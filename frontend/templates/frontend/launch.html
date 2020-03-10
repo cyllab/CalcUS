@@ -1,0 +1,72 @@
+{% extends 'frontend/base.html' %}
+
+{% load i18n bulma_tags %}
+
+{% load static %}
+
+{% block extrahead %}
+	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
+	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+
+{% endblock %}
+
+{% block content %}
+
+{% csrf_token %}
+
+<div class="columns">
+	<div class="column is-half">
+		<script>
+		  let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 500, 300, {useServices:false, oneMolecule:false});
+		  sketcher.styles.atoms_useJMOLColors = true;
+		  sketcher.styles.bonds_clearOverlaps_2D = true;
+		  sketcher.styles.shapes_color = 'c10000';
+		  sketcher.repaint();
+		</script>
+	</div>
+	<div class="column">
+		<form action="/submit_calculation/" method="post" id="calcform">
+			{% csrf_token %}
+
+			<div class="field">
+				<label class="label">Calculation Name</label>
+				<div class="control">
+					<input class="input" name="calc_name" type="text" placeholder="My Calculation" required>
+				</div>
+			</div>
+
+			<div class="field">
+				<label class="label">Calculation Type</label>
+				<div class="control" >
+					<div class="select">
+					  <select  name="calc_type">
+					    <option>Geometrical Optimisation</option>
+					    <option>Conformer Search</option>
+					  </select>
+					</div>
+				</div>
+			</div>
+
+			<div class="field">
+				<div class="control">
+					<button class="button is-primary">Submit</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+<script>
+	$('#calcform').submit(function(){
+	    $('<input />').attr('type', 'hidden')
+		    .attr('name', "structure")
+		    .attr('value', ChemDoodle.writeMOL(sketcher.getMolecule()))
+		    .appendTo('#calcform');
+
+	    return true;
+	}); 
+</script>
+
+{% endblock content %}

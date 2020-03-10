@@ -1,0 +1,69 @@
+{% load bulma_tags %}
+
+<html>
+	<head>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.css" />
+	{% block extrahead %}
+	{% endblock %}
+
+	<style>
+		#content_container {
+			margin-bottom: 30px;
+		}
+	</style>
+	</head>
+	<body>
+
+<nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+  <div class="navbar-menu">
+    <div class="navbar-start">
+	    	<a class="navbar-item" href="/home/">
+        		Home
+      		</a>
+
+	    	<a class="navbar-item" href="/launch/">
+        		Launch calculation
+      		</a>
+    </div>
+
+
+    <div class="navbar-end">
+      <div class="navbar-item">
+        <div class="buttons">
+	{% if user.is_authenticated %}
+		Welcome <a href="{% url 'frontend:profile' %}"> &nbsp;<strong>{{ user.get_username }}</strong></a>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+	     <a href="{% url 'logout'%}?next={{request.path}}">Logout</a>
+	   {% else %}
+	  </ul>
+	  <a class="button is-primary" href="{% url 'frontend:register' %}">
+            <strong>Sign up</strong>
+          </a>
+	  <a class="button is-light" href="{% url 'login' %}">
+            Log in
+          </a>
+	   {% endif %} 
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+<hr>
+</div>
+
+<div class="container" id="content_container">
+<br>
+{% block content %}
+
+{% endblock %}
+
+</div>
+
+<section class="footer is-success has-text-centered">  
+	<div class="container">
+	  <h1 class="title">LabSandbox Beta</h1>
+	</div>
+</section>
+
+</body>
+</html>

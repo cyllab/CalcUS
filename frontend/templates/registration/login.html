@@ -1,0 +1,54 @@
+{% extends "frontend/base.html" %}
+
+{% block content %}
+
+
+<div class="container">
+{% if form.errors %}
+  <p>Your username and password didn't match. Please try again.</p>
+{% endif %}
+
+{% if next %}
+  {% if user.is_authenticated %}
+    <p>Your account doesn't have access to this page. To proceed,
+    please login with an account that has access.</p>
+  {% else %}
+    <p>Please login to see this page.</p>
+  {% endif %}
+{% endif %}
+
+</div>
+<div class="columns is-centered is-expanded">
+	<div class="column is-centered">
+		<section class="section">
+			<div class="field has-addons has-addons-centered">
+				<div class="box has-text-centered">
+					<form method="post" action="{% url 'login' %}">
+					{% csrf_token %}
+						<div class="field">
+							<label class="label">{{ form.username.label_tag }}</label>
+							<div class="control">
+							{{ form.username }}
+							</div>
+						</div>
+						<div class="field">
+							<label class="label">{{ form.password.label_tag }}</label>
+							<div class="control">
+							  {{ form.password }}
+							</div>
+							<br>
+
+							<input class="control" type="submit" value="Login" />
+							<input type="hidden" name="next" value="{{ next }}" />
+						</div>
+					</form>
+				</div>
+
+			</div>
+			<div class="container has-text-centered">
+				<p><a href="{% url 'password_reset' %}">Lost password?</a></p>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

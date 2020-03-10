@@ -1,0 +1,38 @@
+{% extends 'frontend/base.html' %}
+
+{% block content %}
+<div class="container">
+	{% if user.is_authenticated %}
+		{% if latest_frontend %}
+		    {% for calculation in latest_frontend %}
+		<a href="{% url 'frontend:detail' calculation.id %}">
+			<div class="box {% if calculation.status == 1 %} has-background-warning {% elif calculation.status == 2 %} has-background-success {% elif calculation.status == 3 %} has-background-danger{% endif %}">
+			<strong>{{ calculation.id }}</strong>: {{ calculation.name }} ({{ calculation.text_type }})
+		</div></a>
+
+		    <br>
+		    {% endfor %}
+		{% else %}
+		    <p>You have launched no calculation</p>
+		{% endif %}
+		</div>
+		<br>
+		{% if is_paginated %}
+		<nav class="pagination is-right" role="navigation" aria-label="pagination">
+			{% if page_obj.has_previous %}
+				<a class="pagination-previous" href="{{ page_obj.previous_page_number }}">Previous</a>
+			{% endif %}
+			
+			{% if page_obj.has_next %}
+				<a class="pagination-next" href="{{ page_obj.next_page_number }}">Next page</a>
+			{% endif %}
+
+		</nav>        
+		{% endif %}
+	{% else %}
+		Please login to access the Sandbox
+	{% endif %}
+
+<br />
+{% endblock %}
+

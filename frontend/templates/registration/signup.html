@@ -1,0 +1,22 @@
+{% extends 'frontend/base.html' %}
+
+{% load i18n bulma_tags %}
+
+{% block content %}
+<div class="columns is-centered is-expanded">
+	<div class="column is-centered">
+		<section class="section">
+			<div class="field has-addons has-addons-centered">
+				<div class="box has-text-centered">
+				  <h1 class="title is-4">Sign up</h1>
+				  <form method="post">
+				    {% csrf_token %}
+				    {{ form|bulma }}
+				    <button class="control" type="Submit">Sign up</button>
+				  </form>
+				</div>
+			</div>
+		</section>
+	</div>
+</div>
+{% endblock %}

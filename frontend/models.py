@@ -1,0 +1,75 @@
+from django.db import models
+from django.utils import timezone
+import datetime
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils.translation import gettext_lazy as _
+
+from django import template
+
+register = template.Library()
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    #calculations = models.ForeignKey(Calculation, on_delete=models.CASCADE, blank=True, null=True)
+
+    @property
+    def username(self):
+        return self.user.username
+
+    def __str__(self):
+        return self.user.username
+
+
+class Calculation(models.Model):
+
+    CALC_TYPES = {
+            "Geometrical Optimisation" : 0,
+            "Conformer Search" : 1,
+            }
+
+    CALC_STATUSES = {
+            "Queued" : 0,
+            "Running" : 1,
+            "Done" : 2,
+            "Error" : 3,
+            }
+    INV_CALC_TYPES = {v: k for k, v in CALC_TYPES.items()}
+
+    name = models.CharField(max_length=100)
+    date = models.DateTimeField('date')
+    type = models.PositiveIntegerField()
+
+    status = models.PositiveIntegerField()
+
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    def __repr__(self):
+        return self.id
+
+    @property
+    def text_type(self):
+        return self.INV_CALC_TYPES[self.type]
+
+class Result(models.Model):
+    number = models.PositiveIntegerField()
+    energy = models.FloatField()
+    rel_energy = models.FloatField()
+    boltzmann_weight = models.FloatField()
+
+    result_of = models.ForeignKey(Calculation, on_delete=models.CASCADE, blank=True, null=True)
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
+
+

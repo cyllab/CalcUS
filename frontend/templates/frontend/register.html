@@ -1,0 +1,15 @@
+{% extends 'frontend/base.html' %}
+
+{% load i18n bulma_tags %}
+
+
+{% block content %}
+  <div class="box is-primary">
+	  <form method="post">
+	    {% csrf_token %}
+	    {{ form.as_p }}
+	    <button type="submit">Sign up</button>
+	  </form>
+  </div>
+
+{% endblock %}
