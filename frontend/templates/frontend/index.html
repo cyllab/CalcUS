@@ -1,5 +1,16 @@
 {% extends 'frontend/base.html' %}
 
+{% load static %}
+
+{% block extrahead %}
+	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
+	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+
+{% endblock %}
+
 {% block content %}
 <div class="container">
 	{% if user.is_authenticated %}
@@ -7,7 +18,48 @@
 		    {% for calculation in latest_frontend %}
 		<a href="{% url 'frontend:detail' calculation.id %}">
 			<div class="box {% if calculation.status == 1 %} has-background-warning {% elif calculation.status == 2 %} has-background-success {% elif calculation.status == 3 %} has-background-danger{% endif %}">
-			<strong>{{ calculation.id }}</strong>: {{ calculation.name }} ({{ calculation.text_type }})
+				<div class="columns is-vcentered is-half">
+
+					<div class="column is-narrow">
+						<strong>{{ calculation.id }}</strong>: 
+					</div>
+					<div class="column is-narrow">
+						<script>
+							let viewer_{{ calculation.id }} = new ChemDoodle.ViewerCanvas3D('viewer_{{ calculation.id }}', 60, 60, {});
+							viewer_{{ calculation.id }}.styles.set3DRepresentation('Stick');
+							viewer_{{ calculation.id }}.styles.backgroundColor = '#FFFFFF';
+
+							$(document).ready(function(){
+
+								$.ajax({
+									method: "POST",	 	 
+									url: "/get_structure/",
+									data: {'id': {{ calculation.id }} {% if calculation.type == 1 %}, 'num' : 1 {% endif %}},
+									success: function(data, textStatus, xhr) {
+										if (xhr.status != 204) {
+											let mol_{{ calculation.id }} = ChemDoodle.readMOL(data, 1);
+
+											viewer_{{ calculation.id }}.loadMolecule(mol_{{ calculation.id }});
+											viewer_{{ calculation.id }}.repaint();
+
+										}
+
+									}
+							  
+								});
+							});
+
+						</script>
+
+					</div>
+
+					<div class="column">
+						{{ calculation.name }}
+					</div>
+					<div class="column">
+					{{ calculation.text_type }}
+					</div>
+				</div>
 		</div></a>
 
 		    <br>

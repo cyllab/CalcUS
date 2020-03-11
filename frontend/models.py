@@ -25,6 +25,9 @@ class Profile(models.Model):
     def __str__(self):
         return self.user.username
 
+class Project(models.Model):
+    name = models.CharField(max_length=100)
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
 
 class Calculation(models.Model):
 
@@ -48,12 +51,15 @@ class Calculation(models.Model):
     status = models.PositiveIntegerField()
 
     author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
+
     def __repr__(self):
         return self.id
 
     @property
     def text_type(self):
         return self.INV_CALC_TYPES[self.type]
+
 
 class Result(models.Model):
     number = models.PositiveIntegerField()
