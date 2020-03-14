@@ -34,6 +34,7 @@ class Project(models.Model):
 
     def __repr__(self):
         return self.name
+
 class Calculation(models.Model):
 
     CALC_TYPES = {

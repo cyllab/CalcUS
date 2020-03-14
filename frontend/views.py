@@ -26,6 +26,7 @@ from django.template import RequestContext
 
 import bleach
 import os
+import shutil
 
 from .forms import UserCreateForm
 
@@ -36,7 +37,7 @@ from .tasks import geom_opt, conf_search
 from django.views.decorators.csrf import csrf_exempt
 
 LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
-LAB_TODO_HOME = os.environ['LAB_TODO_HOME']
+#LAB_TODO_HOME = os.environ['LAB_TODO_HOME']
 LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
 
 
@@ -130,6 +131,30 @@ def submit_calculation(request):
         conf_search.delay(t)
 
     return redirect("/details/{}".format(t))
+
+def delete(request, pk):
+    if isinstance(request.user, AnonymousUser):
+        return please_register()
+
+    profile, created = Profile.objects.get_or_create(user=request.user)
+
+    try:
+        to_delete = profile.calculation_set.get(id=pk)
+    except Calculation.DoesNotExist:
+        return redirect("/home/")
+    else:
+        try:
+            shutil.rmtree(os.path.join(LAB_SCR_HOME, str(pk)))
+        except FileNotFoundError:
+            pass
+        try:
+            shutil.rmtree(os.path.join(LAB_RESULTS_HOME, str(pk)))
+        except FileNotFoundError:
+            pass
+        to_delete.delete()
+        return redirect("/home/")
+
+
 
 @csrf_exempt
 def conformer_table(request, pk):

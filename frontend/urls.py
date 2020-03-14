@@ -12,6 +12,7 @@ urlpatterns = [
     path('submit_calculation/', views.submit_calculation, name='submit_calculation'),
     path('get_structure/', views.get_structure, name='get_structure'),
     path('download_structure/<int:pk>', views.download_structure, name='download_structure'),
+    path('delete/<int:pk>', views.delete, name='delete'),
     path('conformer_table/<int:pk>', views.conformer_table, name='conformer_table'),
     path('home/<int:page>', views.IndexView.as_view(), name='index'),
     path('details/<int:pk>', views.DetailView.as_view(), name='detail'),
