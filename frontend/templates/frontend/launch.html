@@ -11,6 +11,18 @@
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
 
+	<script>
+		function project_selection_changed() {
+			choice = document.getElementById("calc_project");
+			field = document.getElementById("new_project_name_field");
+			if(choice.value == "New Project") {
+				field.style.display = "block";	
+			}
+			else {
+				field.style.display = "none";	
+			}
+		}
+	</script>
 {% endblock %}
 
 {% block content %}
@@ -37,6 +49,34 @@
 					<input class="input" name="calc_name" type="text" placeholder="My Calculation" required>
 				</div>
 			</div>
+
+			<div class="columns">
+				<div class="column is-narrow">
+					<div class="field">
+						<label class="label">Project</label>
+						<div class="control">
+							<div class="select" >
+							  <select name="calc_project" onchange="project_selection_changed()" id="calc_project">
+								  {% for proj in profile.project_set.all %}
+								  <option name="{{ proj }}">{{ proj }}</option>
+								  {% endfor %}
+								  <option name="new_project">New Project</option>
+							  </select>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="column">
+					<div class="field" style="display: none;" id="new_project_name_field">
+						<label class="label">Name of new project</label>
+						<div class="control">
+							<input class="input" name="new_project_name" type="text" placeholder="My Project">
+						</div>
+					</div>
+				</div>
+
+			</div>
+
 
 			<div class="field">
 				<label class="label">Calculation Type</label>
@@ -67,6 +107,10 @@
 
 	    return true;
 	}); 
+
+$( document ).ready(function() {
+	project_selection_changed();
+});
 </script>
 
 {% endblock content %}

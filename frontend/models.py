@@ -29,6 +29,11 @@ class Project(models.Model):
     name = models.CharField(max_length=100)
     author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
 
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
 class Calculation(models.Model):
 
     CALC_TYPES = {

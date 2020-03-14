@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
 
-from .models import Calculation, Profile
+from .models import Calculation, Profile, Project
 from django.contrib.auth.models import User
 
 from django.contrib.auth import login, authenticate
@@ -93,11 +93,29 @@ def submit_calculation(request):
 
     name = request.POST['calc_name']
     type = Calculation.CALC_TYPES[request.POST['calc_type']]
+    project = request.POST['calc_project']
+
+    profile, created = Profile.objects.get_or_create(user=request.user)
+
+    if project == "New Project":
+        new_project_name = request.POST['new_project_name']
+        #if new_project_name in profile.project_set:
+            #project_obj = profile.project_set
+        project_obj = Project.objects.create(name=new_project_name)
+        profile.project_set.add(project_obj)
+    else:
+        #try:
+        project_set = profile.project_set.filter(name=project)
+        if len(project_set) != 1:
+            print("More than one project with the same name found!")
+        else:
+            project_obj = project_set[0]
+
 
     obj = Calculation.objects.create(name=name, date=timezone.now(), type=type, status=0)
 
-    profile, created = Profile.objects.get_or_create(user=request.user)
     profile.calculation_set.add(obj)
+    project_obj.calculation_set.add(obj)
 
     t = str(obj.id)
 
