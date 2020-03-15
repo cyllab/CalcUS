@@ -8,79 +8,58 @@
 	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+	<script>
+		let page = {{ page }};
+		$(document).ready(function(){
+			refresh_list();
+		});
+		
+		function refresh_list() {
+			var sel = document.getElementById("calc_project");
+			opt = sel.options[sel.selectedIndex].text;
+			$.ajax({
+				data: {
+					csrfmiddlewaretoken: ('{{csrf_token}}'),
+					project: opt,	
+					page: page,
+				},
+				method: "GET",
+				url: '/list/',
+				success: function (data, textStatus, xhr) {
+					if (xhr.status != 204) {
+				    		$("#calculations_list").html(data);
+					}
+				},
+				error: function () {
+				    $("#calculations_list").html("");
+					
+				}
+			    });
 
+		}
+		function set_page(newpage) {
+			page = newpage;
+			refresh_list();
+		}
+	</script>
 {% endblock %}
 
 {% block content %}
 <div class="container">
 	{% if user.is_authenticated %}
-		{% if latest_frontend %}
-		    {% for calculation in latest_frontend %}
-		<a href="{% url 'frontend:detail' calculation.id %}">
-			<div class="box {% if calculation.status == 1 %} has-background-warning {% elif calculation.status == 2 %} has-background-success {% elif calculation.status == 3 %} has-background-danger{% endif %}">
-				<div class="columns is-vcentered is-half">
+		<div class="select" >
+			<select name="calc_project" id="calc_project" onchange="set_page(1);">
+				<option name="all">All projects</option>
+				{% for proj in user.profile.project_set.all %}
+				<option name="{{ proj }}">{{ proj }}</option>
+				{% endfor %}
+			</select>
+		</div>
 
-					<div class="column is-narrow">
-						<strong>{{ calculation.id }}</strong>: 
-					</div>
-					<div class="column is-narrow">
-						<script>
-							let viewer_{{ calculation.id }} = new ChemDoodle.ViewerCanvas3D('viewer_{{ calculation.id }}', 60, 60, {});
-							viewer_{{ calculation.id }}.styles.set3DRepresentation('Stick');
-							viewer_{{ calculation.id }}.styles.backgroundColor = '#FFFFFF';
-
-							$(document).ready(function(){
-
-								$.ajax({
-									method: "POST",	 	 
-									url: "/get_structure/",
-									data: {'id': {{ calculation.id }} {% if calculation.type == 1 %}, 'num' : 1 {% endif %}},
-									success: function(data, textStatus, xhr) {
-										if (xhr.status != 204) {
-											let mol_{{ calculation.id }} = ChemDoodle.readMOL(data, 1);
-
-											viewer_{{ calculation.id }}.loadMolecule(mol_{{ calculation.id }});
-											viewer_{{ calculation.id }}.repaint();
-
-										}
-
-									}
-							  
-								});
-							});
-
-						</script>
-
-					</div>
-
-					<div class="column">
-						{{ calculation.name }}
-					</div>
-					<div class="column">
-					{{ calculation.text_type }}
-					</div>
-				</div>
-		</div></a>
-
-		    <br>
-		    {% endfor %}
-		{% else %}
-		    <p>You have launched no calculation</p>
-		{% endif %}
+		<div id="calculations_list">
+		
 		</div>
 		<br>
-		{% if is_paginated %}
-		<nav class="pagination is-right" role="navigation" aria-label="pagination">
-			{% if page_obj.has_previous %}
-				<a class="pagination-previous" href="{{ page_obj.previous_page_number }}">Previous</a>
-			{% endif %}
-			
-			{% if page_obj.has_next %}
-				<a class="pagination-next" href="{{ page_obj.next_page_number }}">Next page</a>
-			{% endif %}
-
-		</nav>        
-		{% endif %}
 	{% else %}
 		Please login to access the Sandbox
 	{% endif %}

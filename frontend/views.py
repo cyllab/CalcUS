@@ -42,7 +42,7 @@ LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
 
 
 class IndexView(generic.ListView):
-    template_name = 'frontend/index.html'
+    template_name = 'frontend/list.html'
     context_object_name = 'latest_frontend'
     paginate_by = '5'
 
@@ -51,11 +51,21 @@ class IndexView(generic.ListView):
             return []
 
         try:
-            page = self.kwargs['page']
+            page = int(self.request.GET.get('page'))
         except KeyError:
             page = 0
+
         self.request.session['previous_page'] = page
-        return sorted(self.request.user.profile.calculation_set.all(), key=lambda d: d.date, reverse=True)
+        proj = self.request.GET.get('project')
+
+        if proj == "All projects":
+            return sorted(self.request.user.profile.calculation_set.all(), key=lambda d: d.date, reverse=True)
+        else:
+            return sorted(self.request.user.profile.calculation_set.filter(project__name=proj), key=lambda d: d.date, reverse=True)
+
+
+def index(request, page=1):
+    return render(request, 'frontend/index.html', {"page": page})
 
 
 class DetailView(generic.DetailView):
@@ -117,6 +127,9 @@ def submit_calculation(request):
 
     profile.calculation_set.add(obj)
     project_obj.calculation_set.add(obj)
+
+    project_obj.save()
+    profile.save()
 
     t = str(obj.id)
 

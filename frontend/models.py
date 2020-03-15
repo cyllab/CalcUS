@@ -49,9 +49,12 @@ class Calculation(models.Model):
             "Error" : 3,
             }
     INV_CALC_TYPES = {v: k for k, v in CALC_TYPES.items()}
+    INV_CALC_STATUSES = {v: k for k, v in CALC_STATUSES.items()}
 
     name = models.CharField(max_length=100)
     date = models.DateTimeField('date')
+    date_finished = models.DateTimeField('date', default=datetime.datetime.now, blank=True)
+
     type = models.PositiveIntegerField()
 
     status = models.PositiveIntegerField()
@@ -65,6 +68,10 @@ class Calculation(models.Model):
     @property
     def text_type(self):
         return self.INV_CALC_TYPES[self.type]
+
+    @property
+    def text_status(self):
+        return self.INV_CALC_STATUSES[self.status]
 
 
 class Result(models.Model):

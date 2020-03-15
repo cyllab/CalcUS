@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 from labsandbox.celery import app
 import os
 import decimal
+from django.utils import timezone
 
 from .models import Calculation, Result
 
@@ -107,6 +108,7 @@ def conf_search(id):
         calc_obj.result_set.add(r)
 
     calc_obj.status = 2
+    calc_obj.date_finished = timezone.now()
     calc_obj.save()
 
     return 0
