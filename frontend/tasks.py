@@ -58,6 +58,8 @@ def geom_opt(id):
     os.system("cp xtbopt.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
     os.system("babel -ixyz xtbopt.xyz -omol {}/xtbopt.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
 
+    os.system("obabel xtbopt.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id)))
+
     with open("xtbopt.xyz") as f:
         lines = f.readlines()
         E = float(lines[1].split()[1])
@@ -86,6 +88,8 @@ def conf_search(id):
     os.system("cp crest_conformers.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
     os.system("babel -ixyz crest_conformers.xyz -omol {}/conf.mol -m".format(os.path.join(LAB_RESULTS_HOME, id)))
     os.system("babel -ixyz crest_conformers.xyz -omol {}/crest_conformers.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
+
+    os.system("obabel {}/conf1.mol -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id), os.path.join(LAB_RESULTS_HOME, id)))
 
     energies = []
     with open("crest_conformers.xyz") as f:

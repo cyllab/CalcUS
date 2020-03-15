@@ -190,6 +190,33 @@ def conformer_table(request, pk):
             'calculation': calc,
         })
 
+@csrf_exempt
+def icon(request, pk):
+    if isinstance(request.user, AnonymousUser):
+        return HttpResponse(status=403)
+
+    id = str(pk)
+    calc = Calculation.objects.get(pk=id)
+    type = calc.type
+
+    profile = request.user.profile
+
+    if calc not in profile.calculation_set.all():
+        return HttpResponse(status=403)
+
+    icon_file = os.path.join(LAB_RESULTS_HOME, id, "icon.svg")
+    #icon_file = os.path.join(LAB_RESULTS_HOME, id, "icon.png")
+
+    if os.path.isfile(icon_file):
+        with open(icon_file, 'rb') as f:
+            response = HttpResponse(content=f)
+            response['Content-Type'] = 'image/svg+xml'
+            #response['Content-Type'] = 'image/png'
+            #response['Content-Disposition'] = 'attachment; filename={}.mol'.format(id)
+            return response
+    else:
+        return HttpResponse(status=204)
+
 
 @csrf_exempt
 def download_structure(request, pk):
