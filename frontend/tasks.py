@@ -4,6 +4,7 @@ from labsandbox.celery import app
 import os
 import decimal
 from django.utils import timezone
+import numpy as np
 
 from .models import Calculation, Result
 
@@ -116,3 +117,74 @@ def conf_search(id):
     calc_obj.save()
 
     return 0
+
+
+FACTOR = 1
+SIGMA = 0.2
+SIGMA_L = 6199.21
+E = 4.4803204E-10
+NA = 6.02214199E23
+C = 299792458
+HC = 4.135668E15*C
+ME = 9.10938E-31
+
+def plot_peaks(_x, PP):
+    val = 0
+    for w, T in PP:
+        val += np.sqrt(np.pi)*E**2*NA/(1000*np.log(10)*C**2*ME)*T/SIGMA*np.exp(-((HC/_x-HC/w)/(HC/SIGMA_L))**2)
+    return val
+
+
+@app.task
+def uvvis_simple(id):
+    ww = []
+    TT = []
+    PP = []
+
+    calc_obj = Calculation.objects.get(pk=id)
+
+    calc_obj.status = 1
+    calc_obj.save()
+
+    os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
+    os.system("babel -imol initial.mol -oxyz initial.xyz -h --gen3D")
+    os.system("xtb initial.xyz --opt | tee xtb.out")
+    os.system("xtb4stda xtbopt.xyz | tee xtb4stda.out")
+    os.system("stda -xtb -e 12 | tee stda.out")
+
+    f_x = np.arange(120.0, 1200.0, 1.0)
+
+    with open("tda.dat") as f:
+        lines = f.readlines()
+    ind = 0
+    while lines[ind].find("DATXY") == -1:
+        ind += 1
+    ind += 1
+    for line in lines[ind:]:
+        n, ev, I, _x, _y, _z = line.split()
+        ev = float(ev)
+        I = float(I)
+        #ww.append(6.62607004*10**-34 * 299792458/ev)
+        ww.append(1240/ev)
+        TT.append(I)
+    PP = sorted(zip(ww, TT), key=lambda i: i[1], reverse=True)
+    yy = plot_peaks(f_x, PP)
+    yy = np.array(yy)/max(yy)
+
+    os.system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
+
+    with open("{}/uvvis.csv".format(os.path.join(LAB_RESULTS_HOME, id)), 'w') as out:
+        out.write("Wavelength (nm), Absorbance\n")
+        for ind, x in enumerate(f_x):
+            out.write("{},{:.8f}\n".format(x, yy[ind]))
+
+    os.system("babel -ixyz xtbopt.xyz -omol {}/xtbopt.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
+
+    os.system("obabel xtbopt.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id)))
+
+    calc_obj.status = 2
+    calc_obj.date_finished = timezone.now()
+    calc_obj.save()
+
+    return 0
+

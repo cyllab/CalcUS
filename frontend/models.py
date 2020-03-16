@@ -40,6 +40,7 @@ class Calculation(models.Model):
     CALC_TYPES = {
             "Geometrical Optimisation" : 0,
             "Conformer Search" : 1,
+            "UV/Vis Spectrum Prediction": 2,
             }
 
     CALC_STATUSES = {

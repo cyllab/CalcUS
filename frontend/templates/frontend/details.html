@@ -11,7 +11,30 @@
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
 
+	{% if calculation.type == 2 %}
+	<script src="{% static 'frontend/chartist.min.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
+	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
+	{% endif %}
+
 	<script>
+		var loadScript = function(src, callbackfn) {
+		    var newScript = document.createElement("script");
+		    newScript.type = "text/javascript";
+		    newScript.setAttribute("async", "true");
+		    newScript.setAttribute("src", src);
+
+		    if(newScript.readyState) {
+			newScript.onreadystatechange = function() {
+			    if(/loaded|complete/.test(newScript.readyState)) callbackfn();
+			}
+		    } else {
+			newScript.addEventListener("load", callbackfn, false);
+		    }
+
+		    document.documentElement.firstChild.appendChild(newScript);
+		}
+
 		let num = 1;
 		let conf_number = 1;
 
@@ -32,7 +55,22 @@
 						
 							conf_number = {{ calculation.result_set.count }};
 							clearInterval(my_refresh);
+							{% if calculation.type == 1 %}
 							$('#conf_table').load("/conformer_table/{{ calculation.id }}");
+							{% endif %}
+
+							{% if calculation.type == 2 %}
+							g2 = new Dygraph(
+							document.getElementById("uvvis_spectrum"),
+								"/uvvis/{{ calculation.id }}", 
+								{
+									strokeWidth: 2,	
+									xlabel: "Wavelength (nm)",
+									ylabel: "Absorbance"
+								}          
+							);
+
+							{% endif %}
 						}
 
 
@@ -95,9 +133,9 @@
 	</center>
 	</div>
 
-	{% if calculation.type == 0 %}
-	<strong>Geometrical Optimisation</strong>
+	<strong>{{ calculation.text_type }}</strong>
 
+	{% if calculation.type == 0 %}
 	<div>
 		<script>
 			let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {});
@@ -110,8 +148,6 @@
 	Energy: {{ calculation.result_set.all.0.energy }}
 
 	{% elif calculation.type == 1 %}
-
-	<strong>Conformer Search</strong>
 
 	<div class="columns">
 		<div class="column">
@@ -143,6 +179,23 @@
 		</div>
 	</div>
 
+	{% elif calculation.type == 2 %}
+
+	<div class="columns">
+		<div class="column">
+			<script>
+				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {});
+				editor.styles.set3DRepresentation('Stick');
+				editor.styles.backgroundColor = '#FFFFFF';
+			</script>
+			<br />
+			<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .mol</button>
+		</div>
+		<div class="column">
+			<div id="uvvis_spectrum" style="width:600px; height:400px; margin-bottom: 30px;"></div>
+			<a class="button" href="/uvvis/{{ calculation.id }}">Download spectrum in CSV format</a>
+		</div>
+	</div>
 
 	{% endif %}
 	<br />

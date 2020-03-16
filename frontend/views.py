@@ -32,7 +32,7 @@ from .forms import UserCreateForm
 
 from django.utils import timezone
 
-from .tasks import geom_opt, conf_search
+from .tasks import geom_opt, conf_search, uvvis_simple
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -142,6 +142,8 @@ def submit_calculation(request):
         geom_opt.delay(t)
     elif type == 1:
         conf_search.delay(t)
+    elif type == 2:
+        uvvis_simple.delay(t)
 
     return redirect("/details/{}".format(t))
 
@@ -217,6 +219,39 @@ def icon(request, pk):
     else:
         return HttpResponse(status=204)
 
+@csrf_exempt
+def uvvis(request, pk):
+    if isinstance(request.user, AnonymousUser):
+        return HttpResponse(status=403)
+
+    id = str(pk)
+    calc = Calculation.objects.get(pk=id)
+    type = calc.type
+
+    profile = request.user.profile
+
+    if calc not in profile.calculation_set.all():
+        return HttpResponse(status=403)
+
+    spectrum_file = os.path.join(LAB_RESULTS_HOME, id, "uvvis.csv")
+    #icon_file = os.path.join(LAB_RESULTS_HOME, id, "icon.png")
+
+    if os.path.isfile(spectrum_file):
+        with open(spectrum_file, 'rb') as f:
+            response = HttpResponse(f, content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename={}.csv'.format(id)
+            return response
+            '''
+            lines = f.readlines()
+            spectrum = []
+            for line in lines:
+                x, y = line.strip().split(',')
+                spectrum.append([x, y])
+
+            return render(request, 'frontend/uvvis_spectrum.html', {"spectrum": spectrum}, content_type="text/javascript")
+            '''
+    else:
+        return HttpResponse(status=204)
 
 @csrf_exempt
 def download_structure(request, pk):
@@ -264,7 +299,7 @@ def get_structure(request):
 
         type = calc.type
 
-        if type == 0:
+        if type == 0 or type == 2:
             expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.mol")
             if os.path.isfile(expected_file):
                 with open(expected_file) as f:

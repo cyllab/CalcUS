@@ -15,6 +15,7 @@ urlpatterns = [
     path('get_structure/', views.get_structure, name='get_structure'),
     path('download_structure/<int:pk>', views.download_structure, name='download_structure'),
     path('icon/<int:pk>', views.icon, name='icon'),
+    path('uvvis/<int:pk>', views.uvvis, name='uvvis'),
     path('delete/<int:pk>', views.delete, name='delete'),
     path('conformer_table/<int:pk>', views.conformer_table, name='conformer_table'),
     path('details/<int:pk>', views.DetailView.as_view(), name='detail'),
