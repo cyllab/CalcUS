@@ -6,10 +6,11 @@ import decimal
 from django.utils import timezone
 import numpy as np
 
+from time import time
+from celery.signals import task_prerun, task_postrun
 from .models import Calculation, Result
 
 LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
-LAB_TODO_HOME = os.environ['LAB_TODO_HOME']
 LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
 
 decimal.getcontext().prec = 50
@@ -54,16 +55,30 @@ def geom_opt(id):
 
     os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
     os.system("babel -imol initial.mol -oxyz initial.xyz -h --gen3D")
-    os.system("xtb initial.xyz --opt")
+    os.system("xtb initial.xyz --opt | tee xtb.out")
     os.system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
     os.system("cp xtbopt.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
     os.system("babel -ixyz xtbopt.xyz -omol {}/xtbopt.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
 
     os.system("obabel xtbopt.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id)))
 
-    with open("xtbopt.xyz") as f:
+    with open("xtb.out") as f:
         lines = f.readlines()
-        E = float(lines[1].split()[1])
+        ind = len(lines)-1
+
+        '''
+        while lines[ind].find("* finished run on") == -1:
+            ind -= 1
+
+        cpu_time_line = lines[ind+4]
+        sline = cpu_time_line.split()
+        cpu_time = int(sline[2])*3600*24. + int(sline[4])*3600. + int(sline[6])*60. + float(sline[8])
+        '''
+
+        while lines[ind].find("HOMO-LUMO GAP") == -1:
+            ind -= 1
+        hl_gap = float(lines[ind].split()[3])
+        E = float(lines[ind-2].split()[3])
 
     r = Result.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1.)
 
@@ -83,7 +98,7 @@ def conf_search(id):
 
     os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
     os.system("babel -imol initial.mol -oxyz initial.xyz -h --gen3D")
-    os.system("crest initial.xyz -rthr 0.4 -ewin 4")
+    os.system("crest initial.xyz -rthr 0.4 -ewin 4 | tee crest.out")
 
     os.system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
     os.system("cp crest_conformers.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
@@ -187,4 +202,28 @@ def uvvis_simple(id):
     calc_obj.save()
 
     return 0
+
+
+time_dict = {}
+
+@task_prerun.connect
+def task_prerun_handler(signal, sender, task_id, task, args, kwargs, **extras):
+    time_dict[task_id] = time()
+
+
+@task_postrun.connect
+def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, state, **extras):
+    try:
+        execution_time = time() - time_dict.pop(task_id)
+    except KeyError:
+        cost = -1
+
+    job_id = args[0]
+    calc_obj = Calculation.objects.get(pk=job_id)
+    calc_obj.execution_time = int(execution_time)
+    calc_obj.save()
+
+    author = calc_obj.author
+    author.calculation_time_used += execution_time
+    author.save()
 

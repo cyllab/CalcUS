@@ -16,7 +16,7 @@ register = template.Library()
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
-    #calculations = models.ForeignKey(Calculation, on_delete=models.CASCADE, blank=True, null=True)
+    calculation_time_used = models.PositiveIntegerField(default=0)
 
     @property
     def username(self):
@@ -57,6 +57,7 @@ class Calculation(models.Model):
     date_finished = models.DateTimeField('date', default=datetime.datetime.now, blank=True)
 
     type = models.PositiveIntegerField()
+    execution_time = models.PositiveIntegerField(default=0)
 
     status = models.PositiveIntegerField()
 

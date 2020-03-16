@@ -37,7 +37,6 @@ from .tasks import geom_opt, conf_search, uvvis_simple
 from django.views.decorators.csrf import csrf_exempt
 
 LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
-#LAB_TODO_HOME = os.environ['LAB_TODO_HOME']
 LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
 
 
@@ -267,7 +266,7 @@ def download_structure(request, pk):
     if calc not in profile.calculation_set.all():
         return HttpResponse(status=403)
 
-    if type == 0:
+    if type == 0 or type == 2:
         expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.mol")
     elif type == 1:
         expected_file = os.path.join(LAB_RESULTS_HOME, id, "crest_conformers.mol")
