@@ -81,6 +81,7 @@ class Result(models.Model):
     energy = models.FloatField()
     rel_energy = models.FloatField()
     boltzmann_weight = models.FloatField()
+    homo_lumo_gap = models.FloatField()
 
     result_of = models.ForeignKey(Calculation, on_delete=models.CASCADE, blank=True, null=True)
 

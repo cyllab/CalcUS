@@ -206,14 +206,11 @@ def icon(request, pk):
         return HttpResponse(status=403)
 
     icon_file = os.path.join(LAB_RESULTS_HOME, id, "icon.svg")
-    #icon_file = os.path.join(LAB_RESULTS_HOME, id, "icon.png")
 
     if os.path.isfile(icon_file):
         with open(icon_file, 'rb') as f:
             response = HttpResponse(content=f)
             response['Content-Type'] = 'image/svg+xml'
-            #response['Content-Type'] = 'image/png'
-            #response['Content-Disposition'] = 'attachment; filename={}.mol'.format(id)
             return response
     else:
         return HttpResponse(status=204)
@@ -233,22 +230,12 @@ def uvvis(request, pk):
         return HttpResponse(status=403)
 
     spectrum_file = os.path.join(LAB_RESULTS_HOME, id, "uvvis.csv")
-    #icon_file = os.path.join(LAB_RESULTS_HOME, id, "icon.png")
 
     if os.path.isfile(spectrum_file):
         with open(spectrum_file, 'rb') as f:
             response = HttpResponse(f, content_type='text/csv')
             response['Content-Disposition'] = 'attachment; filename={}.csv'.format(id)
             return response
-            '''
-            lines = f.readlines()
-            spectrum = []
-            for line in lines:
-                x, y = line.strip().split(',')
-                spectrum.append([x, y])
-
-            return render(request, 'frontend/uvvis_spectrum.html', {"spectrum": spectrum}, content_type="text/javascript")
-            '''
     else:
         return HttpResponse(status=204)
 

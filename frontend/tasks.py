@@ -66,21 +66,12 @@ def geom_opt(id):
         lines = f.readlines()
         ind = len(lines)-1
 
-        '''
-        while lines[ind].find("* finished run on") == -1:
-            ind -= 1
-
-        cpu_time_line = lines[ind+4]
-        sline = cpu_time_line.split()
-        cpu_time = int(sline[2])*3600*24. + int(sline[4])*3600. + int(sline[6])*60. + float(sline[8])
-        '''
-
         while lines[ind].find("HOMO-LUMO GAP") == -1:
             ind -= 1
         hl_gap = float(lines[ind].split()[3])
         E = float(lines[ind-2].split()[3])
 
-    r = Result.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1.)
+    r = Result.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
 
     r.save()
     calc_obj.result_set.add(r)
@@ -123,7 +114,7 @@ def conf_search(id):
     rel_energies = [(i - min_val)*HARTREE_VAL for i in energies]
 
     for ind, data in enumerate(zip(energies, rel_energies, weights)):
-        r = Result.objects.create(number=ind+1, energy=data[0], rel_energy=data[1], boltzmann_weight=data[2])
+        r = Result.objects.create(number=ind+1, energy=data[0], rel_energy=data[1], boltzmann_weight=data[2], homo_lumo_gap=0.0)
         r.save()
         calc_obj.result_set.add(r)
 
@@ -132,7 +123,6 @@ def conf_search(id):
     calc_obj.save()
 
     return 0
-
 
 FACTOR = 1
 SIGMA = 0.2
@@ -196,6 +186,20 @@ def uvvis_simple(id):
     os.system("babel -ixyz xtbopt.xyz -omol {}/xtbopt.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
 
     os.system("obabel xtbopt.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id)))
+
+    with open("xtb.out") as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+        while lines[ind].find("HOMO-LUMO GAP") == -1:
+            ind -= 1
+        hl_gap = float(lines[ind].split()[3])
+        E = float(lines[ind-2].split()[3])
+
+    r = Result.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
+
+    r.save()
+    calc_obj.result_set.add(r)
 
     calc_obj.status = 2
     calc_obj.date_finished = timezone.now()

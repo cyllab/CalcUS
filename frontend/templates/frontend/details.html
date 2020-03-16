@@ -19,18 +19,18 @@
 
 	<script>
 		var loadScript = function(src, callbackfn) {
-		    var newScript = document.createElement("script");
-		    newScript.type = "text/javascript";
-		    newScript.setAttribute("async", "true");
-		    newScript.setAttribute("src", src);
+			var newScript = document.createElement("script");
+		    	newScript.type = "text/javascript";
+		    	newScript.setAttribute("async", "true");
+		    	newScript.setAttribute("src", src);
 
-		    if(newScript.readyState) {
-			newScript.onreadystatechange = function() {
-			    if(/loaded|complete/.test(newScript.readyState)) callbackfn();
-			}
-		    } else {
-			newScript.addEventListener("load", callbackfn, false);
-		    }
+		    	if(newScript.readyState) {
+				newScript.onreadystatechange = function() {
+			    		if(/loaded|complete/.test(newScript.readyState)) callbackfn();
+				}
+		    	} else {
+				newScript.addEventListener("load", callbackfn, false);
+		    	}
 
 		    document.documentElement.firstChild.appendChild(newScript);
 		}
@@ -99,6 +99,8 @@
 			});
 
 		}
+
+		{% if calculation.type == 2 %}
 		function increase_conf() {
 			if(num < conf_number) {
 				document.getElementById('conf_' + num).classList.remove("has-background-success");
@@ -117,6 +119,7 @@
 				refresh();
 			}
 		}
+		{% endif %}
 	</script>
 
 {% endblock %}
@@ -145,7 +148,6 @@
 		<br />
 		<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .mol</button>
 	</div>
-	Energy: {{ calculation.result_set.all.0.energy }}
 
 	{% elif calculation.type == 1 %}
 
@@ -198,6 +200,24 @@
 	</div>
 
 	{% endif %}
+	<br />
+
+	<div class="box">
+		<table class="table">
+		{% if calculation.type == 0 or calculation.type == 2 %}
+			<tr>
+				<td>Energy:</td>
+				<td>{{ calculation.result_set.all.0.energy }} Ha</td>
+			</tr>
+			<tr>
+				<td>HOMO-LUMO Gap</td>
+				<td>{{ calculation.result_set.all.0.homo_lumo_gap }} eV</td>
+			</tr>
+		{% elif calculation.type == 1 %}
+			Empty
+		{% endif %}
+		</table>
+	</div>
 	<br />
 	<a class="button is-danger" href="/delete/{{ calculation.id }}">Delete this calculation</a>
 </div>
