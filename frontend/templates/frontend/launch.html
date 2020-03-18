@@ -42,7 +42,13 @@
 	</div>
 	<div class="column">
 		<form action="/submit_calculation/" method="post" id="calcform" enctype="multipart/form-data">
-		<input type="file" name="file_structure">
+
+			<div class="field">
+				<label class="label">Draw a structure or choose a file</label>
+				<div class="control">
+					<input type="file" name="file_structure">
+				</div>
+			</div>
 			{% csrf_token %}
 
 			<div class="field">

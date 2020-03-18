@@ -46,15 +46,33 @@ def calc_boltzmann(data):
 
     return minval, float((data[0]+sumnum)/(decimal.Decimal(1)+sumdenum)), weights
 
+def handle_input_file(drawing):
+    if drawing:
+        os.system("babel -imol initial.mol -oxyz initial.xyz -h --gen3D")
+    else:
+        if os.path.isfile("initial.mol"):
+            os.system("babel -imol initial.mol -oxyz initial.xyz")
+            return
+        elif os.path.isfile("initial.xyz"):
+            return
+        elif os.path.isfile("initial.mol2"):
+            os.system("babel -imol2 initial.mol2 -oxyz initial.xyz")
+            return
+        elif os.path.isfile("initial.sdf"):
+            os.system("babel -isdf initial.sdf -oxyz initial.xyz")
+            return
+
 @app.task
-def geom_opt(id):
+def geom_opt(id, drawing):
     calc_obj = Calculation.objects.get(pk=id)
 
     calc_obj.status = 1
     calc_obj.save()
 
     os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
-    os.system("babel -imol initial.mol -oxyz initial.xyz -h --gen3D")
+
+    handle_input_file(drawing)
+
     os.system("xtb initial.xyz --opt | tee xtb.out")
     os.system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
     os.system("cp xtbopt.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
@@ -81,14 +99,16 @@ def geom_opt(id):
     return 0
 
 @app.task
-def conf_search(id):
+def conf_search(id, drawing):
     calc_obj = Calculation.objects.get(pk=id)
 
     calc_obj.status = 1
     calc_obj.save()
 
     os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
-    os.system("babel -imol initial.mol -oxyz initial.xyz -h --gen3D")
+
+    handle_input_file(drawing)
+
     os.system("crest initial.xyz -rthr 0.4 -ewin 4 | tee crest.out")
 
     os.system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
@@ -141,7 +161,7 @@ def plot_peaks(_x, PP):
 
 
 @app.task
-def uvvis_simple(id):
+def uvvis_simple(id, drawing):
     ww = []
     TT = []
     PP = []
@@ -152,7 +172,9 @@ def uvvis_simple(id):
     calc_obj.save()
 
     os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
-    os.system("babel -imol initial.mol -oxyz initial.xyz -h --gen3D")
+
+    handle_input_file(drawing)
+
     os.system("xtb initial.xyz --opt | tee xtb.out")
     os.system("xtb4stda xtbopt.xyz | tee xtb4stda.out")
     os.system("stda -xtb -e 12 | tee stda.out")

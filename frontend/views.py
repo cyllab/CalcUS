@@ -133,25 +133,27 @@ def submit_calculation(request):
     scr = os.path.join(LAB_SCR_HOME, t)
     os.mkdir(scr)
 
-    #form = DocumentForm(request.POST, request.FILES)
+    drawing = True
 
     if len(request.FILES) == 1:
+        drawing = False
+        in_file = request.FILES['file_structure']
+        filename, ext = in_file.name.split('.')
         fs = FileSystemStorage()
-        _ = fs.save(os.path.join(t, 'initial.mol'), request.FILES['file_structure'])
-        #with open(os.path.join(scr, 'initial.mol'), 'wb+') as out:
-        #    for chunk in f.chunks():
-        #        out.write(chunk)
+
+        if ext in ['mol2', 'mol', 'xyz', 'sdf']:
+            _ = fs.save(os.path.join(t, 'initial.{}'.format(ext)), in_file)
     else:
         mol = request.POST['structure']
         with open(os.path.join(scr, 'initial.mol'), 'w') as out:
             out.write(mol)
 
     if type == 0:
-        geom_opt.delay(t)
+        geom_opt.delay(t, drawing)
     elif type == 1:
-        conf_search.delay(t)
+        conf_search.delay(t, drawing)
     elif type == 2:
-        uvvis_simple.delay(t)
+        uvvis_simple.delay(t, drawing)
 
     return redirect("/details/{}".format(t))
 
