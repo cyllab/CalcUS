@@ -1,9 +1,10 @@
 {% if calculation %}
 	{% for res in calculation.structure_set.all %}
-	<tr id="conf_{{ res.number }}" {% if res.number == 1 %} class="has-background-success" {% endif %}>
+	<tr id="conf_{{ res.number }}" {% if res.number == 1 %} class="is-selected" {% endif %}>
 			<th>{{ res.number }}</th>
 			<th>{{ res.energy }}</th>
 			<th>{{ res.rel_energy|floatformat:1 }}</th>
+			<th>{{ res.degeneracy }}</th>
 			<th>{{ res.boltzmann_weight|floatformat:2 }}</th>
 		</tr>
 	{% endfor %}

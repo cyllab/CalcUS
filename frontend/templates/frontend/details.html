@@ -103,9 +103,9 @@
 		{% if calculation.type == 1 %}
 		function increase_conf() {
 			if(num < conf_number) {
-				document.getElementById('conf_' + num).classList.remove("has-background-success");
+				document.getElementById('conf_' + num).classList.remove("is-selected");
 				num = num + 1;
-				document.getElementById('conf_' + num).classList.add("has-background-success");
+				document.getElementById('conf_' + num).classList.add("is-selected");
 				refresh();
 			}
 
@@ -113,9 +113,9 @@
 
 		function decrease_conf() {
 			if(num > 1) {
-				document.getElementById('conf_' + num).classList.remove("has-background-success");
+				document.getElementById('conf_' + num).classList.remove("is-selected");
 				num = num - 1;
-				document.getElementById('conf_' + num).classList.add("has-background-success");
+				document.getElementById('conf_' + num).classList.add("is-selected");
 				refresh();
 			}
 		}
@@ -171,6 +171,7 @@
 						<th>#</th>
 						<th>Energy (Ha)</th>
 						<th>Relative energy (kJ/mol)</th>
+						<th>Degeneracy</th>
 						<th>Boltzmann Weight at 298K</th>
 					</tr>
 				</thead>

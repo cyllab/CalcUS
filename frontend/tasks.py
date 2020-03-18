@@ -135,7 +135,7 @@ def conf_search(id, drawing, charge, solvent):
 
     handle_input_file(drawing)
 
-    os.system("crest --chrg {} {} initial.xyz -rthr 0.4 -ewin 4 | tee crest.out".format(charge, solvent_add))
+    os.system("crest initial.xyz --chrg {} {} -rthr 0.4 -ewin 4 | tee crest.out".format(charge, solvent_add))
 
     os.system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
     os.system("cp crest_conformers.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
@@ -144,6 +144,7 @@ def conf_search(id, drawing, charge, solvent):
 
     os.system("obabel {}/conf1.mol -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id), os.path.join(LAB_RESULTS_HOME, id)))
 
+    '''
     energies = []
     with open("crest_conformers.xyz") as f:
         lines = f.readlines()
@@ -163,6 +164,28 @@ def conf_search(id, drawing, charge, solvent):
         r = Structure.objects.create(number=ind+1, energy=data[0], rel_energy=data[1], boltzmann_weight=data[2], homo_lumo_gap=0.0)
         r.save()
         calc_obj.structure_set.add(r)
+    '''
+
+    with open("crest.out") as f:
+        lines = f.readlines()
+        ind = len(lines) - 1
+
+        while lines[ind].find("total number unique points considered further") == -1:
+            ind -= 1
+
+        ind += 1
+        while lines[ind].find("T /K") == -1:
+            sline = lines[ind].strip().split()
+            if len(sline) == 8:
+                rel_energy = float(sline[1])*4.184
+                energy = float(sline[2])
+                weight = float(sline[4])
+                number = int(sline[5])
+                degeneracy = int(sline[6])
+                r = Structure.objects.create(number=number, energy=energy, rel_energy=rel_energy, boltzmann_weight=weight, homo_lumo_gap=0.0, degeneracy=degeneracy)
+                r.save()
+                calc_obj.structure_set.add(r)
+            ind += 1
 
     calc_obj.status = 2
     calc_obj.date_finished = timezone.now()
@@ -222,7 +245,6 @@ def uvvis_simple(id, drawing, charge, solvent):
         n, ev, I, _x, _y, _z = line.split()
         ev = float(ev)
         I = float(I)
-        #ww.append(6.62607004*10**-34 * 299792458/ev)
         ww.append(1240/ev)
         TT.append(I)
     PP = sorted(zip(ww, TT), key=lambda i: i[1], reverse=True)
