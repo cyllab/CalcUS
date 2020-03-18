@@ -57,6 +57,7 @@ class Calculation(models.Model):
     date_finished = models.DateTimeField('date', default=datetime.datetime.now, blank=True)
 
     charge = models.IntegerField()
+    solvent = models.CharField(max_length=100, default='vacuum')
 
     type = models.PositiveIntegerField()
     execution_time = models.PositiveIntegerField(default=0)

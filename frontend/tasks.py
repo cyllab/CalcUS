@@ -20,6 +20,22 @@ E_VAL = decimal.Decimal(2.7182818284590452353602874713527)
 R_CONSTANT = decimal.Decimal(8.314)
 TEMP = decimal.Decimal(298)
 
+SOLVENT_TABLE = {
+    'Acetone': 'acetone',
+    'Acetonitrile': 'acetonitrile',
+    'Benzene': 'benzene',
+    'Dichloromethane': 'CH2Cl2',
+    'Chloroform': 'CHCl3',
+    'Dimethylformamide': 'DMF',
+    'Dimethylsulfoxide': 'DMSO',
+    'Diethyl ether': 'ether',
+    'Water': 'H2O',
+    'Methanol': 'methanol',
+    'n-Hexane': 'n-hexane',
+    'Tetrahydrofuran': 'THF',
+    'Toluene': 'toluene',
+        }
+
 def calc_boltzmann(data):
 
     #if hartree:
@@ -63,17 +79,22 @@ def handle_input_file(drawing):
             return
 
 @app.task
-def geom_opt(id, drawing, charge):
+def geom_opt(id, drawing, charge, solvent):
     calc_obj = Calculation.objects.get(pk=id)
 
     calc_obj.status = 1
     calc_obj.save()
 
+    if solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add = ''
+
     os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
 
     handle_input_file(drawing)
 
-    os.system("xtb initial.xyz -chrg {} --opt | tee xtb.out".format(charge))
+    os.system("xtb initial.xyz --chrg {} {} --opt | tee xtb.out".format(charge, solvent_add))
     os.system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
     os.system("cp xtbopt.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
     os.system("babel -ixyz xtbopt.xyz -omol {}/xtbopt.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
@@ -99,17 +120,22 @@ def geom_opt(id, drawing, charge):
     return 0
 
 @app.task
-def conf_search(id, drawing, charge):
+def conf_search(id, drawing, charge, solvent):
     calc_obj = Calculation.objects.get(pk=id)
 
     calc_obj.status = 1
     calc_obj.save()
 
+    if solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add = ''
+
     os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
 
     handle_input_file(drawing)
 
-    os.system("crest -chrg {} initial.xyz -rthr 0.4 -ewin 4 | tee crest.out".format(charge))
+    os.system("crest --chrg {} {} initial.xyz -rthr 0.4 -ewin 4 | tee crest.out".format(charge, solvent_add))
 
     os.system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
     os.system("cp crest_conformers.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
@@ -161,7 +187,7 @@ def plot_peaks(_x, PP):
 
 
 @app.task
-def uvvis_simple(id, drawing, charge):
+def uvvis_simple(id, drawing, charge, solvent):
     ww = []
     TT = []
     PP = []
@@ -171,13 +197,18 @@ def uvvis_simple(id, drawing, charge):
     calc_obj.status = 1
     calc_obj.save()
 
+    if solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add = ''
+
     os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
 
     handle_input_file(drawing)
 
-    os.system("xtb initial.xyz -chrg {} --opt | tee xtb.out".format(charge))
-    os.system("xtb4stda xtbopt.xyz -chrg {} | tee xtb4stda.out".format(charge))
-    os.system("stda -xtb -e 12 -chrg {} | tee stda.out".format(charge))
+    os.system("xtb initial.xyz --chrg {} {} --opt | tee xtb.out".format(charge, solvent_add))
+    os.system("xtb4stda xtbopt.xyz --chrg {} {} | tee xtb4stda.out".format(charge, solvent_add))
+    os.system("stda -xtb -e 12 | tee stda.out")
 
     f_x = np.arange(120.0, 1200.0, 1.0)
 

@@ -1,7 +1,4 @@
 *.pyc
-challenges/__pycache__/*
-brillantminds/__pycache__/*
 *__pycache__
 *.swp
-challenges/migrations/*
-challenges/migrations/*.py
+labsandbox/settings.py

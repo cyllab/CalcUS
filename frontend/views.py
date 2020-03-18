@@ -104,6 +104,7 @@ def submit_calculation(request):
     type = Calculation.CALC_TYPES[request.POST['calc_type']]
     project = request.POST['calc_project']
     charge = request.POST['calc_charge']
+    solvent = request.POST['calc_solvent']
 
     profile, created = Profile.objects.get_or_create(user=request.user)
 
@@ -150,11 +151,11 @@ def submit_calculation(request):
             out.write(mol)
 
     if type == 0:
-        geom_opt.delay(t, drawing, charge)
+        geom_opt.delay(t, drawing, charge, solvent)
     elif type == 1:
-        conf_search.delay(t, drawing, charge)
+        conf_search.delay(t, drawing, charge, solvent)
     elif type == 2:
-        uvvis_simple.delay(t, drawing, charge)
+        uvvis_simple.delay(t, drawing, charge, solvent)
 
     return redirect("/details/{}".format(t))
 
