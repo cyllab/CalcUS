@@ -1,8 +1,9 @@
 {% load bulma_tags %}
+{% load static %}
 
 <html>
 	<head>
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.css" />
+		<link rel="stylesheet" href="{% static 'bulma/css/style.min.css' %}" />
 	{% block extrahead %}
 	{% endblock %}
 
@@ -14,7 +15,7 @@
 	</head>
 	<body>
 
-<nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+<nav class="navbar is-success" role="navigation" aria-label="main navigation">
   	<div class="navbar-menu">
     		<div class="navbar-start">
 			<a class="navbar-item" href="/home/">
@@ -59,7 +60,7 @@
 
 <section class="footer is-success has-text-centered">  
 	<div class="container">
-	  <h1 class="title">LabSandbox Beta</h1>
+		<h1 class="title">Calc<font color="green">US</font> Beta</h1>
 	</div>
 </section>
 
