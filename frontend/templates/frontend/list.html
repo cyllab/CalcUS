@@ -1,0 +1,39 @@
+{% if latest_frontend %}
+    {% for calculation in latest_frontend %}
+	<a href="{% url 'frontend:detail' calculation.id %}">
+	<div class="box {% if calculation.status == 1 %} has-background-warning {% elif calculation.status == 2 %} has-background-success {% elif calculation.status == 3 %} has-background-danger{% endif %}">
+		<div class="columns is-vcentered is-half">
+
+			<div class="column is-narrow">
+				<strong>{{ calculation.id }}</strong>: 
+			</div>
+			<div class="column is-narrow">
+				<img src="/icon/{{ calculation.id }}" width="200px">
+			</div>
+
+			<div class="column">
+				{{ calculation.name }}
+			</div>
+			<div class="column">
+			{{ calculation.text_type }}
+			</div>
+		</div>
+	</div>
+	</a>
+
+    <br>
+    {% endfor %}
+{% else %}
+    <p>You have launched no calculation</p>
+{% endif %}
+		{% if is_paginated %}
+			{% if page_obj.has_previous %}
+				<a class="pagination-previous" onclick="set_page({{ page_obj.previous_page_number }})">Previous</a>
+			{% endif %}
+			
+			{% if page_obj.has_next %}
+				<a class="pagination-next" onclick="set_page({{ page_obj.next_page_number }})">Next page</a>
+			{% endif %}
+
+		{% endif %}
+
