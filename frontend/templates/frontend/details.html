@@ -53,7 +53,7 @@
 							$("#calc_title").removeClass("has-background-warning");
 							$("#calc_title").addClass("has-background-success");
 						
-							conf_number = {{ calculation.result_set.count }};
+							conf_number = {{ calculation.structure_set.count }};
 							clearInterval(my_refresh);
 							{% if calculation.type == 1 %}
 							$('#conf_table').load("/conformer_table/{{ calculation.id }}");
@@ -207,11 +207,11 @@
 		{% if calculation.type == 0 or calculation.type == 2 %}
 			<tr>
 				<td>Energy:</td>
-				<td>{{ calculation.result_set.all.0.energy }} Ha</td>
+				<td>{{ calculation.structure_set.all.0.energy }} Ha</td>
 			</tr>
 			<tr>
 				<td>HOMO-LUMO Gap</td>
-				<td>{{ calculation.result_set.all.0.homo_lumo_gap }} eV</td>
+				<td>{{ calculation.structure_set.all.0.homo_lumo_gap }} eV</td>
 			</tr>
 		{% elif calculation.type == 1 %}
 			Empty

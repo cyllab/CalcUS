@@ -125,7 +125,7 @@ LOGIN_REDIRECT_URL= '/home'
 #EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 #EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_emails")
 
-MEDIA_ROOT = '/home/raphael/LabSandbox/media/'
-MEDIA_URL = '/media/'
+MEDIA_ROOT = '/home/raphael/LabSandbox/scr/'
+MEDIA_URL = '/scr/'
 
 

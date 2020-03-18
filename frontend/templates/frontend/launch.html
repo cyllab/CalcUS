@@ -38,9 +38,11 @@
 		  sketcher.styles.shapes_color = 'c10000';
 		  sketcher.repaint();
 		</script>
+
 	</div>
 	<div class="column">
-		<form action="/submit_calculation/" method="post" id="calcform">
+		<form action="/submit_calculation/" method="post" id="calcform" enctype="multipart/form-data">
+		<input type="file" name="file_structure">
 			{% csrf_token %}
 
 			<div class="field">
@@ -65,6 +67,7 @@
 							</div>
 						</div>
 					</div>
+
 				</div>
 				<div class="column">
 					<div class="field" style="display: none;" id="new_project_name_field">

@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.views import generic
 
 from django.http import HttpResponseForbidden
+from django.core.files.storage import FileSystemStorage
 
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
@@ -28,7 +29,7 @@ import bleach
 import os
 import shutil
 
-from .forms import UserCreateForm
+from .forms import UserCreateForm, DocumentForm
 
 from django.utils import timezone
 
@@ -99,8 +100,6 @@ def submit_calculation(request):
     if isinstance(request.user, AnonymousUser):
         return please_register()
 
-    mol = request.POST['structure']
-
     name = request.POST['calc_name']
     type = Calculation.CALC_TYPES[request.POST['calc_type']]
     project = request.POST['calc_project']
@@ -121,7 +120,6 @@ def submit_calculation(request):
         else:
             project_obj = project_set[0]
 
-
     obj = Calculation.objects.create(name=name, date=timezone.now(), type=type, status=0)
 
     profile.calculation_set.add(obj)
@@ -134,8 +132,19 @@ def submit_calculation(request):
 
     scr = os.path.join(LAB_SCR_HOME, t)
     os.mkdir(scr)
-    with open(os.path.join(scr, 'initial.mol'), 'w') as out:
-        out.write(mol)
+
+    #form = DocumentForm(request.POST, request.FILES)
+
+    if len(request.FILES) == 1:
+        fs = FileSystemStorage()
+        _ = fs.save(os.path.join(t, 'initial.mol'), request.FILES['file_structure'])
+        #with open(os.path.join(scr, 'initial.mol'), 'wb+') as out:
+        #    for chunk in f.chunks():
+        #        out.write(chunk)
+    else:
+        mol = request.POST['structure']
+        with open(os.path.join(scr, 'initial.mol'), 'w') as out:
+            out.write(mol)
 
     if type == 0:
         geom_opt.delay(t)

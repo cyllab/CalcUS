@@ -28,3 +28,9 @@ class UserCreateForm(UserCreationForm):
         if User.objects.filter(email=self.cleaned_data['email']).exists():
             raise ValidationError(self.fields['email'].error_messages['exists'])
         return self.cleaned_data['email']
+
+class DocumentForm(forms.Form):
+    mol_file = forms.FileField(
+            label='Select a file',
+            )
+

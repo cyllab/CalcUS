@@ -76,9 +76,11 @@ class Calculation(models.Model):
         return self.INV_CALC_STATUSES[self.status]
 
 
-class Result(models.Model):
+class Structure(models.Model):
     number = models.PositiveIntegerField()
     energy = models.FloatField()
+
+    degeneracy = models.PositiveIntegerField(default=0)
     rel_energy = models.FloatField()
     boltzmann_weight = models.FloatField()
     homo_lumo_gap = models.FloatField()

@@ -1,5 +1,5 @@
 {% if calculation %}
-	{% for res in calculation.result_set.all %}
+	{% for res in calculation.structure_set.all %}
 	<tr id="conf_{{ res.number }}" {% if res.number == 1 %} class="has-background-success" {% endif %}>
 			<th>{{ res.number }}</th>
 			<th>{{ res.energy }}</th>

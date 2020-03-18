@@ -8,7 +8,7 @@ import numpy as np
 
 from time import time
 from celery.signals import task_prerun, task_postrun
-from .models import Calculation, Result
+from .models import Calculation, Structure
 
 LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
 LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
@@ -71,10 +71,10 @@ def geom_opt(id):
         hl_gap = float(lines[ind].split()[3])
         E = float(lines[ind-2].split()[3])
 
-    r = Result.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
+    r = Structure.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
 
     r.save()
-    calc_obj.result_set.add(r)
+    calc_obj.structure_set.add(r)
     calc_obj.status = 2
     calc_obj.save()
 
@@ -114,9 +114,9 @@ def conf_search(id):
     rel_energies = [(i - min_val)*HARTREE_VAL for i in energies]
 
     for ind, data in enumerate(zip(energies, rel_energies, weights)):
-        r = Result.objects.create(number=ind+1, energy=data[0], rel_energy=data[1], boltzmann_weight=data[2], homo_lumo_gap=0.0)
+        r = Structure.objects.create(number=ind+1, energy=data[0], rel_energy=data[1], boltzmann_weight=data[2], homo_lumo_gap=0.0)
         r.save()
-        calc_obj.result_set.add(r)
+        calc_obj.structure_set.add(r)
 
     calc_obj.status = 2
     calc_obj.date_finished = timezone.now()
@@ -196,10 +196,10 @@ def uvvis_simple(id):
         hl_gap = float(lines[ind].split()[3])
         E = float(lines[ind-2].split()[3])
 
-    r = Result.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
+    r = Structure.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
 
     r.save()
-    calc_obj.result_set.add(r)
+    calc_obj.structure_set.add(r)
 
     calc_obj.status = 2
     calc_obj.date_finished = timezone.now()
