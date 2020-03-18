@@ -63,7 +63,7 @@ def handle_input_file(drawing):
             return
 
 @app.task
-def geom_opt(id, drawing):
+def geom_opt(id, drawing, charge):
     calc_obj = Calculation.objects.get(pk=id)
 
     calc_obj.status = 1
@@ -73,7 +73,7 @@ def geom_opt(id, drawing):
 
     handle_input_file(drawing)
 
-    os.system("xtb initial.xyz --opt | tee xtb.out")
+    os.system("xtb initial.xyz -chrg {} --opt | tee xtb.out".format(charge))
     os.system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
     os.system("cp xtbopt.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
     os.system("babel -ixyz xtbopt.xyz -omol {}/xtbopt.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
@@ -99,7 +99,7 @@ def geom_opt(id, drawing):
     return 0
 
 @app.task
-def conf_search(id, drawing):
+def conf_search(id, drawing, charge):
     calc_obj = Calculation.objects.get(pk=id)
 
     calc_obj.status = 1
@@ -109,7 +109,7 @@ def conf_search(id, drawing):
 
     handle_input_file(drawing)
 
-    os.system("crest initial.xyz -rthr 0.4 -ewin 4 | tee crest.out")
+    os.system("crest -chrg {} initial.xyz -rthr 0.4 -ewin 4 | tee crest.out".format(charge))
 
     os.system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
     os.system("cp crest_conformers.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
@@ -161,7 +161,7 @@ def plot_peaks(_x, PP):
 
 
 @app.task
-def uvvis_simple(id, drawing):
+def uvvis_simple(id, drawing, charge):
     ww = []
     TT = []
     PP = []
@@ -175,9 +175,9 @@ def uvvis_simple(id, drawing):
 
     handle_input_file(drawing)
 
-    os.system("xtb initial.xyz --opt | tee xtb.out")
-    os.system("xtb4stda xtbopt.xyz | tee xtb4stda.out")
-    os.system("stda -xtb -e 12 | tee stda.out")
+    os.system("xtb initial.xyz -chrg {} --opt | tee xtb.out".format(charge))
+    os.system("xtb4stda xtbopt.xyz -chrg {} | tee xtb4stda.out".format(charge))
+    os.system("stda -xtb -e 12 -chrg {} | tee stda.out".format(charge))
 
     f_x = np.arange(120.0, 1200.0, 1.0)
 

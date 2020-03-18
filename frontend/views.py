@@ -29,7 +29,7 @@ import bleach
 import os
 import shutil
 
-from .forms import UserCreateForm, DocumentForm
+from .forms import UserCreateForm
 
 from django.utils import timezone
 
@@ -103,6 +103,7 @@ def submit_calculation(request):
     name = request.POST['calc_name']
     type = Calculation.CALC_TYPES[request.POST['calc_type']]
     project = request.POST['calc_project']
+    charge = request.POST['calc_charge']
 
     profile, created = Profile.objects.get_or_create(user=request.user)
 
@@ -120,7 +121,7 @@ def submit_calculation(request):
         else:
             project_obj = project_set[0]
 
-    obj = Calculation.objects.create(name=name, date=timezone.now(), type=type, status=0)
+    obj = Calculation.objects.create(name=name, date=timezone.now(), type=type, status=0, charge=charge)
 
     profile.calculation_set.add(obj)
     project_obj.calculation_set.add(obj)
@@ -149,11 +150,11 @@ def submit_calculation(request):
             out.write(mol)
 
     if type == 0:
-        geom_opt.delay(t, drawing)
+        geom_opt.delay(t, drawing, charge)
     elif type == 1:
-        conf_search.delay(t, drawing)
+        conf_search.delay(t, drawing, charge)
     elif type == 2:
-        uvvis_simple.delay(t, drawing)
+        uvvis_simple.delay(t, drawing, charge)
 
     return redirect("/details/{}".format(t))
 

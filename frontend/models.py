@@ -56,6 +56,8 @@ class Calculation(models.Model):
     date = models.DateTimeField('date')
     date_finished = models.DateTimeField('date', default=datetime.datetime.now, blank=True)
 
+    charge = models.IntegerField()
+
     type = models.PositiveIntegerField()
     execution_time = models.PositiveIntegerField(default=0)
 
