@@ -55,6 +55,9 @@
 						
 							conf_number = {{ calculation.structure_set.count }};
 							clearInterval(my_refresh);
+							$('#info_table').load("/info_table/{{ calculation.id }}");
+							$('#status_box').load("/status/{{ calculation.id }}");
+
 							{% if calculation.type == 1 %}
 							$('#conf_table').load("/conformer_table/{{ calculation.id }}");
 							{% endif %}
@@ -129,11 +132,13 @@
 {% csrf_token %}
 
 <div class="box ">
+	<div id="status_box">
 		<div class="box is-rounded {% if calculation.status == 1 %} has-background-warning {% elif calculation.status == 2 %} has-background-success {% elif calculation.status == 3 %} has-background-danger{% endif %}" id="calc_title">
-	<center>
-			<h3 class="title is-3 ">{{ calculation.name }}</h3>
-			<h5 class="subtitle is-5" id="calc_status">{{ calculation.text_status }}</h5>
-	</center>
+			<center>
+					<h3 class="title is-3 ">{{ calculation.name }}</h3>
+					<h5 class="subtitle is-5" id="calc_status">{{ calculation.text_status }}</h5>
+			</center>
+		</div>
 	</div>
 
 	<strong>{{ calculation.text_type }}</strong>
@@ -204,19 +209,7 @@
 	<br />
 
 	<div class="box">
-		<table class="table">
-		{% if calculation.type == 0 or calculation.type == 2 %}
-			<tr>
-				<td>Energy:</td>
-				<td>{{ calculation.structure_set.all.0.energy }} Ha</td>
-			</tr>
-			<tr>
-				<td>HOMO-LUMO Gap</td>
-				<td>{{ calculation.structure_set.all.0.homo_lumo_gap }} eV</td>
-			</tr>
-		{% elif calculation.type == 1 %}
-			Empty
-		{% endif %}
+		<table class="table" id="info_table">
 		</table>
 	</div>
 	<br />

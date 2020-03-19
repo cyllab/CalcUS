@@ -173,6 +173,8 @@ def conf_search(id, drawing, charge, solvent):
         while lines[ind].find("total number unique points considered further") == -1:
             ind -= 1
 
+        weighted_energy = 0.0
+
         ind += 1
         while lines[ind].find("T /K") == -1:
             sline = lines[ind].strip().split()
@@ -182,11 +184,13 @@ def conf_search(id, drawing, charge, solvent):
                 weight = float(sline[4])
                 number = int(sline[5])
                 degeneracy = int(sline[6])
+                weighted_energy += energy*weight
                 r = Structure.objects.create(number=number, energy=energy, rel_energy=rel_energy, boltzmann_weight=weight, homo_lumo_gap=0.0, degeneracy=degeneracy)
                 r.save()
                 calc_obj.structure_set.add(r)
             ind += 1
 
+    calc_obj.weighted_energy = weighted_energy
     calc_obj.status = 2
     calc_obj.date_finished = timezone.now()
     calc_obj.save()

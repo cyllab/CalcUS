@@ -253,6 +253,43 @@ def uvvis(request, pk):
         return HttpResponse(status=204)
 
 @csrf_exempt
+def info_table(request, pk):
+    if isinstance(request.user, AnonymousUser):
+        return HttpResponse(status=403)
+
+    id = str(pk)
+    calc = Calculation.objects.get(pk=id)
+    type = calc.type
+
+    profile = request.user.profile
+
+    if calc not in profile.calculation_set.all():
+        return HttpResponse(status=403)
+
+    return render(request, 'frontend/info_table.html', {
+            'profile': request.user.profile,
+            'calculation': calc,
+        })
+
+@csrf_exempt
+def status(request, pk):
+    if isinstance(request.user, AnonymousUser):
+        return HttpResponse(status=403)
+
+    id = str(pk)
+    calc = Calculation.objects.get(pk=id)
+    type = calc.type
+
+    profile = request.user.profile
+
+    if calc not in profile.calculation_set.all():
+        return HttpResponse(status=403)
+
+    return render(request, 'frontend/status.html', {
+            'calculation': calc,
+        })
+
+@csrf_exempt
 def download_structure(request, pk):
     if isinstance(request.user, AnonymousUser):
         return HttpResponse(status=403)

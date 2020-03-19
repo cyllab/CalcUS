@@ -49,6 +49,7 @@ class Calculation(models.Model):
             "Done" : 2,
             "Error" : 3,
             }
+
     INV_CALC_TYPES = {v: k for k, v in CALC_TYPES.items()}
     INV_CALC_STATUSES = {v: k for k, v in CALC_STATUSES.items()}
 
@@ -66,6 +67,8 @@ class Calculation(models.Model):
 
     author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
+
+    weighted_energy = models.FloatField(default=0.)
 
     def __repr__(self):
         return self.id
