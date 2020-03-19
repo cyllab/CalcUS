@@ -1,0 +1,29 @@
+	<tr>
+		<td>Charge:</td>
+		<td>{{ calculation.charge }}</td>
+	</tr>
+	<tr>
+		<td>Solvent:</td>
+		<td>{{ calculation.solvent }}</td>
+	</tr>
+
+{% if calculation.status != 3 %}
+	{% if calculation.type == 0 or calculation.type == 2 %}
+		<tr>
+			<td>Energy:</td>
+			<td>{{ calculation.structure_set.all.0.energy }} Ha</td>
+		</tr>
+		<tr>
+			<td>HOMO-LUMO Gap</td>
+			<td>{{ calculation.structure_set.all.0.homo_lumo_gap }} eV</td>
+		</tr>
+	{% elif calculation.type == 1 %}
+		<tr>
+			<td>Boltzmann Weighted Energy:</td>
+			<td>{{ calculation.weighted_energy }} Ha</td>
+		</tr>
+
+	{% endif %}
+{% else %}
+	Error message: {{ calculation.error_message }}
+{% endif %}
