@@ -33,7 +33,7 @@ from .forms import UserCreateForm
 
 from django.utils import timezone
 
-from .tasks import geom_opt, conf_search, uvvis_simple
+from .tasks import geom_opt, conf_search, uvvis_simple, nmr
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -156,6 +156,8 @@ def submit_calculation(request):
         conf_search.delay(t, drawing, charge, solvent)
     elif type == 2:
         uvvis_simple.delay(t, drawing, charge, solvent)
+    elif type == 3:
+        nmr.delay(t, drawing, charge, solvent)
 
     return redirect("/details/{}".format(t))
 

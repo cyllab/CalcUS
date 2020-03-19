@@ -96,7 +96,7 @@ def geom_opt(id, drawing, charge, solvent):
     calc_obj.save()
 
     if solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+        solvent_add = '-solv {}'.format(SOLVENT_TABLE[solvent])
     else:
         solvent_add = ''
 
@@ -386,6 +386,76 @@ def uvvis_simple(id, drawing, charge, solvent):
 
     return 0
 
+@app.task
+def nmr(id, drawing, charge, solvent):
+
+    calc_obj = Calculation.objects.get(pk=id)
+
+    calc_obj.status = 1
+    calc_obj.save()
+
+    if solvent != "Vacuum":
+        solvent_add = '{}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add = ''
+
+    os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
+
+    a = handle_input_file(drawing)
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to convert the input structure"
+        calc_obj.save()
+        return
+
+    a = system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to create the results directory"
+        calc_obj.save()
+        return
+
+    a = system("obabel initial.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to generate the icon"
+        calc_obj.save()
+        return
+
+    a = system("xtb initial.xyz --chrg {} {} --opt".format(charge, solvent_add), 'xtb.out')
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to optimize the structure"
+        calc_obj.save()
+        return
+
+    a = system("crest xtbopt.xyz --chrg {} {} -rthr 0.4 -ewin 4 --nmr".format(charge, solvent_add), 'crest.out')
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to find the conformers"
+        calc_obj.save()
+        return
+
+    a = system("enso.py {} --charge {} -sm4 smd -sm3 smd -sm smd -smgsolv2 sm -O 8 -prog_rrho xtb -ancopt on".format(solvent_add, charge), 'enso_pre.out')
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to prepare the NMR prediction calculation"
+        calc_obj.save()
+        return
+
+    a = system("enso.py -run", 'enso.out')
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to run the NMR prediction calculation"
+        calc_obj.save()
+        return
+
+    a = system("anmr", 'anmr.out')
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to generate the final NMR spectrum"
+        calc_obj.save()
+        return
 
 time_dict = {}
 

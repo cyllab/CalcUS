@@ -41,6 +41,7 @@ class Calculation(models.Model):
             "Geometrical Optimisation" : 0,
             "Conformer Search" : 1,
             "UV/Vis Spectrum Prediction": 2,
+            "NMR Spectrum Prediction": 3,
             }
 
     CALC_STATUSES = {
