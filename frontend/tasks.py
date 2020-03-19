@@ -10,6 +10,9 @@ from time import time
 from celery.signals import task_prerun, task_postrun
 from .models import Calculation, Structure
 
+import subprocess
+import shlex
+
 LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
 LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
 
@@ -36,6 +39,7 @@ SOLVENT_TABLE = {
     'Toluene': 'toluene',
         }
 
+'''
 def calc_boltzmann(data):
 
     #if hartree:
@@ -61,22 +65,28 @@ def calc_boltzmann(data):
     #_sum = [(gas_constant*temp), (decimal.Decimal(1)+sumdenum)]
 
     return minval, float((data[0]+sumnum)/(decimal.Decimal(1)+sumdenum)), weights
+'''
+
+def system(command, log_file=""):
+    if log_file != "":
+        with open(log_file, 'w') as out:
+            a = subprocess.run(shlex.split(command), stdout=out).returncode
+        return a
+    else:
+        return subprocess.run(shlex.split(command)).returncode
 
 def handle_input_file(drawing):
     if drawing:
-        os.system("babel -imol initial.mol -oxyz initial.xyz -h --gen3D")
+        return system("babel -imol initial.mol -oxyz initial.xyz -h --gen3D")
     else:
         if os.path.isfile("initial.mol"):
-            os.system("babel -imol initial.mol -oxyz initial.xyz")
-            return
+            return system("babel -imol initial.mol -oxyz initial.xyz")
         elif os.path.isfile("initial.xyz"):
-            return
+            return 0
         elif os.path.isfile("initial.mol2"):
-            os.system("babel -imol2 initial.mol2 -oxyz initial.xyz")
-            return
+            return system("babel -imol2 initial.mol2 -oxyz initial.xyz")
         elif os.path.isfile("initial.sdf"):
-            os.system("babel -isdf initial.sdf -oxyz initial.xyz")
-            return
+            return system("babel -isdf initial.sdf -oxyz initial.xyz")
 
 @app.task
 def geom_opt(id, drawing, charge, solvent):
@@ -92,14 +102,48 @@ def geom_opt(id, drawing, charge, solvent):
 
     os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
 
-    handle_input_file(drawing)
+    a = handle_input_file(drawing)
 
-    os.system("xtb initial.xyz --chrg {} {} --opt | tee xtb.out".format(charge, solvent_add))
-    os.system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
-    os.system("cp xtbopt.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
-    os.system("babel -ixyz xtbopt.xyz -omol {}/xtbopt.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to convert the input structure"
+        calc_obj.save()
+        return
 
-    os.system("obabel xtbopt.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id)))
+    a = system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to create the results directory"
+        calc_obj.save()
+        return
+
+    a = system("obabel initial.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to generate the icon"
+        calc_obj.save()
+        return
+
+    a = system("xtb initial.xyz --chrg {} {} --opt".format(charge, solvent_add), 'xtb.out')
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to optimize the structure"
+        calc_obj.save()
+        return
+
+    a = system("cp xtbopt.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to copy the results to the results directory"
+        calc_obj.save()
+        return
+
+    a = system("babel -ixyz xtbopt.xyz -omol {}/xtbopt.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to convert the optimized geometry"
+        calc_obj.save()
+        return
 
     with open("xtb.out") as f:
         lines = f.readlines()
@@ -133,38 +177,54 @@ def conf_search(id, drawing, charge, solvent):
 
     os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
 
-    handle_input_file(drawing)
+    a = handle_input_file(drawing)
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to convert the input structure"
+        calc_obj.save()
+        return
 
-    os.system("crest initial.xyz --chrg {} {} -rthr 0.4 -ewin 4 | tee crest.out".format(charge, solvent_add))
+    a = system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to create the results directory"
+        calc_obj.save()
+        return
 
-    os.system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
-    os.system("cp crest_conformers.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
-    os.system("babel -ixyz crest_conformers.xyz -omol {}/conf.mol -m".format(os.path.join(LAB_RESULTS_HOME, id)))
-    os.system("babel -ixyz crest_conformers.xyz -omol {}/crest_conformers.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
+    a = system("obabel initial.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to generate the icon"
+        calc_obj.save()
+        return
 
-    os.system("obabel {}/conf1.mol -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id), os.path.join(LAB_RESULTS_HOME, id)))
+    a = system("crest initial.xyz --chrg {} {} -rthr 0.4 -ewin 4".format(charge, solvent_add), 'crest.out')
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to find the conformers"
+        calc_obj.save()
+        return
 
-    '''
-    energies = []
-    with open("crest_conformers.xyz") as f:
-        lines = f.readlines()
-        ind = 0
-        while ind < len(lines) - 1:
-            line = lines[ind].strip()
-            if len(line.split()) == 1:
-                energies.append(float(lines[ind+1]))
-                ind += 2
-            else:
-                ind += 1
+    a = system("cp crest_conformers.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to copy the results to the results directory"
+        calc_obj.save()
+        return
 
-    min_val, dd, weights = calc_boltzmann(energies)
-    rel_energies = [(i - min_val)*HARTREE_VAL for i in energies]
+    a = system("babel -ixyz crest_conformers.xyz -omol {}/conf.mol -m".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to convert conformers"
+        calc_obj.save()
+        return
 
-    for ind, data in enumerate(zip(energies, rel_energies, weights)):
-        r = Structure.objects.create(number=ind+1, energy=data[0], rel_energy=data[1], boltzmann_weight=data[2], homo_lumo_gap=0.0)
-        r.save()
-        calc_obj.structure_set.add(r)
-    '''
+    a = system("babel -ixyz crest_conformers.xyz -omol {}/crest_conformers.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to convert conformers"
+        calc_obj.save()
+        return
 
     with open("crest.out") as f:
         lines = f.readlines()
@@ -231,11 +291,48 @@ def uvvis_simple(id, drawing, charge, solvent):
 
     os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
 
-    handle_input_file(drawing)
+    a = handle_input_file(drawing)
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to convert the input structure"
+        calc_obj.save()
+        return
 
-    os.system("xtb initial.xyz --chrg {} {} --opt | tee xtb.out".format(charge, solvent_add))
-    os.system("xtb4stda xtbopt.xyz --chrg {} {} | tee xtb4stda.out".format(charge, solvent_add))
-    os.system("stda -xtb -e 12 | tee stda.out")
+    a = system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to create the results directory"
+        calc_obj.save()
+        return
+
+    a = system("obabel initial.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to generate the icon"
+        calc_obj.save()
+        return
+
+    a = system("xtb initial.xyz --chrg {} {} --opt".format(charge, solvent_add), 'xtb.out')
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to optimize the structure"
+        calc_obj.save()
+        return
+
+    a = system("xtb4stda xtbopt.xyz --chrg {} {}".format(charge, solvent_add), 'xtb4stda.out')
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to perform the ground-state calculation"
+        calc_obj.save()
+        return
+
+    a = system("stda -xtb -e 12", 'stda.out')
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to perform the time-dependent DFT calculation"
+        calc_obj.save()
+        return
+
 
     f_x = np.arange(120.0, 1200.0, 1.0)
 
@@ -255,16 +352,19 @@ def uvvis_simple(id, drawing, charge, solvent):
     yy = plot_peaks(f_x, PP)
     yy = np.array(yy)/max(yy)
 
-    os.system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
 
     with open("{}/uvvis.csv".format(os.path.join(LAB_RESULTS_HOME, id)), 'w') as out:
         out.write("Wavelength (nm), Absorbance\n")
         for ind, x in enumerate(f_x):
             out.write("{},{:.8f}\n".format(x, yy[ind]))
 
-    os.system("babel -ixyz xtbopt.xyz -omol {}/xtbopt.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
+    a = system("babel -ixyz xtbopt.xyz -omol {}/xtbopt.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to convert the optimized geometry"
+        calc_obj.save()
+        return
 
-    os.system("obabel xtbopt.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id)))
 
     with open("xtb.out") as f:
         lines = f.readlines()

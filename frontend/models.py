@@ -54,6 +54,9 @@ class Calculation(models.Model):
     INV_CALC_STATUSES = {v: k for k, v in CALC_STATUSES.items()}
 
     name = models.CharField(max_length=100)
+
+    error_message = models.CharField(max_length=400, default="")
+
     date = models.DateTimeField('date')
     date_finished = models.DateTimeField('date', default=datetime.datetime.now, blank=True)
 
@@ -69,6 +72,7 @@ class Calculation(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
 
     weighted_energy = models.FloatField(default=0.)
+
 
     def __repr__(self):
         return self.id

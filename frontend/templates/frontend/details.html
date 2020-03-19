@@ -41,6 +41,15 @@
 		$.ajaxSetup({ cache: false }); 
 		$(document).ready(function(){
 			var my_refresh = setInterval(function() {
+				$('#info_table').load("/info_table/{{ calculation.id }}");
+				$('#status_box').load("/status/{{ calculation.id }}");
+				var status = $('#calc_status');
+
+				if( status.html() == "Error") {
+					clearInterval(my_refresh);
+					$('#info_table').load("/info_table/{{ calculation.id }}");
+				}
+
 				$.ajax({
 					method: "POST",	 	 
 					url: "/get_structure/",
@@ -55,8 +64,7 @@
 						
 							conf_number = {{ calculation.structure_set.count }};
 							clearInterval(my_refresh);
-							$('#info_table').load("/info_table/{{ calculation.id }}");
-							$('#status_box').load("/status/{{ calculation.id }}");
+							
 
 							{% if calculation.type == 1 %}
 							$('#conf_table').load("/conformer_table/{{ calculation.id }}");

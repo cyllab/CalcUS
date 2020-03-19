@@ -6,7 +6,6 @@
 		<td>Solvent:</td>
 		<td>{{ calculation.solvent }}</td>
 	</tr>
-
 {% if calculation.status != 3 %}
 	{% if calculation.type == 0 or calculation.type == 2 %}
 		<tr>
@@ -25,5 +24,10 @@
 
 	{% endif %}
 {% else %}
-	Error message: {{ calculation.error_message }}
+		<tr>
+			<td><strong><font color="red">Error message:</font></strong></td>
+			<td><strong><font color="red">{{ calculation.error_message }}</font></strong></td>
+		</tr>
+
+	
 {% endif %}
