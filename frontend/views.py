@@ -33,7 +33,7 @@ from .forms import UserCreateForm
 
 from django.utils import timezone
 
-from .tasks import geom_opt, conf_search, uvvis_simple, nmr
+from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -157,7 +157,7 @@ def submit_calculation(request):
     elif type == 2:
         uvvis_simple.delay(t, drawing, charge, solvent)
     elif type == 3:
-        nmr.delay(t, drawing, charge, solvent)
+        nmr_enso.delay(t, drawing, charge, solvent)
 
     return redirect("/details/{}".format(t))
 
@@ -255,6 +255,31 @@ def uvvis(request, pk):
         return HttpResponse(status=204)
 
 @csrf_exempt
+def nmr(request, pk):
+    if isinstance(request.user, AnonymousUser):
+        return HttpResponse(status=403)
+
+    id = str(pk)
+    calc = Calculation.objects.get(pk=id)
+    type = calc.type
+
+    profile = request.user.profile
+
+    if calc not in profile.calculation_set.all():
+        return HttpResponse(status=403)
+
+    spectrum_file = os.path.join(LAB_RESULTS_HOME, id, "nmr.csv")
+
+    if os.path.isfile(spectrum_file):
+        with open(spectrum_file, 'rb') as f:
+            response = HttpResponse(f, content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename={}.csv'.format(id)
+            return response
+    else:
+        return HttpResponse(status=204)
+
+
+@csrf_exempt
 def info_table(request, pk):
     if isinstance(request.user, AnonymousUser):
         return HttpResponse(status=403)
@@ -337,7 +362,7 @@ def get_structure(request):
 
         type = calc.type
 
-        if type == 0 or type == 2:
+        if type == 0 or type == 2 or type == 3:
             expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.mol")
             if os.path.isfile(expected_file):
                 with open(expected_file) as f:

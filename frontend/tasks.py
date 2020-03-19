@@ -96,7 +96,7 @@ def geom_opt(id, drawing, charge, solvent):
     calc_obj.save()
 
     if solvent != "Vacuum":
-        solvent_add = '-solv {}'.format(SOLVENT_TABLE[solvent])
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
     else:
         solvent_add = ''
 
@@ -387,7 +387,7 @@ def uvvis_simple(id, drawing, charge, solvent):
     return 0
 
 @app.task
-def nmr(id, drawing, charge, solvent):
+def nmr_enso(id, drawing, charge, solvent):
 
     calc_obj = Calculation.objects.get(pk=id)
 
@@ -429,14 +429,14 @@ def nmr(id, drawing, charge, solvent):
         calc_obj.save()
         return
 
-    a = system("crest xtbopt.xyz --chrg {} {} -rthr 0.4 -ewin 4 --nmr".format(charge, solvent_add), 'crest.out')
+    a = system("crest xtbopt.xyz --chrg {} {} -nmr".format(charge, solvent_add), 'crest.out')
     if a != 0:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to find the conformers"
         calc_obj.save()
         return
 
-    a = system("enso.py {} --charge {} -sm4 smd -sm3 smd -sm smd -smgsolv2 sm -O 8 -prog_rrho xtb -ancopt on".format(solvent_add, charge), 'enso_pre.out')
+    a = system("enso.py {} --charge {}".format(solvent_add, charge), 'enso_pre.out')
     if a != 0:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to prepare the NMR prediction calculation"
@@ -456,6 +456,41 @@ def nmr(id, drawing, charge, solvent):
         calc_obj.error_message = "Failed to generate the final NMR spectrum"
         calc_obj.save()
         return
+
+    #r = Structure.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
+
+    #r.save()
+    #calc_obj.structure_set.add(r)
+
+    a = system("cp xtbopt.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to copy the results to the results directory"
+        calc_obj.save()
+        return
+
+    a = system("babel -ixyz xtbopt.xyz -omol {}/xtbopt.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
+    if a != 0:
+        calc_obj.status = 3
+        calc_obj.error_message = "Failed to convert the optimized geometry"
+        calc_obj.save()
+        return
+
+    with open("anmr.dat") as f:
+        lines = f.readlines()
+        with open("{}/nmr.csv".format(os.path.join(LAB_RESULTS_HOME, id)), 'w') as out:
+                out.write("Chemical shift (ppm),Intensity\n")
+                for ind, line in enumerate(lines):
+                    if ind % 5 == 0:
+                        sline = line.strip().split()
+                        if float(sline[1]) > 0.001:
+                            out.write("{},{}\n".format(sline[0], sline[1]))
+
+    calc_obj.status = 2
+    calc_obj.date_finished = timezone.now()
+    calc_obj.save()
+
+    return 0
 
 time_dict = {}
 

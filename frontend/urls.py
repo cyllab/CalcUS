@@ -18,6 +18,7 @@ urlpatterns = [
     path('status/<int:pk>', views.status, name='status'),
     path('icon/<int:pk>', views.icon, name='icon'),
     path('uvvis/<int:pk>', views.uvvis, name='uvvis'),
+    path('nmr/<int:pk>', views.nmr, name='nmr'),
     path('delete/<int:pk>', views.delete, name='delete'),
     path('conformer_table/<int:pk>', views.conformer_table, name='conformer_table'),
     path('details/<int:pk>', views.DetailView.as_view(), name='detail'),

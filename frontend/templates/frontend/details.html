@@ -11,7 +11,7 @@
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
 
-	{% if calculation.type == 2 %}
+	{% if calculation.type == 2 or calculation.type == 3 %}
 	<script src="{% static 'frontend/chartist.min.js' %}"></script>
 	<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
 	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
@@ -63,14 +63,13 @@
 							$("#calc_title").addClass("has-background-success");
 						
 							conf_number = {{ calculation.structure_set.count }};
-							clearInterval(my_refresh);
 							
 
+							clearInterval(my_refresh);
 							{% if calculation.type == 1 %}
 							$('#conf_table').load("/conformer_table/{{ calculation.id }}");
-							{% endif %}
 
-							{% if calculation.type == 2 %}
+							{% elif calculation.type == 2 %}
 							g2 = new Dygraph(
 							document.getElementById("uvvis_spectrum"),
 								"/uvvis/{{ calculation.id }}", 
@@ -80,7 +79,17 @@
 									ylabel: "Absorbance"
 								}          
 							);
-
+							{% elif calculation.type == 3 %}
+							g2 = new Dygraph(
+							document.getElementById("nmr_spectrum"),
+								"/nmr/{{ calculation.id }}", 
+								{
+									strokeWidth: 2,	
+									xlabel: "Chemical shift (ppm)",
+									ylabel: "Intensity",
+									dateWindow: [10, 0],
+								}          
+							);
 							{% endif %}
 						}
 
@@ -131,6 +140,7 @@
 			}
 		}
 		{% endif %}
+
 	</script>
 
 {% endblock %}
@@ -212,6 +222,24 @@
 			<a class="button" href="/uvvis/{{ calculation.id }}">Download spectrum in CSV format</a>
 		</div>
 	</div>
+	{% elif calculation.type == 3 %}
+
+	<div class="columns">
+		<div class="column">
+			<script>
+				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {});
+				editor.styles.set3DRepresentation('Stick');
+				editor.styles.backgroundColor = '#FFFFFF';
+			</script>
+			<br />
+			<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .mol</button>
+		</div>
+		<div class="column">
+			<div id="nmr_spectrum" style="width:600px; height:400px; margin-bottom: 30px;"></div>
+			<a class="button" href="/nmr/{{ calculation.id }}">Download spectrum in CSV format</a>
+		</div>
+	</div>
+
 
 	{% endif %}
 	<br />
