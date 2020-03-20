@@ -312,7 +312,12 @@ def uvvis_simple(id, drawing, charge, solvent, calc_obj=None):
     return 0
 
 def enso(charge, solvent):
-    return system("enso.py {} --charge {}".format("-solv {}".format(SOLVENT_TABLE[solvent]) if solvent_add != '' else '', charge), 'enso_pre.out')
+    if solvent != "Vacuum":
+        solvent_add = '-solv {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add = ''
+
+    return system("enso.py {} --charge {}".format(solvent_add, charge), 'enso_pre.out')
 
 def enso_run():
     return system("enso.py -run", 'enso.out')
@@ -381,8 +386,11 @@ def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, st
     job_id = args[0]
     calc_obj = Calculation.objects.get(pk=job_id)
     calc_obj.execution_time = int(execution_time)
-    calc_obj.status = 2
     calc_obj.date_finished = timezone.now()
+
+    if calc_obj.status != 3:
+        calc_obj.status = 2
+
     calc_obj.save()
 
     author = calc_obj.author
