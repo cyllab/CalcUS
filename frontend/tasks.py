@@ -241,7 +241,7 @@ def xtb4stda(in_file, charge, solvent):
     else:
         solvent_add_xtb = ''
 
-    return system("xtb4stda {} --chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
+    return system("xtb4stda {} -chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
 
 def stda(charge, solvent):
     if solvent != "Vacuum":
@@ -388,8 +388,11 @@ def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, st
     calc_obj.execution_time = int(execution_time)
     calc_obj.date_finished = timezone.now()
 
-    if calc_obj.status != 3:
+    if retval == 0:
         calc_obj.status = 2
+    else:
+        calc_obj.status = 3
+        calc_obj.error_message = "Unknown error"
 
     calc_obj.save()
 
