@@ -85,15 +85,8 @@ def crest(in_file, charge, solvent, mode):
         print("Invalid crest mode selected!")
         return -1
 
-@app.task
-def geom_opt(id, drawing, charge, solvent):
-    calc_obj = Calculation.objects.get(pk=id)
 
-    calc_obj.status = 1
-    calc_obj.save()
-
-    os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
-
+def run_steps(steps, calc_obj, drawing, id):
     a = handle_input_file(drawing)
 
     if a != 0:
@@ -116,25 +109,52 @@ def geom_opt(id, drawing, charge, solvent):
         calc_obj.save()
         return
 
-    a = xtb_opt("initial.xyz", charge, solvent)
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to optimize the structure"
+    calc_obj.num_steps = len(steps)+1
+    for ind, step in enumerate(steps):
+        f, args, desc, error = step
+        calc_obj.current_status = desc
+        calc_obj.current_step = ind+1
         calc_obj.save()
+        a = f(*args)
+        if a != 0:
+            calc_obj.status = 3
+            calc_obj.error_message = error
+            calc_obj.save()
+            return a
+
+    calc_obj.current_step = calc_obj.num_steps
+    calc_obj.save()
+
+    return 0
+
+def save_to_results(f, calc_obj, multiple=False):
+    for _f in f:
+        name = _f.split('.')[0]
+        if multiple:
+            a = system("babel -ixyz {} -omol {}/conf.mol -m".format(_f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))))
+        else:
+            a = system("babel -ixyz {} -omol {}/{}.mol".format(_f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id)), name))
+        if a != 0:
+            calc_obj.status = 3
+            calc_obj.error_message = "Failed to convert the optimized geometry"
+            calc_obj.save()
+            return a
+    return 0
+
+@app.task
+def geom_opt(id, drawing, charge, solvent, calc_obj=None):
+
+    steps = [
+        [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
+
+    ]
+
+    a = run_steps(steps, calc_obj, drawing, id)
+    if a != 0:
         return
 
-    a = system("cp xtbopt.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
+    a = save_to_results(["xtbopt.xyz"], calc_obj)
     if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to copy the results to the results directory"
-        calc_obj.save()
-        return
-
-    a = system("babel -ixyz xtbopt.xyz -omol {}/xtbopt.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to convert the optimized geometry"
-        calc_obj.save()
         return
 
     with open("xtb_opt.out") as f:
@@ -147,75 +167,27 @@ def geom_opt(id, drawing, charge, solvent):
         E = float(lines[ind-2].split()[3])
 
     r = Structure.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
-
     r.save()
+
     calc_obj.structure_set.add(r)
-    calc_obj.status = 2
-    calc_obj.save()
 
     return 0
 
 @app.task
-def conf_search(id, drawing, charge, solvent):
-    calc_obj = Calculation.objects.get(pk=id)
+def conf_search(id, drawing, charge, solvent, calc_obj=None):
 
-    calc_obj.status = 1
-    calc_obj.save()
+    steps = [
+        [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
+        [crest, ["xtbopt.xyz", charge, solvent, "Final"], "Generating conformer ensemble", "Failed to generate the conformers"],
 
-    if solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
-    else:
-        solvent_add = ''
+    ]
 
-    os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
-
-    a = handle_input_file(drawing)
+    a = run_steps(steps, calc_obj, drawing, id)
     if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to convert the input structure"
-        calc_obj.save()
         return
 
-    a = system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
+    a = save_to_results(["crest_conformers.xyz"], calc_obj, multiple=True)
     if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to create the results directory"
-        calc_obj.save()
-        return
-
-    a = system("obabel initial.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id)))
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to generate the icon"
-        calc_obj.save()
-        return
-
-    a = crest("initial.xyz", charge, solvent, "Final")
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to find the conformers"
-        calc_obj.save()
-        return
-
-    a = system("cp crest_conformers.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to copy the results to the results directory"
-        calc_obj.save()
-        return
-
-    a = system("babel -ixyz crest_conformers.xyz -omol {}/conf.mol -m".format(os.path.join(LAB_RESULTS_HOME, id)))
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to convert conformers"
-        calc_obj.save()
-        return
-
-    a = system("babel -ixyz crest_conformers.xyz -omol {}/crest_conformers.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to convert conformers"
-        calc_obj.save()
         return
 
     with open("crest.out") as f:
@@ -243,8 +215,6 @@ def conf_search(id, drawing, charge, solvent):
             ind += 1
 
     calc_obj.weighted_energy = weighted_energy
-    calc_obj.status = 2
-    calc_obj.date_finished = timezone.now()
     calc_obj.save()
 
     return 0
@@ -265,74 +235,41 @@ def plot_peaks(_x, PP):
     return val
 
 
-def xtb_stda(in_file, charge, solvent):
+def xtb4stda(in_file, charge, solvent):
     if solvent != "Vacuum":
         solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[solvent])
     else:
         solvent_add_xtb = ''
 
-    a = system("xtb4stda {} --chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
-    if a != 0:
-        return 1
+    return system("xtb4stda {} --chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
 
-    a = system("stda -xtb -e 12", 'stda.out')
-    if a != 0:
-        return 2
+def stda(charge, solvent):
+    if solvent != "Vacuum":
+        solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add_xtb = ''
 
-    return 0
+    return system("stda -xtb -e 12", 'stda.out')
+
 @app.task
-def uvvis_simple(id, drawing, charge, solvent):
+def uvvis_simple(id, drawing, charge, solvent, calc_obj=None):
     ww = []
     TT = []
     PP = []
 
-    calc_obj = Calculation.objects.get(pk=id)
+    steps = [
+        [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
+        [xtb4stda, ["xtbopt.xyz", charge, solvent], "Performing ground-state calculation", "Failed to calculate ground-state electronic density"],
+        [stda, [charge, solvent], "Performing time-dependant calculation", "Failed to calculate perform time-dependant calculation"],
+    ]
 
-    calc_obj.status = 1
-    calc_obj.save()
-
-    os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
-
-    a = handle_input_file(drawing)
+    a = run_steps(steps, calc_obj, drawing, id)
     if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to convert the input structure"
-        calc_obj.save()
         return
 
-    a = system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
+    a = save_to_results(["xtbopt.xyz"], calc_obj, multiple=True)
     if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to create the results directory"
-        calc_obj.save()
         return
-
-    a = system("obabel initial.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id)))
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to generate the icon"
-        calc_obj.save()
-        return
-
-    a = xtb_opt("initial.xyz", charge, solvent)
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to optimize the structure"
-        calc_obj.save()
-        return
-
-    a = xtb_stda("xtbopt.xyz", charge, solvent)
-    if a == 1:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to perform the ground-state calculation"
-        calc_obj.save()
-        return
-    elif a == 2:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to perform the time-dependent DFT calculation"
-        calc_obj.save()
-        return
-
 
     f_x = np.arange(120.0, 1200.0, 1.0)
 
@@ -358,13 +295,6 @@ def uvvis_simple(id, drawing, charge, solvent):
         for ind, x in enumerate(f_x):
             out.write("{},{:.8f}\n".format(x, yy[ind]))
 
-    a = system("babel -ixyz xtbopt.xyz -omol {}/xtbopt.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to convert the optimized geometry"
-        calc_obj.save()
-        return
-
     with open("xtb_opt.out") as f:
         lines = f.readlines()
         ind = len(lines)-1
@@ -375,110 +305,44 @@ def uvvis_simple(id, drawing, charge, solvent):
         E = float(lines[ind-2].split()[3])
 
     r = Structure.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
-
     r.save()
-    calc_obj.structure_set.add(r)
 
-    calc_obj.status = 2
-    calc_obj.date_finished = timezone.now()
-    calc_obj.save()
+    calc_obj.structure_set.add(r)
 
     return 0
 
 def enso(charge, solvent):
-    a = system("enso.py {} --charge {}".format("-solv {}".format(SOLVENT_TABLE[solvent]) if solvent_add != '' else '', charge), 'enso_pre.out')
-    if a != 0:
-        return 1
+    return system("enso.py {} --charge {}".format("-solv {}".format(SOLVENT_TABLE[solvent]) if solvent_add != '' else '', charge), 'enso_pre.out')
 
-    a = system("enso.py -run", 'enso.out')
-    if a != 0:
-        return 2
+def enso_run():
+    return system("enso.py -run", 'enso.out')
 
-    return 0
 @app.task
-def nmr_enso(id, drawing, charge, solvent):
+def nmr_enso(id, drawing, charge, solvent, calc_obj=None):
 
-    calc_obj = Calculation.objects.get(pk=id)
+    steps = [
+        [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
+        [crest, ["xtbopt.xyz", charge, solvent, "NMR"], "Generating conformer ensemble", "Failed to generate the conformers"],
+        [enso, [charge, solvent], "Preparing the NMR prediction calculation", "Failed to prepare the NMR prediction calculation"],
+        [enso_run, [], "Running the NMR prediction calculation", "Failed to run the NMR prediction calculation"],
+    ]
 
-    calc_obj.status = 1
-    calc_obj.save()
-
-    os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
-
-    a = handle_input_file(drawing)
+    a = run_steps(steps, calc_obj, drawing, id)
     if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to convert the input structure"
-        calc_obj.save()
         return
 
-    a = system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
+    a = save_to_results(["xtbopt.xyz"], calc_obj)
     if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to create the results directory"
-        calc_obj.save()
         return
 
-    a = system("obabel initial.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id)))
+    a = save_to_results(["crest_conformers.xyz"], calc_obj, multiple=True)
     if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to generate the icon"
-        calc_obj.save()
-        return
-
-    #a = system("xtb initial.xyz --chrg {} {} --opt".format(charge, solvent_add), 'xtb.out')
-
-    a = xtb_opt("initial.xyz", charge, solvent)
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to optimize the structure"
-        calc_obj.save()
-        return
-
-    a = crest("xtbopt.xyz", charge, solvent, "NMR")
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to find the conformers"
-        calc_obj.save()
-        return
-
-    a = enso(charge, solvent)
-    if a == 1:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to prepare the NMR prediction calculation"
-        calc_obj.save()
-        return
-    if a == 2:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to run the NMR prediction calculation"
-        calc_obj.save()
-        return
-
-    a = system("anmr", 'anmr.out')
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to generate the final NMR spectrum"
-        calc_obj.save()
         return
 
     #r = Structure.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
 
     #r.save()
     #calc_obj.structure_set.add(r)
-
-    a = system("cp xtbopt.xyz {}/".format(os.path.join(LAB_RESULTS_HOME, id)))
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to copy the results to the results directory"
-        calc_obj.save()
-        return
-
-    a = system("babel -ixyz xtbopt.xyz -omol {}/xtbopt.mol".format(os.path.join(LAB_RESULTS_HOME, id)))
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to convert the optimized geometry"
-        calc_obj.save()
-        return
 
     with open("anmr.dat") as f:
         lines = f.readlines()
@@ -490,10 +354,6 @@ def nmr_enso(id, drawing, charge, solvent):
                         if float(sline[1]) > 0.001:
                             out.write("{},{}\n".format(-float(sline[0]), sline[1]))
 
-    calc_obj.status = 2
-    calc_obj.date_finished = timezone.now()
-    calc_obj.save()
-
     return 0
 
 time_dict = {}
@@ -501,6 +361,14 @@ time_dict = {}
 @task_prerun.connect
 def task_prerun_handler(signal, sender, task_id, task, args, kwargs, **extras):
     time_dict[task_id] = time()
+
+    calc_obj = Calculation.objects.get(pk=args[0])
+
+    calc_obj.status = 1
+    calc_obj.save()
+
+    os.chdir(os.path.join(LAB_SCR_HOME, str(args[0])))
+    args.append(calc_obj)
 
 
 @task_postrun.connect
@@ -513,6 +381,8 @@ def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, st
     job_id = args[0]
     calc_obj = Calculation.objects.get(pk=job_id)
     calc_obj.execution_time = int(execution_time)
+    calc_obj.status = 2
+    calc_obj.date_finished = timezone.now()
     calc_obj.save()
 
     author = calc_obj.author

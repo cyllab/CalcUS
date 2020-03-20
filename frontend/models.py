@@ -57,6 +57,10 @@ class Calculation(models.Model):
     name = models.CharField(max_length=100)
 
     error_message = models.CharField(max_length=400, default="")
+    current_status = models.CharField(max_length=400, default="")
+
+    num_steps = models.IntegerField(default=0)
+    current_step = models.IntegerField(default=0)
 
     date = models.DateTimeField('date')
     date_finished = models.DateTimeField('date', default=datetime.datetime.now, blank=True)
