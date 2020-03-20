@@ -27,15 +27,15 @@ SOLVENT_TABLE = {
     'Acetone': 'acetone',
     'Acetonitrile': 'acetonitrile',
     'Benzene': 'benzene',
-    'Dichloromethane': 'CH2Cl2',
-    'Chloroform': 'CHCl3',
-    'Dimethylformamide': 'DMF',
-    'Dimethylsulfoxide': 'DMSO',
+    'Dichloromethane': 'ch2cl2',
+    'Chloroform': 'chcl3',
+    'Dimethylformamide': 'dmf',
+    'Dimethylsulfoxide': 'dmso',
     'Diethyl ether': 'ether',
-    'Water': 'H2O',
+    'Water': 'h2o',
     'Methanol': 'methanol',
     'n-Hexane': 'n-hexane',
-    'Tetrahydrofuran': 'THF',
+    'Tetrahydrofuran': 'thf',
     'Toluene': 'toluene',
         }
 
@@ -395,7 +395,7 @@ def nmr_enso(id, drawing, charge, solvent):
     calc_obj.save()
 
     if solvent != "Vacuum":
-        solvent_add = '{}'.format(SOLVENT_TABLE[solvent])
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
     else:
         solvent_add = ''
 
@@ -436,7 +436,7 @@ def nmr_enso(id, drawing, charge, solvent):
         calc_obj.save()
         return
 
-    a = system("enso.py {} --charge {}".format(solvent_add, charge), 'enso_pre.out')
+    a = system("enso.py {} --charge {}".format("-solv {}".format(SOLVENT_TABLE[solvent]) if solvent_add != '' else '', charge), 'enso_pre.out')
     if a != 0:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to prepare the NMR prediction calculation"
@@ -481,10 +481,10 @@ def nmr_enso(id, drawing, charge, solvent):
         with open("{}/nmr.csv".format(os.path.join(LAB_RESULTS_HOME, id)), 'w') as out:
                 out.write("Chemical shift (ppm),Intensity\n")
                 for ind, line in enumerate(lines):
-                    if ind % 5 == 0:
+                    if ind % 15 == 0:
                         sline = line.strip().split()
                         if float(sline[1]) > 0.001:
-                            out.write("{},{}\n".format(sline[0], sline[1]))
+                            out.write("{},{}\n".format(-float(sline[0]), sline[1]))
 
     calc_obj.status = 2
     calc_obj.date_finished = timezone.now()

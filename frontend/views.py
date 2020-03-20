@@ -122,7 +122,7 @@ def submit_calculation(request):
         else:
             project_obj = project_set[0]
 
-    obj = Calculation.objects.create(name=name, date=timezone.now(), type=type, status=0, charge=charge)
+    obj = Calculation.objects.create(name=name, date=timezone.now(), type=type, status=0, charge=charge, solvent=solvent)
 
     profile.calculation_set.add(obj)
     project_obj.calculation_set.add(obj)
