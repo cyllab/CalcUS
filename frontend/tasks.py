@@ -29,6 +29,7 @@ SOLVENT_TABLE = {
     'Benzene': 'benzene',
     'Dichloromethane': 'ch2cl2',
     'Chloroform': 'chcl3',
+    'Carbon disulfide': 'cs2',
     'Dimethylformamide': 'dmf',
     'Dimethylsulfoxide': 'dmso',
     'Diethyl ether': 'ether',
@@ -39,33 +40,6 @@ SOLVENT_TABLE = {
     'Toluene': 'toluene',
         }
 
-'''
-def calc_boltzmann(data):
-
-    #if hartree:
-    gas_constant = decimal.Decimal(R_CONSTANT/HARTREE_VAL/1000)
-    #else: #kcal/mol
-    #    gas_constant = decimal.Decimal(R_CONSTANT/4.184)
-
-    for i, _ in enumerate(data):
-        data[i] = decimal.Decimal(data[i])
-
-    minval = decimal.Decimal(min(data))
-
-    sumnum = decimal.Decimal(0)
-    sumdenum = decimal.Decimal(0)
-    for i in range(1, len(data)):
-        exp_val = E_VAL**(-(data[i]-data[0])/(gas_constant*TEMP))
-        sumnum += decimal.Decimal(exp_val)*(data[i])
-        sumdenum += exp_val
-    weights = []
-    for i, _ in enumerate(data):
-        weights.append(E_VAL**(-(data[i]-data[0])/(gas_constant*TEMP))/(decimal.Decimal(1)+sumdenum))
-
-    #_sum = [(gas_constant*temp), (decimal.Decimal(1)+sumdenum)]
-
-    return minval, float((data[0]+sumnum)/(decimal.Decimal(1)+sumdenum)), weights
-'''
 
 def system(command, log_file=""):
     if log_file != "":
@@ -88,17 +62,35 @@ def handle_input_file(drawing):
         elif os.path.isfile("initial.sdf"):
             return system("babel -isdf initial.sdf -oxyz initial.xyz")
 
+
+def xtb_opt(in_file, charge, solvent):
+    if solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add = ''
+
+    return system("xtb {} --chrg {} {} --opt".format(in_file, charge, solvent_add), 'xtb_opt.out')
+
+def crest(in_file, charge, solvent, mode):
+    if solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add = ''
+
+    if mode == "Final":
+        return system("crest {} --chrg {} {} -rthr 0.4 -ewin 4".format(in_file, charge, solvent_add), 'crest.out')
+    elif mode == "NMR":
+        return system("crest {} --chrg {} {} -nmr".format(in_file, charge, solvent_add), 'crest.out')
+    else:
+        print("Invalid crest mode selected!")
+        return -1
+
 @app.task
 def geom_opt(id, drawing, charge, solvent):
     calc_obj = Calculation.objects.get(pk=id)
 
     calc_obj.status = 1
     calc_obj.save()
-
-    if solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
-    else:
-        solvent_add = ''
 
     os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
 
@@ -124,7 +116,7 @@ def geom_opt(id, drawing, charge, solvent):
         calc_obj.save()
         return
 
-    a = system("xtb initial.xyz --chrg {} {} --opt".format(charge, solvent_add), 'xtb.out')
+    a = xtb_opt("initial.xyz", charge, solvent)
     if a != 0:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to optimize the structure"
@@ -145,7 +137,7 @@ def geom_opt(id, drawing, charge, solvent):
         calc_obj.save()
         return
 
-    with open("xtb.out") as f:
+    with open("xtb_opt.out") as f:
         lines = f.readlines()
         ind = len(lines)-1
 
@@ -198,7 +190,7 @@ def conf_search(id, drawing, charge, solvent):
         calc_obj.save()
         return
 
-    a = system("crest initial.xyz --chrg {} {} -rthr 0.4 -ewin 4".format(charge, solvent_add), 'crest.out')
+    a = crest("initial.xyz", charge, solvent, "Final")
     if a != 0:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to find the conformers"
@@ -273,6 +265,21 @@ def plot_peaks(_x, PP):
     return val
 
 
+def xtb_stda(in_file, charge, solvent):
+    if solvent != "Vacuum":
+        solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add_xtb = ''
+
+    a = system("xtb4stda {} --chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
+    if a != 0:
+        return 1
+
+    a = system("stda -xtb -e 12", 'stda.out')
+    if a != 0:
+        return 2
+
+    return 0
 @app.task
 def uvvis_simple(id, drawing, charge, solvent):
     ww = []
@@ -283,11 +290,6 @@ def uvvis_simple(id, drawing, charge, solvent):
 
     calc_obj.status = 1
     calc_obj.save()
-
-    if solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
-    else:
-        solvent_add = ''
 
     os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
 
@@ -312,22 +314,20 @@ def uvvis_simple(id, drawing, charge, solvent):
         calc_obj.save()
         return
 
-    a = system("xtb initial.xyz --chrg {} {} --opt".format(charge, solvent_add), 'xtb.out')
+    a = xtb_opt("initial.xyz", charge, solvent)
     if a != 0:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to optimize the structure"
         calc_obj.save()
         return
 
-    a = system("xtb4stda xtbopt.xyz --chrg {} {}".format(charge, solvent_add), 'xtb4stda.out')
-    if a != 0:
+    a = xtb_stda("xtbopt.xyz", charge, solvent)
+    if a == 1:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to perform the ground-state calculation"
         calc_obj.save()
         return
-
-    a = system("stda -xtb -e 12", 'stda.out')
-    if a != 0:
+    elif a == 2:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to perform the time-dependent DFT calculation"
         calc_obj.save()
@@ -365,8 +365,7 @@ def uvvis_simple(id, drawing, charge, solvent):
         calc_obj.save()
         return
 
-
-    with open("xtb.out") as f:
+    with open("xtb_opt.out") as f:
         lines = f.readlines()
         ind = len(lines)-1
 
@@ -386,6 +385,16 @@ def uvvis_simple(id, drawing, charge, solvent):
 
     return 0
 
+def enso(charge, solvent):
+    a = system("enso.py {} --charge {}".format("-solv {}".format(SOLVENT_TABLE[solvent]) if solvent_add != '' else '', charge), 'enso_pre.out')
+    if a != 0:
+        return 1
+
+    a = system("enso.py -run", 'enso.out')
+    if a != 0:
+        return 2
+
+    return 0
 @app.task
 def nmr_enso(id, drawing, charge, solvent):
 
@@ -393,11 +402,6 @@ def nmr_enso(id, drawing, charge, solvent):
 
     calc_obj.status = 1
     calc_obj.save()
-
-    if solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
-    else:
-        solvent_add = ''
 
     os.chdir(os.path.join(LAB_SCR_HOME, str(id)))
 
@@ -422,29 +426,29 @@ def nmr_enso(id, drawing, charge, solvent):
         calc_obj.save()
         return
 
-    a = system("xtb initial.xyz --chrg {} {} --opt".format(charge, solvent_add), 'xtb.out')
+    #a = system("xtb initial.xyz --chrg {} {} --opt".format(charge, solvent_add), 'xtb.out')
+
+    a = xtb_opt("initial.xyz", charge, solvent)
     if a != 0:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to optimize the structure"
         calc_obj.save()
         return
 
-    a = system("crest xtbopt.xyz --chrg {} {} -nmr".format(charge, solvent_add), 'crest.out')
+    a = crest("xtbopt.xyz", charge, solvent, "NMR")
     if a != 0:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to find the conformers"
         calc_obj.save()
         return
 
-    a = system("enso.py {} --charge {}".format("-solv {}".format(SOLVENT_TABLE[solvent]) if solvent_add != '' else '', charge), 'enso_pre.out')
-    if a != 0:
+    a = enso(charge, solvent)
+    if a == 1:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to prepare the NMR prediction calculation"
         calc_obj.save()
         return
-
-    a = system("enso.py -run", 'enso.out')
-    if a != 0:
+    if a == 2:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to run the NMR prediction calculation"
         calc_obj.save()
