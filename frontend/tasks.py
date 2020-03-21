@@ -13,8 +13,17 @@ from .models import Calculation, Structure
 import subprocess
 import shlex
 
-LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
-LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
+import sys
+
+
+is_test = "unittest" in sys.modules
+
+if is_test:
+    LAB_SCR_HOME = os.environ['LAB_TEST_SCR_HOME']
+    LAB_RESULTS_HOME = os.environ['LAB_TEST_RESULTS_HOME']
+else:
+    LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
+    LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
 
 decimal.getcontext().prec = 50
 
@@ -22,7 +31,6 @@ HARTREE_VAL = decimal.Decimal(2625.499638)
 E_VAL = decimal.Decimal(2.7182818284590452353602874713527)
 R_CONSTANT = decimal.Decimal(8.314)
 TEMP = decimal.Decimal(298)
-
 SOLVENT_TABLE = {
     'Acetone': 'acetone',
     'Acetonitrile': 'acetonitrile',
@@ -95,14 +103,14 @@ def run_steps(steps, calc_obj, drawing, id):
         calc_obj.save()
         return
 
-    a = system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, id)))
+    a = system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, str(id))))
     if a != 0:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to create the results directory"
         calc_obj.save()
         return
 
-    a = system("obabel initial.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, id)))
+    a = system("obabel initial.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, str(id))))
     if a != 0:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to generate the icon"
@@ -148,7 +156,6 @@ def geom_opt(id, drawing, charge, solvent, calc_obj=None):
         [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
 
     ]
-
     a = run_steps(steps, calc_obj, drawing, id)
     if a != 0:
         return
@@ -290,7 +297,7 @@ def uvvis_simple(id, drawing, charge, solvent, calc_obj=None):
     yy = np.array(yy)/max(yy)
 
 
-    with open("{}/uvvis.csv".format(os.path.join(LAB_RESULTS_HOME, id)), 'w') as out:
+    with open("{}/uvvis.csv".format(os.path.join(LAB_RESULTS_HOME, str(id))), 'w') as out:
         out.write("Wavelength (nm), Absorbance\n")
         for ind, x in enumerate(f_x):
             out.write("{},{:.8f}\n".format(x, yy[ind]))
@@ -400,3 +407,6 @@ def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, st
     author.calculation_time_used += execution_time
     author.save()
 
+@app.task(name='celery.ping')
+def ping():
+    return 'pong'
