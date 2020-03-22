@@ -255,7 +255,7 @@
 	{% if calculation.status == 2 %}
 	<form action="/launch/{{ calculation.id }}" method="post" id="nextstep_form">
 			{% csrf_token %}
-			<button class="button">Launch calculation from current structure</button>
+			<button class="button">Open structure in editor</button>
 		</form>
 	{% endif %}
 
