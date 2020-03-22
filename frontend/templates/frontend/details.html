@@ -86,7 +86,18 @@
 									strokeWidth: 2,	
 									xlabel: "Chemical shift (ppm)",
 									ylabel: "Intensity",
-									dateWindow: [10, 0],
+									dateWindow: [-10, 0],
+									axes: {
+										x: {
+											axisLabelFormatter: function(ppm) {
+												return -ppm.toPrecision(2);
+											},
+											valueFormatter: function(ppm) {
+												return -ppm.toPrecision(3);
+											}
+										},
+									}
+
 								}          
 							);
 							{% endif %}
