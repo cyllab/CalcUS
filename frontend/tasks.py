@@ -12,8 +12,9 @@ from .models import Calculation, Structure
 
 import subprocess
 import shlex
-
+from shutil import copyfile
 import sys
+import glob
 
 
 is_test = "unittest" in sys.modules
@@ -394,6 +395,10 @@ def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, st
     calc_obj = Calculation.objects.get(pk=job_id)
     calc_obj.execution_time = int(execution_time)
     calc_obj.date_finished = timezone.now()
+
+    for f in glob.glob(os.path.join(LAB_SCR_HOME, str(job_id)) + '/*.out'):
+        fname = f.split('/')[-1]
+        copyfile(f, os.path.join(LAB_RESULTS_HOME, str(job_id)) + '/' + fname)
 
     if retval == 0:
         calc_obj.status = 2

@@ -28,6 +28,7 @@ from django.template import RequestContext
 import bleach
 import os
 import shutil
+import glob
 
 from .forms import UserCreateForm
 
@@ -381,6 +382,34 @@ def get_structure(request):
                 return HttpResponse(status=204)
 
 
+def log(request, pk):
+    LOG_HTML = """
+    <label class="label">{}</label>
+    <textarea class="textarea" readonly>
+    {}
+    </textarea>
+    """
+
+    response = ''
+
+    if isinstance(request.user, AnonymousUser):
+        return HttpResponse(status=403)
+
+    calc = Calculation.objects.get(pk=pk)
+
+    profile = request.user.profile
+
+    if calc not in profile.calculation_set.all():
+        return HttpResponse(status=403)
+
+    for out in glob.glob(os.path.join(LAB_RESULTS_HOME, str(pk)) + '/*.out'):
+        out_name = out.split('/')[-1]
+        with open(out) as f:
+            lines = f.readlines()
+        response += LOG_HTML.format(out_name, ''.join(lines))
+
+    return HttpResponse(response)
+
 def profile(request):
     if isinstance(request.user, AnonymousUser):
         return please_register(request)
@@ -395,6 +424,22 @@ def launch(request):
 
     return render(request, 'frontend/launch.html', {
             'profile': request.user.profile,
+        })
+
+def launch_pk(request, pk):
+    if isinstance(request.user, AnonymousUser):
+        return please_register(request)
+
+    calc = Calculation.objects.get(pk=pk)
+
+    profile = request.user.profile
+
+    if calc not in profile.calculation_set.all():
+        return HttpResponse(status=403)
+
+    return render(request, 'frontend/launch.html', {
+            'profile': request.user.profile,
+            'calculation': calc,
         })
 
 def handler404(request, *args, **argv):

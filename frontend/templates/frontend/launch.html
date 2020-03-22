@@ -168,6 +168,18 @@
 $( document ).ready(function() {
 	project_selection_changed();
 });
+{% if calculation %}
+	$.ajax({
+		method: "POST",	 	 
+		url: "/get_structure/",
+		data: {'id': {{ calculation.id }}},
+		success: function(data, textStatus, xhr) {
+			let mol_read = ChemDoodle.readMOL(data);
+			sketcher.loadMolecule(mol_read);	
+		}
+	});
+
+{% endif %}
 </script>
 
 {% endblock content %}

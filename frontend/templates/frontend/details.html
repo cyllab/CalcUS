@@ -53,7 +53,7 @@
 				$.ajax({
 					method: "POST",	 	 
 					url: "/get_structure/",
-					data: {'id': window.location.pathname {% if calculation.type == 1 %}, 'num' : num {% endif %}},
+					data: {'id': {{ calculation.id }} {% if calculation.type == 1 %}, 'num' : num {% endif %}},
 					success: function(data, textStatus, xhr) {
 						if (xhr.status != 204) {
 							let mol = ChemDoodle.readMOL(data, 1);
@@ -64,7 +64,6 @@
 						
 							conf_number = {{ calculation.structure_set.count }};
 							
-
 							clearInterval(my_refresh);
 							{% if calculation.type == 1 %}
 							$('#conf_table').load("/conformer_table/{{ calculation.id }}");
@@ -106,7 +105,7 @@
 			$.ajax({
 				method: "POST",	 	 
 				url: "/get_structure/",
-				data: {'id': window.location.pathname {% if calculation.type == 1 %}, 'num' : num {% endif %}},
+				data: {'id': {{ calculation.id }} {% if calculation.type == 1 %}, 'num' : num {% endif %}},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						let mol = ChemDoodle.readMOL(data, 1);
@@ -118,6 +117,10 @@
 		  
 			});
 
+		}
+
+		function load_log() {
+			$('#log_div').load("/log/{{ calculation.id }}");
 		}
 
 		{% if calculation.type == 1 %}
@@ -249,6 +252,19 @@
 		<table class="table" id="info_table">
 		</table>
 	</div>
+	{% if calculation.status == 2 %}
+	<form action="/launch/{{ calculation.id }}" method="post" id="nextstep_form">
+			{% csrf_token %}
+			<button class="button">Launch calculation from current structure</button>
+		</form>
+	{% endif %}
+
+	<button class="button" onclick="load_log()">Load the log(s)</button>
+
+	<div class="control" id="log_div">
+	  
+	</div>
+
 	<br />
 	<a class="button is-danger" href="/delete/{{ calculation.id }}">Delete this calculation</a>
 </div>
