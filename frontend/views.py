@@ -270,9 +270,9 @@ def claim_key(request):
 
         profile = request.user.profile
 
-        keys_owned = profile.clusterpersonalkey_set.all()
+        keys_owned = profile.clusterpersonalkey_claimer.all()
         for key in keys_owned:
-            if key.cluster_server == key_obj.cluster_server and key.cluster_username == key_obj.cluster_username:
+            if key.access.cluster_address == key_obj.access.cluster_address and key.access.cluster_username == key_obj.access.cluster_username:
                 return HttpResponse("You already have access to this cluster with this username")
 
         if key_obj.issuer == profile:

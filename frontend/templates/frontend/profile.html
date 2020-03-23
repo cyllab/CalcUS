@@ -7,21 +7,6 @@
 <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 
 	<script charset="utf-8">
-		function claim_key() {
-			let key = document.getElementById("key_to_claim").value;
-
-			$.ajax({
-				type: "POST",
-				url: "/claim_key/",
-				data: {'key': key}, 
-				success: function(data)
-				{
-					refresh_claimed_key_table();
-					$("#claim_message").html(data);
-				}
-			});
-
-		}
 		function refresh_claimed_key_table() {
 			$("#claimed_key_table").load("/claimed_key_table/");
 		}
@@ -112,15 +97,15 @@
 	<div class="columns">
 		<div class="column is-narrow has-text-centered">
 			<h5 class="title is-5">Claim key</h5>
-			<form>
+			<form id="claim_key_form">
 				<div class="field">
 					<label class="label">Key</label>
 					<div class="control">
-						<input class="input" id="key_to_claim" ></input>
+						<input class="input" name="key" id="key_to_claim" ></input>
 					</div>
 				</div>
 				<div class="field">
-					<div class="control has-text-centered" onclick="claim_key();">
+					<div class="control has-text-centered" >
 						<button class="button is-primary">Claim</button>
 					</div>
 				</div>
@@ -144,7 +129,6 @@
 
 	    e.preventDefault(); 
 	    var form = $(this);
-	    var url = form.attr('action');
 
 	    $.ajax({
 		   type: "POST",
@@ -158,6 +142,25 @@
 		   }
 		 });
 	});
+	$("#claim_key_form").submit(function(e) {
+
+	    e.preventDefault(); 
+	    var form = $(this);
+	    var url = form.attr('action');
+
+	    $.ajax({
+		   type: "POST",
+		   url: "/claim_key/",
+		   data: form.serialize(), 
+		   success: function(data)
+		   {
+			refresh_claimed_key_table();
+			$("#claim_message").html(data);
+
+		   }
+		 });
+	});
+
 </script>
 
 {% endblock content %}
