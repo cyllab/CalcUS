@@ -1,7 +1,37 @@
 {% extends 'frontend/base.html' %}
 
 {% load i18n bulma_tags %}
+{% load static %}
 
+{% block extrahead %}
+<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+	<script charset="utf-8">
+		function claim_key() {
+			let key = document.getElementById("key_to_claim").value;
+
+			$.ajax({
+				type: "POST",
+				url: "/claim_key/",
+				data: {'key': key}, 
+				success: function(data)
+				{
+					refresh_claimed_key_table();
+					$("#claim_message").html(data);
+				}
+			});
+
+		}
+		function refresh_claimed_key_table() {
+			$("#claimed_key_table").load("/claimed_key_table/");
+		}
+
+		$(document).ready(function() {
+    			refresh_claimed_key_table();
+		});
+
+	</script>
+{% endblock %}
 {% block content %}
 {% csrf_token %}
 
@@ -12,4 +42,122 @@
 </div>
 
 <br>
+
+<div class="box">
+	<div class="columns">
+		<div class="column is-narrow has-text-centered">
+			<h5 class="title is-5">Add new cluster access</h5>
+			<form class="form" id="add_clusteraccess_form" method="post">
+				{% csrf_token %}
+
+				<div class="field">
+					<label class="label">Cluster Address</label>
+					<div class="control">
+						<input class="input" name="cluster_address" type="text" required>
+					</div>
+				</div>
+				<div class="field">
+					<label class="label">Username</label>
+					<div class="control">
+						<input class="input" name="cluster_username" type="text" required>
+					</div>
+				</div>
+
+				<div class="field">
+					<div class="control has-text-centered">
+						<button class="button is-primary">Submit</button>
+					</div>
+				</div>
+			</form>
+			<div class="control is-hidden" id="public_key_div">
+				<label class="label">Public Key (add this to your allowed keys!)</label>
+				<textarea class="textarea" id="public_key_area" readonly></textarea>
+			</div>
+
+		</div>
+		<div class="column has-text-centered">
+			<h5 class="title is-5">Owned accesses</h5>
+			{% if profile.clusteraccess_owner.count > 0 %}
+				<center>
+					<table class="table">
+						<thead>
+							<tr>
+								<th>Server</th>
+								<th>Username</th>
+								<th>Keys generated</th>
+								<th>Keys claimed</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for access in profile.clusteraccess_owner.all %}
+							<tr>
+								<th>{{ access.cluster_address }}</th>
+								<th>{{ access.cluster_username }}</th>
+								<th>{{ access.clusterpersonalkey_set.count }}</th>
+								<th>{{ access.num_claimed_keys }}</th>
+								<th><a class="button" href="/manage_access/{{ access.id }}">Manage</a></th>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</center>
+			{% endif %}
+		</div>
+	</div>
+</div>
+
+
+<div class="box">
+	<div class="columns">
+		<div class="column is-narrow has-text-centered">
+			<h5 class="title is-5">Claim key</h5>
+			<form>
+				<div class="field">
+					<label class="label">Key</label>
+					<div class="control">
+						<input class="input" id="key_to_claim" ></input>
+					</div>
+				</div>
+				<div class="field">
+					<div class="control has-text-centered" onclick="claim_key();">
+						<button class="button is-primary">Claim</button>
+					</div>
+				</div>
+				<div id="claim_message">
+					
+				</div>
+			</form>
+		</div>	
+		<div class="column">
+			<center>
+				<h5 class="title is-5">Claimed key</h5>
+				<table class="table" id="claimed_key_table">
+				</table>
+			</center>
+		</div>
+	</div>
+</div>
+
+<script>
+	$("#add_clusteraccess_form").submit(function(e) {
+
+	    e.preventDefault(); 
+	    var form = $(this);
+	    var url = form.attr('action');
+
+	    $.ajax({
+		   type: "POST",
+		   url: "/add_clusteraccess/",
+		   data: form.serialize(), 
+		   success: function(data)
+		   {
+			$("#public_key_div").removeClass('is-hidden');
+			$("#public_key_area").html(data);
+
+		   }
+		 });
+	});
+</script>
+
 {% endblock content %}

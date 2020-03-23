@@ -196,6 +196,7 @@ def conf_search(id, drawing, charge, solvent, calc_obj=None):
 
     a = save_to_results(["crest_conformers.xyz"], calc_obj, multiple=True)
     a = save_to_results(["crest_conformers.xyz"], calc_obj)
+
     if a != 0:
         return
 

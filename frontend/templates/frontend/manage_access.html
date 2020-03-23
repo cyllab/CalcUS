@@ -1,0 +1,94 @@
+{% extends 'frontend/base.html' %}
+
+{% load i18n bulma_tags %}
+{% load static %}
+
+{% block extrahead %}
+<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+	<script>
+		function generate_keys() {
+			let num = document.getElementById("num_keys").value;
+			$.ajax({
+				type: "POST",
+				url: "/generate_keys/",
+				data: {'access_id': {{ access.id }}, 'num': num}, 
+				success: function(data)
+				{
+					refresh_key_table();
+				}
+			});
+
+		}
+		function refresh_key_table() {
+			$("#key_table").load("/key_table/{{ access.id }}");
+		}
+
+		$(document).ready(function() {
+    			refresh_key_table();
+		});
+
+		function delete_key(key_id) {
+			$.ajax({
+				type: "POST",
+				url: "/delete_key/",
+				data: {'access_id': {{ access.id }}, 'key_id': key_id}, 
+				success: function(data)
+				{
+					refresh_key_table();
+				}
+			});
+		}
+	</script>
+{% endblock %}
+{% block content %}
+{% csrf_token %}
+
+<div class="columns">
+	<div class="column">
+		<div class="box">
+		<table class="table">
+			<tbody>
+				<tr>
+					<th>Cluster address</th>
+					<td>{{ access.cluster_address }}</td>
+				</tr>
+				<tr>
+					<th>Username</th>
+					<td>{{ access.cluster_username }}</td>
+				</tr>
+				<tr>
+					<th>Keys generated</th>
+					<td>{{ access.clusterpersonalkey_set.count }}</td>
+				</tr>
+
+				<tr>
+					<th>Keys claimed</th>
+					<td>{{ access.num_claimed_keys }}</td>
+				</tr>
+			</tbody>
+		</table>
+		</div>
+	</div>
+
+	<div class="column">
+		<div class="box">
+			<div class="field">
+		  		<label class="label">Number of keys</label>
+		  		<div class="control">
+		    			<input class="input" type="number" min="1" max="10" id="num_keys">
+		  		</div>
+			</div>
+			<button class="button is-primary" onclick="generate_keys()">Generate keys</button>
+			<a class="button is-danger" href="/delete_access/{{ access.id }}">Delete this access</a>
+		</div>
+	</div>
+</div>
+
+<div class="box">
+	<table class="table" id="key_table">
+	</table>
+</div>
+
+
+{% endblock content %}

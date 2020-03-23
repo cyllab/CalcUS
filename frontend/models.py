@@ -35,6 +35,44 @@ class Project(models.Model):
     def __repr__(self):
         return self.name
 
+class ClusterAccess(models.Model):
+    private_key_path = models.CharField(max_length=100)
+    public_key_path = models.CharField(max_length=100)
+    owner = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True, related_name="clusteraccess_owner")
+
+    cluster_address = models.CharField(max_length=200, blank=True)
+    cluster_username = models.CharField(max_length=50, blank=True)
+
+    @property
+    def num_claimed_keys(self):
+        '''
+        if self.users is None:
+            return 0
+        else:
+            return self.users.count
+        '''
+        count = 0
+        for i in self.clusterpersonalkey_set.all():
+            if i.claimer is not None:
+                count += 1
+        return count
+
+    @property
+    def users(self):
+        users = []
+        for i in self.clusterpersonalkey_set.all():
+            if i.claimer is not None:
+                users.append(i.claimer)
+        return users
+
+class ClusterPersonalKey(models.Model):
+    key = models.CharField(max_length=100)
+    issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True, related_name="clusterpersonalkey_issuer")
+    claimer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True, related_name="clusterpersonalkey_claimer")
+    date_issued = models.DateTimeField('date')
+    date_claimed = models.DateTimeField('date', blank=True, null=True)
+    access = models.ForeignKey(ClusterAccess, on_delete=models.CASCADE, blank=True, null=True)
+
 class Calculation(models.Model):
 
     CALC_TYPES = {

@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
 
-from .models import Calculation, Profile, Project
+from .models import Calculation, Profile, Project, ClusterAccess, ClusterPersonalKey
 from django.contrib.auth.models import User
 
 from django.contrib.auth import login, authenticate
@@ -29,6 +29,8 @@ import bleach
 import os
 import shutil
 import glob
+import random
+import string
 
 from .forms import UserCreateForm
 
@@ -38,9 +40,15 @@ from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso
 
 from django.views.decorators.csrf import csrf_exempt
 
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.backends import default_backend
+
 LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
 LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
+LAB_KEY_HOME = os.environ['LAB_KEY_HOME']
 
+KEY_SIZE = 32
 
 class IndexView(generic.ListView):
     template_name = 'frontend/list.html'
@@ -184,7 +192,148 @@ def delete(request, pk):
         to_delete.delete()
         return redirect("/home/")
 
+def add_clusteraccess(request):
+    if request.method == 'POST':
+        address = bleach.clean(request.POST['cluster_address'])
+        username = bleach.clean(request.POST['cluster_username'])
+        owner = request.user.profile
 
+        #existing_accesses = owner.clusteraccess_owner
+        #for f in existing_accesses
+        #print(existing_accesses)
+
+        key_private_name = "{}_{}_{}".format(owner.username, username, ''.join(ch for ch in address if ch.isalnum()))
+        key_public_name = key_private_name + '.pub'
+
+        access = ClusterAccess.objects.create(cluster_address=address, cluster_username=username, private_key_path=key_private_name, public_key_path=key_public_name, owner=owner)
+        access.save()
+        owner.save()
+
+        key = rsa.generate_private_key(backend=default_backend(), public_exponent=65537, key_size=2048)
+
+        public_key = key.public_key().public_bytes(serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH)
+
+        pem = key.private_bytes(encoding=serialization.Encoding.PEM, format=serialization.PrivateFormat.TraditionalOpenSSL, encryption_algorithm=serialization.NoEncryption())
+        with open(os.path.join(LAB_KEY_HOME, key_private_name), 'wb') as out:
+            out.write(pem)
+
+        with open(os.path.join(LAB_KEY_HOME, key_public_name), 'wb') as out:
+            out.write(public_key)
+            out.write(b' %b@calcUS' % bytes(owner.username, 'utf-8'))
+
+        return HttpResponse(public_key.decode('utf-8'))
+    else:
+        return HttpResponse(status=403)
+
+@csrf_exempt
+def generate_keys(request):
+    if request.method == 'POST':
+        if isinstance(request.user, AnonymousUser):
+            return HttpResponse(status=403)
+
+        access_id = request.POST['access_id']
+        num = int(request.POST['num'])
+
+        if num < 1 or num > 10:
+            return HttpResponse(status=403)
+
+        access = ClusterAccess.objects.get(pk=access_id)
+
+        profile = request.user.profile
+
+        if access not in profile.clusteraccess_owner.all():
+            return HttpResponse(status=403)
+
+        keys = ""
+        for i in range(int(num)):
+            key = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(KEY_SIZE))
+            a = ClusterPersonalKey.objects.create(key=key, issuer=profile, date_issued=timezone.now(), access=access)
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=403)
+
+@csrf_exempt
+def claim_key(request):
+    if request.method == 'POST':
+        if isinstance(request.user, AnonymousUser):
+            return HttpResponse(status=403)
+
+        key = request.POST['key']
+
+        try:
+            key_obj = ClusterPersonalKey.objects.get(key=key)
+        except ClusterPersonalKey.DoesNotExist:
+            return HttpResponse("Invalid key")
+
+        if key_obj.claimer is not None:
+            return HttpResponse("Invalid key")
+
+        profile = request.user.profile
+
+        keys_owned = profile.clusterpersonalkey_set.all()
+        for key in keys_owned:
+            if key.cluster_server == key_obj.cluster_server and key.cluster_username == key_obj.cluster_username:
+                return HttpResponse("You already have access to this cluster with this username")
+
+        if key_obj.issuer == profile:
+            return HttpResponse("You have issued this key")
+
+        key_obj.claimer = profile
+        key_obj.save()
+
+        return HttpResponse("Key claimed")
+    else:
+        return HttpResponse(status=403)
+
+def delete_access(request, pk):
+    if isinstance(request.user, AnonymousUser):
+        return HttpResponse(status=403)
+
+    access = ClusterAccess.objects.get(pk=pk)
+
+    profile = request.user.profile
+
+    if access not in profile.clusteraccess_owner.all():
+        return HttpResponse(status=403)
+
+    access.delete()
+    return HttpResponseRedirect("/profile")
+
+@csrf_exempt
+def delete_key(request):
+    if request.method == 'POST':
+        if isinstance(request.user, AnonymousUser):
+            return HttpResponse(status=403)
+
+        access_id = request.POST['access_id']
+        key_id = request.POST['key_id']
+
+        access = ClusterAccess.objects.get(pk=access_id)
+
+        profile = request.user.profile
+
+        if access not in profile.clusteraccess_owner.all():
+            return HttpResponse(status=403)
+
+        key = ClusterPersonalKey.objects.get(pk=key_id)
+        if key not in access.clusterpersonalkey_set.all():
+            return HttpResponse(status=403)
+
+        key.delete()
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=403)
+
+@csrf_exempt
+def claimed_key_table(request):
+    if isinstance(request.user, AnonymousUser):
+        return HttpResponse(status=403)
+
+    profile = request.user.profile
+
+    return render(request, 'frontend/claimed_key_table.html', {
+            'profile': request.user.profile,
+        })
 
 @csrf_exempt
 def conformer_table(request, pk):
@@ -409,6 +558,38 @@ def log(request, pk):
         response += LOG_HTML.format(out_name, ''.join(lines))
 
     return HttpResponse(response)
+
+def manage_access(request, pk):
+    if isinstance(request.user, AnonymousUser):
+        return please_register(request)
+
+    access = ClusterAccess.objects.get(pk=pk)
+
+    profile = request.user.profile
+
+    if access not in profile.clusteraccess_owner.all():
+        return HttpResponse(status=403)
+
+    return render(request, 'frontend/manage_access.html', {
+            'profile': request.user.profile,
+            'access': access,
+        })
+
+def key_table(request, pk):
+    if isinstance(request.user, AnonymousUser):
+        return please_register(request)
+
+    access = ClusterAccess.objects.get(pk=pk)
+
+    profile = request.user.profile
+
+    if access not in profile.clusteraccess_owner.all():
+        return HttpResponse(status=403)
+
+    return render(request, 'frontend/key_table.html', {
+            'profile': request.user.profile,
+            'access': access,
+        })
 
 def profile(request):
     if isinstance(request.user, AnonymousUser):

@@ -1,0 +1,16 @@
+{% if profile.clusterpersonalkey_claimer.count > 0 %}
+	<thead>
+		<tr>
+			<th>Key</th>
+			<th>Issuer</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for key in profile.clusterpersonalkey_claimer.all %}
+		<tr>
+			<td>{{ key.key }}</td>
+			<td>{{ key.issuer.username }}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+{% endif %}
