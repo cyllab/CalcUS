@@ -17,7 +17,10 @@ import sys
 import glob
 
 
-is_test = "unittest" in sys.modules
+try:
+    is_test = os.environ['LAB_TEST']
+except:
+    is_test = False
 
 if is_test:
     LAB_SCR_HOME = os.environ['LAB_TEST_SCR_HOME']
@@ -94,6 +97,8 @@ def crest(in_file, charge, solvent, mode):
         print("Invalid crest mode selected!")
         return -1
 
+def anmr():
+    return system("anmr", 'anmr.out')
 
 def run_steps(steps, calc_obj, drawing, id):
     a = handle_input_file(drawing)
@@ -340,6 +345,7 @@ def nmr_enso(id, drawing, charge, solvent, calc_obj=None):
         [crest, ["xtbopt.xyz", charge, solvent, "NMR"], "Generating conformer ensemble", "Failed to generate the conformers"],
         [enso, [charge, solvent], "Preparing the NMR prediction calculation", "Failed to prepare the NMR prediction calculation"],
         [enso_run, [], "Running the NMR prediction calculation", "Failed to run the NMR prediction calculation"],
+        [anmr, [], "Creating the final spectrum", "Failed to create the final spectrum"],
     ]
 
     a = run_steps(steps, calc_obj, drawing, id)
@@ -368,7 +374,10 @@ def nmr_enso(id, drawing, charge, solvent, calc_obj=None):
                         sline = line.strip().split()
                         if float(sline[1]) > 0.001:
                             out.write("{},{}\n".format(-float(sline[0]), sline[1]))
-
+                if float(lines[0].strip().split()[0]) > 0.:
+                    out.write("0.0,0.0\n")
+                if float(lines[-1].strip().split()[0]) < 10.:
+                    out.write("-10.0,0.0\n")
     return 0
 
 time_dict = {}
