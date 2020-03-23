@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
 
-from .models import Calculation, Profile, Project, ClusterAccess, ClusterPersonalKey
+from .models import Calculation, Profile, Project, ClusterAccess, ClusterPersonalKey, ClusterCommand
 from django.contrib.auth.models import User
 
 from django.contrib.auth import login, authenticate
@@ -47,6 +47,7 @@ from cryptography.hazmat.backends import default_backend
 LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
 LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
 LAB_KEY_HOME = os.environ['LAB_KEY_HOME']
+LAB_CLUSTER_HOME = os.environ['LAB_CLUSTER_HOME']
 
 KEY_SIZE = 32
 
@@ -284,6 +285,50 @@ def claim_key(request):
         return HttpResponse("Key claimed")
     else:
         return HttpResponse(status=403)
+
+@csrf_exempt
+def test_access(request):
+    if isinstance(request.user, AnonymousUser):
+        return HttpResponse(status=403)
+
+    pk = request.POST['access_id']
+
+    access = ClusterAccess.objects.get(pk=pk)
+
+    profile = request.user.profile
+
+    if access not in profile.clusteraccess_owner.all() and access not in [i.access for i in profile.clusterpersonalkey_claimer]:
+        return HttpResponse(status=403)
+
+    cmd = ClusterCommand.objects.create(issuer=profile)
+
+    with open(os.path.join(LAB_CLUSTER_HOME, "todo", str(cmd.id)), 'w') as out:
+        out.write("access_test\n")
+        out.write("{}\n".format(pk))
+
+    return HttpResponse(cmd.id)
+
+@csrf_exempt
+def get_command_status(request):
+    if isinstance(request.user, AnonymousUser):
+        return HttpResponse(status=403)
+
+    pk = request.POST['command_id']
+
+    cmd = ClusterCommand.objects.get(pk=pk)
+
+    profile = request.user.profile
+
+    if cmd not in profile.clustercommand_set.all():
+        return HttpResponse(status=403)
+
+    expected_file = os.path.join(LAB_CLUSTER_HOME, "done", str(cmd.id))
+    if not os.path.isfile(expected_file):
+        return HttpResponse("Pending")
+    else:
+        with open(expected_file) as f:
+            lines = f.readlines()
+            return HttpResponse(lines[0].strip())
 
 def delete_access(request, pk):
     if isinstance(request.user, AnonymousUser):

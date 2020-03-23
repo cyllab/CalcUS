@@ -25,6 +25,10 @@ class Profile(models.Model):
     def __str__(self):
         return self.user.username
 
+class ClusterCommand(models.Model):
+    issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+
+
 class Project(models.Model):
     name = models.CharField(max_length=100)
     author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
@@ -45,12 +49,6 @@ class ClusterAccess(models.Model):
 
     @property
     def num_claimed_keys(self):
-        '''
-        if self.users is None:
-            return 0
-        else:
-            return self.users.count
-        '''
         count = 0
         for i in self.clusterpersonalkey_set.all():
             if i.claimer is not None:

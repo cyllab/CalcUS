@@ -28,6 +28,8 @@ urlpatterns = [
     path('get_structure/', views.get_structure, name='get_structure'),
     path('generate_keys/', views.generate_keys, name='generate_keys'),
     path('claim_key/', views.claim_key, name='claim_key'),
+    path('test_access/', views.test_access, name='test_access'),
+    path('get_command_status/', views.get_command_status, name='get_command_status'),
 
     path('delete_key/', views.delete_key, name='delete_key'),
     path('delete_access/<int:pk>', views.delete_access, name='delete_access'),

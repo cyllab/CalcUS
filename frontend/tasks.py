@@ -29,6 +29,8 @@ else:
     LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
     LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
 
+LAB_KEY_HOME = os.environ['LAB_KEY_HOME']
+
 decimal.getcontext().prec = 50
 
 HARTREE_VAL = decimal.Decimal(2625.499638)
@@ -426,3 +428,5 @@ def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, st
 @app.task(name='celery.ping')
 def ping():
     return 'pong'
+
+
