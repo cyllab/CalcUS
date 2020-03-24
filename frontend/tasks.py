@@ -171,18 +171,31 @@ def sftp_put(src, dst, conn, lock):
 
     lock.release()
 
+def wait_until_done(job_id, conn, lock):
+    while True:
+        sleep(5)
+        output = direct_command("squeue -j {}".format(job_id), conn, lock)
+        if len(output) < 2:
+            return 0
+
 def system(command, log_file="", force_local=False):
     if REMOTE and not force_local:
         pid = int(os.getpid())
         conn = connections[pid]
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
+
         if log_file != "":
-            output = direct_command("cd {}; {} | tee {}".format(remote_dir, command, log_file), conn, lock)
+            output = direct_command("cd {}; cp /home/{}/calcus/submit.sh .; echo '{} | tee {}' >> submit.sh; sbatch submit.sh".format(remote_dir, conn[0].cluster_username, command, log_file), conn, lock)
         else:
-            output = direct_command(command, conn, lock)
-        print("OUTPUT: {}".format(output))
-        return 0
+            output = direct_command("cd {}; cp /home/{}/calcus/submit.sh .; echo '{}' >> submit.sh; sbatch submit.sh".format(remote_dir, conn[0].cluster_username, command), conn, lock)
+
+        if output[-2].find("Submitted batch job") != -1:
+            job_id = output[-2].replace('Submitted batch job', '').strip()
+            wait_until_done(job_id, conn, lock)
+            return 0
+        else:
+            return 1
     else:
         if log_file != "":
             with open(log_file, 'w') as out:
