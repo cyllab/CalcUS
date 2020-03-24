@@ -175,7 +175,7 @@ def wait_until_done(job_id, conn, lock):
     while True:
         sleep(5)
         output = direct_command("squeue -j {}".format(job_id), conn, lock)
-        if len(output) < 2:
+        if output != None and len(output) < 2:
             return 0
 
 def system(command, log_file="", force_local=False):

@@ -158,6 +158,8 @@ class ClusterDaemon:
                 access_id = lines[2].strip()
 
                 calc_obj = Calculation.objects.get(pk=calc_id)
+                calc_obj.status = 1
+                calc_obj.save()
                 if cmd == "launch":
                     tasks.connections[os.getpid()] = self.connections
                     retval = self.xtb_job(calc_id, access_id, calc_obj, [i.strip() for i in lines[3:]])
