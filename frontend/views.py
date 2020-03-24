@@ -115,6 +115,19 @@ def submit_calculation(request):
     project = request.POST['calc_project']
     charge = request.POST['calc_charge']
     solvent = request.POST['calc_solvent']
+    ressource = request.POST['calc_ressource']
+
+    profile = request.user.profile
+
+    if ressource != "Local":
+        try:
+            access = ClusterAccess.objects.get(cluster_address=ressource)
+        except ClusterAccess.DoesNotExist:
+            return redirect("/home/")
+
+        if profile not in access.users and access.owner != profile:
+            return redirect("/home/")
+
 
     profile, created = Profile.objects.get_or_create(user=request.user)
 
@@ -160,14 +173,25 @@ def submit_calculation(request):
         with open(os.path.join(scr, 'initial.mol'), 'w') as out:
             out.write(mol)
 
-    if type == 0:
-        geom_opt.delay(t, drawing, charge, solvent)
-    elif type == 1:
-        conf_search.delay(t, drawing, charge, solvent)
-    elif type == 2:
-        uvvis_simple.delay(t, drawing, charge, solvent)
-    elif type == 3:
-        nmr_enso.delay(t, drawing, charge, solvent)
+    if ressource == "Local":
+        if type == 0:
+            geom_opt.delay(t, drawing, charge, solvent)
+        elif type == 1:
+            conf_search.delay(t, drawing, charge, solvent)
+        elif type == 2:
+            uvvis_simple.delay(t, drawing, charge, solvent)
+        elif type == 3:
+            nmr_enso.delay(t, drawing, charge, solvent)
+    else:
+        cmd = ClusterCommand.objects.create(issuer=profile)
+        with open(os.path.join(LAB_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
+            out.write("launch\n")
+            out.write("{}\n".format(t))
+            out.write("{}\n".format(access.id))
+            out.write("{}\n".format(type))
+            out.write("{}\n".format(charge))
+            out.write("{}\n".format(solvent))
+            out.write("{}\n".format(drawing))
 
     return redirect("/details/{}".format(t))
 

@@ -148,6 +148,20 @@
 			</div>
 
 			<div class="field">
+				<label class="label">Ressource</label>
+				<div class="control" >
+					<div class="select">
+					<select name="calc_ressource">
+						<option>Local</option>
+					    	{% for access in profile.accesses %}
+							<option>{{ access.cluster_address }}</option>
+						{% endfor %}
+					  </select>
+					</div>
+				</div>
+			</div>
+
+			<div class="field">
 				<div class="control">
 					<button class="button is-primary">Submit</button>
 				</div>

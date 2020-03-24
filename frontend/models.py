@@ -25,6 +25,15 @@ class Profile(models.Model):
     def __str__(self):
         return self.user.username
 
+    @property
+    def accesses(self):
+        accesses = []
+        for i in self.clusterpersonalkey_claimer.all():
+            accesses.append(i.access)
+        for i in self.clusteraccess_owner.all():
+            accesses.append(i)
+        return accesses
+
 class ClusterCommand(models.Model):
     issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
 
@@ -38,6 +47,7 @@ class Project(models.Model):
 
     def __repr__(self):
         return self.name
+
 
 class ClusterAccess(models.Model):
     private_key_path = models.CharField(max_length=100)

@@ -1,21 +1,32 @@
 from __future__ import absolute_import, unicode_literals
 
 from labsandbox.celery import app
-import os
-import decimal
-from django.utils import timezone
-import numpy as np
 
-from time import time
 from celery.signals import task_prerun, task_postrun
 from .models import Calculation, Structure
+from django.utils import timezone
+
+import os
+import numpy as np
+import decimal
+
+from time import time, sleep
 
 import subprocess
 import shlex
 from shutil import copyfile
 import sys
 import glob
+import ssh2
+from ssh2.session import Session
+from ssh2.utils import wait_socket
+import socket
+from threading import Lock
 
+from ssh2.sftp import LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IRUSR, LIBSSH2_SFTP_S_IWUSR, LIBSSH2_FXF_WRITE, LIBSSH2_SFTP_S_IRGRP, LIBSSH2_SFTP_S_IWGRP, LIBSSH2_FXF_CREAT, LIBSSH2_SFTP_S_IRWXU
+from ssh2.sftp import LIBSSH2_FXF_CREAT, LIBSSH2_FXF_WRITE, \
+    LIBSSH2_SFTP_S_IRUSR, LIBSSH2_SFTP_S_IRGRP, LIBSSH2_SFTP_S_IWUSR, \
+    LIBSSH2_SFTP_S_IROTH
 
 try:
     is_test = os.environ['LAB_TEST']
@@ -29,9 +40,12 @@ else:
     LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
     LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
 
-LAB_KEY_HOME = os.environ['LAB_KEY_HOME']
-
 decimal.getcontext().prec = 50
+
+REMOTE = False
+connections = {}
+locks = {}
+remote_dirs = {}
 
 HARTREE_VAL = decimal.Decimal(2625.499638)
 E_VAL = decimal.Decimal(2.7182818284590452353602874713527)
@@ -54,27 +68,141 @@ SOLVENT_TABLE = {
     'Toluene': 'toluene',
         }
 
+def direct_command(command, conn, lock):
+    lock.acquire()
+    sess = conn[2]
 
-def system(command, log_file=""):
-    if log_file != "":
-        with open(log_file, 'w') as out:
-            a = subprocess.run(shlex.split(command), stdout=out).returncode
-        return a
+    try:
+        chan = sess.open_session()
+        chan.execute("source ~/.bashrc; " + command)
+    except ssh2.exceptions.Timeout:
+        print("Command timed out")
+        lock.release()
+        return
+
+
+    try:
+        chan.wait_eof()
+        chan.close()
+        chan.wait_closed()
+        size, data = chan.read()
+    except ssh2.exceptions.Timeout:
+        print("Channel timed out")
+        lock.release()
+        return
+
+    total = b''
+    while size > 0:
+        total += data
+        size, data = chan.read()
+
+    lock.release()
+
+    if total != None:
+        return total.decode('utf-8').split('\n')
+
+def sftp_get(src, dst, conn, lock):
+    _src = str(src).replace('//', '/')
+    _dst = str(dst).replace('//', '/')
+
+    sftp = conn[3]
+    lock.acquire()
+
+    system("mkdir -p {}".format('/'.join(_dst.split('/')[:-1])), force_local=True)
+
+    if src.strip() == "":
+        lock.release()
+        return
+
+    try:
+        with sftp.open(_src, LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IRUSR) as f:
+            with open(_dst, 'wb') as local:
+                for size, data in f:
+                    if data[-1:] == b'\x00':
+                        local.write(data[:-1])
+                        break
+                    else:
+                        local.write(data)
+    except ssh2.exceptions.SFTPProtocolError:
+        print("Could not get remote file {}".format(src))
+        lock.release()
+        return
+    except ssh2.exceptions.Timeout:
+        print("Timeout")
+        lock.release()
+        sftp_get(src, dst, conn)
+        return
+    lock.release()
+
+
+def sftp_put(src, dst, conn, lock):
+
+    if not os.path.exists(src):
+        librr.warning("The following file was not found and thus could not be uploaded: {}".format(src))
+        lock.release()
+        return
+
+    direct_command("mkdir -p {}".format('/'.join(dst.split('/')[:-1])), conn, lock)
+
+    sftp = conn[3]
+
+    lock.acquire()
+    fileinfo = os.stat(src)
+    mode = LIBSSH2_SFTP_S_IRUSR | \
+               LIBSSH2_SFTP_S_IWUSR
+
+    f_flags = LIBSSH2_FXF_CREAT | LIBSSH2_FXF_WRITE
+
+    try:
+        with open(src, 'rb') as local, \
+                sftp.open(dst, f_flags, mode) as remote:
+            for data in local:
+                if data[-1:] == b'\x00' or data[-1:] == b'\x04' or data[-1:] == b'\x03':
+                    remote.write(data[:-1])
+                    break
+                else:
+                    remote.write(data)
+
+    except ssh2.exceptions.Timeout:
+        print("Timeout while uploading, retrying...")
+        lock.release()
+        sftp_put(src, dst, conn)
+        return
+
+    lock.release()
+
+def system(command, log_file="", force_local=False):
+    if REMOTE and not force_local:
+        pid = int(os.getpid())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        if log_file != "":
+            output = direct_command("cd {}; {} | tee {}".format(remote_dir, command, log_file), conn, lock)
+        else:
+            output = direct_command(command, conn, lock)
+        print("OUTPUT: {}".format(output))
+        return 0
     else:
-        return subprocess.run(shlex.split(command)).returncode
+        if log_file != "":
+            with open(log_file, 'w') as out:
+                a = subprocess.run(shlex.split(command), stdout=out).returncode
+            return a
+        else:
+            return subprocess.run(shlex.split(command)).returncode
 
 def handle_input_file(drawing):
     if drawing:
-        return system("babel -imol initial.mol -oxyz initial.xyz -h --gen3D")
+        return system("babel -imol initial.mol -oxyz initial.xyz -h --gen3D", force_local=True)
     else:
         if os.path.isfile("initial.mol"):
-            return system("babel -imol initial.mol -oxyz initial.xyz")
+            return system("babel -imol initial.mol -oxyz initial.xyz", force_local=True)
         elif os.path.isfile("initial.xyz"):
             return 0
         elif os.path.isfile("initial.mol2"):
-            return system("babel -imol2 initial.mol2 -oxyz initial.xyz")
+            return system("babel -imol2 initial.mol2 -oxyz initial.xyz", force_local=True)
         elif os.path.isfile("initial.sdf"):
-            return system("babel -isdf initial.sdf -oxyz initial.xyz")
+            return system("babel -isdf initial.sdf -oxyz initial.xyz", force_local=True)
 
 
 def xtb_opt(in_file, charge, solvent):
@@ -103,6 +231,7 @@ def anmr():
     return system("anmr", 'anmr.out')
 
 def run_steps(steps, calc_obj, drawing, id):
+
     a = handle_input_file(drawing)
 
     if a != 0:
@@ -111,19 +240,31 @@ def run_steps(steps, calc_obj, drawing, id):
         calc_obj.save()
         return
 
-    a = system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, str(id))))
+    a = system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, str(id))), force_local=True)
     if a != 0:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to create the results directory"
         calc_obj.save()
         return
 
-    a = system("obabel initial.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, str(id))))
+    a = system("obabel initial.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, str(id))), force_local=True)
     if a != 0:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to generate the icon"
         calc_obj.save()
         return
+
+    if REMOTE:
+        pid = int(os.getpid())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = "/scratch/{}/calcus/{}".format(conn[0].cluster_username, calc_obj.id)
+        remote_dirs[pid] = remote_dir
+
+        direct_command("mkdir -p {}".format(remote_dir), conn, lock)
+        for f in glob.glob(os.path.join(LAB_SCR_HOME, str(calc_obj.id)) + '/*'):
+            fname = f.split('/')[-1]
+            sftp_put(f, os.path.join(remote_dir, fname), conn, lock)
 
     calc_obj.num_steps = len(steps)+1
     for ind, step in enumerate(steps):
@@ -141,15 +282,20 @@ def run_steps(steps, calc_obj, drawing, id):
     calc_obj.current_step = calc_obj.num_steps
     calc_obj.save()
 
+    if REMOTE:
+        files = direct_command("ls {}".format(remote_dir), conn, lock)
+        for f in files:
+            if f.strip() != '':
+                sftp_get(os.path.join(remote_dir, f), os.path.join(LAB_SCR_HOME, str(calc_obj.id), f), conn, lock)
     return 0
 
 def save_to_results(f, calc_obj, multiple=False):
     for _f in f:
         name = _f.split('.')[0]
         if multiple:
-            a = system("babel -ixyz {} -omol {}/conf.mol -m".format(_f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))))
+            a = system("babel -ixyz {} -omol {}/conf.mol -m".format(_f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
         else:
-            a = system("babel -ixyz {} -omol {}/{}.mol".format(_f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id)), name))
+            a = system("babel -ixyz {} -omol {}/{}.mol".format(_f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id)), name), force_local=True)
         if a != 0:
             calc_obj.status = 3
             calc_obj.error_message = "Failed to convert the optimized geometry"
@@ -157,8 +303,56 @@ def save_to_results(f, calc_obj, multiple=False):
             return a
     return 0
 
+
+FACTOR = 1
+SIGMA = 0.2
+SIGMA_L = 6199.21
+E = 4.4803204E-10
+NA = 6.02214199E23
+C = 299792458
+HC = 4.135668E15*C
+ME = 9.10938E-31
+
+def plot_peaks(_x, PP):
+    val = 0
+    for w, T in PP:
+        val += np.sqrt(np.pi)*E**2*NA/(1000*np.log(10)*C**2*ME)*T/SIGMA*np.exp(-((HC/_x-HC/w)/(HC/SIGMA_L))**2)
+    return val
+
+
+def xtb4stda(in_file, charge, solvent):
+    if solvent != "Vacuum":
+        solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add_xtb = ''
+
+    return system("xtb4stda {} -chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
+
+def stda(charge, solvent):
+    if solvent != "Vacuum":
+        solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add_xtb = ''
+
+    return system("stda -xtb -e 12", 'stda.out')
+
+
+def enso(charge, solvent):
+    if solvent != "Vacuum":
+        solvent_add = '-solv {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add = ''
+
+    return system("enso.py {} --charge {}".format(solvent_add, charge), 'enso_pre.out')
+
+def enso_run():
+    return system("enso.py -run", 'enso.out')
+
 @app.task
-def geom_opt(id, drawing, charge, solvent, calc_obj=None):
+def geom_opt(id, drawing, charge, solvent, calc_obj=None, remote=False):
+
+    if REMOTE:
+        os.chdir(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))
 
     steps = [
         [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
@@ -189,7 +383,9 @@ def geom_opt(id, drawing, charge, solvent, calc_obj=None):
     return 0
 
 @app.task
-def conf_search(id, drawing, charge, solvent, calc_obj=None):
+def conf_search(id, drawing, charge, solvent, calc_obj=None, remote=False):
+    if REMOTE:
+        os.chdir(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))
 
     steps = [
         [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
@@ -236,40 +432,11 @@ def conf_search(id, drawing, charge, solvent, calc_obj=None):
 
     return 0
 
-FACTOR = 1
-SIGMA = 0.2
-SIGMA_L = 6199.21
-E = 4.4803204E-10
-NA = 6.02214199E23
-C = 299792458
-HC = 4.135668E15*C
-ME = 9.10938E-31
-
-def plot_peaks(_x, PP):
-    val = 0
-    for w, T in PP:
-        val += np.sqrt(np.pi)*E**2*NA/(1000*np.log(10)*C**2*ME)*T/SIGMA*np.exp(-((HC/_x-HC/w)/(HC/SIGMA_L))**2)
-    return val
-
-
-def xtb4stda(in_file, charge, solvent):
-    if solvent != "Vacuum":
-        solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[solvent])
-    else:
-        solvent_add_xtb = ''
-
-    return system("xtb4stda {} -chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
-
-def stda(charge, solvent):
-    if solvent != "Vacuum":
-        solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[solvent])
-    else:
-        solvent_add_xtb = ''
-
-    return system("stda -xtb -e 12", 'stda.out')
-
 @app.task
-def uvvis_simple(id, drawing, charge, solvent, calc_obj=None):
+def uvvis_simple(id, drawing, charge, solvent, calc_obj=None, remote=False):
+    if REMOTE:
+        os.chdir(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))
+
     ww = []
     TT = []
     PP = []
@@ -328,19 +495,10 @@ def uvvis_simple(id, drawing, charge, solvent, calc_obj=None):
 
     return 0
 
-def enso(charge, solvent):
-    if solvent != "Vacuum":
-        solvent_add = '-solv {}'.format(SOLVENT_TABLE[solvent])
-    else:
-        solvent_add = ''
-
-    return system("enso.py {} --charge {}".format(solvent_add, charge), 'enso_pre.out')
-
-def enso_run():
-    return system("enso.py -run", 'enso.out')
-
 @app.task
-def nmr_enso(id, drawing, charge, solvent, calc_obj=None):
+def nmr_enso(id, drawing, charge, solvent, calc_obj=None, remote=False):
+    if REMOTE:
+        os.chdir(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))
 
     steps = [
         [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
