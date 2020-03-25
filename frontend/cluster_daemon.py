@@ -197,8 +197,6 @@ class ClusterDaemon:
                 #w.start()
                 t = threading.Thread(target=self.process_command, args=(c,))
                 t.start()
-
-            print("Still there")
             time.sleep(5)
 
 if __name__ == "__main__":

@@ -180,8 +180,12 @@ def sftp_put(src, dst, conn, lock):
     lock.release()
 
 def wait_until_done(job_id, conn, lock):
+    DELAY = [5, 10, 15, 20, 30]
+    ind = 0
     while True:
-        sleep(5)
+        sleep(DELAY[ind])
+        if ind < len(DELAY)-1:
+            ind += 1
         output = direct_command("squeue -j {}".format(job_id), conn, lock)
         if output != None and len(output) < 2:
             return 0
