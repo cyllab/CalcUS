@@ -551,10 +551,16 @@ def nmr_enso(id, drawing, charge, solvent, calc_obj=None, remote=False):
                         sline = line.strip().split()
                         if float(sline[1]) > 0.001:
                             out.write("{},{}\n".format(-float(sline[0]), sline[1]))
+                        else:
+                            out.write("{},{}\n".format(-float(sline[0]), 0.0))
                 if float(lines[0].strip().split()[0]) > 0.:
-                    out.write("0.0,0.0\n")
+                    x = np.arange(-float(lines[0].strip().split()[0]), 0.0, 0.1)
+                    for _x in x:
+                        out.write("{:.2f},0.0\n".format(_x))
                 if float(lines[-1].strip().split()[0]) < 10.:
-                    out.write("-10.0,0.0\n")
+                    x = np.arange(-10.0, -float(lines[-1].strip().split()[0]), 0.1)
+                    for _x in x:
+                        out.write("{:.2f},0.0\n".format(_x))
     return 0
 
 time_dict = {}
