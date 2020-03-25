@@ -13,6 +13,7 @@
 
 		$(document).ready(function() {
     			refresh_claimed_key_table();
+			$("#owned_accesses").load("/owned_accesses/")
 		});
 
 	</script>
@@ -62,32 +63,9 @@
 		</div>
 		<div class="column has-text-centered">
 			<h5 class="title is-5">Owned accesses</h5>
-			{% if profile.clusteraccess_owner.count > 0 %}
-				<center>
-					<table class="table">
-						<thead>
-							<tr>
-								<th>Server</th>
-								<th>Username</th>
-								<th>Keys generated</th>
-								<th>Keys claimed</th>
-								<th>Actions</th>
-							</tr>
-						</thead>
-						<tbody>
-							{% for access in profile.clusteraccess_owner.all %}
-							<tr>
-								<th>{{ access.cluster_address }}</th>
-								<th>{{ access.cluster_username }}</th>
-								<th>{{ access.clusterpersonalkey_set.count }}</th>
-								<th>{{ access.num_claimed_keys }}</th>
-								<th><a class="button" href="/manage_access/{{ access.id }}">Manage</a></th>
-							</tr>
-							{% endfor %}
-						</tbody>
-					</table>
-				</center>
-			{% endif %}
+			<div id="owned_accesses">
+				
+			</div>
 		</div>
 	</div>
 </div>
@@ -138,7 +116,7 @@
 		   {
 			$("#public_key_div").removeClass('is-hidden');
 			$("#public_key_area").html(data);
-
+			$("#owned_accesses").load("/owned_accesses/")
 		   }
 		 });
 	});

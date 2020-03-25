@@ -223,9 +223,12 @@ def add_clusteraccess(request):
         username = bleach.clean(request.POST['cluster_username'])
         owner = request.user.profile
 
-        #existing_accesses = owner.clusteraccess_owner
-        #for f in existing_accesses
-        #print(existing_accesses)
+        try:
+            existing_access = owner.clusteraccess_owner.get(cluster_address=address, cluster_username=username, owner=owner)
+        except ClusterAccess.DoesNotExist:
+            pass
+        else:
+            return HttpResponse(status=403)
 
         key_private_name = "{}_{}_{}".format(owner.username, username, ''.join(ch for ch in address if ch.isalnum()))
         key_public_name = key_private_name + '.pub'
@@ -658,6 +661,14 @@ def key_table(request, pk):
     return render(request, 'frontend/key_table.html', {
             'profile': request.user.profile,
             'access': access,
+        })
+
+def owned_accesses(request):
+    if isinstance(request.user, AnonymousUser):
+        return please_register(request)
+
+    return render(request, 'frontend/owned_accesses.html', {
+            'profile': request.user.profile,
         })
 
 def profile(request):
