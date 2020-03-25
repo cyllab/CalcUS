@@ -31,10 +31,13 @@ import ssh2
 from ssh2.session import Session
 from ssh2.utils import wait_socket
 import socket
-from threading import Lock
 
 from frontend.models import *
 from frontend import tasks
+
+#from multiprocessing import Process, Manager, Lock
+import threading
+from threading import Lock
 
 tasks.REMOTE = True
 
@@ -118,8 +121,8 @@ class ClusterDaemon:
 
     def xtb_job(self, calc_id, access_id, calc_obj, args):
 
-        tasks.connections[os.getpid()] = self.connections[int(access_id)]
-        tasks.locks[os.getpid()] = self.locks[int(access_id)]
+        tasks.connections[threading.get_ident()] = self.connections[int(access_id)]
+        tasks.locks[threading.get_ident()] = self.locks[int(access_id)]
 
         type, charge, solvent, drawing = args
 
@@ -137,47 +140,45 @@ class ClusterDaemon:
             print("Unknown type: {}".format(type))
             return 3
 
-    def process_commands(self):
-        todo = glob.glob(os.path.join(LAB_CLUSTER_HOME, 'todo/*'))
-        for c in todo:
-            with open(c) as f:
-                lines = f.readlines()
-            os.remove(c)
-            cmd = lines[0].strip()
-            id = int(c.split('/')[-1])
+    def process_command(self, c):
+        with open(c) as f:
+            lines = f.readlines()
+        os.remove(c)
+        cmd = lines[0].strip()
+        id = int(c.split('/')[-1])
 
-            if cmd == "access_test":
-                access_id = int(lines[1])
-                r = self.access_test(access_id)
-                if r in [1, 2, 3, 4]:
-                    self.output(id, "Error: {}".format(CONNECTION_CODE[r]))
-                else:
-                    self.output(id, "Connection successful")
+        if cmd == "access_test":
+            access_id = int(lines[1])
+            r = self.access_test(access_id)
+            if r in [1, 2, 3, 4]:
+                self.output(id, "Error: {}".format(CONNECTION_CODE[r]))
             else:
-                calc_id = lines[1].strip()
-                access_id = lines[2].strip()
+                self.output(id, "Connection successful")
+        else:
+            calc_id = lines[1].strip()
+            access_id = lines[2].strip()
 
-                calc_obj = Calculation.objects.get(pk=calc_id)
-                calc_obj.status = 1
-                calc_obj.save()
-                if cmd == "launch":
-                    tasks.connections[os.getpid()] = self.connections
-                    retval = self.xtb_job(calc_id, access_id, calc_obj, [i.strip() for i in lines[3:]])
-                else:
-                    print("Unknown command: {} (command id {})".format(cmd, c.id))
-                    continue
+            calc_obj = Calculation.objects.get(pk=calc_id)
+            calc_obj.status = 1
+            calc_obj.save()
+            if cmd == "launch":
+                tasks.connections[threading.get_ident()] = self.connections
+                retval = self.xtb_job(calc_id, access_id, calc_obj, [i.strip() for i in lines[3:]])
+            else:
+                print("Unknown command: {} (command id {})".format(cmd, c.id))
+                return
 
-                for f in glob.glob(os.path.join(LAB_SCR_HOME, str(calc_id)) + '/*.out'):
-                    fname = f.split('/')[-1]
-                    copyfile(f, os.path.join(LAB_RESULTS_HOME, str(calc_id)) + '/' + fname)
+            for f in glob.glob(os.path.join(LAB_SCR_HOME, str(calc_id)) + '/*.out'):
+                fname = f.split('/')[-1]
+                copyfile(f, os.path.join(LAB_RESULTS_HOME, str(calc_id)) + '/' + fname)
 
-                if retval == 0:
-                    calc_obj.status = 2
-                else:
-                    calc_obj.status = 3
-                    calc_obj.error_message = "Unknown error"
+            if retval == 0:
+                calc_obj.status = 2
+            else:
+                calc_obj.status = 3
+                calc_obj.error_message = "Unknown error"
 
-                calc_obj.save()
+            calc_obj.save()
 
     def __init__(self):
         for conn in ClusterAccess.objects.all():
@@ -188,8 +189,15 @@ class ClusterDaemon:
                 print("Added cluster access {}".format(c[0].id))
             else:
                 print("Error with cluster access: {}".format(CONNECTION_CODE[c]))
+
         while True:
-            self.process_commands()
+            todo = glob.glob(os.path.join(LAB_CLUSTER_HOME, 'todo/*'))
+            for c in todo:
+                #w = Process(target=self.process_command, args=(c,) )
+                #w.start()
+                t = threading.Thread(target=self.process_command, args=(c,))
+                t.start()
+
             print("Still there")
             time.sleep(5)
 

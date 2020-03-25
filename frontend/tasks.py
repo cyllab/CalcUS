@@ -22,6 +22,7 @@ from ssh2.session import Session
 from ssh2.utils import wait_socket
 import socket
 from threading import Lock
+import threading
 
 from ssh2.sftp import LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IRUSR, LIBSSH2_SFTP_S_IWUSR, LIBSSH2_FXF_WRITE, LIBSSH2_SFTP_S_IRGRP, LIBSSH2_SFTP_S_IWGRP, LIBSSH2_FXF_CREAT, LIBSSH2_SFTP_S_IRWXU
 from ssh2.sftp import LIBSSH2_FXF_CREAT, LIBSSH2_FXF_WRITE, \
@@ -74,7 +75,14 @@ def direct_command(command, conn, lock):
 
     try:
         chan = sess.open_session()
+        if isinstance(chan, int):
+            print("Failed to open channel, trying again")
+            lock.release()
+            sleep(1)
+            direct_command(command, conn, lock)
+            return
         chan.execute("source ~/.bashrc; " + command)
+
     except ssh2.exceptions.Timeout:
         print("Command timed out")
         lock.release()
@@ -180,7 +188,7 @@ def wait_until_done(job_id, conn, lock):
 
 def system(command, log_file="", force_local=False):
     if REMOTE and not force_local:
-        pid = int(os.getpid())
+        pid = int(threading.get_ident())
         conn = connections[pid]
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
@@ -204,18 +212,18 @@ def system(command, log_file="", force_local=False):
         else:
             return subprocess.run(shlex.split(command)).returncode
 
-def handle_input_file(drawing):
+def handle_input_file(drawing, calc_obj):
     if drawing:
-        return system("babel -imol initial.mol -oxyz initial.xyz -h --gen3D", force_local=True)
+        return system("babel -imol {}/initial.mol -oxyz {}/initial.xyz -h --gen3D".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
     else:
-        if os.path.isfile("initial.mol"):
-            return system("babel -imol initial.mol -oxyz initial.xyz", force_local=True)
-        elif os.path.isfile("initial.xyz"):
+        if os.path.isfile("{}/initial.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
+            return system("babel -imol initial.mol -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
+        elif os.path.isfile("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
             return 0
-        elif os.path.isfile("initial.mol2"):
-            return system("babel -imol2 initial.mol2 -oxyz initial.xyz", force_local=True)
-        elif os.path.isfile("initial.sdf"):
-            return system("babel -isdf initial.sdf -oxyz initial.xyz", force_local=True)
+        elif os.path.isfile("{}/initial.mol2".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
+            return system("babel -imol2 {}/initial.mol2 -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
+        elif os.path.isfile("{}/initial.sdf".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
+            return system("babel -isdf {}/initial.sdf -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
 
 
 def xtb_opt(in_file, charge, solvent):
@@ -245,7 +253,7 @@ def anmr():
 
 def run_steps(steps, calc_obj, drawing, id):
 
-    a = handle_input_file(drawing)
+    a = handle_input_file(drawing, calc_obj)
 
     if a != 0:
         calc_obj.status = 3
@@ -260,7 +268,7 @@ def run_steps(steps, calc_obj, drawing, id):
         calc_obj.save()
         return
 
-    a = system("obabel initial.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_RESULTS_HOME, str(id))), force_local=True)
+    a = system("obabel {}/initial.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(id))), force_local=True)
     if a != 0:
         calc_obj.status = 3
         calc_obj.error_message = "Failed to generate the icon"
@@ -268,7 +276,7 @@ def run_steps(steps, calc_obj, drawing, id):
         return
 
     if REMOTE:
-        pid = int(os.getpid())
+        pid = int(threading.get_ident())
         conn = connections[pid]
         lock = locks[pid]
         remote_dir = "/scratch/{}/calcus/{}".format(conn[0].cluster_username, calc_obj.id)
@@ -306,9 +314,9 @@ def save_to_results(f, calc_obj, multiple=False):
     for _f in f:
         name = _f.split('.')[0]
         if multiple:
-            a = system("babel -ixyz {} -omol {}/conf.mol -m".format(_f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
+            a = system("babel -ixyz {}/{} -omol {}/conf.mol -m".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), _f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
         else:
-            a = system("babel -ixyz {} -omol {}/{}.mol".format(_f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id)), name), force_local=True)
+            a = system("babel -ixyz {}/{} -omol {}/{}.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), _f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id)), name), force_local=True)
         if a != 0:
             calc_obj.status = 3
             calc_obj.error_message = "Failed to convert the optimized geometry"
@@ -364,8 +372,6 @@ def enso_run():
 @app.task
 def geom_opt(id, drawing, charge, solvent, calc_obj=None, remote=False):
 
-    if REMOTE:
-        os.chdir(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))
 
     steps = [
         [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
@@ -379,7 +385,7 @@ def geom_opt(id, drawing, charge, solvent, calc_obj=None, remote=False):
     if a != 0:
         return
 
-    with open("xtb_opt.out") as f:
+    with open("{}/xtb_opt.out".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))) as f:
         lines = f.readlines()
         ind = len(lines)-1
 
@@ -397,9 +403,7 @@ def geom_opt(id, drawing, charge, solvent, calc_obj=None, remote=False):
 
 @app.task
 def conf_search(id, drawing, charge, solvent, calc_obj=None, remote=False):
-    if REMOTE:
-        os.chdir(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))
-
+    #os.path.join(LAB_SCR_HOME, str(calc_obj.id))
     steps = [
         [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
         [crest, ["xtbopt.xyz", charge, solvent, "Final"], "Generating conformer ensemble", "Failed to generate the conformers"],
@@ -416,7 +420,7 @@ def conf_search(id, drawing, charge, solvent, calc_obj=None, remote=False):
     if a != 0:
         return
 
-    with open("crest.out") as f:
+    with open("{}/crest.out".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))) as f:
         lines = f.readlines()
         ind = len(lines) - 1
 
@@ -447,8 +451,6 @@ def conf_search(id, drawing, charge, solvent, calc_obj=None, remote=False):
 
 @app.task
 def uvvis_simple(id, drawing, charge, solvent, calc_obj=None, remote=False):
-    if REMOTE:
-        os.chdir(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))
 
     ww = []
     TT = []
@@ -470,7 +472,7 @@ def uvvis_simple(id, drawing, charge, solvent, calc_obj=None, remote=False):
 
     f_x = np.arange(120.0, 1200.0, 1.0)
 
-    with open("tda.dat") as f:
+    with open("{}/tda.dat".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))) as f:
         lines = f.readlines()
     ind = 0
     while lines[ind].find("DATXY") == -1:
@@ -510,8 +512,6 @@ def uvvis_simple(id, drawing, charge, solvent, calc_obj=None, remote=False):
 
 @app.task
 def nmr_enso(id, drawing, charge, solvent, calc_obj=None, remote=False):
-    if REMOTE:
-        os.chdir(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))
 
     steps = [
         [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
@@ -538,7 +538,7 @@ def nmr_enso(id, drawing, charge, solvent, calc_obj=None, remote=False):
     #r.save()
     #calc_obj.structure_set.add(r)
 
-    with open("anmr.dat") as f:
+    with open("{}/anmr.dat".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))) as f:
         lines = f.readlines()
         with open("{}/nmr.csv".format(os.path.join(LAB_RESULTS_HOME, id)), 'w') as out:
                 out.write("Chemical shift (ppm),Intensity\n")
