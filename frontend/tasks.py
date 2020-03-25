@@ -174,7 +174,7 @@ def sftp_put(src, dst, conn, lock):
     except ssh2.exceptions.Timeout:
         print("Timeout while uploading, retrying...")
         lock.release()
-        sftp_put(src, dst, conn)
+        sftp_put(src, dst, conn, lock)
         return
 
     lock.release()
