@@ -1,47 +1,29 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, Http404, HttpResponseRedirect
-from django.template import loader
-from django.urls import reverse
-from django.views import generic
-
-from django.core.files.storage import FileSystemStorage
-
-from django.utils import timezone
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import AnonymousUser
-
-from .models import Calculation, Profile, Project, ClusterAccess, ClusterPersonalKey, ClusterCommand, Example
-from django.contrib.auth.models import User
-
-from django.contrib.auth import login, authenticate
-from django.shortcuts import render, redirect
-
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
-
-from django.contrib.auth.decorators import user_passes_test
-
-from django.shortcuts import render
-from django.template import RequestContext
-
-import bleach
 import os
 import shutil
 import glob
 import random
 import string
-
-from .forms import UserCreateForm
-
-from django.utils import timezone
-
-from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso
-
-from django.views.decorators.csrf import csrf_exempt
+import bleach
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
+
+from django.shortcuts import render, redirect
+from django.http import HttpResponse, HttpResponseRedirect
+from django.views import generic
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.core.files.storage import FileSystemStorage
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth import login
+
+from .forms import UserCreateForm
+from .models import Calculation, Profile, Project, ClusterAccess, ClusterPersonalKey, ClusterCommand, Example
+from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso
+
+
 
 LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
 LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
@@ -110,10 +92,8 @@ class RegisterView(generic.CreateView):
 def please_register(request):
         return render(request, 'frontend/please_register.html', {})
 
+@login_required
 def submit_calculation(request):
-    if isinstance(request.user, AnonymousUser):
-        return please_register()
-
     name = request.POST['calc_name']
     type = Calculation.CALC_TYPES[request.POST['calc_type']]
     project = request.POST['calc_project']
@@ -202,10 +182,8 @@ def submit_calculation(request):
 
     return redirect("/details/{}".format(t))
 
+@login_required
 def delete(request, pk):
-    if isinstance(request.user, AnonymousUser):
-        return please_register()
-
     profile, created = Profile.objects.get_or_create(user=request.user)
 
     try:
@@ -224,6 +202,7 @@ def delete(request, pk):
         to_delete.delete()
         return redirect("/home/")
 
+@login_required
 def add_clusteraccess(request):
     if request.method == 'POST':
         address = bleach.clean(request.POST['cluster_address'])
@@ -261,11 +240,9 @@ def add_clusteraccess(request):
         return HttpResponse(status=403)
 
 @csrf_exempt
+@login_required
 def generate_keys(request):
     if request.method == 'POST':
-        if isinstance(request.user, AnonymousUser):
-            return HttpResponse(status=403)
-
         access_id = request.POST['access_id']
         num = int(request.POST['num'])
 
@@ -279,20 +256,17 @@ def generate_keys(request):
         if access not in profile.clusteraccess_owner.all():
             return HttpResponse(status=403)
 
-        keys = ""
         for i in range(int(num)):
             key = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(KEY_SIZE))
-            a = ClusterPersonalKey.objects.create(key=key, issuer=profile, date_issued=timezone.now(), access=access)
+            ClusterPersonalKey.objects.create(key=key, issuer=profile, date_issued=timezone.now(), access=access)
         return HttpResponse(status=200)
     else:
         return HttpResponse(status=403)
 
 @csrf_exempt
+@login_required
 def claim_key(request):
     if request.method == 'POST':
-        if isinstance(request.user, AnonymousUser):
-            return HttpResponse(status=403)
-
         key = request.POST['key']
 
         try:
@@ -321,10 +295,8 @@ def claim_key(request):
         return HttpResponse(status=403)
 
 @csrf_exempt
+@login_required
 def test_access(request):
-    if isinstance(request.user, AnonymousUser):
-        return HttpResponse(status=403)
-
     pk = request.POST['access_id']
 
     access = ClusterAccess.objects.get(pk=pk)
@@ -343,10 +315,8 @@ def test_access(request):
     return HttpResponse(cmd.id)
 
 @csrf_exempt
+@login_required
 def get_command_status(request):
-    if isinstance(request.user, AnonymousUser):
-        return HttpResponse(status=403)
-
     pk = request.POST['command_id']
 
     cmd = ClusterCommand.objects.get(pk=pk)
@@ -364,10 +334,8 @@ def get_command_status(request):
             lines = f.readlines()
             return HttpResponse(lines[0].strip())
 
+@login_required
 def delete_access(request, pk):
-    if isinstance(request.user, AnonymousUser):
-        return HttpResponse(status=403)
-
     access = ClusterAccess.objects.get(pk=pk)
 
     profile = request.user.profile
@@ -379,11 +347,9 @@ def delete_access(request, pk):
     return HttpResponseRedirect("/profile")
 
 @csrf_exempt
+@login_required
 def delete_key(request):
     if request.method == 'POST':
-        if isinstance(request.user, AnonymousUser):
-            return HttpResponse(status=403)
-
         access_id = request.POST['access_id']
         key_id = request.POST['key_id']
 
@@ -404,21 +370,15 @@ def delete_key(request):
         return HttpResponse(status=403)
 
 @csrf_exempt
+@login_required
 def claimed_key_table(request):
-    if isinstance(request.user, AnonymousUser):
-        return HttpResponse(status=403)
-
-    profile = request.user.profile
-
     return render(request, 'frontend/claimed_key_table.html', {
             'profile': request.user.profile,
         })
 
 @csrf_exempt
+@login_required
 def conformer_table(request, pk):
-    if isinstance(request.user, AnonymousUser):
-        return HttpResponse(status=403)
-
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
     type = calc.type
@@ -436,13 +396,10 @@ def conformer_table(request, pk):
         })
 
 @csrf_exempt
+@login_required
 def icon(request, pk):
-    if isinstance(request.user, AnonymousUser):
-        return HttpResponse(status=403)
-
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
-    type = calc.type
 
     profile = request.user.profile
 
@@ -460,13 +417,14 @@ def icon(request, pk):
         return HttpResponse(status=204)
 
 @csrf_exempt
+@login_required
 def uvvis(request, pk):
-    if isinstance(request.user, AnonymousUser):
-        return HttpResponse(status=403)
-
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
     type = calc.type
+
+    if type != 2:
+        return HttpResponse(status=403)
 
     profile = request.user.profile
 
@@ -484,13 +442,14 @@ def uvvis(request, pk):
         return HttpResponse(status=204)
 
 @csrf_exempt
+@login_required
 def nmr(request, pk):
-    if isinstance(request.user, AnonymousUser):
-        return HttpResponse(status=403)
-
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
     type = calc.type
+
+    if type != 3:
+        return HttpResponse(status=403)
 
     profile = request.user.profile
 
@@ -509,13 +468,10 @@ def nmr(request, pk):
 
 
 @csrf_exempt
+@login_required
 def info_table(request, pk):
-    if isinstance(request.user, AnonymousUser):
-        return HttpResponse(status=403)
-
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
-    type = calc.type
 
     profile = request.user.profile
 
@@ -528,13 +484,10 @@ def info_table(request, pk):
         })
 
 @csrf_exempt
+@login_required
 def status(request, pk):
-    if isinstance(request.user, AnonymousUser):
-        return HttpResponse(status=403)
-
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
-    type = calc.type
 
     profile = request.user.profile
 
@@ -546,10 +499,8 @@ def status(request, pk):
         })
 
 @csrf_exempt
+@login_required
 def download_structure(request, pk):
-    if isinstance(request.user, AnonymousUser):
-        return HttpResponse(status=403)
-
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
     type = calc.type
@@ -574,10 +525,8 @@ def download_structure(request, pk):
         return HttpResponse(status=204)
 
 @csrf_exempt
+@login_required
 def get_structure(request):
-    if isinstance(request.user, AnonymousUser):
-        return HttpResponse(status=403)
-
     if request.method == 'POST':
         url = request.POST['id']
         id = url.split('/')[-1]
@@ -610,6 +559,7 @@ def get_structure(request):
                 return HttpResponse(status=204)
 
 
+@login_required
 def log(request, pk):
     LOG_HTML = """
     <label class="label">{}</label>
@@ -619,9 +569,6 @@ def log(request, pk):
     """
 
     response = ''
-
-    if isinstance(request.user, AnonymousUser):
-        return HttpResponse(status=403)
 
     calc = Calculation.objects.get(pk=pk)
 
@@ -638,10 +585,8 @@ def log(request, pk):
 
     return HttpResponse(response)
 
+@login_required
 def manage_access(request, pk):
-    if isinstance(request.user, AnonymousUser):
-        return please_register(request)
-
     access = ClusterAccess.objects.get(pk=pk)
 
     profile = request.user.profile
@@ -654,10 +599,8 @@ def manage_access(request, pk):
             'access': access,
         })
 
+@login_required
 def key_table(request, pk):
-    if isinstance(request.user, AnonymousUser):
-        return please_register(request)
-
     access = ClusterAccess.objects.get(pk=pk)
 
     profile = request.user.profile
@@ -670,30 +613,25 @@ def key_table(request, pk):
             'access': access,
         })
 
+@login_required
 def owned_accesses(request):
-    if isinstance(request.user, AnonymousUser):
-        return please_register(request)
-
     return render(request, 'frontend/owned_accesses.html', {
             'profile': request.user.profile,
         })
 
+@login_required
 def profile(request):
-    if isinstance(request.user, AnonymousUser):
-        return please_register(request)
-
     return render(request, 'frontend/profile.html', {
             'profile': request.user.profile,
         })
 
+@login_required
 def launch(request):
-    if isinstance(request.user, AnonymousUser):
-        return please_register(request)
-
     return render(request, 'frontend/launch.html', {
             'profile': request.user.profile,
         })
 
+@login_required
 def launch_pk(request, pk):
     if isinstance(request.user, AnonymousUser):
         return please_register(request)

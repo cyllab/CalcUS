@@ -15,16 +15,12 @@ from time import time, sleep
 import subprocess
 import shlex
 from shutil import copyfile
-import sys
 import glob
 import ssh2
-from ssh2.session import Session
-from ssh2.utils import wait_socket
-import socket
 from threading import Lock
 import threading
 
-from ssh2.sftp import LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IRUSR, LIBSSH2_SFTP_S_IWUSR, LIBSSH2_FXF_WRITE, LIBSSH2_SFTP_S_IRGRP, LIBSSH2_SFTP_S_IWGRP, LIBSSH2_FXF_CREAT, LIBSSH2_SFTP_S_IRWXU
+from ssh2.sftp import LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IWGRP, LIBSSH2_SFTP_S_IRWXU
 from ssh2.sftp import LIBSSH2_FXF_CREAT, LIBSSH2_FXF_WRITE, \
     LIBSSH2_SFTP_S_IRUSR, LIBSSH2_SFTP_S_IRGRP, LIBSSH2_SFTP_S_IWUSR, \
     LIBSSH2_SFTP_S_IROTH
@@ -146,7 +142,6 @@ def sftp_get(src, dst, conn, lock):
 def sftp_put(src, dst, conn, lock):
 
     if not os.path.exists(src):
-        librr.warning("The following file was not found and thus could not be uploaded: {}".format(src))
         lock.release()
         return
 
@@ -155,7 +150,6 @@ def sftp_put(src, dst, conn, lock):
     sftp = conn[3]
 
     lock.acquire()
-    fileinfo = os.stat(src)
     mode = LIBSSH2_SFTP_S_IRUSR | \
                LIBSSH2_SFTP_S_IWUSR
 
@@ -354,11 +348,6 @@ def xtb4stda(in_file, charge, solvent):
     return system("xtb4stda {} -chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
 
 def stda(charge, solvent):
-    if solvent != "Vacuum":
-        solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[solvent])
-    else:
-        solvent_add_xtb = ''
-
     return system("stda -xtb -e 12", 'stda.out')
 
 
@@ -583,7 +572,7 @@ def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, st
     try:
         execution_time = time() - time_dict.pop(task_id)
     except KeyError:
-        cost = -1
+        execution_time = -1
 
     job_id = args[0]
     calc_obj = Calculation.objects.get(pk=job_id)

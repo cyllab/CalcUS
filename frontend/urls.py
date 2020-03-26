@@ -1,6 +1,7 @@
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth.decorators import login_required
 
 from . import views
 
@@ -18,7 +19,7 @@ urlpatterns = [
 
     path('launch/', views.launch, name='launch'),
     path('launch/<int:pk>', views.launch_pk, name='launch_pk'),
-    path('details/<int:pk>', views.DetailView.as_view(), name='detail'),
+    path('details/<int:pk>', login_required(views.DetailView.as_view()), name='detail'),
 
     path('claimed_key_table/', views.claimed_key_table, name='claimed_key_table'),
     path('key_table/<int:pk>', views.key_table, name='key_table'),

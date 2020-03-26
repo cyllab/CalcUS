@@ -7,6 +7,13 @@ import subprocess
 import shlex
 from shutil import copyfile
 
+import ssh2
+from ssh2.session import Session
+import socket
+import threading
+from threading import Lock
+
+
 
 LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
 LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
@@ -27,17 +34,9 @@ sys.path.append("/home/raphael/LabSandbox")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "labsandbox.settings")
 django.setup()
 
-import ssh2
-from ssh2.session import Session
-from ssh2.utils import wait_socket
-import socket
-
 from frontend.models import *
 from frontend import tasks
 
-#from multiprocessing import Process, Manager, Lock
-import threading
-from threading import Lock
 
 tasks.REMOTE = True
 

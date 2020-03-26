@@ -1,6 +1,5 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from frontend.models import Example
-from django.utils import timezone
 
 class Command(BaseCommand):
     help = 'Adds an example to the database'

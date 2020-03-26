@@ -1,24 +1,14 @@
-from django.test import TestCase, override_settings
-
-from django.urls import reverse
-import datetime
-from django.utils import timezone
-import time
-import unittest
-from .models import Profile, Calculation, Structure, Project
-from django.contrib.auth.models import User
-from django.dispatch import receiver
-from django.db.models.signals import post_save
-from django.test import Client
 import glob
 import os
-from unittest.mock import patch, call
+import time
+import unittest
+
+from django.test import TestCase
 from django.utils import timezone
+from .models import Profile, Calculation, Structure, Project
+from django.contrib.auth.models import User
 from shutil import copyfile, rmtree
 from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso
-from celery.contrib.testing.worker import start_worker
-
-from labsandbox.celery import app
 
 tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
 SCR_DIR = os.path.join(tests_dir, "scr")
