@@ -69,7 +69,20 @@
 							
 							clearInterval(my_refresh);
 							{% if calculation.type == 1 %}
-							$('#conf_table').load("/conformer_table/{{ calculation.id }}");
+
+							$.ajax({
+								method: "GET",	 	 
+								url: "/conformer_table/{{ calculation.id }}",
+								headers: {
+									"X-CSRFToken": '{{ csrf_token }}',
+								},
+								success: function(data, textStatus, xhr) {
+									if (xhr.status != 204) {
+										$("#conf_table").html(data);
+										conf_number = document.getElementById("conf_table").rows.length;
+									}
+								}
+							});
 
 							{% elif calculation.type == 2 %}
 							g2 = new Dygraph(
