@@ -176,7 +176,7 @@
 
 	<strong>{{ calculation.text_type }}</strong>
 
-	{% if calculation.type == 0 %}
+	{% if calculation.type == 0 or calculation.type == 4 %}
 	<div>
 		<script>
 			let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {});

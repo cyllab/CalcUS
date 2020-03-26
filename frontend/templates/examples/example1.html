@@ -38,12 +38,12 @@
 	This will give the following result:
 	<img src="{% static 'examples/example1/2.png' %}" />	
 
-	We note that the energy of phenol is -19.96706011563 Hartree with XTB. This value will vary depending on the method used and the solvent; it has no meaning by itself. To use this value, we need the energies of the other compounds. After calculating their energy, we will calculate the variation of enthalpy:
+	We note that the energy of phenol is -19.96706011563 Hartree with XTB. This value will vary depending on the method used and the solvent; it has no meaning by itself. To use this value, we need the energies of the other compounds. After calculating their energy, we will calculate the variation of energy:
 
-	$$\Delta H = (\Delta H_{phenolate} + \Delta H_{ammonium}) - (\Delta H_{phenol} + \Delta H_{ammonia})$$
+	$$\Delta U = (U_{phenolate} + U_{ammonium}) - (U_{phenol} + U_{ammonia})$$
 
-	This should give you $$\Delta H \approx 0.05305539 Ha = 33.3kcal/mol = 139.3kJ/mol$$ 
-	We thus predict that the reaction is strongly disfavored. The equilibrium constant would be $e^{-139300/(8.314*293)} \approx 1.46*10^{-25}$. According to the <a href="https://www.chem.wisc.edu/areas/reich/pkatable/">Bordwell pKa table</a>, the pKa of phenol in DMSO is 18.0, while the one of ammonium is 10.5. This would give us an equilibrium constant of $3.16*10^{-8}$, corresponding to variation of free energy of $42.1kJ/mol$. While the result is qualitatively correct, it still differs greatly from the experimental value. However, notice that we simply calculated the energy of the structures as fixed points in space. This neglects completely entropy (i.e. the possible rotations and vibrations in the molecules). We thus obtain only enthalpy, and not free energy. In this case, it is not completely spurious to consider that the entropy variation will be small, but our calculations are still neglecting a big element contributing to the equilibrium. The next tutorial will cover how to take in consideration entropy.
+	This should give you $$\Delta U \approx 0.05305539 Ha = 33.3kcal/mol = 139.3kJ/mol$$ 
+	We thus predict that the reaction is strongly disfavored. The equilibrium constant would be $e^{-139300/(8.314*293)} \approx 1.46*10^{-25}$. According to the <a href="https://www.chem.wisc.edu/areas/reich/pkatable/">Bordwell pKa table</a>, the pKa of phenol in DMSO is 18.0, while the one of ammonium is 10.5. This would give us an equilibrium constant of $3.16*10^{-8}$, corresponding to variation of free energy of $42.1kJ/mol$. While the result is qualitatively correct, it still differs greatly from the experimental value. However, notice that we simply calculated the energy of the structures as fixed points in space. This notably neglects completely entropy (i.e. the possible rotations and vibrations in the molecules). We thus obtain only internal energy, and not free energy. In this case, it is not completely spurious to consider that the entropy variation will be small, but our calculations are still neglecting a big element contributing to the equilibrium. The next tutorial will cover how to take in consideration entropy.
 </div>
 <br />
 {% endblock %}

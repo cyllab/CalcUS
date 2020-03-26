@@ -232,6 +232,14 @@ def xtb_opt(in_file, charge, solvent):
 
     return system("xtb {} --chrg {} {} --opt".format(in_file, charge, solvent_add), 'xtb_opt.out')
 
+def xtb_freq(in_file, charge, solvent):
+    if solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add = ''
+
+    return system("xtb {} --chrg {} {} --hess".format(in_file, charge, solvent_add), 'xtb_freq.out')
+
 def crest(in_file, charge, solvent, mode):
     if solvent != "Vacuum":
         solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
@@ -245,6 +253,28 @@ def crest(in_file, charge, solvent, mode):
     else:
         print("Invalid crest mode selected!")
         return -1
+
+def xtb4stda(in_file, charge, solvent):
+    if solvent != "Vacuum":
+        solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add_xtb = ''
+
+    return system("xtb4stda {} -chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
+
+def stda(charge, solvent):
+    return system("stda -xtb -e 12", 'stda.out')
+
+def enso(charge, solvent):
+    if solvent != "Vacuum":
+        solvent_add = '-solv {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add = ''
+
+    return system("enso.py {} --charge {}".format(solvent_add, charge), 'enso_pre.out')
+
+def enso_run():
+    return system("enso.py -run", 'enso.out')
 
 def anmr():
     return system("anmr", 'anmr.out')
@@ -339,32 +369,9 @@ def plot_peaks(_x, PP):
     return val
 
 
-def xtb4stda(in_file, charge, solvent):
-    if solvent != "Vacuum":
-        solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[solvent])
-    else:
-        solvent_add_xtb = ''
-
-    return system("xtb4stda {} -chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
-
-def stda(charge, solvent):
-    return system("stda -xtb -e 12", 'stda.out')
-
-
-def enso(charge, solvent):
-    if solvent != "Vacuum":
-        solvent_add = '-solv {}'.format(SOLVENT_TABLE[solvent])
-    else:
-        solvent_add = ''
-
-    return system("enso.py {} --charge {}".format(solvent_add, charge), 'enso_pre.out')
-
-def enso_run():
-    return system("enso.py -run", 'enso.out')
 
 @app.task
 def geom_opt(id, drawing, charge, solvent, calc_obj=None, remote=False):
-
 
     steps = [
         [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
@@ -388,6 +395,39 @@ def geom_opt(id, drawing, charge, solvent, calc_obj=None, remote=False):
         E = float(lines[ind-2].split()[3])
 
     r = Structure.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
+    r.save()
+
+    calc_obj.structure_set.add(r)
+
+    return 0
+
+@app.task
+def geom_opt_freq(id, drawing, charge, solvent, calc_obj=None, remote=False):
+
+    steps = [
+        [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
+        [xtb_freq, ["xtbopt.xyz", charge, solvent], "Calculating frequency modes", "Failed to calculate frequency modes"],
+    ]
+
+    a = run_steps(steps, calc_obj, drawing, id)
+    if a != 0:
+        return
+
+    a = save_to_results(["xtbopt.xyz"], calc_obj)
+    if a != 0:
+        return
+
+    with open("{}/xtb_freq.out".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))) as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+        while lines[ind].find("HOMO-LUMO GAP") == -1:
+            ind -= 1
+        hl_gap = float(lines[ind].split()[3])
+        E = float(lines[ind-4].split()[3])
+        G = float(lines[ind-2].split()[4])
+
+    r = Structure.objects.create(number=1, energy=E, free_energy=G, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
     r.save()
 
     calc_obj.structure_set.add(r)

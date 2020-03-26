@@ -89,6 +89,7 @@ class Calculation(models.Model):
             "Conformer Search" : 1,
             "UV/Vis Spectrum Prediction": 2,
             "NMR Spectrum Prediction": 3,
+            "Opt+Freq": 4,
             }
 
     CALC_STATUSES = {
@@ -141,6 +142,7 @@ class Calculation(models.Model):
 class Structure(models.Model):
     number = models.PositiveIntegerField()
     energy = models.FloatField()
+    free_energy = models.FloatField(default=0)
 
     degeneracy = models.PositiveIntegerField(default=0)
     rel_energy = models.FloatField()

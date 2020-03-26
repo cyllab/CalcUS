@@ -21,7 +21,7 @@ from django.contrib.auth import login
 
 from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, ClusterPersonalKey, ClusterCommand, Example
-from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso
+from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso, geom_opt_freq
 
 
 
@@ -169,6 +169,8 @@ def submit_calculation(request):
             uvvis_simple.delay(t, drawing, charge, solvent)
         elif type == 3:
             nmr_enso.delay(t, drawing, charge, solvent)
+        elif type == 4:
+            geom_opt_freq.delay(t, drawing, charge, solvent)
     else:
         cmd = ClusterCommand.objects.create(issuer=profile)
         with open(os.path.join(LAB_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
@@ -540,7 +542,7 @@ def get_structure(request):
 
         type = calc.type
 
-        if type == 0 or type == 2 or type == 3:
+        if type == 0 or type == 2 or type == 3 or type == 4:
             expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.mol")
             if os.path.isfile(expected_file):
                 with open(expected_file) as f:
