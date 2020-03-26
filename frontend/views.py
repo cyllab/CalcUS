@@ -13,7 +13,6 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views import generic
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
@@ -241,7 +240,6 @@ def add_clusteraccess(request):
     else:
         return HttpResponse(status=403)
 
-@csrf_exempt
 @login_required
 def generate_keys(request):
     if request.method == 'POST':
@@ -265,7 +263,6 @@ def generate_keys(request):
     else:
         return HttpResponse(status=403)
 
-@csrf_exempt
 @login_required
 def claim_key(request):
     if request.method == 'POST':
@@ -296,7 +293,6 @@ def claim_key(request):
     else:
         return HttpResponse(status=403)
 
-@csrf_exempt
 @login_required
 def test_access(request):
     pk = request.POST['access_id']
@@ -316,7 +312,6 @@ def test_access(request):
 
     return HttpResponse(cmd.id)
 
-@csrf_exempt
 @login_required
 def get_command_status(request):
     pk = request.POST['command_id']
@@ -348,7 +343,6 @@ def delete_access(request, pk):
     access.delete()
     return HttpResponseRedirect("/profile")
 
-@csrf_exempt
 @login_required
 def delete_key(request):
     if request.method == 'POST':
@@ -371,14 +365,12 @@ def delete_key(request):
     else:
         return HttpResponse(status=403)
 
-@csrf_exempt
 @login_required
 def claimed_key_table(request):
     return render(request, 'frontend/claimed_key_table.html', {
             'profile': request.user.profile,
         })
 
-@csrf_exempt
 @login_required
 def conformer_table(request, pk):
     id = str(pk)
@@ -397,7 +389,6 @@ def conformer_table(request, pk):
             'calculation': calc,
         })
 
-@csrf_exempt
 @login_required
 def icon(request, pk):
     id = str(pk)
@@ -418,7 +409,6 @@ def icon(request, pk):
     else:
         return HttpResponse(status=204)
 
-@csrf_exempt
 @login_required
 def uvvis(request, pk):
     id = str(pk)
@@ -443,7 +433,6 @@ def uvvis(request, pk):
     else:
         return HttpResponse(status=204)
 
-@csrf_exempt
 @login_required
 def nmr(request, pk):
     id = str(pk)
@@ -469,7 +458,6 @@ def nmr(request, pk):
         return HttpResponse(status=204)
 
 
-@csrf_exempt
 @login_required
 def info_table(request, pk):
     id = str(pk)
@@ -485,7 +473,6 @@ def info_table(request, pk):
             'calculation': calc,
         })
 
-@csrf_exempt
 @login_required
 def status(request, pk):
     id = str(pk)
@@ -500,7 +487,6 @@ def status(request, pk):
             'calculation': calc,
         })
 
-@csrf_exempt
 @login_required
 def download_structure(request, pk):
     id = str(pk)
@@ -512,10 +498,10 @@ def download_structure(request, pk):
     if calc not in profile.calculation_set.all():
         return HttpResponse(status=403)
 
-    if type == 0 or type == 2:
-        expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.mol")
-    elif type == 1:
+    if type == 1:
         expected_file = os.path.join(LAB_RESULTS_HOME, id, "crest_conformers.mol")
+    else:
+        expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.mol")
 
     if os.path.isfile(expected_file):
         with open(expected_file, 'rb') as f:
@@ -526,7 +512,6 @@ def download_structure(request, pk):
     else:
         return HttpResponse(status=204)
 
-@csrf_exempt
 @login_required
 def get_structure(request):
     if request.method == 'POST':

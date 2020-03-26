@@ -12,6 +12,9 @@
 			$.ajax({
 				type: "POST",
 				url: "/generate_keys/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
 				data: {'access_id': {{ access.id }}, 'num': num}, 
 				success: function(data)
 				{
@@ -32,6 +35,9 @@
 			$.ajax({
 				type: "POST",
 				url: "/delete_key/",
+				headers:{
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
 				data: {'access_id': {{ access.id }}, 'key_id': key_id}, 
 				success: function(data)
 				{
@@ -43,6 +49,9 @@
 			$.ajax({
 				type: "POST",
 				url: "/test_access/",
+				headers:{
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
 				data: {'access_id': {{ access.id }}}, 
 				success: function(data)
 				{

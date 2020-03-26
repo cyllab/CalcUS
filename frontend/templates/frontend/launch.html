@@ -187,6 +187,10 @@ $( document ).ready(function() {
 	$.ajax({
 		method: "POST",	 	 
 		url: "/get_structure/",
+		headers: {
+			"X-CSRFToken": '{{ csrf_token }}',
+		},
+
 		data: {'id': {{ calculation.id }} {% if calculation.type == 1 %}, 'num': 1 {% endif %}},
 		success: function(data, textStatus, xhr) {
 			let mol_read = ChemDoodle.readMOL(data);

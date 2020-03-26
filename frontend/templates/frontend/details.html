@@ -53,6 +53,9 @@
 				$.ajax({
 					method: "POST",	 	 
 					url: "/get_structure/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
 					data: {'id': {{ calculation.id }} {% if calculation.type == 1 %}, 'num' : num {% endif %}},
 					success: function(data, textStatus, xhr) {
 						if (xhr.status != 204) {
@@ -116,6 +119,10 @@
 			$.ajax({
 				method: "POST",	 	 
 				url: "/get_structure/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
 				data: {'id': {{ calculation.id }} {% if calculation.type == 1 %}, 'num' : num {% endif %}},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
