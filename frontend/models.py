@@ -34,6 +34,11 @@ class Profile(models.Model):
             accesses.append(i)
         return accesses
 
+class Example(models.Model):
+    title = models.CharField(max_length=100)
+    page_path = models.CharField(max_length=100)
+
+
 class ClusterCommand(models.Model):
     issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
 

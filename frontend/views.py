@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
 
-from .models import Calculation, Profile, Project, ClusterAccess, ClusterPersonalKey, ClusterCommand
+from .models import Calculation, Profile, Project, ClusterAccess, ClusterPersonalKey, ClusterCommand, Example
 from django.contrib.auth.models import User
 
 from django.contrib.auth import login, authenticate
@@ -84,7 +84,22 @@ class DetailView(generic.DetailView):
     def get_queryset(self):
         return Calculation.objects.filter(date__lte=timezone.now(), author__user=self.request.user)
 
+class ExamplesView(generic.ListView):
+    model = Example
+    template_name = 'examples/index.html'
+    context_object_name = 'examples'
+    paginate_by = '5'
 
+    def get_queryset(self):
+        return Example.objects.all()
+
+def example(request, pk):
+    try:
+        ex = Example.objects.get(pk=pk)
+    except Example.DoesNotExist:
+        pass
+
+    return render(request, 'examples/' + ex.page_path, {})
 
 class RegisterView(generic.CreateView):
     form_class = UserCreateForm

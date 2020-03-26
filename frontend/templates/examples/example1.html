@@ -1,0 +1,44 @@
+{% extends 'frontend/base.html' %}
+
+{% load static %}
+
+{% block extrahead %}
+	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+	<script type="text/x-mathjax-config">
+  	MathJax.Hub.Config({
+    		tex2jax: {
+      		inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      		processEscapes: true
+    		}
+  	});
+	</script>
+
+	<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>	
+	<title>Example 1: Simple equilibrium calculation</title>
+{% endblock %}
+
+{% block content %}
+
+<div>
+	Equilibria in solution are a critical part of understanding how a reaction might proceed and what factors will affect it. In this first example, we well calculate the equilibrium constant of a basic acid-base reaction:
+
+	We will model this reaction in DMSO, as the experimental pKa values of phenol and ammonia are well established. This will allow us to compare our result with experimental data.
+
+	First, we optimise each structure with implicit DMSO. As this calculation is very fast, we will use the local machine to carry out the optimisation. 
+	<img src="{% static 'examples/example1/1.png' %}" />	
+	
+	This will give the following result:
+	<img src="{% static 'examples/example1/2.png' %}" />	
+
+	We note that the energy of phenol is -19.96706011563 Hartree with XTB. This value will vary depending on the method used and the solvent; it has no meaning by itself. To use this value, we need the energies of the other compounds. After calculating their energy, we will calculate the variation of enthalpy:
+
+	$$\Delta H = (\Delta H_{phenolate} + \Delta H_{ammonium}) - (\Delta H_{phenol} + \Delta H_{ammonia})$$
+
+	This should give you $$\Delta H \approx 0.05305539 Ha = 33.3kcal/mol = 139.3kJ/mol$$ 
+	We thus predict that the reaction is strongly disfavored. The equilibrium constant would be $e^{-139300/(8.314*293)} \approx 1.46*10^{-25}$. According to the <a href="https://www.chem.wisc.edu/areas/reich/pkatable/">Bordwell pKa table</a>, the pKa of phenol in DMSO is 18.0, while the one of ammonium is 10.5. This would give us an equilibrium constant of $3.16*10^{-8}$, corresponding to variation of free energy of $42.1kJ/mol$. While the result is qualitatively correct, it still differs greatly from the experimental value. However, notice that we simply calculated the energy of the structures as fixed points in space. This neglects completely entropy (i.e. the possible rotations and vibrations in the molecules). We thus obtain only enthalpy, and not free energy. In this case, it is not completely spurious to consider that the entropy variation will be small, but our calculations are still neglecting a big element contributing to the equilibrium. The next tutorial will cover how to take in consideration entropy.
+</div>
+<br />
+{% endblock %}
+

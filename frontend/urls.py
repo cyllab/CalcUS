@@ -13,6 +13,8 @@ urlpatterns = [
     path('register/', views.RegisterView.as_view(), name='register'),
     path('profile/', views.profile, name='profile'),
     path('accounts/login', views.login, name='login'),
+    path('examples/', views.ExamplesView.as_view(), name='examples'),
+    path('examples/<int:pk>', views.example, name='example'),
 
     path('launch/', views.launch, name='launch'),
     path('launch/<int:pk>', views.launch_pk, name='launch_pk'),
