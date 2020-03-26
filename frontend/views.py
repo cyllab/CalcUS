@@ -4,7 +4,6 @@ from django.template import loader
 from django.urls import reverse
 from django.views import generic
 
-from django.http import HttpResponseForbidden
 from django.core.files.storage import FileSystemStorage
 
 from django.utils import timezone
@@ -86,16 +85,6 @@ class DetailView(generic.DetailView):
         return Calculation.objects.filter(date__lte=timezone.now(), author__user=self.request.user)
 
 
-def smart_index(request):
-    if 'previous_page' in request.session:
-        a = request.session['previous_page']
-        print(a)
-        return redirect('{a}/')
-    else:
-        redirect('')
-
-is_admin = lambda u: u.is_superuser == True
-
 
 class RegisterView(generic.CreateView):
     form_class = UserCreateForm
@@ -133,12 +122,15 @@ def submit_calculation(request):
 
     if project == "New Project":
         new_project_name = request.POST['new_project_name']
-        #if new_project_name in profile.project_set:
-            #project_obj = profile.project_set
-        project_obj = Project.objects.create(name=new_project_name)
-        profile.project_set.add(project_obj)
+        try:
+            project_obj = Project.objects.get(name=new_project_name)
+        except Project.DoesNotExist:
+            project_obj = Project.objects.create(name=new_project_name)
+            profile.project_set.add(project_obj)
+            pass
+        else:
+            print("Project with that name already exists")
     else:
-        #try:
         project_set = profile.project_set.filter(name=project)
         if len(project_set) != 1:
             print("More than one project with the same name found!")
