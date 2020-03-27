@@ -1,9 +1,8 @@
 from django.db import models
 import datetime
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
 from django import template
 
 register = template.Library()
@@ -14,6 +13,10 @@ class Profile(models.Model):
 
     calculation_time_used = models.PositiveIntegerField(default=0)
 
+    is_PI = models.BooleanField(default=False)
+    is_SU = models.BooleanField(default=False)
+
+    groups = models.ForeignKey('ResearchGroup', on_delete=models.CASCADE, blank=True, null=True, related_name='members')
     @property
     def username(self):
         return self.user.username
@@ -24,8 +27,9 @@ class Profile(models.Model):
     @property
     def accesses(self):
         accesses = []
-        for i in self.clusterpersonalkey_claimer.all():
-            accesses.append(i.access)
+        if self.groups != None:
+            for acc in self.groups.clusteraccess_set.all():
+                accesses.append(acc)
         for i in self.clusteraccess_owner.all():
             accesses.append(i)
         return accesses
@@ -38,6 +42,14 @@ class Example(models.Model):
 class ClusterCommand(models.Model):
     issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
 
+class ResearchGroup(Group):
+    group_name = models.CharField(max_length=100)
+    PI = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True, related_name="researchgroup_PI")
+
+class PIRequest(models.Model):
+    issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    group_name = models.CharField(max_length=100)
+    date_issued = models.DateTimeField('date')
 
 class Project(models.Model):
     name = models.CharField(max_length=100)
@@ -49,11 +61,11 @@ class Project(models.Model):
     def __repr__(self):
         return self.name
 
-
 class ClusterAccess(models.Model):
     private_key_path = models.CharField(max_length=100)
     public_key_path = models.CharField(max_length=100)
     owner = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True, related_name="clusteraccess_owner")
+    group = models.ForeignKey(ResearchGroup, on_delete=models.CASCADE, blank=True, null=True)
 
     cluster_address = models.CharField(max_length=200, blank=True)
     cluster_username = models.CharField(max_length=50, blank=True)

@@ -6,7 +6,27 @@
 		<link rel="stylesheet" href="{% static 'bulma/css/style.min.css' %}" />
 	{% block extrahead %}
 	{% endblock %}
+	{% if user.profile.is_SU %}
+		<script>
+			function refresh_pi_requests_notification() {
+				$.ajax({
+				url: "/get_pi_requests/",
+				type: 'GET',
+				success: function(data) {
+					if (data != "0") {
+						$("#pi_requests").html("(" + data + ")");
+						
+					}
 
+				}
+			});
+
+			}
+		$(document).ready(function() {
+			refresh_pi_requests_notification();
+		});
+		</script>
+	{% endif %}
 	<style>
 		#content_container {
 			margin-bottom: 30px;
@@ -28,7 +48,11 @@
 			<a class="navbar-item" href="/examples/">
 				Examples
 			</a>
-
+			{% if user.profile.is_SU %}
+			<a class="navbar-item" href="/manage_pi_requests/">
+				Manage PI requests <strong><font color="red" id="pi_requests" style="margin-left: 5px;"></font></strong>
+			</a>
+			{% endif %}
     		</div>
     	</div>
 

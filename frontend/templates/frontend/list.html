@@ -1,6 +1,6 @@
 {% if latest_frontend %}
     {% for calculation in latest_frontend %}
-	<a href="{% url 'frontend:detail' calculation.id %}">
+	<a href="{% url 'frontend:details' calculation.id %}">
 	<div class="box {% if calculation.status == 1 %} has-background-warning {% elif calculation.status == 2 %} has-background-success {% elif calculation.status == 3 %} has-background-danger{% endif %}">
 		<div class="columns is-vcentered is-half">
 

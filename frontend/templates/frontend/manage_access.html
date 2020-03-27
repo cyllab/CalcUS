@@ -7,44 +7,6 @@
 <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 
 	<script>
-		function generate_keys() {
-			let num = document.getElementById("num_keys").value;
-			$.ajax({
-				type: "POST",
-				url: "/generate_keys/",
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				data: {'access_id': {{ access.id }}, 'num': num}, 
-				success: function(data)
-				{
-					refresh_key_table();
-				}
-			});
-
-		}
-		function refresh_key_table() {
-			$("#key_table").load("/key_table/{{ access.id }}");
-		}
-
-		$(document).ready(function() {
-    			refresh_key_table();
-		});
-
-		function delete_key(key_id) {
-			$.ajax({
-				type: "POST",
-				url: "/delete_key/",
-				headers:{
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				data: {'access_id': {{ access.id }}, 'key_id': key_id}, 
-				success: function(data)
-				{
-					refresh_key_table();
-				}
-			});
-		}
 		function test_access() {
 			$.ajax({
 				type: "POST",
@@ -96,15 +58,6 @@
 					<th>Username</th>
 					<td>{{ access.cluster_username }}</td>
 				</tr>
-				<tr>
-					<th>Keys generated</th>
-					<td>{{ access.clusterpersonalkey_set.count }}</td>
-				</tr>
-
-				<tr>
-					<th>Keys claimed</th>
-					<td>{{ access.num_claimed_keys }}</td>
-				</tr>
 			</tbody>
 		</table>
 		</div>
@@ -112,34 +65,16 @@
 
 	<div class="column">
 		<div class="box">
-			<div class="columns">
-				<div class="column is-narrow">
-					<div class="field">
-						<label class="label">Number of keys</label>
-						<div class="control">
-							<input class="input" type="number" min="1" max="10" id="num_keys">
-						</div>
-					</div>
-					<button class="button is-primary" onclick="generate_keys()">Generate keys</button>
-				</div>
-				
-				<div class="column is-narrow">
-					<button class="button is-primary" onclick="test_access();">Test this access</button>
-					<br />
-					<a class="button is-danger" href="/delete_access/{{ access.id }}">Delete this access</a>
-					<br />
-					<div id="test_msg">
-					</div>
-				</div>
+			<button class="button is-primary" onclick="test_access();">Test this access</button>
+			<br />
+			<a class="button is-danger" href="/delete_access/{{ access.id }}">Delete this access</a>
+			<br />
+			<div id="test_msg">
 			</div>
 		</div>
 	</div>
 </div>
 
-<div class="box">
-	<table class="table" id="key_table">
-	</table>
-</div>
 
 
 {% endblock content %}

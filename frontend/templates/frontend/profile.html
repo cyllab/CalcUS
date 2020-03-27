@@ -14,8 +14,53 @@
 		$(document).ready(function() {
     			refresh_claimed_key_table();
 			$("#owned_accesses").load("/owned_accesses/")
+    			refresh_groups();
 		});
 
+		function add_user(group_id) {
+			let username = $("#user_to_add").val();
+			$.ajax({
+				method: "POST",	 	 
+				url: "/add_user/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				data: {'username': username, 'group_id': group_id},
+				success: function(data, textStatus, xhr) {
+					if (xhr.status != 204) {
+						refresh_groups();
+					}
+
+				}
+		  
+			});
+
+		}
+
+		function remove_user(group_id, member_id) {
+			$.ajax({
+				method: "POST",	 	 
+				url: "/remove_user/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				data: {'member_id': member_id, 'group_id': group_id},
+				success: function(data, textStatus, xhr) {
+					if (xhr.status != 204) {
+						refresh_groups();
+					}
+
+				}
+		  
+			});
+
+		}
+
+		function refresh_groups() {
+			$("#groups_div").load("/profile_groups/");
+		}
 	</script>
 {% endblock %}
 {% block content %}
@@ -29,6 +74,28 @@
 
 <br>
 
+{% if not profile.is_PI %}
+<div class="box">
+	<div class="columns is-vcentered">
+		<div class="column is-4">
+			<form action="/apply_pi/" method="POST">
+				{% csrf_token %}
+				<div class="field">
+					<div class="control">
+						<label class="label">Group name</label>
+						<input type="text" name="group_name"></input>
+					</div>
+				</div>
+				<button class="button is-primary">Apply for a PI account</button>
+			</form>
+		</div>
+
+		<div class="column">
+			Your account will have to be approved by the administrator before you are able to launch calculations.	
+		</div>
+	</div>
+</div>
+{% else %}
 <div class="box">
 	<div class="columns">
 		<div class="column is-narrow has-text-centered">
@@ -69,36 +136,13 @@
 		</div>
 	</div>
 </div>
-
+{% endif %}
 
 <div class="box">
-	<div class="columns">
-		<div class="column is-narrow has-text-centered">
-			<h5 class="title is-5">Claim key</h5>
-			<form id="claim_key_form">
-				<div class="field">
-					<label class="label">Key</label>
-					<div class="control">
-						<input class="input" name="key" id="key_to_claim" ></input>
-					</div>
-				</div>
-				<div class="field">
-					<div class="control has-text-centered" >
-						<button class="button is-primary">Claim</button>
-					</div>
-				</div>
-				<div id="claim_message">
-					
-				</div>
-			</form>
-		</div>	
-		<div class="column">
-			<center>
-				<h5 class="title is-5">Claimed key</h5>
-				<table class="table" id="claimed_key_table">
-				</table>
-			</center>
-		</div>
+	<center>
+		<h5 class="title is-5">Group</h5>
+	</center>
+	<div id="groups_div">
 	</div>
 </div>
 
@@ -117,24 +161,6 @@
 			$("#public_key_div").removeClass('is-hidden');
 			$("#public_key_area").html(data);
 			$("#owned_accesses").load("/owned_accesses/")
-		   }
-		 });
-	});
-	$("#claim_key_form").submit(function(e) {
-
-	    e.preventDefault(); 
-	    var form = $(this);
-	    var url = form.attr('action');
-
-	    $.ajax({
-		   type: "POST",
-		   url: "/claim_key/",
-		   data: form.serialize(), 
-		   success: function(data)
-		   {
-			refresh_claimed_key_table();
-			$("#claim_message").html(data);
-
 		   }
 		 });
 	});

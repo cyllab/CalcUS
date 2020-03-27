@@ -18,11 +18,12 @@ from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth import login
+from django.contrib.auth.models import User
 
 from .forms import UserCreateForm
-from .models import Calculation, Profile, Project, ClusterAccess, ClusterPersonalKey, ClusterCommand, Example
+from .models import Calculation, Profile, Project, ClusterAccess, ClusterPersonalKey, ClusterCommand, Example, PIRequest, ResearchGroup
 from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso, geom_opt_freq
-
+from .decorators import superuser_required
 
 
 LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
@@ -48,23 +49,38 @@ class IndexView(generic.ListView):
 
         self.request.session['previous_page'] = page
         proj = self.request.GET.get('project')
+        target_username = self.request.GET.get('user')
 
-        if proj == "All projects":
-            return sorted(self.request.user.profile.calculation_set.all(), key=lambda d: d.date, reverse=True)
+
+        try:
+            target_profile = User.objects.get(username=target_username).profile
+        except User.DoesNotExist:
+            return []
+
+        if profile_intersection(self.request.user.profile, target_profile):
+            if proj == "All projects":
+                return sorted(target_profile.calculation_set.all(), key=lambda d: d.date, reverse=True)
+            else:
+                return sorted(target_profile.calculation_set.filter(project__name=proj), key=lambda d: d.date, reverse=True)
         else:
-            return sorted(self.request.user.profile.calculation_set.filter(project__name=proj), key=lambda d: d.date, reverse=True)
+            return []
 
 
 def index(request, page=1):
     return render(request, 'frontend/index.html', {"page": page})
 
 
-class DetailView(generic.DetailView):
-    model = Calculation
-    template_name = 'frontend/details.html'
+@login_required
+def details(request, pk):
+    try:
+        calc = Calculation.objects.get(pk=pk)
+    except Calculation.DoesNotExist:
+        return HttpResponse(status=403)
 
-    def get_queryset(self):
-        return Calculation.objects.filter(date__lte=timezone.now(), author__user=self.request.user)
+    if not profile_intersection(request.user.profile, calc.author):
+        return HttpResponse(status=403)
+
+    return render(request, 'frontend/details.html', {'calculation': calc})
 
 class ExamplesView(generic.ListView):
     model = Example
@@ -184,6 +200,43 @@ def submit_calculation(request):
 
     return redirect("/details/{}".format(t))
 
+def profile_intersection(profile1, profile2):
+    if profile1 == profile2:
+        return True
+    if profile1.groups != None:
+        if profile2 in profile1.groups.members.all():
+            return True
+        if profile2 == profile1.groups.PI:
+            return True
+    if profile1.researchgroup_PI != None:
+        for group in profile1.researchgroup_PI.all():
+            if profile2 in group.members.all():
+                return True
+    return False
+
+@login_required
+def project_list(request):
+    if request.method == "POST":
+        target_username = bleach.clean(request.POST['user'])
+        try:
+            target_profile = User.objects.get(username=target_username).profile
+        except User.DoesNotExist:
+            return HttpResponse(status=403)
+
+        profile = request.user.profile
+
+        if not profile_intersection(profile, target_profile):
+            return HttpResponse(status=403)
+
+
+        return render(request, 'frontend/project_list.html', {
+                'profile': request.user.profile,
+                'target_profile': target_profile,
+            })
+
+    else:
+        return HttpResponse(status=403)
+
 @login_required
 def delete(request, pk):
     profile, created = Profile.objects.get_or_create(user=request.user)
@@ -211,6 +264,9 @@ def add_clusteraccess(request):
         username = bleach.clean(request.POST['cluster_username'])
         owner = request.user.profile
 
+        if not owner.is_PI:
+            return HttpResponse(status=403)
+
         try:
             existing_access = owner.clusteraccess_owner.get(cluster_address=address, cluster_username=username, owner=owner)
         except ClusterAccess.DoesNotExist:
@@ -221,7 +277,7 @@ def add_clusteraccess(request):
         key_private_name = "{}_{}_{}".format(owner.username, username, ''.join(ch for ch in address if ch.isalnum()))
         key_public_name = key_private_name + '.pub'
 
-        access = ClusterAccess.objects.create(cluster_address=address, cluster_username=username, private_key_path=key_private_name, public_key_path=key_public_name, owner=owner)
+        access = ClusterAccess.objects.create(cluster_address=address, cluster_username=username, private_key_path=key_private_name, public_key_path=key_public_name, owner=owner, group=owner.researchgroup_PI.all()[0])
         access.save()
         owner.save()
 
@@ -367,6 +423,131 @@ def delete_key(request):
         return HttpResponse(status=403)
 
 @login_required
+@superuser_required
+def get_pi_requests(request):
+    reqs = PIRequest.objects.count()
+    return HttpResponse(str(reqs))
+
+@login_required
+@superuser_required
+def get_pi_requests_table(request):
+
+    reqs = PIRequest.objects.all()
+
+    return render(request, 'frontend/pi_requests_table.html', {
+        'profile': request.user.profile,
+        'reqs': reqs,
+        })
+
+@login_required
+def add_user(request):
+    if request.method == "POST":
+        profile = request.user.profile
+
+        if not profile.is_PI:
+            return HttpResponse(status=403)
+
+        username = bleach.clean(request.POST['username'])
+        group_id = int(bleach.clean(request.POST['group_id']))
+
+        try:
+            group = ResearchGroup.objects.get(pk=group_id)
+        except ResearchGroup.DoesNotExist:
+            return HttpResponse(status=403)
+
+        if group.PI != profile:
+            return HttpResponse(status=403)
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return HttpResponse(status=403)
+
+        if user.profile == profile:
+            return HttpResponse(status=403)
+        group.members.add(user.profile)
+
+        return HttpResponse(status=200)
+
+    return HttpResponse(status=403)
+
+@login_required
+def remove_user(request):
+    if request.method == "POST":
+        profile = request.user.profile
+
+        if not profile.is_PI:
+            return HttpResponse(status=403)
+
+        member_id = int(bleach.clean(request.POST['member_id']))
+        group_id = int(bleach.clean(request.POST['group_id']))
+
+        try:
+            group = ResearchGroup.objects.get(pk=group_id)
+        except ResearchGroup.DoesNotExist:
+            return HttpResponse(status=403)
+
+        if group.PI != profile:
+            return HttpResponse(status=403)
+
+        try:
+            member = Profile.objects.get(pk=member_id)
+        except Profile.DoesNotExist:
+            return HttpResponse(status=403)
+
+        if member == profile:
+            return HttpResponse(status=403)
+
+        if member not in group.members.all():
+            return HttpResponse(status=403)
+
+        group.members.remove(member)
+
+        return HttpResponse(status=200)
+
+    return HttpResponse(status=403)
+
+@login_required
+def profile_groups(request):
+    return render(request, 'frontend/profile_groups.html', {
+        'profile': request.user.profile,
+        })
+
+
+@login_required
+@superuser_required
+def accept_pi_request(request, pk):
+
+    a = PIRequest.objects.get(pk=pk)
+    issuer = a.issuer
+
+    profile.is_PI = True
+    profile.save()
+    group = ResearchGroup.objects.create(group_name = a.group_name, PI=issuer)
+    a.delete()
+
+    return HttpResponse(status=200)
+
+@login_required
+@superuser_required
+def deny_pi_request(request, pk):
+
+    a = PIRequest.objects.get(pk=pk)
+    a.delete()
+
+    return HttpResponse(status=200)
+
+@login_required
+@superuser_required
+def manage_pi_requests(request):
+    reqs = PIRequest.objects.all()
+
+    return render(request, 'frontend/manage_pi_requests.html', {
+        'profile': request.user.profile,
+        'reqs': reqs,
+        })
+
+@login_required
 def claimed_key_table(request):
     return render(request, 'frontend/claimed_key_table.html', {
             'profile': request.user.profile,
@@ -379,7 +560,7 @@ def conformer_table(request, pk):
     type = calc.type
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all():
+    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
     if type != 1:
@@ -397,7 +578,7 @@ def icon(request, pk):
 
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all():
+    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
     icon_file = os.path.join(LAB_RESULTS_HOME, id, "icon.svg")
@@ -421,7 +602,7 @@ def uvvis(request, pk):
 
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all():
+    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
     spectrum_file = os.path.join(LAB_RESULTS_HOME, id, "uvvis.csv")
@@ -445,7 +626,7 @@ def nmr(request, pk):
 
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all():
+    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
     spectrum_file = os.path.join(LAB_RESULTS_HOME, id, "nmr.csv")
@@ -465,7 +646,7 @@ def vib_table(request, pk):
 
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all():
+    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
     vib_file = os.path.join(LAB_RESULTS_HOME, id, "vibspectrum")
@@ -501,13 +682,32 @@ def vib_table(request, pk):
         return HttpResponse(status=204)
 
 @login_required
+def apply_pi(request):
+    if request.method == 'POST':
+        profile = request.user.profile
+
+        if profile.is_PI:
+            return render(request, 'frontend/apply_pi.html', {
+                'profile': request.user.profile,
+                'message': "You are already a PI!",
+            })
+        group_name = bleach.clean(request.POST['group_name'])
+        req = PIRequest.objects.create(issuer=profile, group_name=group_name, date_issued=timezone.now())
+        return render(request, 'frontend/apply_pi.html', {
+            'profile': request.user.profile,
+            'message': "Your request has been received.",
+        })
+    else:
+        return HttpResponse(status=403)
+
+@login_required
 def info_table(request, pk):
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
 
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all():
+    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
     return render(request, 'frontend/info_table.html', {
@@ -522,7 +722,7 @@ def status(request, pk):
 
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all():
+    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
     return render(request, 'frontend/status.html', {
@@ -537,7 +737,7 @@ def download_structure(request, pk):
 
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all():
+    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
     if type == 1:
@@ -564,7 +764,7 @@ def get_structure(request):
 
         profile = request.user.profile
 
-        if calc not in profile.calculation_set.all():
+        if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
             return HttpResponse(status=403)
 
         type = calc.type
@@ -603,7 +803,7 @@ def log(request, pk):
 
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all():
+    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
     for out in glob.glob(os.path.join(LAB_RESULTS_HOME, str(pk)) + '/*.out'):

@@ -17,11 +17,15 @@
 		function refresh_list() {
 			var sel = document.getElementById("calc_project");
 			opt = sel.options[sel.selectedIndex].text;
+
+			var sel2 = document.getElementById("calc_user");
+			user = sel2.options[sel2.selectedIndex].text;
 			$.ajax({
 				data: {
 					csrfmiddlewaretoken: ('{{csrf_token}}'),
 					project: opt,	
 					page: page,
+					user: user,
 				},
 				method: "GET",
 				url: '/list/',
@@ -41,12 +45,58 @@
 			page = newpage;
 			refresh_list();
 		}
+
+		function refresh_project_list() {
+			var sel2 = document.getElementById("calc_user");
+			user = sel2.options[sel2.selectedIndex].text;
+			$.ajax({
+				data: {
+					csrfmiddlewaretoken: ('{{csrf_token}}'),
+					user: user,
+				},
+				method: "POST",
+				url: '/project_list/',
+				success: function (data, textStatus, xhr) {
+					if (xhr.status != 204) {
+				    		$("#calc_project").html(data);
+						refresh_list();
+					}
+				},
+				error: function () {
+				    $("#calc_project").html("");
+					
+				}
+			    });
+
+
+		}
 	</script>
 {% endblock %}
 
 {% block content %}
 <div class="container">
 	{% if user.is_authenticated %}
+		<div class="select" >
+			<select name="calc_user" id="calc_user" onchange="set_page(1);refresh_project_list();">
+				<option>{{ user.username }}</option>
+				{% for teammate in user.profile.groups.members.all %}
+					{% if teammate != user.profile %}
+						<option name="{{ teammate.username }}">{{ teammate.username }}</option>
+					{% endif %}
+				{% endfor %}
+				{% if user.profile.groups.PI != None %}
+					<option name="{{ user.profile.groups.PI.username }}">{{ user.profile.groups.PI.username }}</option>
+				{% endif %}
+				{% for group in user.profile.researchgroup_PI.all %}
+					{% for teammate in group.members.all %}
+						<option name="{{ teammate.username }}">{{ teammate.username }}</option>
+					{% endfor %}
+				{% endfor %}
+
+			</select>
+		</div>
+
+
 		<div class="select" >
 			<select name="calc_project" id="calc_project" onchange="set_page(1);">
 				<option name="all">All projects</option>

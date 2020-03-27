@@ -1,0 +1,65 @@
+{% if profile.researchgroup_PI.count > 0 %}
+	{% for group in profile.researchgroup_PI.all %}
+	<center>
+		You are the PI of {{ group.group_name }}
+	</center>
+
+		<div class="columns">
+			<div class="column is-narrow has-text-centered">
+				<div>
+					{% csrf_token %}
+					<div class="field">
+						<label class="label">Username</label>
+						<input type="text" id="user_to_add"></input>
+					</div>
+					<button class="button is-primary" onclick="add_user({{ group.id }});">Add user to group</button>
+				</div>
+			</div>
+			<div class="column has-text-centered">
+				<div>
+					<center>
+					{% if group.members.count > 0 %}
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Members</th>
+									<th>Action</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for member in group.members.all %}
+								<tr>
+									<td>{{ member.username }}</td>
+									<td><button class="button is-danger" onclick="remove_user({{ group.id }}, {{ member.id }});">Remove</button>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					{% endif %}
+					</center>
+				</div>
+			</div>
+		</div>
+	{% endfor %}
+{% elif profile.groups != None %}
+	You are a member of {{ profile.groups.group_name }}
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Members</th>
+			</tr>
+		</thead>
+		<tbody>
+			<th>{{ profile.groups.PI.username }}</th>
+			{% for member in profile.groups.members.all %}
+			<tr>
+				<td>{{ member.username }}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+{% else %}
+	You belong to no research group as of right now.
+{% endif %}
+
