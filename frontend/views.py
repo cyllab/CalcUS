@@ -127,6 +127,9 @@ def submit_calculation(request):
 
         if profile not in access.users and access.owner != profile:
             return redirect("/home/")
+    else:
+        if not profile.is_PI and profile.groups == None:
+            return redirect("/home/")
 
 
     profile, created = Profile.objects.get_or_create(user=request.user)
@@ -358,10 +361,12 @@ def test_access(request):
 
     profile = request.user.profile
 
-    if access not in profile.clusteraccess_owner.all() and access not in [i.access for i in profile.clusterpersonalkey_claimer]:
+    if access not in profile.clusteraccess_owner.all():
         return HttpResponse(status=403)
 
     cmd = ClusterCommand.objects.create(issuer=profile)
+    cmd.save()
+    profile.save()
 
     with open(os.path.join(LAB_CLUSTER_HOME, "todo", str(cmd.id)), 'w') as out:
         out.write("access_test\n")
@@ -376,7 +381,6 @@ def get_command_status(request):
     cmd = ClusterCommand.objects.get(pk=pk)
 
     profile = request.user.profile
-
     if cmd not in profile.clustercommand_set.all():
         return HttpResponse(status=403)
 
@@ -877,14 +881,12 @@ def launch(request):
 
 @login_required
 def launch_pk(request, pk):
-    if isinstance(request.user, AnonymousUser):
-        return please_register(request)
 
     calc = Calculation.objects.get(pk=pk)
 
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all():
+    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
     return render(request, 'frontend/launch.html', {

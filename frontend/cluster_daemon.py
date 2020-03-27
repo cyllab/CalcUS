@@ -47,7 +47,7 @@ class ClusterDaemon:
 
     def access_test(self, id):
         for conn in self.connections:
-            if conn[0].id == int(id):
+            if self.connections[conn][0].id == int(id):
                 return 0
 
         try:
@@ -182,10 +182,12 @@ class ClusterDaemon:
     def __init__(self):
         for conn in ClusterAccess.objects.all():
             c = self.access_test(conn.id)
-            if c not in [1, 2, 3, 4]:
+            if c not in [0, 1, 2, 3, 4]:
                 self.connections[c[0].id] = c
                 self.locks[c[0].id] = Lock()
                 print("Added cluster access {}".format(c[0].id))
+            elif c == 0:
+                pass
             else:
                 print("Error with cluster access: {}".format(CONNECTION_CODE[c]))
 

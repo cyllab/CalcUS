@@ -24,6 +24,10 @@
 						type: "POST",
 						url: "/get_command_status/",
 						data: {'command_id': id}, 
+						headers:{
+							"X-CSRFToken": '{{ csrf_token }}',
+						},
+
 						success: function(data)
 						{
 							$("#test_msg").html(data);

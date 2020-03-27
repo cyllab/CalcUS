@@ -1,4 +1,4 @@
-{% if profile.researchgroup_PI.count == 0 %}
+{% if profile.researchgroup_PI.count == 0 and profile.groups == None %}
 Your group code is {{ profile.code }}. Give this to your PI to be added to a research group.
 {% endif %}
 
