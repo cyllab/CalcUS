@@ -1,7 +1,11 @@
+{% if profile.researchgroup_PI.count == 0 %}
+Your group code is {{ profile.code }}. Give this to your PI to be added to a research group.
+{% endif %}
+
 {% if profile.researchgroup_PI.count > 0 %}
 	{% for group in profile.researchgroup_PI.all %}
 	<center>
-		You are the PI of {{ group.group_name }}
+		You are the PI of {{ group.name }}
 	</center>
 
 		<div class="columns">
@@ -12,6 +16,11 @@
 						<label class="label">Username</label>
 						<input type="text" id="user_to_add"></input>
 					</div>
+					<div class="field">
+						<label class="label">Individual Code</label>
+						<input type="text" id="code"></input>
+					</div>
+
 					<button class="button is-primary" onclick="add_user({{ group.id }});">Add user to group</button>
 				</div>
 			</div>
@@ -42,23 +51,24 @@
 		</div>
 	{% endfor %}
 {% elif profile.groups != None %}
-	You are a member of {{ profile.groups.group_name }}
-	<table class="table">
-		<thead>
-			<tr>
-				<th>Members</th>
-			</tr>
-		</thead>
-		<tbody>
-			<th>{{ profile.groups.PI.username }}</th>
-			{% for member in profile.groups.members.all %}
-			<tr>
-				<td>{{ member.username }}</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-	</table>
-
+	You are a member of {{ profile.groups.name }}
+	<center>
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Members</th>
+				</tr>
+			</thead>
+			<tbody>
+				<th>{{ profile.groups.PI.username }} (PI)</th>
+				{% for member in profile.groups.members.all %}
+				<tr>
+					<td>{{ member.username }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</center>
 {% else %}
 	You belong to no research group as of right now.
 {% endif %}

@@ -19,6 +19,7 @@
 
 		function add_user(group_id) {
 			let username = $("#user_to_add").val();
+			let code = $("#code").val();
 			$.ajax({
 				method: "POST",	 	 
 				url: "/add_user/",
@@ -26,7 +27,7 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 
-				data: {'username': username, 'group_id': group_id},
+				data: {'username': username, 'group_id': group_id, 'code': code},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						refresh_groups();

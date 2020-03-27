@@ -465,6 +465,12 @@ def add_user(request):
 
         if user.profile == profile:
             return HttpResponse(status=403)
+
+        code = bleach.clean(request.POST['code'])
+
+        if user.profile.code != code:
+            return HttpResponse(status=403)
+
         group.members.add(user.profile)
 
         return HttpResponse(status=200)
@@ -519,11 +525,20 @@ def profile_groups(request):
 def accept_pi_request(request, pk):
 
     a = PIRequest.objects.get(pk=pk)
-    issuer = a.issuer
 
-    profile.is_PI = True
-    profile.save()
-    group = ResearchGroup.objects.create(group_name = a.group_name, PI=issuer)
+    try:
+        group = ResearchGroup.objects.get(name=a.group_name)
+    except ResearchGroup.DoesNotExist:
+        pass
+    else:
+        print("Group with that name already exists")
+        return HttpResponse(status=403)
+    issuer = a.issuer
+    group = ResearchGroup.objects.create(name=a.group_name, PI=issuer)
+    group.save()
+    issuer.is_PI = True
+    issuer.save()
+
     a.delete()
 
     return HttpResponse(status=200)

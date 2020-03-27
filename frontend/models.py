@@ -4,6 +4,7 @@ from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django import template
+import random, string
 
 register = template.Library()
 
@@ -17,6 +18,9 @@ class Profile(models.Model):
     is_SU = models.BooleanField(default=False)
 
     groups = models.ForeignKey('ResearchGroup', on_delete=models.CASCADE, blank=True, null=True, related_name='members')
+
+    code = models.CharField(max_length=16)
+
     @property
     def username(self):
         return self.user.username
@@ -43,7 +47,6 @@ class ClusterCommand(models.Model):
     issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
 
 class ResearchGroup(Group):
-    group_name = models.CharField(max_length=100)
     PI = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True, related_name="researchgroup_PI")
 
 class PIRequest(models.Model):
@@ -165,8 +168,9 @@ class Structure(models.Model):
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
+    code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(16))
     if created:
-        Profile.objects.create(user=instance)
+        Profile.objects.create(user=instance, code=code)
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
