@@ -11,8 +11,7 @@
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
 
-	{% if calculation.type == 2 or calculation.type == 3 %}
-	<script src="{% static 'frontend/chartist.min.js' %}"></script>
+	{% if calculation.type == 2 or calculation.type == 3 or calculation.type == 4 %}
 	<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
 	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
 	{% endif %}
@@ -95,7 +94,7 @@
 								}          
 							);
 							{% elif calculation.type == 3 %}
-							g2 = new Dygraph(
+							g3 = new Dygraph(
 							document.getElementById("nmr_spectrum"),
 								"/nmr/{{ calculation.id }}", 
 								{
@@ -118,6 +117,28 @@
 							);
 							{% elif calculation.type == 4 %}
 								$("#vib_table").load("/vib_table/{{ calculation.id }}")
+								g4 = new Dygraph(
+								document.getElementById("ir_spectrum"),
+									"/ir_spectrum/{{ calculation.id }}", 
+									{
+										strokeWidth: 2,	
+										xlabel: "Wavelength (cm^-1)",
+										ylabel: "Intensity",
+
+									axes: {
+										x: {
+											axisLabelFormatter: function(cm) {
+												return -cm;
+											},
+											valueFormatter: function(cm) {
+												return -cm;
+											}
+										},
+									}
+									}
+
+								);
+
 							{% endif %}
 						}
 
@@ -304,6 +325,7 @@
 
 				</tbody>
 			</table>
+			<div id="ir_spectrum" style="width:600px; height:400px; margin-bottom: 30px;"></div>
 		</div>
 	</div>
 	{% endif %}

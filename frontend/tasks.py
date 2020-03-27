@@ -375,12 +375,20 @@ C = 299792458
 HC = 4.135668E15*C
 ME = 9.10938E-31
 
+FUZZ_INT = 1./30
+FUZZ_WIDTH = 50000
+
 def plot_peaks(_x, PP):
     val = 0
     for w, T in PP:
         val += np.sqrt(np.pi)*E**2*NA/(1000*np.log(10)*C**2*ME)*T/SIGMA*np.exp(-((HC/_x-HC/w)/(HC/SIGMA_L))**2)
     return val
 
+def plot_vibs(_x, PP):
+    val = 0
+    for w, T in PP:
+        val += FUZZ_INT*(1 - np.exp(-(FUZZ_WIDTH/w-FUZZ_WIDTH/_x)**2))
+    return val
 
 
 @app.task
@@ -443,6 +451,42 @@ def geom_opt_freq(id, drawing, charge, solvent, calc_obj=None, remote=False):
         hl_gap = float(lines[ind].split()[3])
         E = float(lines[ind-4].split()[3])
         G = float(lines[ind-2].split()[4])
+
+    vib_file = os.path.join(LAB_RESULTS_HOME, id, "vibspectrum")
+
+    if os.path.isfile(vib_file):
+        with open(vib_file) as f:
+            lines = f.readlines()
+
+        vibs = []
+        intensities = []
+        for line in lines:
+            if len(line.split()) > 4 and line[0] != '#':
+                sline = line.split()
+                try:
+                    a = float(sline[1])
+                    if a == 0.:
+                        continue
+                except ValueError:
+                    pass
+                vib = float(line[20:33].strip())
+                vibs.append(vib)
+                try:
+                    intensity = float(sline[3])
+                except ValueError:
+                    continue
+                else:
+                    intensities.append(intensity)
+        if len(vibs) == len(intensities):
+            x = np.arange(500, 4000, 1)
+            spectrum = plot_vibs(x, zip(vibs, intensities))
+            with open(os.path.join(LAB_RESULTS_HOME, id, "IR.csv"), 'w') as out:
+                out.write("Wavenumber,Intensity\n")
+                intensities = 1000*np.array(intensities)/max(intensities)
+                for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
+                    out.write("-{:.1f},{:.5f}\n".format(_x, i))
+
+
 
     r = Structure.objects.create(number=1, energy=E, free_energy=G, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
     r.save()

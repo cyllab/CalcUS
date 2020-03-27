@@ -659,6 +659,30 @@ def nmr(request, pk):
         return HttpResponse(status=204)
 
 @login_required
+def ir_spectrum(request, pk):
+    id = str(pk)
+    calc = Calculation.objects.get(pk=id)
+    type = calc.type
+
+    if type != 4:
+        return HttpResponse(status=403)
+
+    profile = request.user.profile
+
+    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+        return HttpResponse(status=403)
+
+    spectrum_file = os.path.join(LAB_RESULTS_HOME, id, "IR.csv")
+
+    if os.path.isfile(spectrum_file):
+        with open(spectrum_file, 'rb') as f:
+            response = HttpResponse(f, content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename={}.csv'.format(id)
+            return response
+    else:
+        return HttpResponse(status=204)
+
+@login_required
 def vib_table(request, pk):
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
