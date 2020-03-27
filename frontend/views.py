@@ -301,59 +301,6 @@ def add_clusteraccess(request):
         return HttpResponse(status=403)
 
 @login_required
-def generate_keys(request):
-    if request.method == 'POST':
-        access_id = request.POST['access_id']
-        num = int(request.POST['num'])
-
-        if num < 1 or num > 10:
-            return HttpResponse(status=403)
-
-        access = ClusterAccess.objects.get(pk=access_id)
-
-        profile = request.user.profile
-
-        if access not in profile.clusteraccess_owner.all():
-            return HttpResponse(status=403)
-
-        for i in range(int(num)):
-            key = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(KEY_SIZE))
-            ClusterPersonalKey.objects.create(key=key, issuer=profile, date_issued=timezone.now(), access=access)
-        return HttpResponse(status=200)
-    else:
-        return HttpResponse(status=403)
-
-@login_required
-def claim_key(request):
-    if request.method == 'POST':
-        key = request.POST['key']
-
-        try:
-            key_obj = ClusterPersonalKey.objects.get(key=key)
-        except ClusterPersonalKey.DoesNotExist:
-            return HttpResponse("Invalid key")
-
-        if key_obj.claimer is not None:
-            return HttpResponse("Invalid key")
-
-        profile = request.user.profile
-
-        keys_owned = profile.clusterpersonalkey_claimer.all()
-        for key in keys_owned:
-            if key.access.cluster_address == key_obj.access.cluster_address and key.access.cluster_username == key_obj.access.cluster_username:
-                return HttpResponse("You already have access to this cluster with this username")
-
-        if key_obj.issuer == profile:
-            return HttpResponse("You have issued this key")
-
-        key_obj.claimer = profile
-        key_obj.save()
-
-        return HttpResponse("Key claimed")
-    else:
-        return HttpResponse(status=403)
-
-@login_required
 def test_access(request):
     pk = request.POST['access_id']
 
@@ -403,28 +350,6 @@ def delete_access(request, pk):
 
     access.delete()
     return HttpResponseRedirect("/profile")
-
-@login_required
-def delete_key(request):
-    if request.method == 'POST':
-        access_id = request.POST['access_id']
-        key_id = request.POST['key_id']
-
-        access = ClusterAccess.objects.get(pk=access_id)
-
-        profile = request.user.profile
-
-        if access not in profile.clusteraccess_owner.all():
-            return HttpResponse(status=403)
-
-        key = ClusterPersonalKey.objects.get(pk=key_id)
-        if key not in access.clusterpersonalkey_set.all():
-            return HttpResponse(status=403)
-
-        key.delete()
-        return HttpResponse(status=200)
-    else:
-        return HttpResponse(status=403)
 
 @login_required
 @superuser_required

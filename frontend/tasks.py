@@ -238,7 +238,7 @@ def xtb_freq(in_file, charge, solvent):
     else:
         solvent_add = ''
 
-    return system("xtb {} --chrg {} {} --hess".format(in_file, charge, solvent_add), 'xtb_freq.out')
+    return system("xtb {} --uhf 1 --chrg {} {} --hess".format(in_file, charge, solvent_add), 'xtb_freq.out')
 
 def crest(in_file, charge, solvent, mode):
     if solvent != "Vacuum":
