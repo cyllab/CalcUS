@@ -4,6 +4,7 @@ import glob
 import random
 import string
 import bleach
+import math
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -457,6 +458,47 @@ def nmr(request, pk):
     else:
         return HttpResponse(status=204)
 
+@login_required
+def vib_table(request, pk):
+    id = str(pk)
+    calc = Calculation.objects.get(pk=id)
+
+    profile = request.user.profile
+
+    if calc not in profile.calculation_set.all():
+        return HttpResponse(status=403)
+
+    vib_file = os.path.join(LAB_RESULTS_HOME, id, "vibspectrum")
+
+    if os.path.isfile(vib_file):
+        with open(vib_file) as f:
+            lines = f.readlines()
+
+        vibs = []
+        for line in lines:
+            if len(line.split()) > 4 and line[0] != '#':
+                sline = line.split()
+                try:
+                    a = float(sline[1])
+                    if a == 0.:
+                        continue
+                except ValueError:
+                    pass
+                vib = float(line[20:33].strip())
+                vibs.append(vib)
+
+        formatted_vibs = []
+
+        for ind in range(math.ceil(len(vibs)/3)):
+            formatted_vibs.append([vibs[3*ind], vibs[3*ind+1] if 3*ind+2 < len(vibs) else '', vibs[3*ind+2] if 3*ind+3 < len(vibs) else ''])
+
+        return render(request, 'frontend/vib_table.html', {
+                    'profile': request.user.profile,
+                    'vibs': formatted_vibs
+                })
+
+    else:
+        return HttpResponse(status=204)
 
 @login_required
 def info_table(request, pk):

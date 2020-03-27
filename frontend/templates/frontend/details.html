@@ -116,6 +116,8 @@
 
 								}          
 							);
+							{% elif calculation.type == 4 %}
+								$("#vib_table").load("/vib_table/{{ calculation.id }}")
 							{% endif %}
 						}
 
@@ -196,7 +198,7 @@
 
 	<strong>{{ calculation.text_type }}</strong>
 
-	{% if calculation.type == 0 or calculation.type == 4 %}
+	{% if calculation.type == 0 %}
 	<div>
 		<script>
 			let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {});
@@ -274,8 +276,36 @@
 			<a class="button" href="/nmr/{{ calculation.id }}">Download spectrum in CSV format</a>
 		</div>
 	</div>
+	{% endif %}
 
+	{% if calculation.type == 4 %}
+	<div class="columns">
+		<div class="column">
+			<div>
+				<script>
+					let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {});
+					editor.styles.set3DRepresentation('Stick');
+					editor.styles.backgroundColor = '#FFFFFF';
+				</script>
+				<br />
+				<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .mol</button>
+			</div>
+		</div>
+		<div class="column">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Vibration (cm^-1)</th>
+						<th>Vibration (cm^-1)</th>
+						<th>Vibration (cm^-1)</th>
+					</tr>
+				</thead>
+				<tbody id="vib_table">
 
+				</tbody>
+			</table>
+		</div>
+	</div>
 	{% endif %}
 	<br />
 

@@ -340,16 +340,29 @@ def run_steps(steps, calc_obj, drawing, id):
 
 def save_to_results(f, calc_obj, multiple=False):
     for _f in f:
-        name = _f.split('.')[0]
-        if multiple:
-            a = system("babel -ixyz {}/{} -omol {}/conf.mol -m".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), _f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
+        s = _f.split('.')
+        if len(s) == 2:
+            name, ext = s
+            if ext == 'xyz':
+                if multiple:
+                    a = system("babel -ixyz {}/{} -omol {}/conf.mol -m".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), _f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
+                else:
+                    a = system("babel -ixyz {}/{} -omol {}/{}.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), _f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id)), name), force_local=True)
+                if a != 0:
+                    calc_obj.status = 3
+                    calc_obj.error_message = "Failed to convert the optimized geometry"
+                    calc_obj.save()
+                    return a
+            elif ext == 'mol':
+                copyfile(os.path.join(LAB_SCR_HOME, str(calc_obj.id), _f.split('/')[-1]), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), _f.split('/')[-1]))
+            else:
+                print("Unknown extension: {}".format(ext))
+        elif len(s) == 1:
+            name = s
+            copyfile(os.path.join(LAB_SCR_HOME, str(calc_obj.id), _f.split('/')[-1]), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), _f.split('/')[-1]))
         else:
-            a = system("babel -ixyz {}/{} -omol {}/{}.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), _f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id)), name), force_local=True)
-        if a != 0:
-            calc_obj.status = 3
-            calc_obj.error_message = "Failed to convert the optimized geometry"
-            calc_obj.save()
-            return a
+            print("Odd number of periods!")
+            return -1
     return 0
 
 
@@ -414,6 +427,10 @@ def geom_opt_freq(id, drawing, charge, solvent, calc_obj=None, remote=False):
         return
 
     a = save_to_results(["xtbopt.xyz"], calc_obj)
+    if a != 0:
+        return
+
+    a = save_to_results(["vibspectrum"], calc_obj, multiple=True)
     if a != 0:
         return
 
@@ -565,6 +582,7 @@ def nmr_enso(id, drawing, charge, solvent, calc_obj=None, remote=False):
     a = save_to_results(["crest_conformers.xyz"], calc_obj, multiple=True)
     if a != 0:
         return
+
 
     #r = Structure.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
 

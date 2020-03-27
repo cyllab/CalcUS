@@ -25,6 +25,7 @@ urlpatterns = [
     path('key_table/<int:pk>', views.key_table, name='key_table'),
     path('info_table/<int:pk>', views.info_table, name='info_table'),
     path('conformer_table/<int:pk>', views.conformer_table, name='conformer_table'),
+    path('vib_table/<int:pk>', views.vib_table, name='vib_table'),
 
     path('log/<int:pk>', views.log, name='log'),
     path('submit_calculation/', views.submit_calculation, name='submit_calculation'),
