@@ -17,6 +17,18 @@
 	{% endif %}
 
 	<script>
+		$(document).ready(function(){
+	(function(ChemDoodle) {
+	  ChemDoodle.relabel = function(molecule){
+	    for(let i = 0, ii = molecule.atoms.length; i<ii; i++){
+	    	molecule.atoms[i].altLabel = String(i+1);
+	    }
+	  };
+
+	})(ChemDoodle);
+		});
+	</script>
+	<script>
 		var loadScript = function(src, callbackfn) {
 			var newScript = document.createElement("script");
 		    	newScript.type = "text/javascript";
@@ -58,9 +70,11 @@
 					data: {'id': {{ calculation.id }} {% if calculation.type == 1 %}, 'num' : num {% endif %}},
 					success: function(data, textStatus, xhr) {
 						if (xhr.status != 204) {
-							let mol = ChemDoodle.readMOL(data, 1);
+							let mol = ChemDoodle.readXYZ(data, 1);
 
+							ChemDoodle.relabel(mol);
 							editor.loadMolecule(mol);
+							$("#next_step_div").load("/next_step/{{ calculation.id }}");
 							$("#calc_title").removeClass("has-background-warning");
 							$("#calc_title").addClass("has-background-success");
 						
@@ -162,7 +176,7 @@
 				data: {'id': {{ calculation.id }} {% if calculation.type == 1 %}, 'num' : num {% endif %}},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
-						let mol = ChemDoodle.readMOL(data, 1);
+						let mol = ChemDoodle.readXYZ(data, 1);
 
 						editor.loadMolecule(mol);
 					}
@@ -335,12 +349,14 @@
 		<table class="table" id="info_table">
 		</table>
 	</div>
-	{% if calculation.status == 2 %}
-	<form action="/launch/{{ calculation.id }}" method="post" id="nextstep_form">
-			{% csrf_token %}
-			<button class="button">Open structure in editor</button>
-		</form>
-	{% endif %}
+	<div id="next_step_div">
+		{% if calculation.status == 2 %}
+			<form action="/launch/{{ calculation.id }}" method="post" id="nextstep_form">
+				{% csrf_token %}
+				<button class="button">Open structure in editor</button>
+			</form>
+		{% endif %}
+	</div>
 
 	<button class="button" onclick="load_log()">Load the log(s)</button>
 

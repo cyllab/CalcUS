@@ -10,6 +10,16 @@
 	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+	<script>
+	(function(ChemDoodle) {
+	  ChemDoodle.relabel = function(molecule){
+	    for(let i = 0, ii = molecule.atoms.length; i<ii; i++){
+	    	molecule.atoms[i].altLabel = String(i+1);
+	    }
+	  };
+
+	})(ChemDoodle);
+	</script>
 
 	<script>
 		function project_selection_changed() {
@@ -22,6 +32,25 @@
 				field.style.display = "none";	
 			}
 		}
+		function get_3D() {
+		let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
+
+		$.ajax({
+			method: "POST",	 	 
+			url: "/gen_3D/",
+			headers: {
+				"X-CSRFToken": '{{ csrf_token }}',
+			},
+
+			data: {'mol': mol},
+			success: function(data, textStatus, xhr) {
+				let mol_read = ChemDoodle.readXYZ(data);
+				ChemDoodle.relabel(mol_read);
+				editor.loadMolecule(mol_read);	
+			}
+		});
+		
+		}
 	</script>
 {% endblock %}
 
@@ -32,11 +61,19 @@
 <div class="columns">
 	<div class="column is-half">
 		<script>
-		  let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 500, 300, {useServices:false, oneMolecule:false});
-		  sketcher.styles.atoms_useJMOLColors = true;
-		  sketcher.styles.bonds_clearOverlaps_2D = true;
-		  sketcher.styles.shapes_color = 'c10000';
-		  sketcher.repaint();
+		  	let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 500, 300, {useServices:false, oneMolecule:false});
+		  	sketcher.styles.atoms_useJMOLColors = true;
+		  	sketcher.styles.bonds_clearOverlaps_2D = true;
+		  	sketcher.styles.shapes_color = 'c10000';
+		  	sketcher.repaint();
+		</script>
+		<button onclick="get_3D();">Generate 3D representation</button>
+		<script>
+		  	let editor = new ChemDoodle.EditorCanvas3D('editor', 500, 300, {useServices:false, oneMolecule:false});
+		  	editor.styles.atoms_useJMOLColors = true;
+			editor.styles.set3DRepresentation('Stick');
+		  	editor.styles.shapes_color = 'c10000';
+		  	editor.repaint();
 		</script>
 
 	</div>
@@ -195,8 +232,12 @@ $( document ).ready(function() {
 
 		data: {'id': {{ calculation.id }} {% if calculation.type == 1 %}, 'num': 1 {% endif %}},
 		success: function(data, textStatus, xhr) {
-			let mol_read = ChemDoodle.readMOL(data);
-			sketcher.loadMolecule(mol_read);	
+			let mol_read = ChemDoodle.readXYZ(data);
+			ChemDoodle.relabel(mol_read);
+			editor.loadMolecule(mol_read);	
+
+			mol_mol = ChemDoodle.writeMOL(mol_read);
+			sketcher.loadMolecule(mol_mol);	
 		}
 	});
 

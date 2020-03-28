@@ -5,6 +5,7 @@ import random
 import string
 import bleach
 import math
+import time
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -21,10 +22,10 @@ from django.contrib.auth import login
 from django.contrib.auth.models import User
 
 from .forms import UserCreateForm
-from .models import Calculation, Profile, Project, ClusterAccess, ClusterPersonalKey, ClusterCommand, Example, PIRequest, ResearchGroup
+from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup
 from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso, geom_opt_freq
 from .decorators import superuser_required
-
+from .tasks import system
 
 LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
 LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
@@ -698,6 +699,20 @@ def status(request, pk):
         })
 
 @login_required
+def next_step(request, pk):
+    id = str(pk)
+    calc = Calculation.objects.get(pk=id)
+
+    profile = request.user.profile
+
+    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+        return HttpResponse(status=403)
+
+    return render(request, 'frontend/next_step.html', {
+            'calculation': calc,
+        })
+
+@login_required
 def download_structure(request, pk):
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
@@ -709,9 +724,9 @@ def download_structure(request, pk):
         return HttpResponse(status=403)
 
     if type == 1:
-        expected_file = os.path.join(LAB_RESULTS_HOME, id, "crest_conformers.mol")
+        expected_file = os.path.join(LAB_RESULTS_HOME, id, "crest_conformers.xyz")
     else:
-        expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.mol")
+        expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.xyz")
 
     if os.path.isfile(expected_file):
         with open(expected_file, 'rb') as f:
@@ -721,6 +736,21 @@ def download_structure(request, pk):
             return response
     else:
         return HttpResponse(status=204)
+
+def gen_3D(request):
+    if request.method == 'POST':
+        mol = request.POST['mol']
+        clean_mol = bleach.clean(mol)
+
+        t = time.time()
+        with open("/tmp/{}.mol".format(t), 'w') as out:
+            out.write(clean_mol)
+
+        system("babel -imol /tmp/{}.mol -oxyz /tmp/{}.xyz -h --gen3D".format(t, t), force_local=True)
+        with open("/tmp/{}.xyz".format(t)) as f:
+            lines = f.readlines()
+        return HttpResponse(lines)
+    return HttpResponse(status=403)
 
 @login_required
 def get_structure(request):
@@ -738,7 +768,7 @@ def get_structure(request):
         type = calc.type
 
         if type == 0 or type == 2 or type == 3 or type == 4:
-            expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.mol")
+            expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.xyz")
             if os.path.isfile(expected_file):
                 with open(expected_file) as f:
                     lines = f.readlines()
@@ -747,7 +777,7 @@ def get_structure(request):
                 return HttpResponse(status=204)
         if type == 1:
             num = request.POST['num']
-            expected_file = os.path.join(LAB_RESULTS_HOME, id, "conf{}.mol".format(num))
+            expected_file = os.path.join(LAB_RESULTS_HOME, id, "conf{}.xyz".format(num))
             if os.path.isfile(expected_file):
                 with open(expected_file) as f:
                     lines = f.readlines()

@@ -25,14 +25,14 @@ urlpatterns = [
     path('deny_pi_request/<int:pk>', views.deny_pi_request, name='deny_pi_request'),
     path('accept_pi_request/<int:pk>', views.accept_pi_request, name='accept_pi_request'),
     path('add_user/', views.add_user, name='add_user'),
+    path('gen_3D/', views.gen_3D, name='gen_3D'),
     path('remove_user/', views.remove_user, name='remove_user'),
 
     path('launch/', views.launch, name='launch'),
     path('launch/<int:pk>', views.launch_pk, name='launch_pk'),
     path('details/<int:pk>', views.details, name='details'),
 
-    path('claimed_key_table/', views.claimed_key_table, name='claimed_key_table'),
-    path('key_table/<int:pk>', views.key_table, name='key_table'),
+    path('next_step/<int:pk>', views.next_step, name='next_step'),
     path('info_table/<int:pk>', views.info_table, name='info_table'),
     path('conformer_table/<int:pk>', views.conformer_table, name='conformer_table'),
     path('vib_table/<int:pk>', views.vib_table, name='vib_table'),

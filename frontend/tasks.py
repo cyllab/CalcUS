@@ -345,14 +345,9 @@ def save_to_results(f, calc_obj, multiple=False):
             name, ext = s
             if ext == 'xyz':
                 if multiple:
-                    a = system("babel -ixyz {}/{} -omol {}/conf.mol -m".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), _f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
+                    a = system("babel -ixyz {}/{} -oxyz {}/conf.xyz -m".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), _f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
                 else:
-                    a = system("babel -ixyz {}/{} -omol {}/{}.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), _f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id)), name), force_local=True)
-                if a != 0:
-                    calc_obj.status = 3
-                    calc_obj.error_message = "Failed to convert the optimized geometry"
-                    calc_obj.save()
-                    return a
+                    copyfile(os.path.join(LAB_SCR_HOME, str(calc_obj.id), _f.split('/')[-1]), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), _f.split('/')[-1]))
             elif ext == 'mol':
                 copyfile(os.path.join(LAB_SCR_HOME, str(calc_obj.id), _f.split('/')[-1]), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), _f.split('/')[-1]))
             else:
