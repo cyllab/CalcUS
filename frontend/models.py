@@ -89,14 +89,6 @@ class ClusterAccess(models.Model):
                 users.append(i.claimer)
         return users
 
-class ClusterPersonalKey(models.Model):
-    key = models.CharField(max_length=100)
-    issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True, related_name="clusterpersonalkey_issuer")
-    claimer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True, related_name="clusterpersonalkey_claimer")
-    date_issued = models.DateTimeField('date')
-    date_claimed = models.DateTimeField('date', blank=True, null=True)
-    access = models.ForeignKey(ClusterAccess, on_delete=models.CASCADE, blank=True, null=True)
-
 class Calculation(models.Model):
 
     CALC_TYPES = {
