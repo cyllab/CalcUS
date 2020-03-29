@@ -199,7 +199,7 @@ def submit_calculation(request):
                 if mode == "Freeze":
                     constraints.append([mode, ids])
                 elif mode == "Scan":
-                    begin = float(bleach.clean(request.POST['calc_scan_{}_1'.format(ind)]))
+                    begin = bleach.clean(request.POST['calc_scan_{}_1'.format(ind)])
                     end = float(bleach.clean(request.POST['calc_scan_{}_2'.format(ind)]))
                     steps = float(bleach.clean(request.POST['calc_scan_{}_3'.format(ind)]))
                     constraints.append([mode, [begin, end, steps], ids])

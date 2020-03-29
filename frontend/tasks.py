@@ -226,7 +226,7 @@ def handle_input_file(drawing, calc_obj):
                     try:
                         a = int(sline[3])
                     except ValueError:
-                        to_print.append("{} {} {} {}\n".format(sline[3], float(sline[0])*10, float(sline[1])*10, float(sline[2])*10))
+                        to_print.append("{} {} {} {}\n".format(sline[3], float(sline[0])*20, float(sline[1])*20, float(sline[2])*20))
                     else:
                         break
                 num = len(to_print)
