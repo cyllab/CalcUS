@@ -174,6 +174,7 @@
 		<script>
 		  	let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 500, 300, {useServices:false, oneMolecule:false});
 		  	sketcher.styles.atoms_useJMOLColors = true;
+		  	sketcher.oneMolecule = false;
 		  	sketcher.styles.bonds_clearOverlaps_2D = true;
 		  	sketcher.styles.shapes_color = 'c10000';
 		  	sketcher.repaint();
@@ -182,6 +183,7 @@
 		<script>
 		  	let editor = new ChemDoodle.EditorCanvas3D('editor', 500, 300, {useServices:false, oneMolecule:false});
 		  	editor.styles.atoms_useJMOLColors = true;
+		  	sketcher.oneMolecule = false;
 			editor.styles.set3DRepresentation('Stick');
 		  	editor.styles.shapes_color = 'c10000';
 		  	editor.repaint();
@@ -292,6 +294,7 @@
 					    <option>UV/Vis Spectrum Prediction</option>
 					    <option>NMR Spectrum Prediction</option>
 					    <option>Opt+Freq</option>
+					    <option>TS+Freq</option>
 					  </select>
 					</div>
 				</div>

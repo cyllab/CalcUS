@@ -11,7 +11,7 @@
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
 
-	{% if calculation.type == 2 or calculation.type == 3 or calculation.type == 4 %}
+	{% if calculation.type == 2 or calculation.type == 3 or calculation.type == 4 or calculation.type == 6%}
 	<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
 	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
 	{% endif %}
@@ -70,19 +70,18 @@
 					data: {'id': {{ calculation.id }} {% if calculation.type == 1 %}, 'num' : num {% endif %}},
 					success: function(data, textStatus, xhr) {
 						if (xhr.status != 204) {
-							let mol = ChemDoodle.readXYZ(data, 1);
+							let mol = ChemDoodle.readXYZ(data);
 
-							ChemDoodle.relabel(mol);
 							clearInterval(my_refresh);
 
 							{% if calculation.type != 5 or calculation.has_scan == False %}
+							ChemDoodle.relabel(mol);
 							editor.loadMolecule(mol);
 							{% endif %}
 
 							$("#next_step_div").load("/next_step/{{ calculation.id }}");
 							$("#calc_title").removeClass("has-background-warning");
-							$("#calc_title").addClass("has-background-success");
-						
+							$("#calc_title").addClass("has-background-success"); 
 							conf_number = {{ calculation.structure_set.count }};
 							
 							{% if calculation.type == 1 %}
@@ -133,7 +132,7 @@
 
 								}          
 							);
-							{% elif calculation.type == 4 %}
+							{% elif calculation.type == 4 or calculation.type == 6%}
 								$("#vib_table").load("/vib_table/{{ calculation.id }}")
 								g4 = new Dygraph(
 								document.getElementById("ir_spectrum"),
@@ -211,7 +210,7 @@
 			$('#log_div').load("/log/{{ calculation.id }}");
 		}
 
-		{% if calculation.type == 4 %}
+		{% if calculation.type == 4 or calculation.type == 6 %}
 			function animate_vib(num) {
 				$.ajax({
 					method: "POST",	 	 
@@ -358,7 +357,7 @@
 	</div>
 	{% endif %}
 
-	{% if calculation.type == 4 %}
+	{% if calculation.type == 4 or calculation.type == 6 %}
 	<div class="columns">
 		<div class="column">
 			<div>
@@ -368,7 +367,7 @@
 					editor.styles.backgroundColor = '#FFFFFF';
 				</script>
 				<br />
-				<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .mol</button>
+				<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .xyz</button>
 			</div>
 			<div id="vib_animation">
 				<script>
@@ -404,7 +403,7 @@
 
 		</script>
 		<br />
-		<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .mol</button>
+		<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .xyz</button>
 	</div>
 
 	{% endif %}

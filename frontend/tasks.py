@@ -37,12 +37,16 @@ else:
     LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
     LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
 
+PAL = os.environ['OMP_NUM_THREADS'][0]
+ORCAPATH = os.environ['ORCAPATH']
+
 decimal.getcontext().prec = 50
 
 REMOTE = False
 connections = {}
 locks = {}
 remote_dirs = {}
+
 
 HARTREE_VAL = decimal.Decimal(2625.499638)
 E_VAL = decimal.Decimal(2.7182818284590452353602874713527)
@@ -252,6 +256,37 @@ def xtb_opt(in_file, charge, solvent):
 
     return system("xtb {} --chrg {} {} --opt".format(in_file, charge, solvent_add), 'xtb_opt.out')
 
+def xtb_ts(in_file, charge, solvent, id):
+    if solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add = ''
+
+    ORCA_TEMPLATE = """!xtb OPTTS
+    %pal
+    nprocs {}
+    end
+    {}
+    *xyz {} 1 
+    {}
+    *"""
+
+    if solvent == "Vacuum":
+        solvent_add = ""
+    else:
+        solvent_add = """%cpcm
+        smd true
+        SMDsolvent '{}'
+        end""".format(solvent)
+
+    with open(os.path.join(LAB_SCR_HOME, str(id), in_file)) as f:
+        lines = f.readlines()[2:]
+
+    with open(os.path.join(LAB_SCR_HOME, str(id), 'ts.inp'), 'w') as out:
+        out.write(ORCA_TEMPLATE.format(PAL, solvent_add, charge, ''.join(lines)))
+
+    return system("{} ts.inp".format(ORCAPATH), 'xtb_ts.out')
+
 def xtb_scan(in_file, charge, solvent):
     if solvent != "Vacuum":
         solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
@@ -268,8 +303,8 @@ def xtb_freq(in_file, charge, solvent):
 
     return system("xtb {} --uhf 1 --chrg {} {} --hess".format(in_file, charge, solvent_add), 'xtb_freq.out')
 
-def animate_vib(calc_obj):
-    with open(os.path.join(LAB_SCR_HOME, str(calc_obj.id), "xtbopt.xyz")) as f:
+def animate_vib(in_file, calc_obj):
+    with open(os.path.join(LAB_SCR_HOME, str(calc_obj.id), in_file)) as f:
         lines = f.readlines()
         num_atoms = int(lines[0].strip())
         lines = lines[2:]
@@ -579,6 +614,80 @@ def geom_opt_freq(id, drawing, charge, solvent, calc_obj=None, remote=False):
     return 0
 
 @app.task
+def ts_freq(id, drawing, charge, solvent, calc_obj=None, remote=False):
+
+    steps = [
+        [xtb_ts, ["initial.xyz", charge, solvent, calc_obj.id], "Optimizing the transition state", "Failed to optimize the transition state"],
+        [xtb_freq, ["ts.xyz", charge, solvent], "Calculating frequency modes", "Failed to calculate frequency modes"],
+        [animate_vib, ["ts.xyz", calc_obj], "Animating frequency modes", "Failed to animate frequency modes"],
+    ]
+
+    a = run_steps(steps, calc_obj, drawing, id)
+    if a != 0:
+        return
+
+    a = save_to_results("ts.xyz", calc_obj)
+    if a != 0:
+        return
+
+    a = save_to_results("vibspectrum", calc_obj, multiple=True)
+    if a != 0:
+        return
+
+    with open("{}/xtb_freq.out".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))) as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+        while lines[ind].find("HOMO-LUMO GAP") == -1:
+            ind -= 1
+        hl_gap = float(lines[ind].split()[3])
+        E = float(lines[ind-4].split()[3])
+        G = float(lines[ind-2].split()[4])
+
+    vib_file = os.path.join(LAB_RESULTS_HOME, id, "vibspectrum")
+
+    if os.path.isfile(vib_file):
+        with open(vib_file) as f:
+            lines = f.readlines()
+
+        vibs = []
+        intensities = []
+        for line in lines:
+            if len(line.split()) > 4 and line[0] != '#':
+                sline = line.split()
+                try:
+                    a = float(sline[1])
+                    if a == 0.:
+                        continue
+                except ValueError:
+                    pass
+                vib = float(line[20:33].strip())
+                vibs.append(vib)
+                try:
+                    intensity = float(sline[3])
+                except ValueError:
+                    continue
+                else:
+                    intensities.append(intensity)
+        if len(vibs) == len(intensities):
+            x = np.arange(500, 4000, 1)
+            spectrum = plot_vibs(x, zip(vibs, intensities))
+            with open(os.path.join(LAB_RESULTS_HOME, id, "IR.csv"), 'w') as out:
+                out.write("Wavenumber,Intensity\n")
+                intensities = 1000*np.array(intensities)/max(intensities)
+                for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
+                    out.write("-{:.1f},{:.5f}\n".format(_x, i))
+
+
+
+    r = Structure.objects.create(number=1, energy=E, free_energy=G, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
+    r.save()
+
+    calc_obj.structure_set.add(r)
+
+    return 0
+
+@app.task
 def conf_search(id, drawing, charge, solvent, calc_obj=None, remote=False):
     #os.path.join(LAB_SCR_HOME, str(calc_obj.id))
     steps = [
@@ -819,7 +928,8 @@ def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, st
         calc_obj.status = 2
     else:
         calc_obj.status = 3
-        calc_obj.error_message = "Unknown error"
+        if calc_obj.error_message == "":
+            calc_obj.error_message = "Unknown error"
 
     calc_obj.save()
 

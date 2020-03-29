@@ -98,6 +98,7 @@ class Calculation(models.Model):
             "NMR Spectrum Prediction": 3,
             "Opt+Freq": 4,
             "Constrained Optimisation": 5,
+            "TS+Freq": 6,
             }
 
     CALC_STATUSES = {

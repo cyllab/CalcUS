@@ -24,7 +24,7 @@ from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup
-from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso, geom_opt_freq, constraint_opt
+from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso, geom_opt_freq, constraint_opt, ts_freq
 from .decorators import superuser_required
 from .tasks import system
 
@@ -219,6 +219,8 @@ def submit_calculation(request):
             geom_opt_freq.delay(t, drawing, charge, solvent)
         elif type == 5:
             constraint_opt.delay(t, drawing, charge, solvent, constraints)
+        elif type == 6:
+            ts_freq.delay(t, drawing, charge, solvent)
     else:
         cmd = ClusterCommand.objects.create(issuer=profile)
         with open(os.path.join(LAB_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
@@ -757,6 +759,8 @@ def download_structure(request, pk):
 
     if type == 1:
         expected_file = os.path.join(LAB_RESULTS_HOME, id, "crest_conformers.xyz")
+    elif type == 6:
+        expected_file = os.path.join(LAB_RESULTS_HOME, id, "ts.xyz")
     else:
         expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.xyz")
 
@@ -764,7 +768,7 @@ def download_structure(request, pk):
         with open(expected_file, 'rb') as f:
             response = HttpResponse(f.read())
             response['Content-Type'] = 'text/plain'
-            response['Content-Disposition'] = 'attachment; filename={}.mol'.format(id)
+            response['Content-Disposition'] = 'attachment; filename={}.xyz'.format(id)
             return response
     else:
         return HttpResponse(status=204)
@@ -808,7 +812,7 @@ def get_structure(request):
             else:
                 return HttpResponse(status=204)
         elif type == 1:
-            num = request.POST['num']
+            num = bleach.clean(request.POST['num'])
             expected_file = os.path.join(LAB_RESULTS_HOME, id, "conf{}.xyz".format(num))
             if os.path.isfile(expected_file):
                 with open(expected_file) as f:
@@ -816,23 +820,15 @@ def get_structure(request):
                 return HttpResponse(lines)
             else:
                 return HttpResponse(status=204)
-        '''
-        elif type == 5:
-            if calc.has_scan:
-                expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbscan.xyz")
-            else:
-                expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.xyz")
+        elif type == 6:
+            expected_file = os.path.join(LAB_RESULTS_HOME, id, "ts.xyz")
             if os.path.isfile(expected_file):
                 with open(expected_file) as f:
                     lines = f.readlines()
                 return HttpResponse(lines)
             else:
                 return HttpResponse(status=204)
-        else:
-            print("TYPE is {}".format(type))
 
-        return HttpResponse(status=404)
-        '''
 @login_required
 def get_vib_animation(request):
     if request.method == 'POST' or True:
@@ -848,7 +844,7 @@ def get_vib_animation(request):
 
         type = calc.type
 
-        if type != 4:
+        if type != 4 and type != 6:
             return HttpResponse(status=403)
 
         num = request.POST['num']
