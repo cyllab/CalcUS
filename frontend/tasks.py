@@ -242,14 +242,12 @@ def handle_input_file(drawing, calc_obj):
                 out.write(line)
             return 0
 
-        '''
-        elif os.path.isfile("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
-            return 0
-        elif os.path.isfile("{}/initial.mol2".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
-            return system("babel -imol2 {}/initial.mol2 -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
-        elif os.path.isfile("{}/initial.sdf".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
-            return system("babel -isdf {}/initial.sdf -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
-        '''
+    elif os.path.isfile("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
+        return 0
+    elif os.path.isfile("{}/initial.mol2".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
+        return system("babel -imol2 {}/initial.mol2 -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
+    elif os.path.isfile("{}/initial.sdf".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
+        return system("babel -isdf {}/initial.sdf -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
 
 
 def xtb_opt(in_file, charge, solvent):

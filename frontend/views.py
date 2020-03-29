@@ -179,7 +179,6 @@ def submit_calculation(request):
         drawing = False
         in_file = request.FILES['file_structure']
         filename, ext = in_file.name.split('.')
-        #fs = FileSystemStorage()
 
         if ext in ['mol2', 'mol', 'xyz', 'sdf']:
             with open(os.path.join(LAB_SCR_HOME, t, 'initial.{}'.format(ext)), 'wb+') as out:
