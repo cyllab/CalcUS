@@ -1,7 +1,7 @@
 {% for line in vibs %}
 	<tr>
-		<td>{{ line.0 }}</td>
-		<td>{{ line.1 }}</td>
-		<td>{{ line.2 }}</td>
+		<td><a class="button" onclick="animate_vib({{ line.0.1}});">{{ line.0.0 }}</a></td>
+		<td><a class="button" onclick="animate_vib({{ line.1.1}});">{{ line.1.0 }}</a></td>
+		<td><a class="button" onclick="animate_vib({{ line.2.1}});">{{ line.2.0 }}</a></td>
 	</tr>
 {% endfor %}

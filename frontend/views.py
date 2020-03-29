@@ -20,10 +20,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth import login
 from django.contrib.auth.models import User
+from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup
-from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso, geom_opt_freq
+from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso, geom_opt_freq, constraint_opt
 from .decorators import superuser_required
 from .tasks import system
 
@@ -180,6 +181,31 @@ def submit_calculation(request):
         with open(os.path.join(scr, 'initial.mol'), 'w') as out:
             out.write(mol)
 
+    TYPE_LENGTH = {'Distance' : 2, 'Angle' : 3, 'Dihedral' : 4}
+    if type == 5:
+        constraints = []
+        for ind in range(1, int(request.POST['constraint_num'])+1):
+            try:
+                mode = bleach.clean(request.POST['constraint_mode_{}'.format(ind)])
+            except MultiValueDictKeyError:
+                pass
+            else:
+                _type = bleach.clean(request.POST['constraint_type_{}'.format(ind)])
+                ids = []
+                for i in range(1, TYPE_LENGTH[_type]+1):
+                    id = int(bleach.clean(request.POST['calc_constraint_{}_{}'.format(ind, i)]))
+                    ids.append(id)
+
+                if mode == "Freeze":
+                    constraints.append([mode, ids])
+                elif mode == "Scan":
+                    begin = float(bleach.clean(request.POST['calc_scan_{}_1'.format(ind)]))
+                    end = float(bleach.clean(request.POST['calc_scan_{}_2'.format(ind)]))
+                    steps = float(bleach.clean(request.POST['calc_scan_{}_3'.format(ind)]))
+                    constraints.append([mode, [begin, end, steps], ids])
+                else:
+                    return HttpResponse(status=403)
+
     if ressource == "Local":
         if type == 0:
             geom_opt.delay(t, drawing, charge, solvent)
@@ -191,6 +217,8 @@ def submit_calculation(request):
             nmr_enso.delay(t, drawing, charge, solvent)
         elif type == 4:
             geom_opt_freq.delay(t, drawing, charge, solvent)
+        elif type == 5:
+            constraint_opt.delay(t, drawing, charge, solvent, constraints)
     else:
         cmd = ClusterCommand.objects.create(issuer=profile)
         with open(os.path.join(LAB_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
@@ -640,7 +668,11 @@ def vib_table(request, pk):
         formatted_vibs = []
 
         for ind in range(math.ceil(len(vibs)/3)):
-            formatted_vibs.append([vibs[3*ind], vibs[3*ind+1] if 3*ind+2 < len(vibs) else '', vibs[3*ind+2] if 3*ind+3 < len(vibs) else ''])
+            formatted_vibs.append([
+                [vibs[3*ind], 3*ind],
+                [vibs[3*ind+1] if 3*ind+2 < len(vibs) else '', 3*ind+1],
+                [vibs[3*ind+2] if 3*ind+3 < len(vibs) else '', 3*ind+2]
+                    ])
 
         return render(request, 'frontend/vib_table.html', {
                     'profile': request.user.profile,
@@ -775,7 +807,7 @@ def get_structure(request):
                 return HttpResponse(lines)
             else:
                 return HttpResponse(status=204)
-        if type == 1:
+        elif type == 1:
             num = request.POST['num']
             expected_file = os.path.join(LAB_RESULTS_HOME, id, "conf{}.xyz".format(num))
             if os.path.isfile(expected_file):
@@ -784,7 +816,66 @@ def get_structure(request):
                 return HttpResponse(lines)
             else:
                 return HttpResponse(status=204)
+        elif type == 5:
+            if calc.has_scan:
+                expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbscan.xyz")
+            else:
+                expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.xyz")
+            if os.path.isfile(expected_file):
+                with open(expected_file) as f:
+                    lines = f.readlines()
+                return HttpResponse(lines)
+            else:
+                return HttpResponse(status=204)
+        else:
+            print("TYPE is {}".format(type))
 
+        return HttpResponse(status=404)
+
+@login_required
+def get_vib_animation(request):
+    if request.method == 'POST' or True:
+        url = request.POST['id']
+        id = url.split('/')[-1]
+
+        calc = Calculation.objects.get(pk=id)
+
+        profile = request.user.profile
+
+        if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+            return HttpResponse(status=403)
+
+        type = calc.type
+
+        if type != 4:
+            return HttpResponse(status=403)
+
+        num = request.POST['num']
+        expected_file = os.path.join(LAB_RESULTS_HOME, id, "freq_{}.xyz".format(num))
+        if os.path.isfile(expected_file):
+            with open(expected_file) as f:
+                lines = f.readlines()
+
+            inds = []
+            num_atoms = lines[0]
+
+            for ind, line in enumerate(lines):
+                if line == num_atoms:
+                    inds.append(ind)
+
+            inds.append(len(lines)-1)
+            xyz_files = []
+            for ind, _ in enumerate(inds[1:]):
+                xyz = ""
+                for _ind in range(inds[ind-1], inds[ind]):
+                    if lines[_ind].strip() != '':
+                        xyz += lines[_ind].strip() + '\\n'
+                xyz_files.append(xyz)
+            return render(request, 'frontend/vib_animation.html', {
+                'xyz_files': xyz_files[1:]
+                })
+        else:
+            return HttpResponse(status=204)
 
 @login_required
 def log(request, pk):

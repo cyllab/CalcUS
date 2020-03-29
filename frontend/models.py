@@ -97,6 +97,7 @@ class Calculation(models.Model):
             "UV/Vis Spectrum Prediction": 2,
             "NMR Spectrum Prediction": 3,
             "Opt+Freq": 4,
+            "Constrained Optimisation": 5,
             }
 
     CALC_STATUSES = {
@@ -116,6 +117,8 @@ class Calculation(models.Model):
 
     num_steps = models.IntegerField(default=0)
     current_step = models.IntegerField(default=0)
+
+    has_scan = models.BooleanField(default=False)
 
     date = models.DateTimeField('date')
     date_finished = models.DateTimeField('date', default=datetime.datetime.now, blank=True)

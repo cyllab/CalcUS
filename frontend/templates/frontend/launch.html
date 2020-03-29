@@ -12,16 +12,69 @@
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
 	<script>
 	(function(ChemDoodle) {
-	  ChemDoodle.relabel = function(molecule){
-	    for(let i = 0, ii = molecule.atoms.length; i<ii; i++){
-	    	molecule.atoms[i].altLabel = String(i+1);
-	    }
-	  };
-
+		ChemDoodle.relabel = function(molecule){
+	    		for(let i = 0, ii = molecule.atoms.length; i<ii; i++){
+	    			molecule.atoms[i].altLabel = String(i+1);
+	    		}
+	  	};
 	})(ChemDoodle);
+
+	let constraint_num = 1;
+	String.prototype.format = function() {
+  		a = this;
+  		for (k in arguments[1]) {
+    			a = a.replace("{" + k + "}", arguments[0])
+  		}
+  		return a
+	}
 	</script>
 
 	<script>
+		function calc_selection_changed() {
+			choice = document.getElementById("calc_type");
+			constraint_div = document.getElementById("constraint_div");
+			if(choice.value == "Constrained Optimisation") {
+				constraint_div.style.display = "block";	
+				editor.styles.atoms_displayLabels_3D = true;
+			}
+			else {
+				constraint_div.style.display = "none";	
+				editor.styles.atoms_displayLabels_3D = false;
+			}
+		}
+		function constraint_type_selection_changed(id) {
+			choice = document.getElementById("constraint_type_{0}".format(id, [0]));
+			inp2 = document.getElementById("calc_constraint_{0}_2".format(id, [0]));
+			inp3 = document.getElementById("calc_constraint_{0}_3".format(id, [0]));
+			inp4 = document.getElementById("calc_constraint_{0}_4".format(id, [0]));
+			if (choice.value == "Distance") {
+				inp2.style.display = "block";	
+				inp3.style.display = "none";	
+				inp4.style.display = "none";	
+			}
+			else if (choice.value == "Angle") {
+				inp2.style.display = "block";	
+				inp3.style.display = "block";	
+				inp4.style.display = "none";	
+			}
+			else {
+				inp2.style.display = "block";	
+				inp3.style.display = "block";	
+				inp4.style.display = "block";	
+			}
+		}
+
+		function constraint_mode_changed(id) {
+			choice = document.getElementById("constraint_mode_{0}".format(id, [0]));
+			div = document.getElementById("calc_scan_div_{0}".format(id, [0]));
+			if (choice.value == "Freeze") {
+				div.style.display = "none";	
+			}
+			else if (choice.value == "Scan") {
+				div.style.display = "block";	
+			}
+		}
+
 		function project_selection_changed() {
 			choice = document.getElementById("calc_project");
 			field = document.getElementById("new_project_name_field");
@@ -32,6 +85,64 @@
 				field.style.display = "none";	
 			}
 		}
+
+		function add_constraint() {
+			constraint_num += 1;
+			$("#constraint_list").append('<div class="control" id="constraint_1"> \
+				<div class="columns"> \
+					<div class="column"> \
+						<div class="select"> \
+							<select name="constraint_mode_{0}" id="constraint_mode_{1}" onchange="constraint_mode_changed({13})"> \
+							<option>Freeze</option> \
+							<option>Scan</option> \
+							</select> \
+						</div> \
+					</div> \
+					<div class="column"> \
+						<div class="select"> \
+				<select name="constraint_type_{2}" id="constraint_type_{3}" onchange="constraint_type_selection_changed({12});"> \
+							<option>Distance</option> \
+							<option>Angle</option> \
+							<option>Dihedral</option> \
+							</select> \
+						</div> \
+					</div> \
+					<div class="column"> \
+						<input class="input" type="text" width="5" name="calc_constraint_{4}_1" id="calc_constraint_{5}_1"> \
+					</div> \
+					<div class="column"> \
+						<input class="input" type="text" width="5" name="calc_constraint_{6}_2" id="calc_constraint_{7}_2"> \
+					</div> \
+					<div class="column"> \
+						<input class="input" type="text" width="5" name="calc_constraint_{8}_3" id="calc_constraint_{9}_3" style="display: none;"> \
+					</div> \
+					<div class="column"> \
+						<input class="input" type="text" width="5" name="calc_constraint_{10}_4" id="calc_constraint_{11}_4" style="display: none;"> \
+					</div> \
+					<div class="column"> \
+						<button type="button" class="button is-danger" onclick="$(this).parent().parent().parent().remove();">Delete</button> \
+					</div> \
+				</div> \
+			</div> \
+				<div style="display: none;" id="calc_scan_div_{14}"> \
+				<div class="columns"> \
+				<div class="column"> \
+					From \
+				<input class="input" type="text" width="5" name="calc_scan_{15}_1" id="calc_scan_{16}_1"> \
+				</div> \
+				<div class="column"> \
+					To \
+				<input class="input" type="text" width="5" name="calc_scan_{17}_2" id="calc_scan_{18}_2"> \
+				</div> \
+				<div class="column"> \
+					# Steps \
+				<input class="input" type="text" width="5" name="calc_scan_{19}_3" id="calc_scan_{20}_3"> \
+				</div> \
+			</div> \
+			</div>'.format(constraint_num, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+		}
+		
 		function get_3D() {
 		let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
 
@@ -67,7 +178,7 @@
 		  	sketcher.styles.shapes_color = 'c10000';
 		  	sketcher.repaint();
 		</script>
-		<button onclick="get_3D();">Generate 3D representation</button>
+		<button class="button" onclick="get_3D();">Generate 3D representation</button>
 		<script>
 		  	let editor = new ChemDoodle.EditorCanvas3D('editor', 500, 300, {useServices:false, oneMolecule:false});
 		  	editor.styles.atoms_useJMOLColors = true;
@@ -174,13 +285,74 @@
 				<label class="label">Calculation Type</label>
 				<div class="control" >
 					<div class="select">
-					  <select  name="calc_type">
+					  <select name="calc_type" id="calc_type" onchange="calc_selection_changed();">
 					    <option>Geometrical Optimisation</option>
+					    <option>Constrained Optimisation</option>
 					    <option>Conformer Search</option>
 					    <option>UV/Vis Spectrum Prediction</option>
 					    <option>NMR Spectrum Prediction</option>
 					    <option>Opt+Freq</option>
 					  </select>
+					</div>
+				</div>
+			</div>
+			<div style="display: none;" id="constraint_div">
+				<div class="field">
+					<label class="label">Constraints and scan coordinates</label>
+					<button type="button" class="button is-primary" onclick="add_constraint();">Add</button>
+					<div id="constraint_list">
+						<div class="control" id="constraint_1">
+							<div class="columns">
+								<div class="column">
+									<div class="select">
+										<select name="constraint_mode_1" id="constraint_mode_1" onchange="constraint_mode_changed(1)">
+										<option selected="selected">Freeze</option>
+										<option>Scan</option>
+										</select>
+									</div>
+								</div>
+
+								<div class="column">
+									<div class="select">
+										<select name="constraint_type_1" id="constraint_type_1" onchange="constraint_type_selection_changed(1);">
+										<option selected="selected">Distance</option>
+										<option>Angle</option>
+										<option>Dihedral</option>
+										</select>
+									</div>
+								</div>
+								<div class="column">
+									<input class="input" type="text" width="5" name="calc_constraint_1_1" id="calc_constraint_1_1">
+								</div>
+								<div class="column">
+									<input class="input" type="text" width="5" name="calc_constraint_1_2" id="calc_constraint_1_2">
+								</div>
+								<div class="column">
+									<input class="input" type="text" width="5" name="calc_constraint_1_3" id="calc_constraint_1_3" style="display: none;">
+								</div>
+								<div class="column">
+									<input class="input" type="text" width="5" name="calc_constraint_1_4" id="calc_constraint_1_4" style="display: none;">
+								</div>
+								<div class="column">
+								</div>
+							</div>
+							<div style="display: none;" id="calc_scan_div_1">
+							<div class="columns" >
+								<div class="column">
+									From
+									<input class="input" type="text" width="5" name="calc_scan_1_1" id="calc_scan_1_1">
+								</div>
+								<div class="column">
+									To
+									<input class="input" type="text" width="5" name="calc_scan_1_2" id="calc_scan_1_2">
+								</div>
+								<div class="column">
+									# Steps
+									<input class="input" type="text" width="5" name="calc_scan_1_3" id="calc_scan_1_3">
+								</div>
+							</div>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -213,9 +385,12 @@
 	$('#calcform').submit(function(){
 	    $('<input />').attr('type', 'hidden')
 		    .attr('name', "structure")
-		    .attr('value', ChemDoodle.writeMOL(sketcher.getMolecule()))
+		    .attr('value', ChemDoodle.writeMOL(editor.getMolecule()))
 		    .appendTo('#calcform');
-
+		$('<input />').attr('type', 'hidden')
+		    .attr('name', "constraint_num")
+		    .attr('value', constraint_num)
+		    .appendTo('#calcform');
 	    return true;
 	}); 
 

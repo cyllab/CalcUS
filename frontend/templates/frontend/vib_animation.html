@@ -1,0 +1,7 @@
+	animator.frames = []
+	{% for xyz in xyz_files %}
+		animator.addFrame([ChemDoodle.readXYZ('{{ xyz }}')], []);
+	{% endfor %}
+	animator.loadMolecule(animator.frames[0].mols[0]);
+	animator.startAnimation();
+

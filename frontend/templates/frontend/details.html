@@ -191,6 +191,29 @@
 			$('#log_div').load("/log/{{ calculation.id }}");
 		}
 
+		{% if calculation.type == 4 %}
+			function animate_vib(num) {
+				$.ajax({
+					method: "POST",	 	 
+					url: "/get_vib_animation/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+
+					data: {'id': {{ calculation.id }}, 'num': num},
+					success: function(data, textStatus, xhr) {
+						if (xhr.status != 204) {
+							eval(data);
+						}
+
+					}
+			  
+				});
+
+
+			}
+		{% endif %}
+
 		{% if calculation.type == 1 %}
 		function increase_conf() {
 			if(num < conf_number) {
@@ -233,18 +256,20 @@
 
 	<strong>{{ calculation.text_type }}</strong>
 
-	{% if calculation.type == 0 %}
-	<div>
-		<script>
-			let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {});
-			editor.styles.set3DRepresentation('Stick');
-			editor.styles.backgroundColor = '#FFFFFF';
-		</script>
-		<br />
-		<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .mol</button>
-	</div>
-
-	{% elif calculation.type == 1 %}
+	{% if calculation.has_scan == False %}
+		{% if calculation.type == 0 or calculation.type == 5%}
+		<div>
+			<script>
+				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {});
+				editor.styles.set3DRepresentation('Stick');
+				editor.styles.backgroundColor = '#FFFFFF';
+			</script>
+			<br />
+			<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .mol</button>
+		</div>
+		{% endif %}
+	{% endif %}
+	{% if calculation.type == 1 %}
 
 	<div class="columns">
 		<div class="column">
@@ -325,6 +350,14 @@
 				<br />
 				<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .mol</button>
 			</div>
+			<div id="vib_animation">
+				<script>
+					let animator = new ChemDoodle.MovieCanvas3D('animator', 400, 400, {});
+					animator.styles.set3DRepresentation('Stick');
+					animator.styles.backgroundColor = '#FFFFFF';
+
+				</script>
+			</div>
 		</div>
 		<div class="column">
 			<table class="table">
@@ -342,6 +375,18 @@
 			<div id="ir_spectrum" style="width:600px; height:400px; margin-bottom: 30px;"></div>
 		</div>
 	</div>
+	{% elif calculation.type == 5 and calculation.has_scan %}
+	<div>
+		<script>
+			let editor = new ChemDoodle.MovieCanvas3D('editor', 400, 400, {});
+			editor.styles.set3DRepresentation('Stick');
+			editor.styles.backgroundColor = '#FFFFFF';
+
+		</script>
+		<br />
+		<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .mol</button>
+	</div>
+
 	{% endif %}
 	<br />
 

@@ -232,6 +232,14 @@ def xtb_opt(in_file, charge, solvent):
 
     return system("xtb {} --chrg {} {} --opt".format(in_file, charge, solvent_add), 'xtb_opt.out')
 
+def xtb_scan(in_file, charge, solvent):
+    if solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add = ''
+
+    return system("xtb {} --input scan --chrg {} {} --opt".format(in_file, charge, solvent_add), 'xtb_opt.out')
+
 def xtb_freq(in_file, charge, solvent):
     if solvent != "Vacuum":
         solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
@@ -239,6 +247,65 @@ def xtb_freq(in_file, charge, solvent):
         solvent_add = ''
 
     return system("xtb {} --uhf 1 --chrg {} {} --hess".format(in_file, charge, solvent_add), 'xtb_freq.out')
+
+def animate_vib(calc_obj):
+    with open(os.path.join(LAB_SCR_HOME, str(calc_obj.id), "xtbopt.xyz")) as f:
+        lines = f.readlines()
+        num_atoms = int(lines[0].strip())
+        lines = lines[2:]
+
+    hess = []
+    struct = []
+
+    for line in lines:
+        a, x, y, z = line.strip().split()
+        struct.append([a, float(x), float(y), float(z)])
+
+    with open("hessian") as f:
+        lines = f.readlines()[1:]
+        for line in lines:
+            hess += [float(i) for i in line.strip().split()]
+
+        num_freqs = len(hess)/(3*num_atoms)
+        if not num_freqs.is_integer():
+            print("Incorrect number of frequencies!")
+            exit(0)
+
+        num_freqs = int(num_freqs)
+    SCALING = 0.05
+    hess = [i*SCALING for i in hess]
+    def output_with_displacement(mol, out, hess):
+        t = 10
+        mols = [mol]
+        for _t in range(t):
+            new_mol = []
+            for ind, (a, x, y, z) in enumerate(mols[-1]):
+                _x = x + hess[3*ind]
+                _y = y + hess[3*ind+1]
+                _z = z + hess[3*ind+2]
+                new_mol.append([a, _x, _y, _z])
+            mols.append(new_mol)
+
+        for _t in range(t):
+            new_mol = []
+            for ind, (a, x, y, z) in enumerate(mols[0]):
+                _x = x - hess[3*ind]
+                _y = y - hess[3*ind+1]
+                _z = z - hess[3*ind+2]
+                new_mol.append([a, _x, _y, _z])
+            mols.insert(0, new_mol)
+
+        for mol in mols:
+            out.write("{}\n".format(num_atoms))
+            out.write("Free\n")
+            for a, x, y, z in mol:
+                out.write("{} {} {} {}\n".format(a, x, y, z))
+
+    for ind in range(num_freqs):
+        _hess = hess[3*num_atoms*ind:3*num_atoms*(ind+1)]
+        with open(os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), "freq_{}.xyz".format(ind)), 'w') as out:
+            output_with_displacement(struct, out, _hess)
+    return 0
 
 def crest(in_file, charge, solvent, mode):
     if solvent != "Vacuum":
@@ -338,26 +405,26 @@ def run_steps(steps, calc_obj, drawing, id):
                 sftp_get(os.path.join(remote_dir, f), os.path.join(LAB_SCR_HOME, str(calc_obj.id), f), conn, lock)
     return 0
 
-def save_to_results(f, calc_obj, multiple=False):
-    for _f in f:
-        s = _f.split('.')
-        if len(s) == 2:
-            name, ext = s
-            if ext == 'xyz':
-                if multiple:
-                    a = system("babel -ixyz {}/{} -oxyz {}/conf.xyz -m".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), _f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
-                else:
-                    copyfile(os.path.join(LAB_SCR_HOME, str(calc_obj.id), _f.split('/')[-1]), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), _f.split('/')[-1]))
-            elif ext == 'mol':
-                copyfile(os.path.join(LAB_SCR_HOME, str(calc_obj.id), _f.split('/')[-1]), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), _f.split('/')[-1]))
+def save_to_results(f, calc_obj, multiple=False, out_name=""):
+    s = f.split('.')
+    fname = f.split('/')[-1]
+    if out_name == "":
+        out_name = fname
+    if len(s) == 2:
+        name, ext = s
+        if ext == 'xyz':
+            if multiple:
+                a = system("babel -ixyz {}/{} -oxyz {}/conf.xyz -m".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
             else:
-                print("Unknown extension: {}".format(ext))
-        elif len(s) == 1:
-            name = s
-            copyfile(os.path.join(LAB_SCR_HOME, str(calc_obj.id), _f.split('/')[-1]), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), _f.split('/')[-1]))
+                copyfile(os.path.join(LAB_SCR_HOME, str(calc_obj.id), fname), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), out_name))
         else:
-            print("Odd number of periods!")
-            return -1
+            copyfile(os.path.join(LAB_SCR_HOME, str(calc_obj.id), fname), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), out_name))
+    elif len(s) == 1:
+        name = s
+        copyfile(os.path.join(LAB_SCR_HOME, str(calc_obj.id), fname), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), out_name))
+    else:
+        print("Odd number of periods!")
+        return -1
     return 0
 
 
@@ -397,7 +464,7 @@ def geom_opt(id, drawing, charge, solvent, calc_obj=None, remote=False):
     if a != 0:
         return
 
-    a = save_to_results(["xtbopt.xyz"], calc_obj)
+    a = save_to_results("xtbopt.xyz", calc_obj)
     if a != 0:
         return
 
@@ -423,17 +490,18 @@ def geom_opt_freq(id, drawing, charge, solvent, calc_obj=None, remote=False):
     steps = [
         [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
         [xtb_freq, ["xtbopt.xyz", charge, solvent], "Calculating frequency modes", "Failed to calculate frequency modes"],
+        [animate_vib, [calc_obj], "Animating frequency modes", "Failed to animate frequency modes"],
     ]
 
     a = run_steps(steps, calc_obj, drawing, id)
     if a != 0:
         return
 
-    a = save_to_results(["xtbopt.xyz"], calc_obj)
+    a = save_to_results("xtbopt.xyz", calc_obj)
     if a != 0:
         return
 
-    a = save_to_results(["vibspectrum"], calc_obj, multiple=True)
+    a = save_to_results("vibspectrum", calc_obj, multiple=True)
     if a != 0:
         return
 
@@ -503,8 +571,8 @@ def conf_search(id, drawing, charge, solvent, calc_obj=None, remote=False):
     if a != 0:
         return
 
-    a = save_to_results(["crest_conformers.xyz"], calc_obj, multiple=True)
-    a = save_to_results(["crest_conformers.xyz"], calc_obj)
+    a = save_to_results("crest_conformers.xyz", calc_obj, multiple=True)
+    a = save_to_results("crest_conformers.xyz", calc_obj)
 
     if a != 0:
         return
@@ -555,7 +623,7 @@ def uvvis_simple(id, drawing, charge, solvent, calc_obj=None, remote=False):
     if a != 0:
         return
 
-    a = save_to_results(["xtbopt.xyz"], calc_obj, multiple=True)
+    a = save_to_results("xtbopt.xyz", calc_obj, multiple=True)
     if a != 0:
         return
 
@@ -614,11 +682,11 @@ def nmr_enso(id, drawing, charge, solvent, calc_obj=None, remote=False):
     if a != 0:
         return
 
-    a = save_to_results(["xtbopt.xyz"], calc_obj)
+    a = save_to_results("xtbopt.xyz", calc_obj)
     if a != 0:
         return
 
-    a = save_to_results(["crest_conformers.xyz"], calc_obj, multiple=True)
+    a = save_to_results("crest_conformers.xyz", calc_obj, multiple=True)
     if a != 0:
         return
 
@@ -648,6 +716,52 @@ def nmr_enso(id, drawing, charge, solvent, calc_obj=None, remote=False):
                     for _x in x:
                         out.write("{:.2f},0.0\n".format(_x))
     return 0
+
+@app.task
+def constraint_opt(id, drawing, charge, solvent, constraints, calc_obj=None, remote=False):
+
+    steps = [
+        [xtb_scan, ["initial.xyz", charge, solvent], "Performing the constrained optimisation", "Failed to perform the constrained optimisation"],
+
+    ]
+
+    with open("{}/scan".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))), 'w') as out:
+        out.write("$constrain\n")
+        has_scan = False
+        for cmd in constraints:
+            type = len(cmd[-1])
+            if type == 2:
+                out.write("distance: {}, {}, auto\n".format(*cmd[-1]))
+            if type == 3:
+                out.write("angle: {}, {}, {}, auto\n".format(*cmd[-1]))
+            if type == 4:
+                out.write("dihedral: {}, {}, {}, {}, auto\n".format(*cmd[-1]))
+            if cmd[0] == "Scan":
+                has_scan = True
+        if has_scan:
+            calc_obj.has_scan = True
+            out.write("$scan\n")
+            counter = 1
+            for cmd in constraints:
+                if cmd[0] == "Scan":
+                    out.write("{}: {}, {}, {}\n".format(counter, *cmd[1]))
+                    counter += 1
+        out.write("$end")
+
+
+    a = run_steps(steps, calc_obj, drawing, id)
+    if a != 0:
+        return
+
+    if has_scan:
+        a = save_to_results("xtbscan.log", calc_obj, out_name="xtbscan.xyz")
+    else:
+        a = save_to_results("xtbopt.xyz", calc_obj)
+    if a != 0:
+        return
+
+    return 0
+
 
 time_dict = {}
 
