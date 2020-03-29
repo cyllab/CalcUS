@@ -179,10 +179,12 @@ def submit_calculation(request):
         drawing = False
         in_file = request.FILES['file_structure']
         filename, ext = in_file.name.split('.')
-        fs = FileSystemStorage()
+        #fs = FileSystemStorage()
 
         if ext in ['mol2', 'mol', 'xyz', 'sdf']:
-            _ = fs.save(os.path.join(t, 'initial.{}'.format(ext)), in_file)
+            with open(os.path.join(LAB_SCR_HOME, t, 'initial.{}'.format(ext)), 'wb+') as out:
+                for chunk in in_file.chunks():
+                    out.write(chunk)
     else:
         mol = request.POST['structure']
         with open(os.path.join(scr, 'initial.mol'), 'w') as out:

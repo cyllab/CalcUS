@@ -215,37 +215,41 @@ def system(command, log_file="", force_local=False):
             return subprocess.run(shlex.split(command)).returncode
 
 def handle_input_file(drawing, calc_obj):
-    drawing = False
     if drawing:
-        return system("babel -imol {}/initial.mol -oxyz {}/initial.xyz -h --gen3D".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
+        SCALE = 20
+        #return system("babel -imol {}/initial.mol -oxyz {}/initial.xyz -h --gen3D".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
     else:
-        if os.path.isfile("{}/initial.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
-            #return system("babel -imol initial.mol -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
-            with open(os.path.join("{}/initial.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))))) as f:
-                lines = f.readlines()[4:]
-            with open(os.path.join("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))), 'w') as out:
-                to_print = []
-                for line in lines:
-                    sline = line.split()
-                    try:
-                        a = int(sline[3])
-                    except ValueError:
-                        to_print.append("{} {} {} {}\n".format(sline[3], float(sline[0])*20, float(sline[1])*20, float(sline[2])*20))
-                    else:
-                        break
-                num = len(to_print)
-                out.write("{}\n".format(num))
-                out.write("CalcUS\n")
-                for line in to_print:
-                    out.write(line)
-                return 0
+        SCALE = 1
 
+    if os.path.isfile("{}/initial.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
+        #return system("babel -imol initial.mol -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
+        with open(os.path.join("{}/initial.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))))) as f:
+            lines = f.readlines()[4:]
+        with open(os.path.join("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))), 'w') as out:
+            to_print = []
+            for line in lines:
+                sline = line.split()
+                try:
+                    a = int(sline[3])
+                except ValueError:
+                    to_print.append("{} {} {} {}\n".format(sline[3], float(sline[0])*SCALE, float(sline[1])*SCALE, float(sline[2])*SCALE))
+                else:
+                    break
+            num = len(to_print)
+            out.write("{}\n".format(num))
+            out.write("CalcUS\n")
+            for line in to_print:
+                out.write(line)
+            return 0
+
+        '''
         elif os.path.isfile("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
             return 0
         elif os.path.isfile("{}/initial.mol2".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
             return system("babel -imol2 {}/initial.mol2 -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
         elif os.path.isfile("{}/initial.sdf".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
             return system("babel -isdf {}/initial.sdf -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
+        '''
 
 
 def xtb_opt(in_file, charge, solvent):
