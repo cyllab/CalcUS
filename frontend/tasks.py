@@ -276,10 +276,10 @@ def xtb_ts(in_file, charge, solvent, id):
     if solvent == "Vacuum":
         solvent_add = ""
     else:
-        solvent_add = """%cpcm
+        solvent_add = '''%cpcm
         smd true
-        SMDsolvent '{}'
-        end""".format(solvent)
+        SMDsolvent "{}"
+        end'''.format(solvent)
 
     with open(os.path.join(LAB_SCR_HOME, str(id), in_file)) as f:
         lines = f.readlines()[2:]

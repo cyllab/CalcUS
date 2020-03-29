@@ -628,7 +628,7 @@ def ir_spectrum(request, pk):
     calc = Calculation.objects.get(pk=id)
     type = calc.type
 
-    if type != 4:
+    if type != 4 and type != 6:
         return HttpResponse(status=403)
 
     profile = request.user.profile
