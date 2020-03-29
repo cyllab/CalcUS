@@ -747,6 +747,7 @@ def constraint_opt(id, drawing, charge, solvent, constraints, calc_obj=None, rem
 
     with open("{}/scan".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))), 'w') as out:
         out.write("$constrain\n")
+        out.write("force constant=99\n")
         has_scan = False
         for cmd in constraints:
             type = len(cmd[-1])
@@ -773,10 +774,10 @@ def constraint_opt(id, drawing, charge, solvent, constraints, calc_obj=None, rem
     if a != 0:
         return
 
+    a = save_to_results("xtbopt.xyz", calc_obj)
     if has_scan:
         a = save_to_results("xtbscan.log", calc_obj, out_name="xtbscan.xyz")
-    else:
-        a = save_to_results("xtbopt.xyz", calc_obj)
+
     if a != 0:
         return
 

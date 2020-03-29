@@ -73,14 +73,18 @@
 							let mol = ChemDoodle.readXYZ(data, 1);
 
 							ChemDoodle.relabel(mol);
+							clearInterval(my_refresh);
+
+							{% if calculation.type != 5 or calculation.has_scan == False %}
 							editor.loadMolecule(mol);
+							{% endif %}
+
 							$("#next_step_div").load("/next_step/{{ calculation.id }}");
 							$("#calc_title").removeClass("has-background-warning");
 							$("#calc_title").addClass("has-background-success");
 						
 							conf_number = {{ calculation.structure_set.count }};
 							
-							clearInterval(my_refresh);
 							{% if calculation.type == 1 %}
 
 							$.ajax({
@@ -152,6 +156,23 @@
 									}
 
 								);
+							{% elif calculation.type == 5 %}
+								$.ajax({
+									method: "POST",	 	 
+									url: "/get_scan_animation/",
+									headers: {
+										"X-CSRFToken": '{{ csrf_token }}',
+									},
+
+									data: {'id': {{ calculation.id }}},
+									success: function(data, textStatus, xhr) {
+										if (xhr.status != 204) {
+											eval(data);
+										}
+
+									}
+							  
+								});
 
 							{% endif %}
 						}
@@ -177,7 +198,6 @@
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						let mol = ChemDoodle.readXYZ(data, 1);
-
 						editor.loadMolecule(mol);
 					}
 

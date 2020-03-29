@@ -799,7 +799,7 @@ def get_structure(request):
 
         type = calc.type
 
-        if type == 0 or type == 2 or type == 3 or type == 4:
+        if type == 0 or type == 2 or type == 3 or type == 4 or type == 5:
             expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.xyz")
             if os.path.isfile(expected_file):
                 with open(expected_file) as f:
@@ -816,6 +816,7 @@ def get_structure(request):
                 return HttpResponse(lines)
             else:
                 return HttpResponse(status=204)
+        '''
         elif type == 5:
             if calc.has_scan:
                 expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbscan.xyz")
@@ -831,7 +832,7 @@ def get_structure(request):
             print("TYPE is {}".format(type))
 
         return HttpResponse(status=404)
-
+        '''
 @login_required
 def get_vib_animation(request):
     if request.method == 'POST' or True:
@@ -872,6 +873,50 @@ def get_vib_animation(request):
                         xyz += lines[_ind].strip() + '\\n'
                 xyz_files.append(xyz)
             return render(request, 'frontend/vib_animation.html', {
+                'xyz_files': xyz_files[1:]
+                })
+        else:
+            return HttpResponse(status=204)
+
+@login_required
+def get_scan_animation(request):
+    if request.method == 'POST' or True:
+        url = request.POST['id']
+        id = url.split('/')[-1]
+
+        calc = Calculation.objects.get(pk=id)
+
+        profile = request.user.profile
+
+        if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+            return HttpResponse(status=403)
+
+        type = calc.type
+
+        if type != 5:
+            return HttpResponse(status=403)
+
+        expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbscan.xyz")
+        if os.path.isfile(expected_file):
+            with open(expected_file) as f:
+                lines = f.readlines()
+
+            inds = []
+            num_atoms = lines[0]
+
+            for ind, line in enumerate(lines):
+                if line == num_atoms:
+                    inds.append(ind)
+
+            inds.append(len(lines)-1)
+            xyz_files = []
+            for ind, _ in enumerate(inds[1:]):
+                xyz = ""
+                for _ind in range(inds[ind-1], inds[ind]):
+                    if lines[_ind].strip() != '':
+                        xyz += lines[_ind].strip() + '\\n'
+                xyz_files.append(xyz)
+            return render(request, 'frontend/scan_animation.html', {
                 'xyz_files': xyz_files[1:]
                 })
         else:
