@@ -51,6 +51,7 @@ class IndexView(generic.ListView):
 
         self.request.session['previous_page'] = page
         proj = self.request.GET.get('project')
+        type = self.request.GET.get('type')
         target_username = self.request.GET.get('user')
 
 
@@ -61,9 +62,15 @@ class IndexView(generic.ListView):
 
         if profile_intersection(self.request.user.profile, target_profile):
             if proj == "All projects":
-                return sorted(target_profile.calculation_set.all(), key=lambda d: d.date, reverse=True)
+                if type == "All":
+                    return sorted(target_profile.calculation_set.all(), key=lambda d: d.date, reverse=True)
+                else:
+                    return sorted(target_profile.calculation_set.filter(type=Calculation.CALC_TYPES[type]), key=lambda d: d.date, reverse=True)
             else:
-                return sorted(target_profile.calculation_set.filter(project__name=proj), key=lambda d: d.date, reverse=True)
+                if type == "All":
+                    return sorted(target_profile.calculation_set.filter(project__name=proj), key=lambda d: d.date, reverse=True)
+                else:
+                    return sorted(target_profile.calculation_set.filter(project__name=proj, type=Calculation.CALC_TYPES[type]), key=lambda d: d.date, reverse=True)
         else:
             return []
 

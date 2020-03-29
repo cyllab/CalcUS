@@ -20,12 +20,17 @@
 
 			var sel2 = document.getElementById("calc_user");
 			user = sel2.options[sel2.selectedIndex].text;
+
+			var sel3 = document.getElementById("calc_type");
+			type = sel3.options[sel3.selectedIndex].text;
+
 			$.ajax({
 				data: {
 					csrfmiddlewaretoken: ('{{csrf_token}}'),
 					project: opt,	
 					page: page,
 					user: user,
+					type: type,
 				},
 				method: "GET",
 				url: '/list/',
@@ -103,6 +108,18 @@
 				{% for proj in user.profile.project_set.all %}
 				<option name="{{ proj }}">{{ proj }}</option>
 				{% endfor %}
+			</select>
+		</div>
+		<div class="select" >
+			<select name="calc_project" id="calc_type" onchange="set_page(1);">
+				<option name="all">All</option>
+			    	<option>Geometrical Optimisation</option>
+			    	<option>Constrained Optimisation</option>
+			    	<option>Conformer Search</option>
+			    	<option>UV/Vis Spectrum Prediction</option>
+			    	<option>NMR Spectrum Prediction</option>
+			    	<option>Opt+Freq</option>
+			    	<option>TS+Freq</option>
 			</select>
 		</div>
 
