@@ -84,9 +84,9 @@ class ClusterAccess(models.Model):
     @property
     def users(self):
         users = []
-        for i in self.clusterpersonalkey_set.all():
-            if i.claimer is not None:
-                users.append(i.claimer)
+        for i in self.group.members.all():
+            users.append(i)
+        users.append(self.group.PI)
         return users
 
 class Calculation(models.Model):
