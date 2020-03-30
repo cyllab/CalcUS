@@ -287,7 +287,7 @@ def xtb_ts(in_file, charge, solvent, id):
     with open(os.path.join(LAB_SCR_HOME, str(id), 'ts.inp'), 'w') as out:
         out.write(ORCA_TEMPLATE.format(PAL, solvent_add, charge, ''.join(lines)))
 
-    return system("{} ts.inp".format(ORCAPATH), 'xtb_ts.out')
+    return system("{}/orca ts.inp".format(ORCAPATH), 'xtb_ts.out')
 
 def xtb_scan(in_file, charge, solvent):
     if solvent != "Vacuum":
