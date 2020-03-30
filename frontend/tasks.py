@@ -547,7 +547,7 @@ def geom_opt_freq(id, drawing, charge, solvent, calc_obj=None, remote=False):
     steps = [
         [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
         [xtb_freq, ["xtbopt.xyz", charge, solvent], "Calculating frequency modes", "Failed to calculate frequency modes"],
-        [animate_vib, [calc_obj], "Animating frequency modes", "Failed to animate frequency modes"],
+        [animate_vib, ["xtbopt.xyz", calc_obj], "Animating frequency modes", "Failed to animate frequency modes"],
     ]
 
     a = run_steps(steps, calc_obj, drawing, id)

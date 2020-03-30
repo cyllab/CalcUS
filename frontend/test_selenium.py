@@ -13,12 +13,17 @@ from selenium.webdriver.support.ui import Select
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-class AccountTestCase(LiveServerTestCase):
-    def setUp(self):
-        self.driver = webdriver.Firefox()
-        self.user = "Steve"
-        self.password = "betatest"
-        self.login()
+class LaunchTestCase(LiveServerTestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.driver = webdriver.Firefox()
+        cls.user = "Steve"
+        cls.password = "betatest"
+        cls.login(cls)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.driver.quit()
 
     def login(self):
         self.driver.get('http://127.0.0.1:8000/accounts/login/')
@@ -33,8 +38,20 @@ class AccountTestCase(LiveServerTestCase):
             EC.presence_of_element_located((By.ID, "calculations_list"))
         )
 
-        url = self.driver.current_url.split('/')
-        self.assertTrue(url[-2] == "home")
+
+    def get_charge(self, fname):
+
+        charge = 0
+        if fname.find("anion"):
+            charge = -1
+        elif fname.find("dianion"):
+            charge = -2
+        elif fname.find("cation"):
+            charge = 1
+        elif fname.find("dication"):
+            charge = 2
+
+        return charge, fname.replace('dianion', '').replace('dication', '').replace('anion', '').replace('cation', '')
 
     def launch_calc(self, params):
         name_input = self.driver.find_element_by_name('calc_name')
@@ -68,20 +85,17 @@ class AccountTestCase(LiveServerTestCase):
 
         submit.send_keys(Keys.RETURN)
 
-    def test_basic_launch(self):
+    def basic_launch(self, params, delay):
         self.driver.get('http://127.0.0.1:8000/launch/')
 
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "editor"))
         )
+        element = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.NAME, "calc_name"))
+        )
 
-        params = {
-                'calc_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
-                }
+
         self.launch_calc(params)
 
         element = WebDriverWait(self.driver, 10).until(
@@ -93,7 +107,38 @@ class AccountTestCase(LiveServerTestCase):
 
         status_bar = self.driver.find_element_by_id('calc_title')
 
-        element = WebDriverWait(self.driver, 10).until(
+        element = WebDriverWait(self.driver, delay).until(
             EC.text_to_be_present_in_element((By.ID, "calc_title"), 'Done')
         )
 
+    def test_opt(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                }
+
+        self.basic_launch(params, 10)
+
+    def test_opt_freq(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Opt+Freq',
+                'project': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                }
+
+        self.basic_launch(params, 10)
+
+    def test_conf_search(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Conformer Search',
+                'project': 'SeleniumProject',
+                'in_file': 'ethanol.sdf',
+                }
+
+        self.basic_launch(params, 120)

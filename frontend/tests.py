@@ -36,8 +36,6 @@ FUNCTIONS = {
         2: uvvis_simple,
         3: nmr_enso,
         }
-class TestInstance(unittest.TestCase):
-    pass
 
 def create_user(username):
     p, u = User.objects.get_or_create(username=username, password="test1234")
@@ -167,7 +165,8 @@ def gen_test(in_file, type, solvent):
 
 input_files = glob.glob(tests_dir + '*.*')
 
-TYPES = [0, 1, 2, 3]
+#TYPES = [0, 1, 2, 3]
+TYPES = [0, 2]
 
 for type in TYPES:
     solvent = "Vacuum"
