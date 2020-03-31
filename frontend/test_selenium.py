@@ -17,7 +17,7 @@ from celery.contrib.testing.worker import start_worker
 
 from labsandbox.celery import app
 
-from .models import Profile
+from .models import *
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -48,6 +48,12 @@ class UserPermissionsTests(StaticLiveServerTestCase):
         super().tearDownClass()
         cls.celery_worker.__exit__(None, None, None)
 
+        if os.path.isdir(SCR_DIR):
+            rmtree(SCR_DIR)
+        if os.path.isdir(RESULTS_DIR):
+            rmtree(RESULTS_DIR)
+
+
     def setUp(self):
         self.username = "Selenium"
         self.password = "test1234"
@@ -57,10 +63,7 @@ class UserPermissionsTests(StaticLiveServerTestCase):
         self.login(self.username, self.password)
 
     def tearDown(self):
-        if os.path.isdir(SCR_DIR):
-            rmtree(SCR_DIR)
-        if os.path.isdir(RESULTS_DIR):
-            rmtree(RESULTS_DIR)
+        pass
 
     def login(self, username, password):
         self.driver.get('{}/accounts/login/'.format(self.live_server_url))
@@ -244,9 +247,25 @@ class CalculationTests(StaticLiveServerTestCase):
         cls.celery_worker.__exit__(None, None, None)
 
     def setUp(self):
+        if not os.path.isdir(SCR_DIR):
+            os.mkdir(SCR_DIR)
+        if not os.path.isdir(RESULTS_DIR):
+            os.mkdir(RESULTS_DIR)
+
         u = User.objects.create_superuser(username=self.username, password=self.password)#Weird things happen if the user is not superuser...
         u.save()
-        self.login(self.username, self.password)
+        p = Profile.objects.get(user__username=self.username)
+        self.login()
+        a = ResearchGroup(PI=p)
+        p.is_PI = True
+        a.save()
+        p.save()
+
+    def tearDown(self):
+        if os.path.isdir(SCR_DIR):
+            rmtree(SCR_DIR)
+        if os.path.isdir(RESULTS_DIR):
+            rmtree(RESULTS_DIR)
 
     def lget(self, url):
         self.driver.get('{}{}'.format(self.live_server_url, url))
@@ -289,6 +308,7 @@ class CalculationTests(StaticLiveServerTestCase):
         upload_input = self.driver.find_element_by_name('file_structure')
         submit = self.driver.find_element_by_xpath('/html/body/div[1]/div/div[2]/form/div[7]/div/button')
 
+        name_input.click()
         name_input.send_keys(params['calc_name'])
 
         if 'solvent' in params.keys():
@@ -303,6 +323,7 @@ class CalculationTests(StaticLiveServerTestCase):
         self.driver.find_element_by_xpath("//*[@id='calc_project']/option[text()='{}']".format(params['project'])).click()
 
         if 'new_project_name' in params.keys():
+            new_project_input.click()
             new_project_input.send_keys(params['new_project_name'])
 
         if 'in_file' in params.keys():
@@ -353,18 +374,21 @@ class CalculationTests(StaticLiveServerTestCase):
         params = {
                 'calc_name': 'test',
                 'type': 'Opt+Freq',
-                'project': 'SeleniumProject',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
                 'charge': '+1',
                 }
 
-        self.basic_launch(params, 10)
+        self.basic_launch(params, 20)
 
     def test_conf_search(self):
         self.client.login(username=self.username, password=self.password)
         params = {
                 'calc_name': 'test',
                 'type': 'Conformer Search',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
                 'project': 'SeleniumProject',
                 'in_file': 'ethanol.sdf',
                 }
