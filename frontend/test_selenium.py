@@ -370,6 +370,20 @@ class CalculationTests(StaticLiveServerTestCase):
 
         self.basic_launch(params, 10)
 
+    def test_proj(self):
+        self.client.login(username=self.username, password=self.password)
+        p = Profile.objects.get(user__username=self.username)
+        proj = Project.objects.create(author=p, name="TestProj")
+        proj.save()
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'TestProj',
+                'in_file': 'benzene.mol',
+                }
+
+        self.basic_launch(params, 20)
+
     def test_opt_freq(self):
         self.client.login(username=self.username, password=self.password)
         params = {
