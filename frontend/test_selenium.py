@@ -30,7 +30,7 @@ class UserPermissionsTests(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.driver = webdriver.Firefox()
+        cls.driver = webdriver.Chrome()
 
         app.loader.import_module('celery.contrib.testing.tasks')
         cls.celery_worker = start_worker(app, perform_ping_check=False)
@@ -166,7 +166,7 @@ class UserPermissionsTests(StaticLiveServerTestCase):
         )
 
         element = WebDriverWait(self.driver, 10).until(
-            EC.text_to_be_present_in_element((By.ID, "calc_title"), "Running")
+            EC.text_to_be_present_in_element((By.ID, "calc_title"), "Done")
         )
 
 
@@ -228,11 +228,12 @@ class UserPermissionsTests(StaticLiveServerTestCase):
         )
         self.assertTrue(self.driver.find_element_by_class_name('box').text.find("You have no computing ressource") != -1)
 
+
 class CalculationTests(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.driver = webdriver.Firefox()
+        cls.driver = webdriver.Chrome()
         cls.username = "Selenium"
         cls.password = "test1234"
 
