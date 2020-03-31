@@ -99,7 +99,8 @@ def details(request, pk):
     if not profile_intersection(request.user.profile, calc.author):
         return HttpResponse(status=403)
 
-    return render(request, 'frontend/details.html', {'calculation': calc})
+    return render(request, 'frontend/details.html', {'profile': request.user.profile,
+        'calculation': calc})
 
 class ExamplesView(generic.ListView):
     model = Example
