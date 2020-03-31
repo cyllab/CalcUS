@@ -114,6 +114,7 @@
 {% block content %}
 <div class="container">
 	{% if user.is_authenticated %}
+	<center>
 	<div class="box">
 		<div class="select" >
 			<select name="calc_user" id="calc_user" onchange="refresh_project_list('new');">
@@ -169,6 +170,7 @@
 		<div id="calculations_list">
 		
 		</div>
+	</center>
 		<br>
 	{% else %}
 		Please login to access the Sandbox

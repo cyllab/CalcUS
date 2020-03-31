@@ -224,7 +224,6 @@ def submit_calculation(request):
     scr = os.path.join(LAB_SCR_HOME, t)
     os.mkdir(scr)
 
-    print(request.POST)
     drawing = True
     if len(request.FILES) == 1:
         drawing = False

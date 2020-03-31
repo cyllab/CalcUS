@@ -82,6 +82,8 @@
 							$("#next_step_div").load("/next_step/{{ calculation.id }}");
 							$("#calc_title").removeClass("has-background-warning");
 							$("#calc_title").addClass("has-background-success"); 
+							$('#status_box').load("/status/{{ calculation.id }}");
+
 							conf_number = {{ calculation.structure_set.count }};
 							
 							{% if calculation.type == 1 %}

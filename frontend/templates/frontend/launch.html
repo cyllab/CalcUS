@@ -391,17 +391,20 @@
 			.attr('value', constraint_num)
 			.appendTo(this);
 
-		let mol2 = ChemDoodle.writeMOL(editor.getMolecule());
+		if (editor.molecules != []) {
+			let mol2 = ChemDoodle.writeMOL(editor.getMolecule());
 
-		$('<input />').attr('type', 'hidden')
-			.attr('name', "structure").val(mol2).appendTo("#calcform");
+			$('<input />').attr('type', 'hidden')
+				.attr('name', "structure").val(mol2).appendTo("#calcform");
+		}
 
-		let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
-	    	$('<input />').attr('type', 'hidden')
-			.attr('name', "structureB")
-			.attr('value', mol)
-			.appendTo("#calcform");
-	    	
+		if (editor.molecules != []) {
+			let mol = ChemDoodle.writeMOL(editor.getMolecule());
+
+			$('<input />').attr('type', 'hidden')
+				.attr('name', "structureB").val(mol).appendTo("#calcform");
+		}
+
 		return true;
 	}); 
 

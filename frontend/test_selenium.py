@@ -423,6 +423,7 @@ class CalculationTests(StaticLiveServerTestCase):
 
         self.basic_launch(params, 120)
 
+    '''
     def test_ts(self):
         self.client.login(username=self.username, password=self.password)
         params = {
@@ -434,3 +435,31 @@ class CalculationTests(StaticLiveServerTestCase):
                 }
 
         self.basic_launch(params, 20)
+    '''
+    def test_second_step(self):
+        self.client.login(username=self.username, password=self.password)
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                }
+
+        self.basic_launch(params, 20)
+
+        calc_id = self.driver.current_url.split('/')[-1]
+        next_button = self.lget('/launch/{}'.format(calc_id))
+
+        params2 = {
+                'calc_name': 'test2',
+                'type': 'Opt+Freq',
+                'project': 'SeleniumProject',
+                }
+
+        self.launch_calc(params)
+
+        element = WebDriverWait(self.driver, 10).until(
+            EC.text_to_be_present_in_element((By.ID, "calc_title"), 'Done')
+        )
+
