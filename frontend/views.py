@@ -224,6 +224,7 @@ def submit_calculation(request):
     scr = os.path.join(LAB_SCR_HOME, t)
     os.mkdir(scr)
 
+    print(request.POST)
     drawing = True
     if len(request.FILES) == 1:
         drawing = False
@@ -236,14 +237,23 @@ def submit_calculation(request):
                     out.write(chunk)
     else:
         if 'structure' in request.POST.keys():
-            drawing = False
+            if 'structureB' in request.POST.keys():
+                drawing = False
+            else:
+                drawing = True
             mol = request.POST['structure']
             with open(os.path.join(scr, 'initial.mol'), 'w') as out:
                 out.write(mol)
-        else:
+        elif 'structureB' in request.POST.keys():
             mol = request.POST['structureB']
             with open(os.path.join(scr, 'initial_2D.mol'), 'w') as out:
                 out.write(mol)
+        else:
+            return render(request, 'frontend/error.html', {
+            'profile': request.user.profile,
+            'error_message': "No input structure"
+            })
+
 
     TYPE_LENGTH = {'Distance' : 2, 'Angle' : 3, 'Dihedral' : 4}
     if type == 5:

@@ -386,21 +386,22 @@
 </div>
 <script>
 	$('#calcform').submit(function(){
+		$('<input />').attr('type', 'hidden')
+			.attr('name', "constraint_num")
+			.attr('value', constraint_num)
+			.appendTo(this);
+
+		let mol2 = ChemDoodle.writeMOL(editor.getMolecule());
+
+		$('<input />').attr('type', 'hidden')
+			.attr('name', "structure").val(mol2).appendTo("#calcform");
+
 		let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
 	    	$('<input />').attr('type', 'hidden')
 			.attr('name', "structureB")
 			.attr('value', mol)
-			.appendTo('#calcform');
-
-	    	$('<input />').attr('type', 'hidden')
-			.attr('name', "structure")
-			.attr('value', ChemDoodle.writeMOL(editor.getMolecule()))
-			.appendTo('#calcform');
-
-		$('<input />').attr('type', 'hidden')
-			.attr('name', "constraint_num")
-			.attr('value', constraint_num)
-			.appendTo('#calcform');
+			.appendTo("#calcform");
+	    	
 		return true;
 	}); 
 
@@ -420,9 +421,6 @@ $( document ).ready(function() {
 			let mol_read = ChemDoodle.readXYZ(data);
 			ChemDoodle.relabel(mol_read);
 			editor.loadMolecule(mol_read);	
-
-			mol_mol = ChemDoodle.writeMOL(mol_read);
-			sketcher.loadMolecule(mol_mol);	
 		}
 	});
 
