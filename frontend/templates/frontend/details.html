@@ -429,7 +429,9 @@
 	</div>
 
 	<br />
-	<a class="button is-danger" href="/delete/{{ calculation.id }}">Delete this calculation</a>
+	{% if profile == calculation.author %}
+		<a class="button is-danger" href="/delete/{{ calculation.id }}">Delete this calculation</a>
+	{% endif %}
 </div>
 
 {% endblock content %}

@@ -4,6 +4,12 @@
 <html>
 	<head>
 		<link rel="stylesheet" href="{% static 'bulma/css/style.min.css' %}" />
+	<style>
+		a {
+			color: inherit;
+		}
+
+	</style>
 	{% block extrahead %}
 	{% endblock %}
 	{% if user.profile.is_SU %}

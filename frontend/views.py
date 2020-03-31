@@ -184,9 +184,14 @@ def submit_calculation(request):
                 for chunk in in_file.chunks():
                     out.write(chunk)
     else:
-        mol = request.POST['structure']
-        with open(os.path.join(scr, 'initial.mol'), 'w') as out:
-            out.write(mol)
+        if 'structure' in request.POST.keys():
+            mol = request.POST['structure']
+            with open(os.path.join(scr, 'initial.mol'), 'w') as out:
+                out.write(mol)
+        else:
+            mol = request.POST['structureB']
+            with open(os.path.join(scr, 'initial_2D.mol'), 'w') as out:
+                out.write(mol)
 
     TYPE_LENGTH = {'Distance' : 2, 'Angle' : 3, 'Dihedral' : 4}
     if type == 5:

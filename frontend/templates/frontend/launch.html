@@ -183,7 +183,7 @@
 		<script>
 		  	let editor = new ChemDoodle.EditorCanvas3D('editor', 500, 300, {useServices:false, oneMolecule:false});
 		  	editor.styles.atoms_useJMOLColors = true;
-		  	sketcher.oneMolecule = false;
+		  	editor.oneMolecule = false;
 			editor.styles.set3DRepresentation('Stick');
 		  	editor.styles.shapes_color = 'c10000';
 		  	editor.repaint();
@@ -386,15 +386,22 @@
 </div>
 <script>
 	$('#calcform').submit(function(){
-	    $('<input />').attr('type', 'hidden')
-		    .attr('name', "structure")
-		    .attr('value', ChemDoodle.writeMOL(editor.getMolecule()))
-		    .appendTo('#calcform');
+		let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
+	    	$('<input />').attr('type', 'hidden')
+			.attr('name', "structureB")
+			.attr('value', mol)
+			.appendTo('#calcform');
+
+	    	$('<input />').attr('type', 'hidden')
+			.attr('name', "structure")
+			.attr('value', ChemDoodle.writeMOL(editor.getMolecule()))
+			.appendTo('#calcform');
+
 		$('<input />').attr('type', 'hidden')
-		    .attr('name', "constraint_num")
-		    .attr('value', constraint_num)
-		    .appendTo('#calcform');
-	    return true;
+			.attr('name', "constraint_num")
+			.attr('value', constraint_num)
+			.appendTo('#calcform');
+		return true;
 	}); 
 
 $( document ).ready(function() {

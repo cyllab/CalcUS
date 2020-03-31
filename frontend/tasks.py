@@ -215,6 +215,9 @@ def system(command, log_file="", force_local=False):
             return subprocess.run(shlex.split(command)).returncode
 
 def handle_input_file(drawing, calc_obj):
+    if os.path.isfile("{}/initial_2D.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
+        return system("babel -imol {}/initial_2D.mol -oxyz {}/initial.xyz -h --gen3D".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
+
     if drawing:
         SCALE = 20
         #return system("babel -imol {}/initial.mol -oxyz {}/initial.xyz -h --gen3D".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)

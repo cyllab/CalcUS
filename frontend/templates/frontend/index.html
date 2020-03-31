@@ -9,6 +9,19 @@
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 
 	<script src="https://unpkg.com/masonry-layout@4.2.0/dist/masonry.pkgd.min.js"></script>
+	<style>
+	.grid-item {
+		float: left;
+		width: 200px;
+		height: 300px;
+		margin: 10px;
+	}
+	.grid-item:hover {
+		opacity: 0.5;
+	}
+
+	</style>
+
 	<script>
 		let page = {{ page }};
 		$(document).ready(function(){
