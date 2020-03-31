@@ -282,6 +282,7 @@
 				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {});
 				editor.styles.set3DRepresentation('Stick');
 				editor.styles.backgroundColor = '#FFFFFF';
+				editor.oneMolecule = False;
 			</script>
 			<br />
 			<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .xyz <i class="fas fa-download"></i></button>
@@ -296,6 +297,7 @@
 				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {});
 				editor.styles.set3DRepresentation('Stick');
 				editor.styles.backgroundColor = '#FFFFFF';
+				editor.oneMolecule = False;
 			</script>
 			<br />
 			<button class="button" onclick="decrease_conf()">Previous Conformer</button>
@@ -329,6 +331,7 @@
 				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {});
 				editor.styles.set3DRepresentation('Stick');
 				editor.styles.backgroundColor = '#FFFFFF';
+				editor.oneMolecule = False;
 			</script>
 			<br />
 			<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .xyz <i class="fas fa-download"></i></button>
@@ -346,9 +349,10 @@
 				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {});
 				editor.styles.set3DRepresentation('Stick');
 				editor.styles.backgroundColor = '#FFFFFF';
+				editor.oneMolecule = False;
 			</script>
 			<br />
-			<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .xyz <i class="fas fa-download"></button>
+			<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .xyz <i class="fas fa-download"></i></button>
 		</div>
 		<div class="column">
 			<div id="nmr_spectrum" style="width:600px; height:400px; margin-bottom: 30px;"></div>
@@ -365,9 +369,10 @@
 					let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {});
 					editor.styles.set3DRepresentation('Stick');
 					editor.styles.backgroundColor = '#FFFFFF';
+					editor.oneMolecule = False;
 				</script>
 				<br />
-				<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .xyz <i class="fas fa-download"></button>
+				<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .xyz <i class="fas fa-download"></i></button>
 			</div>
 			<div id="vib_animation">
 				<script>
