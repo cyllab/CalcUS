@@ -4,6 +4,7 @@
 <html>
 	<head>
 		<link rel="stylesheet" href="{% static 'bulma/css/style.min.css' %}" />
+		<script src="https://kit.fontawesome.com/55d0fd4831.js" crossorigin="anonymous"></script>
 	{% block extrahead %}
 	{% endblock %}
 	{% if user.profile.is_SU %}
@@ -40,6 +41,9 @@
 		a {
 			color: inherit;
 		}
+		.fas {
+			margin-left: 10px;
+		}
 	</style>
 	</head>
 	<body>
@@ -70,13 +74,13 @@
 			{% if user.is_authenticated %}
 				Welcome <a href="{% url 'frontend:profile' %}"> &nbsp;<strong>{{ user.get_username }}</strong></a>
 				&nbsp;&nbsp;&nbsp;&nbsp;
-			     	<a href="{% url 'logout'%}?next={{request.path}}">Logout</a>
+			     	<a href="{% url 'logout'%}?next={{request.path}}">Logout <i class="fas fa-sign-out-alt"></i></a>
 			{% else %}
 				<a class="button is-primary" href="{% url 'frontend:register' %}">
 			    	<strong>Sign up</strong>
 			  	</a>
 				<a class="button is-light" href="{% url 'login' %}">
-			    	Log in
+			    	Log in  <i class="fas fa-sign-in-alt"></i>
 			  	</a>
 			{% endif %} 
 			</div>

@@ -1,7 +1,7 @@
 {% if calculation.status == 2 %}
 	<form action="/launch/{{ calculation.id }}" method="post" id="nextstep_form">
 	{% csrf_token %}
-		<button class="button">Open structure in editor</button>
+		<button class="button">Open structure in editor <i class="fas fa-external-link-alt" ></i></button>
 	</form>
 {% endif %}
 

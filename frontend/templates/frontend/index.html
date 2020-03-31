@@ -114,6 +114,7 @@
 {% block content %}
 <div class="container">
 	{% if user.is_authenticated %}
+	<div class="box">
 		<div class="select" >
 			<select name="calc_user" id="calc_user" onchange="refresh_project_list('new');">
 				<option>{{ user.username }}</option>
@@ -156,7 +157,7 @@
 			</select>
 		</div>
 		<div class="select" >
-			<select name="calc_status" id="calc_status" onchange="refresh_list(1);">
+			<select name="calc_status" id="calc_status" onchange="refresh_list('new');">
 				<option name="all">All statuses</option>
 			    	<option>Done</option>
 			    	<option>Error</option>
@@ -164,7 +165,7 @@
 			    	<option>Queued</option>
 			</select>
 		</div>
-
+		</div>
 		<div id="calculations_list">
 		
 		</div>
