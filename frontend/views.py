@@ -38,6 +38,7 @@ KEY_SIZE = 32
 class IndexView(generic.ListView):
     template_name = 'frontend/list.html'
     context_object_name = 'latest_frontend'
+    paginate_by = '20'
 
     def get_queryset(self, *args, **kwargs):
         if isinstance(self.request.user, AnonymousUser):

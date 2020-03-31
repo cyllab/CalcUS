@@ -25,10 +25,10 @@
 	<script>
 		let page = {{ page }};
 		$(document).ready(function(){
-			refresh_list();
+			refresh_list('add');
 		});
 		
-		function refresh_list() {
+		function refresh_list(mode) {
 			var sel = document.getElementById("calc_project");
 			opt = sel.options[sel.selectedIndex].text;
 
@@ -40,6 +40,8 @@
 
 			var sel4 = document.getElementById("calc_status");
 			status = sel4.options[sel4.selectedIndex].text;
+
+			if (mode == 'new') { page = 1; }
 
 			$.ajax({
 				data: {
@@ -54,21 +56,19 @@
 				url: '/list/',
 				success: function (data, textStatus, xhr) {
 					if (xhr.status != 204) {
-				    		$("#calculations_list").html(data);
+						if(mode == 'new') {
+				    			$("#calculations_list").html(data);
+						}
+						else {
+				    			$("#calculations_list").append(data);
+						}
+
+   						$(window).bind('scroll', scroll_test);
 					}
 				},
-				error: function () {
-				    $("#calculations_list").html("");
-					
-				}
 			    });
-
 		}
-		function set_page(newpage) {
-			page = newpage;
-			refresh_list();
-		}
-
+		
 		function refresh_project_list() {
 			var sel2 = document.getElementById("calc_user");
 			user = sel2.options[sel2.selectedIndex].text;
@@ -82,7 +82,7 @@
 				success: function (data, textStatus, xhr) {
 					if (xhr.status != 204) {
 				    		$("#calc_project").html(data);
-						refresh_list();
+						refresh_list('new');
 					}
 				},
 				error: function () {
@@ -93,6 +93,21 @@
 
 
 		}
+
+		$(document).ready(function(){     
+   			$(window).bind('scroll', scroll_test);
+		});
+
+		function scroll_test() {
+			let page_bottom = $(".footer").offset().top;
+			let user_bottom = $(window).scrollTop() + window.innerHeight; 
+
+			if (page_bottom - user_bottom < 200) {
+				$(window).unbind();
+				page += 1;
+				refresh_list('add');
+			    }
+		}
 	</script>
 {% endblock %}
 
@@ -100,7 +115,7 @@
 <div class="container">
 	{% if user.is_authenticated %}
 		<div class="select" >
-			<select name="calc_user" id="calc_user" onchange="set_page(1);refresh_project_list();">
+			<select name="calc_user" id="calc_user" onchange="refresh_project_list('new');">
 				<option>{{ user.username }}</option>
 				{% for teammate in user.profile.groups.members.all %}
 					{% if teammate != user.profile %}
@@ -121,7 +136,7 @@
 
 
 		<div class="select" >
-			<select name="calc_project" id="calc_project" onchange="set_page(1);">
+			<select name="calc_project" id="calc_project" onchange="refresh_list('new');">
 				<option name="all">All projects</option>
 				{% for proj in user.profile.project_set.all %}
 				<option name="{{ proj }}">{{ proj }}</option>
@@ -129,7 +144,7 @@
 			</select>
 		</div>
 		<div class="select" >
-			<select name="calc_type" id="calc_type" onchange="set_page(1);">
+			<select name="calc_type" id="calc_type" onchange="refresh_list('new');">
 				<option name="all">All calculation types</option>
 			    	<option>Geometrical Optimisation</option>
 			    	<option>Constrained Optimisation</option>
@@ -141,7 +156,7 @@
 			</select>
 		</div>
 		<div class="select" >
-			<select name="calc_status" id="calc_status" onchange="set_page(1);">
+			<select name="calc_status" id="calc_status" onchange="refresh_list(1);">
 				<option name="all">All statuses</option>
 			    	<option>Done</option>
 			    	<option>Error</option>
