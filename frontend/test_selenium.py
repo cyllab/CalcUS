@@ -86,7 +86,6 @@ class UserPermissionsTests(StaticLiveServerTestCase):
     def logout(self):
         self.driver.get('{}/accounts/logout/?next=/'.format(self.live_server_url))
 
-    '''
     def test_launch_without_group(self):
         params = {
                 'calc_name': 'test',
@@ -110,7 +109,7 @@ class UserPermissionsTests(StaticLiveServerTestCase):
         )
 
         self.assertTrue(self.driver.find_element_by_id("PI_application_message").text.find("Your request has been received") != -1)
-    '''
+
     def lget(self, url):
         self.driver.get('{}{}'.format(self.live_server_url, url))
 
@@ -226,7 +225,6 @@ class UserPermissionsTests(StaticLiveServerTestCase):
         )
         self.assertTrue(self.driver.find_element_by_class_name('box').text.find("You have no computing ressource") != -1)
 
-'''
 class CalculationTests(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
@@ -234,9 +232,6 @@ class CalculationTests(StaticLiveServerTestCase):
         cls.driver = webdriver.Firefox()
         cls.username = "Selenium"
         cls.password = "test1234"
-        u = User.objects.create_user(username=cls.username, password=cls.password)
-        u.save()
-        cls.logged_in = False
 
         app.loader.import_module('celery.contrib.testing.tasks')
         cls.celery_worker = start_worker(app, perform_ping_check=False)
@@ -249,9 +244,12 @@ class CalculationTests(StaticLiveServerTestCase):
         cls.celery_worker.__exit__(None, None, None)
 
     def setUp(self):
-        if not self.logged_in:
-            self.login()
-            self.logged_in = True
+        u = User.objects.create_superuser(username=self.username, password=self.password)#Weird things happen if the user is not superuser...
+        u.save()
+        self.login(self.username, self.password)
+
+    def lget(self, url):
+        self.driver.get('{}{}'.format(self.live_server_url, url))
 
     def login(self):
         self.driver.get('{}/accounts/login/'.format(self.live_server_url))
@@ -372,4 +370,3 @@ class CalculationTests(StaticLiveServerTestCase):
                 }
 
         self.basic_launch(params, 120)
-'''
