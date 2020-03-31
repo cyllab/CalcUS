@@ -902,45 +902,47 @@ time_dict = {}
 
 @task_prerun.connect
 def task_prerun_handler(signal, sender, task_id, task, args, kwargs, **extras):
-    time_dict[task_id] = time()
+    if task != ping:
+        time_dict[task_id] = time()
 
-    calc_obj = Calculation.objects.get(pk=args[0])
+        calc_obj = Calculation.objects.get(pk=args[0])
 
-    calc_obj.status = 1
-    calc_obj.save()
+        calc_obj.status = 1
+        calc_obj.save()
 
-    os.chdir(os.path.join(LAB_SCR_HOME, str(args[0])))
-    args.append(calc_obj)
+        os.chdir(os.path.join(LAB_SCR_HOME, str(args[0])))
+        args.append(calc_obj)
 
 
 @task_postrun.connect
 def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, state, **extras):
-    try:
-        execution_time = time() - time_dict.pop(task_id)
-    except KeyError:
-        execution_time = -1
+    if task != ping:
+        try:
+            execution_time = time() - time_dict.pop(task_id)
+        except KeyError:
+            execution_time = -1
 
-    job_id = args[0]
-    calc_obj = Calculation.objects.get(pk=job_id)
-    calc_obj.execution_time = int(execution_time)
-    calc_obj.date_finished = timezone.now()
+        job_id = args[0]
+        calc_obj = Calculation.objects.get(pk=job_id)
+        calc_obj.execution_time = int(execution_time)
+        calc_obj.date_finished = timezone.now()
 
-    for f in glob.glob(os.path.join(LAB_SCR_HOME, str(job_id)) + '/*.out'):
-        fname = f.split('/')[-1]
-        copyfile(f, os.path.join(LAB_RESULTS_HOME, str(job_id)) + '/' + fname)
+        for f in glob.glob(os.path.join(LAB_SCR_HOME, str(job_id)) + '/*.out'):
+            fname = f.split('/')[-1]
+            copyfile(f, os.path.join(LAB_RESULTS_HOME, str(job_id)) + '/' + fname)
 
-    if retval == 0:
-        calc_obj.status = 2
-    else:
-        calc_obj.status = 3
-        if calc_obj.error_message == "":
-            calc_obj.error_message = "Unknown error"
+        if retval == 0:
+            calc_obj.status = 2
+        else:
+            calc_obj.status = 3
+            if calc_obj.error_message == "":
+                calc_obj.error_message = "Unknown error"
 
-    calc_obj.save()
+        calc_obj.save()
 
-    author = calc_obj.author
-    author.calculation_time_used += execution_time
-    author.save()
+        author = calc_obj.author
+        author.calculation_time_used += execution_time
+        author.save()
 
 @app.task(name='celery.ping')
 def ping():

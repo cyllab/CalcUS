@@ -28,8 +28,18 @@ from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso, geom_opt_freq,
 from .decorators import superuser_required
 from .tasks import system
 
-LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
-LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
+try:
+    is_test = os.environ['LAB_TEST']
+except:
+    is_test = False
+
+if is_test:
+    LAB_SCR_HOME = os.environ['LAB_TEST_SCR_HOME']
+    LAB_RESULTS_HOME = os.environ['LAB_TEST_RESULTS_HOME']
+else:
+    LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
+    LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
+
 LAB_KEY_HOME = os.environ['LAB_KEY_HOME']
 LAB_CLUSTER_HOME = os.environ['LAB_CLUSTER_HOME']
 
@@ -117,17 +127,59 @@ class RegisterView(generic.CreateView):
 def please_register(request):
         return render(request, 'frontend/please_register.html', {})
 
+
+
 @login_required
 def submit_calculation(request):
-    name = request.POST['calc_name']
-    type = Calculation.CALC_TYPES[request.POST['calc_type']]
-    project = request.POST['calc_project']
-    charge = request.POST['calc_charge']
-    solvent = request.POST['calc_solvent']
-    ressource = request.POST['calc_ressource']
+    if 'calc_name' in request.POST.keys():
+        name = request.POST['calc_name']
+    else:
+        return render(request, 'frontend/error.html', {
+            'profile': request.user.profile,
+            'error_message': "No calculation name"
+            })
+
+    if 'calc_type' in request.POST.keys():
+        type = Calculation.CALC_TYPES[request.POST['calc_type']]
+    else:
+        return render(request, 'frontend/error.html', {
+            'profile': request.user.profile,
+            'error_message': "No calculation type"
+            })
+    if 'calc_project' in request.POST.keys():
+        project = request.POST['calc_project']
+    else:
+        return render(request, 'frontend/error.html', {
+            'profile': request.user.profile,
+            'error_message': "No calculation project"
+            })
+
+    if 'calc_charge' in request.POST.keys():
+        charge = request.POST['calc_charge']
+    else:
+        return render(request, 'frontend/error.html', {
+            'profile': request.user.profile,
+            'error_message': "No calculation charge"
+            })
+
+    if 'calc_solvent' in request.POST.keys():
+        solvent = request.POST['calc_solvent']
+    else:
+        return render(request, 'frontend/error.html', {
+            'profile': request.user.profile,
+            'error_message': "No calculation solvent"
+            })
+
+
+    if 'calc_ressource' in request.POST.keys():
+        ressource = request.POST['calc_ressource']
+    else:
+        return render(request, 'frontend/error.html', {
+            'profile': request.user.profile,
+            'error_message': "You have no computing ressource"
+            })
 
     profile = request.user.profile
-
     if ressource != "Local":
         try:
             access = ClusterAccess.objects.get(cluster_address=ressource)
@@ -139,9 +191,6 @@ def submit_calculation(request):
     else:
         if not profile.is_PI and profile.groups == None:
             return redirect("/home/")
-
-
-    profile, created = Profile.objects.get_or_create(user=request.user)
 
     if project == "New Project":
         new_project_name = request.POST['new_project_name']
@@ -160,6 +209,7 @@ def submit_calculation(request):
         else:
             project_obj = project_set[0]
 
+
     obj = Calculation.objects.create(name=name, date=timezone.now(), type=type, status=0, charge=charge, solvent=solvent)
 
     profile.calculation_set.add(obj)
@@ -172,8 +222,6 @@ def submit_calculation(request):
 
     scr = os.path.join(LAB_SCR_HOME, t)
     os.mkdir(scr)
-
-    drawing = True
 
     if len(request.FILES) == 1:
         drawing = False
@@ -218,6 +266,9 @@ def submit_calculation(request):
                     constraints.append([mode, [begin, end, steps], ids])
                 else:
                     return HttpResponse(status=403)
+
+
+    drawing = True
 
     if ressource == "Local":
         if type == 0:

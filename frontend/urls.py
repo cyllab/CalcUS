@@ -10,6 +10,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('home/', views.index, name='index'),
     path('list/', views.IndexView.as_view(), name='list'),
+    #path('error/', views.error, name='error'),
     path('project_list/', views.project_list, name='project_list'),
     path('please_register/', views.please_register, name='please_register'),
     path('register/', views.RegisterView.as_view(), name='register'),
