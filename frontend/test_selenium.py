@@ -36,11 +36,6 @@ class UserPermissionsTests(StaticLiveServerTestCase):
         cls.celery_worker = start_worker(app, perform_ping_check=False)
         cls.celery_worker.__enter__()
 
-        if not os.path.isdir(SCR_DIR):
-            os.mkdir(SCR_DIR)
-        if not os.path.isdir(RESULTS_DIR):
-            os.mkdir(RESULTS_DIR)
-
 
     @classmethod
     def tearDownClass(cls):
@@ -48,25 +43,20 @@ class UserPermissionsTests(StaticLiveServerTestCase):
         super().tearDownClass()
         cls.celery_worker.__exit__(None, None, None)
 
-        if os.path.isdir(SCR_DIR):
-            rmtree(SCR_DIR)
-        if os.path.isdir(RESULTS_DIR):
-            rmtree(RESULTS_DIR)
-
 
     def setUp(self):
         self.username = "Selenium"
-        self.password = "test1234"
+        self.password = "seleniumpassword"
 
-        u = User.objects.create_superuser(username=self.username, password=self.password)#Weird things happen if the user is not superuser...
-        u.save()
+        #u = User.objects.create_superuser(username=self.username, password=self.password)#Weird things happen if the user is not superuser...
+        #u.save()
         self.login(self.username, self.password)
 
     def tearDown(self):
         pass
 
     def login(self, username, password):
-        self.driver.get('{}/accounts/login/'.format(self.live_server_url))
+        self.driver.get('http://0.0.0.0:8000/accounts/login/')
 
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "id_username"))
@@ -87,7 +77,7 @@ class UserPermissionsTests(StaticLiveServerTestCase):
         )
 
     def logout(self):
-        self.driver.get('{}/accounts/logout/?next=/'.format(self.live_server_url))
+        self.driver.get('http://0.0.0.0:8000/accounts/logout/?next=/')
 
     def test_launch_without_group(self):
         params = {
@@ -101,7 +91,7 @@ class UserPermissionsTests(StaticLiveServerTestCase):
         self.basic_launch(params, 10)
 
     def test_request_PI(self):
-        self.driver.get('{}/profile/'.format(self.live_server_url))
+        self.driver.get('http://0.0.0.0:8000/profile/')
         group_name = self.driver.find_element_by_name('group_name')
         submit = self.driver.find_element_by_xpath('/html/body/div/div[2]/div/div[1]/form/button')
         group_name.send_keys("Test group")
@@ -114,7 +104,7 @@ class UserPermissionsTests(StaticLiveServerTestCase):
         self.assertTrue(self.driver.find_element_by_id("PI_application_message").text.find("Your request has been received") != -1)
 
     def lget(self, url):
-        self.driver.get('{}{}'.format(self.live_server_url, url))
+        self.driver.get('http://0.0.0.0:8000{}'.format(url))
 
     def test_manage_PI_request(self):
         self.lget('/profile/')
@@ -151,7 +141,7 @@ class UserPermissionsTests(StaticLiveServerTestCase):
 
         self.login(self.username, self.password)
 
-        self.driver.get('{}/launch/'.format(self.live_server_url))
+        self.driver.get('http://0.0.0.0:8000/launch/')
 
         params = {
                 'calc_name': 'test',
@@ -203,7 +193,7 @@ class UserPermissionsTests(StaticLiveServerTestCase):
         submit.send_keys(Keys.RETURN)
 
     def basic_launch(self, params, delay):
-        self.driver.get('{}/launch/'.format(self.live_server_url))
+        self.driver.get('http://0.0.0.0:8000/launch/')
 
         self.driver.implicitly_wait(10)
         element = WebDriverWait(self.driver, 10).until(
@@ -234,7 +224,7 @@ class CalculationTests(StaticLiveServerTestCase):
         super().setUpClass()
         cls.driver = webdriver.Firefox()
         cls.username = "Selenium"
-        cls.password = "test1234"
+        cls.password = "seleniumpassword"
 
         app.loader.import_module('celery.contrib.testing.tasks')
         cls.celery_worker = start_worker(app, perform_ping_check=False)
@@ -267,11 +257,8 @@ class CalculationTests(StaticLiveServerTestCase):
         if os.path.isdir(RESULTS_DIR):
             rmtree(RESULTS_DIR)
 
-    def lget(self, url):
-        self.driver.get('{}{}'.format(self.live_server_url, url))
-
     def login(self):
-        self.driver.get('{}/accounts/login/'.format(self.live_server_url))
+        self.driver.get('http://0.0.0.0:8000/accounts/login/')
         username_f = self.driver.find_element_by_id('id_username')
         password_f = self.driver.find_element_by_id('id_password')
         submit = self.driver.find_element_by_xpath('/html/body/div/div[2]/div/section/div[1]/div/form/div[2]/input[1]')
@@ -332,7 +319,7 @@ class CalculationTests(StaticLiveServerTestCase):
         submit.send_keys(Keys.RETURN)
 
     def basic_launch(self, params, delay):
-        self.driver.get('{}/launch/'.format(self.live_server_url))
+        self.driver.get('http://0.0.0.0:8000/launch/')
 
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "editor"))

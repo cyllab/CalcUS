@@ -223,6 +223,7 @@ def submit_calculation(request):
     scr = os.path.join(LAB_SCR_HOME, t)
     os.mkdir(scr)
 
+    drawing = True
     if len(request.FILES) == 1:
         drawing = False
         in_file = request.FILES['file_structure']
@@ -234,6 +235,7 @@ def submit_calculation(request):
                     out.write(chunk)
     else:
         if 'structure' in request.POST.keys():
+            drawing = False
             mol = request.POST['structure']
             with open(os.path.join(scr, 'initial.mol'), 'w') as out:
                 out.write(mol)
@@ -268,7 +270,6 @@ def submit_calculation(request):
                     return HttpResponse(status=403)
 
 
-    drawing = True
 
     if ressource == "Local":
         if type == 0:
