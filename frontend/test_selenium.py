@@ -4,6 +4,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import LiveServerTestCase
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+import datetime
 
 from django.contrib.auth.models import User, Group
 
@@ -88,6 +89,19 @@ class UserPermissionsTests(StaticLiveServerTestCase):
 
     def logout(self):
         self.driver.get('{}/accounts/logout/?next=/'.format(self.live_server_url))
+
+    def test_access_calc_without_permission(self):
+        u = User.objects.create_superuser(username="OtherPI", password="irrelevant")
+        p = Profile.objects.get(user__username="OtherPI")
+        proj = Project.objects.create(author=p, name="SecretProj")
+        c = Calculation.objects.create(name="test", date=datetime.datetime.now(), charge=0, type=0, status=2, author=p, project=proj)
+        proj.save()
+        c.save()
+        p.save()
+
+        self.lget('/details/1')
+        self.driver.implicitly_wait(5)
+        self.assertEqual(self.driver.current_url.split('/')[-2], 'home')
 
     def test_launch_without_group(self):
         params = {
@@ -408,3 +422,15 @@ class CalculationTests(StaticLiveServerTestCase):
                 }
 
         self.basic_launch(params, 120)
+
+    def test_ts(self):
+        self.client.login(username=self.username, password=self.password)
+        params = {
+                'calc_name': 'test',
+                'type': 'TS+Freq',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ts.xyz',
+                }
+
+        self.basic_launch(params, 20)

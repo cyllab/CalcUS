@@ -94,10 +94,10 @@ def details(request, pk):
     try:
         calc = Calculation.objects.get(pk=pk)
     except Calculation.DoesNotExist:
-        return HttpResponse(status=403)
+        return redirect('/home/')
 
     if not profile_intersection(request.user.profile, calc.author):
-        return HttpResponse(status=403)
+        return redirect('/home/')
 
     return render(request, 'frontend/details.html', {'profile': request.user.profile,
         'calculation': calc})
