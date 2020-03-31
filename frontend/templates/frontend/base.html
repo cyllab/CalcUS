@@ -4,12 +4,6 @@
 <html>
 	<head>
 		<link rel="stylesheet" href="{% static 'bulma/css/style.min.css' %}" />
-	<style>
-		a {
-			color: inherit;
-		}
-
-	</style>
 	{% block extrahead %}
 	{% endblock %}
 	{% if user.profile.is_SU %}
@@ -40,6 +34,12 @@
 		#content_container {
 			margin-bottom: 30px;
 		}
+		nav {
+			margin-bottom: 50px;
+		}
+		a {
+			color: inherit;
+		}
 	</style>
 	</head>
 	<body>
@@ -64,8 +64,6 @@
 			{% endif %}
     		</div>
     	</div>
-
-
     	<div class="navbar-end">
       		<div class="navbar-item">
         		<div class="buttons">
@@ -85,10 +83,8 @@
       		</div>
     	</div>
 </nav>
-<hr>
 
 <div class="container" id="content_container">
-<br>
 {% block content %}
 
 {% endblock %}
