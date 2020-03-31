@@ -38,7 +38,6 @@ KEY_SIZE = 32
 class IndexView(generic.ListView):
     template_name = 'frontend/list.html'
     context_object_name = 'latest_frontend'
-    paginate_by = '5'
 
     def get_queryset(self, *args, **kwargs):
         if isinstance(self.request.user, AnonymousUser):
@@ -52,6 +51,7 @@ class IndexView(generic.ListView):
         self.request.session['previous_page'] = page
         proj = self.request.GET.get('project')
         type = self.request.GET.get('type')
+        status = self.request.GET.get('status')
         target_username = self.request.GET.get('user')
 
 
@@ -61,16 +61,15 @@ class IndexView(generic.ListView):
             return []
 
         if profile_intersection(self.request.user.profile, target_profile):
-            if proj == "All projects":
-                if type == "All":
-                    return sorted(target_profile.calculation_set.all(), key=lambda d: d.date, reverse=True)
-                else:
-                    return sorted(target_profile.calculation_set.filter(type=Calculation.CALC_TYPES[type]), key=lambda d: d.date, reverse=True)
-            else:
-                if type == "All":
-                    return sorted(target_profile.calculation_set.filter(project__name=proj), key=lambda d: d.date, reverse=True)
-                else:
-                    return sorted(target_profile.calculation_set.filter(project__name=proj, type=Calculation.CALC_TYPES[type]), key=lambda d: d.date, reverse=True)
+            hits = target_profile.calculation_set.all()
+            if proj != "All projects":
+                hits = hits.filter(project__name=proj)
+            if type != "All calculation types":
+                hits = hits.filter(type=Calculation.CALC_TYPES[type])
+            if status != "All statuses":
+                hits = hits.filter(status=Calculation.CALC_STATUSES[status])
+            return sorted(hits, key=lambda d: d.date, reverse=True)
+
         else:
             return []
 

@@ -7,7 +7,8 @@
 	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
 	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
-	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+
+	<script src="https://unpkg.com/masonry-layout@4.2.0/dist/masonry.pkgd.min.js"></script>
 	<script>
 		let page = {{ page }};
 		$(document).ready(function(){
@@ -24,6 +25,9 @@
 			var sel3 = document.getElementById("calc_type");
 			type = sel3.options[sel3.selectedIndex].text;
 
+			var sel4 = document.getElementById("calc_status");
+			status = sel4.options[sel4.selectedIndex].text;
+
 			$.ajax({
 				data: {
 					csrfmiddlewaretoken: ('{{csrf_token}}'),
@@ -31,6 +35,7 @@
 					page: page,
 					user: user,
 					type: type,
+					status: status,
 				},
 				method: "GET",
 				url: '/list/',
@@ -111,8 +116,8 @@
 			</select>
 		</div>
 		<div class="select" >
-			<select name="calc_project" id="calc_type" onchange="set_page(1);">
-				<option name="all">All</option>
+			<select name="calc_type" id="calc_type" onchange="set_page(1);">
+				<option name="all">All calculation types</option>
 			    	<option>Geometrical Optimisation</option>
 			    	<option>Constrained Optimisation</option>
 			    	<option>Conformer Search</option>
@@ -120,6 +125,15 @@
 			    	<option>NMR Spectrum Prediction</option>
 			    	<option>Opt+Freq</option>
 			    	<option>TS+Freq</option>
+			</select>
+		</div>
+		<div class="select" >
+			<select name="calc_status" id="calc_status" onchange="set_page(1);">
+				<option name="all">All statuses</option>
+			    	<option>Done</option>
+			    	<option>Error</option>
+			    	<option>Running</option>
+			    	<option>Queued</option>
 			</select>
 		</div>
 
