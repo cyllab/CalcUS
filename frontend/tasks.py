@@ -30,6 +30,7 @@ try:
 except:
     is_test = False
 
+
 if is_test:
     LAB_SCR_HOME = os.environ['LAB_TEST_SCR_HOME']
     LAB_RESULTS_HOME = os.environ['LAB_TEST_RESULTS_HOME']
@@ -209,7 +210,7 @@ def system(command, log_file="", force_local=False):
     else:
         if log_file != "":
             with open(log_file, 'w') as out:
-                a = subprocess.run(shlex.split(command), stdout=out).returncode
+                a = subprocess.run(shlex.split(command), stdout=out, stderr=out).returncode
             return a
         else:
             return subprocess.run(shlex.split(command)).returncode

@@ -254,19 +254,22 @@ class CalculationTests(StaticLiveServerTestCase):
         app.loader.import_module('celery.contrib.testing.tasks')
         cls.celery_worker = start_worker(app, perform_ping_check=False)
         cls.celery_worker.__enter__()
+        if not os.path.isdir(SCR_DIR):
+            os.mkdir(SCR_DIR)
+        if not os.path.isdir(RESULTS_DIR):
+            os.mkdir(RESULTS_DIR)
 
     @classmethod
     def tearDownClass(cls):
         cls.driver.quit()
         super().tearDownClass()
         cls.celery_worker.__exit__(None, None, None)
+        if os.path.isdir(SCR_DIR):
+            rmtree(SCR_DIR)
+        if os.path.isdir(RESULTS_DIR):
+            rmtree(RESULTS_DIR)
 
     def setUp(self):
-        if not os.path.isdir(SCR_DIR):
-            os.mkdir(SCR_DIR)
-        if not os.path.isdir(RESULTS_DIR):
-            os.mkdir(RESULTS_DIR)
-
         u = User.objects.create_superuser(username=self.username, password=self.password)#Weird things happen if the user is not superuser...
         u.save()
         p = Profile.objects.get(user__username=self.username)
@@ -277,10 +280,7 @@ class CalculationTests(StaticLiveServerTestCase):
         p.save()
 
     def tearDown(self):
-        if os.path.isdir(SCR_DIR):
-            rmtree(SCR_DIR)
-        if os.path.isdir(RESULTS_DIR):
-            rmtree(RESULTS_DIR)
+        pass
 
     def lget(self, url):
         self.driver.get('{}{}'.format(self.live_server_url, url))
@@ -343,6 +343,21 @@ class CalculationTests(StaticLiveServerTestCase):
 
         if 'in_file' in params.keys():
             upload_input.send_keys("{}/tests/{}".format(dir_path, params['in_file']))
+        elif 'in_text' in params.keys():
+            with open("{}/tests/{}".format(dir_path, params['in_text'])) as f:
+                mol_text = f.readlines()
+
+            open_input = self.driver.find_element_by_xpath('/html/body/div[1]/div/div[1]/div[1]/button[3]/span/img')
+            open_input.click()
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.ID, "sketcher_open_text"))
+            )
+            self.driver.implicitly_wait(5)
+
+            text_area = self.driver.find_element_by_id('sketcher_open_text')
+            text_area.send_keys(mol_text)
+            button_load = self.driver.find_element_by_id('sketcher_open_load')
+            button_load.send_keys(Keys.RETURN)
 
         submit.send_keys(Keys.RETURN)
 
@@ -368,9 +383,25 @@ class CalculationTests(StaticLiveServerTestCase):
 
         status_bar = self.driver.find_element_by_id('calc_title')
 
-        element = WebDriverWait(self.driver, delay).until(
-            EC.text_to_be_present_in_element((By.ID, "calc_title"), 'Done')
+        self.wait_calc_completion(delay)
+
+        self.assertTrue(self.driver.find_element_by_id('calc_status').text.find("Done") != -1)
+
+    def wait_calc_completion(self, delay):
+        element = WebDriverWait(self.driver, delay).until(EC.text_to_be_present_in_element((By.CSS_SELECTOR, "#calc_status"), 'Done')
         )
+
+    def test_text_opt(self):
+        self.client.login(username=self.username, password=self.password)
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_text': 'Cl-iodane_2D.mol',
+                }
+
+        self.basic_launch(params, 10)
 
     def test_opt(self):
         self.client.login(username=self.username, password=self.password)
