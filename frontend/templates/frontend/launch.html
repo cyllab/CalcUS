@@ -391,6 +391,14 @@
 			.attr('value', constraint_num)
 			.appendTo(this);
 
+		{% if calculation %}
+		$('<input />').attr('type', 'hidden')
+			.attr('name', "starting_struct")
+			.attr('value', {{ calculation.id }})
+			.appendTo(this);
+
+		{% endif %}
+
 		if (editor.molecules != []) {
 			let mol2 = ChemDoodle.writeMOL(editor.getMolecule());
 

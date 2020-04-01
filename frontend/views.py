@@ -28,6 +28,8 @@ from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso, geom_opt_freq,
 from .decorators import superuser_required
 from .tasks import system
 
+from shutil import copyfile
+
 try:
     is_test = os.environ['LAB_TEST']
 except:
@@ -225,33 +227,51 @@ def submit_calculation(request):
     os.mkdir(scr)
 
     drawing = True
-    if len(request.FILES) == 1:
+    if 'starting_struct' in request.POST.keys():
         drawing = False
-        in_file = request.FILES['file_structure']
-        filename, ext = in_file.name.split('.')
-
-        if ext in ['mol2', 'mol', 'xyz', 'sdf']:
-            with open(os.path.join(LAB_SCR_HOME, t, 'initial.{}'.format(ext)), 'wb+') as out:
-                for chunk in in_file.chunks():
-                    out.write(chunk)
-    else:
-        if 'structure' in request.POST.keys():
-            if 'structureB' in request.POST.keys():
-                drawing = False
-            else:
-                drawing = True
-            mol = request.POST['structure']
-            with open(os.path.join(scr, 'initial.mol'), 'w') as out:
-                out.write(mol)
-        elif 'structureB' in request.POST.keys():
-            mol = request.POST['structureB']
-            with open(os.path.join(scr, 'initial_2D.mol'), 'w') as out:
-                out.write(mol)
-        else:
+        start_id = int(request.POST['starting_struct'])
+        try:
+            start_calc = Calculation.objects.get(pk=start_id)
+        except Calculation.DoesNotExist:
             return render(request, 'frontend/error.html', {
-            'profile': request.user.profile,
-            'error_message': "No input structure"
-            })
+                'profile': request.user.profile,
+                'error_message': "No starting structure found"
+                })
+        start_author = start_calc.author
+        if not profile_intersection(profile, start_author):
+            return render(request, 'frontend/error.html', {
+                'profile': request.user.profile,
+                'error_message': "You do not have permission to access the starting calculation"
+                })
+        copyfile(os.path.join(LAB_RESULTS_HOME, str(start_id), 'xtbopt.xyz'), os.path.join(LAB_SCR_HOME, t, 'initial.xyz'))
+    else:
+        if len(request.FILES) == 1:
+            drawing = False
+            in_file = request.FILES['file_structure']
+            filename, ext = in_file.name.split('.')
+
+            if ext in ['mol2', 'mol', 'xyz', 'sdf']:
+                with open(os.path.join(LAB_SCR_HOME, t, 'initial.{}'.format(ext)), 'wb+') as out:
+                    for chunk in in_file.chunks():
+                        out.write(chunk)
+        else:
+            if 'structure' in request.POST.keys():
+                if 'structureB' in request.POST.keys():
+                    drawing = False
+                else:
+                    drawing = True
+                mol = request.POST['structure']
+                with open(os.path.join(scr, 'initial.mol'), 'w') as out:
+                    out.write(mol)
+            elif 'structureB' in request.POST.keys():
+                mol = request.POST['structureB']
+                with open(os.path.join(scr, 'initial_2D.mol'), 'w') as out:
+                    out.write(mol)
+            else:
+                return render(request, 'frontend/error.html', {
+                'profile': request.user.profile,
+                'error_message': "No input structure"
+                })
 
 
     TYPE_LENGTH = {'Distance' : 2, 'Angle' : 3, 'Dihedral' : 4}

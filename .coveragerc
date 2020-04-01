@@ -1,0 +1,7 @@
+[run]
+omit = 
+	*/migrations/*
+	labsandbox/*
+	manage.py
+	test*.py
+	*__init__.py

@@ -443,7 +443,7 @@ class CalculationTests(StaticLiveServerTestCase):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'ethanol.sdf',
                 }
 
         self.basic_launch(params, 20)
