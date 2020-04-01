@@ -399,15 +399,15 @@
 
 		{% endif %}
 
-		if (editor.molecules != []) {
+		if (editor.molecules.length > 0) {
 			let mol2 = ChemDoodle.writeMOL(editor.getMolecule());
 
 			$('<input />').attr('type', 'hidden')
 				.attr('name', "structure").val(mol2).appendTo("#calcform");
 		}
 
-		if (editor.molecules != []) {
-			let mol = ChemDoodle.writeMOL(editor.getMolecule());
+		if (sketcher.molecules.length > 0) {
+			let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
 
 			$('<input />').attr('type', 'hidden')
 				.attr('name', "structureB").val(mol).appendTo("#calcform");

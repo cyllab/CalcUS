@@ -255,6 +255,7 @@ def submit_calculation(request):
                     for chunk in in_file.chunks():
                         out.write(chunk)
         else:
+            '''
             if 'structure' in request.POST.keys():
                 if 'structureB' in request.POST.keys():
                     drawing = False
@@ -263,7 +264,8 @@ def submit_calculation(request):
                 mol = request.POST['structure']
                 with open(os.path.join(scr, 'initial.mol'), 'w') as out:
                     out.write(mol)
-            elif 'structureB' in request.POST.keys():
+            '''
+            if 'structureB' in request.POST.keys():
                 mol = request.POST['structureB']
                 with open(os.path.join(scr, 'initial_2D.mol'), 'w') as out:
                     out.write(mol)
