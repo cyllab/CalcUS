@@ -41,8 +41,9 @@ def create_user(username):
     p, u = User.objects.get_or_create(username=username, password="test1234")
     return p
 
-
+counter = 1
 def create_calculation(in_file, type, solvent, user, project):
+    global counter
     name = "Test"
     fname = in_file.split('/')[-1]
     ext = fname.split('.')[-1]
@@ -57,7 +58,8 @@ def create_calculation(in_file, type, solvent, user, project):
     elif fname.find("dication"):
         charge = 2
 
-    c = Calculation.objects.create(name=name, date=timezone.now(), type=type, status=0, charge=charge, solvent=solvent)
+    c = Calculation.objects.create(id=counter, name=name, date=timezone.now(), type=type, status=0, charge=charge, solvent=solvent)
+    counter += 1
 
     user.profile.calculation_set.add(c)
     project.calculation_set.add(c)
@@ -116,7 +118,21 @@ class JobTestCase(TestCase):
         author.calculation_time_used += execution_time
         author.save()
 
-    def setUp(self):
+        self.status = calc_obj.status
+        self.id = str(calc_obj.id)
+
+    def tearDown(self):
+        try:
+            a = self.status
+        except:
+            pass
+        else:
+            if self.status == 2:
+                if os.path.isdir(os.path.join(SCR_DIR, self.id)):
+                    rmtree(os.path.join(SCR_DIR, self.id))
+
+    @classmethod
+    def setUpClass(self):
         self.user = create_user("test")
 
         if not os.path.isdir(SCR_DIR):
@@ -126,7 +142,10 @@ class JobTestCase(TestCase):
 
         self.project = create_project(self.user, "TestProject")
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(self):
+        pass
+        return
         if os.path.isdir(SCR_DIR):
             rmtree(SCR_DIR)
         if os.path.isdir(RESULTS_DIR):
@@ -149,38 +168,62 @@ def gen_test(in_file, type, solvent):
             self.assertTrue(os.path.isfile(os.path.join(calc_path, "xtbopt.xyz")))
             with open(os.path.join(calc_path, "xtb_opt.out")) as f:
                 lines = f.readlines()
-            self.assertTrue(lines[-1].find("normal termination of xtb"))
+            self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
         elif type == 1:
             self.assertTrue(os.path.isfile(os.path.join(calc_path, "xtbopt.xyz")))
             with open(os.path.join(calc_path, "xtb_opt.out")) as f:
                 lines = f.readlines()
-            self.assertTrue(lines[-1].find("normal termination of xtb"))
+            self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
 
             with open(os.path.join(calc_path, "crest.out")) as f:
                 lines = f.readlines()
-            self.assertTrue(lines[-1].find("CREST terminated normally."))
+            self.assertTrue(lines[-1].find("CREST terminated normally.") != -1)
+
+        elif type == 2:
+            self.assertTrue(os.path.isfile(os.path.join(calc_path, "xtbopt.xyz")))
+            with open(os.path.join(calc_path, "xtb_opt.out")) as f:
+                lines = f.readlines()
+            self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
+
+            with open(os.path.join(calc_path, "xtb4stda.out")) as f:
+                lines = f.readlines()
+            self.assertTrue(lines[-1].find("wall time for all") != -1)
+
+            with open(os.path.join(calc_path, "stda.out")) as f:
+                lines = f.readlines()
+            self.assertTrue(lines[-2].find("sTDA done.") != -1)
 
     return test
 
 
 input_files = glob.glob(tests_dir + '*.*')
-
+input_files = [
+                'benzene.mol',
+                'carbo_cation.mol',
+                #'Cl-iodane_2D.mol',
+                'enolate_anion.mol',
+                'ethanol.sdf',
+                'EtMgBr.mol',
+                'FeCl3.mol',
+                'NH3.mol',
+                'propane.mol'
+                ]
 #TYPES = [0, 1, 2, 3]
 TYPES = [0, 2]
 
 for type in TYPES:
     solvent = "Vacuum"
     for f in input_files:
-        in_name = f.split('.')[0].split('/')[-1]
+        in_name = f.split('.')[0]
         test_name = "test_{}_{}_{}".format(in_name, type, solvent)
-        test = gen_test(f, type, solvent)
+        test = gen_test(os.path.join(tests_dir, f), type, solvent)
         setattr(JobTestCase, test_name, test)
 
 for solv in SOLVENTS:
     for f in [input_files[i] for i in [0, 4, 6]]:
         for type in TYPES:
-            in_name = f.split('.')[0].split('/')[-1]
+            in_name = f.split('.')[0]
             test_name = "test_{}_{}_{}".format(in_name, type, solv)
-            test = gen_test(f, type, solvent)
+            test = gen_test(os.path.join(tests_dir, f), type, solv)
             setattr(JobTestCase, test_name, test)
 
