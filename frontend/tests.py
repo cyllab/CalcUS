@@ -8,7 +8,7 @@ from django.utils import timezone
 from .models import Profile, Calculation, Structure, Project
 from django.contrib.auth.models import User
 from shutil import copyfile, rmtree
-from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso
+from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso, geom_opt_freq
 
 tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
 SCR_DIR = os.path.join(tests_dir, "scr")
@@ -35,6 +35,7 @@ FUNCTIONS = {
         1: conf_search,
         2: uvvis_simple,
         3: nmr_enso,
+        4: geom_opt_freq,
         }
 
 def create_user(username):
@@ -192,7 +193,15 @@ def gen_test(in_file, type, solvent):
             with open(os.path.join(calc_path, "stda.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-2].find("sTDA done.") != -1)
+        elif type == 4:
+            self.assertTrue(os.path.isfile(os.path.join(calc_path, "xtbopt.xyz")))
+            with open(os.path.join(calc_path, "xtb_opt.out")) as f:
+                lines = f.readlines()
+            self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
 
+            with open(os.path.join(calc_path, "xtb_freq.out")) as f:
+                lines = f.readlines()
+            self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
     return test
 
 
@@ -209,7 +218,7 @@ input_files = [
                 'propane.mol'
                 ]
 #TYPES = [0, 1, 2, 3]
-TYPES = [0, 2]
+TYPES = [0, 2, 4]
 
 for type in TYPES:
     solvent = "Vacuum"

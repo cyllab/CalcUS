@@ -576,7 +576,7 @@ def geom_opt_freq(id, drawing, charge, solvent, calc_obj=None, remote=False):
         E = float(lines[ind-4].split()[3])
         G = float(lines[ind-2].split()[4])
 
-    vib_file = os.path.join(LAB_RESULTS_HOME, id, "vibspectrum")
+    vib_file = os.path.join(LAB_RESULTS_HOME, str(id), "vibspectrum")
 
     if os.path.isfile(vib_file):
         with open(vib_file) as f:
@@ -604,7 +604,7 @@ def geom_opt_freq(id, drawing, charge, solvent, calc_obj=None, remote=False):
         if len(vibs) == len(intensities):
             x = np.arange(500, 4000, 1)
             spectrum = plot_vibs(x, zip(vibs, intensities))
-            with open(os.path.join(LAB_RESULTS_HOME, id, "IR.csv"), 'w') as out:
+            with open(os.path.join(LAB_RESULTS_HOME, str(id), "IR.csv"), 'w') as out:
                 out.write("Wavenumber,Intensity\n")
                 intensities = 1000*np.array(intensities)/max(intensities)
                 for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
