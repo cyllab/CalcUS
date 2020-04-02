@@ -3,9 +3,11 @@ import os
 import time
 import unittest
 
-from django.test import TestCase
+from django.http import HttpResponse, HttpResponseRedirect
+from django.test import TestCase, Client
+from django.urls import reverse
 from django.utils import timezone
-from .models import Profile, Calculation, Structure, Project
+from .models import *
 from django.contrib.auth.models import User
 from shutil import copyfile, rmtree
 from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso, geom_opt_freq
@@ -236,3 +238,116 @@ for solv in SOLVENTS:
             test = gen_test(os.path.join(tests_dir, f), type, solv)
             setattr(JobTestCase, test_name, test)
 
+class ModelTestCase(TestCase):
+    def setUp(self):
+        self.bs1 = BasicStep.objects.create(name="step1")
+        self.bs2 = BasicStep.objects.create(name="step2")
+        self.bs3 = BasicStep.objects.create(name="step3")
+        self.bs4 = BasicStep.objects.create(name="step4")
+        self.bs1.save()
+        self.bs2.save()
+        self.bs3.save()
+        self.bs4.save()
+
+    def test_procedure_singlestep(self):
+        params = Parameters.objects.create(name="TestParams", charge=1, multiplicity=1)
+        params.save()
+
+        p = Procedure.objects.create(name="TestProcedure")
+        p.save()
+
+        s1 = Step.objects.create(step_model=self.bs1, parent_procedure=p, parameters=params, from_procedure=p)
+        s1.save()
+
+        self.assertEqual(s1.parent_procedure.name, "TestProcedure")
+        self.assertEqual(len(p.step_set.all()), 1)
+        self.assertEqual(len(p.initial_steps.all()), 1)
+
+    def test_procedure_multistep(self):
+        params = Parameters.objects.create(name="TestParams", charge=1, multiplicity=1)
+        params.save()
+
+        p = Procedure.objects.create(name="TestProcedure")
+        p.save()
+
+        s1 = Step.objects.create(step_model=self.bs1, parent_procedure=p, parameters=params, from_procedure=p)
+        s1.save()
+        s2 = Step.objects.create(step_model=self.bs2, parent_step=s1, parameters=params, from_procedure=p)
+        s2.save()
+
+        self.assertEqual(len(p.step_set.all()), 2)
+        self.assertEqual(len(p.initial_steps.all()), 1)
+        self.assertEqual(len(s1.step_set.all()), 1)
+
+class ViewTestCase(TestCase):
+    @classmethod
+    def setUpClass(self):
+        if not os.path.isdir(SCR_DIR):
+            os.mkdir(SCR_DIR)
+        if not os.path.isdir(RESULTS_DIR):
+            os.mkdir(RESULTS_DIR)
+
+    @classmethod
+    def tearDownClass(self):
+        if os.path.isdir(SCR_DIR):
+            rmtree(SCR_DIR)
+        if os.path.isdir(RESULTS_DIR):
+            rmtree(RESULTS_DIR)
+
+    def setUp(self):
+        self.bs1 = BasicStep.objects.create(name="step1")
+        self.bs2 = BasicStep.objects.create(name="step2")
+        self.bs3 = BasicStep.objects.create(name="step3")
+        self.bs4 = BasicStep.objects.create(name="step4")
+        self.bs1.save()
+        self.bs2.save()
+        self.bs3.save()
+        self.bs4.save()
+        self.client = Client()
+        self.submit_url = reverse('submit_calculation', 'frontend.urls')
+        u = User.objects.create(username="Tester")
+        u.set_password('xxPassWordxx')
+        u.save()
+        self.profile = Profile.objects.get(user__username="Tester")
+        self.profile.is_PI = True
+        self.profile.save()
+        self.client.login(username="Tester", password="xxPassWordxx")
+
+    def test_basic_calc_fail(self):
+        with open(os.path.join(tests_dir, 'benzene.mol')) as f:
+            response = self.client.post(self.submit_url, {
+                'file_structure': f,
+                'calc_name': 'TestCalc',
+                'calc_type': 'Opt+Freq',
+                'calc_project': 'New Project',
+                'new_project_name': 'TestProject',
+                'calc_charge': '0',
+                'calc_solvent': 'Vacuum',
+                'calc_ressource': 'Local',
+            })
+
+        self.assertTemplateUsed('frontend/error.html')
+
+
+    def test_basic_calc(self):
+        proc = Procedure.objects.create(name="Opt+Freq")
+
+        with open(os.path.join(tests_dir, 'benzene.mol')) as f:
+            response = self.client.post(self.submit_url, {
+                'file_structure': f,
+                'calc_name': 'TestCalc',
+                'calc_type': 'Opt+Freq',
+                'calc_project': 'New Project',
+                'new_project_name': 'TestProject',
+                'calc_charge': '0',
+                'calc_solvent': 'Vacuum',
+                'calc_ressource': 'Local',
+            })
+
+        self.assertTrue(isinstance(response, HttpResponseRedirect))
+
+        c = Calculation.objects.get(name='TestCalc')
+        self.assertEqual(c.project.name, 'TestProject')
+        self.assertEqual(c.global_parameters.charge, 0)
+
+        self.assertTrue(os.path.isdir(os.path.join(SCR_DIR, str(c.id))))

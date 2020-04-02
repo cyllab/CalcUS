@@ -1,5 +1,5 @@
 from django.db import models
-import datetime
+from django.utils import timezone
 from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -89,6 +89,59 @@ class ClusterAccess(models.Model):
         users.append(self.group.PI)
         return users
 
+class BasicStep(models.Model):
+    name = models.CharField(max_length=100)
+
+class Step(models.Model):
+    step_model = models.ForeignKey(BasicStep, on_delete=models.CASCADE)
+    parent_step = models.ForeignKey('Step', on_delete=models.CASCADE, blank=True, null=True)
+    parent_procedure = models.ForeignKey('Procedure', on_delete=models.CASCADE, blank=True, null=True, related_name="initial_steps")
+
+    from_procedure = models.ForeignKey('Procedure', on_delete=models.CASCADE)
+
+    parameters = models.ForeignKey('Parameters', on_delete=models.CASCADE, blank=True, null=True)
+
+class Procedure(models.Model):
+    name = models.CharField(max_length=100)
+
+    '''
+    @property
+    def has_freq(self):
+        #example
+        for step in self.steps:
+            if step.type == '1':
+                return True
+        return False
+    '''
+
+class Ensemble(models.Model):
+    name = models.CharField(max_length=100, default="Nameless ensemble")
+    #result_of = models.ForeignKey('Calculation', on_delete=models.CASCADE, blank=True, null=True)
+
+class Structure(models.Model):
+    parent_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
+
+    mol_structure = models.CharField(default="", max_length=5000000)
+    xyz_structure = models.CharField(default="", max_length=5000000)
+
+    number = models.PositiveIntegerField(default=0)#remove?
+    energy = models.FloatField(default=0)
+    free_energy = models.FloatField(default=0)
+
+    degeneracy = models.PositiveIntegerField(default=0)
+    rel_energy = models.FloatField(default=0)
+    boltzmann_weight = models.FloatField(default=-1.)
+    homo_lumo_gap = models.FloatField(default=0)
+
+
+
+
+class Parameters(models.Model):
+    name = models.CharField(max_length=100, default="Nameless parameters")
+    charge = models.IntegerField()
+    multiplicity = models.IntegerField()
+    solvent = models.CharField(max_length=100, default='vacuum')
+
 class Calculation(models.Model):
 
     CALC_TYPES = {
@@ -113,21 +166,17 @@ class Calculation(models.Model):
 
     name = models.CharField(max_length=100)
 
+    ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
+
     error_message = models.CharField(max_length=400, default="")
     current_status = models.CharField(max_length=400, default="")
 
     num_steps = models.IntegerField(default=0)
     current_step = models.IntegerField(default=0)
 
-    has_scan = models.BooleanField(default=False)
-
     date = models.DateTimeField('date')
-    date_finished = models.DateTimeField('date', default=datetime.datetime.now, blank=True)
+    date_finished = models.DateTimeField('date', null=True, blank=True)
 
-    charge = models.IntegerField()
-    solvent = models.CharField(max_length=100, default='vacuum')
-
-    type = models.PositiveIntegerField()
     execution_time = models.PositiveIntegerField(default=0)
 
     status = models.PositiveIntegerField()
@@ -136,6 +185,9 @@ class Calculation(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
 
     weighted_energy = models.FloatField(default=0.)
+
+    global_parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, blank=True, null=True)
+    procedure = models.ForeignKey(Procedure, on_delete=models.CASCADE, blank=True, null=True)
 
 
     def __repr__(self):
@@ -149,18 +201,6 @@ class Calculation(models.Model):
     def text_status(self):
         return self.INV_CALC_STATUSES[self.status]
 
-
-class Structure(models.Model):
-    number = models.PositiveIntegerField()
-    energy = models.FloatField()
-    free_energy = models.FloatField(default=0)
-
-    degeneracy = models.PositiveIntegerField(default=0)
-    rel_energy = models.FloatField()
-    boltzmann_weight = models.FloatField()
-    homo_lumo_gap = models.FloatField()
-
-    result_of = models.ForeignKey(Calculation, on_delete=models.CASCADE, blank=True, null=True)
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

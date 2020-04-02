@@ -23,7 +23,7 @@ from django.contrib.auth.models import User
 from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
-from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup
+from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep
 from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso, geom_opt_freq, constraint_opt, ts_freq
 from .decorators import superuser_required
 from .tasks import system
@@ -143,6 +143,14 @@ def submit_calculation(request):
             })
 
     if 'calc_type' in request.POST.keys():
+        try:
+            proc = Procedure.objects.get(name=bleach.clean(request.POST['calc_type']))
+        except Procedure.DoesNotExist:
+            return render(request, 'frontend/error.html', {
+                'profile': request.user.profile,
+                'error_message': "No such procedure"
+                })
+
         type = Calculation.CALC_TYPES[request.POST['calc_type']]
     else:
         return render(request, 'frontend/error.html', {
@@ -212,8 +220,10 @@ def submit_calculation(request):
         else:
             project_obj = project_set[0]
 
+    params = Parameters.objects.create(charge=charge, solvent=solvent, multiplicity=1)
+    params.save()
 
-    obj = Calculation.objects.create(name=name, date=timezone.now(), type=type, status=0, charge=charge, solvent=solvent)
+    obj = Calculation.objects.create(name=name, date=timezone.now(), status=0, global_parameters=params, procedure=proc)
 
     profile.calculation_set.add(obj)
     project_obj.calculation_set.add(obj)
@@ -221,6 +231,7 @@ def submit_calculation(request):
     project_obj.save()
     profile.save()
 
+    obj.save()
     t = str(obj.id)
 
     scr = os.path.join(LAB_SCR_HOME, t)
@@ -246,14 +257,27 @@ def submit_calculation(request):
         copyfile(os.path.join(LAB_RESULTS_HOME, str(start_id), 'xtbopt.xyz'), os.path.join(LAB_SCR_HOME, t, 'initial.xyz'))
     else:
         if len(request.FILES) == 1:
+            e = Ensemble.objects.create()
+            e.save()
+            obj.ensemble = e
+            obj.save()
+
+            s = Structure.objects.create(parent_ensemble=e)
+
             drawing = False
             in_file = request.FILES['file_structure']
             filename, ext = in_file.name.split('.')
 
-            if ext in ['mol2', 'mol', 'xyz', 'sdf']:
-                with open(os.path.join(LAB_SCR_HOME, t, 'initial.{}'.format(ext)), 'wb+') as out:
-                    for chunk in in_file.chunks():
-                        out.write(chunk)
+            #if ext in ['mol2', 'mol', 'xyz', 'sdf']:
+            #    with open(os.path.join(LAB_SCR_HOME, t, 'initial.{}'.format(ext)), 'wb+') as out:
+            data = b''
+            for chunk in in_file.chunks():
+                data += chunk
+
+            if ext == 'mol':
+                s.mol_structure = data.decode('utf-8')
+            elif ext == 'xyz':
+                s.xyz_structure = data.decode('utf-8')
         else:
             '''
             if 'structure' in request.POST.keys():
@@ -275,6 +299,7 @@ def submit_calculation(request):
                 'error_message': "No input structure"
                 })
 
+    return redirect("/details/{}".format(t))
 
     TYPE_LENGTH = {'Distance' : 2, 'Angle' : 3, 'Dihedral' : 4}
     if type == 5:

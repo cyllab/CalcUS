@@ -3,5 +3,5 @@ omit =
 	*/migrations/*
 	labsandbox/*
 	manage.py
-	test*.py
+	frontend/test*.py
 	*__init__.py
