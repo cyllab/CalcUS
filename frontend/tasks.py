@@ -470,20 +470,15 @@ def crest(in_file, params):
             ind += 1
         inds.append(len(lines))
 
-        print(inds)
         assert len(inds)-1 == len(e.structure_set.all())
         for metaind, mol in enumerate(inds[:-1]):
             E = float(lines[inds[metaind]+1].strip())
             struct = ''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]]])
             r = e.structure_set.get(number=metaind+1)
-            #print(E, r.energy)
             #assert r.energy == E
             r.xyz_structure = struct
 
             r.save()
-
-
-
 
     e.weighted_energy = weighted_energy
     e.save()
@@ -1067,9 +1062,9 @@ def run_procedure(drawing, calc_id):
     calc_obj.save()
     while len(steps_to_do) > 0:
         step = steps_to_do.pop()
-        #calc_obj.current_status = desc
-        #calc_obj.current_step = ind+1
-        #calc_obj.save()
+        calc_obj.current_status = step.step_model.desc
+        calc_obj.current_step = ind
+        calc_obj.save()
         f = BASICSTEP_TABLE[step.step_model.name]
         step_dir = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(ind))
         a = system("mkdir -p {}".format(step_dir), force_local=True)
@@ -1085,7 +1080,7 @@ def run_procedure(drawing, calc_id):
 
         if a != 0:
             calc_obj.status = 3
-            #calc_obj.error_message = error
+            calc_obj.error_message = step.step_model.error_message
             calc_obj.save()
             return a
         else:

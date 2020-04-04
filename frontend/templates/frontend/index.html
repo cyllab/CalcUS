@@ -147,14 +147,11 @@
 		</div>
 		<div class="select" >
 			<select name="calc_type" id="calc_type" onchange="refresh_list('new');">
-				<option name="all">All calculation types</option>
-			    	<option>Geometrical Optimisation</option>
-			    	<option>Constrained Optimisation</option>
-			    	<option>Conformer Search</option>
-			    	<option>UV/Vis Spectrum Prediction</option>
-			    	<option>NMR Spectrum Prediction</option>
-			    	<option>Opt+Freq</option>
-			    	<option>TS+Freq</option>
+				<option name="all">All procedures</option>
+				{% for proc in procedures %}
+				<option name="{{ proc.name }}">{{ proc.name }}</option>
+				{% endfor %}
+
 			</select>
 		</div>
 		<div class="select" >

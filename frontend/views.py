@@ -77,8 +77,8 @@ class IndexView(generic.ListView):
             hits = target_profile.calculation_set.all()
             if proj != "All projects":
                 hits = hits.filter(project__name=proj)
-            if type != "All calculation types":
-                hits = hits.filter(type=Calculation.CALC_TYPES[type])
+            if type != "All procedures":
+                hits = hits.filter(procedure__name=type)
             if status != "All statuses":
                 hits = hits.filter(status=Calculation.CALC_STATUSES[status])
             return sorted(hits, key=lambda d: d.date, reverse=True)
@@ -88,7 +88,7 @@ class IndexView(generic.ListView):
 
 
 def index(request, page=1):
-    return render(request, 'frontend/index.html', {"page": page})
+    return render(request, 'frontend/index.html', {"page": page, "procedures": Procedure.objects.all()})
 
 def clean(txt):
     return bleach.clean(txt)

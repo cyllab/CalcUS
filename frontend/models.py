@@ -91,6 +91,8 @@ class ClusterAccess(models.Model):
 
 class BasicStep(models.Model):
     name = models.CharField(max_length=100)
+    desc = models.CharField(max_length=500, default="")
+    error_message = models.CharField(max_length=500, default="")
 
     def __repr__(self):
         return self.id
@@ -106,6 +108,7 @@ class Step(models.Model):
 
     def __repr__(self):
         return self.id
+
 class Procedure(models.Model):
     name = models.CharField(max_length=100)
 

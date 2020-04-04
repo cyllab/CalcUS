@@ -27,12 +27,12 @@ class Command(BaseCommand):
         name = "Geometrical Optimisation"
         if self.is_absent(BasicStep, name):
             print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name)
+            a = BasicStep.objects.create(name=name, desc="Optimizing geometry", error_message="Failed to optimize geometry")
 
         name = "Crest"
         if self.is_absent(BasicStep, name):
             print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name)
+            a = BasicStep.objects.create(name=name, desc="Finding conformers", error_message="Failed to find the conformers")
 
         ###Procedure creations
 
