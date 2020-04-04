@@ -337,8 +337,6 @@ def submit_calculation(request):
                     return HttpResponse(status=403)
 
     obj.constraints = constraints
-    obj.has_nmr = proc.has_nmr
-    obj.has_freq = proc.has_freq
 
     obj.save()
     e.save()
@@ -708,9 +706,8 @@ def icon(request, pk):
 def uvvis(request, pk):
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
-    type = calc.type
 
-    if type != 2:
+    if not calc.has_uvvis:
         return HttpResponse(status=403)
 
     profile = request.user.profile
@@ -952,23 +949,7 @@ def get_structure(request):
                 return HttpResponse(struct.xyz_structure)
         else:
             return HttpResponse(status=204)
-        #expected_file = os.path.join(LAB_RESULTS_HOME, id, "conf{}.xyz".format(num))
-        '''
-        if os.path.isfile(expected_file):
-            with open(expected_file) as f:
-                lines = f.readlines()
-            return HttpResponse(lines)
-        else:
-            return HttpResponse(status=204)
-        elif type == 6:
-            expected_file = os.path.join(LAB_RESULTS_HOME, id, "ts.xyz")
-            if os.path.isfile(expected_file):
-                with open(expected_file) as f:
-                    lines = f.readlines()
-                return HttpResponse(lines)
-            else:
-                return HttpResponse(status=204)
-        '''
+
 @login_required
 def get_vib_animation(request):
     if request.method == 'POST' or True:

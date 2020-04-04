@@ -280,6 +280,7 @@ def handle_input_file(drawing, calc_obj):
 def xtb_opt(in_file, calc):
     solvent = calc.global_parameters.solvent
     charge = calc.global_parameters.charge
+    folder = '/'.join(in_file.split('/')[:-1])
     if solvent != "Vacuum":
         solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
     else:
@@ -735,16 +736,6 @@ def crest(in_file, calc):
 def crest_pre_nmr(in_file, calc):
     crest_generic(in_file, calc, "NMR")
 
-def xtb4stda(in_file, charge, solvent):
-    if solvent != "Vacuum":
-        solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[solvent])
-    else:
-        solvent_add_xtb = ''
-
-    return system("xtb4stda {} -chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
-
-def stda(charge, solvent):
-    return system("stda -xtb -e 12", 'stda.out')
 
 def enso(charge, solvent):
     if solvent != "Vacuum":
@@ -867,259 +858,36 @@ def plot_vibs(_x, PP):
     return val
 
 
-@app.task
-def geom_opt(id, drawing, charge, solvent, calc_obj=None, remote=False):
-
-    steps = [
-        [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
-
-    ]
-    a = run_steps(steps, calc_obj, drawing, id)
-    if a != 0:
-        return
-
-    a = save_to_results("xtbopt.xyz", calc_obj)
-    if a != 0:
-        return
-
-    with open("{}/xtb_opt.out".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))) as f:
-        lines = f.readlines()
-        ind = len(lines)-1
-
-        while lines[ind].find("HOMO-LUMO GAP") == -1:
-            ind -= 1
-        hl_gap = float(lines[ind].split()[3])
-        E = float(lines[ind-2].split()[3])
-
-    r = Structure.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
-    r.save()
-
-    calc_obj.structure_set.add(r)
-
-    return 0
-
-@app.task
-def geom_opt_freq(id, drawing, charge, solvent, calc_obj=None, remote=False):
-
-    steps = [
-        [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
-        [xtb_freq, ["xtbopt.xyz", charge, solvent], "Calculating frequency modes", "Failed to calculate frequency modes"],
-        [animate_vib, ["xtbopt.xyz", calc_obj], "Animating frequency modes", "Failed to animate frequency modes"],
-    ]
-
-    a = run_steps(steps, calc_obj, drawing, id)
-    if a != 0:
-        return
-
-    a = save_to_results("xtbopt.xyz", calc_obj)
-    if a != 0:
-        return
-
-    a = save_to_results("vibspectrum", calc_obj, multiple=True)
-    if a != 0:
-        return
-
-    with open("{}/xtb_freq.out".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))) as f:
-        lines = f.readlines()
-        ind = len(lines)-1
-
-        while lines[ind].find("HOMO-LUMO GAP") == -1:
-            ind -= 1
-        hl_gap = float(lines[ind].split()[3])
-        E = float(lines[ind-4].split()[3])
-        G = float(lines[ind-2].split()[4])
-
-    vib_file = os.path.join(LAB_RESULTS_HOME, str(id), "vibspectrum")
-
-    if os.path.isfile(vib_file):
-        with open(vib_file) as f:
-            lines = f.readlines()
-
-        vibs = []
-        intensities = []
-        for line in lines:
-            if len(line.split()) > 4 and line[0] != '#':
-                sline = line.split()
-                try:
-                    a = float(sline[1])
-                    if a == 0.:
-                        continue
-                except ValueError:
-                    pass
-                vib = float(line[20:33].strip())
-                vibs.append(vib)
-                try:
-                    intensity = float(sline[3])
-                except ValueError:
-                    continue
-                else:
-                    intensities.append(intensity)
-        if len(vibs) == len(intensities):
-            x = np.arange(500, 4000, 1)
-            spectrum = plot_vibs(x, zip(vibs, intensities))
-            with open(os.path.join(LAB_RESULTS_HOME, str(id), "IR.csv"), 'w') as out:
-                out.write("Wavenumber,Intensity\n")
-                intensities = 1000*np.array(intensities)/max(intensities)
-                for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
-                    out.write("-{:.1f},{:.5f}\n".format(_x, i))
-
-
-
-    r = Structure.objects.create(number=1, energy=E, free_energy=G, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
-    r.save()
-
-    calc_obj.structure_set.add(r)
-
-    return 0
-
-@app.task
-def ts_freq(id, drawing, charge, solvent, calc_obj=None, remote=False):
-
-    steps = [
-        [xtb_ts, ["initial.xyz", charge, solvent, calc_obj.id], "Optimizing the transition state", "Failed to optimize the transition state"],
-        [xtb_freq, ["ts.xyz", charge, solvent], "Calculating frequency modes", "Failed to calculate frequency modes"],
-        [animate_vib, ["ts.xyz", calc_obj], "Animating frequency modes", "Failed to animate frequency modes"],
-    ]
-
-    a = run_steps(steps, calc_obj, drawing, id)
-    if a != 0:
-        return
-
-    a = save_to_results("ts.xyz", calc_obj)
-    if a != 0:
-        return
-
-    a = save_to_results("vibspectrum", calc_obj, multiple=True)
-    if a != 0:
-        return
-
-    with open("{}/xtb_freq.out".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))) as f:
-        lines = f.readlines()
-        ind = len(lines)-1
-
-        while lines[ind].find("HOMO-LUMO GAP") == -1:
-            ind -= 1
-        hl_gap = float(lines[ind].split()[3])
-        E = float(lines[ind-4].split()[3])
-        G = float(lines[ind-2].split()[4])
-
-    vib_file = os.path.join(LAB_RESULTS_HOME, id, "vibspectrum")
-
-    if os.path.isfile(vib_file):
-        with open(vib_file) as f:
-            lines = f.readlines()
-
-        vibs = []
-        intensities = []
-        for line in lines:
-            if len(line.split()) > 4 and line[0] != '#':
-                sline = line.split()
-                try:
-                    a = float(sline[1])
-                    if a == 0.:
-                        continue
-                except ValueError:
-                    pass
-                vib = float(line[20:33].strip())
-                vibs.append(vib)
-                try:
-                    intensity = float(sline[3])
-                except ValueError:
-                    continue
-                else:
-                    intensities.append(intensity)
-        if len(vibs) == len(intensities):
-            x = np.arange(500, 4000, 1)
-            spectrum = plot_vibs(x, zip(vibs, intensities))
-            with open(os.path.join(LAB_RESULTS_HOME, id, "IR.csv"), 'w') as out:
-                out.write("Wavenumber,Intensity\n")
-                intensities = 1000*np.array(intensities)/max(intensities)
-                for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
-                    out.write("-{:.1f},{:.5f}\n".format(_x, i))
-
-
-
-    r = Structure.objects.create(number=1, energy=E, free_energy=G, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
-    r.save()
-
-    calc_obj.structure_set.add(r)
-
-    return 0
-
-'''
-@app.task
-def conf_search(id, drawing, charge, solvent, calc_obj=None, remote=False):
-    #os.path.join(LAB_SCR_HOME, str(calc_obj.id))
-    steps = [
-        [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
-        [crest, ["xtbopt.xyz", charge, solvent, "Final"], "Generating conformer ensemble", "Failed to generate the conformers"],
-
-    ]
-
-    a = run_steps(steps, calc_obj, drawing, id)
-    if a != 0:
-        return
-
-    a = save_to_results("crest_conformers.xyz", calc_obj, multiple=True)
-    a = save_to_results("crest_conformers.xyz", calc_obj)
-
-    if a != 0:
-        return
-
-    with open("{}/crest.out".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))) as f:
-        lines = f.readlines()
-        ind = len(lines) - 1
-
-        while lines[ind].find("total number unique points considered further") == -1:
-            ind -= 1
-
-        weighted_energy = 0.0
-
-        ind += 1
-        while lines[ind].find("T /K") == -1:
-            sline = lines[ind].strip().split()
-            if len(sline) == 8:
-                rel_energy = float(sline[1])*4.184
-                energy = float(sline[2])
-                weight = float(sline[4])
-                number = int(sline[5])
-                degeneracy = int(sline[6])
-                weighted_energy += energy*weight
-                r = Structure.objects.create(number=number, energy=energy, rel_energy=rel_energy, boltzmann_weight=weight, homo_lumo_gap=0.0, degeneracy=degeneracy)
-                r.save()
-                calc_obj.structure_set.add(r)
-            ind += 1
-
-    calc_obj.weighted_energy = weighted_energy
-    calc_obj.save()
-
-    return 0
-'''
-@app.task
-def uvvis_simple(id, drawing, charge, solvent, calc_obj=None, remote=False):
+def xtb_stda(in_file, calc):
 
     ww = []
     TT = []
     PP = []
 
-    steps = [
-        [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
-        [xtb4stda, ["xtbopt.xyz", charge, solvent], "Performing ground-state calculation", "Failed to calculate ground-state electronic density"],
-        [stda, [charge, solvent], "Performing time-dependant calculation", "Failed to calculate perform time-dependant calculation"],
-    ]
+    folder = '/'.join(in_file.split('/')[:-1])
 
-    a = run_steps(steps, calc_obj, drawing, id)
-    if a != 0:
-        return
+    solvent = calc.global_parameters.solvent
+    charge = calc.global_parameters.charge
 
-    a = save_to_results("xtbopt.xyz", calc_obj, multiple=True)
+    if solvent != "Vacuum":
+        solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add_xtb = ''
+
+    os.chdir(folder)
+    a = system("xtb4stda {} -chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
     if a != 0:
-        return
+        return a, 'e'
+
+    os.chdir(folder)
+    a = system("stda -xtb -e 12", 'stda.out')
+    if a != 0:
+        return a, 'e'
 
     f_x = np.arange(120.0, 1200.0, 1.0)
-
-    with open("{}/tda.dat".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))) as f:
+    with open("{}/tda.dat".format(folder)) as f:
         lines = f.readlines()
+
     ind = 0
     while lines[ind].find("DATXY") == -1:
         ind += 1
@@ -1135,26 +903,12 @@ def uvvis_simple(id, drawing, charge, solvent, calc_obj=None, remote=False):
     yy = np.array(yy)/max(yy)
 
 
-    with open("{}/uvvis.csv".format(os.path.join(LAB_RESULTS_HOME, str(id))), 'w') as out:
+    with open("{}/uvvis.csv".format(os.path.join(LAB_RESULTS_HOME, str(calc.id))), 'w') as out:
         out.write("Wavelength (nm), Absorbance\n")
         for ind, x in enumerate(f_x):
             out.write("{},{:.8f}\n".format(x, yy[ind]))
 
-    with open("xtb_opt.out") as f:
-        lines = f.readlines()
-        ind = len(lines)-1
-
-        while lines[ind].find("HOMO-LUMO GAP") == -1:
-            ind -= 1
-        hl_gap = float(lines[ind].split()[3])
-        E = float(lines[ind-2].split()[3])
-
-    r = Structure.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
-    r.save()
-
-    calc_obj.structure_set.add(r)
-
-    return 0
+    return 0, calc.result_ensemble
 
 @app.task
 def nmr_enso(id, drawing, charge, solvent, calc_obj=None, remote=False):
@@ -1206,50 +960,6 @@ def nmr_enso(id, drawing, charge, solvent, calc_obj=None, remote=False):
                         out.write("{:.2f},0.0\n".format(_x))
     return 0
 
-@app.task
-def constraint_opt(id, drawing, charge, solvent, constraints, calc_obj=None, remote=False):
-
-    steps = [
-        [xtb_scan, ["initial.xyz", charge, solvent], "Performing the constrained optimisation", "Failed to perform the constrained optimisation"],
-
-    ]
-
-    with open("{}/scan".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))), 'w') as out:
-        out.write("$constrain\n")
-        out.write("force constant=99\n")
-        has_scan = False
-        for cmd in constraints:
-            type = len(cmd[-1])
-            if type == 2:
-                out.write("distance: {}, {}, auto\n".format(*cmd[-1]))
-            if type == 3:
-                out.write("angle: {}, {}, {}, auto\n".format(*cmd[-1]))
-            if type == 4:
-                out.write("dihedral: {}, {}, {}, {}, auto\n".format(*cmd[-1]))
-            if cmd[0] == "Scan":
-                has_scan = True
-        if has_scan:
-            out.write("$scan\n")
-            counter = 1
-            for cmd in constraints:
-                if cmd[0] == "Scan":
-                    out.write("{}: {}, {}, {}\n".format(counter, *cmd[1]))
-                    counter += 1
-        out.write("$end")
-
-
-    a = run_steps(steps, calc_obj, drawing, id)
-    if a != 0:
-        return
-
-    a = save_to_results("xtbopt.xyz", calc_obj)
-    if has_scan:
-        a = save_to_results("xtbscan.log", calc_obj, out_name="xtbscan.xyz")
-
-    if a != 0:
-        return
-
-    return 0
 
 BASICSTEP_TABLE = {
             'Geometrical Optimisation': xtb_opt,
@@ -1257,6 +967,7 @@ BASICSTEP_TABLE = {
             'Constrained Optimisation': xtb_scan,
             'Frequency Calculation': xtb_freq,
             'TS Optimisation': xtb_ts,
+            'UV-Vis Calculation': xtb_stda,
         }
 
 time_dict = {}

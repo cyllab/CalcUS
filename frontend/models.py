@@ -114,6 +114,7 @@ class Procedure(models.Model):
 
     has_nmr = models.BooleanField(default=False)
     has_freq = models.BooleanField(default=False)
+    has_uvvis = models.BooleanField(default=False)
 
     '''
     @property
@@ -201,8 +202,15 @@ class Calculation(models.Model):
 
     constraints = models.CharField(max_length=400, default="", blank=True, null=True)
 
-    has_freq = models.BooleanField(default=False)
     has_scan = models.BooleanField(default=False)
+
+    @property
+    def has_freq(self):
+        return self.procedure.has_freq
+
+    @property
+    def has_uvvis(self):
+        return self.procedure.has_uvvis
 
     def __repr__(self):
         return self.id
