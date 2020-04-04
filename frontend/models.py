@@ -200,6 +200,7 @@ class Calculation(models.Model):
     global_parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, blank=True, null=True)
     procedure = models.ForeignKey(Procedure, on_delete=models.CASCADE, blank=True, null=True)
 
+    constraints = models.CharField(max_length=400, default="", blank=True, null=True)
 
     def __repr__(self):
         return self.id

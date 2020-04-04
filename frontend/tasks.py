@@ -277,9 +277,9 @@ def handle_input_file(drawing, calc_obj):
         return -1
 
 
-def xtb_opt(in_file, params):
-    solvent = params.solvent
-    charge = params.charge
+def xtb_opt(in_file, calc):
+    solvent = calc.global_parameters.solvent
+    charge = calc.global_parameters.charge
     if solvent != "Vacuum":
         solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
     else:
@@ -338,13 +338,111 @@ def xtb_ts(in_file, charge, solvent, id):
 
     return system("{}/orca ts.inp".format(ORCAPATH), 'xtb_ts.out')
 
-def xtb_scan(in_file, charge, solvent):
+def xtb_scan(in_file, calc):
+    solvent = calc.global_parameters.solvent
+    charge = calc.global_parameters.charge
+
     if solvent != "Vacuum":
         solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
     else:
         solvent_add = ''
 
-    return system("xtb {} --input scan --chrg {} {} --opt".format(in_file, charge, solvent_add), 'xtb_opt.out')
+    folder = '/'.join(in_file.split('/')[:-1])
+
+    constraints = calc.constraints.split(';')[:-1]
+    if constraints == "":
+        print("No constraints!")
+        return -1, 'e'
+
+    with open("{}/scan".format(folder), 'w') as out:
+        out.write("$constrain\n")
+        out.write("force constant=99\n")
+        has_scan = False
+        for cmd in constraints:
+            _cmd, ids = cmd.split('-')
+            _cmd = _cmd.split('_')
+            ids = ids.split('_')
+            type = len(ids)
+            if type == 2:
+                out.write("distance: {}, {}, auto\n".format(*ids))
+            if type == 3:
+                out.write("angle: {}, {}, {}, auto\n".format(*ids))
+            if type == 4:
+                out.write("dihedral: {}, {}, {}, {}, auto\n".format(*ids))
+            if _cmd[0] == "Scan":
+                has_scan = True
+        if has_scan:
+            calc.has_scan = True
+            calc.save()
+            out.write("$scan\n")
+            counter = 1
+            for cmd in constraints:
+                _cmd, ids = cmd.split('-')
+                _cmd = _cmd.split('_')
+                if _cmd[0] == "Scan":
+                    out.write("{}: {}, {}, {}\n".format(counter, *_cmd[1:]))
+                    counter += 1
+        out.write("$end")
+
+    os.chdir(folder)
+    a = system("xtb {} --input scan --chrg {} {} --opt".format(in_file, charge, solvent_add), 'xtb_scan.out')
+    if a != 0:
+        return a, 'e'
+
+    e = Ensemble.objects.create()
+
+    if has_scan:
+        with open(os.path.join(folder, 'xtbscan.log')) as f:
+            lines = f.readlines()
+            num_atoms = lines[0]
+            inds = []
+            ind = 0
+            while ind < len(lines)-1:
+                if lines[ind] == num_atoms:
+                    inds.append(ind)
+                ind += 1
+            inds.append(len(lines))
+
+            min_E = 0
+            for metaind, mol in enumerate(inds[:-1]):
+                E = float(lines[inds[metaind]+1].split()[1])
+                struct = ''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]]])
+
+                r = Structure.objects.create(number=metaind+1, energy=E)
+                #assert r.energy == E
+                r.xyz_structure = struct
+                r.save()
+                if E < min_E:
+                    min_E = E
+
+                e.structure_set.add(r)
+            for s in e.structure_set.all():
+                s.rel_energy = (s.energy - min_E)*float(HARTREE_VAL)
+                s.save()
+
+    else:
+        with open(os.path.join(folder, 'xtbopt.xyz')) as f:
+            lines = f.readlines()
+            #E = float(lines[1])
+            r = Structure.objects.create(number=1)
+            r.xyz_structure = ''.join(lines)
+
+        with open(os.path.join(folder, "xtb_scan.out")) as f:
+            lines = f.readlines()
+            ind = len(lines)-1
+
+            while lines[ind].find("HOMO-LUMO GAP") == -1:
+                ind -= 1
+            hl_gap = float(lines[ind].split()[3])
+            E = float(lines[ind-2].split()[3])
+            r.energy = E
+            #assert E == Eb
+
+            r.homo_lumo_gap = hl_gap
+            e.structure_set.add(r)
+    e.save()
+
+    return 0, e
 
 def xtb_freq(in_file, charge, solvent):
     if solvent != "Vacuum":
@@ -413,23 +511,24 @@ def animate_vib(in_file, calc_obj):
             output_with_displacement(struct, out, _hess)
     return 0
 
-def crest(in_file, params):
 
-    solvent = params.solvent
-    charge = params.charge
+def crest_generic(in_file, calc, mode):
+
+    solvent = calc.global_parameters.solvent
+    charge = calc.global_parameters.charge
 
     if solvent != "Vacuum":
         solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
     else:
         solvent_add = ''
 
-    #if mode == "Final":
-    a = system("crest {} --chrg {} {} -rthr 0.4 -ewin 4".format(in_file, charge, solvent_add), 'crest.out')
-    #elif mode == "NMR":
-    #    a = system("crest {} --chrg {} {} -nmr".format(in_file, charge, solvent_add), 'crest.out')
-   # else:
-   #     print("Invalid crest mode selected!")
-   #     return -1
+    if mode == "Final":
+        a = system("crest {} --chrg {} {} -rthr 0.4 -ewin 4".format(in_file, charge, solvent_add), 'crest.out')
+    elif mode == "NMR":
+        a = system("crest {} --chrg {} {} -nmr".format(in_file, charge, solvent_add), 'crest.out')
+    else:
+        print("Invalid crest mode selected!")
+        return -1
 
     if a != 0:
         return -1
@@ -483,6 +582,12 @@ def crest(in_file, params):
     e.weighted_energy = weighted_energy
     e.save()
     return 0, e
+
+def crest(in_file, calc):
+    crest_generic(in_file, calc, "Final")
+
+def crest_pre_nmr(in_file, calc):
+    crest_generic(in_file, calc, "NMR")
 
 def xtb4stda(in_file, charge, solvent):
     if solvent != "Vacuum":
@@ -795,6 +900,7 @@ def ts_freq(id, drawing, charge, solvent, calc_obj=None, remote=False):
 
     return 0
 
+'''
 @app.task
 def conf_search(id, drawing, charge, solvent, calc_obj=None, remote=False):
     #os.path.join(LAB_SCR_HOME, str(calc_obj.id))
@@ -842,7 +948,7 @@ def conf_search(id, drawing, charge, solvent, calc_obj=None, remote=False):
     calc_obj.save()
 
     return 0
-
+'''
 @app.task
 def uvvis_simple(id, drawing, charge, solvent, calc_obj=None, remote=False):
 
@@ -1003,6 +1109,7 @@ def constraint_opt(id, drawing, charge, solvent, constraints, calc_obj=None, rem
 BASICSTEP_TABLE = {
             'Geometrical Optimisation': xtb_opt,
             'Crest': crest,
+            'Constrained Optimisation': xtb_scan,
         }
 
 time_dict = {}
@@ -1011,6 +1118,8 @@ time_dict = {}
 def run_procedure(drawing, calc_id):
 
     calc_obj = Calculation.objects.get(pk=calc_id)
+    calc_obj.status = 1
+    calc_obj.save()
 
     if len(calc_obj.ensemble.structure_set.all()) == 1:
         in_struct = calc_obj.ensemble.structure_set.all()[0]
@@ -1058,8 +1167,6 @@ def run_procedure(drawing, calc_id):
     in_ensemble = calc_obj.ensemble
     ind = 1
 
-    calc_obj.status = 1
-    calc_obj.save()
     while len(steps_to_do) > 0:
         step = steps_to_do.pop()
         calc_obj.current_status = step.step_model.desc
@@ -1074,7 +1181,7 @@ def run_procedure(drawing, calc_id):
             out.write(in_ensemble.structure_set.all()[0].xyz_structure)
 
         os.chdir(step_dir)
-        a, e = f(in_file, calc_obj.global_parameters)
+        a, e = f(in_file, calc_obj)
 
         ind += 1
 

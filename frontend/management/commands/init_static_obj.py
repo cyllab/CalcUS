@@ -34,6 +34,16 @@ class Command(BaseCommand):
             print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Finding conformers", error_message="Failed to find the conformers")
 
+        name = "Crest Pre NMR"
+        if self.is_absent(BasicStep, name):
+            print("Adding BasicStep: {}".format(name))
+            a = BasicStep.objects.create(name=name, desc="Finding conformers", error_message="Failed to find the conformers")
+
+        name = "Constrained Optimisation"
+        if self.is_absent(BasicStep, name):
+            print("Adding BasicStep: {}".format(name))
+            a = BasicStep.objects.create(name=name, desc="Optimizing geometry", error_message="Failed to optimize geometry")
+
         ###Procedure creations
 
         ###Template:
@@ -62,18 +72,28 @@ class Command(BaseCommand):
             step1.save()
             a.save()
 
+        name = "Constrained Optimisation"
+        if self.is_absent(Procedure, name):
+            print("Adding Procedure: {}".format(name))
+            a = Procedure.objects.create(name=name)
+
+            s_opt = BasicStep.objects.get(name="Constrained Optimisation")
+            step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)
+            step1.save()
+            a.save()
+
         ###Finishing the process
-        self.verify
+        self.verify()
 
     def verify(self):
         for proc in Procedure.objects.all():
             assert proc.initial_steps != None
-            for step in proc.step_set:
-                if step.name == "Frequency Calculation":
+            for step in proc.step_set.all():
+                if step.step_model.name == "Frequency Calculation":
                     proc.has_freq = True
-                elif step.name == "NMR Calculation":
+                elif step.step_model.name == "NMR Calculation":
                     proc.has_nmr = True
-                elif step.name == "Constrained Optimisation":
+                elif step.step_model.name == "Constrained Optimisation":
                     #Check if scan
                     pass
 

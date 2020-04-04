@@ -146,7 +146,7 @@ def submit_calculation(request):
 
     if 'calc_type' in request.POST.keys():
         try:
-            proc = Procedure.objects.get(name=bleach.clean(request.POST['calc_type']))
+            proc = Procedure.objects.get(name=clean(request.POST['calc_type']))
         except Procedure.DoesNotExist:
             return render(request, 'frontend/error.html', {
                 'profile': request.user.profile,
@@ -229,7 +229,6 @@ def submit_calculation(request):
     project_obj.calculation_set.add(obj)
 
     project_obj.save()
-    profile.save()
 
     obj.save()
     t = str(obj.id)
@@ -259,8 +258,6 @@ def submit_calculation(request):
         if len(request.FILES) == 1:
             e = Ensemble.objects.create()
             obj.ensemble = e
-            obj.save()
-            e.save()
 
             s = Structure.objects.create(parent_ensemble=e)
 
@@ -295,15 +292,12 @@ def submit_calculation(request):
                 drawing = True
                 e = Ensemble.objects.create()
                 obj.ensemble = e
-                obj.save()
-                e.save()
 
                 s = Structure.objects.create(parent_ensemble=e)
 
 
                 mol = clean(request.POST['structureB'])
                 s.mol_structure = mol
-                s.save()
                 #with open(os.path.join(scr, 'initial_2D.mol'), 'w') as out:
                 #    out.write(mol)
             else:
@@ -313,33 +307,37 @@ def submit_calculation(request):
                 })
 
     #return redirect("/details/{}".format(t))
-    '''
     TYPE_LENGTH = {'Distance' : 2, 'Angle' : 3, 'Dihedral' : 4}
-    if type == 5:
-        constraints = []
+    constraints = ""
+    if 'constraint_num' in request.POST.keys():
         for ind in range(1, int(request.POST['constraint_num'])+1):
             try:
-                mode = bleach.clean(request.POST['constraint_mode_{}'.format(ind)])
+                mode = clean(request.POST['constraint_mode_{}'.format(ind)])
             except MultiValueDictKeyError:
                 pass
             else:
-                _type = bleach.clean(request.POST['constraint_type_{}'.format(ind)])
+                _type = clean(request.POST['constraint_type_{}'.format(ind)])
                 ids = []
                 for i in range(1, TYPE_LENGTH[_type]+1):
-                    id = int(bleach.clean(request.POST['calc_constraint_{}_{}'.format(ind, i)]))
+                    id = int(clean(request.POST['calc_constraint_{}_{}'.format(ind, i)]))
                     ids.append(id)
 
+                ids = '_'.join([str(i) for i in ids])
                 if mode == "Freeze":
-                    constraints.append([mode, ids])
+                    constraints += "{}-{};".format(mode, ids)
                 elif mode == "Scan":
-                    begin = bleach.clean(request.POST['calc_scan_{}_1'.format(ind)])
-                    end = float(bleach.clean(request.POST['calc_scan_{}_2'.format(ind)]))
-                    steps = float(bleach.clean(request.POST['calc_scan_{}_3'.format(ind)]))
-                    constraints.append([mode, [begin, end, steps], ids])
+                    begin = clean(request.POST['calc_scan_{}_1'.format(ind)])
+                    end = float(clean(request.POST['calc_scan_{}_2'.format(ind)]))
+                    steps = float(clean(request.POST['calc_scan_{}_3'.format(ind)]))
+                    constraints += "{}_{}_{}_{}-{};".format(mode, begin, end, steps, ids)
                 else:
                     return HttpResponse(status=403)
 
-    '''
+    obj.constraints = constraints
+    obj.save()
+    e.save()
+    s.save()
+    profile.save()
 
     if ressource == "Local":
         '''
@@ -389,7 +387,7 @@ def profile_intersection(profile1, profile2):
 @login_required
 def project_list(request):
     if request.method == "POST":
-        target_username = bleach.clean(request.POST['user'])
+        target_username = clean(request.POST['user'])
         try:
             target_profile = User.objects.get(username=target_username).profile
         except User.DoesNotExist:
@@ -432,8 +430,8 @@ def delete(request, pk):
 @login_required
 def add_clusteraccess(request):
     if request.method == 'POST':
-        address = bleach.clean(request.POST['cluster_address'])
-        username = bleach.clean(request.POST['cluster_username'])
+        address = clean(request.POST['cluster_address'])
+        username = clean(request.POST['cluster_username'])
         owner = request.user.profile
 
         if not owner.is_PI:
@@ -545,8 +543,8 @@ def add_user(request):
         if not profile.is_PI:
             return HttpResponse(status=403)
 
-        username = bleach.clean(request.POST['username'])
-        group_id = int(bleach.clean(request.POST['group_id']))
+        username = clean(request.POST['username'])
+        group_id = int(clean(request.POST['group_id']))
 
         try:
             group = ResearchGroup.objects.get(pk=group_id)
@@ -564,7 +562,7 @@ def add_user(request):
         if user.profile == profile:
             return HttpResponse(status=403)
 
-        code = bleach.clean(request.POST['code'])
+        code = clean(request.POST['code'])
 
         if user.profile.code != code:
             return HttpResponse(status=403)
@@ -583,8 +581,8 @@ def remove_user(request):
         if not profile.is_PI:
             return HttpResponse(status=403)
 
-        member_id = int(bleach.clean(request.POST['member_id']))
-        group_id = int(bleach.clean(request.POST['group_id']))
+        member_id = int(clean(request.POST['member_id']))
+        group_id = int(clean(request.POST['group_id']))
 
         try:
             group = ResearchGroup.objects.get(pk=group_id)
@@ -828,7 +826,7 @@ def apply_pi(request):
                 'profile': request.user.profile,
                 'message': "You are already a PI!",
             })
-        group_name = bleach.clean(request.POST['group_name'])
+        group_name = clean(request.POST['group_name'])
         req = PIRequest.objects.create(issuer=profile, group_name=group_name, date_issued=timezone.now())
         return render(request, 'frontend/apply_pi.html', {
             'profile': request.user.profile,
@@ -910,7 +908,7 @@ def download_structure(request, pk):
 def gen_3D(request):
     if request.method == 'POST':
         mol = request.POST['mol']
-        clean_mol = bleach.clean(mol)
+        clean_mol = clean(mol)
 
         t = time.time()
         with open("/tmp/{}.mol".format(t), 'w') as out:
@@ -936,13 +934,17 @@ def get_structure(request):
             return HttpResponse(status=403)
 
         if 'num' in request.POST.keys():
-            num = bleach.clean(request.POST['num'])
+            num = int(clean(request.POST['num']))
         else:
             num = 1
 
         if calc.result_ensemble != None:
-            struct = calc.result_ensemble.structure_set.all()[num-1]
-            return HttpResponse(struct.xyz_structure)
+            try:
+                struct = calc.result_ensemble.structure_set.get(number=num)
+            except Structure.DoesNotExist:
+                return HttpResponse(status=204)
+            else:
+                return HttpResponse(struct.xyz_structure)
         else:
             return HttpResponse(status=204)
         #expected_file = os.path.join(LAB_RESULTS_HOME, id, "conf{}.xyz".format(num))
