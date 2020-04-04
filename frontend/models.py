@@ -92,6 +92,9 @@ class ClusterAccess(models.Model):
 class BasicStep(models.Model):
     name = models.CharField(max_length=100)
 
+    def __repr__(self):
+        return self.id
+
 class Step(models.Model):
     step_model = models.ForeignKey(BasicStep, on_delete=models.CASCADE)
     parent_step = models.ForeignKey('Step', on_delete=models.CASCADE, blank=True, null=True)
@@ -101,8 +104,14 @@ class Step(models.Model):
 
     parameters = models.ForeignKey('Parameters', on_delete=models.CASCADE, blank=True, null=True)
 
+    def __repr__(self):
+        return self.id
 class Procedure(models.Model):
     name = models.CharField(max_length=100)
+
+    has_nmr = models.BooleanField(default=False)
+    has_freq = models.BooleanField(default=False)
+    has_scan = models.BooleanField(default=False)
 
     '''
     @property
@@ -118,6 +127,9 @@ class Ensemble(models.Model):
     name = models.CharField(max_length=100, default="Nameless ensemble")
     #result_of = models.ForeignKey('Calculation', on_delete=models.CASCADE, blank=True, null=True)
 
+    def __repr__(self):
+        return self.id
+
 class Structure(models.Model):
     parent_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
 
@@ -130,9 +142,11 @@ class Structure(models.Model):
 
     degeneracy = models.PositiveIntegerField(default=0)
     rel_energy = models.FloatField(default=0)
-    boltzmann_weight = models.FloatField(default=-1.)
+    boltzmann_weight = models.FloatField(default=1.)
     homo_lumo_gap = models.FloatField(default=0)
 
+    def __repr__(self):
+        return self.id
 
 
 
@@ -142,17 +156,10 @@ class Parameters(models.Model):
     multiplicity = models.IntegerField()
     solvent = models.CharField(max_length=100, default='vacuum')
 
-class Calculation(models.Model):
+    def __repr__(self):
+        return self.id
 
-    CALC_TYPES = {
-            "Geometrical Optimisation" : 0,
-            "Conformer Search" : 1,
-            "UV/Vis Spectrum Prediction": 2,
-            "NMR Spectrum Prediction": 3,
-            "Opt+Freq": 4,
-            "Constrained Optimisation": 5,
-            "TS+Freq": 6,
-            }
+class Calculation(models.Model):
 
     CALC_STATUSES = {
             "Queued" : 0,
@@ -161,12 +168,13 @@ class Calculation(models.Model):
             "Error" : 3,
             }
 
-    INV_CALC_TYPES = {v: k for k, v in CALC_TYPES.items()}
     INV_CALC_STATUSES = {v: k for k, v in CALC_STATUSES.items()}
 
     name = models.CharField(max_length=100)
 
     ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
+
+    result_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True, related_name='result_of')
 
     error_message = models.CharField(max_length=400, default="")
     current_status = models.CharField(max_length=400, default="")
@@ -174,12 +182,12 @@ class Calculation(models.Model):
     num_steps = models.IntegerField(default=0)
     current_step = models.IntegerField(default=0)
 
-    date = models.DateTimeField('date')
+    date = models.DateTimeField('date', null=True, blank=True)
     date_finished = models.DateTimeField('date', null=True, blank=True)
 
     execution_time = models.PositiveIntegerField(default=0)
 
-    status = models.PositiveIntegerField()
+    status = models.PositiveIntegerField(default=0)
 
     author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
@@ -192,10 +200,6 @@ class Calculation(models.Model):
 
     def __repr__(self):
         return self.id
-
-    @property
-    def text_type(self):
-        return self.INV_CALC_TYPES[self.type]
 
     @property
     def text_status(self):

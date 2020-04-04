@@ -7,10 +7,9 @@
 		<td>{{ calculation.solvent }}</td>
 	</tr>
 {% if calculation.status != 3 %}
-	{% if calculation.type == 0 or calculation.type == 2 or calculation.type == 4 %}
 		<tr>
 			<td>Energy:</td>
-			<td>{{ calculation.structure_set.all.0.energy }} Ha</td>
+			<td>{{ calculation.result_ensemble.structure_set.all.0.energy }} Ha</td>
 		</tr>
 		{% if calculation.structure_set.all.0.free_energy != 0 %}
 		<tr>
@@ -22,13 +21,11 @@
 			<td>HOMO-LUMO Gap</td>
 			<td>{{ calculation.structure_set.all.0.homo_lumo_gap }} eV</td>
 		</tr>
-	{% elif calculation.type == 1 %}
 		<tr>
 			<td>Boltzmann Weighted Energy:</td>
 			<td>{{ calculation.weighted_energy }} Ha</td>
 		</tr>
 
-	{% endif %}
 {% else %}
 		<tr>
 			<td><strong><font color="red">Error message:</font></strong></td>

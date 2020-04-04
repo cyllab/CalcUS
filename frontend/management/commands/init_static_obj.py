@@ -29,6 +29,10 @@ class Command(BaseCommand):
             print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name)
 
+        name = "Crest"
+        if self.is_absent(BasicStep, name):
+            print("Adding BasicStep: {}".format(name))
+            a = BasicStep.objects.create(name=name)
 
         ###Procedure creations
 
@@ -42,11 +46,21 @@ class Command(BaseCommand):
         if self.is_absent(Procedure, name):
             print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
-            a.save()
 
             s_opt = BasicStep.objects.get(name="Geometrical Optimisation")
             step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)
             step1.save()
+            a.save()
+
+        name = "Conformational Search"
+        if self.is_absent(Procedure, name):
+            print("Adding Procedure: {}".format(name))
+            a = Procedure.objects.create(name=name)
+
+            s_opt = BasicStep.objects.get(name="Crest")
+            step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)
+            step1.save()
+            a.save()
 
         ###Finishing the process
         self.verify
@@ -54,6 +68,14 @@ class Command(BaseCommand):
     def verify(self):
         for proc in Procedure.objects.all():
             assert proc.initial_steps != None
+            for step in proc.step_set:
+                if step.name == "Frequency Calculation":
+                    proc.has_freq = True
+                elif step.name == "NMR Calculation":
+                    proc.has_nmr = True
+                elif step.name == "Constrained Optimisation":
+                    #Check if scan
+                    pass
 
         for step in Step.objects.all():
             assert step.parent_step != None or step.parent_procedure != None

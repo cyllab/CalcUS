@@ -288,13 +288,9 @@
 				<div class="control" >
 					<div class="select">
 					  <select name="calc_type" id="calc_type" onchange="calc_selection_changed();">
-					    <option>Geometrical Optimisation</option>
-					    <option>Constrained Optimisation</option>
-					    <option>Conformer Search</option>
-					    <option>UV/Vis Spectrum Prediction</option>
-					    <option>NMR Spectrum Prediction</option>
-					    <option>Opt+Freq</option>
-					    <option>TS+Freq</option>
+						{% for proc in procedures %}
+						<option>{{ proc.name }}</option>
+					    	{% endfor %}
 					  </select>
 					</div>
 				</div>
@@ -427,7 +423,7 @@ $( document ).ready(function() {
 			"X-CSRFToken": '{{ csrf_token }}',
 		},
 
-		data: {'id': {{ calculation.id }} {% if calculation.type == 1 %}, 'num': 1 {% endif %}},
+		data: {'id': {{ calculation.id }} },
 		success: function(data, textStatus, xhr) {
 			let mol_read = ChemDoodle.readXYZ(data);
 			ChemDoodle.relabel(mol_read);

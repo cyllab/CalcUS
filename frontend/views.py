@@ -24,7 +24,7 @@ from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep
-from .tasks import geom_opt, conf_search, uvvis_simple, nmr_enso, geom_opt_freq, constraint_opt, ts_freq
+from .tasks import run_procedure
 from .decorators import superuser_required
 from .tasks import system
 
@@ -90,6 +90,8 @@ class IndexView(generic.ListView):
 def index(request, page=1):
     return render(request, 'frontend/index.html', {"page": page})
 
+def clean(txt):
+    return bleach.clean(txt)
 
 @login_required
 def details(request, pk):
@@ -150,8 +152,6 @@ def submit_calculation(request):
                 'profile': request.user.profile,
                 'error_message': "No such procedure"
                 })
-
-        type = Calculation.CALC_TYPES[request.POST['calc_type']]
     else:
         return render(request, 'frontend/error.html', {
             'profile': request.user.profile,
@@ -258,14 +258,14 @@ def submit_calculation(request):
     else:
         if len(request.FILES) == 1:
             e = Ensemble.objects.create()
-            e.save()
             obj.ensemble = e
             obj.save()
+            e.save()
 
             s = Structure.objects.create(parent_ensemble=e)
 
             drawing = False
-            in_file = request.FILES['file_structure']
+            in_file = clean(request.FILES['file_structure'])
             filename, ext = in_file.name.split('.')
 
             #if ext in ['mol2', 'mol', 'xyz', 'sdf']:
@@ -278,6 +278,8 @@ def submit_calculation(request):
                 s.mol_structure = data.decode('utf-8')
             elif ext == 'xyz':
                 s.xyz_structure = data.decode('utf-8')
+
+            s.save()
         else:
             '''
             if 'structure' in request.POST.keys():
@@ -290,17 +292,28 @@ def submit_calculation(request):
                     out.write(mol)
             '''
             if 'structureB' in request.POST.keys():
-                mol = request.POST['structureB']
-                with open(os.path.join(scr, 'initial_2D.mol'), 'w') as out:
-                    out.write(mol)
+                drawing = True
+                e = Ensemble.objects.create()
+                obj.ensemble = e
+                obj.save()
+                e.save()
+
+                s = Structure.objects.create(parent_ensemble=e)
+
+
+                mol = clean(request.POST['structureB'])
+                s.mol_structure = mol
+                s.save()
+                #with open(os.path.join(scr, 'initial_2D.mol'), 'w') as out:
+                #    out.write(mol)
             else:
                 return render(request, 'frontend/error.html', {
                 'profile': request.user.profile,
                 'error_message': "No input structure"
                 })
 
-    return redirect("/details/{}".format(t))
-
+    #return redirect("/details/{}".format(t))
+    '''
     TYPE_LENGTH = {'Distance' : 2, 'Angle' : 3, 'Dihedral' : 4}
     if type == 5:
         constraints = []
@@ -326,9 +339,10 @@ def submit_calculation(request):
                 else:
                     return HttpResponse(status=403)
 
-
+    '''
 
     if ressource == "Local":
+        '''
         if type == 0:
             geom_opt.delay(t, drawing, charge, solvent)
         elif type == 1:
@@ -343,6 +357,8 @@ def submit_calculation(request):
             constraint_opt.delay(t, drawing, charge, solvent, constraints)
         elif type == 6:
             ts_freq.delay(t, drawing, charge, solvent)
+        '''
+        run_procedure.delay(drawing, obj.id)
     else:
         cmd = ClusterCommand.objects.create(issuer=profile)
         with open(os.path.join(LAB_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
@@ -654,13 +670,9 @@ def claimed_key_table(request):
 def conformer_table(request, pk):
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
-    type = calc.type
     profile = request.user.profile
 
     if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
-        return HttpResponse(status=403)
-
-    if type != 1:
         return HttpResponse(status=403)
 
     return render(request, 'frontend/conformer_table.html', {
@@ -923,25 +935,24 @@ def get_structure(request):
         if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
             return HttpResponse(status=403)
 
-        type = calc.type
-
-        if type == 0 or type == 2 or type == 3 or type == 4 or type == 5:
-            expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.xyz")
-            if os.path.isfile(expected_file):
-                with open(expected_file) as f:
-                    lines = f.readlines()
-                return HttpResponse(lines)
-            else:
-                return HttpResponse(status=204)
-        elif type == 1:
+        if 'num' in request.POST.keys():
             num = bleach.clean(request.POST['num'])
-            expected_file = os.path.join(LAB_RESULTS_HOME, id, "conf{}.xyz".format(num))
-            if os.path.isfile(expected_file):
-                with open(expected_file) as f:
-                    lines = f.readlines()
-                return HttpResponse(lines)
-            else:
-                return HttpResponse(status=204)
+        else:
+            num = 1
+
+        if calc.result_ensemble != None:
+            struct = calc.result_ensemble.structure_set.all()[num-1]
+            return HttpResponse(struct.xyz_structure)
+        else:
+            return HttpResponse(status=204)
+        #expected_file = os.path.join(LAB_RESULTS_HOME, id, "conf{}.xyz".format(num))
+        '''
+        if os.path.isfile(expected_file):
+            with open(expected_file) as f:
+                lines = f.readlines()
+            return HttpResponse(lines)
+        else:
+            return HttpResponse(status=204)
         elif type == 6:
             expected_file = os.path.join(LAB_RESULTS_HOME, id, "ts.xyz")
             if os.path.isfile(expected_file):
@@ -950,7 +961,7 @@ def get_structure(request):
                 return HttpResponse(lines)
             else:
                 return HttpResponse(status=204)
-
+        '''
 @login_required
 def get_vib_animation(request):
     if request.method == 'POST' or True:
@@ -1110,6 +1121,7 @@ def profile(request):
 def launch(request):
     return render(request, 'frontend/launch.html', {
             'profile': request.user.profile,
+            'procedures': Procedure.objects.all(),
         })
 
 @login_required
