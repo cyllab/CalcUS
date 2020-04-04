@@ -7,17 +7,21 @@ from . import views
 
 app_name = 'frontend'
 urlpatterns = [
+    #Home and index
     path('', views.index, name='index'),
     path('home/', views.index, name='index'),
     path('list/', views.IndexView.as_view(), name='list'),
-    #path('error/', views.error, name='error'),
     path('project_list/', views.project_list, name='project_list'),
     path('please_register/', views.please_register, name='please_register'),
     path('register/', views.RegisterView.as_view(), name='register'),
     path('profile/', views.profile, name='profile'),
     path('accounts/login', views.login, name='login'),
+
+    #Documentation
     path('examples/', views.ExamplesView.as_view(), name='examples'),
     path('examples/<int:pk>', views.example, name='example'),
+
+    #Group management
     path('apply_pi/', views.apply_pi, name='apply_pi'),
     path('get_pi_requests/', views.get_pi_requests, name='get_pi_requests'),
     path('get_pi_requests_table/', views.get_pi_requests_table, name='get_pi_requests_table'),
@@ -29,10 +33,19 @@ urlpatterns = [
     path('gen_3D/', views.gen_3D, name='gen_3D'),
     path('remove_user/', views.remove_user, name='remove_user'),
 
+    #Access management
+    path('manage_access/<int:pk>', views.manage_access, name='manage_access'),
+    path('add_clusteraccess/', views.add_clusteraccess, name='add_clusteraccess'),
+    path('owned_accesses/', views.owned_accesses, name='owned_accesses'),
+    path('test_access/', views.test_access, name='test_access'),
+    path('get_command_status/', views.get_command_status, name='get_command_status'),
+    path('delete_access/<int:pk>', views.delete_access, name='delete_access'),
+
+    #Calculations
     path('launch/', views.launch, name='launch'),
     path('launch/<int:pk>', views.launch_pk, name='launch_pk'),
-    path('details/<int:pk>', views.details, name='details'),
 
+    path('details/<int:pk>', views.details, name='details'),
     path('next_step/<int:pk>', views.next_step, name='next_step'),
     path('info_table/<int:pk>', views.info_table, name='info_table'),
     path('conformer_table/<int:pk>', views.conformer_table, name='conformer_table'),
@@ -45,19 +58,12 @@ urlpatterns = [
     path('get_details_sections/<int:pk>', views.get_details_sections, name='get_details_sections'),
     path('get_vib_animation/', views.get_vib_animation, name='get_vib_animation'),
     path('get_scan_animation/', views.get_scan_animation, name='get_scan_animation'),
-    path('owned_accesses/', views.owned_accesses, name='owned_accesses'),
-    path('test_access/', views.test_access, name='test_access'),
-    path('get_command_status/', views.get_command_status, name='get_command_status'),
-
-    path('delete_access/<int:pk>', views.delete_access, name='delete_access'),
     path('download_structure/<int:pk>', views.download_structure, name='download_structure'),
     path('status/<int:pk>', views.status, name='status'),
     path('icon/<int:pk>', views.icon, name='icon'),
     path('uvvis/<int:pk>', views.uvvis, name='uvvis'),
     path('nmr/<int:pk>', views.nmr, name='nmr'),
     path('delete/<int:pk>', views.delete, name='delete'),
-    path('manage_access/<int:pk>', views.manage_access, name='manage_access'),
-    path('add_clusteraccess/', views.add_clusteraccess, name='add_clusteraccess'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

@@ -116,19 +116,8 @@ class Procedure(models.Model):
     has_freq = models.BooleanField(default=False)
     has_uvvis = models.BooleanField(default=False)
 
-    '''
-    @property
-    def has_freq(self):
-        #example
-        for step in self.steps:
-            if step.type == '1':
-                return True
-        return False
-    '''
-
 class Ensemble(models.Model):
     name = models.CharField(max_length=100, default="Nameless ensemble")
-    #result_of = models.ForeignKey('Calculation', on_delete=models.CASCADE, blank=True, null=True)
 
     def __repr__(self):
         return self.id
@@ -140,7 +129,7 @@ class Structure(models.Model):
     xyz_structure = models.CharField(default="", max_length=5000000)
     sdf_structure = models.CharField(default="", max_length=5000000)
 
-    number = models.PositiveIntegerField(default=0)#remove?
+    number = models.PositiveIntegerField(default=0)
     energy = models.FloatField(default=0)
     free_energy = models.FloatField(default=0)
 

@@ -194,6 +194,8 @@ def wait_until_done(job_id, conn, lock):
 def system(command, log_file="", force_local=False):
     if REMOTE and not force_local:
         pid = int(threading.get_ident())
+        #Get the variables based on thread ID
+        #These are already set by cluster_daemon when running
         conn = connections[pid]
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
@@ -218,18 +220,17 @@ def system(command, log_file="", force_local=False):
             return subprocess.run(shlex.split(command)).returncode
 
 def handle_input_file(drawing, calc_obj):
-    if os.path.isfile("{}/initial_2D.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
-        a = system("obabel {}/initial_2D.mol -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
-        return system("obabel {}/initial_2D.mol -O {}/initial.xyz -h --gen3D".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
+    #if os.path.isfile("{}/initial_2D.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
+    #    a = system("obabel {}/initial_2D.mol -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
+    #    return system("obabel {}/initial_2D.mol -O {}/initial.xyz -h --gen3D".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
 
     if drawing:
         SCALE = 1
         #SCALE = 20
-        #return system("babel -imol {}/initial.mol -oxyz {}/initial.xyz -h --gen3D".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
     else:
         SCALE = 1
 
-    if len(calc_obj.ensemble.structure_set.all()) == 1:
+    if len(calc_obj.ensemble.structure_set.all()) == 1:#TODO: expend to multiple structures?
         in_struct = calc_obj.ensemble.structure_set.all()[0]
         if in_struct.xyz_structure == "":
             if in_struct.mol_structure != '':
@@ -241,10 +242,9 @@ def handle_input_file(drawing, calc_obj):
 
                 a = system("obabel {}/initial.mol -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
 
-                #return system("babel -imol initial.mol -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
                 with open(os.path.join("{}/initial.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))))) as f:
                     lines = f.readlines()[4:]
-                #with open(os.path.join("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))), 'w') as out:
+
                 to_print = []
                 for line in lines:
                     sline = line.split()
@@ -255,13 +255,10 @@ def handle_input_file(drawing, calc_obj):
                     else:
                         break
                 num = len(to_print)
-                #out.write("{}\n".format(num))
-                #out.write("CalcUS\n")
                 in_struct.xyz_structure = "{}\n".format(num)
                 in_struct.xyz_structure += "CalcUS\n"
                 for line in to_print:
                     in_struct.xyz_structure += line
-                    #out.write(line)
                 in_struct.save()
                 return 0
             elif in_struct.sdf_structure != '':
@@ -287,6 +284,7 @@ def xtb_opt(in_file, calc):
     solvent = calc.global_parameters.solvent
     charge = calc.global_parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
+
     if solvent != "Vacuum":
         solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
     else:
@@ -294,6 +292,7 @@ def xtb_opt(in_file, calc):
 
     os.chdir(folder)
     a = system("xtb {} --opt -o vtight -a 0.05 --chrg {} {} ".format(in_file, charge, solvent_add), 'xtb_opt.out')
+
     if a == 0:
         with open("xtbopt.xyz") as f:
             lines = f.readlines()
@@ -533,7 +532,7 @@ def xtb_freq(in_file, calc):
                 else:
                     intensities.append(intensity)
         if len(vibs) == len(intensities):
-            x = np.arange(500, 4000, 1)
+            x = np.arange(500, 4000, 1)#Wave number in cm^-1
             spectrum = plot_vibs(x, zip(vibs, intensities))
             with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "IR.csv"), 'w') as out:
                 out.write("Wavenumber,Intensity\n")
@@ -544,6 +543,7 @@ def xtb_freq(in_file, calc):
 
     e = calc.result_ensemble
     assert e.structure_set.count() == 1
+
     e.structure_set.all()[0].free_energy = G
     e.save()
 
@@ -571,7 +571,9 @@ def xtb_freq(in_file, calc):
         num_freqs = int(num_freqs)
     SCALING = 0.05
     hess = [i*SCALING for i in hess]
+
     def output_with_displacement(mol, out, hess):
+        #Simple displacement based on the hessian
         t = 10
         mols = [mol]
         for _t in range(t):
@@ -675,9 +677,9 @@ def crest_generic(in_file, calc, mode):
     else:
         solvent_add = ''
 
-    if mode == "Final":
+    if mode == "Final":#Restrict the number of conformers
         a = system("crest {} --chrg {} {} -rthr 0.4 -ewin 4".format(in_file, charge, solvent_add), 'crest.out')
-    elif mode == "NMR":
+    elif mode == "NMR":#No restriction, as it will be done by enso
         a = system("crest {} --chrg {} {} -nmr".format(in_file, charge, solvent_add), 'crest.out')
     else:
         print("Invalid crest mode selected!")
@@ -756,65 +758,6 @@ def enso_run():
 
 def anmr():
     return system("anmr", 'anmr.out')
-
-def run_steps(steps, calc_obj, drawing, id):
-
-    a = handle_input_file(drawing, calc_obj)
-
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to convert the input structure"
-        calc_obj.save()
-        return
-
-    a = system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, str(id))), force_local=True)
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to create the results directory"
-        calc_obj.save()
-        return
-
-    a = system("obabel {}/initial.xyz -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(id))), force_local=True)
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to generate the icon"
-        calc_obj.save()
-        return
-
-    if REMOTE:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = "/scratch/{}/calcus/{}".format(conn[0].cluster_username, calc_obj.id)
-        remote_dirs[pid] = remote_dir
-
-        direct_command("mkdir -p {}".format(remote_dir), conn, lock)
-        for f in glob.glob(os.path.join(LAB_SCR_HOME, str(calc_obj.id)) + '/*'):
-            fname = f.split('/')[-1]
-            sftp_put(f, os.path.join(remote_dir, fname), conn, lock)
-
-    calc_obj.num_steps = len(steps)+1
-    for ind, step in enumerate(steps):
-        f, args, desc, error = step
-        calc_obj.current_status = desc
-        calc_obj.current_step = ind+1
-        calc_obj.save()
-        a = f(*args)
-        if a != 0:
-            calc_obj.status = 3
-            calc_obj.error_message = error
-            calc_obj.save()
-            return a
-
-    calc_obj.current_step = calc_obj.num_steps
-    calc_obj.save()
-
-    if REMOTE:
-        files = direct_command("ls {}".format(remote_dir), conn, lock)
-        for f in files:
-            if f.strip() != '':
-                sftp_get(os.path.join(remote_dir, f), os.path.join(LAB_SCR_HOME, str(calc_obj.id), f), conn, lock)
-    return 0
 
 def save_to_results(f, calc_obj, multiple=False, out_name=""):
     s = f.split('.')
@@ -1036,7 +979,7 @@ def run_procedure(drawing, calc_id):
         calc_obj.current_status = step.step_model.desc
         calc_obj.current_step = ind
         calc_obj.save()
-        f = BASICSTEP_TABLE[step.step_model.name]
+        function = BASICSTEP_TABLE[step.step_model.name]
         step_dir = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(ind))
         a = system("mkdir -p {}".format(step_dir), force_local=True)
         in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(ind), "in.xyz")
@@ -1045,7 +988,7 @@ def run_procedure(drawing, calc_id):
             out.write(in_ensemble.structure_set.all()[0].xyz_structure)
 
         os.chdir(step_dir)
-        a, e = f(in_file, calc_obj)
+        a, e = function(in_file, calc_obj)
 
         ind += 1
 
@@ -1074,19 +1017,15 @@ def run_procedure(drawing, calc_id):
                 sftp_get(os.path.join(remote_dir, f), os.path.join(LAB_SCR_HOME, str(calc_obj.id), f), conn, lock)
     return 0
 
-'''
 @task_prerun.connect
 def task_prerun_handler(signal, sender, task_id, task, args, kwargs, **extras):
     if task != ping:
         time_dict[task_id] = time()
 
-        calc_obj = Calculation.objects.get(pk=args[0])
+        calc_obj = Calculation.objects.get(pk=args[1])
 
         calc_obj.status = 1
         calc_obj.save()
-
-        os.chdir(os.path.join(LAB_SCR_HOME, str(args[0])))
-        args.append(calc_obj)
 
 
 @task_postrun.connect
@@ -1097,14 +1036,15 @@ def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, st
         except KeyError:
             execution_time = -1
 
-        job_id = args[0]
+        job_id = args[1]
         calc_obj = Calculation.objects.get(pk=job_id)
         calc_obj.execution_time = int(execution_time)
         calc_obj.date_finished = timezone.now()
 
-        for f in glob.glob(os.path.join(LAB_SCR_HOME, str(job_id)) + '/*.out'):
-            fname = f.split('/')[-1]
-            copyfile(f, os.path.join(LAB_RESULTS_HOME, str(job_id)) + '/' + fname)
+        for f in glob.glob(os.path.join(LAB_SCR_HOME, str(job_id)) + '/*/'):
+            for ff in glob.glob("{}/*.out".format(f)):
+                fname = ff.split('/')[-1]
+                copyfile(ff, os.path.join(LAB_RESULTS_HOME, str(job_id)) + '/' + fname)
 
         if retval == 0:
             calc_obj.status = 2
@@ -1118,7 +1058,7 @@ def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, st
         author = calc_obj.author
         author.calculation_time_used += execution_time
         author.save()
-'''
+
 @app.task(name='celery.ping')
 def ping():
     return 'pong'
