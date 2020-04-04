@@ -42,6 +42,7 @@ urlpatterns = [
     path('log/<int:pk>', views.log, name='log'),
     path('submit_calculation/', views.submit_calculation, name='submit_calculation'),
     path('get_structure/', views.get_structure, name='get_structure'),
+    path('get_details_sections/<int:pk>', views.get_details_sections, name='get_details_sections'),
     path('get_vib_animation/', views.get_vib_animation, name='get_vib_animation'),
     path('get_scan_animation/', views.get_scan_animation, name='get_scan_animation'),
     path('owned_accesses/', views.owned_accesses, name='owned_accesses'),

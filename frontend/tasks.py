@@ -285,7 +285,7 @@ def xtb_opt(in_file, calc):
     else:
         solvent_add = ''
 
-    a = system("xtb {} --chrg {} {} --opt".format(in_file, charge, solvent_add), 'xtb_opt.out')
+    a = system("xtb {} --opt -o vtight -a 0.05 --chrg {} {} ".format(in_file, charge, solvent_add), 'xtb_opt.out')
     if a == 0:
         with open("xtbopt.xyz") as f:
             lines = f.readlines()
@@ -300,7 +300,7 @@ def xtb_opt(in_file, calc):
             E = float(lines[ind-2].split()[3])
 
         e = Ensemble.objects.create()
-        s = Structure.objects.create(parent_ensemble=e, xyz_structure=xyz_structure, energy=E, homo_lumo_gap=hl_gap)
+        s = Structure.objects.create(parent_ensemble=e, xyz_structure=xyz_structure, energy=E, homo_lumo_gap=hl_gap, number=1)
         e.save()
         s.save()
         return a, e
@@ -372,7 +372,6 @@ def xtb_scan(in_file, calc):
             if _cmd[0] == "Scan":
                 has_scan = True
         if has_scan:
-            calc.has_scan = True
             calc.save()
             out.write("$scan\n")
             counter = 1
@@ -445,13 +444,130 @@ def xtb_scan(in_file, calc):
 
     return 0, e
 
-def xtb_freq(in_file, charge, solvent):
+def xtb_freq(in_file, calc):
+    solvent = calc.global_parameters.solvent
+    charge = calc.global_parameters.charge
+    folder = '/'.join(in_file.split('/')[:-1])
+
     if solvent != "Vacuum":
         solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
     else:
         solvent_add = ''
 
-    return system("xtb {} --uhf 1 --chrg {} {} --hess".format(in_file, charge, solvent_add), 'xtb_freq.out')
+    os.chdir(folder)
+    system("xtb {} --uhf 1 --chrg {} {} --hess".format(in_file, charge, solvent_add), 'xtb_freq.out')
+
+    a = save_to_results(os.path.join(folder, "vibspectrum"), calc)
+    if a != 0:
+        return -1, 'e'
+
+    with open("{}/xtb_freq.out".format(folder)) as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+        while lines[ind].find("HOMO-LUMO GAP") == -1:
+            ind -= 1
+        hl_gap = float(lines[ind].split()[3])
+        E = float(lines[ind-4].split()[3])
+        G = float(lines[ind-2].split()[4])
+
+    vib_file = os.path.join(folder, "vibspectrum")
+
+    if os.path.isfile(vib_file):
+        with open(vib_file) as f:
+            lines = f.readlines()
+
+        vibs = []
+        intensities = []
+        for line in lines:
+            if len(line.split()) > 4 and line[0] != '#':
+                sline = line.split()
+                try:
+                    a = float(sline[1])
+                    if a == 0.:
+                        continue
+                except ValueError:
+                    pass
+                vib = float(line[20:33].strip())
+                vibs.append(vib)
+                try:
+                    intensity = float(sline[3])
+                except ValueError:
+                    continue
+                else:
+                    intensities.append(intensity)
+        if len(vibs) == len(intensities):
+            x = np.arange(500, 4000, 1)
+            spectrum = plot_vibs(x, zip(vibs, intensities))
+            with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "IR.csv"), 'w') as out:
+                out.write("Wavenumber,Intensity\n")
+                intensities = 1000*np.array(intensities)/max(intensities)
+                for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
+                    out.write("-{:.1f},{:.5f}\n".format(_x, i))
+
+
+    e = calc.result_ensemble
+    assert e.structure_set.count() == 1
+    e.structure_set.all()[0].free_energy = G
+    e.save()
+
+    lines = [i +'\n' for i in e.structure_set.all()[0].xyz_structure.split('\n')][:-1]#Todo: make general
+    num_atoms = int(lines[0].strip())
+    lines = lines[2:]
+
+    hess = []
+    struct = []
+
+    for line in lines:
+        a, x, y, z = line.strip().split()
+        struct.append([a, float(x), float(y), float(z)])
+
+    with open(os.path.join(folder, "hessian")) as f:
+        lines = f.readlines()[1:]
+        for line in lines:
+            hess += [float(i) for i in line.strip().split()]
+
+        num_freqs = len(hess)/(3*num_atoms)
+        if not num_freqs.is_integer():
+            print("Incorrect number of frequencies!")
+            exit(0)
+
+        num_freqs = int(num_freqs)
+    SCALING = 0.05
+    hess = [i*SCALING for i in hess]
+    def output_with_displacement(mol, out, hess):
+        t = 10
+        mols = [mol]
+        for _t in range(t):
+            new_mol = []
+            for ind, (a, x, y, z) in enumerate(mols[-1]):
+                _x = x + hess[3*ind]
+                _y = y + hess[3*ind+1]
+                _z = z + hess[3*ind+2]
+                new_mol.append([a, _x, _y, _z])
+            mols.append(new_mol)
+
+        for _t in range(t):
+            new_mol = []
+            for ind, (a, x, y, z) in enumerate(mols[0]):
+                _x = x - hess[3*ind]
+                _y = y - hess[3*ind+1]
+                _z = z - hess[3*ind+2]
+                new_mol.append([a, _x, _y, _z])
+            mols.insert(0, new_mol)
+
+        for mol in mols:
+            out.write("{}\n".format(num_atoms))
+            out.write("Free\n")
+            for a, x, y, z in mol:
+                out.write("{} {} {} {}\n".format(a, x, y, z))
+
+    for ind in range(num_freqs):
+        _hess = hess[3*num_atoms*ind:3*num_atoms*(ind+1)]
+        with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
+            output_with_displacement(struct, out, _hess)
+
+    return 0, e
 
 def animate_vib(in_file, calc_obj):
     with open(os.path.join(LAB_SCR_HOME, str(calc_obj.id), in_file)) as f:
@@ -687,10 +803,10 @@ def save_to_results(f, calc_obj, multiple=False, out_name=""):
             else:
                 copyfile(os.path.join(LAB_SCR_HOME, str(calc_obj.id), fname), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), out_name))
         else:
-            copyfile(os.path.join(LAB_SCR_HOME, str(calc_obj.id), fname), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), out_name))
+            copyfile(f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), out_name))
     elif len(s) == 1:
         name = s
-        copyfile(os.path.join(LAB_SCR_HOME, str(calc_obj.id), fname), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), out_name))
+        copyfile(f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), out_name))
     else:
         print("Odd number of periods!")
         return -1
@@ -1084,7 +1200,6 @@ def constraint_opt(id, drawing, charge, solvent, constraints, calc_obj=None, rem
             if cmd[0] == "Scan":
                 has_scan = True
         if has_scan:
-            calc_obj.has_scan = True
             out.write("$scan\n")
             counter = 1
             for cmd in constraints:
@@ -1111,6 +1226,7 @@ BASICSTEP_TABLE = {
             'Geometrical Optimisation': xtb_opt,
             'Crest': crest,
             'Constrained Optimisation': xtb_scan,
+            'Frequency Calculation': xtb_freq,
         }
 
 time_dict = {}
@@ -1194,6 +1310,11 @@ def run_procedure(drawing, calc_id):
         else:
             calc_obj.result_ensemble = e
             calc_obj.save()
+
+        next_steps = step.step_set.all()
+        if len(next_steps) > 0:
+            for ss in next_steps:
+                steps_to_do.append(ss)
 
     calc_obj.current_step = calc_obj.num_steps
     calc_obj.status = 2

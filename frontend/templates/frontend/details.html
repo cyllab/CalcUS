@@ -67,7 +67,7 @@
 					headers: {
 						"X-CSRFToken": '{{ csrf_token }}',
 					},
-					data: {'id': {{ calculation.id }}},
+					data: {'id': {{ calculation.id }}, 'num': 1},
 					success: function(data, textStatus, xhr) {
 						if (xhr.status != 204) {
 							let mol = ChemDoodle.readXYZ(data);
@@ -84,6 +84,10 @@
 							$("#calc_title").removeClass("has-background-warning");
 							$("#calc_title").addClass("has-background-success"); 
 							$('#status_box').load("/status/{{ calculation.id }}");
+
+							
+
+
 							//conf_number = {{ calculation.result_ensemble.structure_set.count }};
 							$.ajax({
 								method: "GET",	 	 
@@ -150,6 +154,29 @@
 			}
 		}
 
+		{% if calculation.procedure.has_freq %}
+			function animate_vib(num) {
+				$.ajax({
+					method: "POST",	 	 
+					url: "/get_vib_animation/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+
+					data: {'id': {{ calculation.id }}, 'num': num},
+					success: function(data, textStatus, xhr) {
+						if (xhr.status != 204) {
+							eval(data);
+						}
+
+					}
+			  
+				});
+
+
+			}
+
+		{% endif %}
 	</script>
 
 {% endblock %}
@@ -171,17 +198,15 @@
 
 	<strong>{{ calculation.text_type }}</strong>
 
-	<div class="columns">
+	<div class="columns box">
 		<div class="column">
-			{% if calculation.procedure.has_scan == False %}
-				<script>
-					let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {useServices: false});
-					editor.styles.set3DRepresentation('Stick');
-					editor.styles.backgroundColor = '#FFFFFF';
-					editor.oneMolecule = true;
-				</script>
-				<br />
-			{% endif %}
+			<script>
+				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {useServices: false});
+				editor.styles.set3DRepresentation('Stick');
+				editor.styles.backgroundColor = '#FFFFFF';
+				editor.oneMolecule = true;
+			</script>
+			<br />
 			<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .xyz <i class="fas fa-download"></i></button>
 			<br />	
 			<button class="button" onclick="decrease_conf()">Previous Structure</button>
@@ -206,6 +231,11 @@
 	</div>
 
 	<br />
+
+
+	<div class="box" id="sections">
+		{% include 'frontend/details_sections.html' %}	
+	</div>
 
 	<div class="box">
 		<table class="table" id="info_table">

@@ -44,6 +44,11 @@ class Command(BaseCommand):
             print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Optimizing geometry", error_message="Failed to optimize geometry")
 
+        name = "Frequency Calculation"
+        if self.is_absent(BasicStep, name):
+            print("Adding BasicStep: {}".format(name))
+            a = BasicStep.objects.create(name=name, desc="Calculating frequencies", error_message="Failed to calculate frequencies")
+
         ###Procedure creations
 
         ###Template:
@@ -82,6 +87,22 @@ class Command(BaseCommand):
             step1.save()
             a.save()
 
+        name = "Opt+Freq"
+        if self.is_absent(Procedure, name):
+            print("Adding Procedure: {}".format(name))
+            a = Procedure.objects.create(name=name)
+
+            s_opt = BasicStep.objects.get(name="Geometrical Optimisation")
+            step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)
+            step1.save()
+
+            s_freq = BasicStep.objects.get(name="Frequency Calculation")
+            step2 = Step.objects.create(step_model=s_freq, parent_step=step1, from_procedure=a)
+            step2.save()
+
+            a.save()
+
+
         ###Finishing the process
         self.verify()
 
@@ -93,9 +114,7 @@ class Command(BaseCommand):
                     proc.has_freq = True
                 elif step.step_model.name == "NMR Calculation":
                     proc.has_nmr = True
-                elif step.step_model.name == "Constrained Optimisation":
-                    #Check if scan
-                    pass
+        proc.save()
 
         for step in Step.objects.all():
             assert step.parent_step != None or step.parent_procedure != None

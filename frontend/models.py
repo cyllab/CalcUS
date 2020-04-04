@@ -114,7 +114,6 @@ class Procedure(models.Model):
 
     has_nmr = models.BooleanField(default=False)
     has_freq = models.BooleanField(default=False)
-    has_scan = models.BooleanField(default=False)
 
     '''
     @property
@@ -201,6 +200,9 @@ class Calculation(models.Model):
     procedure = models.ForeignKey(Procedure, on_delete=models.CASCADE, blank=True, null=True)
 
     constraints = models.CharField(max_length=400, default="", blank=True, null=True)
+
+    has_freq = models.BooleanField(default=False)
+    has_scan = models.BooleanField(default=False)
 
     def __repr__(self):
         return self.id

@@ -319,13 +319,16 @@ def submit_calculation(request):
                 _type = clean(request.POST['constraint_type_{}'.format(ind)])
                 ids = []
                 for i in range(1, TYPE_LENGTH[_type]+1):
-                    id = int(clean(request.POST['calc_constraint_{}_{}'.format(ind, i)]))
-                    ids.append(id)
+                    id_txt = clean(request.POST['calc_constraint_{}_{}'.format(ind, i)])
+                    if id_txt != "":
+                        id = int(id_txt)
+                        ids.append(id)
 
                 ids = '_'.join([str(i) for i in ids])
                 if mode == "Freeze":
                     constraints += "{}-{};".format(mode, ids)
                 elif mode == "Scan":
+                    obj.has_scan = True
                     begin = clean(request.POST['calc_scan_{}_1'.format(ind)])
                     end = float(clean(request.POST['calc_scan_{}_2'.format(ind)]))
                     steps = float(clean(request.POST['calc_scan_{}_3'.format(ind)]))
@@ -334,6 +337,9 @@ def submit_calculation(request):
                     return HttpResponse(status=403)
 
     obj.constraints = constraints
+    obj.has_nmr = proc.has_nmr
+    obj.has_freq = proc.has_freq
+
     obj.save()
     e.save()
     s.save()
@@ -750,9 +756,8 @@ def nmr(request, pk):
 def ir_spectrum(request, pk):
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
-    type = calc.type
 
-    if type != 4 and type != 6:
+    if not calc.procedure.has_freq:
         return HttpResponse(status=403)
 
     profile = request.user.profile
@@ -939,8 +944,10 @@ def get_structure(request):
             num = 1
 
         if calc.result_ensemble != None:
+            print("Ensemble ok")
             try:
                 struct = calc.result_ensemble.structure_set.get(number=num)
+                print("struct ok")
             except Structure.DoesNotExist:
                 return HttpResponse(status=204)
             else:
@@ -977,9 +984,8 @@ def get_vib_animation(request):
         if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
             return HttpResponse(status=403)
 
-        type = calc.type
 
-        if type != 4 and type != 6:
+        if calc.procedure.has_freq == False:
             return HttpResponse(status=403)
 
         num = request.POST['num']
@@ -1052,6 +1058,22 @@ def get_scan_animation(request):
                 })
         else:
             return HttpResponse(status=204)
+
+@login_required
+def get_details_sections(request, pk):
+    try:
+        calc = Calculation.objects.get(pk=pk)
+    except Calculation.DoesNotExist:
+        return HttpResponse(status=404)
+
+    profile = request.user.profile
+
+    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+        return HttpResponse(status=403)
+
+    return render(request, 'frontend/details_sections.html', {
+            'calculation': calc
+        })
 
 @login_required
 def log(request, pk):
