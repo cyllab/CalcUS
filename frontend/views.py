@@ -262,19 +262,18 @@ def submit_calculation(request):
             s = Structure.objects.create(parent_ensemble=e)
 
             drawing = False
-            in_file = clean(request.FILES['file_structure'])
-            filename, ext = in_file.name.split('.')
+            in_file = clean(request.FILES['file_structure'].read().decode('utf-8'))
+            filename, ext = request.FILES['file_structure'].name.split('.')
 
             #if ext in ['mol2', 'mol', 'xyz', 'sdf']:
             #    with open(os.path.join(LAB_SCR_HOME, t, 'initial.{}'.format(ext)), 'wb+') as out:
-            data = b''
-            for chunk in in_file.chunks():
-                data += chunk
 
             if ext == 'mol':
-                s.mol_structure = data.decode('utf-8')
+                s.mol_structure = in_file
             elif ext == 'xyz':
-                s.xyz_structure = data.decode('utf-8')
+                s.xyz_structure = in_file
+            elif ext == 'sdf':
+                s.sdf_structure = in_file
 
             s.save()
         else:

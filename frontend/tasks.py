@@ -228,53 +228,59 @@ def handle_input_file(drawing, calc_obj):
         #return system("babel -imol {}/initial.mol -oxyz {}/initial.xyz -h --gen3D".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
     else:
         SCALE = 1
+
     if len(calc_obj.ensemble.structure_set.all()) == 1:
         in_struct = calc_obj.ensemble.structure_set.all()[0]
-        if in_struct.mol_structure != '':
-            with open("{}/initial.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))), 'w') as out:
-                out.write(in_struct.mol_structure)
-            if drawing:
-                a = system("obabel {}/initial.mol -O {}/initial_H.mol -h --gen3D".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
-                a = system("mv {}/initial_H.mol {}/initial.mol ".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
+        if in_struct.xyz_structure == "":
+            if in_struct.mol_structure != '':
+                with open("{}/initial.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))), 'w') as out:
+                    out.write(in_struct.mol_structure)
+                if drawing:
+                    a = system("obabel {}/initial.mol -O {}/initial_H.mol -h --gen3D".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
+                    a = system("mv {}/initial_H.mol {}/initial.mol ".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
 
-            a = system("obabel {}/initial.mol -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
+                a = system("obabel {}/initial.mol -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
 
-            #return system("babel -imol initial.mol -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
-            with open(os.path.join("{}/initial.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))))) as f:
-                lines = f.readlines()[4:]
-            #with open(os.path.join("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))), 'w') as out:
-            to_print = []
-            for line in lines:
-                sline = line.split()
-                try:
-                    a = int(sline[3])
-                except ValueError:
-                    to_print.append("{} {} {} {}\n".format(sline[3], float(sline[0])*SCALE, float(sline[1])*SCALE, float(sline[2])*SCALE))
-                else:
-                    break
-            num = len(to_print)
-            #out.write("{}\n".format(num))
-            #out.write("CalcUS\n")
-            in_struct.xyz_structure = "{}\n".format(num)
-            in_struct.xyz_structure += "CalcUS\n"
-            for line in to_print:
-                in_struct.xyz_structure += line
-                #out.write(line)
-            in_struct.save()
-            return 0
+                #return system("babel -imol initial.mol -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
+                with open(os.path.join("{}/initial.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))))) as f:
+                    lines = f.readlines()[4:]
+                #with open(os.path.join("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))), 'w') as out:
+                to_print = []
+                for line in lines:
+                    sline = line.split()
+                    try:
+                        a = int(sline[3])
+                    except ValueError:
+                        to_print.append("{} {} {} {}\n".format(sline[3], float(sline[0])*SCALE, float(sline[1])*SCALE, float(sline[2])*SCALE))
+                    else:
+                        break
+                num = len(to_print)
+                #out.write("{}\n".format(num))
+                #out.write("CalcUS\n")
+                in_struct.xyz_structure = "{}\n".format(num)
+                in_struct.xyz_structure += "CalcUS\n"
+                for line in to_print:
+                    in_struct.xyz_structure += line
+                    #out.write(line)
+                in_struct.save()
+                return 0
+            elif in_struct.sdf_structure != '':
+                with open("{}/initial.sdf".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))), 'w') as out:
+                    out.write(in_struct.sdf_structure)
+                a = system("obabel {}/initial.sdf -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
+                a = system("obabel {}/initial.sdf -O {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
 
-        elif os.path.isfile("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
-            return 0
-        elif os.path.isfile("{}/initial.mol2".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
-            return system("babel -imol2 {}/initial.mol2 -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
-        elif os.path.isfile("{}/initial.sdf".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
-            return system("babel -isdf {}/initial.sdf -oxyz {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
+                with open(os.path.join("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))))) as f:
+                    lines = f.readlines()
+                in_struct.xyz_structure = '\n'.join([i.strip() for i in lines])
+                in_struct.save()
+                return 0
+            else:
+                print("Unimplemented")
+                return -1
         else:
-            print("Oops")
+            return 0
 
-    else:
-        print("Unimplementend")
-        return -1
 
 
 def xtb_opt(in_file, calc):
@@ -675,10 +681,10 @@ def crest_generic(in_file, calc, mode):
         a = system("crest {} --chrg {} {} -nmr".format(in_file, charge, solvent_add), 'crest.out')
     else:
         print("Invalid crest mode selected!")
-        return -1
+        return -1, 'e'
 
     if a != 0:
-        return -1
+        return -1, 'e'
 
     folder = '/'.join(in_file.split('/')[:-1])
     with open("{}/crest.out".format(folder)) as f:
@@ -731,10 +737,10 @@ def crest_generic(in_file, calc, mode):
     return 0, e
 
 def crest(in_file, calc):
-    crest_generic(in_file, calc, "Final")
+    return crest_generic(in_file, calc, "Final")
 
 def crest_pre_nmr(in_file, calc):
-    crest_generic(in_file, calc, "NMR")
+    return crest_generic(in_file, calc, "NMR")
 
 
 def enso(charge, solvent):

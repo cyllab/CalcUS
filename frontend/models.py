@@ -138,6 +138,7 @@ class Structure(models.Model):
 
     mol_structure = models.CharField(default="", max_length=5000000)
     xyz_structure = models.CharField(default="", max_length=5000000)
+    sdf_structure = models.CharField(default="", max_length=5000000)
 
     number = models.PositiveIntegerField(default=0)#remove?
     energy = models.FloatField(default=0)

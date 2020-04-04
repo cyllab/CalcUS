@@ -19,6 +19,7 @@ from celery.contrib.testing.worker import start_worker
 from labsandbox.celery import app
 
 from .models import *
+from django.core.management import call_command
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -56,6 +57,7 @@ class UserPermissionsTests(StaticLiveServerTestCase):
 
 
     def setUp(self):
+        call_command('init_static_obj')
         self.username = "Selenium"
         self.password = "test1234"
 
@@ -259,6 +261,7 @@ class CalculationTests(StaticLiveServerTestCase):
         if not os.path.isdir(RESULTS_DIR):
             os.mkdir(RESULTS_DIR)
 
+
     @classmethod
     def tearDownClass(cls):
         cls.driver.quit()
@@ -270,6 +273,7 @@ class CalculationTests(StaticLiveServerTestCase):
             rmtree(RESULTS_DIR)
 
     def setUp(self):
+        call_command('init_static_obj')
         u = User.objects.create_superuser(username=self.username, password=self.password)#Weird things happen if the user is not superuser...
         u.save()
         p = Profile.objects.get(user__username=self.username)
@@ -321,7 +325,7 @@ class CalculationTests(StaticLiveServerTestCase):
         calc_type_input = self.driver.find_element_by_id('calc_type')
         ressource_input = self.driver.find_element_by_name('calc_ressource')
         upload_input = self.driver.find_element_by_name('file_structure')
-        submit = self.driver.find_element_by_xpath('/html/body/div[1]/div/div[2]/form/div[7]/div/button')
+        submit = self.driver.find_element_by_id('submit_button')
 
         name_input.click()
         name_input.send_keys(params['calc_name'])
@@ -395,7 +399,7 @@ class CalculationTests(StaticLiveServerTestCase):
         self.client.login(username=self.username, password=self.password)
         params = {
                 'calc_name': 'test',
-                'type': 'Geometrical Optimisation',
+                'type': 'Simple Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_text': 'Cl-iodane_2D.mol',
@@ -407,7 +411,7 @@ class CalculationTests(StaticLiveServerTestCase):
         self.client.login(username=self.username, password=self.password)
         params = {
                 'calc_name': 'test',
-                'type': 'Geometrical Optimisation',
+                'type': 'Simple Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'benzene.mol',
@@ -422,7 +426,7 @@ class CalculationTests(StaticLiveServerTestCase):
         proj.save()
         params = {
                 'calc_name': 'test',
-                'type': 'Geometrical Optimisation',
+                'type': 'Simple Optimisation',
                 'project': 'TestProj',
                 'in_file': 'benzene.mol',
                 }
@@ -446,7 +450,7 @@ class CalculationTests(StaticLiveServerTestCase):
         self.client.login(username=self.username, password=self.password)
         params = {
                 'calc_name': 'test',
-                'type': 'Conformer Search',
+                'type': 'Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'ethanol.sdf',
@@ -454,7 +458,6 @@ class CalculationTests(StaticLiveServerTestCase):
 
         self.basic_launch(params, 120)
 
-    '''
     def test_ts(self):
         self.client.login(username=self.username, password=self.password)
         params = {
@@ -466,12 +469,12 @@ class CalculationTests(StaticLiveServerTestCase):
                 }
 
         self.basic_launch(params, 20)
-    '''
+
     def test_second_step(self):
         self.client.login(username=self.username, password=self.password)
         params = {
                 'calc_name': 'test',
-                'type': 'Geometrical Optimisation',
+                'type': 'Simple Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'ethanol.sdf',
