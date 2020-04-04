@@ -73,12 +73,7 @@
 							let mol = ChemDoodle.readXYZ(data);
 
 							clearInterval(my_refresh);
-
-							{% if calculation.procedure.has_scan == False %}
-							//ChemDoodle.relabel(mol);
-							
 							editor.loadMolecule(mol);
-							{% endif %}
 
 							$("#next_step_div").load("/next_step/{{ calculation.id }}");
 							$("#calc_title").removeClass("has-background-warning");

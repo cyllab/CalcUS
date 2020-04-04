@@ -49,6 +49,11 @@ class Command(BaseCommand):
             print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Calculating frequencies", error_message="Failed to calculate frequencies")
 
+        name = "TS Optimisation"
+        if self.is_absent(BasicStep, name):
+            print("Adding BasicStep: {}".format(name))
+            a = BasicStep.objects.create(name=name, desc="Optimizing the transition state", error_message="Failed to optimize the transition state")
+
         ###Procedure creations
 
         ###Template:
@@ -102,6 +107,20 @@ class Command(BaseCommand):
 
             a.save()
 
+        name = "TS+Freq"
+        if self.is_absent(Procedure, name):
+            print("Adding Procedure: {}".format(name))
+            a = Procedure.objects.create(name=name)
+
+            s_opt = BasicStep.objects.get(name="TS Optimisation")
+            step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)
+            step1.save()
+
+            s_freq = BasicStep.objects.get(name="Frequency Calculation")
+            step2 = Step.objects.create(step_model=s_freq, parent_step=step1, from_procedure=a)
+            step2.save()
+
+            a.save()
 
         ###Finishing the process
         self.verify()

@@ -944,10 +944,8 @@ def get_structure(request):
             num = 1
 
         if calc.result_ensemble != None:
-            print("Ensemble ok")
             try:
                 struct = calc.result_ensemble.structure_set.get(number=num)
-                print("struct ok")
             except Structure.DoesNotExist:
                 return HttpResponse(status=204)
             else:

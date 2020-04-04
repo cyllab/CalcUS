@@ -23,8 +23,10 @@
 
 				</tbody>
 			</table>
+			{% if calculation.has_ts == False %}
 			<div id="ir_spectrum" style="width:600px; height:400px; margin-bottom: 30px;">
 			</div>
+			{% endif %}
 		</div>
 	</div>
 	<script>
@@ -32,6 +34,7 @@
 
 		$("#vib_table").load("/vib_table/{{ calculation.id }}");
 
+			{% if calculation.has_ts == False %}
 			g4 = new Dygraph(
 			document.getElementById("ir_spectrum"),
 				"/ir_spectrum/{{ calculation.id }}", 
@@ -53,6 +56,7 @@
 				}
 
 			);
+			{% endif %}
 		});
 	</script>
 {% endif %}

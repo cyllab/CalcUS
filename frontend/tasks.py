@@ -285,6 +285,7 @@ def xtb_opt(in_file, calc):
     else:
         solvent_add = ''
 
+    os.chdir(folder)
     a = system("xtb {} --opt -o vtight -a 0.05 --chrg {} {} ".format(in_file, charge, solvent_add), 'xtb_opt.out')
     if a == 0:
         with open("xtbopt.xyz") as f:
@@ -307,18 +308,24 @@ def xtb_opt(in_file, calc):
     else:
         return a, None
 
-def xtb_ts(in_file, charge, solvent, id):
+def xtb_ts(in_file, calc):
+    solvent = calc.global_parameters.solvent
+    charge = calc.global_parameters.charge
+    multiplicity = calc.global_parameters.multiplicity
+
     if solvent != "Vacuum":
         solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
     else:
         solvent_add = ''
+
+    folder = '/'.join(in_file.split('/')[:-1])
 
     ORCA_TEMPLATE = """!xtb OPTTS
     %pal
     nprocs {}
     end
     {}
-    *xyz {} 1 
+    *xyz {} {}
     {}
     *"""
 
@@ -330,13 +337,35 @@ def xtb_ts(in_file, charge, solvent, id):
         SMDsolvent "{}"
         end'''.format(solvent)
 
-    with open(os.path.join(LAB_SCR_HOME, str(id), in_file)) as f:
+    with open(in_file) as f:
         lines = f.readlines()[2:]
 
-    with open(os.path.join(LAB_SCR_HOME, str(id), 'ts.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(PAL, solvent_add, charge, ''.join(lines)))
+    with open(os.path.join(folder, 'ts.inp'), 'w') as out:
+        out.write(ORCA_TEMPLATE.format(PAL, solvent_add, charge, multiplicity, ''.join(lines)))
 
-    return system("{}/orca ts.inp".format(ORCAPATH), 'xtb_ts.out')
+    os.chdir(folder)
+    a = system("{}/orca ts.inp".format(ORCAPATH), 'xtb_ts.out')
+    with open(os.path.join(folder, "ts.xyz")) as f:
+        lines = f.readlines()
+
+    with open(os.path.join(folder, "xtb_ts.out")) as f:
+        olines= f.readlines()
+        ind = len(olines)-1
+        while olines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+            ind -= 1
+        E = float(olines[ind].split()[4])
+
+        while olines[ind].find("HOMO-LUMO GAP") == -1:
+            ind -= 1
+        hl_gap = float(olines[ind].split()[3])
+
+    e = Ensemble.objects.create()
+    r = Structure.objects.create(number=1, parent_ensemble=e, energy=E, homo_lumo_gap=hl_gap)
+    r.xyz_structure = '\n'.join([i.strip() for i in lines])
+    r.save()
+    e.save()
+    return 0, e
+
 
 def xtb_scan(in_file, calc):
     solvent = calc.global_parameters.solvent
@@ -1227,6 +1256,7 @@ BASICSTEP_TABLE = {
             'Crest': crest,
             'Constrained Optimisation': xtb_scan,
             'Frequency Calculation': xtb_freq,
+            'TS Optimisation': xtb_ts,
         }
 
 time_dict = {}
