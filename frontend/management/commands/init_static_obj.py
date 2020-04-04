@@ -48,3 +48,13 @@ class Command(BaseCommand):
             step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)
             step1.save()
 
+        ###Finishing the process
+        self.verify
+
+    def verify(self):
+        for proc in Procedure.objects.all():
+            assert proc.initial_steps != None
+
+        for step in Step.objects.all():
+            assert step.parent_step != None or step.parent_procedure != None
+
