@@ -439,6 +439,7 @@ def xtb_scan(in_file, calc):
             #assert E == Eb
 
             r.homo_lumo_gap = hl_gap
+            r.save()
             e.structure_set.add(r)
     e.save()
 
