@@ -109,6 +109,10 @@ class Step(models.Model):
     def __repr__(self):
         return self.id
 
+    @property
+    def name(self):
+        return self.step_model.name
+
 class Procedure(models.Model):
     name = models.CharField(max_length=100)
 

@@ -1042,7 +1042,9 @@ def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, st
         calc_obj.date_finished = timezone.now()
 
         for f in glob.glob(os.path.join(LAB_SCR_HOME, str(job_id)) + '/*/'):
-            for ff in glob.glob("{}/*.out".format(f)):
+            print(f)
+            for ff in glob.glob("{}*.out".format(f)):
+                print("FF", ff)
                 fname = ff.split('/')[-1]
                 copyfile(ff, os.path.join(LAB_RESULTS_HOME, str(job_id)) + '/' + fname)
 
