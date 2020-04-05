@@ -1011,7 +1011,7 @@ def run_procedure(drawing, calc_id):
 
     in_ensemble = calc_obj.ensemble
     ind = 1
-
+    step_ind = 1
     while len(steps_to_do) > 0:
         step = steps_to_do.pop()
         calc_obj.current_status = step.step_model.desc
@@ -1020,22 +1020,21 @@ def run_procedure(drawing, calc_id):
         function = BASICSTEP_TABLE[step.step_model.name]
 
         if not step.same_dir:
-            step_dir = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(ind))
+            step_dir = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(step_ind))
             a = system("mkdir -p {}".format(step_dir), force_local=True)
-            in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(ind), "in.xyz")
 
             with open(in_file, 'w') as out:
                 out.write(in_ensemble.structure_set.all()[0].xyz_structure)
         else:
-            ind -= 1
+            step_ind -= 1
 
-            #Dummy file just to give the right folder
-            in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(ind), "dummy.xyz")
+        in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(step_ind), "in.xyz")
 
         os.chdir(step_dir)
         a, e = function(in_file, calc_obj)
 
         ind += 1
+        step_ind += 1
 
         if a != 0:
             calc_obj.status = 3
