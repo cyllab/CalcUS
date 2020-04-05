@@ -792,7 +792,7 @@ def anmr(in_file, calc):
                     for _x in x:
                         out.write("{:.2f},0.0\n".format(_x))
 
-    return a, calc.ensemble
+    return 0, calc.ensemble
 
 def save_to_results(f, calc_obj, multiple=False, out_name=""):
     s = f.split('.')
