@@ -97,13 +97,25 @@
 </center>
 	<script>
 		$(document).ready(function(){
-					g2 = new Dygraph(
-			document.getElementById("uvvis_spectrum"),
-				"/uvvis/{{ calculation.id }}", 
+			g3 = new Dygraph(
+			document.getElementById("nmr_spectrum"),
+				"/nmr/{{ calculation.id }}", 
 				{
 					strokeWidth: 2,	
-					xlabel: "Wavelength (nm)",
-					ylabel: "Absorbance"
+					xlabel: "Chemical shift (ppm)",
+					ylabel: "Intensity",
+					dateWindow: [-10, 0],
+					axes: {
+						x: {
+							axisLabelFormatter: function(ppm) {
+								return -ppm.toPrecision(2);
+							},
+							valueFormatter: function(ppm) {
+								return -ppm.toPrecision(3);
+							}
+						},
+					}
+
 				}          
 			);
 		});
