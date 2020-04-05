@@ -121,6 +121,7 @@ class Procedure(models.Model):
     has_nmr = models.BooleanField(default=False)
     has_freq = models.BooleanField(default=False)
     has_uvvis = models.BooleanField(default=False)
+    has_mo = models.BooleanField(default=False)
 
 class Ensemble(models.Model):
     name = models.CharField(max_length=100, default="Nameless ensemble")
@@ -216,6 +217,10 @@ class Calculation(models.Model):
     @property
     def has_nmr(self):
         return self.procedure.has_nmr
+
+    @property
+    def has_mo(self):
+        return self.procedure.has_mo
 
     def __repr__(self):
         return self.id

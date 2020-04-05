@@ -45,6 +45,7 @@ urlpatterns = [
     path('launch/', views.launch, name='launch'),
     path('launch/<int:pk>', views.launch_pk, name='launch_pk'),
 
+    path('get_cube/', views.get_cube, name='get_cube'),
     path('details/<int:pk>', views.details, name='details'),
     path('next_step/<int:pk>', views.next_step, name='next_step'),
     path('info_table/<int:pk>', views.info_table, name='info_table'),

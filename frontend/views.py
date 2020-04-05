@@ -725,10 +725,44 @@ def uvvis(request, pk):
         return HttpResponse(status=204)
 
 @login_required
+def get_cube(request):
+    if request.method == 'POST':
+        id = int(clean(request.POST['id']))
+        orb = int(clean(request.POST['orb']))
+        calc = Calculation.objects.get(pk=id)
+
+        profile = request.user.profile
+
+        if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+            return HttpResponse(status=403)
+
+        if not calc.has_mo:
+            return HttpResponse(status=403)
+
+        if orb == 0:
+            cube_file = "in-HOMO.cube"
+        elif orb == 1:
+            cube_file = "in-LUMO.cube"
+        elif orb == 2:
+            cube_file = "in-LUMOA.cube"
+        elif orb == 3:
+            cube_file = "in-LUMOB.cube"
+        else:
+            return HttpResponse(status=204)
+        spectrum_file = os.path.join(LAB_RESULTS_HOME, str(id), cube_file)
+
+        if os.path.isfile(spectrum_file):
+            with open(spectrum_file, 'r') as f:
+                lines = f.readlines()
+            return HttpResponse(''.join(lines))
+        else:
+            return HttpResponse(status=204)
+    return HttpResponse(status=204)
+
+@login_required
 def nmr(request, pk):
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
-
 
     profile = request.user.profile
 

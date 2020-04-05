@@ -30,7 +30,12 @@ try:
     is_test = os.environ['LAB_TEST']
 except:
     is_test = False
+import periodictable
 
+ATOMIC_NUMBER = {
+        }
+for el in periodictable.elements:
+    ATOMIC_NUMBER[el.symbol] = el.number
 
 if is_test:
     LAB_SCR_HOME = os.environ['LAB_TEST_SCR_HOME']
@@ -745,6 +750,66 @@ def crest_pre_nmr(in_file, calc):
     return crest_generic(in_file, calc, "NMR")
 
 
+def mo_gen(in_file, calc):
+    ORCA_TEMPLATE = """!HF-3c SP PAL8
+%plots
+dim1 45
+dim2 45
+dim3 45
+min1 0
+max1 0
+min2 0
+max2 0
+min3 0
+max3 0
+Format Gaussian_Cube
+MO("in-HOMO.cube",{},0);
+MO("in-LUMO.cube",{},0);
+MO("in-LUMOA.cube",{},0);
+MO("in-LUMOB.cube",{},0);
+end
+*xyzfile {} {} {}
+"""
+
+    struct = calc.ensemble.structure_set.all()[0].xyz_structure
+    electrons = 0
+    for line in struct.split('\n')[2:]:
+        if line.strip() == "":
+            continue
+        el = line.split()[0]
+        electrons += ATOMIC_NUMBER[el]
+
+    electrons -= calc.global_parameters.charge
+
+    if calc.global_parameters.multiplicity != 1:
+        print("Unimplemented multiplicity")
+        return -1, 'e'
+
+    n_HOMO = int(electrons/2)-1
+    n_LUMO = int(electrons/2)
+    n_LUMO1 = int(electrons/2)+1
+    n_LUMO2 = int(electrons/2)+2
+
+    solvent = calc.global_parameters.solvent
+    charge = calc.global_parameters.charge
+    multiplicity = calc.global_parameters.multiplicity
+
+    fname = in_file.split('/')[-1]
+    folder = '/'.join(in_file.split('/')[:-1])
+
+    with open("{}/mo.inp".format(folder), 'w') as out:
+        out.write(ORCA_TEMPLATE.format(n_HOMO, n_LUMO, n_LUMO1, n_LUMO2, charge, multiplicity, fname))
+
+    a = system("{}/orca mo.inp".format(ORCAPATH), 'orca_mo.out')
+    if a != 0:
+        return a, 'e'
+
+    save_to_results("{}/in-HOMO.cube".format(folder), calc)
+    save_to_results("{}/in-LUMO.cube".format(folder), calc)
+    save_to_results("{}/in-LUMOA.cube".format(folder), calc)
+    save_to_results("{}/in-LUMOB.cube".format(folder), calc)
+    return 0, calc.result_ensemble
+
 def enso(in_file, calc):
 
     solvent = calc.global_parameters.solvent
@@ -762,7 +827,7 @@ def enso(in_file, calc):
 
     a = system("enso.py -run", 'enso.out')
 
-    return a, calc.result_ensemble
+    return a, calc.ensemble
 
 def anmr(in_file, calc):
     a = system("anmr", 'anmr.out')
@@ -792,7 +857,7 @@ def anmr(in_file, calc):
                     for _x in x:
                         out.write("{:.2f},0.0\n".format(_x))
 
-    return 0, calc.result_ensemble
+    return 0, calc.ensemble
 
 def save_to_results(f, calc_obj, multiple=False, out_name=""):
     s = f.split('.')
@@ -894,56 +959,6 @@ def xtb_stda(in_file, calc):
 
     return 0, calc.result_ensemble
 
-@app.task
-def nmr_enso(id, drawing, charge, solvent, calc_obj=None, remote=False):
-
-    steps = [
-        [xtb_opt, ["initial.xyz", charge, solvent], "Optimizing geometry", "Failed to optimize the geometry"],
-        [crest, ["xtbopt.xyz", charge, solvent, "NMR"], "Generating conformer ensemble", "Failed to generate the conformers"],
-        [enso, [charge, solvent], "Preparing the NMR prediction calculation", "Failed to prepare the NMR prediction calculation"],
-        [enso_run, [], "Running the NMR prediction calculation", "Failed to run the NMR prediction calculation"],
-        [anmr, [], "Creating the final spectrum", "Failed to create the final spectrum"],
-    ]
-
-    a = run_steps(steps, calc_obj, drawing, id)
-    if a != 0:
-        return
-
-    a = save_to_results("xtbopt.xyz", calc_obj)
-    if a != 0:
-        return
-
-    a = save_to_results("crest_conformers.xyz", calc_obj, multiple=True)
-    if a != 0:
-        return
-
-
-    #r = Structure.objects.create(number=1, energy=E, rel_energy=0., boltzmann_weight=1., homo_lumo_gap=hl_gap)
-
-    #r.save()
-    #calc_obj.structure_set.add(r)
-
-    with open("{}/anmr.dat".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))) as f:
-        lines = f.readlines()
-        with open("{}/nmr.csv".format(os.path.join(LAB_RESULTS_HOME, id)), 'w') as out:
-                out.write("Chemical shift (ppm),Intensity\n")
-                for ind, line in enumerate(lines):
-                    if ind % 15 == 0:
-                        sline = line.strip().split()
-                        if float(sline[1]) > 0.001:
-                            out.write("{},{}\n".format(-float(sline[0]), sline[1]))
-                        else:
-                            out.write("{},{}\n".format(-float(sline[0]), 0.0))
-                if float(lines[0].strip().split()[0]) > 0.:
-                    x = np.arange(-float(lines[0].strip().split()[0]), 0.0, 0.1)
-                    for _x in x:
-                        out.write("{:.2f},0.0\n".format(_x))
-                if float(lines[-1].strip().split()[0]) < 10.:
-                    x = np.arange(-10.0, -float(lines[-1].strip().split()[0]), 0.1)
-                    for _x in x:
-                        out.write("{:.2f},0.0\n".format(_x))
-    return 0
-
 
 BASICSTEP_TABLE = {
             'Geometrical Optimisation': xtb_opt,
@@ -955,6 +970,7 @@ BASICSTEP_TABLE = {
             'Crest Pre NMR': crest_pre_nmr,
             'Enso': enso,
             'Anmr': anmr,
+            'MO Calculation': mo_gen,
         }
 
 time_dict = {}
@@ -1022,13 +1038,13 @@ def run_procedure(drawing, calc_id):
         if not step.same_dir:
             step_dir = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(step_ind))
             a = system("mkdir -p {}".format(step_dir), force_local=True)
-            in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(step_ind), "in.xyz")
 
+            in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(step_ind), "in.xyz")
             with open(in_file, 'w') as out:
                 out.write(in_ensemble.structure_set.all()[0].xyz_structure)
         else:
-            step_ind -= 1
             in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(step_ind), "in.xyz")
+            step_ind -= 1
 
 
         os.chdir(step_dir)

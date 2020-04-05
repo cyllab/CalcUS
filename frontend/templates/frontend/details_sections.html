@@ -124,6 +124,70 @@
 </div>
 {% endif %}
 
+{% if calculation.has_mo == True %}
+<span class="tag is-danger is-large">Molecular Orbitals</span>
+<div class="columns box">
+	<div class="column">
+
+	<div id="mo_viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
+
+	<script>
+
+	   	var mo_viewer = $3Dmol.createViewer("mo_viewer_div");
+	    	mo_viewer.setBackgroundColor(0xffffff);
+		function get_mo_struct() {
+			$.ajax({
+				method: "POST",	 	 
+				url: "/get_structure/",
+				data: {'id': {{ calculation.id }}, 'num': 1},
+
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				success: function(data, textStatus, xhr) {
+					mo_viewer.addModel(data, "xyz");
+					mo_viewer.setStyle({}, {stick:{}});
+					mo_viewer.zoomTo();
+					mo_viewer.render();
+				}
+			});
+		}
+
+		function get_cube(orb) {
+			$.ajax({
+				method: "POST",	 	 
+				url: "/get_cube/",
+				data: {
+					'id': {{ calculation.id }},
+					'orb': orb,
+				},
+
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				success: function(volumedata, textStatus, xhr) {
+
+					var voldata = new $3Dmol.VolumeData(volumedata, "cube");
+						mo_viewer.clear();
+						get_mo_struct();
+						mo_viewer.addIsosurface(voldata, {isoval: 0.0001, color: "blue", alpha: 0.95, smoothness: 10});              
+						mo_viewer.addIsosurface(voldata, {isoval: -0.0001, color: "red", alpha: 0.95, smoothness: 10}); 
+						mo_viewer.zoomTo();
+						mo_viewer.render();
+					}
+			});
+		}
+
+	</script>
+	<button class="button" onclick="get_cube(0);">HOMO</button>
+	<button class="button" onclick="get_cube(1);">LUMO</button>
+	<button class="button" onclick="get_cube(2);">LUMO+1</button>
+	<button class="button" onclick="get_cube(3);">LUMO+2</button>
+	</div>
+
+</div>
+{% endif %}
+
 <span class="tag is-danger is-large">Parameters</span>
 <div class="columns box">
 	<div class="column">

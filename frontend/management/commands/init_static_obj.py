@@ -69,6 +69,11 @@ class Command(BaseCommand):
             print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Creating the final NMR Spectrum", error_message="Failed to create the final NMR spectrum")
 
+        name = "MO Calculation"
+        if self.is_absent(BasicStep, name):
+            print("Adding BasicStep: {}".format(name))
+            a = BasicStep.objects.create(name=name, desc="Creating the Molecular Orbitals", error_message="Failed to create the Molecular Orbitals")
+
 
 
         ###Procedure creations
@@ -154,6 +159,21 @@ class Command(BaseCommand):
 
             a.save()
 
+        name = "MO Generation"
+        if self.is_absent(Procedure, name):
+            print("Adding Procedure: {}".format(name))
+            a = Procedure.objects.create(name=name)
+
+            s_opt = BasicStep.objects.get(name="Geometrical Optimisation")
+            step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)
+            step1.save()
+
+            s_freq = BasicStep.objects.get(name="MO Calculation")
+            step2 = Step.objects.create(step_model=s_freq, parent_step=step1, from_procedure=a)
+            step2.save()
+
+            a.save()
+
         name = "NMR Prediction"
         if self.is_absent(Procedure, name):
             print("Adding Procedure: {}".format(name))
@@ -186,6 +206,8 @@ class Command(BaseCommand):
                     proc.has_nmr = True
                 elif step.step_model.name == "UV-Vis Calculation":
                     proc.has_uvvis = True
+                elif step.step_model.name == "MO Calculation":
+                    proc.has_mo = True
         proc.save()
 
         for step in Step.objects.all():
