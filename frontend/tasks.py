@@ -774,7 +774,7 @@ def anmr(in_file, calc):
 
     with open("{}/anmr.dat".format(folder)) as f:
         lines = f.readlines()
-        with open("{}/nmr.csv".format(os.path.join(LAB_RESULTS_HOME, id)), 'w') as out:
+        with open("{}/nmr.csv".format(os.path.join(LAB_RESULTS_HOME, str(calc.id))), 'w') as out:
                 out.write("Chemical shift (ppm),Intensity\n")
                 for ind, line in enumerate(lines):
                     if ind % 15 == 0:

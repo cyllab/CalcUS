@@ -97,8 +97,31 @@
 								);
 
 							{% endif %}
+							{% if calculation.hes_nmr %}
 
-							//conf_number = {{ calculation.result_ensemble.structure_set.count }};
+							g3 = new Dygraph(
+							document.getElementById("nmr_spectrum"),
+								"/nmr/{{ calculation.id }}", 
+								{
+									strokeWidth: 2,	
+									xlabel: "Chemical shift (ppm)",
+									ylabel: "Intensity",
+									dateWindow: [-10, 0],
+									axes: {
+										x: {
+											axisLabelFormatter: function(ppm) {
+												return -ppm.toPrecision(2);
+											},
+											valueFormatter: function(ppm) {
+												return -ppm.toPrecision(3);
+											}
+										},
+									}
+
+								}          
+							);
+
+							{% endif %}
 							$.ajax({
 								method: "GET",	 	 
 								url: "/conformer_table/{{ calculation.id }}",

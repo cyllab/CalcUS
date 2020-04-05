@@ -88,6 +88,30 @@
 </div>
 {% endif %}
 
+{% if calculation.has_nmr == True %}
+<span class="tag is-danger is-large">NMR</span>
+<div class="columns box">
+	<div class="column">
+<center>
+	<div id="nmr_spectrum" style="width:80%; height:400px; margin-bottom: 30px;"></div>
+</center>
+	<script>
+		$(document).ready(function(){
+					g2 = new Dygraph(
+			document.getElementById("uvvis_spectrum"),
+				"/uvvis/{{ calculation.id }}", 
+				{
+					strokeWidth: 2,	
+					xlabel: "Wavelength (nm)",
+					ylabel: "Absorbance"
+				}          
+			);
+		});
+	</script>
+	</div>
+</div>
+{% endif %}
+
 <span class="tag is-danger is-large">Parameters</span>
 <div class="columns box">
 	<div class="column">
