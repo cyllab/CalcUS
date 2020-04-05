@@ -728,16 +728,15 @@ def uvvis(request, pk):
 def nmr(request, pk):
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
-    type = calc.type
 
-    if type != 3:
-        return HttpResponse(status=403)
 
     profile = request.user.profile
 
     if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
+    if not calc.has_nmr: 
+        return HttpResponse(status=403)
     spectrum_file = os.path.join(LAB_RESULTS_HOME, id, "nmr.csv")
 
     if os.path.isfile(spectrum_file):
