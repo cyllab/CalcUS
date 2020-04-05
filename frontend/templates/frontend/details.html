@@ -80,8 +80,23 @@
 							$("#calc_title").addClass("has-background-success"); 
 							$('#status_box').load("/status/{{ calculation.id }}");
 
-							
+							{% if calculation.has_freq %}
+							$("#vib_table").load("/vib_table/{{ calculation.id }}");
+							{% endif %}
 
+							{% if calculation.has_uvvis %}
+
+							g2 = new Dygraph(
+								document.getElementById("uvvis_spectrum"),
+									"/uvvis/{{ calculation.id }}", 
+									{
+										strokeWidth: 2,	
+										xlabel: "Wavelength (nm)",
+										ylabel: "Absorbance"
+									}          
+								);
+
+							{% endif %}
 
 							//conf_number = {{ calculation.result_ensemble.structure_set.count }};
 							$.ajax({
@@ -192,8 +207,11 @@
 	</div>
 
 	<strong>{{ calculation.text_type }}</strong>
-
+	<br />
+	<br />
+	<span class="tag is-danger is-large">Geometries</span>
 	<div class="columns box">
+
 		<div class="column">
 			<script>
 				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {useServices: false});

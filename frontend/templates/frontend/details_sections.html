@@ -1,5 +1,7 @@
 {% if calculation.has_freq == True %}
 
+	<span class="tag is-danger is-large">Frequencies</span>
+
 	<div class="columns box">
 		<div class="column">
 
@@ -63,15 +65,14 @@
 {% endif %}
 
 {% if calculation.has_uvvis == True %}
-<div class="box">
+<span class="tag is-danger is-large">UV-Vis</span>
+<div class="columns box">
+	<div class="column">
 <center>
 	<div id="uvvis_spectrum" style="width:80%; height:400px; margin-bottom: 30px;"></div>
 </center>
 	<script>
 		$(document).ready(function(){
-
-		$("#vib_table").load("/vib_table/{{ calculation.id }}");
-
 					g2 = new Dygraph(
 			document.getElementById("uvvis_spectrum"),
 				"/uvvis/{{ calculation.id }}", 
@@ -83,5 +84,13 @@
 			);
 		});
 	</script>
+	</div>
 </div>
 {% endif %}
+
+<span class="tag is-danger is-large">Parameters</span>
+<div class="columns box">
+	<div class="column">
+	</div>
+</div>
+
