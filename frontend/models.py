@@ -213,6 +213,10 @@ class Calculation(models.Model):
     def has_uvvis(self):
         return self.procedure.has_uvvis
 
+    @property
+    def has_nmr(self):
+        return self.procedure.has_nmr
+
     def __repr__(self):
         return self.id
 
