@@ -248,9 +248,12 @@
 
 	{% include 'frontend/details_sections.html' %}	
 
-	<div class="box">
-		<table class="table" id="info_table">
-		</table>
+	<span class="tag is-danger is-large">Thermochemistry</span>
+	<div class="columns box">
+			<div class="column">
+				<table class="table" id="info_table">
+				</table>
+			</div>
 	</div>
 	<div id="next_step_div">
 		{% if calculation.status == 2 %}

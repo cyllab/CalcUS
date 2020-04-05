@@ -745,19 +745,54 @@ def crest_pre_nmr(in_file, calc):
     return crest_generic(in_file, calc, "NMR")
 
 
-def enso(charge, solvent):
+def enso(in_file, calc):
+
+    solvent = calc.global_parameters.solvent
+    charge = calc.global_parameters.charge
+
     if solvent != "Vacuum":
         solvent_add = '-solv {}'.format(SOLVENT_TABLE[solvent])
     else:
         solvent_add = ''
 
-    return system("enso.py {} --charge {}".format(solvent_add, charge), 'enso_pre.out')
+    a = system("enso.py {} --charge {}".format(solvent_add, charge), 'enso_pre.out')
 
-def enso_run():
-    return system("enso.py -run", 'enso.out')
+    if a != 0:
+        return a, 'e'
 
-def anmr():
-    return system("anmr", 'anmr.out')
+    a = system("enso.py -run", 'enso.out')
+
+    return a, calc.ensemble
+
+def anmr(in_file, calc):
+    a = system("anmr", 'anmr.out')
+
+    if a != 0:
+        return a, 'e'
+
+    folder = '/'.join(in_file.split('/')[:-1])
+
+    with open("{}/anmr.dat".format(folder)) as f:
+        lines = f.readlines()
+        with open("{}/nmr.csv".format(os.path.join(LAB_RESULTS_HOME, id)), 'w') as out:
+                out.write("Chemical shift (ppm),Intensity\n")
+                for ind, line in enumerate(lines):
+                    if ind % 15 == 0:
+                        sline = line.strip().split()
+                        if float(sline[1]) > 0.001:
+                            out.write("{},{}\n".format(-float(sline[0]), sline[1]))
+                        else:
+                            out.write("{},{}\n".format(-float(sline[0]), 0.0))
+                if float(lines[0].strip().split()[0]) > 0.:
+                    x = np.arange(-float(lines[0].strip().split()[0]), 0.0, 0.1)
+                    for _x in x:
+                        out.write("{:.2f},0.0\n".format(_x))
+                if float(lines[-1].strip().split()[0]) < 10.:
+                    x = np.arange(-10.0, -float(lines[-1].strip().split()[0]), 0.1)
+                    for _x in x:
+                        out.write("{:.2f},0.0\n".format(_x))
+
+    return a, calc.ensemble
 
 def save_to_results(f, calc_obj, multiple=False, out_name=""):
     s = f.split('.')
@@ -917,6 +952,9 @@ BASICSTEP_TABLE = {
             'Frequency Calculation': xtb_freq,
             'TS Optimisation': xtb_ts,
             'UV-Vis Calculation': xtb_stda,
+            'Crest Pre NMR': crest_pre_nmr,
+            'Enso': enso,
+            'Anmr': anmr,
         }
 
 time_dict = {}
@@ -980,12 +1018,19 @@ def run_procedure(drawing, calc_id):
         calc_obj.current_step = ind
         calc_obj.save()
         function = BASICSTEP_TABLE[step.step_model.name]
-        step_dir = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(ind))
-        a = system("mkdir -p {}".format(step_dir), force_local=True)
-        in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(ind), "in.xyz")
 
-        with open(in_file, 'w') as out:
-            out.write(in_ensemble.structure_set.all()[0].xyz_structure)
+        if not step.same_dir:
+            step_dir = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(ind))
+            a = system("mkdir -p {}".format(step_dir), force_local=True)
+            in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(ind), "in.xyz")
+
+            with open(in_file, 'w') as out:
+                out.write(in_ensemble.structure_set.all()[0].xyz_structure)
+        else:
+            ind -= 1
+
+            #Dummy file just to give the right folder
+            in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(ind), "dummy.xyz")
 
         os.chdir(step_dir)
         a, e = function(in_file, calc_obj)

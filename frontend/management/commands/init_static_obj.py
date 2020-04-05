@@ -59,6 +59,17 @@ class Command(BaseCommand):
             print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Calculating UV-Vis spectrum", error_message="Failed to calculate the UV-Vis spectrum")
 
+        name = "Enso"
+        if self.is_absent(BasicStep, name):
+            print("Adding BasicStep: {}".format(name))
+            a = BasicStep.objects.create(name=name, desc="Calculating NMR Spectrum", error_message="Failed to calculate the NMR spectrum", same_dir=True)
+
+        name = "Anmr"
+        if self.is_absent(BasicStep, name):
+            print("Adding BasicStep: {}".format(name))
+            a = BasicStep.objects.create(name=name, desc="Creating the final NMR Spectrum", error_message="Failed to create the final NMR spectrum", same_dir=True)
+
+
 
         ###Procedure creations
 
@@ -143,6 +154,25 @@ class Command(BaseCommand):
 
             a.save()
 
+        name = "NMR Prediction"
+        if self.is_absent(Procedure, name):
+            print("Adding Procedure: {}".format(name))
+            a = Procedure.objects.create(name=name)
+
+            s_crest = BasicStep.objects.get(name="Crest Pre NMR")
+            step1 = Step.objects.create(step_model=s_crest, parent_procedure=a, from_procedure=a)
+            step1.save()
+
+            s_enso = BasicStep.objects.get(name="Enso")
+            step2 = Step.objects.create(step_model=s_enso, parent_step=step1, from_procedure=a)
+            step2.save()
+
+            s_anmr = BasicStep.objects.get(name="Anmr")
+            step3 = Step.objects.create(step_model=s_anmr, parent_step=step2, from_procedure=a)
+            step3.save()
+
+            a.save()
+
         ###Finishing the process
         self.verify()
 
@@ -152,7 +182,7 @@ class Command(BaseCommand):
             for step in proc.step_set.all():
                 if step.step_model.name == "Frequency Calculation":
                     proc.has_freq = True
-                elif step.step_model.name == "NMR Calculation":
+                elif step.step_model.name == "Anmr" or step.step_model.name == "Enso":
                     proc.has_nmr = True
                 elif step.step_model.name == "UV-Vis Calculation":
                     proc.has_uvvis = True

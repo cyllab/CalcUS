@@ -91,6 +91,39 @@
 <span class="tag is-danger is-large">Parameters</span>
 <div class="columns box">
 	<div class="column">
+		<center>
+			<table class="table is-bordered">
+				<tbody>
+					<tr>
+						<th>Charge</th>
+						<td>{{ calculation.global_parameters.charge }}</td>
+						<th>Basis set</th>
+						<td>{{ calculation.global_parameters.basis_set }}</td>
+					</tr>
+					<tr>
+						<th>Multiplicity</th>
+						<td>{{ calculation.global_parameters.multiplicity }}</td>
+						<th>Solvent</th>
+						<td>{{ calculation.global_parameters.solvent }}</td>
+					</tr>
+
+					<tr>
+						<th>Program</th>
+						<td>{{ calculation.global_parameters.program }}</td>
+						<th>Solvation model</th>
+						<td>{{ calculation.global_parameters.solvation_model }}</td>
+					</tr>
+
+					<tr>
+						<th>Method/Functional</th>
+						<td>{{ calculation.global_parameters.method }}</td>
+						<th>Miscellaneous</th>
+						<td>{{ calculation.global_parameters.misc }}</td>
+					</tr>
+
+				</tbody>
+			</table>
+		</center>
 	</div>
 </div>
 

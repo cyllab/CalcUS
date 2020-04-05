@@ -106,6 +106,8 @@ class Step(models.Model):
 
     parameters = models.ForeignKey('Parameters', on_delete=models.CASCADE, blank=True, null=True)
 
+    same_dir = models.BooleanField(default=False)
+
     def __repr__(self):
         return self.id
 
@@ -152,6 +154,11 @@ class Parameters(models.Model):
     charge = models.IntegerField()
     multiplicity = models.IntegerField()
     solvent = models.CharField(max_length=100, default='vacuum')
+    solvation_model = models.CharField(max_length=100, default='gbsa')
+    program = models.CharField(max_length=100, default='xtb')
+    basis_set = models.CharField(max_length=100, default='min')
+    method = models.CharField(max_length=100, default='GFN2-xTB')
+    misc = models.CharField(max_length=1000, default='')
 
     def __repr__(self):
         return self.id
