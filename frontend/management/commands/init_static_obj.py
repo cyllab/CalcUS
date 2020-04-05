@@ -62,12 +62,12 @@ class Command(BaseCommand):
         name = "Enso"
         if self.is_absent(BasicStep, name):
             print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Calculating NMR Spectrum", error_message="Failed to calculate the NMR spectrum", same_dir=True)
+            a = BasicStep.objects.create(name=name, desc="Calculating NMR Spectrum", error_message="Failed to calculate the NMR spectrum")
 
         name = "Anmr"
         if self.is_absent(BasicStep, name):
             print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Creating the final NMR Spectrum", error_message="Failed to create the final NMR spectrum", same_dir=True)
+            a = BasicStep.objects.create(name=name, desc="Creating the final NMR Spectrum", error_message="Failed to create the final NMR spectrum")
 
 
 
@@ -164,11 +164,11 @@ class Command(BaseCommand):
             step1.save()
 
             s_enso = BasicStep.objects.get(name="Enso")
-            step2 = Step.objects.create(step_model=s_enso, parent_step=step1, from_procedure=a)
+            step2 = Step.objects.create(step_model=s_enso, parent_step=step1, from_procedure=a, same_dir=True)
             step2.save()
 
             s_anmr = BasicStep.objects.get(name="Anmr")
-            step3 = Step.objects.create(step_model=s_anmr, parent_step=step2, from_procedure=a)
+            step3 = Step.objects.create(step_model=s_anmr, parent_step=step2, from_procedure=a, same_dir=True)
             step3.save()
 
             a.save()

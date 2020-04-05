@@ -762,7 +762,7 @@ def enso(in_file, calc):
 
     a = system("enso.py -run", 'enso.out')
 
-    return a, calc.ensemble
+    return a, calc.result_ensemble
 
 def anmr(in_file, calc):
     a = system("anmr", 'anmr.out')
@@ -792,7 +792,7 @@ def anmr(in_file, calc):
                     for _x in x:
                         out.write("{:.2f},0.0\n".format(_x))
 
-    return 0, calc.ensemble
+    return 0, calc.result_ensemble
 
 def save_to_results(f, calc_obj, multiple=False, out_name=""):
     s = f.split('.')
@@ -1022,13 +1022,14 @@ def run_procedure(drawing, calc_id):
         if not step.same_dir:
             step_dir = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(step_ind))
             a = system("mkdir -p {}".format(step_dir), force_local=True)
+            in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(step_ind), "in.xyz")
 
             with open(in_file, 'w') as out:
                 out.write(in_ensemble.structure_set.all()[0].xyz_structure)
         else:
             step_ind -= 1
+            in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(step_ind), "in.xyz")
 
-        in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(step_ind), "in.xyz")
 
         os.chdir(step_dir)
         a, e = function(in_file, calc_obj)

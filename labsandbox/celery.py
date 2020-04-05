@@ -9,7 +9,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'labsandbox.settings')
 try:
     is_test = os.environ['LAB_TEST']
 except:
-    app = Celery('labsandbox', broker='amqp://selenium:selenium_password@localhost:5672/test_vhost')
+    app = Celery('labsandbox')
 else:
     app = Celery('labsandbox')
 
