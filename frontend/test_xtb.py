@@ -45,13 +45,13 @@ def create_calculation(in_file, proc, solvent, user, project):
     ext = fname.split('.')[-1]
 
     charge = 0
-    if fname.find("anion"):
+    if fname.find("anion") != -1:
         charge = -1
-    elif fname.find("dianion"):
+    elif fname.find("dianion") != -1:
         charge = -2
-    elif fname.find("cation"):
+    elif fname.find("cation") != -1:
         charge = 1
-    elif fname.find("dication"):
+    elif fname.find("dication") != -1:
         charge = 2
 
     with open(in_file) as f:
@@ -114,6 +114,8 @@ class JobTestCase(TestCase):
 
         retval = run_procedure(drawing, calc.id)
 
+        calc = Calculation.objects.get(pk=calc.id)
+
         for f in glob.glob(os.path.join(SCR_DIR, str(calc.id)) + '/*/'):
             for ff in glob.glob("{}*.out".format(f)):
                 fname = ff.split('/')[-1]
@@ -134,14 +136,16 @@ class JobTestCase(TestCase):
 
         self.status = calc.status
         self.id = str(calc.id)
+        return calc
 
     def tearDown(self):
         try:
             a = self.status
+            if a == 2:
+                if os.path.isdir(os.path.join(SCR_DIR, self.id)):
+                    rmtree(os.path.join(SCR_DIR, self.id))
         except:
             pass
-        if os.path.isdir(os.path.join(SCR_DIR, self.id)):
-            rmtree(os.path.join(SCR_DIR, self.id))
 
     def setUp(self):
         call_command('init_static_obj')
@@ -167,37 +171,32 @@ class JobTestCase(TestCase):
         if os.path.isdir(RESULTS_DIR):
             rmtree(RESULTS_DIR)
 
-def gen_test(in_file, proc, solvent):
+def gen_test(in_file, type, solvent):
     def test(self):
         c = create_calculation(in_file, type, solvent, self.user, self.project)
 
-        self.run_calc(False, c, type)
+        c = self.run_calc(False, c, type)
 
         id = str(c.id)
 
         self.assertEqual(c.status, 2)
+        self.assertTrue(c.result_ensemble != None)
 
         calc_path = os.path.join(RESULTS_DIR, id)
 
         if type == "Simple Optimisation":
-            #self.assertTrue(os.path.isfile(os.path.join(calc_path, "xtbopt.xyz")))
+            self.assertTrue(c.result_ensemble.structure_set.count() == 1)
             with open(os.path.join(calc_path, "xtb_opt.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
 
-        '''
-        elif type == 1:
-            self.assertTrue(os.path.isfile(os.path.join(calc_path, "xtbopt.xyz")))
-            with open(os.path.join(calc_path, "xtb_opt.out")) as f:
-                lines = f.readlines()
-            self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
-
+        elif type == "Conformational Search":
             with open(os.path.join(calc_path, "crest.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("CREST terminated normally.") != -1)
-
-        elif type == 2:
-            self.assertTrue(os.path.isfile(os.path.join(calc_path, "xtbopt.xyz")))
+        elif type == "Constrained Optimisation":
+            pass
+        elif type == "Simple UV-Vis":
             with open(os.path.join(calc_path, "xtb_opt.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
@@ -209,8 +208,14 @@ def gen_test(in_file, proc, solvent):
             with open(os.path.join(calc_path, "stda.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-2].find("sTDA done.") != -1)
-        elif type == 4:
-            self.assertTrue(os.path.isfile(os.path.join(calc_path, "xtbopt.xyz")))
+        elif type == "MO Generation":
+            with open(os.path.join(calc_path, "xtb_opt.out")) as f:
+                lines = f.readlines()
+            self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
+            with open(os.path.join(calc_path, "orca_mo.out")) as f:
+                lines = f.readlines()
+            self.assertTrue(lines[-2].find("ORCA TERMINATED NORMALLY") != -1)
+        elif type == "Opt+Freq":
             with open(os.path.join(calc_path, "xtb_opt.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
@@ -218,7 +223,16 @@ def gen_test(in_file, proc, solvent):
             with open(os.path.join(calc_path, "xtb_freq.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
-        '''
+        elif type == "TS+Freq":
+            with open(os.path.join(calc_path, "xtb_ts.out")) as f:
+                lines = f.readlines()
+            self.assertTrue(lines[-2].find("ORCA TERMINATED NORMALLY") != -1)
+
+            with open(os.path.join(calc_path, "xtb_freq.out")) as f:
+                lines = f.readlines()
+            self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
+        elif type == "NMR Prediction":
+            pass
     return test
 
 
@@ -230,12 +244,20 @@ input_files = [
                 'enolate_anion.mol',
                 'ethanol.sdf',
                 'EtMgBr.mol',
-                'FeCl3.mol',
                 'NH3.mol',
                 'propane.mol'
                 ]
 #TYPES = [0, 1, 2, 3]
-TYPES = ["Simple Optimisation"]
+TYPES = [
+            "Simple Optimisation",
+            #"Constrained Optimisation",
+            #"Conformational Search",
+            "Opt+Freq",
+            "TS+Freq",
+            "Simple UV-Vis",
+            #"NMR Prediction",
+            "MO Generation",
+        ]
 
 for type in TYPES:
     solvent = "Vacuum"
@@ -253,6 +275,7 @@ for solv in SOLVENTS:
             test_name = "test_{}_{}_{}".format(in_name, type, solv)
             test = gen_test(os.path.join(tests_dir, f), type, solv)
             setattr(JobTestCase, test_name, test)
+'''
 class ModelTestCase(TestCase):
     def setUp(self):
         self.bs1 = BasicStep.objects.create(name="step1")
@@ -365,4 +388,3 @@ class ViewTestCase(TestCase):
         self.assertEqual(c.global_parameters.charge, 0)
 
         self.assertTrue(os.path.isdir(os.path.join(SCR_DIR, str(c.id))))
-'''

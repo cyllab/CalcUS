@@ -3,6 +3,13 @@ import os
 from django.core.management.base import BaseCommand
 from frontend.models import *
 
+try:
+    os.environ['LAB_TEST']
+except:
+    is_test = False
+else:
+    is_test = True
+
 class Command(BaseCommand):
     help = 'Initializes the procedures'
 
@@ -15,63 +22,67 @@ class Command(BaseCommand):
         else:
             return False
 
+    def print(self, txt):
+        if not is_test:
+            print(txt)
+
     def handle(self, *args, **options):
         ###BasicStep creations
 
         ###Template:
         #name = "Geometrical Optimisation"
         #if self.is_absent(BasicStep, name):
-        #    print("Adding BasicStep: {}".format(name))
+        #    self.print("Adding BasicStep: {}".format(name))
         #    a = BasicStep.objects.create(name=name)
 
         name = "Geometrical Optimisation"
         if self.is_absent(BasicStep, name):
-            print("Adding BasicStep: {}".format(name))
+            self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Optimizing geometry", error_message="Failed to optimize geometry")
 
         name = "Crest"
         if self.is_absent(BasicStep, name):
-            print("Adding BasicStep: {}".format(name))
+            self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Finding conformers", error_message="Failed to find the conformers")
 
         name = "Crest Pre NMR"
         if self.is_absent(BasicStep, name):
-            print("Adding BasicStep: {}".format(name))
+            self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Finding conformers", error_message="Failed to find the conformers")
 
         name = "Constrained Optimisation"
         if self.is_absent(BasicStep, name):
-            print("Adding BasicStep: {}".format(name))
+            self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Optimizing geometry", error_message="Failed to optimize geometry")
 
         name = "Frequency Calculation"
         if self.is_absent(BasicStep, name):
-            print("Adding BasicStep: {}".format(name))
+            self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Calculating frequencies", error_message="Failed to calculate frequencies")
 
         name = "TS Optimisation"
         if self.is_absent(BasicStep, name):
-            print("Adding BasicStep: {}".format(name))
+            self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Optimizing the transition state", error_message="Failed to optimize the transition state")
 
         name = "UV-Vis Calculation"
         if self.is_absent(BasicStep, name):
-            print("Adding BasicStep: {}".format(name))
+            self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Calculating UV-Vis spectrum", error_message="Failed to calculate the UV-Vis spectrum")
 
         name = "Enso"
         if self.is_absent(BasicStep, name):
-            print("Adding BasicStep: {}".format(name))
+            self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Calculating NMR Spectrum", error_message="Failed to calculate the NMR spectrum")
 
         name = "Anmr"
         if self.is_absent(BasicStep, name):
-            print("Adding BasicStep: {}".format(name))
+            self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Creating the final NMR Spectrum", error_message="Failed to create the final NMR spectrum")
 
         name = "MO Calculation"
         if self.is_absent(BasicStep, name):
-            print("Adding BasicStep: {}".format(name))
+            self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Creating the Molecular Orbitals", error_message="Failed to create the Molecular Orbitals")
 
 
@@ -81,12 +92,12 @@ class Command(BaseCommand):
         ###Template:
         #name = "Simple Optimisation"
         #if self.is_absent(Procedure, name):
-        #    print("Adding Procedure: {}".format(name))
+        #    self.print("Adding Procedure: {}".format(name))
         #    a = Procedure.objects.create(name=name)
 
         name = "Simple Optimisation"
         if self.is_absent(Procedure, name):
-            print("Adding Procedure: {}".format(name))
+            self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
 
             s_opt = BasicStep.objects.get(name="Geometrical Optimisation")
@@ -96,7 +107,7 @@ class Command(BaseCommand):
 
         name = "Conformational Search"
         if self.is_absent(Procedure, name):
-            print("Adding Procedure: {}".format(name))
+            self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
 
             s_opt = BasicStep.objects.get(name="Crest")
@@ -106,7 +117,7 @@ class Command(BaseCommand):
 
         name = "Constrained Optimisation"
         if self.is_absent(Procedure, name):
-            print("Adding Procedure: {}".format(name))
+            self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
 
             s_opt = BasicStep.objects.get(name="Constrained Optimisation")
@@ -116,7 +127,7 @@ class Command(BaseCommand):
 
         name = "Opt+Freq"
         if self.is_absent(Procedure, name):
-            print("Adding Procedure: {}".format(name))
+            self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
 
             s_opt = BasicStep.objects.get(name="Geometrical Optimisation")
@@ -131,7 +142,7 @@ class Command(BaseCommand):
 
         name = "TS+Freq"
         if self.is_absent(Procedure, name):
-            print("Adding Procedure: {}".format(name))
+            self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
 
             s_opt = BasicStep.objects.get(name="TS Optimisation")
@@ -146,7 +157,7 @@ class Command(BaseCommand):
 
         name = "Simple UV-Vis"
         if self.is_absent(Procedure, name):
-            print("Adding Procedure: {}".format(name))
+            self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
 
             s_opt = BasicStep.objects.get(name="Geometrical Optimisation")
@@ -161,7 +172,7 @@ class Command(BaseCommand):
 
         name = "MO Generation"
         if self.is_absent(Procedure, name):
-            print("Adding Procedure: {}".format(name))
+            self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
 
             s_opt = BasicStep.objects.get(name="Geometrical Optimisation")
@@ -176,7 +187,7 @@ class Command(BaseCommand):
 
         name = "NMR Prediction"
         if self.is_absent(Procedure, name):
-            print("Adding Procedure: {}".format(name))
+            self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
 
             s_crest = BasicStep.objects.get(name="Crest Pre NMR")
