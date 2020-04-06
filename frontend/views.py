@@ -906,28 +906,24 @@ def next_step(request, pk):
 def download_structure(request, pk):
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
-    type = calc.type
 
     profile = request.user.profile
 
     if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
-    if type == 1:
-        expected_file = os.path.join(LAB_RESULTS_HOME, id, "crest_conformers.xyz")
-    elif type == 6:
-        expected_file = os.path.join(LAB_RESULTS_HOME, id, "ts.xyz")
-    else:
-        expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbopt.xyz")
+    e = calc.result_ensemble
+    structs = ""
+    for s in e.structure_set.all():
+        if s.xyz_structure == "":
+            structs += "1\nMissing Structure\nC 0 0 0"
+            print("Missing structure! ({}, {})".format(profile.username, calc.id))
+        structs += s.xyz_structure
 
-    if os.path.isfile(expected_file):
-        with open(expected_file, 'rb') as f:
-            response = HttpResponse(f.read())
-            response['Content-Type'] = 'text/plain'
-            response['Content-Disposition'] = 'attachment; filename={}.xyz'.format(id)
-            return response
-    else:
-        return HttpResponse(status=204)
+    response = HttpResponse(structs)
+    response['Content-Type'] = 'text/plain'
+    response['Content-Disposition'] = 'attachment; filename={}.xyz'.format(id)
+    return response
 
 def gen_3D(request):
     if request.method == 'POST':
