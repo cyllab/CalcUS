@@ -3,7 +3,7 @@
 			<td>Energy:</td>
 			<td>{{ calculation.result_ensemble.structure_set.all.0.energy }} Ha</td>
 		</tr>
-		{% if calculation.structure_set.all.0.free_energy != 0 %}
+		{% if calculation.result_ensemble.structure_set.all.0.free_energy != 0 %}
 		<tr>
 			<td>Free Energy:</td>
 			<td>{{ calculation.structure_set.all.0.free_energy }} Ha</td>

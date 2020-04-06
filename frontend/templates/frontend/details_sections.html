@@ -128,6 +128,8 @@
 <span class="tag is-danger is-large">Molecular Orbitals</span>
 <div class="columns box">
 	<div class="column">
+	</div>
+	<div class="column is-tight">
 
 	<div id="mo_viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
 
@@ -154,12 +156,18 @@
 		}
 
 		function get_cube(orb) {
+			if (orb != -1) {
+				window.mo_selection = orb;
+			}
+
+			let _orb = mo_selection;
+
 			$.ajax({
 				method: "POST",	 	 
 				url: "/get_cube/",
 				data: {
 					'id': {{ calculation.id }},
-					'orb': orb,
+					'orb': _orb,
 				},
 
 				headers: {
@@ -167,24 +175,36 @@
 				},
 				success: function(volumedata, textStatus, xhr) {
 
+					var isoval = 10**(-document.getElementById("mo_calibration").value);
 					var voldata = new $3Dmol.VolumeData(volumedata, "cube");
 						mo_viewer.clear();
 						get_mo_struct();
-						mo_viewer.addIsosurface(voldata, {isoval: 0.0001, color: "blue", alpha: 0.95, smoothness: 10});              
-						mo_viewer.addIsosurface(voldata, {isoval: -0.0001, color: "red", alpha: 0.95, smoothness: 10}); 
+						mo_viewer.addIsosurface(voldata, {isoval: isoval, color: "blue", alpha: 0.90, smoothness: 10});              
+						mo_viewer.addIsosurface(voldata, {isoval: -isoval, color: "red", alpha: 0.90, smoothness: 10}); 
 						mo_viewer.zoomTo();
 						mo_viewer.render();
 					}
 			});
 		}
 
+		$(document).ready(function(){
+			get_cube(0);
+		});
 	</script>
-	<button class="button" onclick="get_cube(0);">HOMO</button>
-	<button class="button" onclick="get_cube(1);">LUMO</button>
-	<button class="button" onclick="get_cube(2);">LUMO+1</button>
-	<button class="button" onclick="get_cube(3);">LUMO+2</button>
+	<div id="mo_container">
+		<button class="button" onclick="get_cube(0);" style="width: 24%;">HOMO</button>
+		<button class="button" onclick="get_cube(1);" style="width: 24%;">LUMO</button>
+		<button class="button" onclick="get_cube(2);" style="width: 24%;">LUMO+1</button>
+		<button class="button" onclick="get_cube(3);" style="width: 24%;">LUMO+2</button>
+
+		<div class="slidecontainer">
+			<input type="range" min="1" max="10" value="4" class="slider" id="mo_calibration" onchange="get_cube(-1);" style="width: 100%;">
+		</div>
+	</div>
 	</div>
 
+	<div class="column">
+	</div>
 </div>
 {% endif %}
 

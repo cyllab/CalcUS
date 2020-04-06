@@ -98,6 +98,11 @@
 								);
 
 							{% endif %}
+
+							{% if calculation.has_mo %}
+							get_cube(0);
+							{% endif %}
+
 							{% if calculation.has_nmr %}
 
 							g3 = new Dygraph(
