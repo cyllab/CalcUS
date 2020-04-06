@@ -265,28 +265,20 @@ def submit_calculation(request):
             in_file = clean(request.FILES['file_structure'].read().decode('utf-8'))
             filename, ext = request.FILES['file_structure'].name.split('.')
 
-            #if ext in ['mol2', 'mol', 'xyz', 'sdf']:
-            #    with open(os.path.join(LAB_SCR_HOME, t, 'initial.{}'.format(ext)), 'wb+') as out:
-
             if ext == 'mol':
                 s.mol_structure = in_file
             elif ext == 'xyz':
                 s.xyz_structure = in_file
             elif ext == 'sdf':
                 s.sdf_structure = in_file
+            else:
+                return render(request, 'frontend/error.html', {
+                    'profile': request.user.profile,
+                    'error_message': "Unknown file extension (Known formats: .mol, .xyz, .sdf)"
+                    })
 
             s.save()
         else:
-            '''
-            if 'structure' in request.POST.keys():
-                if 'structureB' in request.POST.keys():
-                    drawing = False
-                else:
-                    drawing = True
-                mol = request.POST['structure']
-                with open(os.path.join(scr, 'initial.mol'), 'w') as out:
-                    out.write(mol)
-            '''
             if 'structureB' in request.POST.keys():
                 drawing = True
                 e = Ensemble.objects.create()
@@ -297,8 +289,6 @@ def submit_calculation(request):
 
                 mol = clean(request.POST['structureB'])
                 s.mol_structure = mol
-                #with open(os.path.join(scr, 'initial_2D.mol'), 'w') as out:
-                #    out.write(mol)
             else:
                 return render(request, 'frontend/error.html', {
                 'profile': request.user.profile,
@@ -307,7 +297,7 @@ def submit_calculation(request):
 
         e.save()
         s.save()
-    #return redirect("/details/{}".format(t))
+
     TYPE_LENGTH = {'Distance' : 2, 'Angle' : 3, 'Dihedral' : 4}
     constraints = ""
     if 'constraint_num' in request.POST.keys():

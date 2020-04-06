@@ -5,3 +5,5 @@ omit =
 	manage.py
 	frontend/test*.py
 	*__init__.py
+	/usr/*
+	/home/raphael/.local/*
