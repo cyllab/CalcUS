@@ -253,7 +253,7 @@ def submit_calculation(request):
                 'profile': request.user.profile,
                 'error_message': "You do not have permission to access the starting calculation"
                 })
-        copyfile(os.path.join(LAB_RESULTS_HOME, str(start_id), 'xtbopt.xyz'), os.path.join(LAB_SCR_HOME, t, 'initial.xyz'))
+        obj.ensemble = start_calc.result_ensemble
     else:
         if len(request.FILES) == 1:
             e = Ensemble.objects.create()
@@ -305,6 +305,8 @@ def submit_calculation(request):
                 'error_message': "No input structure"
                 })
 
+        e.save()
+        s.save()
     #return redirect("/details/{}".format(t))
     TYPE_LENGTH = {'Distance' : 2, 'Angle' : 3, 'Dihedral' : 4}
     constraints = ""
@@ -338,8 +340,6 @@ def submit_calculation(request):
     obj.constraints = constraints
 
     obj.save()
-    e.save()
-    s.save()
     profile.save()
 
     if ressource == "Local":
@@ -1175,6 +1175,7 @@ def launch_pk(request, pk):
     return render(request, 'frontend/launch.html', {
             'profile': request.user.profile,
             'calculation': calc,
+            'procedures': Procedure.objects.all(),
         })
 
 def handler404(request, *args, **argv):

@@ -96,7 +96,7 @@ class UserPermissionsTests(StaticLiveServerTestCase):
         u = User.objects.create_superuser(username="OtherPI", password="irrelevant")
         p = Profile.objects.get(user__username="OtherPI")
         proj = Project.objects.create(author=p, name="SecretProj")
-        c = Calculation.objects.create(name="test", date=datetime.datetime.now(), charge=0, type=0, status=2, author=p, project=proj)
+        c = Calculation.objects.create(name="test", date=datetime.datetime.now(), status=2, author=p, project=proj)
         proj.save()
         c.save()
         p.save()
@@ -108,7 +108,7 @@ class UserPermissionsTests(StaticLiveServerTestCase):
     def test_launch_without_group(self):
         params = {
                 'calc_name': 'test',
-                'type': 'Geometrical Optimisation',
+                'type': 'Simple Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'benzene.mol',
@@ -171,7 +171,7 @@ class UserPermissionsTests(StaticLiveServerTestCase):
 
         params = {
                 'calc_name': 'test',
-                'type': 'Geometrical Optimisation',
+                'type': 'Simple Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'benzene.mol',
