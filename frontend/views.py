@@ -66,7 +66,7 @@ class IndexView(generic.ListView):
         type = self.request.GET.get('type')
         status = self.request.GET.get('status')
         target_username = self.request.GET.get('user')
-
+        unseen = self.request.GET.get('unseen')
 
         try:
             target_profile = User.objects.get(username=target_username).profile
@@ -81,6 +81,8 @@ class IndexView(generic.ListView):
                 hits = hits.filter(procedure__name=type)
             if status != "All statuses":
                 hits = hits.filter(status=Calculation.CALC_STATUSES[status])
+            if unseen == "true":
+                hits = hits.filter(unseen=True)
             return sorted(hits, key=lambda d: d.date, reverse=True)
 
         else:

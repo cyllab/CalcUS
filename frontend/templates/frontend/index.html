@@ -41,6 +41,9 @@
 			var sel4 = document.getElementById("calc_status");
 			status = sel4.options[sel4.selectedIndex].text;
 
+			var sel5 = document.getElementById("calc_unseen");
+			unseen = sel5.checked;
+
 			if (mode == 'new') { page = 1; }
 
 			$.ajax({
@@ -51,6 +54,7 @@
 					user: user,
 					type: type,
 					status: status,
+					unseen: unseen,
 				},
 				method: "GET",
 				url: '/list/',
@@ -115,55 +119,61 @@
 <div class="container">
 	{% if user.is_authenticated %}
 	<center>
-	<div class="box">
-		<div class="select" >
-			<select name="calc_user" id="calc_user" onchange="refresh_project_list('new');">
-				<option>{{ user.username }}</option>
-				{% for teammate in user.profile.groups.members.all %}
-					{% if teammate != user.profile %}
-						<option name="{{ teammate.username }}">{{ teammate.username }}</option>
-					{% endif %}
-				{% endfor %}
-				{% if user.profile.groups.PI != None %}
-					<option name="{{ user.profile.groups.PI.username }}">{{ user.profile.groups.PI.username }}</option>
-				{% endif %}
-				{% for group in user.profile.researchgroup_PI.all %}
-					{% for teammate in group.members.all %}
-						<option name="{{ teammate.username }}">{{ teammate.username }}</option>
+		<div class="box">
+			<div class="select" >
+				<select name="calc_user" id="calc_user" onchange="refresh_project_list('new');">
+					<option>{{ user.username }}</option>
+					{% for teammate in user.profile.groups.members.all %}
+						{% if teammate != user.profile %}
+							<option name="{{ teammate.username }}">{{ teammate.username }}</option>
+						{% endif %}
 					{% endfor %}
-				{% endfor %}
+					{% if user.profile.groups.PI != None %}
+						<option name="{{ user.profile.groups.PI.username }}">{{ user.profile.groups.PI.username }}</option>
+					{% endif %}
+					{% for group in user.profile.researchgroup_PI.all %}
+						{% for teammate in group.members.all %}
+							<option name="{{ teammate.username }}">{{ teammate.username }}</option>
+						{% endfor %}
+					{% endfor %}
 
-			</select>
-		</div>
+				</select>
+			</div>
 
 
-		<div class="select" >
-			<select name="calc_project" id="calc_project" onchange="refresh_list('new');">
-				<option name="all">All projects</option>
-				{% for proj in user.profile.project_set.all %}
-				<option name="{{ proj }}">{{ proj }}</option>
-				{% endfor %}
-			</select>
-		</div>
-		<div class="select" >
-			<select name="calc_type" id="calc_type" onchange="refresh_list('new');">
-				<option name="all">All procedures</option>
-				{% for proc in procedures %}
-				<option name="{{ proc.name }}">{{ proc.name }}</option>
-				{% endfor %}
+			<div class="select" >
+				<select name="calc_project" id="calc_project" onchange="refresh_list('new');">
+					<option name="all">All projects</option>
+					{% for proj in user.profile.project_set.all %}
+					<option name="{{ proj }}">{{ proj }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="select" >
+				<select name="calc_type" id="calc_type" onchange="refresh_list('new');">
+					<option name="all">All procedures</option>
+					{% for proc in procedures %}
+					<option name="{{ proc.name }}">{{ proc.name }}</option>
+					{% endfor %}
 
-			</select>
+				</select>
+			</div>
+			<div class="select" >
+				<select name="calc_status" id="calc_status" onchange="refresh_list('new');">
+					<option name="all">All statuses</option>
+					<option>Done</option>
+					<option>Error</option>
+					<option>Running</option>
+					<option>Queued</option>
+				</select>
+			</div>
+				<label class="checkbox" style="margin-left: 30px; margin-top: 10px;">
+					<input type="checkbox" id="calc_unseen" onchange="refresh_list('new');">
+					Unseen only
+				</label>
+
 		</div>
-		<div class="select" >
-			<select name="calc_status" id="calc_status" onchange="refresh_list('new');">
-				<option name="all">All statuses</option>
-			    	<option>Done</option>
-			    	<option>Error</option>
-			    	<option>Running</option>
-			    	<option>Queued</option>
-			</select>
-		</div>
-		</div>
+		
 		<div id="calculations_list">
 		
 		</div>
