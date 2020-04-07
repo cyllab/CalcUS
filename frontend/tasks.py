@@ -9,6 +9,7 @@ from django.utils import timezone
 import os
 import numpy as np
 import decimal
+import math
 
 from time import time, sleep
 
@@ -31,6 +32,7 @@ try:
 except:
     is_test = False
 import periodictable
+import mendeleev
 
 ATOMIC_NUMBER = {
         }
@@ -958,6 +960,80 @@ def xtb_stda(in_file, calc):
             out.write("{},{:.8f}\n".format(x, yy[ind]))
 
     return 0, calc.result_ensemble
+
+def dist(a, b):
+    return math.sqrt((a[1] - b[1])**2 + (a[2] - b[2])**2 + (a[3] - b[3])**2)
+
+COV_THRESHOLD = 1.1
+def find_bonds(xyz):
+    bonds = []
+    def bond_unique(ind1, ind2):
+        for bond in bonds:
+            if bond[0] == ind1 and bond[1] == ind2:
+                return False
+            if bond[0] == ind2 and bond[1] == ind1:
+                return False
+        return True
+    doubles = {'CC': 1.34, 'CN': 1.29, 'CO': 1.20, 'CS': 1.60, 'NC': 1.29, 'OC': 1.20, 'SC': 1.60, 'NN': 1.25,
+               'NO': 1.22, 'ON': 1.22, 'SO': 1.44, 'OS': 1.44}
+    d_exist = list(doubles.keys())
+    for ind1, i in enumerate(xyz):
+        for ind2, j in enumerate(xyz):
+            if ind1 > ind2:
+                d = dist(i, j)
+                btype = '{}{}'.format(i[0], j[0])
+                cov = (periodictable.elements[ATOMIC_NUMBER[i[0]]].covalent_radius +periodictable.elements[ATOMIC_NUMBER[j[0]]].covalent_radius)
+                if d_exist.count(btype):
+                    factor = (cov - doubles[btype])
+                    b_order = ((cov - d)/factor)+1
+                    if b_order > 2.2:
+                        bond_type = 3
+                    elif b_order > 1.8:
+                        bond_type = 2
+                    elif b_order > 1.6:
+                        bond_type = 4
+                    else:
+                        bond_type = 1
+                else:
+                    bond_type = 1
+                corr_ratio = d / cov
+                if corr_ratio < COV_THRESHOLD and bond_unique(ind1, ind2):
+                    #btag = '%1s_%1s' % (self.atoms[i].label, self.atoms[j].label)
+                    bonds.append([ind1, ind2, bond_type])
+    return bonds
+
+
+def write_mol(xyz):
+
+    bonds = find_bonds(xyz)
+    content = []
+    content.append('Molfile\n')
+    content.append('  CalcUS\n')
+    content.append('empty\n')
+    content.append('%3d%3d%3d%3d%3d%3d%3d%3d%3d%6s V2000 \n' % (len(xyz), len(bonds),
+                                                                         0, 0, 0, 0, 0, 0, 0, '0999'))
+    for atom in xyz:
+        content.append('%10.4f%10.4f%10.4f %-3s 0  0  0  0  0  0  0  0  0  0  0  0\n'
+                       % (atom[1], atom[2], atom[3], atom[0]))
+    for bond in bonds:
+        content.append('%3d%3d%3d  0  0  0  0\n' %(1+bond[0], 1+bond[1], bond[2]))
+    content.append('M  END\n')
+    return content
+
+def gen_fingerprint(structure):
+
+    if structure.xyz_structure == '':
+        print("No xyz structure!")
+        return -1
+
+    raw_xyz = structure.xyz_structure
+
+    xyz = []
+    for line in raw_xyz[2:]:
+        a, x, y, z = line.strip().split()
+        xyz.append([a, float(x), float(y), float(z)])
+
+
 
 
 BASICSTEP_TABLE = {
