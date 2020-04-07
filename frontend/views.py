@@ -958,12 +958,17 @@ def get_structure(request):
         else:
             num = 1
 
+
         if calc.status != 2 and calc.status != 3:
                 return HttpResponse(status=204)
 
         if calc.result_ensemble != None:
             try:
                 struct = calc.result_ensemble.structure_set.get(number=num)
+                if calc.unseen:
+                    calc.unseen = False
+                    calc.save()
+
             except Structure.DoesNotExist:
                 return HttpResponse(status=204)
             else:

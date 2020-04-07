@@ -204,6 +204,8 @@ class Calculation(models.Model):
 
     constraints = models.CharField(max_length=400, default="", blank=True, null=True)
 
+    unseen = models.BooleanField(default=True)
+
     has_scan = models.BooleanField(default=False)
 
     @property

@@ -244,6 +244,7 @@ input_files = [
                 'enolate_anion.mol',
                 'ethanol.sdf',
                 'EtMgBr.mol',
+                'FeCl2.mol',
                 'NH3.mol',
                 'propane.mol'
                 ]
@@ -251,7 +252,7 @@ input_files = [
 TYPES = [
             "Simple Optimisation",
             #"Constrained Optimisation",
-            #"Conformational Search",
+            "Conformational Search",
             "Opt+Freq",
             "TS+Freq",
             "Simple UV-Vis",

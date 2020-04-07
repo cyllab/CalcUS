@@ -2,7 +2,7 @@
 <div class="grid">
     {% for calculation in latest_frontend %}
 	<a href="{% url 'frontend:details' calculation.id %}">
-		<article class="grid-item message ">
+		<article class="grid-item message" {% if calculation.unseen and calculation.status == 2%}style="border: 5px solid yellow"{% endif %}>
 			<div class="message-header {% if calculation.status == 1 %} has-background-warning {% elif calculation.status == 2 %} has-background-success {% elif calculation.status == 3 %} has-background-danger{% endif %}">
 				{{ calculation.id }}
 {% if calculation.status == 1 %} <i class="fas fa-spinner"></i> {% elif calculation.status == 2 %} 
