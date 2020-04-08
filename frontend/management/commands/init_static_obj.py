@@ -99,6 +99,8 @@ class Command(BaseCommand):
         if self.is_absent(Procedure, name):
             self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
+            a.avail_xtb = True
+            a.avail_Gaussian = True
 
             s_opt = BasicStep.objects.get(name="Geometrical Optimisation")
             step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)
@@ -110,6 +112,7 @@ class Command(BaseCommand):
             self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
 
+            a.avail_xtb = True
             s_opt = BasicStep.objects.get(name="Crest")
             step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)
             step1.save()
@@ -119,6 +122,8 @@ class Command(BaseCommand):
         if self.is_absent(Procedure, name):
             self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
+            a.avail_xtb = True
+            a.avail_Gaussian = True
 
             s_opt = BasicStep.objects.get(name="Constrained Optimisation")
             step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)
@@ -129,6 +134,9 @@ class Command(BaseCommand):
         if self.is_absent(Procedure, name):
             self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
+
+            a.avail_xtb = True
+            a.avail_Gaussian = True
 
             s_opt = BasicStep.objects.get(name="Geometrical Optimisation")
             step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)
@@ -145,6 +153,9 @@ class Command(BaseCommand):
             self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
 
+            a.avail_xtb = True
+            a.avail_Gaussian = True
+
             s_opt = BasicStep.objects.get(name="TS Optimisation")
             step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)
             step1.save()
@@ -160,6 +171,7 @@ class Command(BaseCommand):
             self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
 
+            a.avail_xtb = True
             s_opt = BasicStep.objects.get(name="Geometrical Optimisation")
             step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)
             step1.save()
@@ -175,6 +187,8 @@ class Command(BaseCommand):
             self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
 
+            a.avail_orca = True
+
             s_opt = BasicStep.objects.get(name="Geometrical Optimisation")
             step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)
             step1.save()
@@ -189,6 +203,8 @@ class Command(BaseCommand):
         if self.is_absent(Procedure, name):
             self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
+
+            a.avail_xtb = True
 
             s_crest = BasicStep.objects.get(name="Crest Pre NMR")
             step1 = Step.objects.create(step_model=s_crest, parent_procedure=a, from_procedure=a)

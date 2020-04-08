@@ -46,6 +46,7 @@ LAB_KEY_HOME = os.environ['LAB_KEY_HOME']
 LAB_CLUSTER_HOME = os.environ['LAB_CLUSTER_HOME']
 
 KEY_SIZE = 32
+SOFTWARE_LIST = ['xtb', 'Gaussian']
 
 class IndexView(generic.ListView):
     template_name = 'frontend/list.html'
@@ -364,6 +365,12 @@ def submit_calculation(request):
             out.write("{}\n".format(drawing))
 
     return redirect("/details/{}".format(t))
+
+def launch_software(request, software):
+    if software in SOFTWARE_LIST:
+        return render(request, 'frontend/launch_software.html', {'software': software})
+    else:
+        return HttpResponse(status=404)
 
 def profile_intersection(profile1, profile2):
     if profile1 == profile2:

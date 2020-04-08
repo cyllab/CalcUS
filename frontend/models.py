@@ -123,6 +123,11 @@ class Procedure(models.Model):
     has_uvvis = models.BooleanField(default=False)
     has_mo = models.BooleanField(default=False)
 
+
+    avail_xtb = models.BooleanField(default=False)
+    avail_Gaussian = models.BooleanField(default=False)
+    avail_orca = models.BooleanField(default=False)
+
 class Ensemble(models.Model):
     name = models.CharField(max_length=100, default="Nameless ensemble")
 
