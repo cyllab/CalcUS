@@ -23,8 +23,8 @@ from django.contrib.auth.models import User
 from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
-from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep
-from .tasks import run_procedure
+from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder
+from .tasks import run_procedure, dispatcher
 from .decorators import superuser_required
 from .tasks import system
 
@@ -218,7 +218,7 @@ def submit_calculation(request):
 
     if 'calc_type' in request.POST.keys():
         try:
-            proc = Procedure.objects.get(name=clean(request.POST['calc_type']))
+            step = BasicStep.objects.get(name=clean(request.POST['calc_type']))
         except Procedure.DoesNotExist:
             return render(request, 'frontend/error.html', {
                 'profile': request.user.profile,
@@ -295,20 +295,18 @@ def submit_calculation(request):
     params = Parameters.objects.create(charge=charge, solvent=solvent, multiplicity=1)
     params.save()
 
-    obj = Calculation.objects.create(name=name, date=timezone.now(), status=0, global_parameters=params, procedure=proc)
+    obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
 
-    profile.calculation_set.add(obj)
-    project_obj.calculation_set.add(obj)
+    #project_obj.save()
 
-    project_obj.save()
+    #obj.save()
+    #t = str(obj.id)
 
-    obj.save()
-    t = str(obj.id)
-
-    scr = os.path.join(LAB_SCR_HOME, t)
-    os.mkdir(scr)
+    #scr = os.path.join(LAB_SCR_HOME, t)
+    #os.mkdir(scr)
 
     drawing = True
+
     if 'starting_struct' in request.POST.keys():
         drawing = False
         start_id = int(request.POST['starting_struct'])
@@ -421,7 +419,7 @@ def submit_calculation(request):
         elif type == 6:
             ts_freq.delay(t, drawing, charge, solvent)
         '''
-        run_procedure.delay(drawing, obj.id)
+        dispatcher.delay(drawing, obj.id)
     else:
         cmd = ClusterCommand.objects.create(issuer=profile)
         with open(os.path.join(LAB_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
@@ -433,11 +431,16 @@ def submit_calculation(request):
             out.write("{}\n".format(solvent))
             out.write("{}\n".format(drawing))
 
-    return redirect("/details/{}".format(t))
+    return redirect("/projects/")
 
 def launch_software(request, software):
-    if software in SOFTWARE_LIST:
-        return render(request, 'frontend/launch_software.html', {'software': software})
+    _software = clean(software)
+    if _software == 'xtb':
+        procs = BasicStep.objects.filter(avail_xtb=True)
+        return render(request, 'frontend/launch_software.html', {'procs': procs})
+    elif _software == 'Gaussian':
+        procs = BasicStep.objects.filter(avail_Gaussian=True)
+        return render(request, 'frontend/launch_software.html', {'procs': procs})
     else:
         return HttpResponse(status=404)
 
@@ -445,12 +448,12 @@ def profile_intersection(profile1, profile2):
     if profile1 == profile2:
         return True
     if profile1.group != None:
-        if profile2 in profile1.group.all()[0].members.all():
+        if profile2 in profile1.group.members.all():
             return True
-        if profile2 == profile1.group.all()[0].PI:
+        if profile2 == profile1.group.PI:
             return True
     if profile1.researchgroup_PI != None:
-        for group in profile1.researchgroup_PI.all():
+        for group in profile1.researchgroup_PI:
             if profile2 in group.members.all():
                 return True
     return False
@@ -1222,7 +1225,7 @@ def profile(request):
 def launch(request):
     return render(request, 'frontend/launch.html', {
             'profile': request.user.profile,
-            'procedures': Procedure.objects.all(),
+            'procedures': BasicStep.objects.all(),
         })
 
 @login_required

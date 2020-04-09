@@ -10,7 +10,7 @@ import os
 import numpy as np
 import decimal
 import math
-
+from datetime import datetime
 from time import time, sleep
 
 import subprocess
@@ -20,6 +20,8 @@ import glob
 import ssh2
 from threading import Lock
 import threading
+
+from celery import group
 
 from .models import *
 from ssh2.sftp import LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IWGRP, LIBSSH2_SFTP_S_IRWXU
@@ -226,6 +228,61 @@ def system(command, log_file="", force_local=False):
         else:
             return subprocess.run(shlex.split(command)).returncode
 
+def generate_xyz_structure(drawing, structure):
+
+    if drawing:
+        SCALE = 1
+        #SCALE = 20
+    else:
+        SCALE = 1
+
+    if structure.xyz_structure == "":
+        if structure.mol_structure != '':
+            t = time()
+            fname = "{}_{}".format(t, structure.id)
+            if drawing:
+                with open("/tmp/{}.mol".format(fname), 'w') as out:
+                    out.write(structure.mol_structure)
+                a = system("obabel /tmp/{}.mol -O /tmp/{}.xyz -h --gen3D".format(fname, fname), force_local=True)
+                with open("/tmp/{}.xyz".format(fname)) as f:
+                    lines = f.readlines()
+                    structure.xyz_structure = ''.join(lines)
+                    structure.save()
+                    return 0
+            else:
+                to_print = []
+                for line in structure.mol_structure.split('\n')[4:]:
+                    sline = line.split()
+                    try:
+                        a = int(sline[3])
+                    except ValueError:
+                        to_print.append("{} {} {} {}\n".format(sline[3], float(sline[0])*SCALE, float(sline[1])*SCALE, float(sline[2])*SCALE))
+                    else:
+                        break
+                num = len(to_print)
+                in_struct.xyz_structure = "{}\n".format(num)
+                in_struct.xyz_structure += "CalcUS\n"
+                for line in to_print:
+                    in_struct.xyz_structure += line
+                in_struct.save()
+                return 0
+        elif in_struct.sdf_structure != '':#unimplemented
+            with open("{}/initial.sdf".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))), 'w') as out:
+                out.write(in_struct.sdf_structure)
+            a = system("obabel {}/initial.sdf -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
+            a = system("obabel {}/initial.sdf -O {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
+
+            with open(os.path.join("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))))) as f:
+                lines = f.readlines()
+            in_struct.xyz_structure = '\n'.join([i.strip() for i in lines])
+            in_struct.save()
+            return 0
+        else:
+            print("Unimplemented")
+            return -1
+    else:
+        return 0
+
 def handle_input_file(drawing, calc_obj):
     #if os.path.isfile("{}/initial_2D.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
     #    a = system("obabel {}/initial_2D.mol -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
@@ -288,8 +345,8 @@ def handle_input_file(drawing, calc_obj):
 
 
 def xtb_opt(in_file, calc):
-    solvent = calc.global_parameters.solvent
-    charge = calc.global_parameters.charge
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
 
     if solvent != "Vacuum":
@@ -313,18 +370,18 @@ def xtb_opt(in_file, calc):
             hl_gap = float(lines[ind].split()[3])
             E = float(lines[ind-2].split()[3])
 
-        e = Ensemble.objects.create()
-        s = Structure.objects.create(parent_ensemble=e, xyz_structure=xyz_structure, energy=E, homo_lumo_gap=hl_gap, number=1)
-        e.save()
+        s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=1)
+        prop = Property.objects.create(homo_lumo_gap=hl_gap, energy=E, parameters=calc.parameters, parent_structure=s)
         s.save()
-        return a, e
+        prop.save
+        return 0
     else:
-        return a, None
+        return a
 
 def xtb_ts(in_file, calc):
-    solvent = calc.global_parameters.solvent
-    charge = calc.global_parameters.charge
-    multiplicity = calc.global_parameters.multiplicity
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
+    multiplicity = calc.parameters.multiplicity
 
     if solvent != "Vacuum":
         solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
@@ -358,6 +415,9 @@ def xtb_ts(in_file, calc):
 
     os.chdir(folder)
     a = system("{}/orca ts.inp".format(ORCAPATH), 'xtb_ts.out')
+    if a != 0:
+        print("Orca failed")
+        return a
     with open(os.path.join(folder, "ts.xyz")) as f:
         lines = f.readlines()
 
@@ -372,17 +432,18 @@ def xtb_ts(in_file, calc):
             ind -= 1
         hl_gap = float(olines[ind].split()[3])
 
-    e = Ensemble.objects.create()
-    r = Structure.objects.create(number=1, parent_ensemble=e, energy=E, homo_lumo_gap=hl_gap)
-    r.xyz_structure = '\n'.join([i.strip() for i in lines])
-    r.save()
-    e.save()
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=1)
+    prop = Property.objects.create(homo_lumo_gap=hl_gap, energy=E, parameters=calc.parameters, parent_structure=s)
+    s.xyz_structure = '\n'.join([i.strip() for i in lines])
+
+    s.save()
+    prop.save()
     return 0, e
 
 
 def xtb_scan(in_file, calc):
-    solvent = calc.global_parameters.solvent
-    charge = calc.global_parameters.charge
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
 
     if solvent != "Vacuum":
         solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
@@ -428,9 +489,8 @@ def xtb_scan(in_file, calc):
     os.chdir(folder)
     a = system("xtb {} --input scan --chrg {} {} --opt".format(in_file, charge, solvent_add), 'xtb_scan.out')
     if a != 0:
-        return a, 'e'
+        return a
 
-    e = Ensemble.objects.create()
 
     if has_scan:
         with open(os.path.join(folder, 'xtbscan.log')) as f:
@@ -449,17 +509,18 @@ def xtb_scan(in_file, calc):
                 E = float(lines[inds[metaind]+1].split()[1])
                 struct = ''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]]])
 
-                r = Structure.objects.create(number=metaind+1, energy=E)
+                r = Structure.objects.create(number=metaind+1)
+                prop = Property.objects.create(energy=E, parent_structure=r, parameters=calc.parameters)
                 #assert r.energy == E
                 r.xyz_structure = struct
                 r.save()
                 if E < min_E:
                     min_E = E
 
-                e.structure_set.add(r)
-            for s in e.structure_set.all():
-                s.rel_energy = (s.energy - min_E)*float(HARTREE_VAL)
-                s.save()
+                calc.result_ensemble.structure_set.add(r)
+            for s in calc.result_ensemble.structure_set.all():
+                s.properties.get(parameters=calc.parameters).rel_energy = (s.properties.get(parameters=calc.parameters).energy - min_E)*float(HARTREE_VAL)
+                s.properties.get(parameters=calc.parameters).save()
 
     else:
         with open(os.path.join(folder, 'xtbopt.xyz')) as f:
@@ -476,19 +537,20 @@ def xtb_scan(in_file, calc):
                 ind -= 1
             hl_gap = float(lines[ind].split()[3])
             E = float(lines[ind-2].split()[3])
-            r.energy = E
+            prop = Property.objects.create(energy=E, homo_lumo_gap=hl_gap, parent_structure=r, parameters=calc.parameters)
             #assert E == Eb
 
             r.homo_lumo_gap = hl_gap
             r.save()
-            e.structure_set.add(r)
-    e.save()
+            prop.save()
+            calc.result_ensemble.structure_set.add(r)
+            calc.result_ensemble.save()
 
-    return 0, e
+    return 0
 
 def xtb_freq(in_file, calc):
-    solvent = calc.global_parameters.solvent
-    charge = calc.global_parameters.charge
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
 
     if solvent != "Vacuum":
@@ -614,70 +676,10 @@ def xtb_freq(in_file, calc):
 
     return 0, e
 
-def animate_vib(in_file, calc_obj):
-    with open(os.path.join(LAB_SCR_HOME, str(calc_obj.id), in_file)) as f:
-        lines = f.readlines()
-        num_atoms = int(lines[0].strip())
-        lines = lines[2:]
-
-    hess = []
-    struct = []
-
-    for line in lines:
-        a, x, y, z = line.strip().split()
-        struct.append([a, float(x), float(y), float(z)])
-
-    with open("hessian") as f:
-        lines = f.readlines()[1:]
-        for line in lines:
-            hess += [float(i) for i in line.strip().split()]
-
-        num_freqs = len(hess)/(3*num_atoms)
-        if not num_freqs.is_integer():
-            print("Incorrect number of frequencies!")
-            exit(0)
-
-        num_freqs = int(num_freqs)
-    SCALING = 0.05
-    hess = [i*SCALING for i in hess]
-    def output_with_displacement(mol, out, hess):
-        t = 10
-        mols = [mol]
-        for _t in range(t):
-            new_mol = []
-            for ind, (a, x, y, z) in enumerate(mols[-1]):
-                _x = x + hess[3*ind]
-                _y = y + hess[3*ind+1]
-                _z = z + hess[3*ind+2]
-                new_mol.append([a, _x, _y, _z])
-            mols.append(new_mol)
-
-        for _t in range(t):
-            new_mol = []
-            for ind, (a, x, y, z) in enumerate(mols[0]):
-                _x = x - hess[3*ind]
-                _y = y - hess[3*ind+1]
-                _z = z - hess[3*ind+2]
-                new_mol.append([a, _x, _y, _z])
-            mols.insert(0, new_mol)
-
-        for mol in mols:
-            out.write("{}\n".format(num_atoms))
-            out.write("Free\n")
-            for a, x, y, z in mol:
-                out.write("{} {} {} {}\n".format(a, x, y, z))
-
-    for ind in range(num_freqs):
-        _hess = hess[3*num_atoms*ind:3*num_atoms*(ind+1)]
-        with open(os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), "freq_{}.xyz".format(ind)), 'w') as out:
-            output_with_displacement(struct, out, _hess)
-    return 0
-
-
 def crest_generic(in_file, calc, mode):
 
-    solvent = calc.global_parameters.solvent
-    charge = calc.global_parameters.charge
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
 
     if solvent != "Vacuum":
         solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
@@ -781,9 +783,9 @@ end
         el = line.split()[0]
         electrons += ATOMIC_NUMBER[el]
 
-    electrons -= calc.global_parameters.charge
+    electrons -= calc.parameters.charge
 
-    if calc.global_parameters.multiplicity != 1:
+    if calc.parameters.multiplicity != 1:
         print("Unimplemented multiplicity")
         return -1, 'e'
 
@@ -792,9 +794,9 @@ end
     n_LUMO1 = int(electrons/2)+1
     n_LUMO2 = int(electrons/2)+2
 
-    solvent = calc.global_parameters.solvent
-    charge = calc.global_parameters.charge
-    multiplicity = calc.global_parameters.multiplicity
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
+    multiplicity = calc.parameters.multiplicity
 
     fname = in_file.split('/')[-1]
     folder = '/'.join(in_file.split('/')[:-1])
@@ -814,8 +816,8 @@ end
 
 def enso(in_file, calc):
 
-    solvent = calc.global_parameters.solvent
-    charge = calc.global_parameters.charge
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
 
     if solvent != "Vacuum":
         solvent_add = '-solv {}'.format(SOLVENT_TABLE[solvent])
@@ -917,8 +919,8 @@ def xtb_stda(in_file, calc):
 
     folder = '/'.join(in_file.split('/')[:-1])
 
-    solvent = calc.global_parameters.solvent
-    charge = calc.global_parameters.charge
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
 
     if solvent != "Vacuum":
         solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[solvent])
@@ -1063,6 +1065,69 @@ BASICSTEP_TABLE = {
 time_dict = {}
 
 @app.task
+def dispatcher(drawing, order_id):
+    order = CalculationOrder.objects.get(pk=order_id)
+    ensemble = order.ensemble
+
+    step = order.step
+
+    for s in ensemble.structure_set.all():
+        generate_xyz_structure(drawing, s)
+
+    if ensemble.parent_molecule is None:
+        fingerprint = ""
+        for s in ensemble.structure_set.all():
+            generate_xyz_structure(drawing, s)
+            fing = gen_fingerprint(s)
+            if fingerprint == "":
+                fingerprint = fing
+            else:
+                assert fingerprint == fing
+        molecule = Molecule.objects.create(name=order.name, inchi=fingerprint, project=order.project)
+        molecule.save()
+    else:
+        molecule = ensemble.parent_molecule
+
+    group_order = []
+
+    if step.creates_ensemble:
+        e = Ensemble.objects.create()
+        molecule.ensemble_set.add(e)
+        molecule.save()
+        e.save()
+
+        for s in ensemble.structure_set.all():
+            c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), step=step, parameters=order.parameters, result_ensemble=e, constraints=order.constraints)
+            c.save()
+            group_order.append(run_calc.s(c.id).set(queue='comp'))
+
+    else:
+        for s in ensemble.structure_set.all():
+            c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), parameters=order.parameters, step=step, constraints=order.constraints)
+            c.save()
+            group_order.append(run_calc.s(c.id).set(queue='comp'))
+
+    g = group(group_order)
+    result = g.apply_async()
+
+
+@app.task
+def run_calc(calc_id):
+    print("Processing calc {}".format(calc_id))
+    calc = Calculation.objects.get(pk=calc_id)
+    f = BASICSTEP_TABLE[calc.step.name]
+
+    os.mkdir(os.path.join(LAB_RESULTS_HOME, str(calc.id)))
+    workdir = os.path.join(LAB_SCR_HOME, str(calc.id))
+    os.mkdir(workdir)
+    in_file = os.path.join(workdir, 'in.xyz')
+
+    with open(in_file, 'w') as out:
+        out.write(calc.structure.xyz_structure)
+
+    f(in_file, calc)
+
+@app.task
 def run_procedure(drawing, calc_id):
 
     calc_obj = Calculation.objects.get(pk=calc_id)
@@ -1165,6 +1230,7 @@ def run_procedure(drawing, calc_id):
                 sftp_get(os.path.join(remote_dir, f), os.path.join(LAB_SCR_HOME, str(calc_obj.id), f), conn, lock)
     return 0
 
+'''
 @task_prerun.connect
 def task_prerun_handler(signal, sender, task_id, task, args, kwargs, **extras):
     if task != ping:
@@ -1206,7 +1272,7 @@ def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, st
         author = calc_obj.author
         author.calculation_time_used += execution_time
         author.save()
-
+'''
 @app.task(name='celery.ping')
 def ping():
     return 'pong'

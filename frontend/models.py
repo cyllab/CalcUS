@@ -37,8 +37,8 @@ class Profile(models.Model):
     @property
     def accesses(self):
         accesses = []
-        if self.groups != None:
-            for acc in self.groups.clusteraccess_set.all():
+        if self.group != None:
+            for acc in self.group.all()[0].clusteraccess_set.all():
                 accesses.append(acc)
         for i in self.clusteraccess_owner.all():
             accesses.append(i)
@@ -57,6 +57,7 @@ class ResearchGroup(Group):
 
     def __repr__(self):
         return self.name
+
 class PIRequest(models.Model):
     issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
     group_name = models.CharField(max_length=100)
@@ -102,6 +103,11 @@ class BasicStep(models.Model):
     desc = models.CharField(max_length=500, default="")
     error_message = models.CharField(max_length=500, default="")
 
+    avail_xtb = models.BooleanField(default=False)
+    avail_Gaussian = models.BooleanField(default=False)
+    avail_orca = models.BooleanField(default=False)
+
+    creates_ensemble = models.BooleanField(default=False)
     def __repr__(self):
         return self.id
 
@@ -145,6 +151,7 @@ class Ensemble(models.Model):
 
 class Property(models.Model):
     parameters = models.ForeignKey('Parameters', on_delete=models.CASCADE, blank=True, null=True)
+    parent_structure = models.ForeignKey('Structure', on_delete=models.CASCADE, blank=True, null=True, related_name="properties")
 
     energy = models.FloatField(default=0)
     free_energy = models.FloatField(default=0)
@@ -161,7 +168,6 @@ class Property(models.Model):
 
 class Structure(models.Model):
     parent_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
-    properties = models.ForeignKey(Property, on_delete=models.CASCADE, blank=True, null=True)
 
     mol_structure = models.CharField(default="", max_length=5000000)
     xyz_structure = models.CharField(default="", max_length=5000000)
@@ -199,6 +205,24 @@ class Molecule(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
 
 
+class CalculationOrder(models.Model):
+    name = models.CharField(max_length=100)
+
+    ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
+    result_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True, related_name='result_of')
+    step = models.ForeignKey(BasicStep, on_delete=models.CASCADE, blank=True, null=True)
+
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    project = models.ForeignKey('Project', on_delete=models.CASCADE, blank=True, null=True)
+
+    parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, blank=True, null=True)
+
+    constraints = models.CharField(max_length=400, default="", blank=True, null=True)
+
+    date = models.DateTimeField('date', null=True, blank=True)
+    date_finished = models.DateTimeField('date', null=True, blank=True)
+
+
 class Calculation(models.Model):
 
     CALC_STATUSES = {
@@ -210,16 +234,9 @@ class Calculation(models.Model):
 
     INV_CALC_STATUSES = {v: k for k, v in CALC_STATUSES.items()}
 
-    name = models.CharField(max_length=100)
-
-    ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
-    result_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True, related_name='result_of')
 
     error_message = models.CharField(max_length=400, default="")
     current_status = models.CharField(max_length=400, default="")
-
-    num_steps = models.IntegerField(default=0)
-    current_step = models.IntegerField(default=0)
 
     date = models.DateTimeField('date', null=True, blank=True)
     date_finished = models.DateTimeField('date', null=True, blank=True)
@@ -228,15 +245,15 @@ class Calculation(models.Model):
 
     status = models.PositiveIntegerField(default=0)
 
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
+    structure = models.ForeignKey(Structure, on_delete=models.CASCADE)
+    step = models.ForeignKey(BasicStep, on_delete=models.CASCADE)
+    order = models.ForeignKey(CalculationOrder, on_delete=models.CASCADE)
 
-    global_parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, blank=True, null=True)
-    procedure = models.ForeignKey(Procedure, on_delete=models.CASCADE, blank=True, null=True)
+    parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE)
+    result_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
+    unseen = models.BooleanField(default=True)
 
     constraints = models.CharField(max_length=400, default="", blank=True, null=True)
-
-    unseen = models.BooleanField(default=True)
 
     has_scan = models.BooleanField(default=False)
 

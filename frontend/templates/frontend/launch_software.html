@@ -3,7 +3,7 @@
 	<div class="control" >
 		<div class="select">
 			<select name="calc_type" id="calc_type" onchange="calc_selection_changed();">
-				{% for proc in procedures %}
+				{% for proc in procs %}
 				<option>{{ proc.name }}</option>
 				{% endfor %}
 			</select>
