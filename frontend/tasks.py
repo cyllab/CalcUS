@@ -1029,11 +1029,22 @@ def gen_fingerprint(structure):
     raw_xyz = structure.xyz_structure
 
     xyz = []
-    for line in raw_xyz[2:]:
-        a, x, y, z = line.strip().split()
-        xyz.append([a, float(x), float(y), float(z)])
+    for line in raw_xyz.split('\n')[2:]:
+        if line.strip() != "":
+            a, x, y, z = line.strip().split()
+            xyz.append([a, float(x), float(y), float(z)])
 
-
+    mol = write_mol(xyz)
+    t = "{}_{}".format(time(), structure.id)
+    mol_file = "/tmp/{}.mol".format(t)
+    with open(mol_file, 'w') as out:
+        for line in mol:
+            out.write(line)
+    os.system("inchi-1 {}".format(mol_file))
+    with open(mol_file + '.txt') as f:
+        lines = f.readlines()
+    inchi = lines[2][6:]
+    return inchi
 
 
 BASICSTEP_TABLE = {
