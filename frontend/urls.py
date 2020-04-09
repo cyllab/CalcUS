@@ -8,10 +8,15 @@ from . import views
 app_name = 'frontend'
 urlpatterns = [
     #Home and index
-    path('', views.index, name='index'),
-    path('home/', views.index, name='index'),
+    path('', views.projects, name='projects'),
+    path('home/', views.projects, name='projects'),
     path('list/', views.IndexView.as_view(), name='list'),
-    path('project_list/', views.project_list, name='project_list'),
+
+    path('projects/', views.projects, name='projects'),
+    path('projects/<str:username>', views.projects_username, name='projects_username'),
+    path('get_projects/', views.get_projects, name='get_projects'),
+    path('projects/<str:username>/<str:proj>', views.project_details, name='project_details'),
+
     path('please_register/', views.please_register, name='please_register'),
     path('register/', views.RegisterView.as_view(), name='register'),
     path('profile/', views.profile, name='profile'),

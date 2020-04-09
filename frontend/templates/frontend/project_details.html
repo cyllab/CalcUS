@@ -1,0 +1,53 @@
+{% extends 'frontend/base.html' %}
+
+{% load static %}
+
+{% block extrahead %}
+	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
+	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+	<script src="https://unpkg.com/masonry-layout@4.2.0/dist/masonry.pkgd.min.js"></script>
+	<style>
+	.grid-item {
+		float: left;
+		width: 200px;
+		height: 300px;
+		margin: 10px;
+	}
+	.grid-item:hover {
+		opacity: 0.5;
+	}
+
+	</style>
+
+{% endblock %}
+
+{% block content %}
+<div class="container">
+	<nav class="breadcrumb" aria-label="breadcrumbs">
+	 	<ul>
+	    		<li><a href="/projects/">Projects</a></li>
+			<li><a href="/projects/{{ project.author }}">{{ project.author }}</a></li>
+			<li class="is-active"><a aria-current="page" href="#">{{ project.name }}</a></li>
+	  	</ul>
+	</nav>
+	{% if molecules.count > 0 %}
+		<div class="grid">
+			{% for mol in molecules %}
+				<a href="/molecule/{{ mol.id }}">
+					<div class="box grid-item">
+						{{ mol.name }}
+						//stats
+					</div>
+				</a>
+			{% endfor %}
+		</div>
+	{% else %}
+		No molecule in this project.
+	{% endif %}
+</div>
+<br />
+{% endblock %}
+

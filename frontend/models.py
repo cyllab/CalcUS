@@ -15,9 +15,8 @@ class Profile(models.Model):
     calculation_time_used = models.PositiveIntegerField(default=0)
 
     is_PI = models.BooleanField(default=False)
-    is_SU = models.BooleanField(default=False)
 
-    groups = models.ForeignKey('ResearchGroup', on_delete=models.CASCADE, blank=True, null=True, related_name='members')
+    member_of = models.ForeignKey('ResearchGroup', on_delete=models.CASCADE, blank=True, null=True, related_name='members')
 
     code = models.CharField(max_length=16)
 
@@ -27,6 +26,13 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+    @property
+    def group(self):
+        if self.is_PI:
+            return self.researchgroup_PI
+        else:
+            return self.member_of
 
     @property
     def accesses(self):
@@ -49,6 +55,8 @@ class ClusterCommand(models.Model):
 class ResearchGroup(Group):
     PI = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True, related_name="researchgroup_PI")
 
+    def __repr__(self):
+        return self.name
 class PIRequest(models.Model):
     issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
     group_name = models.CharField(max_length=100)
@@ -130,12 +138,30 @@ class Procedure(models.Model):
 
 class Ensemble(models.Model):
     name = models.CharField(max_length=100, default="Nameless ensemble")
+    parent_molecule = models.ForeignKey('Molecule', on_delete=models.CASCADE, blank=True, null=True)
 
     def __repr__(self):
         return self.id
 
+class Property(models.Model):
+    parameters = models.ForeignKey('Parameters', on_delete=models.CASCADE, blank=True, null=True)
+
+    energy = models.FloatField(default=0)
+    free_energy = models.FloatField(default=0)
+
+    nmr_shifts = models.CharField(max_length=5000, default="")
+    uvvis_spectrum = models.CharField(max_length=100000, default="")
+
+    rel_energy = models.FloatField(default=0)
+    boltzmann_weight = models.FloatField(default=1.)
+    homo_lumo_gap = models.FloatField(default=0)
+
+
+
+
 class Structure(models.Model):
     parent_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
+    properties = models.ForeignKey(Property, on_delete=models.CASCADE, blank=True, null=True)
 
     mol_structure = models.CharField(default="", max_length=5000000)
     xyz_structure = models.CharField(default="", max_length=5000000)
@@ -146,9 +172,6 @@ class Structure(models.Model):
     free_energy = models.FloatField(default=0)
 
     degeneracy = models.PositiveIntegerField(default=0)
-    rel_energy = models.FloatField(default=0)
-    boltzmann_weight = models.FloatField(default=1.)
-    homo_lumo_gap = models.FloatField(default=0)
 
     def __repr__(self):
         return self.id
@@ -169,6 +192,13 @@ class Parameters(models.Model):
     def __repr__(self):
         return self.id
 
+class Molecule(models.Model):
+
+    name = models.CharField(max_length=100)
+    inchi = models.CharField(max_length=1000)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
+
+
 class Calculation(models.Model):
 
     CALC_STATUSES = {
@@ -183,7 +213,6 @@ class Calculation(models.Model):
     name = models.CharField(max_length=100)
 
     ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
-
     result_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True, related_name='result_of')
 
     error_message = models.CharField(max_length=400, default="")
@@ -201,8 +230,6 @@ class Calculation(models.Model):
 
     author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
-
-    weighted_energy = models.FloatField(default=0.)
 
     global_parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, blank=True, null=True)
     procedure = models.ForeignKey(Procedure, on_delete=models.CASCADE, blank=True, null=True)

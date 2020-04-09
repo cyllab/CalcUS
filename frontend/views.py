@@ -89,9 +89,78 @@ class IndexView(generic.ListView):
         else:
             return []
 
+@login_required
+def projects(request):
+    return render(request, 'frontend/projects.html', {
+            'profile': request.user.profile,
+            'target_profile': request.user.profile,
+        })
+
+@login_required
+def projects_username(request, username):
+    target_username = clean(username)
+
+    try:
+        target_profile = User.objects.get(username=target_username).profile
+    except User.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if profile_intersection(request.user.profile, target_profile):
+        return render(request, 'frontend/projects.html', {
+                    'profile': request.user.profile,
+                    'target_profile': target_profile,
+                })
+
+    else:
+        return HttpResponse(status=404)
+
+   
+@login_required
+def get_projects(request):
+    if request.method == 'POST':
+        target_username = clean(request.POST['username'])
+        profile = request.user.profile
+
+        try:
+            target_profile = User.objects.get(username=target_username).profile
+        except User.DoesNotExist:
+            return HttpResponse(status=404)
+
+        if profile_intersection(request.user.profile, target_profile):
+            return render(request, 'frontend/project_list.html', {'projects' : target_profile.project_set.all()})
+
+        else:
+            return HttpResponse(status=404)
+    else:
+        return HttpResponse(status=404)
 
 def index(request, page=1):
     return render(request, 'frontend/index.html', {"page": page, "procedures": Procedure.objects.all()})
+
+@login_required
+def project_details(request, username, proj):
+    target_project = clean(proj)
+    target_username = clean(username)
+
+    try:
+        target_profile = User.objects.get(username=target_username).profile
+    except User.DoesNotExist:
+        return render(request, 'frontend/error.html', {'error_message': 'Invalid user'})
+
+    if profile_intersection(request.user.profile, target_profile):
+        try:
+            project = target_profile.project_set.get(name=target_project)
+        except Project.DoesNotExist:
+                return render(request, 'frontend/error.html', {'error_message': 'Invalid project'})
+        return render(request, 'frontend/project_details.html', {
+        'molecules': project.molecule_set.all(),
+        'project': project,
+        })
+
+
+    else:
+        return render(request, 'frontend/error.html', {'error_message': 'Invalid user'})
+
 
 def clean(txt):
     return bleach.clean(txt)
@@ -375,10 +444,10 @@ def launch_software(request, software):
 def profile_intersection(profile1, profile2):
     if profile1 == profile2:
         return True
-    if profile1.groups != None:
-        if profile2 in profile1.groups.members.all():
+    if profile1.group != None:
+        if profile2 in profile1.group.all()[0].members.all():
             return True
-        if profile2 == profile1.groups.PI:
+        if profile2 == profile1.group.all()[0].PI:
             return True
     if profile1.researchgroup_PI != None:
         for group in profile1.researchgroup_PI.all():
@@ -658,12 +727,6 @@ def manage_pi_requests(request):
     return render(request, 'frontend/manage_pi_requests.html', {
         'profile': request.user.profile,
         'reqs': reqs,
-        })
-
-@login_required
-def claimed_key_table(request):
-    return render(request, 'frontend/claimed_key_table.html', {
-            'profile': request.user.profile,
         })
 
 @login_required

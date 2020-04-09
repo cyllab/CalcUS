@@ -1,0 +1,55 @@
+{% extends 'frontend/base.html' %}
+
+{% load static %}
+
+{% block extrahead %}
+	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
+	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+	<script src="https://unpkg.com/masonry-layout@4.2.0/dist/masonry.pkgd.min.js"></script>
+	<style>
+	.grid-item {
+		float: left;
+		width: 200px;
+		height: 300px;
+		margin: 10px;
+	}
+	.grid-item:hover {
+		opacity: 0.5;
+	}
+
+	</style>
+
+{% endblock %}
+
+{% block content %}
+<div class="container">
+	<nav class="breadcrumb" aria-label="breadcrumbs">
+	 	<ul>
+	    		<li><a href="/projects/">Projects</a></li>
+			<li class="is-active"><a aria-current="page" href="#">{{ target_profile.username }}</a></li>
+	  	</ul>
+	</nav>
+
+	<center>
+		<div id="projects_list">
+			<div class="grid">
+				{% if target_profile.project_set.count > 0 %}
+					{% for proj in target_profile.project_set.all %}
+						<a href="/projects/{{ proj.author }}/{{ proj.name }}">
+							<div class="box grid-item">
+								{{ proj.name }}
+								//stats
+							</div>
+						</a>
+					{% endfor %}
+				{% else %}
+					No project
+				{% endif %}
+			</div>
+		</div>
+	</center>
+{% endblock %}
+

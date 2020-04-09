@@ -7,7 +7,7 @@
 		<script src="https://kit.fontawesome.com/55d0fd4831.js" crossorigin="anonymous"></script>
 	{% block extrahead %}
 	{% endblock %}
-	{% if user.profile.is_SU %}
+	{% if user.is_superuser %}
 		<script>
 			function refresh_pi_requests_notification() {
 				$.ajax({
@@ -68,7 +68,13 @@
 		  	width: 25px;
 		  	height: 25px;
 		}
-
+		.panel {
+			width: 10%;
+			float: left;
+		}
+		.button{
+			width: 100%;
+		}
 	</style>
 	</head>
 	<body>
@@ -76,7 +82,7 @@
 <nav class="navbar is-success" role="navigation" aria-label="main navigation">
   	<div class="navbar-menu">
     		<div class="navbar-start">
-			<a class="navbar-item" href="/home/">
+			<a class="navbar-item" href="/projects/">
 				Home
 			</a>
 
@@ -86,7 +92,7 @@
 			<a class="navbar-item" href="/examples/">
 				Examples
 			</a>
-			{% if user.profile.is_SU %}
+			{% if user.is_superuser %}
 			<a class="navbar-item" href="/manage_pi_requests/">
 				Manage PI requests <strong><font color="red" id="pi_requests" style="margin-left: 5px;"></font></strong>
 			</a>
@@ -112,6 +118,33 @@
       		</div>
     	</div>
 </nav>
+
+{% if user.profile.group != None %}
+	<article class="panel is-primary">
+		<p class="panel-heading">
+			Research Group
+		</p>
+		{% if user.profile.is_PI %}
+			<div class="panel-block">
+				<a class="button is-primary" href="/projects/{{ user.profile.group.all.0.PI.username }}">{{ user.profile.group.all.0.PI.username }}</a>
+			</div>
+				{% for u in user.profile.group.all.0.members.all %}
+					<div class="panel-block">
+						<a class="button" href="/projects/{{ u.username }}">{{ u.username }}</a>
+					</div>
+				{% endfor %}
+		{% else %}
+			<div class="panel-block">
+				<a class="button is-primary" href="/projects/{{ user.profile.group.PI.username }}">{{ user.profile.group.PI.username }}</a>
+			</div>
+				{% for u in user.profile.group.members.all %}
+					<div class="panel-block">
+						<a class="button" href="/projects/{{ u.username }}">{{ u.username }}</a>
+					</div>
+				{% endfor %}
+		{% endif %}
+	</article>
+{% endif %}
 
 <div class="container" id="content_container">
 {% block content %}
