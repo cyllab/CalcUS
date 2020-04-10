@@ -179,7 +179,7 @@
 
 <div class="columns">
 	<div class="column is-half">
-		{% if not ensemble %}
+		{% if not ensemble and not structure %}
 		<script>
 		  	let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 500, 300, {useServices:false, oneMolecule:false});
 		  	sketcher.styles.atoms_useJMOLColors = true;
@@ -203,23 +203,27 @@
 	<div class="column">
 		<form action="/submit_calculation/" method="post" id="calcform" enctype="multipart/form-data">
 
+			{% if not ensemble and not structure %}
 			<div class="field">
 				<label class="label">Draw a structure or choose a file</label>
 				<div class="control">
 					<input type="file" name="file_structure">
 				</div>
 			</div>
+			{% endif %}
 			{% csrf_token %}
 
 			<div class="columns">
+				{% if not ensemble and not structure %}
 				<div class="column">
-					<div class="field">
-						<label class="label">Calculation Name</label>
-						<div class="control">
-							<input class="input" name="calc_name" type="text" placeholder="My Calculation" required>
+						<div class="field">
+							<label class="label">Molecule Name</label>
+							<div class="control">
+								<input class="input" name="calc_name" type="text" placeholder="My Molecule" required>
+							</div>
 						</div>
-					</div>
 				</div>
+				{% endif %}
 				<div class="column is-narrow">
 					<div class="field">
 						<label class="label">Solvent</label>
@@ -340,12 +344,19 @@
 
 		{% if ensemble %}
 		$('<input />').attr('type', 'hidden')
-			.attr('name', "starting_struct")
+			.attr('name', "starting_ensemble")
 			.attr('value', {{ ensemble.id }})
 			.appendTo(this);
 
 		{% endif %}
 
+		{% if structure %}
+		$('<input />').attr('type', 'hidden')
+			.attr('name', "starting_struct")
+			.attr('value', {{ structure.id }})
+			.appendTo(this);
+
+		{% endif %}
 		if (editor.molecules.length > 0) {
 			let mol2 = ChemDoodle.writeMOL(editor.getMolecule());
 
@@ -382,6 +393,12 @@ $( document ).ready(function() {
 		}
 	});
 
+{% endif %}
+
+{% if structure %}
+	let mol_read = ChemDoodle.readXYZ(`{{ structure.xyz_structure }}`);
+	ChemDoodle.relabel(mol_read);
+	editor.loadMolecule(mol_read);	
 {% endif %}
 </script>
 

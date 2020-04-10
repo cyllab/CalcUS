@@ -40,9 +40,9 @@
 					vib_viewer.stopAnimate();
 					vib_viewer.removeAllModels();
 					vib_viewer.clear();
-					vib_viewer.stopAnimate();
-					vib_viewer.addModelsAsFrames(data, "xyz");
-					vib_viewer.animate({loop: "backAndForth", reps: 0});
+					vib_viewer.addModel(data, "xyz");
+					vib_viewer.vibrate(20, 1, true, {});
+					vib_viewer.animate({'loop': 'backAndForth'});
 					vib_viewer.setStyle({}, {stick:{}});
 					vib_viewer.zoomTo();
 					vib_viewer.render();

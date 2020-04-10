@@ -293,10 +293,13 @@ def submit_calculation(request):
     if 'calc_name' in request.POST.keys():
         name = request.POST['calc_name']
     else:
-        return render(request, 'frontend/error.html', {
-            'profile': request.user.profile,
-            'error_message': "No calculation name"
-            })
+        if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys():
+            return render(request, 'frontend/error.html', {
+                'profile': request.user.profile,
+                'error_message': "No calculation name"
+                })
+        else:
+            name = "Followup"
 
     if 'calc_type' in request.POST.keys():
         try:
@@ -389,9 +392,9 @@ def submit_calculation(request):
 
     drawing = True
 
-    if 'starting_struct' in request.POST.keys():
+    if 'starting_ensemble' in request.POST.keys():
         drawing = False
-        start_id = int(request.POST['starting_struct'])
+        start_id = int(clean(request.POST['starting_ensemble']))
         try:
             start_e = Ensemble.objects.get(pk=start_id)
         except Ensemble.DoesNotExist:
@@ -406,6 +409,28 @@ def submit_calculation(request):
                 'error_message': "You do not have permission to access the starting calculation"
                 })
         obj.ensemble = start_e
+    elif 'starting_struct' in request.POST.keys():
+        drawing = False
+        start_id = int(clean(request.POST['starting_struct']))
+        try:
+            start_s = Structure.objects.get(pk=start_id)
+        except Structure.DoesNotExist:
+            return render(request, 'frontend/error.html', {
+                'profile': request.user.profile,
+                'error_message': "No starting ensemble found"
+                })
+        start_author = start_s.parent_ensemble.parent_molecule.project.author
+        if not profile_intersection(profile, start_author):
+            return render(request, 'frontend/error.html', {
+                'profile': request.user.profile,
+                'error_message': "You do not have permission to access the starting calculation"
+                })
+        e = Ensemble.objects.create(name="Extracted Structure")
+        s = Structure.objects.create(xyz_structure=start_s.xyz_structure)
+        e.structure_set.add(s)
+        e.save()
+        obj.ensemble = e
+
     else:
         if len(request.FILES) == 1:
             e = Ensemble.objects.create(name="File Upload")
@@ -1164,7 +1189,6 @@ def get_vib_animation(request):
         if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
             return HttpResponse(status=403)
 
-
         num = request.POST['num']
         expected_file = os.path.join(LAB_RESULTS_HOME, id, "freq_{}.xyz".format(num))
         if os.path.isfile(expected_file):
@@ -1172,24 +1196,6 @@ def get_vib_animation(request):
                 lines = f.readlines()
 
             return HttpResponse(''.join(lines))
-            inds = []
-            num_atoms = lines[0]
-
-            for ind, line in enumerate(lines):
-                if line == num_atoms:
-                    inds.append(ind)
-
-            inds.append(len(lines)-1)
-            xyz_files = []
-            for ind, _ in enumerate(inds[1:]):
-                xyz = ""
-                for _ind in range(inds[ind-1], inds[ind]):
-                    if lines[_ind].strip() != '':
-                        xyz += lines[_ind].strip() + '\\n'
-                xyz_files.append(xyz)
-            return render(request, 'frontend/vib_animation.html', {
-                'xyz_files': xyz_files[1:]
-                })
         else:
             return HttpResponse(status=204)
 
@@ -1342,6 +1348,30 @@ def launch_pk(request, pk):
     return render(request, 'frontend/launch.html', {
             'profile': request.user.profile,
             'ensemble': e,
+            'procedures': BasicStep.objects.all(),
+        })
+
+@login_required
+def launch_structure_pk(request, ee, pk):
+
+    try:
+        e = Ensemble.objects.get(pk=ee)
+    except Ensemble.DoesNotExist:
+        return redirect('/home/')
+
+    profile = request.user.profile
+
+    if e.parent_molecule.project.author != profile and not profile_intersection(profile, e.parent_molecule.project.author):
+        return HttpResponse(status=403)
+
+    try:
+        s = e.structure_set.get(number=pk)
+    except Structure.DoesNotExist:
+        return redirect('/home/')
+
+    return render(request, 'frontend/launch.html', {
+            'profile': request.user.profile,
+            'structure': s,
             'procedures': BasicStep.objects.all(),
         })
 

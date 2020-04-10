@@ -9,18 +9,6 @@
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 
 	<script src="https://unpkg.com/masonry-layout@4.2.0/dist/masonry.pkgd.min.js"></script>
-	<style>
-	.grid-item {
-		float: left;
-		width: 200px;
-		height: 300px;
-		margin: 10px;
-	}
-	.grid-item:hover {
-		opacity: 0.5;
-	}
-
-	</style>
 
 {% endblock %}
 
@@ -41,10 +29,14 @@
 				{% if ensembles %}
 					{% for e in ensembles %}
 						<a href="/ensemble/{{ e.id}}">
-							<div class="box grid-item">
-								{{ e.name }}
-								//stats
-							</div>
+							<article class="message grid-item">
+								<div class="message-header">
+									<p>{{ e.name }}</p>
+								</div>
+								<div class="message-body">
+								{{ e.structure_set.count }} Structure(s)	
+								</div>
+							</article>
 						</a>
 					{% endfor %}
 				{% else %}

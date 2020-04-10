@@ -148,6 +148,7 @@ class Ensemble(models.Model):
     name = models.CharField(max_length=100, default="Nameless ensemble")
     parent_molecule = models.ForeignKey('Molecule', on_delete=models.CASCADE, blank=True, null=True)
 
+    hidden = models.BooleanField(default=False)
     def __repr__(self):
         return self.id
 

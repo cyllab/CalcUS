@@ -9,18 +9,6 @@
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 
 	<script src="https://unpkg.com/masonry-layout@4.2.0/dist/masonry.pkgd.min.js"></script>
-	<style>
-	.grid-item {
-		float: left;
-		width: 200px;
-		height: 300px;
-		margin: 10px;
-	}
-	.grid-item:hover {
-		opacity: 0.5;
-	}
-
-	</style>
 
 {% endblock %}
 
@@ -37,10 +25,14 @@
 		<div class="grid">
 			{% for mol in molecules %}
 				<a href="/molecule/{{ mol.id }}">
-					<div class="box grid-item">
-						{{ mol.name }}
-						//stats
-					</div>
+					<article class="message grid-item">
+						<div class="message-header">
+							<p>{{ mol.name }}</p>
+						</div>
+						<div class="message-body">
+						{{ mol.ensemble_set.count }} Ensemble(s)	
+						</div>
+					</article>
 				</a>
 			{% endfor %}
 		</div>

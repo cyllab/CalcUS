@@ -10,15 +10,6 @@
 
 	<script src="https://unpkg.com/masonry-layout@4.2.0/dist/masonry.pkgd.min.js"></script>
 	<style>
-	.grid-item {
-		float: left;
-		width: 200px;
-		height: 300px;
-		margin: 10px;
-	}
-	.grid-item:hover {
-		opacity: 0.5;
-	}
 
 	</style>
 
@@ -33,16 +24,19 @@
 	  	</ul>
 	</nav>
 
-	<center>
 		<div id="projects_list">
 			<div class="grid">
 				{% if target_profile.project_set.count > 0 %}
 					{% for proj in target_profile.project_set.all %}
 						<a href="/projects/{{ proj.author }}/{{ proj.name }}">
-							<div class="box grid-item">
-								{{ proj.name }}
-								//stats
-							</div>
+							<article class="message grid-item">
+								<div class="message-header">
+									<p>{{ proj.name }}</p>
+								</div>
+								<div class="message-body">
+								{{ proj.molecule_set.count }} Molecule(s)	
+								</div>
+							</article>
 						</a>
 					{% endfor %}
 				{% else %}
@@ -50,6 +44,5 @@
 				{% endif %}
 			</div>
 		</div>
-	</center>
 {% endblock %}
 

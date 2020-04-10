@@ -636,9 +636,8 @@ def xtb_freq(in_file, calc):
             exit(0)
 
         num_freqs = int(num_freqs)
-    SCALING = 0.05
-    hess = [i*SCALING for i in hess]
 
+    '''
     def output_with_displacement(mol, out, hess):
         #Simple displacement based on the hessian
         t = 10
@@ -667,11 +666,15 @@ def xtb_freq(in_file, calc):
             for a, x, y, z in mol:
                 out.write("{} {} {} {}\n".format(a, x, y, z))
 
+    '''
     for ind in range(num_freqs):
         _hess = hess[3*num_atoms*ind:3*num_atoms*(ind+1)]
         with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
-            output_with_displacement(struct, out, _hess)
-
+            out.write("{}\n".format(num_atoms))
+            out.write("CalcUS\n")
+            for ind2, (a, x, y, z) in enumerate(struct):
+                out.write("{} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}\n".format(a, x, y, z, *_hess[3*ind2:3*ind2+3]))
+            #output_with_displacement(struct, out, _hess)
     return 0
 
 def crest_generic(in_file, calc, mode):
@@ -1044,10 +1047,13 @@ def gen_fingerprint(structure):
     with open(mol_file, 'w') as out:
         for line in mol:
             out.write(line)
-    os.system("inchi-1 {}".format(mol_file))
-    with open(mol_file + '.txt') as f:
-        lines = f.readlines()
-    inchi = lines[2][6:]
+    a = os.system("inchi-1 {}".format(mol_file))
+    if a == 0:
+        with open(mol_file + '.txt') as f:
+            lines = f.readlines()
+        inchi = lines[2][6:]
+    else:
+        inchi = str(time())
     return inchi
 
 
@@ -1087,7 +1093,6 @@ def dispatcher(drawing, order_id):
                 fingerprint = fing
             else:
                 assert fingerprint == fing
-        print("Fingerprint: {}".format(fingerprint))
         try:
             molecule = Molecule.objects.get(inchi=fingerprint, project=order.project)
         except Molecule.DoesNotExist:

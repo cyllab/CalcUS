@@ -54,6 +54,7 @@ urlpatterns = [
 
     path('launch/', views.launch, name='launch'),
     path('launch/<int:pk>', views.launch_pk, name='launch_pk'),
+    path('launch/<int:ee>/<int:pk>', views.launch_structure_pk, name='launch_structure_pk'),
     path('software/<str:software>', views.launch_software, name='launch_software'),
 
     path('get_cube/', views.get_cube, name='get_cube'),
