@@ -6,6 +6,8 @@ from django.dispatch import receiver
 from django import template
 import random, string
 
+from .constants import *
+
 register = template.Library()
 
 
@@ -149,6 +151,61 @@ class Ensemble(models.Model):
     def __repr__(self):
         return self.id
 
+    @property
+    def unique_parameters(self):
+        unique = []
+        structs = self.structure_set.all()
+        for s in structs:
+            for p in s.properties.all():
+                if p.parameters not in unique:
+                    unique.append(p.parameters)
+        return unique
+
+    def relative_energy(self, structure, params):
+        lowest = 0
+        try:
+            main_p = structure.properties.get(parameters=params)
+        except Property.DoesNotExist:
+            return '-'
+
+        for s in self.structure_set.all():
+            try:
+                p = s.properties.get(parameters=params)
+            except Property.DoesNotExist:
+                continue#Handle this better?
+            if p.energy < lowest:
+                lowest = p.energy
+        return "{:.1f}".format((main_p.energy - lowest)*float(HARTREE_VAL))
+
+    def weight(self, structure, params):
+        data = []
+        for s in self.structure_set.all():
+            try:
+                p = s.properties.get(parameters=params)
+            except Property.DoesNotExist:
+                continue#Handle this better?
+            data.append([decimal.Decimal(p.energy), structure.degeneracy])
+
+        if len(data) == 1:
+            return 1
+
+        '''
+        sumnum = decimal.Decimal(0)
+        sumdenum = decimal.Decimal(0)
+        for i in range(1, len(data)):
+            exp_val = data[i][1]*E_VAL**(-(data[i][0]-data[0][0])/(gas_constant*temp))
+            sumnum += decimal.Decimal(exp_val)*(data[i])
+            sumdenum += exp_val
+        weights = []
+        for i, _ in enumerate(data):
+            weights.append(data[i][1]*E_VAL**(-(data[i][0]-data[0][0])/(gas_constant*temp))/(decimal.Decimal(1)+sumdenum))
+
+        sums[process_name(name, meso)] = [(gas_constant*temp), (decimal.Decimal(1)+sumdenum)]
+
+        return minval, float((data[0]+sumnum)/(decimal.Decimal(1)+sumdenum)), weights
+        '''
+        return 'unimplemented'
+
 class Property(models.Model):
     parameters = models.ForeignKey('Parameters', on_delete=models.CASCADE, blank=True, null=True)
     parent_structure = models.ForeignKey('Structure', on_delete=models.CASCADE, blank=True, null=True, related_name="properties")
@@ -156,14 +213,21 @@ class Property(models.Model):
     energy = models.FloatField(default=0)
     free_energy = models.FloatField(default=0)
 
-    nmr_shifts = models.CharField(max_length=5000, default="")
-    uvvis_spectrum = models.CharField(max_length=100000, default="")
-
     rel_energy = models.FloatField(default=0)
     boltzmann_weight = models.FloatField(default=1.)
     homo_lumo_gap = models.FloatField(default=0)
 
+    uvvis = models.PositiveIntegerField(default=0)
+    nmr = models.PositiveIntegerField(default=0)
+    mo = models.PositiveIntegerField(default=0)
+    freq = models.PositiveIntegerField(default=0)
 
+    geom = models.BooleanField(default=False)
+
+    def __eq__(self, other):
+        values = [(k,v) for k,v in self.__dict__.items() if k != '_state']
+        other_values = [(k,v) for k,v in other.__dict__.items() if k != '_state']
+        return values == other_values
 
 
 class Structure(models.Model):

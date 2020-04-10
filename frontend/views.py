@@ -23,7 +23,7 @@ from django.contrib.auth.models import User
 from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
-from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder
+from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property
 from .tasks import run_procedure, dispatcher
 from .decorators import superuser_required
 from .tasks import system
@@ -164,6 +164,88 @@ def project_details(request, username, proj):
 
 def clean(txt):
     return bleach.clean(txt)
+
+@login_required
+def molecule(request, pk):
+    try:
+        mol = Molecule.objects.get(pk=pk)
+    except Molecule.DoesNotExist:
+        return redirect('/home/')
+
+    if not profile_intersection(request.user.profile, mol.project.author):
+        return redirect('/home/')
+
+    return render(request, 'frontend/molecule.html', {'profile': request.user.profile,
+        'ensembles': mol.ensemble_set.all(),
+        'molecule': mol})
+
+@login_required
+def ensemble(request, pk):
+    try:
+        e = Ensemble.objects.get(pk=pk)
+    except Ensemble.DoesNotExist:
+        return redirect('/home/')
+
+    if not profile_intersection(request.user.profile, e.parent_molecule.project.author):
+        return redirect('/home/')
+
+    return render(request, 'frontend/ensemble.html', {'profile': request.user.profile,
+        'ensemble': e})
+
+@login_required
+def details_ensemble(request):
+    if request.method == 'POST':
+        pk = int(clean(request.POST['id']))
+        p_id = int(clean(request.POST['p_id']))
+        try:
+            e = Ensemble.objects.get(pk=pk)
+        except Ensemble.DoesNotExist:
+            return HttpResponse(status=403)
+        try:
+            p = Parameters.objects.get(pk=p_id)
+        except Parameters.DoesNotExist:
+            return HttpResponse(status=403)
+
+        if not profile_intersection(request.user.profile, e.parent_molecule.project.author):
+            return HttpResponse(status=403)
+
+        return render(request, 'frontend/details_ensemble.html', {'profile': request.user.profile,
+            'ensemble': e, 'parameters': p})
+
+    return HttpResponse(status=403)
+
+@login_required
+def details_structure(request):
+    if request.method == 'POST':
+        pk = int(clean(request.POST['id']))
+        p_id = int(clean(request.POST['p_id']))
+        num = int(clean(request.POST['num']))
+        try:
+            e = Ensemble.objects.get(pk=pk)
+        except Ensemble.DoesNotExist:
+            return HttpResponse(status=403)
+
+        if not profile_intersection(request.user.profile, e.parent_molecule.project.author):
+            return HttpResponse(status=403)
+
+        try:
+            s = e.structure_set.get(number=num)
+        except Structure.DoesNotExist:
+            return HttpResponse(status=403)
+
+        try:
+            p = Parameters.objects.get(pk=p_id)
+        except Parameters.DoesNotExist:
+            return HttpResponse(status=403)
+
+        prop = s.properties.get(parameters=p)
+
+
+        return render(request, 'frontend/details_structure.html', {'profile': request.user.profile,
+            'structure': s, 'property': prop, 'ensemble': e})
+
+    return HttpResponse(status=403)
+
 
 @login_required
 def details(request, pk):
@@ -329,7 +411,7 @@ def submit_calculation(request):
             e = Ensemble.objects.create()
             obj.ensemble = e
 
-            s = Structure.objects.create(parent_ensemble=e)
+            s = Structure.objects.create(parent_ensemble=e, number=1)
 
             drawing = False
             in_file = clean(request.FILES['file_structure'].read().decode('utf-8'))
@@ -351,10 +433,10 @@ def submit_calculation(request):
         else:
             if 'structureB' in request.POST.keys():
                 drawing = True
-                e = Ensemble.objects.create()
+                e = Ensemble.objects.create(name="Drawn Structure")
                 obj.ensemble = e
 
-                s = Structure.objects.create(parent_ensemble=e)
+                s = Structure.objects.create(parent_ensemble=e, number=1)
 
 
                 mol = clean(request.POST['structureB'])
@@ -735,16 +817,45 @@ def manage_pi_requests(request):
 @login_required
 def conformer_table(request, pk):
     id = str(pk)
-    calc = Calculation.objects.get(pk=id)
+    try:
+        e = Ensemble.objects.get(pk=id)
+    except Ensemble.DoesNotExist:
+        return HttpResponse(status=403)
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+    if e.parent_molecule.project.author != profile and not profile_intersection(profile, e.parent_molecule.project.author):
         return HttpResponse(status=403)
 
     return render(request, 'frontend/conformer_table.html', {
             'profile': request.user.profile,
-            'calculation': calc,
+            'ensemble': e,
         })
+
+@login_required
+def conformer_table_post(request):
+    if request.method == 'POST':
+        id = int(clean(request.POST['ensemble_id']))
+        p_id = int(clean(request.POST['param_id']))
+        try:
+            e = Ensemble.objects.get(pk=id)
+        except Ensemble.DoesNotExist:
+            return HttpResponse(status=403)
+        profile = request.user.profile
+
+        if e.parent_molecule.project.author != profile and not profile_intersection(profile, e.parent_molecule.project.author):
+            return HttpResponse(status=403)
+        try:
+            p = Parameters.objects.get(pk=p_id)
+        except Parameters.DoesNotExist:
+            return HttpResponse(status=403)
+
+        return render(request, 'frontend/conformer_table.html', {
+                'profile': request.user.profile,
+                'ensemble': e,
+                'parameters': p
+            })
+    else:
+        return HttpResponse(status=403)
 
 @login_required
 def icon(request, pk):
@@ -851,12 +962,9 @@ def ir_spectrum(request, pk):
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
 
-    if not calc.procedure.has_freq:
-        return HttpResponse(status=403)
-
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+    if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
         return HttpResponse(status=403)
 
     spectrum_file = os.path.join(LAB_RESULTS_HOME, id, "IR.csv")
@@ -876,7 +984,7 @@ def vib_table(request, pk):
 
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+    if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
         return HttpResponse(status=403)
 
     vib_file = os.path.join(LAB_RESULTS_HOME, id, "vibspectrum")
@@ -1021,11 +1129,14 @@ def get_structure(request):
         url = request.POST['id']
         id = url.split('/')[-1]
 
-        calc = Calculation.objects.get(pk=id)
+        try:
+            e = Ensemble.objects.get(pk=id)
+        except Ensemble.DoesNotExist:
+            return HttpResponse(status=403)
 
         profile = request.user.profile
 
-        if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+        if e.parent_molecule.project.author != profile and not profile_intersection(profile, e.parent_molecule.project.author):
             return HttpResponse(status=403)
 
         if 'num' in request.POST.keys():
@@ -1033,23 +1144,12 @@ def get_structure(request):
         else:
             num = 1
 
-
-        if calc.status != 2 and calc.status != 3:
-                return HttpResponse(status=204)
-
-        if calc.result_ensemble != None:
-            try:
-                struct = calc.result_ensemble.structure_set.get(number=num)
-                if calc.unseen:
-                    calc.unseen = False
-                    calc.save()
-
-            except Structure.DoesNotExist:
-                return HttpResponse(status=204)
-            else:
-                return HttpResponse(struct.xyz_structure)
-        else:
+        try:
+            struct = e.structure_set.get(number=num)
+        except Structure.DoesNotExist:
             return HttpResponse(status=204)
+        else:
+            return HttpResponse(struct.xyz_structure)
 
 @login_required
 def get_vib_animation(request):
@@ -1061,12 +1161,9 @@ def get_vib_animation(request):
 
         profile = request.user.profile
 
-        if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+        if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
             return HttpResponse(status=403)
 
-
-        if calc.procedure.has_freq == False:
-            return HttpResponse(status=403)
 
         num = request.POST['num']
         expected_file = os.path.join(LAB_RESULTS_HOME, id, "freq_{}.xyz".format(num))
@@ -1074,6 +1171,7 @@ def get_vib_animation(request):
             with open(expected_file) as f:
                 lines = f.readlines()
 
+            return HttpResponse(''.join(lines))
             inds = []
             num_atoms = lines[0]
 

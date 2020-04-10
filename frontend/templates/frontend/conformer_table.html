@@ -1,11 +1,34 @@
-{% if calculation %}
-	{% for res in calculation.result_ensemble.structure_set.all %}
+{% load details_tags %}
+
+{% if ensemble %}
+	{% for res in ensemble.structure_set.all %}
 	<tr id="conf_{{ res.number }}" {% if res.number == 1 %} class="is-selected" {% endif %}>
 			<th>{{ res.number }}</th>
-			<th>{{ res.energy }}</th>
-			<th>{{ res.rel_energy|floatformat:1 }}</th>
+
+			<th>
+			{% if parameters %}
+				{% get_structure_energy res parameters %}
+			{% else %}
+			-
+			{% endif %}
+			</th>
+			
+			<th>
+			{% if parameters %}
+				{% get_structure_relative_energy res parameters ensemble %}
+			{% else %}
+			-
+			{% endif %}
+			</th>
+
 			<th>{{ res.degeneracy }}</th>
-			<th>{{ res.boltzmann_weight|floatformat:2 }}</th>
+			<th>
+			{% if parameters %}
+				{% get_structure_weight res parameters ensemble %}
+			{% else %}
+			-
+			{% endif %}
+			</th>
 		</tr>
 	{% endfor %}
 {% endif %}

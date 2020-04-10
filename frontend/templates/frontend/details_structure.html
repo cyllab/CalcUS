@@ -1,16 +1,11 @@
 
-{% if property.free_energy != 0 %}
+{% if property.freq != 0 %}
 	<span class="tag is-danger is-large">Frequencies</span>
 	<div class="columns box">
 		<div class="column">
 
-			<div id="vib_animation">
-				<script>
-				let animator = new ChemDoodle.MovieCanvas3D('animator', 400, 400, {});
-					animator.styles.set3DRepresentation('Stick');
-					animator.styles.backgroundColor = '#FFFFFF';
-				</script>
-			</div>
+
+			<div id="vib_animation" style="width: 400px; height: 400px; position: relative;"></div>
 		</div>
 		<div class="column">
 			<table class="table">
@@ -31,12 +26,42 @@
 		</div>
 	</div>
 	<script>
+
+		function animate_vib(num) {
+			$.ajax({
+				method: "POST",	 	 
+				url: "/get_vib_animation/",
+				data: {'id': {{ property.freq }}, 'num': num },
+
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				success: function(data, textStatus, xhr) {
+					vib_viewer.stopAnimate();
+					vib_viewer.removeAllModels();
+					vib_viewer.clear();
+					vib_viewer.stopAnimate();
+					vib_viewer.addModelsAsFrames(data, "xyz");
+					vib_viewer.animate({loop: "backAndForth", reps: 0});
+					vib_viewer.setStyle({}, {stick:{}});
+					vib_viewer.zoomTo();
+					vib_viewer.render();
+				}
+			});
+		}
+
+
+	   	var vib_viewer = $3Dmol.createViewer("vib_animation");
+
 		$(document).ready(function(){
 
-		$("#vib_table").load("/vib_table/{{ calculation.id }}");
+	    	vib_viewer.setBackgroundColor(0xffffff);
+
+		
+		$("#vib_table").load("/vib_table/{{ property.freq }}");
 			g4 = new Dygraph(
 			document.getElementById("ir_spectrum"),
-				"/ir_spectrum/{{ calculation.id }}", 
+				"/ir_spectrum/{{ property.freq }}", 
 				{
 					strokeWidth: 2,	
 					xlabel: "Wavelength (cm^-1)",

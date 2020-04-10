@@ -3,6 +3,7 @@
 {% load i18n bulma_tags %}
 
 {% load static %}
+{% load details_tags %}
 
 {% block extrahead %}
 	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
@@ -11,11 +12,9 @@
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
 
-	{% if calculation.has_freq or calculation.has_nmr or calculation.has_uvvis %}
 	<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
 	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
-	{% endif %}
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/1.4.0/3Dmol-min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/1.4.0/3Dmol-min.js"></script>
 
 	<script>
 		$(document).ready(function(){
@@ -164,6 +163,23 @@
 				}
 		  
 			});
+			$.ajax({
+				method: "POST",	 	 
+				url: "/conformer_table/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				data: {
+					'ensemble_id': {{ ensemble.id }},
+					'param_id': p_id,
+				},
+				success: function(data, textStatus, xhr) {
+					if (xhr.status != 204) {
+						$("#conf_table").html(data);
+						conf_number = document.getElementById("conf_table").rows.length;
+					}
+				}
+			});
 
 		}
 	</script>
@@ -224,7 +240,7 @@
 	<div class="tabs">
 	  	<ul>
 			{% for p in ensemble.unique_parameters %}
-				<li><a onclick="refresh_details({{ p.id }})" id="tab_{{ p.id }}">{{ p.program }} - {{ p.method }}</a></li>
+				<li><a onclick="refresh_details({{ p.id }})" id="tab_{{ p.id }}">{{ p.program }} - {{ p.method }}{% get_geom_flag ensemble p %}</a></li>
 			{% endfor %}
 	  	</ul>
 	</div>

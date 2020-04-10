@@ -47,6 +47,11 @@ urlpatterns = [
     path('delete_access/<int:pk>', views.delete_access, name='delete_access'),
 
     #Calculations
+    path('molecule/<int:pk>', views.molecule, name='molecule'),
+    path('ensemble/<int:pk>', views.ensemble, name='ensemble'),
+    path('details_ensemble/', views.details_ensemble, name='details_ensemble'),
+    path('details_structure/', views.details_structure, name='details_structure'),
+
     path('launch/', views.launch, name='launch'),
     path('launch/<int:pk>', views.launch_pk, name='launch_pk'),
     path('software/<str:software>', views.launch_software, name='launch_software'),
@@ -56,6 +61,7 @@ urlpatterns = [
     path('next_step/<int:pk>', views.next_step, name='next_step'),
     path('info_table/<int:pk>', views.info_table, name='info_table'),
     path('conformer_table/<int:pk>', views.conformer_table, name='conformer_table'),
+    path('conformer_table/', views.conformer_table_post, name='conformer_table_post'),
     path('vib_table/<int:pk>', views.vib_table, name='vib_table'),
     path('ir_spectrum/<int:pk>', views.ir_spectrum, name='ir_spectrum'),
 

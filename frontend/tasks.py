@@ -35,6 +35,7 @@ except:
     is_test = False
 import periodictable
 import mendeleev
+from .constants import *
 
 ATOMIC_NUMBER = {
         }
@@ -59,26 +60,6 @@ locks = {}
 remote_dirs = {}
 
 
-HARTREE_VAL = decimal.Decimal(2625.499638)
-E_VAL = decimal.Decimal(2.7182818284590452353602874713527)
-R_CONSTANT = decimal.Decimal(8.314)
-TEMP = decimal.Decimal(298)
-SOLVENT_TABLE = {
-    'Acetone': 'acetone',
-    'Acetonitrile': 'acetonitrile',
-    'Benzene': 'benzene',
-    'Dichloromethane': 'ch2cl2',
-    'Chloroform': 'chcl3',
-    'Carbon disulfide': 'cs2',
-    'Dimethylformamide': 'dmf',
-    'Dimethylsulfoxide': 'dmso',
-    'Diethyl ether': 'ether',
-    'Water': 'h2o',
-    'Methanol': 'methanol',
-    'n-Hexane': 'n-hexane',
-    'Tetrahydrofuran': 'thf',
-    'Toluene': 'toluene',
-        }
 
 
 def direct_command(command, conn, lock):
@@ -370,13 +351,24 @@ def xtb_opt(in_file, calc):
             hl_gap = float(lines[ind].split()[3])
             E = float(lines[ind-2].split()[3])
 
-        s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=1)
-        prop = Property.objects.create(homo_lumo_gap=hl_gap, energy=E, parameters=calc.parameters, parent_structure=s)
+        s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=1, degeneracy=1)
+        prop = get_or_create(calc.parameters, s)
+        prop.homo_lumo_gap = hl_gap
+        prop.energy = E
+        prop.geom = True
         s.save()
-        prop.save
+        prop.save()
         return 0
     else:
         return a
+
+def get_or_create(params, struct):
+    try:
+        prop = Property.objects.get(parameters=params, parent_structure=struct)
+    except Property.DoesNotExist:
+        prop = Property.objects.create(parameters=params, parent_structure=struct)
+
+    return prop
 
 def xtb_ts(in_file, calc):
     solvent = calc.parameters.solvent
@@ -433,12 +425,16 @@ def xtb_ts(in_file, calc):
         hl_gap = float(olines[ind].split()[3])
 
     s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=1)
-    prop = Property.objects.create(homo_lumo_gap=hl_gap, energy=E, parameters=calc.parameters, parent_structure=s)
+    prop = get_or_create(calc.parameters, s)
+    prop.homo_lumo_gap = hl_gap
+    prop.energy = E
+    prop.geom = True
+
     s.xyz_structure = '\n'.join([i.strip() for i in lines])
 
     s.save()
     prop.save()
-    return 0, e
+    return 0
 
 
 def xtb_scan(in_file, calc):
@@ -510,8 +506,10 @@ def xtb_scan(in_file, calc):
                 struct = ''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]]])
 
                 r = Structure.objects.create(number=metaind+1)
-                prop = Property.objects.create(energy=E, parent_structure=r, parameters=calc.parameters)
-                #assert r.energy == E
+                prop = get_or_create(calc.parameters, r)
+                prop.energy = E
+                prop.geom = True
+                prop.save()
                 r.xyz_structure = struct
                 r.save()
                 if E < min_E:
@@ -537,7 +535,9 @@ def xtb_scan(in_file, calc):
                 ind -= 1
             hl_gap = float(lines[ind].split()[3])
             E = float(lines[ind-2].split()[3])
-            prop = Property.objects.create(energy=E, homo_lumo_gap=hl_gap, parent_structure=r, parameters=calc.parameters)
+            prop = get_or_create(calc.parameters, r)
+            prop.energy = E
+            prop.homo_lumo_gap = hl_gap
             #assert E == Eb
 
             r.homo_lumo_gap = hl_gap
@@ -610,13 +610,13 @@ def xtb_freq(in_file, calc):
                     out.write("-{:.1f},{:.5f}\n".format(_x, i))
 
 
-    e = calc.result_ensemble
-    assert e.structure_set.count() == 1
+    prop = get_or_create(calc.parameters, calc.structure)
+    prop.energy = E
+    prop.free_energy = G
+    prop.freq = calc.id
+    prop.save()
 
-    e.structure_set.all()[0].free_energy = G
-    e.save()
-
-    lines = [i +'\n' for i in e.structure_set.all()[0].xyz_structure.split('\n')][:-1]#Todo: make general
+    lines = [i +'\n' for i in calc.structure.xyz_structure.split('\n')][:-1]
     num_atoms = int(lines[0].strip())
     lines = lines[2:]
 
@@ -674,7 +674,7 @@ def xtb_freq(in_file, calc):
         with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
             output_with_displacement(struct, out, _hess)
 
-    return 0, e
+    return 0
 
 def crest_generic(in_file, calc, mode):
 
@@ -686,18 +686,19 @@ def crest_generic(in_file, calc, mode):
     else:
         solvent_add = ''
 
+    folder = '/'.join(in_file.split('/')[:-1])
+    os.chdir(folder)
     if mode == "Final":#Restrict the number of conformers
         a = system("crest {} --chrg {} {} -rthr 0.4 -ewin 4".format(in_file, charge, solvent_add), 'crest.out')
     elif mode == "NMR":#No restriction, as it will be done by enso
         a = system("crest {} --chrg {} {} -nmr".format(in_file, charge, solvent_add), 'crest.out')
     else:
         print("Invalid crest mode selected!")
-        return -1, 'e'
+        return -1
 
     if a != 0:
-        return -1, 'e'
+        return -1
 
-    folder = '/'.join(in_file.split('/')[:-1])
     with open("{}/crest.out".format(folder)) as f:
         lines = f.readlines()
         ind = len(lines) - 1
@@ -706,7 +707,6 @@ def crest_generic(in_file, calc, mode):
             ind -= 1
 
         weighted_energy = 0.0
-        e = Ensemble.objects.create()
         ind += 1
         while lines[ind].find("T /K") == -1:
             sline = lines[ind].strip().split()
@@ -717,10 +717,17 @@ def crest_generic(in_file, calc, mode):
                 number = int(sline[5])
                 degeneracy = int(sline[6])
                 weighted_energy += energy*weight
-                r = Structure.objects.create(number=number, energy=energy, rel_energy=rel_energy, boltzmann_weight=weight, homo_lumo_gap=0.0, degeneracy=degeneracy)
+                r = Structure.objects.create(number=number, degeneracy=degeneracy)
+                prop = get_or_create(calc.parameters, r)
+                prop.energy = energy
+                prop.boltzmann_weight = weight
+                prop.geom = True
+
                 r.save()
-                e.structure_set.add(r)
+                prop.save()
+                calc.result_ensemble.structure_set.add(r)
             ind += 1
+        calc.result_ensemble.save()
 
     with open("{}/crest_conformers.xyz".format(folder)) as f:
         lines = f.readlines()
@@ -733,19 +740,16 @@ def crest_generic(in_file, calc, mode):
             ind += 1
         inds.append(len(lines))
 
-        assert len(inds)-1 == len(e.structure_set.all())
+        assert len(inds)-1 == len(calc.result_ensemble.structure_set.all())
         for metaind, mol in enumerate(inds[:-1]):
             E = float(lines[inds[metaind]+1].strip())
             struct = ''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]]])
-            r = e.structure_set.get(number=metaind+1)
+            r = calc.result_ensemble.structure_set.get(number=metaind+1)
             #assert r.energy == E
             r.xyz_structure = struct
-
             r.save()
 
-    e.weighted_energy = weighted_energy
-    e.save()
-    return 0, e
+    return 0
 
 def crest(in_file, calc):
     return crest_generic(in_file, calc, "Final")
@@ -812,7 +816,7 @@ end
     save_to_results("{}/in-LUMO.cube".format(folder), calc)
     save_to_results("{}/in-LUMOA.cube".format(folder), calc)
     save_to_results("{}/in-LUMOB.cube".format(folder), calc)
-    return 0, calc.result_ensemble
+    return 0
 
 def enso(in_file, calc):
 
@@ -930,12 +934,12 @@ def xtb_stda(in_file, calc):
     os.chdir(folder)
     a = system("xtb4stda {} -chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
     if a != 0:
-        return a, 'e'
+        return a
 
     os.chdir(folder)
     a = system("stda -xtb -e 12", 'stda.out')
     if a != 0:
-        return a, 'e'
+        return a
 
     f_x = np.arange(120.0, 1200.0, 1.0)
     with open("{}/tda.dat".format(folder)) as f:
@@ -961,7 +965,7 @@ def xtb_stda(in_file, calc):
         for ind, x in enumerate(f_x):
             out.write("{},{:.8f}\n".format(x, yy[ind]))
 
-    return 0, calc.result_ensemble
+    return 0
 
 def dist(a, b):
     return math.sqrt((a[1] - b[1])**2 + (a[2] - b[2])**2 + (a[3] - b[3])**2)
@@ -1074,6 +1078,8 @@ def dispatcher(drawing, order_id):
     for s in ensemble.structure_set.all():
         generate_xyz_structure(drawing, s)
 
+    ensemble.save()
+
     if ensemble.parent_molecule is None:
         fingerprint = ""
         for s in ensemble.structure_set.all():
@@ -1083,15 +1089,22 @@ def dispatcher(drawing, order_id):
                 fingerprint = fing
             else:
                 assert fingerprint == fing
-        molecule = Molecule.objects.create(name=order.name, inchi=fingerprint, project=order.project)
-        molecule.save()
+        print("Fingerprint: {}".format(fingerprint))
+        try:
+            molecule = Molecule.objects.get(inchi=fingerprint, project=order.project)
+        except Molecule.DoesNotExist:
+            molecule = Molecule.objects.create(name=order.name, inchi=fingerprint, project=order.project)
+            molecule.save()
+        ensemble.parent_molecule = molecule
+        ensemble.save()
     else:
         molecule = ensemble.parent_molecule
 
     group_order = []
 
     if step.creates_ensemble:
-        e = Ensemble.objects.create()
+        e = Ensemble.objects.create(name="Result Ensemble")
+        print("creating ensemble {}".format(e.id))
         molecule.ensemble_set.add(e)
         molecule.save()
         e.save()
@@ -1102,6 +1115,7 @@ def dispatcher(drawing, order_id):
             group_order.append(run_calc.s(c.id).set(queue='comp'))
 
     else:
+        print("using ensemble {}".format(ensemble.id))
         for s in ensemble.structure_set.all():
             c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), parameters=order.parameters, step=step, constraints=order.constraints)
             c.save()
@@ -1125,7 +1139,7 @@ def run_calc(calc_id):
     with open(in_file, 'w') as out:
         out.write(calc.structure.xyz_structure)
 
-    f(in_file, calc)
+    return f(in_file, calc)
 
 @app.task
 def run_procedure(drawing, calc_id):
