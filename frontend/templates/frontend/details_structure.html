@@ -1,0 +1,205 @@
+
+{% if property.free_energy != 0 %}
+	<span class="tag is-danger is-large">Frequencies</span>
+	<div class="columns box">
+		<div class="column">
+
+			<div id="vib_animation">
+				<script>
+				let animator = new ChemDoodle.MovieCanvas3D('animator', 400, 400, {});
+					animator.styles.set3DRepresentation('Stick');
+					animator.styles.backgroundColor = '#FFFFFF';
+				</script>
+			</div>
+		</div>
+		<div class="column">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Vibration (cm^-1)</th>
+						<th>Vibration (cm^-1)</th>
+						<th>Vibration (cm^-1)</th>
+					</tr>
+				</thead>
+				<tbody id="vib_table">
+
+				</tbody>
+			</table>
+
+			<div id="ir_spectrum" style="width:600px; height:400px; margin-bottom: 30px;">
+			</div>
+		</div>
+	</div>
+	<script>
+		$(document).ready(function(){
+
+		$("#vib_table").load("/vib_table/{{ calculation.id }}");
+			g4 = new Dygraph(
+			document.getElementById("ir_spectrum"),
+				"/ir_spectrum/{{ calculation.id }}", 
+				{
+					strokeWidth: 2,	
+					xlabel: "Wavelength (cm^-1)",
+					ylabel: "Intensity",
+
+				axes: {
+					x: {
+						axisLabelFormatter: function(cm) {
+							return -cm;
+						},
+						valueFormatter: function(cm) {
+							return -cm;
+						}
+					},
+				}
+				}
+
+			);
+		});
+	</script>
+{% endif %}
+
+{% if property.uvvis != 0 %}
+<span class="tag is-danger is-large">UV-Vis</span>
+<div class="columns box">
+	<div class="column">
+<center>
+	<div id="uvvis_spectrum" style="width:80%; height:400px; margin-bottom: 30px;"></div>
+</center>
+	<script>
+		$(document).ready(function(){
+					g2 = new Dygraph(
+			document.getElementById("uvvis_spectrum"),
+				"/uvvis/{{ property.uvvis }}", 
+				{
+					strokeWidth: 2,	
+					xlabel: "Wavelength (nm)",
+					ylabel: "Absorbance"
+				}          
+			);
+		});
+	</script>
+	</div>
+</div>
+{% endif %}
+
+{% if property.nmr != 0 %}
+<span class="tag is-danger is-large">NMR</span>
+<div class="columns box">
+	<div class="column">
+<center>
+	<div id="nmr_spectrum" style="width:80%; height:400px; margin-bottom: 30px;"></div>
+</center>
+	<script>
+		$(document).ready(function(){
+			g3 = new Dygraph(
+			document.getElementById("nmr_spectrum"),
+				"/nmr/{{ property.nmr }}", 
+				{
+					strokeWidth: 2,	
+					xlabel: "Chemical shift (ppm)",
+					ylabel: "Intensity",
+					dateWindow: [-10, 0],
+					axes: {
+						x: {
+							axisLabelFormatter: function(ppm) {
+								return -ppm.toPrecision(2);
+							},
+							valueFormatter: function(ppm) {
+								return -ppm.toPrecision(3);
+							}
+						},
+					}
+
+				}          
+			);
+		});
+	</script>
+	</div>
+</div>
+{% endif %}
+
+{% if property.mo != 0 %}
+<span class="tag is-danger is-large">Molecular Orbitals</span>
+<div class="columns box">
+	<div class="column">
+	</div>
+	<div class="column is-tight">
+
+	<div id="mo_viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
+
+	<script>
+
+	   	var mo_viewer = $3Dmol.createViewer("mo_viewer_div");
+	    	mo_viewer.setBackgroundColor(0xffffff);
+		function get_mo_struct() {
+			$.ajax({
+				method: "POST",	 	 
+				url: "/get_structure/",
+				data: {'id': {{ ensemble.id }}, 'num': {{ structure.number }} },
+
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				success: function(data, textStatus, xhr) {
+					mo_viewer.addModel(data, "xyz");
+					mo_viewer.setStyle({}, {stick:{}});
+					mo_viewer.zoomTo();
+					mo_viewer.render();
+				}
+			});
+		}
+
+		function get_cube(orb) {
+			if (orb != -1) {
+				window.mo_selection = orb;
+			}
+
+			let _orb = mo_selection;
+
+			$.ajax({
+				method: "POST",	 	 
+				url: "/get_cube/",
+				data: {
+					'id': {{ property.mo }},
+					'orb': _orb,
+				},
+
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				success: function(volumedata, textStatus, xhr) {
+
+					var isoval = 10**(-document.getElementById("mo_calibration").value);
+					var voldata = new $3Dmol.VolumeData(volumedata, "cube");
+						mo_viewer.clear();
+						get_mo_struct();
+						mo_viewer.addIsosurface(voldata, {isoval: isoval, color: "blue", alpha: 0.90, smoothness: 10});              
+						mo_viewer.addIsosurface(voldata, {isoval: -isoval, color: "red", alpha: 0.90, smoothness: 10}); 
+						mo_viewer.zoomTo();
+						mo_viewer.render();
+					}
+			});
+		}
+
+		$(document).ready(function(){
+			get_cube(0);
+		});
+	</script>
+	<div id="mo_container">
+		<button class="button" onclick="get_cube(0);" style="width: 24%;">HOMO</button>
+		<button class="button" onclick="get_cube(1);" style="width: 24%;">LUMO</button>
+		<button class="button" onclick="get_cube(2);" style="width: 24%;">LUMO+1</button>
+		<button class="button" onclick="get_cube(3);" style="width: 24%;">LUMO+2</button>
+
+		<div class="slidecontainer">
+			<input type="range" min="1" max="10" value="4" class="slider" id="mo_calibration" onchange="get_cube(-1);" style="width: 100%;">
+		</div>
+	</div>
+	</div>
+
+	<div class="column">
+	</div>
+</div>
+{% endif %}
+

@@ -1,0 +1,48 @@
+
+<span class="tag is-danger is-large">Parameters</span>
+<div class="columns box">
+		<div class="column">
+		<center>
+			<table class="table is-bordered">
+				<tbody>
+					<tr>
+						<th>Charge</th>
+						<td>{{ parameters.charge }}</td>
+						<th>Basis set</th>
+						<td>{{ parameters.basis_set }}</td>
+					</tr>
+					<tr>
+						<th>Multiplicity</th>
+						<td>{{ parameters.multiplicity }}</td>
+						<th>Solvent</th>
+						<td>{{ parameters.solvent }}</td>
+					</tr>
+
+					<tr>
+						<th>Program</th>
+						<td>{{ parameters.program }}</td>
+						<th>Solvation model</th>
+						<td>{{ parameters.solvation_model }}</td>
+					</tr>
+
+					<tr>
+						<th>Method/Functional</th>
+						<td>{{ parameters.method }}</td>
+						<th>Miscellaneous</th>
+						<td>{{ parameters.misc }}</td>
+					</tr>
+
+				</tbody>
+			</table>
+		</center>
+		</div>
+</div>
+
+<span class="tag is-danger is-large">Ensemble properties</span>
+<div class="columns box">
+		<div class="column">
+			<table class="table" id="info_table">
+			</table>
+		</div>
+</div>
+

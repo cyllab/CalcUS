@@ -1,0 +1,247 @@
+{% extends 'frontend/base.html' %}
+
+{% load i18n bulma_tags %}
+
+{% load static %}
+
+{% block extrahead %}
+	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
+	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+
+	{% if calculation.has_freq or calculation.has_nmr or calculation.has_uvvis %}
+	<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
+	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
+	{% endif %}
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/1.4.0/3Dmol-min.js"></script>
+
+	<script>
+		$(document).ready(function(){
+	(function(ChemDoodle) {
+	  ChemDoodle.relabel = function(molecule){
+	    for(let i = 0, ii = molecule.atoms.length; i<ii; i++){
+	    	molecule.atoms[i].altLabel = String(i+1);
+	    }
+	  };
+
+	})(ChemDoodle);
+		});
+	</script>
+	<script>
+		var loadScript = function(src, callbackfn) {
+			var newScript = document.createElement("script");
+		    	newScript.type = "text/javascript";
+		    	newScript.setAttribute("async", "true");
+		    	newScript.setAttribute("src", src);
+
+		    	if(newScript.readyState) {
+				newScript.onreadystatechange = function() {
+			    		if(/loaded|complete/.test(newScript.readyState)) callbackfn();
+				}
+		    	} else {
+				newScript.addEventListener("load", callbackfn, false);
+		    	}
+
+		    document.documentElement.firstChild.appendChild(newScript);
+		}
+
+		let num = 1;
+		let conf_number = 1;
+
+		$.ajaxSetup({ cache: false }); 
+		$(document).ready(function(){
+			var my_refresh = setInterval(function() {
+				$.ajax({
+					method: "POST",	 	 
+					url: "/get_structure/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					data: {'id': {{ ensemble.id }}, 'num': 1},
+					success: function(data, textStatus, xhr) {
+						if (xhr.status != 204) {
+							let mol = ChemDoodle.readXYZ(data);
+
+							
+							clearInterval(my_refresh);
+							editor.loadMolecule(mol);
+
+							$("#next_step_div").load("/next_step/{{ calculation.id }}");
+							$.ajax({
+								method: "GET",	 	 
+								url: "/conformer_table/{{ ensemble.id }}",
+								headers: {
+									"X-CSRFToken": '{{ csrf_token }}',
+								},
+								success: function(data, textStatus, xhr) {
+									if (xhr.status != 204) {
+										$("#conf_table").html(data);
+										conf_number = document.getElementById("conf_table").rows.length;
+									}
+								}
+							});
+
+						}
+					}
+				});
+			 }, 1000);
+		});
+
+		function refresh() {
+			$.ajax({
+				method: "POST",	 	 
+				url: "/get_structure/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				data: {'id': {{ ensemble.id }} , 'num': num},
+				success: function(data, textStatus, xhr) {
+					if (xhr.status != 204) {
+						let mol = ChemDoodle.readXYZ(data);
+						editor.loadMolecule(mol);
+					}
+
+				}
+		  
+			});
+
+		}
+
+		function increase_conf() {
+			if(num < conf_number) {
+				document.getElementById('conf_' + num).classList.remove("is-selected");
+				num = num + 1;
+				document.getElementById('conf_' + num).classList.add("is-selected");
+				refresh();
+			}
+
+		}
+
+		function decrease_conf() {
+			if(num > 1) {
+				document.getElementById('conf_' + num).classList.remove("is-selected");
+				num = num - 1;
+				document.getElementById('conf_' + num).classList.add("is-selected");
+				refresh();
+			}
+		}
+
+		function refresh_details(p_id) {
+
+			$.ajax({
+				method: "POST",	 	 
+				url: "/details_ensemble/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				data: {'id': {{ ensemble.id }}, 'p_id': p_id},
+				success: function(data, textStatus, xhr) {
+					if (xhr.status != 204) {
+						$("#details_ensemble_div").html(data);
+					}
+
+				}
+		  
+			});
+
+			$.ajax({
+				method: "POST",	 	 
+				url: "/details_structure/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				data: {'id': {{ ensemble.id }}, 'num': num, 'p_id': p_id},
+				success: function(data, textStatus, xhr) {
+					if (xhr.status != 204) {
+						$("#details_structure_div").html(data);
+					}
+
+				}
+		  
+			});
+
+		}
+	</script>
+
+{% endblock %}
+
+{% block content %}
+
+{% csrf_token %}
+
+<div class="container">
+	<div id="status_box">
+		<div class="box is-rounded" id="ensemble_title">
+			<center>
+					<h3 class="title is-3 ">{{ ensemble.name }}</h3>
+			</center>
+		</div>
+	</div>
+
+	<br />
+	<span class="tag is-danger is-large">Geometries</span>
+	<div class="columns box">
+
+		<div class="column">
+			<script>
+				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {useServices: false});
+				editor.styles.set3DRepresentation('Stick');
+				editor.styles.backgroundColor = '#FFFFFF';
+				editor.oneMolecule = true;
+			</script>
+			<br />
+			<button class="button" onclick="window.location.href='/download_structure/{{ calculation.id }}'">Download structure in .xyz <i class="fas fa-download"></i></button>
+			<br />	
+			<button class="button" onclick="decrease_conf()">Previous Structure</button>
+			<button class="button" onclick="increase_conf()">Next Structure</button>
+		</div>
+		<div class="column">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Energy (Ha)</th>
+						<th>Relative energy (kJ/mol)</th>
+						<th>Degeneracy</th>
+						<th>Boltzmann Weight at 298K</th>
+					</tr>
+				</thead>
+				<tbody id="conf_table">
+
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	<br />	
+	<br />	
+
+	<div class="tabs">
+	  	<ul>
+			{% for p in ensemble.unique_parameters %}
+				<li><a onclick="refresh_details({{ p.id }})" id="tab_{{ p.id }}">{{ p.program }} - {{ p.method }}</a></li>
+			{% endfor %}
+	  	</ul>
+	</div>
+	<br />
+
+	<div id="details_ensemble_div">	
+
+	</div>
+	<div id="details_structure_div">	
+
+	</div>
+
+
+	<br />
+	{% if profile == calculation.author %}
+		<a class="button is-danger" href="/delete/{{ calculation.id }}">Delete this calculation</a>
+	{% endif %}
+</div>
+
+{% endblock content %}
