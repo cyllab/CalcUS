@@ -393,22 +393,22 @@ def submit_calculation(request):
         drawing = False
         start_id = int(request.POST['starting_struct'])
         try:
-            start_calc = Calculation.objects.get(pk=start_id)
-        except Calculation.DoesNotExist:
+            start_e = Ensemble.objects.get(pk=start_id)
+        except Ensemble.DoesNotExist:
             return render(request, 'frontend/error.html', {
                 'profile': request.user.profile,
-                'error_message': "No starting structure found"
+                'error_message': "No starting ensemble found"
                 })
-        start_author = start_calc.author
+        start_author = start_e.parent_molecule.project.author
         if not profile_intersection(profile, start_author):
             return render(request, 'frontend/error.html', {
                 'profile': request.user.profile,
                 'error_message': "You do not have permission to access the starting calculation"
                 })
-        obj.ensemble = start_calc.result_ensemble
+        obj.ensemble = start_e
     else:
         if len(request.FILES) == 1:
-            e = Ensemble.objects.create()
+            e = Ensemble.objects.create(name="File Upload")
             obj.ensemble = e
 
             s = Structure.objects.create(parent_ensemble=e, number=1)
@@ -1329,17 +1329,20 @@ def launch(request):
 @login_required
 def launch_pk(request, pk):
 
-    calc = Calculation.objects.get(pk=pk)
+    try:
+        e = Ensemble.objects.get(pk=pk)
+    except Ensemble.DoesNotExist:
+        return redirect('/home/')
 
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+    if e.parent_molecule.project.author != profile and not profile_intersection(profile, e.parent_molecule.project.author):
         return HttpResponse(status=403)
 
     return render(request, 'frontend/launch.html', {
             'profile': request.user.profile,
-            'calculation': calc,
-            'procedures': Procedure.objects.all(),
+            'ensemble': e,
+            'procedures': BasicStep.objects.all(),
         })
 
 def handler404(request, *args, **argv):

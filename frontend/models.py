@@ -224,10 +224,6 @@ class Property(models.Model):
 
     geom = models.BooleanField(default=False)
 
-    def __eq__(self, other):
-        values = [(k,v) for k,v in self.__dict__.items() if k != '_state']
-        other_values = [(k,v) for k,v in other.__dict__.items() if k != '_state']
-        return values == other_values
 
 
 class Structure(models.Model):
@@ -261,6 +257,11 @@ class Parameters(models.Model):
 
     def __repr__(self):
         return self.id
+
+    def __eq__(self, other):
+        values = [(k,v) for k,v in self.__dict__.items() if k != '_state' and k != 'id']
+        other_values = [(k,v) for k,v in other.__dict__.items() if k != '_state' and k != 'id']
+        return values == other_values
 
 class Molecule(models.Model):
 

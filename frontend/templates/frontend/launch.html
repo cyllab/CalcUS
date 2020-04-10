@@ -179,6 +179,7 @@
 
 <div class="columns">
 	<div class="column is-half">
+		{% if not ensemble %}
 		<script>
 		  	let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 500, 300, {useServices:false, oneMolecule:false});
 		  	sketcher.styles.atoms_useJMOLColors = true;
@@ -188,6 +189,7 @@
 		  	sketcher.repaint();
 		</script>
 		<button class="button" onclick="get_3D();">Generate 3D representation</button>
+		{% endif %}
 		<script>
 		  	let editor = new ChemDoodle.EditorCanvas3D('editor', 500, 300, {useServices:false, oneMolecule:false});
 		  	editor.styles.atoms_useJMOLColors = true;
@@ -336,10 +338,10 @@
 			.attr('value', constraint_num)
 			.appendTo(this);
 
-		{% if calculation %}
+		{% if ensemble %}
 		$('<input />').attr('type', 'hidden')
 			.attr('name', "starting_struct")
-			.attr('value', {{ calculation.id }})
+			.attr('value', {{ ensemble.id }})
 			.appendTo(this);
 
 		{% endif %}
@@ -364,7 +366,7 @@
 $( document ).ready(function() {
 	project_selection_changed();
 });
-{% if calculation %}
+{% if ensemble %}
 	$.ajax({
 		method: "POST",	 	 
 		url: "/get_structure/",
@@ -372,7 +374,7 @@ $( document ).ready(function() {
 			"X-CSRFToken": '{{ csrf_token }}',
 		},
 
-		data: {'id': {{ calculation.id }} },
+		data: {'id': {{ ensemble.id }}, 'num': 1},
 		success: function(data, textStatus, xhr) {
 			let mol_read = ChemDoodle.readXYZ(data);
 			ChemDoodle.relabel(mol_read);

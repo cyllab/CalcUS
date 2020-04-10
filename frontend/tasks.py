@@ -363,12 +363,10 @@ def xtb_opt(in_file, calc):
         return a
 
 def get_or_create(params, struct):
-    try:
-        prop = Property.objects.get(parameters=params, parent_structure=struct)
-    except Property.DoesNotExist:
-        prop = Property.objects.create(parameters=params, parent_structure=struct)
-
-    return prop
+    for p in struct.properties.all():
+        if p.parameters == params:
+            return p
+    return Property.objects.create(parameters=params, parent_structure=struct)
 
 def xtb_ts(in_file, calc):
     solvent = calc.parameters.solvent
