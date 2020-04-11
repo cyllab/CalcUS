@@ -34,7 +34,6 @@ try:
 except:
     is_test = False
 import periodictable
-import mendeleev
 from .constants import *
 
 ATOMIC_NUMBER = {

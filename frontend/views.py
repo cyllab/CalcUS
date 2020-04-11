@@ -431,7 +431,7 @@ def submit_calculation(request):
                 'profile': request.user.profile,
                 'error_message': "You do not have permission to access the starting calculation"
                 })
-        e = Ensemble.objects.create(name="Extracted Structure", parent_molecule=start_s.parent_ensemble.parent_molecule, hidden=True)
+        e = Ensemble.objects.create(name="Extracted Structure", parent_molecule=start_s.parent_ensemble.parent_molecule)
         s = Structure.objects.create(xyz_structure=start_s.xyz_structure)
         e.structure_set.add(s)
         e.save()
