@@ -379,6 +379,7 @@ $( document ).ready(function() {
 	project_selection_changed();
 });
 {% if ensemble %}
+	$("#calc_project").val("{{ ensemble.parent_molecule.project.name }}");
 	$.ajax({
 		method: "POST",	 	 
 		url: "/get_structure/",

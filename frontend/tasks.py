@@ -1142,6 +1142,8 @@ def dispatcher(drawing, order_id):
 def run_calc(calc_id):
     print("Processing calc {}".format(calc_id))
     calc = Calculation.objects.get(pk=calc_id)
+    calc.status = 1
+    calc.save()
     f = BASICSTEP_TABLE[calc.step.name]
 
     os.mkdir(os.path.join(LAB_RESULTS_HOME, str(calc.id)))
@@ -1152,7 +1154,14 @@ def run_calc(calc_id):
     with open(in_file, 'w') as out:
         out.write(calc.structure.xyz_structure)
 
-    return f(in_file, calc)
+    ret = f(in_file, calc)
+    if ret != 0:
+        calc.status = 3
+        calc.save()
+    else:
+        calc.status = 2
+        calc.save()
+    return ret
 
 @app.task
 def run_procedure(drawing, calc_id):

@@ -292,6 +292,29 @@ class CalculationOrder(models.Model):
     date = models.DateTimeField('date', null=True, blank=True)
     date_finished = models.DateTimeField('date', null=True, blank=True)
 
+    @property
+    def status(self):
+        stat = 0
+        for calc in self.calculation_set.all():
+            if calc.status > stat:
+                stat = calc.status
+        return stat
+
+    @property
+    def get_queued(self):
+        return len(self.calculation_set.filter(status=0))
+
+    @property
+    def get_running(self):
+        return len(self.calculation_set.filter(status=1))
+
+    @property
+    def get_done(self):
+        return len(self.calculation_set.filter(status=2))
+
+    @property
+    def get_error(self):
+        return len(self.calculation_set.filter(status=3))
 
 class Calculation(models.Model):
 

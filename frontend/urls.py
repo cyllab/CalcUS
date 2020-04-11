@@ -11,6 +11,7 @@ urlpatterns = [
     path('', views.projects, name='projects'),
     path('home/', views.projects, name='projects'),
     path('list/', views.IndexView.as_view(), name='list'),
+    path('calculations/', views.calculations, name='calculations'),
 
     path('projects/', views.projects, name='projects'),
     path('projects/<str:username>', views.projects_username, name='projects_username'),

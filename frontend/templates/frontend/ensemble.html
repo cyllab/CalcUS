@@ -14,7 +14,7 @@
 
 	<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
 	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/1.4.0/3Dmol-min.js"></script>
+	<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
 
 	<script>
 		$(document).ready(function(){
@@ -48,6 +48,7 @@
 
 		let num = 1;
 		let conf_number = 1;
+		var curr_p = 0;
 
 		$.ajaxSetup({ cache: false }); 
 		$(document).ready(function(){
@@ -106,7 +107,9 @@
 				}
 		  
 			});
-
+			if (curr_p != 0) {
+				refresh_structure();
+			}
 		}
 
 		function increase_conf() {
@@ -128,15 +131,7 @@
 			}
 		}
 
-		function refresh_details(p_id) {
-
-			actives = document.getElementById("tabs").getElementsByClassName("is-active");
-			for (i=0; i < actives.length; ++i) {
-				actives[i].classList.remove("is-active");
-			}
-			
-			$("#tab_" + p_id).addClass("is-active");
-
+		function refresh_ensemble () {
 			$.ajax({
 				method: "POST",	 	 
 				url: "/details_ensemble/",
@@ -144,7 +139,7 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 
-				data: {'id': {{ ensemble.id }}, 'p_id': p_id},
+				data: {'id': {{ ensemble.id }}, 'p_id': curr_p},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						$("#details_ensemble_div").html(data);
@@ -153,7 +148,9 @@
 				}
 		  
 			});
+		}
 
+		function refresh_structure () {
 			$.ajax({
 				method: "POST",	 	 
 				url: "/details_structure/",
@@ -161,7 +158,7 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 
-				data: {'id': {{ ensemble.id }}, 'num': num, 'p_id': p_id},
+				data: {'id': {{ ensemble.id }}, 'num': num, 'p_id': curr_p},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						$("#details_structure_div").html(data);
@@ -170,6 +167,23 @@
 				}
 		  
 			});
+
+
+		}
+
+		function refresh_details(p_id) {
+
+			curr_p = p_id;
+
+			actives = document.getElementById("tabs").getElementsByClassName("is-active");
+			for (i=0; i < actives.length; ++i) {
+				actives[i].classList.remove("is-active");
+			}
+			
+			$("#tab_" + p_id).addClass("is-active");
+			refresh_ensemble();
+			refresh_structure();
+
 			$.ajax({
 				method: "POST",	 	 
 				url: "/conformer_table/",

@@ -41,7 +41,7 @@
 					vib_viewer.removeAllModels();
 					vib_viewer.clear();
 					vib_viewer.addModel(data, "xyz");
-					vib_viewer.vibrate(20, 1, true, {});
+					vib_viewer.vibrate(20, 0.6, true, null);
 					vib_viewer.animate({'loop': 'backAndForth'});
 					vib_viewer.setStyle({}, {stick:{}});
 					vib_viewer.zoomTo();

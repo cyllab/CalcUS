@@ -46,7 +46,6 @@ LAB_KEY_HOME = os.environ['LAB_KEY_HOME']
 LAB_CLUSTER_HOME = os.environ['LAB_CLUSTER_HOME']
 
 KEY_SIZE = 32
-SOFTWARE_LIST = ['xtb', 'Gaussian']
 
 class IndexView(generic.ListView):
     template_name = 'frontend/list.html'
@@ -75,19 +74,25 @@ class IndexView(generic.ListView):
             return []
 
         if profile_intersection(self.request.user.profile, target_profile):
-            hits = target_profile.calculation_set.all()
+            hits = target_profile.calculationorder_set.all()
             if proj != "All projects":
                 hits = hits.filter(project__name=proj)
-            if type != "All procedures":
-                hits = hits.filter(procedure__name=type)
-            if status != "All statuses":
-                hits = hits.filter(status=Calculation.CALC_STATUSES[status])
-            if unseen == "true":
-                hits = hits.filter(unseen=True)
+            #if type != "All procedures":
+            #    hits = hits.filter(procedure__name=type)
+            #if status != "All statuses":
+            #    hits = hits.filter(status=Calculation.CALC_STATUSES[status])
+            #if unseen == "true":
+            #    hits = hits.filter(unseen=True)
             return sorted(hits, key=lambda d: d.date, reverse=True)
 
         else:
             return []
+
+@login_required
+def calculations(request):
+    return render(request, 'frontend/calculations.html', {
+            'profile': request.user.profile,
+        })
 
 @login_required
 def projects(request):
@@ -114,7 +119,6 @@ def projects_username(request, username):
     else:
         return HttpResponse(status=404)
 
-   
 @login_required
 def get_projects(request):
     if request.method == 'POST':
@@ -427,7 +431,7 @@ def submit_calculation(request):
                 'profile': request.user.profile,
                 'error_message': "You do not have permission to access the starting calculation"
                 })
-        e = Ensemble.objects.create(name="Extracted Structure", hidden=True)
+        e = Ensemble.objects.create(name="Extracted Structure", parent_molecule=start_s.parent_ensemble.parent_molecule, hidden=True)
         s = Structure.objects.create(xyz_structure=start_s.xyz_structure)
         e.structure_set.add(s)
         e.save()
@@ -550,13 +554,13 @@ def launch_software(request, software):
     _software = clean(software)
     if _software == 'xtb':
         procs = BasicStep.objects.filter(avail_xtb=True)
-        return render(request, 'frontend/launch_software.html', {'procs': procs})
+        return render(request, 'frontend/launch_software.html', {'procs': procs, 'software': _software})
     elif _software == 'Gaussian':
         procs = BasicStep.objects.filter(avail_Gaussian=True)
-        return render(request, 'frontend/launch_software.html', {'procs': procs})
+        return render(request, 'frontend/launch_software.html', {'procs': procs, 'software': _software})
     elif _software == 'ORCA':
         procs = BasicStep.objects.filter(avail_ORCA=True)
-        return render(request, 'frontend/launch_software.html', {'procs': procs})
+        return render(request, 'frontend/launch_software.html', {'procs': procs, 'software': _software})
     else:
         return HttpResponse(status=404)
 
