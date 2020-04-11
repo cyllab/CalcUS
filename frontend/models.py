@@ -291,6 +291,7 @@ class CalculationOrder(models.Model):
 
     date = models.DateTimeField('date', null=True, blank=True)
     date_finished = models.DateTimeField('date', null=True, blank=True)
+    unseen = models.BooleanField(default=True)
 
     @property
     def status(self):
@@ -344,7 +345,6 @@ class Calculation(models.Model):
 
     parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE)
     result_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
-    unseen = models.BooleanField(default=True)
 
     constraints = models.CharField(max_length=400, default="", blank=True, null=True)
 

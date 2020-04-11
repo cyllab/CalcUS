@@ -223,7 +223,17 @@
 							</div>
 						</div>
 				</div>
+				{% elif structure %}
+				<div class="column">
+					<div class="field">
+						<label class="label">New Ensemble Name</label>
+						<div class="control">
+							<input class="input" name="calc_ensemble_name" type="text" placeholder="My Ensemble" required>
+						</div>
+					</div>
+				</div>
 				{% endif %}
+
 				<div class="column is-narrow">
 					<div class="field">
 						<label class="label">Solvent</label>

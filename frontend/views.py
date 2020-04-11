@@ -303,6 +303,14 @@ def submit_calculation(request):
                 'error_message': "No calculation name"
                 })
         else:
+            if 'starting_struct' in request.POST.keys():
+                if'calc_ensemble_name' in request.POST.keys():
+                    ensemble_name = clean(request.POST['calc_ensemble_name'])
+                else:
+                    return render(request, 'frontend/error.html', {
+                        'profile': request.user.profile,
+                        'error_message': "No ensemble name"
+                        })
             name = "Followup"
 
     if 'calc_type' in request.POST.keys():
@@ -431,7 +439,7 @@ def submit_calculation(request):
                 'profile': request.user.profile,
                 'error_message': "You do not have permission to access the starting calculation"
                 })
-        e = Ensemble.objects.create(name="Extracted Structure", parent_molecule=start_s.parent_ensemble.parent_molecule)
+        e = Ensemble.objects.create(name=ensemble_name, parent_molecule=start_s.parent_ensemble.parent_molecule)
         s = Structure.objects.create(xyz_structure=start_s.xyz_structure)
         e.structure_set.add(s)
         e.save()
@@ -1216,7 +1224,7 @@ def rename_project(request):
 
         profile = request.user.profile
 
-        if project.author != profile:
+        if proj.author != profile:
             return HttpResponse(status=403)
 
         if 'new_name' in request.POST.keys():
