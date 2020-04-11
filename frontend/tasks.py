@@ -621,8 +621,9 @@ def xtb_freq(in_file, calc):
     struct = []
 
     for line in lines:
-        a, x, y, z = line.strip().split()
-        struct.append([a, float(x), float(y), float(z)])
+        if line.strip() != '':
+            a, x, y, z = line.strip().split()
+            struct.append([a, float(x), float(y), float(z)])
 
     with open(os.path.join(folder, "hessian")) as f:
         lines = f.readlines()[1:]

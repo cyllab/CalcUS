@@ -176,7 +176,7 @@ def molecule(request, pk):
         return redirect('/home/')
 
     return render(request, 'frontend/molecule.html', {'profile': request.user.profile,
-        'ensembles': mol.ensemble_set.all(),
+        'ensembles': mol.ensemble_set.filter(hidden=False),
         'molecule': mol})
 
 @login_required
@@ -425,7 +425,7 @@ def submit_calculation(request):
                 'profile': request.user.profile,
                 'error_message': "You do not have permission to access the starting calculation"
                 })
-        e = Ensemble.objects.create(name="Extracted Structure")
+        e = Ensemble.objects.create(name="Extracted Structure", hidden=True)
         s = Structure.objects.create(xyz_structure=start_s.xyz_structure)
         e.structure_set.add(s)
         e.save()
@@ -458,7 +458,7 @@ def submit_calculation(request):
         else:
             if 'structureB' in request.POST.keys():
                 drawing = True
-                e = Ensemble.objects.create(name="Drawn Structure")
+                e = Ensemble.objects.create(name="Drawn Structure", hidden=True)
                 obj.ensemble = e
 
                 s = Structure.objects.create(parent_ensemble=e, number=1)

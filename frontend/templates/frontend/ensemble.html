@@ -130,6 +130,13 @@
 
 		function refresh_details(p_id) {
 
+			actives = document.getElementById("tabs").getElementsByClassName("is-active");
+			for (i=0; i < actives.length; ++i) {
+				actives[i].classList.remove("is-active");
+			}
+			
+			$("#tab_" + p_id).addClass("is-active");
+
 			$.ajax({
 				method: "POST",	 	 
 				url: "/details_ensemble/",
@@ -249,14 +256,13 @@
 	<br />	
 	<br />	
 
-	<div class="tabs">
+	<div class="tabs is-boxed" id="tabs">
 	  	<ul>
 			{% for p in ensemble.unique_parameters %}
-				<li><a onclick="refresh_details({{ p.id }})" id="tab_{{ p.id }}">{{ p.program }} - {{ p.method }}{% get_geom_flag ensemble p %}</a></li>
+				<li id="tab_{{ p.id }}"><a onclick="refresh_details({{ p.id }})">{{ p.program }} - {{ p.method }}{% get_geom_flag ensemble p %}</a></li>
 			{% endfor %}
 	  	</ul>
 	</div>
-	<br />
 
 	<div id="details_ensemble_div">	
 

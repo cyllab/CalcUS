@@ -270,6 +270,10 @@ class Molecule(models.Model):
     inchi = models.CharField(max_length=1000)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
 
+    @property
+    def count_vis(self):
+        return len(self.ensemble_set.filter(hidden=False))
+
 
 class CalculationOrder(models.Model):
     name = models.CharField(max_length=100)
