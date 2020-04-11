@@ -13,6 +13,60 @@
 {% endblock %}
 
 {% block content %}
+	<script>
+		function selectText(node) {
+		    	node = document.getElementById(node);
+
+		    	if (document.body.createTextRange) {
+				const range = document.body.createTextRange();
+				range.moveToElementText(node);
+				range.select();
+		    	} else if (window.getSelection) {
+				const selection = window.getSelection();
+				const range = document.createRange();
+				range.selectNodeContents(node);
+				selection.removeAllRanges();
+				selection.addRange(range);
+			} else {
+				console.warn("Could not select text in node: Unsupported browser.");
+			}
+		}
+		function edit_field(e_id) {
+			el = document.getElementById("e_name_" + e_id);
+			if (el.getAttribute("contentEditable") == "true") {
+				el.setAttribute("contentEditable", "false");
+				$("#icon_" + e_id).removeClass("fa-check");
+				$("#icon_" + e_id).addClass("fa-edit");
+				name = el.textContent;
+				$.ajax({
+					method: "POST",	 	 
+					url: "/rename_ensemble/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					data: {'id': e_id, 'new_name': name}
+				});
+
+			}
+			else {
+				el.setAttribute("contentEditable", "true");
+				$("#icon_" + e_id).removeClass("fa-edit");
+				$("#icon_" + e_id).addClass("fa-check");
+				selectText('e_name_' + e_id);
+				$('[contenteditable=true]').on('keypress', function(e) {
+					if (e.keyCode == 13) {
+						e.preventDefault();
+						edit_field(e_id);
+					}
+				});
+
+			}
+			
+		}
+
+
+	</script>
+
 <div class="container">
 	<nav class="breadcrumb" aria-label="breadcrumbs">
 	 	<ul>
@@ -28,16 +82,20 @@
 			<div class="grid">
 				{% if ensembles %}
 					{% for e in ensembles %}
-						<a href="/ensemble/{{ e.id}}">
-							<article class="message grid-item">
+							<article class="message grid-item is-info">
 								<div class="message-header">
-									<p>{{ e.name }}</p>
+<p id="e_name_{{ e.id }}">{{ e.name }}</p>
+							<p onclick="edit_field({{ e.id }});"><i class="fas fa-edit" id="icon_{{ e.id}}"></i></p>
+
 								</div>
-								<div class="message-body">
-								{{ e.structure_set.count }} Structure(s)	
-								</div>
+								<a href="/ensemble/{{ e.id}}">
+									<div class="message-body" style="height: 80%;">
+										<strong>Ensemble</strong>
+										<br />
+									{{ e.structure_set.count }} Structure(s)	
+									</div>
+								</a>
 							</article>
-						</a>
 					{% endfor %}
 				{% else %}
 					No ensemble

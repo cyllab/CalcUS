@@ -1151,8 +1151,7 @@ def gen_3D(request):
 @login_required
 def rename_molecule(request):
     if request.method == 'POST':
-        url = clean(request.POST['id'])
-        id = url.split('/')[-1]
+        id = int(clean(request.POST['id']))
 
         try:
             mol = Molecule.objects.get(pk=id)
@@ -1161,7 +1160,7 @@ def rename_molecule(request):
 
         profile = request.user.profile
 
-        if mol.project.author != profile and not profile_intersection(profile, mol.project.author):
+        if mol.project.author != profile:
             return HttpResponse(status=403)
 
         if 'new_name' in request.POST.keys():
@@ -1169,6 +1168,54 @@ def rename_molecule(request):
 
         mol.name = name
         mol.save()
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=403)
+
+@login_required
+def rename_project(request):
+    if request.method == 'POST':
+        id = int(clean(request.POST['id']))
+
+        try:
+            proj = Project.objects.get(pk=id)
+        except Project.DoesNotExist:
+            return HttpResponse(status=403)
+
+        profile = request.user.profile
+
+        if project.author != profile:
+            return HttpResponse(status=403)
+
+        if 'new_name' in request.POST.keys():
+            name = clean(request.POST['new_name'])
+
+        proj.name = name
+        proj.save()
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=403)
+
+@login_required
+def rename_ensemble(request):
+    if request.method == 'POST':
+        id = int(clean(request.POST['id']))
+
+        try:
+            e = Ensemble.objects.get(pk=id)
+        except Ensemble.DoesNotExist:
+            return HttpResponse(status=403)
+
+        profile = request.user.profile
+
+        if e.parent_molecule.project.author != profile:
+            return HttpResponse(status=403)
+
+        if 'new_name' in request.POST.keys():
+            name = clean(request.POST['new_name'])
+
+        e.name = name
+        e.save()
         return HttpResponse(status=200)
     else:
         return HttpResponse(status=403)
