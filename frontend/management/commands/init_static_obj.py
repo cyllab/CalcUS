@@ -38,7 +38,7 @@ class Command(BaseCommand):
         name = "Geometrical Optimisation"
         if self.is_absent(BasicStep, name):
             self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Optimizing geometry", error_message="Failed to optimize geometry", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_orca=True)
+            a = BasicStep.objects.create(name=name, desc="Optimizing geometry", error_message="Failed to optimize geometry", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
         name = "Crest"
         if self.is_absent(BasicStep, name):
@@ -53,22 +53,22 @@ class Command(BaseCommand):
         name = "Constrained Optimisation"
         if self.is_absent(BasicStep, name):
             self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Optimizing geometry", error_message="Failed to optimize geometry", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_orca=True)
+            a = BasicStep.objects.create(name=name, desc="Optimizing geometry", error_message="Failed to optimize geometry", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
         name = "Frequency Calculation"
         if self.is_absent(BasicStep, name):
             self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Calculating frequencies", error_message="Failed to calculate frequencies", avail_xtb=True, avail_Gaussian=True, avail_orca=True)
+            a = BasicStep.objects.create(name=name, desc="Calculating frequencies", error_message="Failed to calculate frequencies", avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
         name = "TS Optimisation"
         if self.is_absent(BasicStep, name):
             self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Optimizing the transition state", error_message="Failed to optimize the transition state", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_orca=True)
+            a = BasicStep.objects.create(name=name, desc="Optimizing the transition state", error_message="Failed to optimize the transition state", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
         name = "UV-Vis Calculation"
         if self.is_absent(BasicStep, name):
             self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Calculating UV-Vis spectrum", error_message="Failed to calculate the UV-Vis spectrum", avail_xtb=True, avail_Gaussian=True, avail_orca=True)
+            a = BasicStep.objects.create(name=name, desc="Calculating UV-Vis spectrum", error_message="Failed to calculate the UV-Vis spectrum", avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
         '''
         name = "Enso"
@@ -86,7 +86,7 @@ class Command(BaseCommand):
         name = "MO Calculation"
         if self.is_absent(BasicStep, name):
             self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Creating the Molecular Orbitals", error_message="Failed to create the Molecular Orbitals", avail_orca=True)
+            a = BasicStep.objects.create(name=name, desc="Creating the Molecular Orbitals", error_message="Failed to create the Molecular Orbitals", avail_ORCA=True)
 
 
 
@@ -190,7 +190,7 @@ class Command(BaseCommand):
             self.print("Adding Procedure: {}".format(name))
             a = Procedure.objects.create(name=name)
 
-            a.avail_orca = True
+            a.avail_ORCA = True
 
             s_opt = BasicStep.objects.get(name="Geometrical Optimisation")
             step1 = Step.objects.create(step_model=s_opt, parent_procedure=a, from_procedure=a)

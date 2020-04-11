@@ -347,6 +347,8 @@ def submit_calculation(request):
             'error_message': "You have no computing ressource"
             })
 
+    #Verify parameters
+
     profile = request.user.profile
     if ressource != "Local":
         try:
@@ -458,10 +460,14 @@ def submit_calculation(request):
         else:
             if 'structureB' in request.POST.keys():
                 drawing = True
-                e = Ensemble.objects.create(name="Drawn Structure", hidden=True)
+                e = Ensemble.objects.create(name="Drawn Structure")
                 obj.ensemble = e
 
                 s = Structure.objects.create(parent_ensemble=e, number=1)
+                params = Parameters.objects.create(program="Open Babel", method="Forcefield", basis_set="", solvation_model="", charge="0", multiplicity="1")
+                p = Property.objects.create(parent_structure=s, parameters=params, geom=True)
+                p.save()
+                params.save()
 
 
                 mol = clean(request.POST['structureB'])
@@ -547,6 +553,9 @@ def launch_software(request, software):
         return render(request, 'frontend/launch_software.html', {'procs': procs})
     elif _software == 'Gaussian':
         procs = BasicStep.objects.filter(avail_Gaussian=True)
+        return render(request, 'frontend/launch_software.html', {'procs': procs})
+    elif _software == 'ORCA':
+        procs = BasicStep.objects.filter(avail_ORCA=True)
         return render(request, 'frontend/launch_software.html', {'procs': procs})
     else:
         return HttpResponse(status=404)
@@ -907,12 +916,9 @@ def uvvis(request, pk):
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
 
-    if not calc.has_uvvis:
-        return HttpResponse(status=403)
-
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+    if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
         return HttpResponse(status=403)
 
     spectrum_file = os.path.join(LAB_RESULTS_HOME, id, "uvvis.csv")
@@ -934,10 +940,7 @@ def get_cube(request):
 
         profile = request.user.profile
 
-        if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
-            return HttpResponse(status=403)
-
-        if not calc.has_mo:
+        if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
             return HttpResponse(status=403)
 
         if orb == 0:
@@ -1111,26 +1114,51 @@ def next_step(request, pk):
         })
 
 @login_required
-def download_structure(request, pk):
-    id = str(pk)
-    calc = Calculation.objects.get(pk=id)
+def download_structures(request, ee):
+    try:
+        e = Ensemble.objects.get(pk=ee)
+    except Ensemble.DoesNotExist:
+        return HttpResponse(status=404)
+
 
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
-        return HttpResponse(status=403)
+    if e.parent_molecule.project.author != profile and not profile_intersection(profile, e.parent_molecule.project.author):
+        return HttpResponse(status=404)
 
-    e = calc.result_ensemble
     structs = ""
     for s in e.structure_set.all():
         if s.xyz_structure == "":
             structs += "1\nMissing Structure\nC 0 0 0"
-            print("Missing structure! ({}, {})".format(profile.username, calc.id))
+            print("Missing structure! ({}, {})".format(profile.username, ee))
         structs += s.xyz_structure
 
     response = HttpResponse(structs)
     response['Content-Type'] = 'text/plain'
-    response['Content-Disposition'] = 'attachment; filename={}.xyz'.format(id)
+    response['Content-Disposition'] = 'attachment; filename={}.xyz'.format(ee)
+    return response
+
+@login_required
+def download_structure(request, ee, num):
+    try:
+        e = Ensemble.objects.get(pk=ee)
+    except Ensemble.DoesNotExist:
+        return HttpResponse(status=404)
+
+
+    profile = request.user.profile
+
+    if e.parent_molecule.project.author != profile and not profile_intersection(profile, e.parent_molecule.project.author):
+        return HttpResponse(status=404)
+
+    try:
+        s = e.structure_set.get(number=num)
+    except Structure.DoesNotExist:
+        return HttpResponse(status=404)
+
+    response = HttpResponse(s.xyz_structure)
+    response['Content-Type'] = 'text/plain'
+    response['Content-Disposition'] = 'attachment; filename={}_conf{}.xyz'.format(ee, num)
     return response
 
 def gen_3D(request):

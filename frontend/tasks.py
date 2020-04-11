@@ -781,7 +781,7 @@ end
 *xyzfile {} {} {}
 """
 
-    struct = calc.ensemble.structure_set.all()[0].xyz_structure
+    struct = calc.structure.xyz_structure
     electrons = 0
     for line in struct.split('\n')[2:]:
         if line.strip() == "":
@@ -793,7 +793,7 @@ end
 
     if calc.parameters.multiplicity != 1:
         print("Unimplemented multiplicity")
-        return -1, 'e'
+        return -1
 
     n_HOMO = int(electrons/2)-1
     n_LUMO = int(electrons/2)
@@ -818,6 +818,11 @@ end
     save_to_results("{}/in-LUMO.cube".format(folder), calc)
     save_to_results("{}/in-LUMOA.cube".format(folder), calc)
     save_to_results("{}/in-LUMOB.cube".format(folder), calc)
+
+    prop = get_or_create(calc.parameters, calc.structure)
+    prop.mo = calc.id
+    prop.save()
+
     return 0
 
 def enso(in_file, calc):
@@ -966,6 +971,10 @@ def xtb_stda(in_file, calc):
         out.write("Wavelength (nm), Absorbance\n")
         for ind, x in enumerate(f_x):
             out.write("{},{:.8f}\n".format(x, yy[ind]))
+
+    prop = get_or_create(calc.parameters, calc.structure)
+    prop.uvvis = calc.id
+    prop.save()
 
     return 0
 
