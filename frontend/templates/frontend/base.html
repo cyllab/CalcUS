@@ -143,9 +143,9 @@
 		</p>
 		{% if user.profile.is_PI %}
 			<div class="panel-block">
-				<a class="button is-primary" href="/projects/{{ user.profile.group.all.0.PI.username }}">{{ user.profile.group.all.0.PI.username }}</a>
+				<a class="button is-primary" href="/projects/{{ user.profile.group.PI.username }}">{{ user.profile.group.PI.username }}</a>
 			</div>
-				{% for u in user.profile.group.all.0.members.all %}
+				{% for u in user.profile.group.members.all %}
 					<div class="panel-block">
 						<a class="button" href="/projects/{{ u.username }}">{{ u.username }}</a>
 					</div>

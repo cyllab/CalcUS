@@ -142,6 +142,25 @@ def index(request, page=1):
     return render(request, 'frontend/index.html', {"page": page, "procedures": Procedure.objects.all()})
 
 @login_required
+def get_theory_details(request):
+    if request.method == 'POST':
+        if 'theory' in request.POST.keys():
+            theory = clean(request.POST['theory'])
+        else:
+            return HttpResponse(status=403)
+        if 'software' in request.POST.keys():
+            software = clean(request.POST['software'])
+        else:
+            return HttpResponse(status=403)
+        return render(request, 'frontend/launch_theory_options.html', {
+                'profile': request.user.profile,
+                'software': software,
+                'theory': theory,
+            })
+    else:
+        return HttpResponse(status=403)
+
+@login_required
 def project_details(request, username, proj):
     target_project = clean(proj)
     target_username = clean(username)
@@ -528,22 +547,6 @@ def submit_calculation(request):
     profile.save()
 
     if ressource == "Local":
-        '''
-        if type == 0:
-            geom_opt.delay(t, drawing, charge, solvent)
-        elif type == 1:
-            conf_search.delay(t, drawing, charge, solvent)
-        elif type == 2:
-            uvvis_simple.delay(t, drawing, charge, solvent)
-        elif type == 3:
-            nmr_enso.delay(t, drawing, charge, solvent)
-        elif type == 4:
-            geom_opt_freq.delay(t, drawing, charge, solvent)
-        elif type == 5:
-            constraint_opt.delay(t, drawing, charge, solvent, constraints)
-        elif type == 6:
-            ts_freq.delay(t, drawing, charge, solvent)
-        '''
         dispatcher.delay(drawing, obj.id)
     else:
         cmd = ClusterCommand.objects.create(issuer=profile)
@@ -558,6 +561,7 @@ def submit_calculation(request):
 
     return redirect("/projects/")
 
+@login_required
 def launch_software(request, software):
     _software = clean(software)
     if _software == 'xtb':

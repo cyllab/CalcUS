@@ -32,7 +32,7 @@ class Profile(models.Model):
     @property
     def group(self):
         if self.is_PI:
-            return self.researchgroup_PI
+            return self.researchgroup_PI.all()[0]
         else:
             return self.member_of
 
