@@ -1149,10 +1149,35 @@ def gen_3D(request):
     return HttpResponse(status=403)
 
 @login_required
+def rename_molecule(request):
+    if request.method == 'POST':
+        url = clean(request.POST['id'])
+        id = url.split('/')[-1]
+
+        try:
+            mol = Molecule.objects.get(pk=id)
+        except Molecule.DoesNotExist:
+            return HttpResponse(status=403)
+
+        profile = request.user.profile
+
+        if mol.project.author != profile and not profile_intersection(profile, mol.project.author):
+            return HttpResponse(status=403)
+
+        if 'new_name' in request.POST.keys():
+            name = clean(request.POST['new_name'])
+
+        mol.name = name
+        mol.save()
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=403)
+
+
+@login_required
 def get_structure(request):
     if request.method == 'POST':
-        url = request.POST['id']
-        id = url.split('/')[-1]
+        id = int(clean(request.POST['id']))
 
         try:
             e = Ensemble.objects.get(pk=id)

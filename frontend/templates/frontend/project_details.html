@@ -10,6 +10,59 @@
 
 	<script src="https://unpkg.com/masonry-layout@4.2.0/dist/masonry.pkgd.min.js"></script>
 
+	<script>
+		function selectText(node) {
+		    	node = document.getElementById(node);
+
+		    	if (document.body.createTextRange) {
+				const range = document.body.createTextRange();
+				range.moveToElementText(node);
+				range.select();
+		    	} else if (window.getSelection) {
+				const selection = window.getSelection();
+				const range = document.createRange();
+				range.selectNodeContents(node);
+				selection.removeAllRanges();
+				selection.addRange(range);
+			} else {
+				console.warn("Could not select text in node: Unsupported browser.");
+			}
+		}
+		function edit_field(mol_id) {
+			el = document.getElementById("mol_name_" + mol_id);
+			if (el.getAttribute("contentEditable") == "true") {
+				el.setAttribute("contentEditable", "false");
+				$("#icon_" + mol_id).removeClass("fa-check");
+				$("#icon_" + mol_id).addClass("fa-edit");
+				name = el.textContent;
+				$.ajax({
+					method: "POST",	 	 
+					url: "/rename_molecule/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					data: {'id': mol_id, 'new_name': name}
+				});
+
+			}
+			else {
+				el.setAttribute("contentEditable", "true");
+				$("#icon_" + mol_id).removeClass("fa-edit");
+				$("#icon_" + mol_id).addClass("fa-check");
+				selectText('mol_name_' + mol_id);
+				$('[contenteditable=true]').on('keypress', function(e) {
+					if (e.keyCode == 13) {
+						e.preventDefault();
+						edit_field(mol_id);
+					}
+				});
+
+			}
+			
+		}
+
+
+	</script>
 {% endblock %}
 
 {% block content %}
@@ -24,16 +77,17 @@
 	{% if molecules.count > 0 %}
 		<div class="grid">
 			{% for mol in molecules %}
-				<a href="/molecule/{{ mol.id }}">
 					<article class="message grid-item">
 						<div class="message-header">
-							<p>{{ mol.name }}</p>
+							<p id="mol_name_{{ mol.id }}">{{ mol.name }}</p>
+							<p onclick="edit_field({{ mol.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}"></i></p>
 						</div>
-						<div class="message-body">
+						<a href="/molecule/{{ mol.id }}">
+						<div class="message-body" style="height: 80%;">
 						{{ mol.ensemble_set.count }} Ensemble(s)	
 						</div>
+						</a>
 					</article>
-				</a>
 			{% endfor %}
 		</div>
 	{% else %}

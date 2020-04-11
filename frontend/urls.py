@@ -22,6 +22,7 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('accounts/login', views.login, name='login'),
 
+    path('rename_molecule/', views.rename_molecule, name='rename_molecule'),
     #Documentation
     path('examples/', views.ExamplesView.as_view(), name='examples'),
     path('examples/<int:pk>', views.example, name='example'),
