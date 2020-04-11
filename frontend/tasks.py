@@ -1088,6 +1088,7 @@ def dispatcher(drawing, order_id):
 
     step = order.step
 
+    print(drawing)
     for s in ensemble.structure_set.all():
         generate_xyz_structure(drawing, s)
 

@@ -40,7 +40,7 @@ class Profile(models.Model):
     def accesses(self):
         accesses = []
         if self.group != None:
-            for acc in self.group.all()[0].clusteraccess_set.all():
+            for acc in self.group.clusteraccess_set.all():
                 accesses.append(acc)
         for i in self.clusteraccess_owner.all():
             accesses.append(i)
