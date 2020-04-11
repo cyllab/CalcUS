@@ -422,7 +422,7 @@ def xtb_ts(in_file, calc):
             ind -= 1
         hl_gap = float(olines[ind].split()[3])
 
-    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=1)
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=''.join(lines), number=1)
     prop = get_or_create(calc.parameters, s)
     prop.homo_lumo_gap = hl_gap
     prop.energy = E
@@ -614,10 +614,9 @@ def xtb_freq(in_file, calc):
     prop.freq = calc.id
     prop.save()
 
-    lines = [i +'\n' for i in calc.structure.xyz_structure.split('\n')][:-1]
+    lines = [i +'\n' for i in calc.structure.xyz_structure.split('\n')]
     num_atoms = int(lines[0].strip())
     lines = lines[2:]
-
     hess = []
     struct = []
 
@@ -671,6 +670,7 @@ def xtb_freq(in_file, calc):
         _hess = hess[3*num_atoms*ind:3*num_atoms*(ind+1)]
         with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
             out.write("{}\n".format(num_atoms))
+            assert len(struct) == num_atoms
             out.write("CalcUS\n")
             for ind2, (a, x, y, z) in enumerate(struct):
                 out.write("{} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}\n".format(a, x, y, z, *_hess[3*ind2:3*ind2+3]))
@@ -1048,11 +1048,11 @@ def gen_fingerprint(structure):
         for line in mol:
             out.write(line)
     a = os.system("inchi-1 {}".format(mol_file))
-    if a == 0:
+    try:
         with open(mol_file + '.txt') as f:
             lines = f.readlines()
         inchi = lines[2][6:]
-    else:
+    except IndexError:
         inchi = str(time())
     return inchi
 
