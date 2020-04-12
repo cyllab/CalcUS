@@ -105,7 +105,36 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def lget(self, url):
         self.driver.get('{}{}'.format(self.live_server_url, url))
 
-    def launch_calc(self, params):
+    def get_charge(self, fname):
+        charge = 0
+        if fname.find("anion"):
+            charge = -1
+        elif fname.find("dianion"):
+            charge = -2
+        elif fname.find("cation"):
+            charge = 1
+        elif fname.find("dication"):
+            charge = 2
+
+        return charge, fname.replace('dianion', '').replace('dication', '').replace('anion', '').replace('cation', '')
+
+    def calc_input_params(self, params):
+        self.driver.implicitly_wait(10)
+        element = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "sketcher"))
+        )
+        element = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.NAME, "calc_name"))
+        )
+
+        element = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.NAME, "calc_solvent"))
+        )
+
+        element = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.NAME, "calc_project"))
+        )
+
         name_input = self.driver.find_element_by_name('calc_name')
         solvent_input = self.driver.find_element_by_name('calc_solvent')
         charge_input = self.driver.find_element_by_name('calc_charge')
@@ -114,7 +143,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         calc_type_input = self.driver.find_element_by_id('calc_type')
         ressource_input = self.driver.find_element_by_name('calc_ressource')
         upload_input = self.driver.find_element_by_name('file_structure')
-        submit = self.driver.find_element_by_xpath('/html/body/div[1]/div/div[2]/form/div[7]/div/button')
 
         name_input.send_keys(params['calc_name'])
 
@@ -135,7 +163,22 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if 'in_file' in params.keys():
             upload_input.send_keys("{}/tests/{}".format(dir_path, params['in_file']))
 
-        submit.send_keys(Keys.RETURN)
+    def calc_launch(self):
+        submit = self.driver.find_element_by_xpath('/html/body/div[1]/div/div[2]/form/div[7]/div/button')
+        submit.click()
+
+    def get_number_calc_orders(self):
+        assert self.is_on_page_calculations()
+        calculations_container = self.driver.find_element_by_id("calculations_list")
+        try:
+            calculations_div = calculations_container.find_element_by_css_selector(".grid")
+        except selenium.common.exceptions.NoSuchElementException:
+            assert calculations_container.text.find('No calculation') != -1
+            return 0
+
+        calculations = calculations_div.find_elements_by_css_selector("article")
+        num = len(calculations)
+        return num
 
     def get_split_url(self):
         return self.driver.current_url.split('/')[3:]
@@ -198,6 +241,27 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_user_project(self):
         url = self.get_split_url()
         if url[0] == 'projects' and self.is_user(url[1]) and self.is_user_project(url[1], url[2]):
+            return True
+        else:
+            return False
+
+    def is_on_page_calculations(self):
+        url = self.get_split_url()
+        if url[0] == 'calculations' and url[1] == '':
+            return True
+        else:
+            return False
+
+    def is_on_page_profile(self):
+        url = self.get_split_url()
+        if url[0] == 'profile' and url[1] == '':
+            return True
+        else:
+            return False
+
+    def is_on_page_managePI(self):
+        url = self.get_split_url()
+        if url[0] == 'manage_pi_requests' and url[1] == '':
             return True
         else:
             return False
@@ -294,6 +358,31 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 e.click()
                 return
 
+    def apply_PI(self, group_name):
+        assert self.is_on_page_profile()
+        group_name = self.driver.find_element_by_name('group_name')
+        submit = self.driver.find_element_by_xpath('/html/body/div/div[2]/div/div[1]/form/button')
+        group_name.send_keys("Test group")
+        submit.send_keys(Keys.RETURN)
+
+        element = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "PI_application_message"))
+        )
+
+    def accept_PI_request(self):
+        assert self.is_on_page_managePI()
+        element = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "table"))
+        )
+
+        table = self.driver.find_element_by_class_name('table')
+
+        self.assertTrue(table.text.find("Accept") != -1)
+        self.assertTrue(table.text.find("Deny") != -1)
+
+        accept_button = self.driver.find_element_by_xpath('/html/body/div/div/table/tbody/tr[1]/td[1]/button')
+        accept_button.send_keys(Keys.RETURN)
+
 class InterfaceTests(CalcusLiveServer):
     def test_default_login_page(self):
         self.assertTrue(self.is_on_page_projects())
@@ -369,19 +458,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_ensemble())
 
 class UserPermissionsTests(CalcusLiveServer):
-    def test_access_calc_without_permission(self):
-        u = User.objects.create_superuser(username="OtherPI", password="irrelevant")
-        p = Profile.objects.get(user__username="OtherPI")
-        proj = Project.objects.create(author=p, name="SecretProj")
-        c = Calculation.objects.create(name="test", date=datetime.datetime.now(), status=2, author=p, project=proj)
-        proj.save()
-        c.save()
-        p.save()
-
-        self.lget('/details/1')
-        self.driver.implicitly_wait(5)
-        self.assertEqual(self.driver.current_url.split('/')[-2], 'home')
-
     def test_launch_without_group(self):
         params = {
                 'calc_name': 'test',
@@ -391,31 +467,22 @@ class UserPermissionsTests(CalcusLiveServer):
                 'in_file': 'benzene.mol',
                 }
 
-        self.basic_launch(params, 10)
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.lget("/calculations")
+        self.assertEqual(self.get_number_calc_orders(), 0)
 
     def test_request_PI(self):
-        self.driver.get('{}/profile/'.format(self.live_server_url))
-        group_name = self.driver.find_element_by_name('group_name')
-        submit = self.driver.find_element_by_xpath('/html/body/div/div[2]/div/div[1]/form/button')
-        group_name.send_keys("Test group")
-        submit.send_keys(Keys.RETURN)
-
-        element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, "PI_application_message"))
-        )
-
+        self.lget('/profile/')
+        self.apply_PI("Test group")
         self.assertTrue(self.driver.find_element_by_id("PI_application_message").text.find("Your request has been received") != -1)
 
     def test_manage_PI_request(self):
         self.lget('/profile/')
-        group_name = self.driver.find_element_by_name('group_name')
-        submit = self.driver.find_element_by_xpath('/html/body/div/div[2]/div/div[1]/form/button')
-        group_name.send_keys("Test group")
-        submit.send_keys(Keys.RETURN)
 
-        element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, "PI_application_message"))
-        )
+        self.apply_PI("Test group")
         self.logout()
 
         u = User.objects.create_superuser(username="SU", password=self.password)
@@ -426,22 +493,13 @@ class UserPermissionsTests(CalcusLiveServer):
 
         self.login("SU", self.password)
         self.lget('/manage_pi_requests/')
-        element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "table"))
-        )
 
-        table = self.driver.find_element_by_class_name('table')
-
-        self.assertTrue(table.text.find("Accept") != -1)
-        self.assertTrue(table.text.find("Deny") != -1)
-
-        accept_button = self.driver.find_element_by_xpath('/html/body/div/div/table/tbody/tr[1]/td[1]/button')
-        accept_button.send_keys(Keys.RETURN)
+        self.accept_PI_request()
         self.logout()
 
         self.login(self.username, self.password)
 
-        self.driver.get('{}/launch/'.format(self.live_server_url))
+        self.lget('/launch/')
 
         params = {
                 'calc_name': 'test',
@@ -450,140 +508,15 @@ class UserPermissionsTests(CalcusLiveServer):
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'benzene.mol',
                 }
-        self.launch_calc(params)
-        element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, "calc_title"))
-        )
-
-        element = WebDriverWait(self.driver, 10).until(
-            EC.text_to_be_present_in_element((By.ID, "calc_title"), "Done")
-        )
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations")
+        self.assertEqual(self.get_number_calc_orders(), 1)
 
 
+class CalculationTests(CalcusLiveServer):
 
-    def basic_launch(self, params, delay):
-        self.driver.get('{}/launch/'.format(self.live_server_url))
-
-        self.driver.implicitly_wait(10)
-        element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, "editor"))
-        )
-        element = WebDriverWait(self.driver, 2).until(
-            EC.presence_of_element_located((By.NAME, "calc_name"))
-        )
-
-        element = WebDriverWait(self.driver, 2).until(
-            EC.presence_of_element_located((By.NAME, "calc_solvent"))
-        )
-
-        element = WebDriverWait(self.driver, 2).until(
-            EC.presence_of_element_located((By.NAME, "calc_project"))
-        )
-
-        self.launch_calc(params)
-
-        element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "box"))
-        )
-        self.assertTrue(self.driver.find_element_by_class_name('box').text.find("You have no computing ressource") != -1)
-
-
-class CalculationTests(StaticLiveServerTestCase):
-
-
-    def get_charge(self, fname):
-
-        charge = 0
-        if fname.find("anion"):
-            charge = -1
-        elif fname.find("dianion"):
-            charge = -2
-        elif fname.find("cation"):
-            charge = 1
-        elif fname.find("dication"):
-            charge = 2
-
-        return charge, fname.replace('dianion', '').replace('dication', '').replace('anion', '').replace('cation', '')
-
-    def launch_calc(self, params):
-        name_input = self.driver.find_element_by_name('calc_name')
-        solvent_input = self.driver.find_element_by_name('calc_solvent')
-        charge_input = self.driver.find_element_by_name('calc_charge')
-        project_input = self.driver.find_element_by_id('calc_project')
-        new_project_input = self.driver.find_element_by_name('new_project_name')
-        calc_type_input = self.driver.find_element_by_id('calc_type')
-        ressource_input = self.driver.find_element_by_name('calc_ressource')
-        upload_input = self.driver.find_element_by_name('file_structure')
-        submit = self.driver.find_element_by_id('submit_button')
-
-        name_input.click()
-        name_input.send_keys(params['calc_name'])
-
-        if 'solvent' in params.keys():
-            self.driver.find_element_by_xpath("/html/body/div[1]/div/div[2]/form/div[2]/div[2]/div/div/div/select/option[text()='{}']".format(params['solvent'])).click()
-
-        if 'charge' in params.keys():
-            self.driver.find_element_by_xpath("/html/body/div[1]/div/div[2]/form/div[2]/div[3]/div/div/div/select/option[text()='{}']".format(params['charge'])).click()
-
-        if 'type' in params.keys():
-            self.driver.find_element_by_xpath("//*[@id='calc_type']/option[text()='{}']".format(params['type'])).click()
-
-        self.driver.find_element_by_xpath("//*[@id='calc_project']/option[text()='{}']".format(params['project'])).click()
-
-        if 'new_project_name' in params.keys():
-            new_project_input.click()
-            new_project_input.send_keys(params['new_project_name'])
-
-        if 'in_file' in params.keys():
-            upload_input.send_keys("{}/tests/{}".format(dir_path, params['in_file']))
-        elif 'in_text' in params.keys():
-            with open("{}/tests/{}".format(dir_path, params['in_text'])) as f:
-                mol_text = f.readlines()
-
-            open_input = self.driver.find_element_by_xpath('/html/body/div[1]/div/div[1]/div[1]/button[3]/span/img')
-            open_input.click()
-            element = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.ID, "sketcher_open_text"))
-            )
-            self.driver.implicitly_wait(5)
-
-            text_area = self.driver.find_element_by_id('sketcher_open_text')
-            text_area.send_keys(mol_text)
-            button_load = self.driver.find_element_by_id('sketcher_open_load')
-            button_load.send_keys(Keys.RETURN)
-
-        submit.send_keys(Keys.RETURN)
-
-    def basic_launch(self, params, delay):
-        self.driver.get('{}/launch/'.format(self.live_server_url))
-
-        element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, "editor"))
-        )
-        element = WebDriverWait(self.driver, 2).until(
-            EC.presence_of_element_located((By.NAME, "calc_name"))
-        )
-
-
-        self.launch_calc(params)
-
-        element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, "calc_title"))
-        )
-
-        url = self.driver.current_url.split('/')
-        self.assertTrue(url[-2] == "details")
-
-        status_bar = self.driver.find_element_by_id('calc_title')
-
-        self.wait_calc_completion(delay)
-
-        self.assertTrue(self.driver.find_element_by_id('calc_status').text.find("Done") != -1)
-
-    def wait_calc_completion(self, delay):
-        element = WebDriverWait(self.driver, delay).until(EC.text_to_be_present_in_element((By.CSS_SELECTOR, "#calc_status"), 'Done')
-        )
-
+    '''
     def test_text_opt(self):
         #Will fail
         self.client.login(username=self.username, password=self.password)
@@ -596,9 +529,9 @@ class CalculationTests(StaticLiveServerTestCase):
                 }
 
         self.basic_launch(params, 10)
+    '''
 
     def test_opt(self):
-        self.client.login(username=self.username, password=self.password)
         params = {
                 'calc_name': 'test',
                 'type': 'Geometrical Optimisation',
@@ -610,8 +543,7 @@ class CalculationTests(StaticLiveServerTestCase):
         self.basic_launch(params, 10)
 
     def test_proj(self):
-        self.client.login(username=self.username, password=self.password)
-        p = Profile.objects.get(user__username=self.username)
+        p = self.profile
         proj = Project.objects.create(author=p, name="TestProj")
         proj.save()
         params = {
@@ -624,7 +556,6 @@ class CalculationTests(StaticLiveServerTestCase):
         self.basic_launch(params, 20)
 
     def test_opt_freq(self):
-        self.client.login(username=self.username, password=self.password)
         params = {
                 'calc_name': 'test',
                 'type': 'Opt+Freq',
@@ -637,7 +568,6 @@ class CalculationTests(StaticLiveServerTestCase):
         self.basic_launch(params, 20)
 
     def test_conf_search(self):
-        self.client.login(username=self.username, password=self.password)
         params = {
                 'calc_name': 'test',
                 'type': 'Conformational Search',
@@ -649,7 +579,6 @@ class CalculationTests(StaticLiveServerTestCase):
         self.basic_launch(params, 120)
 
     def test_ts(self):
-        self.client.login(username=self.username, password=self.password)
         params = {
                 'calc_name': 'test',
                 'type': 'TS+Freq',
@@ -661,7 +590,6 @@ class CalculationTests(StaticLiveServerTestCase):
         self.basic_launch(params, 20)
 
     def test_second_step(self):
-        self.client.login(username=self.username, password=self.password)
         params = {
                 'calc_name': 'test',
                 'type': 'Geometrical Optimisation',
@@ -682,8 +610,4 @@ class CalculationTests(StaticLiveServerTestCase):
                 }
 
         self.launch_calc(params)
-
-        element = WebDriverWait(self.driver, 10).until(
-            EC.text_to_be_present_in_element((By.ID, "calc_title"), 'Done')
-        )
 
