@@ -74,8 +74,8 @@
 			<li class="is-active"><a aria-current="page" href="#">{{ project.name }}</a></li>
 	  	</ul>
 	</nav>
-	{% if molecules.count > 0 %}
-		<div class="grid">
+	<div class="grid">
+		{% if molecules.count > 0 %}
 			{% for mol in molecules %}
 					<article class="message grid-item is-primary">
 						<div class="message-header">
@@ -91,10 +91,10 @@
 						</a>
 					</article>
 			{% endfor %}
-		</div>
-	{% else %}
-		No molecule in this project.
-	{% endif %}
+		{% else %}
+			No molecule in this project.
+		{% endif %}
+	</div>
 </div>
 <br />
 {% endblock %}

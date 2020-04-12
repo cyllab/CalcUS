@@ -202,6 +202,7 @@ class Command(BaseCommand):
 
             a.save()
 
+        '''
         name = "NMR Prediction"
         if self.is_absent(Procedure, name):
             self.print("Adding Procedure: {}".format(name))
@@ -222,7 +223,7 @@ class Command(BaseCommand):
             step3.save()
 
             a.save()
-
+        '''
         ###Finishing the process
         self.verify()
 

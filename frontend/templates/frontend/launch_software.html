@@ -72,35 +72,38 @@
 </div>
 
 {% if software == 'ORCA' or software == 'Gaussian' %}
+<script>
+	function refresh_theory_options() {
+		let theory = document.getElementById("calc_theory_level").value;
+		$.ajax({
+			method: "POST",	 	 
+			url: "/get_theory_details/",
+			headers: {
+				"X-CSRFToken": '{{ csrf_token }}',
+			},
+			data: {'theory': theory, 'software': "{{ software }}"},
+
+			success: function(data, textStatus, xhr) {
+				$("#theory_options").html(data);	
+			}
+		});
+	}
+</script>
 <div>
 	<div class="field">
 		<label class="label">Theory Level</label>
 		<div class="control" >
 			<div class="select">
-				<select name="calc_theory_level" id="calc_theory_Level">
+				<select name="calc_theory_level" id="calc_theory_level" onchange="refresh_theory_options();">
+					<option>Semi-empirical</option>
+					<option>HF</option>
 					<option>DFT</option>
+					<option>RI-MPI</option>
 				</select>
 			</div>
 		</div>
 	</div>
-	<div class="columns">
-		<div class="column">
-			<div class="field">
-				<label class="label">Functional</label>
-				<div class="control">
-					<input class="input" name="calc_functional" type="text" placeholder="M062X" required>
-				</div>
-			</div>
-		</div>
-		<div class="column">
-			<div class="field">
-				<label class="label">Basis set</label>
-				<div class="control">
-					<input class="input" name="calc_basis_set" type="text" placeholder="Def2SVP" required>
-				</div>
-			</div>
-		</div>
-
+	<div id="theory_options">
 	</div>
 </div>
 

@@ -240,22 +240,22 @@ def generate_xyz_structure(drawing, structure):
                     else:
                         break
                 num = len(to_print)
-                in_struct.xyz_structure = "{}\n".format(num)
-                in_struct.xyz_structure += "CalcUS\n"
+                structure.xyz_structure = "{}\n".format(num)
+                structure.xyz_structure += "CalcUS\n"
                 for line in to_print:
-                    in_struct.xyz_structure += line
-                in_struct.save()
+                    structure.xyz_structure += line
+                structure.save()
                 return 0
-        elif in_struct.sdf_structure != '':#unimplemented
+        elif structure.sdf_structure != '':#unimplemented
             with open("{}/initial.sdf".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))), 'w') as out:
-                out.write(in_struct.sdf_structure)
+                out.write(structure.sdf_structure)
             a = system("obabel {}/initial.sdf -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
             a = system("obabel {}/initial.sdf -O {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
 
             with open(os.path.join("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))))) as f:
                 lines = f.readlines()
-            in_struct.xyz_structure = '\n'.join([i.strip() for i in lines])
-            in_struct.save()
+            structure.xyz_structure = '\n'.join([i.strip() for i in lines])
+            structure.save()
             return 0
         else:
             print("Unimplemented")

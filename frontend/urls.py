@@ -61,6 +61,7 @@ urlpatterns = [
     path('launch/<int:pk>', views.launch_pk, name='launch_pk'),
     path('launch/<int:ee>/<int:pk>', views.launch_structure_pk, name='launch_structure_pk'),
     path('software/<str:software>', views.launch_software, name='launch_software'),
+    path('get_theory_details/', views.get_theory_details, name='get_theory_details'),
 
     path('get_cube/', views.get_cube, name='get_cube'),
     path('details/<int:pk>', views.details, name='details'),
