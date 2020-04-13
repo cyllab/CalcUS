@@ -383,6 +383,34 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         accept_button = self.driver.find_element_by_xpath('/html/body/div/div/table/tbody/tr[1]/td[1]/button')
         accept_button.send_keys(Keys.RETURN)
 
+    def wait_latest_calc_done(self, timeout):
+        assert self.is_on_page_calculations()
+        assert self.get_number_calc_orders() > 0
+
+
+        ind = 0
+        while ind < timeout:
+            calculations_container = self.driver.find_element_by_id("calculations_list")
+            calculations_div = calculations_container.find_element_by_css_selector(".grid")
+            calculations = calculations_div.find_elements_by_css_selector("article")
+            header = calculations[0].find_element_by_class_name("message-header")
+            if "has-background-success" in header.get_attribute("class") or "has-background-danger" in header.get_attribute("class"):
+                    return
+            time.sleep(1)
+            ind += 1
+            self.driver.refresh()
+
+    def latest_calc_successful(self):
+        assert self.is_on_page_calculations()
+        assert self.get_number_calc_orders() > 0
+
+
+        calculations_container = self.driver.find_element_by_id("calculations_list")
+        calculations_div = calculations_container.find_element_by_css_selector(".grid")
+        calculations = calculations_div.find_elements_by_css_selector("article")
+        header = calculations[0].find_element_by_class_name("message-header")
+        return "has-background-success" in header.get_attribute("class")
+
 class InterfaceTests(CalcusLiveServer):
     def test_default_login_page(self):
         self.assertTrue(self.is_on_page_projects())
@@ -457,6 +485,8 @@ class InterfaceTests(CalcusLiveServer):
         self.click_ensemble("Test Ensemble")
         self.assertTrue(self.is_on_page_ensemble())
 
+    #Test calculation linking to molecule
+
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):
         params = {
@@ -488,7 +518,6 @@ class UserPermissionsTests(CalcusLiveServer):
         u = User.objects.create_superuser(username="SU", password=self.password)
         u.save()
         p = Profile.objects.get(user__username="SU")
-        p.is_SU = True
         p.save()
 
         self.login("SU", self.password)
@@ -531,6 +560,28 @@ class CalculationTests(CalcusLiveServer):
         self.basic_launch(params, 10)
     '''
 
+    def setUp(self):
+        super().setUp()
+
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+
+
     def test_opt(self):
         params = {
                 'calc_name': 'test',
@@ -540,12 +591,17 @@ class CalculationTests(CalcusLiveServer):
                 'in_file': 'benzene.mol',
                 }
 
-        self.basic_launch(params, 10)
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
 
     def test_proj(self):
-        p = self.profile
-        proj = Project.objects.create(author=p, name="TestProj")
+        proj = Project.objects.create(author=self.profile, name="TestProj")
         proj.save()
+
         params = {
                 'calc_name': 'test',
                 'type': 'Geometrical Optimisation',
@@ -553,42 +609,63 @@ class CalculationTests(CalcusLiveServer):
                 'in_file': 'benzene.mol',
                 }
 
-        self.basic_launch(params, 20)
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
 
     def test_opt_freq(self):
         params = {
                 'calc_name': 'test',
-                'type': 'Opt+Freq',
+                'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
                 'charge': '+1',
                 }
 
-        self.basic_launch(params, 20)
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
 
     def test_conf_search(self):
         params = {
                 'calc_name': 'test',
-                'type': 'Conformational Search',
+                'type': 'Crest',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'ethanol.sdf',
                 }
 
-        self.basic_launch(params, 120)
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
 
     def test_ts(self):
         params = {
                 'calc_name': 'test',
-                'type': 'TS+Freq',
+                'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'ts.xyz',
                 }
 
-        self.basic_launch(params, 20)
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(20)
+        self.assertTrue(self.latest_calc_successful())
 
+    '''
     def test_second_step(self):
         params = {
                 'calc_name': 'test',
@@ -611,3 +688,4 @@ class CalculationTests(CalcusLiveServer):
 
         self.launch_calc(params)
 
+    '''

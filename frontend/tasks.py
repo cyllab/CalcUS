@@ -247,12 +247,14 @@ def generate_xyz_structure(drawing, structure):
                 structure.save()
                 return 0
         elif structure.sdf_structure != '':#unimplemented
-            with open("{}/initial.sdf".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))), 'w') as out:
-                out.write(structure.sdf_structure)
-            a = system("obabel {}/initial.sdf -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
-            a = system("obabel {}/initial.sdf -O {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
+            t = time()
+            fname = "{}_{}".format(t, structure.id)
 
-            with open(os.path.join("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))))) as f:
+            with open("/tmp/{}.sdf".format(fname), 'w') as out:
+                out.write(structure.sdf_structure)
+            a = system("obabel /tmp/{}.sdf -O /tmp/{}.xyz".format(fname, fname), force_local=True)
+
+            with open("/tmp/{}.xyz".format(fname)) as f:
                 lines = f.readlines()
             structure.xyz_structure = '\n'.join([i.strip() for i in lines])
             structure.save()
@@ -311,7 +313,7 @@ def handle_input_file(drawing, calc_obj):
                 a = system("obabel {}/initial.sdf -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
                 a = system("obabel {}/initial.sdf -O {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
 
-                with open(os.path.join("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))))) as f:
+                with open(os.path.join("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc.id))))) as f:
                     lines = f.readlines()
                 in_struct.xyz_structure = '\n'.join([i.strip() for i in lines])
                 in_struct.save()
@@ -1125,14 +1127,20 @@ def dispatcher(drawing, order_id):
         for s in ensemble.structure_set.all():
             c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), step=step, parameters=order.parameters, result_ensemble=e, constraints=order.constraints)
             c.save()
-            group_order.append(run_calc.s(c.id).set(queue='comp'))
+            if not is_test:
+                group_order.append(run_calc.s(c.id).set(queue='comp'))
+            else:
+                group_order.append(run_calc.s(c.id))
 
     else:
         print("using ensemble {}".format(ensemble.id))
         for s in ensemble.structure_set.all():
             c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), parameters=order.parameters, step=step, constraints=order.constraints)
             c.save()
-            group_order.append(run_calc.s(c.id).set(queue='comp'))
+            if not is_test:
+                group_order.append(run_calc.s(c.id).set(queue='comp'))
+            else:
+                group_order.append(run_calc.s(c.id))
 
     g = group(group_order)
     result = g.apply_async()
