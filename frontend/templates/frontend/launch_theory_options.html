@@ -1,4 +1,20 @@
-{% if theory == 'HF' %}
+{% if theory == 'Semi-empirical' %}
+<div class="field" id="calc_se_method">
+	<label class="label">Method</label>
+	<div class="select">
+		<select name="calc_se_method">
+			<option>AM1</option>
+			<option>PM3</option>
+			{% if software == 'Gaussian' %}
+			<option>PM6</option>
+			<option>PM7</option>
+			{% endif %}
+		</select>
+	</div>
+
+</div>
+
+{% elif theory == 'HF' %}
 <script>
 	function hf3c_toggle() {
 		hf3c = document.getElementById("hf3c").checked;
@@ -12,7 +28,7 @@
 </script>
 <div class="columns is-vcentered">
 	{% if software == 'ORCA' %}
-	<div class="column">
+	<div class="column is-narrow">
 		<div class="field">
 			<label class="label">Special</label>
 			<label class="checkbox">
@@ -58,7 +74,7 @@
 
 <div class="columns">
 	{% if software == 'ORCA' %}
-	<div class="column">
+	<div class="column is-narrow">
 		<div class="field">
 			<label class="label">Special</label>
 			<label class="checkbox">
@@ -93,6 +109,25 @@
 		</div>
 	</div>
 
+</div>
+{% elif theory == 'RI-MP2' %}
+<div class="columns">
+	<div class="column">
+		<div class="field" id="calc_basis_set_field">
+			<label class="label">Basis set</label>
+			<div class="control">
+				<input class="input" name="calc_basis_set" type="text" placeholder="Def2SVP" required>
+			</div>
+		</div>
+	</div>
+	<div class="column">
+		<div class="field">
+			<label class="label">Additional keyword</label>
+			<div class="control">
+				<input class="input" name="calc_misc" type="text" placeholder="" >
+			</div>
+		</div>
+	</div>
 </div>
 
 {% endif %}

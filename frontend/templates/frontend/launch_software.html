@@ -88,6 +88,7 @@
 			}
 		});
 	}
+	refresh_theory_options();
 </script>
 <div>
 	<div class="field">
@@ -98,7 +99,9 @@
 					<option>Semi-empirical</option>
 					<option>HF</option>
 					<option>DFT</option>
+					{% if software == 'ORCA' %}
 					<option>RI-MP2</option>
+					{% endif %}				
 				</select>
 			</div>
 		</div>
