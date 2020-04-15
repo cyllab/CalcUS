@@ -1,7 +1,75 @@
-{% if theory == 'DFT' %}
-<div class="columns">
+{% if theory == 'HF' %}
+<script>
+	function hf3c_toggle() {
+		hf3c = document.getElementById("hf3c").checked;
+		if (hf3c == true) {
+			document.getElementById("calc_basis_set_field").style.display = "none";
+		}
+		else {
+			document.getElementById("calc_basis_set_field").style.display = "block";
+		}
+	}
+</script>
+<div class="columns is-vcentered">
+	{% if software == 'ORCA' %}
 	<div class="column">
 		<div class="field">
+			<label class="label">Special</label>
+			<label class="checkbox">
+  				<input type="checkbox" id="hf3c" onchange="hf3c_toggle();">
+				HF-3c
+			</label>		
+		</div>
+	</div>
+	{% endif %}
+	<div class="column">
+		<div class="field" id="calc_basis_set_field">
+			<label class="label">Basis set</label>
+			<div class="control">
+				<input class="input" name="calc_basis_set" type="text" placeholder="Def2SVP" required>
+			</div>
+		</div>
+	</div>
+	<div class="column">
+		<div class="field">
+			<label class="label">Additional keyword</label>
+			<div class="control">
+				<input class="input" name="calc_misc" type="text" placeholder="" >
+			</div>
+		</div>
+	</div>
+
+</div>
+
+{% elif theory == 'DFT' %}
+<script>
+	function pbeh3c_toggle() {
+		pbeh3c = document.getElementById("pbeh3c").checked;
+		if (pbeh3c == true) {
+			document.getElementById("calc_basis_set_field").style.display = "none";
+			document.getElementById("calc_functional_field").style.display = "none";
+		}
+		else {
+			document.getElementById("calc_basis_set_field").style.display = "block";
+			document.getElementById("calc_functional_field").style.display = "block";
+		}
+	}
+</script>
+
+<div class="columns">
+	{% if software == 'ORCA' %}
+	<div class="column">
+		<div class="field">
+			<label class="label">Special</label>
+			<label class="checkbox">
+  				<input type="checkbox" id="pbeh3c" onchange="pbeh3c_toggle();">
+				PBEh-3c
+			</label>		
+		</div>
+	</div>
+	{% endif %}
+	<div class="column">
+		<div class="field" id="calc_functional_field">
 			<label class="label">Functional</label>
 			<div class="control">
 				<input class="input" name="calc_functional" type="text" placeholder="M062X" required>
@@ -9,7 +77,7 @@
 		</div>
 	</div>
 	<div class="column">
-		<div class="field">
+		<div class="field" id="calc_basis_set_field">
 			<label class="label">Basis set</label>
 			<div class="control">
 				<input class="input" name="calc_basis_set" type="text" placeholder="Def2SVP" required>
