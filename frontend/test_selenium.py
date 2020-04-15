@@ -120,12 +120,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def calc_input_params(self, params):
         self.driver.implicitly_wait(10)
-        element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, "sketcher"))
-        )
-        element = WebDriverWait(self.driver, 2).until(
-            EC.presence_of_element_located((By.NAME, "calc_name"))
-        )
+        if 'calc_name' in params.keys():
+            element = WebDriverWait(self.driver, 2).until(
+                EC.presence_of_element_located((By.NAME, "calc_name"))
+            )
+            name_input = self.driver.find_element_by_name('calc_name')
 
         element = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located((By.NAME, "calc_solvent"))
@@ -135,16 +134,19 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             EC.presence_of_element_located((By.NAME, "calc_project"))
         )
 
-        name_input = self.driver.find_element_by_name('calc_name')
         solvent_input = self.driver.find_element_by_name('calc_solvent')
         charge_input = self.driver.find_element_by_name('calc_charge')
         project_input = self.driver.find_element_by_id('calc_project')
         new_project_input = self.driver.find_element_by_name('new_project_name')
         calc_type_input = self.driver.find_element_by_id('calc_type')
         ressource_input = self.driver.find_element_by_name('calc_ressource')
-        upload_input = self.driver.find_element_by_name('file_structure')
+        try:
+            upload_input = self.driver.find_element_by_name('file_structure')
+        except selenium.common.exceptions.NoSuchElementException:
+            pass
 
-        name_input.send_keys(params['calc_name'])
+        if 'calc_name' in params.keys():
+            name_input.send_keys(params['calc_name'])
 
         if 'solvent' in params.keys():
             self.driver.find_element_by_xpath("/html/body/div[1]/div/div[2]/form/div[2]/div[2]/div/div/div/select/option[text()='{}']".format(params['solvent'])).click()
@@ -155,7 +157,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if 'type' in params.keys():
             self.driver.find_element_by_xpath("//*[@id='calc_type']/option[text()='{}']".format(params['type'])).click()
 
-        self.driver.find_element_by_xpath("//*[@id='calc_project']/option[text()='{}']".format(params['project'])).click()
+        if 'project' in params.keys():
+            self.driver.find_element_by_xpath("//*[@id='calc_project']/option[text()='{}']".format(params['project'])).click()
 
         if 'new_project_name' in params.keys():
             new_project_input.send_keys(params['new_project_name'])
@@ -164,7 +167,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             upload_input.send_keys("{}/tests/{}".format(dir_path, params['in_file']))
 
     def calc_launch(self):
-        submit = self.driver.find_element_by_xpath('/html/body/div[1]/div/div[2]/form/div[7]/div/button')
+        submit = self.driver.find_element_by_id('submit_button')
         submit.click()
 
     def get_number_calc_orders(self):
@@ -179,6 +182,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         calculations = calculations_div.find_elements_by_css_selector("article")
         num = len(calculations)
         return num
+
+    def get_number_calc_methods(self):
+        assert self.is_on_page_ensemble()
+
+        tabs_list = self.driver.find_element_by_css_selector("#tabs")
+        tabs = tabs_list.find_elements_by_css_selector("li")
+        return len(tabs)
 
     def get_split_url(self):
         return self.driver.current_url.split('/')[3:]
@@ -358,6 +368,15 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 e.click()
                 return
 
+    def click_latest_calc(self):
+        assert self.is_on_page_calculations()
+        assert self.get_number_calc_orders() > 0
+
+        calculations_container = self.driver.find_element_by_id("calculations_list")
+        calculations_div = calculations_container.find_element_by_css_selector(".grid")
+        calculations = calculations_div.find_elements_by_css_selector("article")
+        calculations[0].click()
+
     def apply_PI(self, group_name):
         assert self.is_on_page_profile()
         group_name = self.driver.find_element_by_name('group_name')
@@ -368,6 +387,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "PI_application_message"))
         )
+
 
     def accept_PI_request(self):
         assert self.is_on_page_managePI()
@@ -410,6 +430,30 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         calculations = calculations_div.find_elements_by_css_selector("article")
         header = calculations[0].find_element_by_class_name("message-header")
         return "has-background-success" in header.get_attribute("class")
+
+    def add_user_to_group(self, username):
+        assert self.is_on_page_profile()
+
+        element = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "code"))
+        )
+        element = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "user_to_add"))
+        )
+
+
+        p = Profile.objects.get(user__username=username)
+        code = p.code
+        field_username = self.driver.find_element_by_id("user_to_add")
+        field_code = self.driver.find_element_by_id("code")
+        button_submit = self.driver.find_element_by_xpath("/html/body/div/div[3]/div/div/div[1]/div/button")
+        field_username.send_keys(username)
+        field_code.send_keys(code)
+        button_submit.send_keys(Keys.RETURN)
+
+    def launch_ensemble_next_step(self):
+        button = self.driver.find_element_by_xpath("/html/body/div[1]/div/div[2]/div[1]/a")
+        button.click()
 
 class InterfaceTests(CalcusLiveServer):
     def test_default_login_page(self):
@@ -543,7 +587,7 @@ class UserPermissionsTests(CalcusLiveServer):
         self.assertEqual(self.get_number_calc_orders(), 1)
 
 
-class CalculationTests(CalcusLiveServer):
+class CalculationTestsPI(CalcusLiveServer):
 
     '''
     def test_text_opt(self):
@@ -597,6 +641,8 @@ class CalculationTests(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.click_ensemble("Result Ensemble")
 
     def test_proj(self):
         proj = Project.objects.create(author=self.profile, name="TestProj")
@@ -665,27 +711,178 @@ class CalculationTests(CalcusLiveServer):
         self.wait_latest_calc_done(20)
         self.assertTrue(self.latest_calc_successful())
 
-    '''
     def test_second_step(self):
         params = {
                 'calc_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.click_ensemble("Result Ensemble")
+        self.launch_ensemble_next_step()
+
+        params2 = {
+                #'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                #project implicit
+                }
+        self.calc_input_params(params2)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+
+
+class CalculationTestsStudent(CalcusLiveServer):
+    def setUp(self):
+        super().setUp()
+
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
+        self.lget("/profile/")
+        self.add_user_to_group("Student")
+        self.logout()
+        self.login("Student", self.password)
+
+
+    def test_opt(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.click_ensemble("Result Ensemble")
+
+    def test_proj(self):
+        student = Profile.objects.get(user__username="Student")
+        proj = Project.objects.create(author=student, name="TestProj")
+        proj.save()
+
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'TestProj',
+                'in_file': 'benzene.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+
+    def test_opt_freq(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+
+    def test_conf_search(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Crest',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
                 'in_file': 'ethanol.sdf',
                 }
 
-        self.basic_launch(params, 20)
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
 
-        calc_id = self.driver.current_url.split('/')[-1]
-        next_button = self.lget('/launch/{}'.format(calc_id))
-
-        params2 = {
-                'calc_name': 'test2',
-                'type': 'Opt+Freq',
-                'project': 'SeleniumProject',
+    def test_ts(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'TS Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ts.xyz',
                 }
 
-        self.launch_calc(params)
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(20)
+        self.assertTrue(self.latest_calc_successful())
 
-    '''
+    def test_second_step(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.click_ensemble("Result Ensemble")
+        self.launch_ensemble_next_step()
+
+        params2 = {
+                #'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                #project implicit
+                }
+        self.calc_input_params(params2)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+

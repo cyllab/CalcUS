@@ -1085,12 +1085,13 @@ time_dict = {}
 
 @app.task
 def dispatcher(drawing, order_id):
+    if is_test:
+        print("TEST MODE DISPATCHER")
     order = CalculationOrder.objects.get(pk=order_id)
     ensemble = order.ensemble
 
     step = order.step
 
-    print(drawing)
     for s in ensemble.structure_set.all():
         generate_xyz_structure(drawing, s)
 
@@ -1148,6 +1149,7 @@ def dispatcher(drawing, order_id):
 
 @app.task
 def run_calc(calc_id):
+    print("{} calculations total in db".format(len(Calculation.objects.all())))
     print("Processing calc {}".format(calc_id))
     calc = Calculation.objects.get(pk=calc_id)
     calc.status = 1

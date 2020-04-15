@@ -3,19 +3,26 @@ import os
 import time
 import unittest
 
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+
 from django.http import HttpResponse, HttpResponseRedirect
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils import timezone
 from .models import *
 from django.contrib.auth.models import User
-from shutil import copyfile, rmtree
-from .tasks import run_procedure
+from shutil import copyfile, rmtree, move
+from .tasks import dispatcher, run_calc
 from django.core.management import call_command
+
+from celery.contrib.testing.worker import start_worker
+from labsandbox.celery import app
 
 tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
 SCR_DIR = os.path.join(tests_dir, "scr")
 RESULTS_DIR = os.path.join(tests_dir, "results")
+REPORTS_DIR = os.path.join(tests_dir, "reports")
+
 SOLVENTS = [
     'Acetone',
     'Acetonitrile',
@@ -33,14 +40,14 @@ SOLVENTS = [
     'Toluene',
         ]
 
+counter = 1
+
 def create_user(username):
     p, u = User.objects.get_or_create(username=username, password="test1234")
     return p
 
-counter = 1
-def create_calculation(in_file, proc, solvent, user, project):
+def create_calculation(in_file, step_name, solvent, user, project):
     global counter
-    name = "Test"
     fname = in_file.split('/')[-1]
     ext = fname.split('.')[-1]
 
@@ -72,59 +79,64 @@ def create_calculation(in_file, proc, solvent, user, project):
     s.save()
     e.save()
 
+    step = BasicStep.objects.get(name=step_name)
     params = Parameters.objects.create(solvent=solvent, charge=charge, multiplicity=1)
-    c = Calculation.objects.create(id=counter, name=name, date=timezone.now(), global_parameters=params, ensemble=e)
-    counter += 1
+    c = CalculationOrder.objects.create(id=counter, name="TestOrder", date=timezone.now(), parameters=params, ensemble=e, step=step)
 
-    user.profile.calculation_set.add(c)
-    project.calculation_set.add(c)
+    #user.profile.calculationorder_set.add(c)
+    #project.calculationorder_set.add(c)
 
     c.save()
-    project.save()
-    user.profile.save()
+    #project.save()
+    #user.profile.save()
 
-    id = str(c.id)
-    scr = os.path.join(SCR_DIR, id)
+    #scr = os.path.join(SCR_DIR, id)
 
-    os.mkdir(scr)
+    #os.mkdir(scr)
 
+    counter += 1
     #copyfile(in_file, os.path.join(scr, "initial.{}".format(ext)))
 
-    return c
+    return c.id
 
 def create_project(user, name):
     p, created = Project.objects.get_or_create(name=name, author=user.profile)
     p.save()
     return p
 
-class JobTestCase(TestCase):
+class JobTestCase(StaticLiveServerTestCase):
 
-    def run_calc(self, drawing, calc, type):
+    def run_calc(self, drawing, order_id):
 
-        calc.status = 1
-        calc.save()
-
-        proc = Procedure.objects.get(name=type)
-        calc.procedure = proc
-        calc.save()
-        proc.save()
-        os.chdir(os.path.join(SCR_DIR, str(calc.id)))
+        #os.chdir(os.path.join(SCR_DIR, str(calc.id)))
 
         ti = time.time()
 
-        retval = run_procedure(drawing, calc.id)
+        submit_val = dispatcher.delay(drawing, order_id)
+        time.sleep(1)
 
-        calc = Calculation.objects.get(pk=calc.id)
+        #calculations = CalculationOrder.objects.all()[0].calculation_set.all()
 
-        for f in glob.glob(os.path.join(SCR_DIR, str(calc.id)) + '/*/'):
-            for ff in glob.glob("{}*.out".format(f)):
-                fname = ff.split('/')[-1]
-                copyfile(ff, os.path.join(RESULTS_DIR, str(calc.id)) + '/' + fname)
+        #for c in calculations:
+        #    run_calc(c.id)
+
+        done = False
+        while not done:
+            time.sleep(1)
+            calculations = CalculationOrder.objects.get(pk=int(order_id)).calculation_set.all()
+            done = True
+            for c in calculations:
+                if c.status != 2 and c.status != 3:
+                    done = False
+                    break
+
+        return 0
+        #calc = CalculationOrder.objects.get(pk=calc.id)
 
         tf = time.time()
         execution_time = tf - ti
 
-        job_id = str(calc.id)
+        #job_id = str(calc.id)
 
         if retval == 0:
             calc.status = 2
@@ -144,59 +156,70 @@ class JobTestCase(TestCase):
             if a == 2:
                 if os.path.isdir(os.path.join(SCR_DIR, self.id)):
                     rmtree(os.path.join(SCR_DIR, self.id))
+            else:
+                if os.path.isdir(os.path.join(SCR_DIR, self.id)):
+                    move(os.path.join(SCR_DIR, self.id), os.path.join(REPORTS_DIR, self.id))
         except:
             pass
+        if not os.path.isdir(SCR_DIR):
+            rmtree(SCR_DIR)
+        if not os.path.isdir(RESULTS_DIR):
+            rmtree(RESULTS_DIR)
+
 
     def setUp(self):
         call_command('init_static_obj')
-        pass
-
-    @classmethod
-    def setUpClass(self):
-        self.user = create_user("test")
-
         if not os.path.isdir(SCR_DIR):
             os.mkdir(SCR_DIR)
         if not os.path.isdir(RESULTS_DIR):
             os.mkdir(RESULTS_DIR)
 
+    @classmethod
+    def setUpClass(self):
+
+        self.user = create_user("test")
+
+        if not os.path.isdir(REPORTS_DIR):
+            os.mkdir(REPORTS_DIR)
+
         self.project = create_project(self.user, "TestProject")
+
+        app.loader.import_module('celery.contrib.testing.tasks')
+        self.celery_worker = start_worker(app, perform_ping_check=False)
+        self.celery_worker.__enter__()
+
 
     @classmethod
     def tearDownClass(self):
-        pass
-        return
-        if os.path.isdir(SCR_DIR):
-            rmtree(SCR_DIR)
-        if os.path.isdir(RESULTS_DIR):
-            rmtree(RESULTS_DIR)
+        #super().tearDownClass()
+        self.celery_worker.__exit__(None, None, None)
 
-def gen_test(in_file, type, solvent):
+def gen_test(in_file, _type, solvent):
     def test(self):
-        c = create_calculation(in_file, type, solvent, self.user, self.project)
+        order_id = create_calculation(in_file, _type, solvent, self.user, self.project)
 
-        c = self.run_calc(False, c, type)
+        order = CalculationOrder.objects.get(pk=order_id)
+        print("order ID: {}".format(order_id))
+        c = self.run_calc(False, order_id)
 
-        id = str(c.id)
+        self.assertEqual(c, 0)
+        #self.assertTrue(c.result_ensemble != None)
 
-        self.assertEqual(c.status, 2)
-        self.assertTrue(c.result_ensemble != None)
+        calc_path = os.path.join(RESULTS_DIR, str(order.calculation_set.all()[0].id))
 
-        calc_path = os.path.join(RESULTS_DIR, id)
-
-        if type == "Simple Optimisation":
+        if _type == "Simple Optimisation":
             self.assertTrue(c.result_ensemble.structure_set.count() == 1)
             with open(os.path.join(calc_path, "xtb_opt.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
 
-        elif type == "Conformational Search":
+        elif _type == "Conformational Search":
             with open(os.path.join(calc_path, "crest.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("CREST terminated normally.") != -1)
-        elif type == "Constrained Optimisation":
+        elif _type == "Constrained Optimisation":
             pass
-        elif type == "Simple UV-Vis":
+        elif _type == "Simple UV-Vis":
             with open(os.path.join(calc_path, "xtb_opt.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
@@ -208,14 +231,14 @@ def gen_test(in_file, type, solvent):
             with open(os.path.join(calc_path, "stda.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-2].find("sTDA done.") != -1)
-        elif type == "MO Generation":
+        elif _type == "MO Generation":
             with open(os.path.join(calc_path, "xtb_opt.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
             with open(os.path.join(calc_path, "orca_mo.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-2].find("ORCA TERMINATED NORMALLY") != -1)
-        elif type == "Opt+Freq":
+        elif _type == "Opt+Freq":
             with open(os.path.join(calc_path, "xtb_opt.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
@@ -223,7 +246,7 @@ def gen_test(in_file, type, solvent):
             with open(os.path.join(calc_path, "xtb_freq.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
-        elif type == "TS+Freq":
+        elif _type == "TS+Freq":
             with open(os.path.join(calc_path, "xtb_ts.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-2].find("ORCA TERMINATED NORMALLY") != -1)
@@ -231,7 +254,7 @@ def gen_test(in_file, type, solvent):
             with open(os.path.join(calc_path, "xtb_freq.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
-        elif type == "NMR Prediction":
+        elif _type == "NMR Prediction":
             pass
     return test
 
@@ -250,22 +273,22 @@ input_files = [
                 ]
 #TYPES = [0, 1, 2, 3]
 TYPES = [
-            "Simple Optimisation",
+            "Geometrical Optimisation",
             #"Constrained Optimisation",
-            "Conformational Search",
-            "Opt+Freq",
-            "TS+Freq",
-            "Simple UV-Vis",
+            "Crest",
+            "Frequency Calculation",
+            "TS Optimisation",
+            "UV-Vis Calculation",
             #"NMR Prediction",
-            "MO Generation",
+            #"MO Generation",
         ]
 
-for type in TYPES:
+for _type in TYPES:
     solvent = "Vacuum"
     for f in input_files:
         in_name = f.split('.')[0]
-        test_name = "test_{}_{}_{}".format(in_name, type.replace(' ', '_'), solvent)
-        test = gen_test(os.path.join(tests_dir, f), type, solvent)
+        test_name = "test_{}_{}_{}".format(in_name, _type.replace(' ', '_'), solvent)
+        test = gen_test(os.path.join(tests_dir, f), _type, solvent)
         setattr(JobTestCase, test_name, test)
 
 '''
@@ -276,7 +299,6 @@ for solv in SOLVENTS:
             test_name = "test_{}_{}_{}".format(in_name, type, solv)
             test = gen_test(os.path.join(tests_dir, f), type, solv)
             setattr(JobTestCase, test_name, test)
-'''
 class ModelTestCase(TestCase):
     def setUp(self):
         self.bs1 = BasicStep.objects.create(name="step1")
@@ -356,7 +378,7 @@ class ViewTestCase(TestCase):
             response = self.client.post(self.submit_url, {
                 'file_structure': f,
                 'calc_name': 'TestCalc',
-                'calc_type': 'Opt+Freq',
+                'calc_type': 'Geometrical Optimisation',
                 'calc_project': 'New Project',
                 'new_project_name': 'TestProject',
                 'calc_charge': '0',
@@ -389,3 +411,4 @@ class ViewTestCase(TestCase):
         self.assertEqual(c.global_parameters.charge, 0)
 
         self.assertTrue(os.path.isdir(os.path.join(SCR_DIR, str(c.id))))
+'''

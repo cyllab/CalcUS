@@ -390,7 +390,7 @@ def submit_calculation(request):
         if profile not in access.users and access.owner != profile:
             return redirect("/home/")
     else:
-        if not profile.is_PI and profile.groups == None:
+        if not profile.is_PI and profile.group == None:
             return redirect("/home/")
 
     if project == "New Project":
