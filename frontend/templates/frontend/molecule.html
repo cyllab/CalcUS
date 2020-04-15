@@ -9,6 +9,7 @@
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 
 	<script src="https://unpkg.com/masonry-layout@4.2.0/dist/masonry.pkgd.min.js"></script>
+	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
 
 {% endblock %}
 
@@ -64,6 +65,33 @@
 			
 		}
 
+		let num = 1;
+		let conf_number = 1;
+		var curr_p = 0;
+
+		$.ajaxSetup({ cache: false }); 
+		$(document).ready(function(){
+			var my_refresh = setInterval(function() {
+				$.ajax({
+					method: "POST",	 	 
+					url: "/get_structure/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					data: {'id': {{ molecule.ensemble_set.all.0.id }}, 'num': 1},
+					success: function(data, textStatus, xhr) {
+						if (xhr.status != 204) {
+							let mol = ChemDoodle.readXYZ(data);
+
+							
+							clearInterval(my_refresh);
+							editor.loadMolecule(mol);
+
+						}
+					}
+				});
+			 }, 1000);
+		});
 
 	</script>
 
@@ -76,7 +104,39 @@
 			<li class="is-active"><a aria-current="page" href="#">{{ molecule.name }}</a></li>
 	  	</ul>
 	</nav>
+	<div class="box">
+		<center>
+			<h3 class="title is-3">Preview of {{ molecule.name }}</h3>
+		</center>
+		<div class="columns">
+			<div class="column is-narrow">
+				<script>
+					let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {useServices: false});
+					editor.styles.set3DRepresentation('Stick');
+					editor.styles.backgroundColor = '#FFFFFF';
+					editor.oneMolecule = false;
+				</script>
+			</div>
+			<div class="column">
+				<table class="table">
+				{% for e in molecule.ensemble_set.all %}
+					<tr>
+						<td>{{ e.name }}</td>
+						{% for p in e.unique_parameters %}
+							<td>{{ p }}</td>
+					</tr>
+					<tr>
+						<td></td>
+						{% endfor %}
 
+					</tr>
+				{% endfor %}
+				</table>
+			</div>
+		</div>
+
+	</div>
+	
 	<center>
 		<div id="ensembles_list">
 			<div class="grid">

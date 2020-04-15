@@ -929,15 +929,14 @@ def icon(request, pk):
 
 @login_required
 def uvvis(request, pk):
-    id = str(pk)
-    calc = Calculation.objects.get(pk=id)
+    calc = Calculation.objects.get(pk=pk)
 
     profile = request.user.profile
 
     if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
         return HttpResponse(status=403)
 
-    spectrum_file = os.path.join(LAB_RESULTS_HOME, id, "uvvis.csv")
+    spectrum_file = os.path.join(LAB_RESULTS_HOME, str(pk), "uvvis.csv")
 
     if os.path.isfile(spectrum_file):
         with open(spectrum_file, 'rb') as f:

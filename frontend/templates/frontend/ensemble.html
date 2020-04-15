@@ -239,7 +239,7 @@
 				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {useServices: false});
 				editor.styles.set3DRepresentation('Stick');
 				editor.styles.backgroundColor = '#FFFFFF';
-				editor.oneMolecule = true;
+				editor.oneMolecule = false;
 			</script>
 			<br />
 			<button class="button" onclick="window.location.href='/download_structures/{{ ensemble.id }}'">Download ensemble in .xyz <i class="fas fa-download"></i></button>
@@ -280,7 +280,7 @@
 	<div class="tabs is-boxed" id="tabs">
 	  	<ul>
 			{% for p in ensemble.unique_parameters %}
-				<li id="tab_{{ p.id }}"><a onclick="refresh_details({{ p.id }})">{{ p.program }} - {{ p.method }}{% get_geom_flag ensemble p %}</a></li>
+			<li id="tab_{{ p.id }}"><a onclick="refresh_details({{ p.id }})">{{ p }}{% get_geom_flag ensemble p %}</a></li>
 			{% endfor %}
 	  	</ul>
 	</div>

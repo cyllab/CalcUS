@@ -190,6 +190,19 @@ class Ensemble(models.Model):
         if len(data) == 1:
             return 1
 
+        #return 'unimplemented'
+        s = decimal.Decimal(0)
+
+        for e, degen in data:
+            s += degen*e
+
+        try:
+            main_p = structure.properties.get(parameters=params)
+        except Property.DoesNotExist:
+            return '-'
+
+        return "{:.2f}".format(main_p.boltzmann_weight)
+        #return "{:.2f}".format(float(decimal.Decimal(structure.degeneracy*main_p.energy)/s))
         '''
         sumnum = decimal.Decimal(0)
         sumdenum = decimal.Decimal(0)
@@ -257,7 +270,10 @@ class Parameters(models.Model):
     misc = models.CharField(max_length=1000, default='')
 
     def __repr__(self):
-        return self.id
+        return "{} - {} ({})".format(self.program, self.method, self.solvent)
+
+    def __str__(self):
+        return self.__repr__()
 
     def __eq__(self, other):
         values = [(k,v) for k,v in self.__dict__.items() if k != '_state' and k != 'id']
