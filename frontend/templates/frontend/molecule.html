@@ -118,20 +118,33 @@
 				</script>
 			</div>
 			<div class="column">
+				<br />
+				<center>
 				<table class="table">
+					<tr>
+						<th>Ensemble</th>
+						<th>Unique methods</th>
+						<th>Unique calculations</th>
+					</tr>
 				{% for e in molecule.ensemble_set.all %}
 					<tr>
 						<td>{{ e.name }}</td>
-						{% for p in e.unique_parameters %}
-							<td>{{ p }}</td>
-					</tr>
-					<tr>
-						<td></td>
-						{% endfor %}
+						<td>
+							{% for p in e.unique_parameters %}
+								{{ p }} <br />
+							{% endfor %}
+						</td>
+						<td>
+							{% for c in e.unique_calculations %}
+								{{ c }} <br />
+							{% endfor %}
+						</td>
 
 					</tr>
+
 				{% endfor %}
 				</table>
+				</center>
 			</div>
 		</div>
 

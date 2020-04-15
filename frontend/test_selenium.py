@@ -711,7 +711,7 @@ class CalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(20)
         self.assertTrue(self.latest_calc_successful())
 
-    def test_second_step(self):
+    def test_ensemble_second_step(self):
         params = {
                 'calc_name': 'test',
                 'type': 'Geometrical Optimisation',
@@ -856,7 +856,7 @@ class CalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(20)
         self.assertTrue(self.latest_calc_successful())
 
-    def test_second_step(self):
+    def test_ensemble_second_step(self):
         params = {
                 'calc_name': 'test',
                 'type': 'Geometrical Optimisation',

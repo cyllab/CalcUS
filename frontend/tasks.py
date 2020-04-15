@@ -1092,40 +1092,48 @@ def dispatcher(drawing, order_id):
 
     step = order.step
 
-    for s in ensemble.structure_set.all():
-        generate_xyz_structure(drawing, s)
-
-    ensemble.save()
-
-    if ensemble.parent_molecule is None:
-        fingerprint = ""
+    mode = "e"#Mode for input structure (Ensemble/Structure)
+    input_structures = None
+    if order.structure != None:
+        mode = "s"
+        generate_xyz_structure(drawing, order.structure)
+        input_structures = [order.structure]
+        molecule = order.structure.parent_ensemble.parent_molecule
+    else:
         for s in ensemble.structure_set.all():
             generate_xyz_structure(drawing, s)
-            fing = gen_fingerprint(s)
-            if fingerprint == "":
-                fingerprint = fing
-            else:
-                assert fingerprint == fing
-        try:
-            molecule = Molecule.objects.get(inchi=fingerprint, project=order.project)
-        except Molecule.DoesNotExist:
-            molecule = Molecule.objects.create(name=order.name, inchi=fingerprint, project=order.project)
-            molecule.save()
-        ensemble.parent_molecule = molecule
-        ensemble.save()
-    else:
-        molecule = ensemble.parent_molecule
 
+        ensemble.save()
+
+        if ensemble.parent_molecule is None:
+            fingerprint = ""
+            for s in ensemble.structure_set.all():
+                generate_xyz_structure(drawing, s)
+                fing = gen_fingerprint(s)
+                if fingerprint == "":
+                    fingerprint = fing
+                else:
+                    assert fingerprint == fing
+            try:
+                molecule = Molecule.objects.get(inchi=fingerprint, project=order.project)
+            except Molecule.DoesNotExist:
+                molecule = Molecule.objects.create(name=order.name, inchi=fingerprint, project=order.project)
+                molecule.save()
+            ensemble.parent_molecule = molecule
+            ensemble.save()
+        else:
+            molecule = ensemble.parent_molecule
+        input_structures = ensemble.structure_set.all()
     group_order = []
 
     if step.creates_ensemble:
-        e = Ensemble.objects.create(name="Result Ensemble")
+        e = Ensemble.objects.create(name="{} Result".format(order.step.name))
         print("creating ensemble {}".format(e.id))
         molecule.ensemble_set.add(e)
         molecule.save()
         e.save()
 
-        for s in ensemble.structure_set.all():
+        for s in input_structures:
             c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), step=step, parameters=order.parameters, result_ensemble=e, constraints=order.constraints)
             c.save()
             if not is_test:
@@ -1134,8 +1142,7 @@ def dispatcher(drawing, order_id):
                 group_order.append(run_calc.s(c.id))
 
     else:
-        print("using ensemble {}".format(ensemble.id))
-        for s in ensemble.structure_set.all():
+        for s in input_structures:
             c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), parameters=order.parameters, step=step, constraints=order.constraints)
             c.save()
             if not is_test:
@@ -1149,7 +1156,6 @@ def dispatcher(drawing, order_id):
 
 @app.task
 def run_calc(calc_id):
-    print("{} calculations total in db".format(len(Calculation.objects.all())))
     print("Processing calc {}".format(calc_id))
     calc = Calculation.objects.get(pk=calc_id)
     calc.status = 1

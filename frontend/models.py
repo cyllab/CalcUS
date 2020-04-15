@@ -162,6 +162,22 @@ class Ensemble(models.Model):
                     unique.append(p.parameters)
         return unique
 
+    @property
+    def unique_calculations(self):
+        unique = []
+        '''
+        calcs = self.calculation_set.all()
+        for c in calcs:
+            if c.step.name not in unique:
+                unique.append(c.step.name)
+        '''
+        structs = self.structure_set.all()
+        for s in structs:
+            for c in s.calculation_set.all():
+                if c.step.name not in unique:
+                    unique.append(c.step.name)
+        return unique
+
     def relative_energy(self, structure, params):
         lowest = 0
         try:
@@ -294,6 +310,7 @@ class Molecule(models.Model):
 class CalculationOrder(models.Model):
     name = models.CharField(max_length=100)
 
+    structure = models.ForeignKey(Structure, on_delete=models.CASCADE, blank=True, null=True)
     ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
     result_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True, related_name='result_of')
     step = models.ForeignKey(BasicStep, on_delete=models.CASCADE, blank=True, null=True)
@@ -365,6 +382,12 @@ class Calculation(models.Model):
     constraints = models.CharField(max_length=400, default="", blank=True, null=True)
 
     has_scan = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.step.name
+
+    #def __str__(self):
+    #    return self.__repr__()
 
     @property
     def has_freq(self):
