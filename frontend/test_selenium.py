@@ -461,6 +461,66 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         button = self.driver.find_element_by_xpath("/html/body/div[1]/div/div[2]/div[1]/button[5]")
         button.click()
 
+    def delete_project(self, name):
+        assert self.is_on_page_projects()
+        main_window_handle = None
+        while not main_window_handle:
+            main_window_handle = self.driver.current_window_handle
+
+        project_div = self.driver.find_element_by_css_selector(".grid")
+        projects = project_div.find_elements_by_css_selector("article")
+
+        for proj in projects:
+            p_name = proj.find_element_by_css_selector("div > p").text
+            if p_name == name:
+                trash = proj.find_element_by_css_selector(".message-header > div > a > i.fa-trash-alt")
+                trash.click()
+
+                alert = self.driver.switch_to_alert()
+                alert.accept()
+                self.driver.switch_to_default_content()
+                return
+
+    def delete_molecule(self, name):
+        assert self.is_on_page_user_project()
+        main_window_handle = None
+        while not main_window_handle:
+            main_window_handle = self.driver.current_window_handle
+
+        molecule_div = self.driver.find_element_by_css_selector(".grid")
+        molecules = molecule_div.find_elements_by_css_selector("article")
+
+        for mol in molecules:
+            mol_name = mol.find_element_by_css_selector("div > p").text
+            if mol_name == name:
+                trash = mol.find_element_by_css_selector(".message-header > div > a > i.fa-trash-alt")
+                trash.click()
+
+                alert = self.driver.switch_to_alert()
+                alert.accept()
+                self.driver.switch_to_default_content()
+                return
+
+    def delete_ensemble(self, name):
+        assert self.is_on_page_molecule()
+        main_window_handle = None
+        while not main_window_handle:
+            main_window_handle = self.driver.current_window_handle
+
+        ensemble_div = self.driver.find_element_by_css_selector(".grid")
+        ensembles = ensemble_div.find_elements_by_css_selector("article")
+
+        for e in ensembles:
+            e_name = e.find_element_by_css_selector("div > p").text
+            if e_name == name:
+                trash = e.find_element_by_css_selector(".message-header > div > a > i.fa-trash-alt")
+                trash.click()
+
+                alert = self.driver.switch_to_alert()
+                alert.accept()
+                self.driver.switch_to_default_content()
+                return
+
 class InterfaceTests(CalcusLiveServer):
     def test_default_login_page(self):
         self.assertTrue(self.is_on_page_projects())
@@ -535,8 +595,76 @@ class InterfaceTests(CalcusLiveServer):
         self.click_ensemble("Test Ensemble")
         self.assertTrue(self.is_on_page_ensemble())
 
-    #Test calculation linking to molecule
+    def test_basic_delete_project(self):
+        def get_proj():
+            proj = Project.objects.get(name="Test project", author=self.profile)
+            return 0
+        proj = Project.objects.create(name="Test project", author=self.profile)
+        self.lget("/projects/")
 
+        self.assertEqual(get_proj(), 0)
+        self.delete_project("Test project")
+        ind = 0
+        while ind < 10:
+            try:
+                get_proj()
+            except Project.DoesNotExist:
+                break
+
+            time.sleep(1)
+            ind += 1
+
+        self.assertRaises(Project.DoesNotExist, get_proj)
+
+    def test_basic_delete_molecule(self):
+        def get_mol():
+            mol = Molecule.objects.get(name="Test molecule", project=proj)
+            return 0
+        proj = Project.objects.create(name="Test project", author=self.profile)
+        mol = Molecule.objects.create(name="Test molecule", project=proj)
+        self.lget("/projects/")
+        self.click_project("Test project")
+
+        self.assertEqual(get_mol(), 0)
+        self.delete_molecule("Test molecule")
+        ind = 0
+        while ind < 10:
+            try:
+                get_mol()
+            except Molecule.DoesNotExist:
+                break
+
+            time.sleep(1)
+            ind += 1
+
+        self.assertRaises(Molecule.DoesNotExist, get_mol)
+
+    def test_basic_delete_ensemble(self):
+        def get_ensemble():
+            e = Ensemble.objects.get(name="Test ensemble", parent_molecule=mol)
+            return 0
+        proj = Project.objects.create(name="Test project", author=self.profile)
+        mol = Molecule.objects.create(name="Test molecule", project=proj)
+        e = Ensemble.objects.create(name="Test ensemble", parent_molecule=mol)
+        self.lget("/projects/")
+        self.click_project("Test project")
+        self.click_molecule("Test molecule")
+
+        self.assertEqual(get_ensemble(), 0)
+        self.delete_ensemble("Test ensemble")
+        ind = 0
+        while ind < 10:
+            try:
+                get_ensemble()
+            except Ensemble.DoesNotExist:
+                break
+
+            time.sleep(1)
+            ind += 1
+
+        self.assertRaises(Ensemble.DoesNotExist, get_ensemble)
+
+    #Test delete other user's stuff
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):
         params = {

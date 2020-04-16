@@ -668,7 +668,7 @@ def delete_ensemble(request):
         except Ensemble.DoesNotExist:
             return HttpResponse(status=403)
 
-        if to_delete.author != request.user.profile:
+        if to_delete.parent_molecule.project.author != request.user.profile:
             return HttpResponse(status=403)
 
         del_ensemble.delay(ensemble_id)
