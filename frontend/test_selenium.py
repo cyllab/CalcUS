@@ -544,6 +544,28 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 self.driver.switch_to_default_content()
                 return
 
+    def setup_test_group(self):
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
+        self.lget("/profile/")
+        self.add_user_to_group("Student")
+
 
 class InterfaceTests(CalcusLiveServer):
     def test_default_login_page(self):
@@ -1096,6 +1118,7 @@ class InterfaceTests(CalcusLiveServer):
 
         self.assertRaises(Project.DoesNotExist, get_proj)
 
+
     def test_basic_delete_molecule(self):
         def get_mol():
             mol = Molecule.objects.get(name="Test molecule", project=proj)
@@ -1144,7 +1167,76 @@ class InterfaceTests(CalcusLiveServer):
 
         self.assertRaises(Ensemble.DoesNotExist, get_ensemble)
 
-    #Test delete other user's stuff
+    def test_delete_project_user(self):
+        self.setup_test_group()
+        student = Profile.objects.get(user__username="Student")
+
+        def get_proj():
+            proj = Project.objects.get(name="Test project", author=student)
+            return 0
+        proj = Project.objects.create(name="Test project", author=student)
+        self.lget("/projects/")
+
+        self.group_click_member("Student")
+
+        self.assertEqual(get_proj(), 0)
+        self.delete_project("Test project")
+        ind = 0
+        while ind < 5:
+            self.assertEqual(get_proj(), 0)
+
+            time.sleep(1)
+            ind += 1
+
+    def test_delete_molecule_user(self):
+
+        self.setup_test_group()
+        student = Profile.objects.get(user__username="Student")
+
+        def get_mol():
+            mol = Molecule.objects.get(name="Test molecule", project=proj)
+            return 0
+
+        proj = Project.objects.create(name="Test project", author=student)
+        mol = Molecule.objects.create(name="Test molecule", project=proj)
+        self.lget("/projects/")
+        self.group_click_member("Student")
+        self.click_project("Test project")
+
+        self.assertEqual(get_mol(), 0)
+        self.delete_molecule("Test molecule")
+        ind = 0
+        while ind < 5:
+            self.assertEqual(get_mol(), 0)
+
+            time.sleep(1)
+            ind += 1
+
+    def test_delete_ensemble_user(self):
+
+        self.setup_test_group()
+        student = Profile.objects.get(user__username="Student")
+
+        def get_ensemble():
+            e = Ensemble.objects.get(name="Test ensemble", parent_molecule=mol)
+            return 0
+        proj = Project.objects.create(name="Test project", author=student)
+        mol = Molecule.objects.create(name="Test molecule", project=proj)
+        e = Ensemble.objects.create(name="Test ensemble", parent_molecule=mol)
+        self.lget("/projects/")
+        self.group_click_member("Student")
+        self.click_project("Test project")
+        self.click_molecule("Test molecule")
+
+        self.assertEqual(get_ensemble(), 0)
+        self.delete_ensemble("Test ensemble")
+        ind = 0
+        while ind < 5:
+            self.assertEqual(get_ensemble(), 0)
+
+            time.sleep(1)
+            ind += 1
+
 
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):
