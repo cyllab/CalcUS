@@ -15,7 +15,7 @@ from time import time, sleep
 
 import subprocess
 import shlex
-from shutil import copyfile
+from shutil import copyfile, rmtree
 import glob
 import ssh2
 from threading import Lock
@@ -1282,49 +1282,63 @@ def run_procedure(drawing, calc_id):
                 sftp_get(os.path.join(remote_dir, f), os.path.join(LAB_SCR_HOME, str(calc_obj.id), f), conn, lock)
     return 0
 
-'''
-@task_prerun.connect
-def task_prerun_handler(signal, sender, task_id, task, args, kwargs, **extras):
-    if task != ping:
-        time_dict[task_id] = time()
+@app.task
+def del_project(proj_id):
+    proj = Project.objects.get(pk=proj_id)
+    for m in proj.molecule_set.all():
+        for e in m.ensemble_set.all():
+            for s in e.structure_set.all():
+                for c in s.calculation_set.all():
+                    try:
+                        rmtree(os.path.join(LAB_SCR_HOME, str(c.id)))
+                    except OSError:
+                        pass
+                    try:
+                        rmtree(os.path.join(LAB_RESULTS_HOME, str(c.id)))
+                    except OSError:
+                        pass
+                    c.delete()
+                s.delete()
+            e.delete()
+        m.delete()
+    proj.delete()
 
-        calc_obj = Calculation.objects.get(pk=args[1])
+@app.task
+def del_molecule(mol_id):
+    mol = Molecule.objects.get(pk=mol_id)
+    for e in mol.ensemble_set.all():
+        for s in e.structure_set.all():
+            for c in s.calculation_set.all():
+                try:
+                    rmtree(os.path.join(LAB_SCR_HOME, str(c.id)))
+                except OSError:
+                    pass
+                try:
+                    rmtree(os.path.join(LAB_RESULTS_HOME, str(c.id)))
+                except OSError:
+                    pass
+                c.delete()
+            s.delete()
+        e.delete()
+    mol.delete()
 
-        calc_obj.status = 1
-        calc_obj.save()
+@app.task
+def del_ensemble(ensemble_id):
+    e = Ensemble.objects.get(pk=ensemble_id)
+    for s in e.structure_set.all():
+        for c in s.calculation_set.all():
+            try:
+                rmtree(os.path.join(LAB_SCR_HOME, str(c.id)))
+            except OSError:
+                pass
+            try:
+                rmtree(os.path.join(LAB_RESULTS_HOME, str(c.id)))
+            except OSError:
+                pass
+            c.delete()
+        s.delete()
+    e.delete()
 
-
-@task_postrun.connect
-def task_postrun_handler(signal, sender, task_id, task, args, kwargs, retval, state, **extras):
-    if task != ping:
-        try:
-            execution_time = time() - time_dict.pop(task_id)
-        except KeyError:
-            execution_time = -1
-
-        job_id = args[1]
-        calc_obj = Calculation.objects.get(pk=job_id)
-        calc_obj.execution_time = int(execution_time)
-        calc_obj.date_finished = timezone.now()
-
-        for f in glob.glob(os.path.join(LAB_SCR_HOME, str(job_id)) + '/*/'):
-            for ff in glob.glob("{}*.out".format(f)):
-                fname = ff.split('/')[-1]
-                copyfile(ff, os.path.join(LAB_RESULTS_HOME, str(job_id)) + '/' + fname)
-
-        if retval == 0:
-            calc_obj.status = 2
-        else:
-            calc_obj.status = 3
-            if calc_obj.error_message == "":
-                calc_obj.error_message = "Unknown error"
-
-        calc_obj.save()
-
-        author = calc_obj.author
-        author.calculation_time_used += execution_time
-        author.save()
-'''
 @app.task(name='celery.ping')
 def ping():
     return 'pong'

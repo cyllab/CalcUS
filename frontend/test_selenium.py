@@ -745,7 +745,6 @@ class CalculationTestsPI(CalcusLiveServer):
         self.launch_ensemble_next_step()
 
         params2 = {
-                #'calc_name': 'test',
                 'type': 'Frequency Calculation',
                 #project implicit
                 }
@@ -777,7 +776,6 @@ class CalculationTestsPI(CalcusLiveServer):
         self.launch_structure_next_step()
 
         params2 = {
-                #'calc_name': 'test',
                 'type': 'Frequency Calculation',
                 #project implicit
                 }
@@ -931,7 +929,6 @@ class CalculationTestsStudent(CalcusLiveServer):
         self.launch_ensemble_next_step()
 
         params2 = {
-                #'calc_name': 'test',
                 'type': 'Frequency Calculation',
                 #project implicit
                 }
@@ -964,7 +961,6 @@ class CalculationTestsStudent(CalcusLiveServer):
 
 
         params2 = {
-                #'calc_name': 'test',
                 'type': 'Frequency Calculation',
                 #project implicit
                 }

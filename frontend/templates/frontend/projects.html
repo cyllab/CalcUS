@@ -67,6 +67,19 @@
 			
 		}
 
+		function del(proj_id) {
+			var res = confirm("Delete the entire project?");	
+			if (res) {
+				$.ajax({
+					method: "POST",	 	 
+					url: "/delete_project/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					data: {'id': proj_id},
+				});
+			}
+		}
 
 	</script>
 
@@ -85,7 +98,10 @@
 							<article class="message grid-item is-danger">
 								<div class="message-header">
 									<p id="proj_name_{{ proj.id }}">{{ proj.name }}</p>
-									<p onclick="edit_field({{ proj.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}"></i></p>
+									<div>
+										<a onclick="edit_field({{ proj.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}"></i></a>
+										<a onclick="del({{ proj.id }});"><i class="fas fa-trash-alt"></i></a>
+									</div>
 								</div>
 								<a href="/projects/{{ proj.author }}/{{ proj.name }}">
 									<div class="message-body" style="height: 80%;">

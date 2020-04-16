@@ -84,7 +84,11 @@ urlpatterns = [
     path('icon/<int:pk>', views.icon, name='icon'),
     path('uvvis/<int:pk>', views.uvvis, name='uvvis'),
     path('nmr/<int:pk>', views.nmr, name='nmr'),
-    path('delete/<int:pk>', views.delete, name='delete'),
+    #path('delete/<int:pk>', views.delete, name='delete'),
+
+    path('delete_project/', views.delete_project, name='delete_project'),
+    path('delete_molecule/', views.delete_molecule, name='delete_molecule'),
+    path('delete_ensemble/', views.delete_ensemble, name='delete_ensemble'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

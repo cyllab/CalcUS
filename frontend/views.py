@@ -24,7 +24,7 @@ from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property
-from .tasks import run_procedure, dispatcher
+from .tasks import run_procedure, dispatcher, del_project, del_molecule, del_ensemble
 from .decorators import superuser_required
 from .tasks import system
 
@@ -614,24 +614,67 @@ def project_list(request):
         return HttpResponse(status=403)
 
 @login_required
-def delete(request, pk):
-    profile, created = Profile.objects.get_or_create(user=request.user)
+def delete_project(request):
+    if request.method == 'POST':
+        if 'id' in request.POST.keys():
+            proj_id = int(clean(request.POST['id']))
+        else:
+            return HttpResponse(status=403)
 
-    try:
-        to_delete = profile.calculation_set.get(id=pk)
-    except Calculation.DoesNotExist:
-        return redirect("/home/")
+        try:
+            to_delete = Project.objects.get(pk=proj_id)
+        except Project.DoesNotExist:
+            return HttpResponse(status=403)
+
+        if to_delete.author != request.user.profile:
+            return HttpResponse(status=403)
+
+        del_project.delay(proj_id)
+        return HttpResponse(status=204)
     else:
+        return HttpResponse(status=403)
+
+@login_required
+def delete_molecule(request):
+    if request.method == 'POST':
+        if 'id' in request.POST.keys():
+            mol_id = int(clean(request.POST['id']))
+        else:
+            return HttpResponse(status=403)
+
         try:
-            shutil.rmtree(os.path.join(LAB_SCR_HOME, str(pk)))
-        except FileNotFoundError:
-            pass
+            to_delete = Molecule.objects.get(pk=mol_id)
+        except Molecule.DoesNotExist:
+            return HttpResponse(status=403)
+
+        if to_delete.project.author != request.user.profile:
+            return HttpResponse(status=403)
+
+        del_molecule.delay(mol_id)
+        return HttpResponse(status=204)
+    else:
+        return HttpResponse(status=403)
+
+@login_required
+def delete_ensemble(request):
+    if request.method == 'POST':
+        if 'id' in request.POST.keys():
+            ensemble_id = int(clean(request.POST['id']))
+        else:
+            return HttpResponse(status=403)
+
         try:
-            shutil.rmtree(os.path.join(LAB_RESULTS_HOME, str(pk)))
-        except FileNotFoundError:
-            pass
-        to_delete.delete()
-        return redirect("/home/")
+            to_delete = Ensemble.objects.get(pk=ensemble_id)
+        except Ensemble.DoesNotExist:
+            return HttpResponse(status=403)
+
+        if to_delete.author != request.user.profile:
+            return HttpResponse(status=403)
+
+        del_ensemble.delay(ensemble_id)
+        return HttpResponse(status=204)
+    else:
+        return HttpResponse(status=403)
 
 @login_required
 def add_clusteraccess(request):

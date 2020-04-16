@@ -60,6 +60,19 @@
 			}
 			
 		}
+		function del(mol_id) {
+			var res = confirm("Delete this molecule?");	
+			if (res) {
+				$.ajax({
+					method: "POST",	 	 
+					url: "/delete_molecule/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					data: {'id': mol_id},
+				});
+			}
+		}
 
 
 	</script>
@@ -80,7 +93,10 @@
 					<article class="message grid-item is-primary">
 						<div class="message-header">
 							<p id="mol_name_{{ mol.id }}">{{ mol.name }}</p>
-							<p onclick="edit_field({{ mol.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}"></i></p>
+							<div>
+								<a onclick="edit_field({{ mol.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}"></i></a>
+								<a onclick="del({{ mol.id }});"><i class="fas fa-trash-alt"></i></a>
+							</div>
 						</div>
 						<a href="/molecule/{{ mol.id }}">
 						<div class="message-body" style="height: 80%;">
