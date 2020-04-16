@@ -291,7 +291,6 @@ for _type in TYPES:
         test = gen_test(os.path.join(tests_dir, f), _type, solvent)
         setattr(JobTestCase, test_name, test)
 
-'''
 for solv in SOLVENTS:
     for f in [input_files[i] for i in [0, 4, 6]]:
         for type in TYPES:
@@ -299,6 +298,7 @@ for solv in SOLVENTS:
             test_name = "test_{}_{}_{}".format(in_name, type, solv)
             test = gen_test(os.path.join(tests_dir, f), type, solv)
             setattr(JobTestCase, test_name, test)
+'''
 class ModelTestCase(TestCase):
     def setUp(self):
         self.bs1 = BasicStep.objects.create(name="step1")

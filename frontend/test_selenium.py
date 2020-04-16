@@ -39,6 +39,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.driver = webdriver.Chrome()
+        cls.driver.set_window_size(1424, 768)
 
         app.loader.import_module('celery.contrib.testing.tasks')
         cls.celery_worker = start_worker(app, perform_ping_check=False)
@@ -204,6 +205,28 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         else:
             return True
 
+    def group_num_members(self):
+        assert self.group_panel_present()
+
+        panel = self.get_group_panel()
+        users = panel.find_elements_by_css_selector(".panel-block")
+
+        assert len(users) > 0
+
+        return len(users)
+
+    def group_click_member(self, name):
+        assert self.group_panel_present()
+
+        panel = self.get_group_panel()
+        users = panel.find_elements_by_css_selector(".panel-block")
+
+        for u in users:
+            username = u.text
+            if username == name:
+                button = u.find_element_by_css_selector("a.button")
+                button.click()
+                return
     def is_user(self, username):
         try:
             u = Profile.objects.get(user__username=username)
@@ -243,7 +266,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def is_on_page_projects(self):
         url = self.get_split_url()
-        if (url[0] == 'projects' or url[0] == 'home') and url[1] == '':
+        if (url[0] == 'projects' or url[0] == 'home') and (url[1] == '' or self.is_user(url[1])):
             return True
         else:
             return False
@@ -521,6 +544,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 self.driver.switch_to_default_content()
                 return
 
+
 class InterfaceTests(CalcusLiveServer):
     def test_default_login_page(self):
         self.assertTrue(self.is_on_page_projects())
@@ -544,14 +568,470 @@ class InterfaceTests(CalcusLiveServer):
     def test_group_panel_absent2(self):
         self.assertFalse(self.group_panel_present())
 
-    #Test that the panel is there when user is PI
+    def test_group_panel_appears_as_PI(self):
+        self.lget('/profile/')
 
-    #Test that a second user shows up when added to group
-    #Test that a second user doesn't show up if not in group
-    #Test going to the second user's projects
-    #Test going to every page for that second user's projects
+        self.apply_PI("Test group")
+        self.logout()
 
-    #Same tests when the user is non-PI
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        self.assertTrue(self.group_panel_present())
+        self.assertEqual(self.group_num_members(), 1)
+
+    def test_group_panel_appears_as_PI2(self):
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
+        self.lget("/profile/")
+        self.add_user_to_group("Student")
+        time.sleep(1)
+        self.lget("/projects/")
+        self.assertTrue(self.group_panel_present())
+        self.assertEqual(self.group_num_members(), 2)
+
+    def test_group_panel_absent_without_adding(self):
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        u = User.objects.create_user(username="Student", password=self.password)
+        self.login(self.username, self.password)
+        self.lget("/profile/")
+        self.assertEqual(self.group_num_members(), 1)
+
+    def test_group_panel_appears_as_student(self):
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
+        self.lget("/profile/")
+        self.add_user_to_group("Student")
+        self.logout()
+        self.login("Student", self.password)
+        self.assertTrue(self.group_panel_present())
+        self.assertEqual(self.group_num_members(), 2)
+
+    def test_group_panel_appears_everywhere_as_student(self):
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
+
+        proj = Project.objects.create(name="Test project", author=u.profile)
+        mol = Molecule.objects.create(name="Test Molecule", project=proj)
+        e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
+
+        self.lget("/profile/")
+        self.add_user_to_group("Student")
+        self.logout()
+        self.login("Student", self.password)
+
+        self.lget("/profile/")
+        self.assertTrue(self.group_panel_present())
+        self.assertEqual(self.group_num_members(), 2)
+
+        self.lget("/projects/")
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.group_panel_present())
+        self.assertEqual(self.group_num_members(), 2)
+
+        self.click_project("Test project")
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.group_panel_present())
+        self.assertEqual(self.group_num_members(), 2)
+
+        self.click_molecule("Test Molecule")
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.group_panel_present())
+        self.assertEqual(self.group_num_members(), 2)
+
+        self.click_ensemble("Test Ensemble")
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.group_panel_present())
+        self.assertEqual(self.group_num_members(), 2)
+
+    def test_group_panel_appears_everywhere_as_PI(self):
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
+
+        proj = Project.objects.create(name="Test project", author=self.profile)
+        mol = Molecule.objects.create(name="Test Molecule", project=proj)
+        e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
+
+        self.lget("/profile/")
+        self.add_user_to_group("Student")
+
+        self.lget("/profile/")
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.group_panel_present())
+        self.assertEqual(self.group_num_members(), 2)
+
+        self.lget("/projects/")
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.group_panel_present())
+        self.assertEqual(self.group_num_members(), 2)
+
+        self.click_project("Test project")
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.group_panel_present())
+        self.assertEqual(self.group_num_members(), 2)
+
+        self.click_molecule("Test Molecule")
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.group_panel_present())
+        self.assertEqual(self.group_num_members(), 2)
+
+        self.click_ensemble("Test Ensemble")
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.group_panel_present())
+        self.assertEqual(self.group_num_members(), 2)
+
+    def test_group_access_projects_as_PI(self):
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
+
+        proj = Project.objects.create(name="Test project", author=self.profile)
+        mol = Molecule.objects.create(name="Test Molecule", project=proj)
+        e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
+
+        self.lget("/profile/")
+        self.add_user_to_group("Student")
+        time.sleep(1)
+        self.lget("/projects/")
+        self.group_click_member("Student")
+        self.assertTrue(self.is_on_page_projects())
+
+    def test_group_access_project_as_PI(self):
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
+
+        proj = Project.objects.create(name="Test project", author=u.profile)
+        mol = Molecule.objects.create(name="Test Molecule", project=proj)
+        e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
+
+        self.lget("/profile/")
+        self.add_user_to_group("Student")
+        time.sleep(1)
+        self.lget("/projects/")
+        self.group_click_member("Student")
+        self.click_project("Test project")
+        self.driver.implicitly_wait(4)
+        self.assertTrue(self.is_on_page_user_project())
+
+    def test_group_access_molecule_as_PI(self):
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
+
+        proj = Project.objects.create(name="Test project", author=u.profile)
+        mol = Molecule.objects.create(name="Test Molecule", project=proj)
+        e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
+
+        self.lget("/profile/")
+        self.add_user_to_group("Student")
+        time.sleep(1)
+        self.lget("/projects/")
+        self.group_click_member("Student")
+        self.click_project("Test project")
+        self.click_molecule("Test Molecule")
+        self.assertTrue(self.is_on_page_molecule())
+
+    def test_group_access_ensemble_as_PI(self):
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
+
+        proj = Project.objects.create(name="Test project", author=u.profile)
+        mol = Molecule.objects.create(name="Test Molecule", project=proj)
+        e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
+
+        self.lget("/profile/")
+        self.add_user_to_group("Student")
+        time.sleep(1)
+        self.lget("/projects/")
+        self.group_click_member("Student")
+        self.click_project("Test project")
+        self.click_molecule("Test Molecule")
+        self.click_ensemble("Test Ensemble")
+        self.assertTrue(self.is_on_page_ensemble())
+
+    def test_group_access_projects_as_student(self):
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
+
+        proj = Project.objects.create(name="Test project", author=self.profile)
+        mol = Molecule.objects.create(name="Test Molecule", project=proj)
+        e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
+
+        self.lget("/profile/")
+        self.add_user_to_group("Student")
+        self.logout()
+        self.login("Student", self.password)
+        self.lget("/projects/")
+        self.group_click_member(self.username)
+        self.assertTrue(self.is_on_page_projects())
+
+    def test_group_access_project_as_student(self):
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
+
+        proj = Project.objects.create(name="Test project", author=self.profile)
+        mol = Molecule.objects.create(name="Test Molecule", project=proj)
+        e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
+
+        self.lget("/profile/")
+        self.add_user_to_group("Student")
+        self.logout()
+        self.login("Student", self.password)
+        self.lget("/projects/")
+        self.group_click_member(self.username)
+        self.click_project("Test project")
+        self.assertTrue(self.is_on_page_user_project())
+
+    def test_group_access_molecule_as_PI(self):
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
+
+        proj = Project.objects.create(name="Test project", author=self.profile)
+        mol = Molecule.objects.create(name="Test Molecule", project=proj)
+        e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
+
+        self.lget("/profile/")
+        self.add_user_to_group("Student")
+        self.logout()
+        self.login("Student", self.password)
+        self.lget("/projects/")
+        self.group_click_member(self.username)
+        self.click_project("Test project")
+        self.click_molecule("Test Molecule")
+        self.assertTrue(self.is_on_page_molecule())
+
+    def test_group_access_ensemble_as_PI(self):
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
+
+        proj = Project.objects.create(name="Test project", author=self.profile)
+        mol = Molecule.objects.create(name="Test Molecule", project=proj)
+        e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
+
+        self.lget("/profile/")
+        self.add_user_to_group("Student")
+        self.logout()
+        self.login("Student", self.password)
+        self.lget("/projects/")
+        self.group_click_member(self.username)
+        self.click_project("Test project")
+        self.click_molecule("Test Molecule")
+        self.click_ensemble("Test Ensemble")
+        self.assertTrue(self.is_on_page_ensemble())
 
     def test_project_empty(self):
         proj = Project.objects.create(name="Test project", author=self.profile)
@@ -665,6 +1145,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertRaises(Ensemble.DoesNotExist, get_ensemble)
 
     #Test delete other user's stuff
+
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):
         params = {
