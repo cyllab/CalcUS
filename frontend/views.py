@@ -27,8 +27,10 @@ from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand
 from .tasks import run_procedure, dispatcher, del_project, del_molecule, del_ensemble
 from .decorators import superuser_required
 from .tasks import system
+from .constants import *
 
 from shutil import copyfile
+
 
 try:
     is_test = os.environ['LAB_TEST']
@@ -310,6 +312,12 @@ def please_register(request):
         return render(request, 'frontend/please_register.html', {})
 
 
+def error(request, msg):
+    return render(request, 'frontend/error.html', {
+        'profile': request.user.profile,
+        'error_message': msg,
+        })
+
 
 @login_required
 def submit_calculation(request):
@@ -317,68 +325,70 @@ def submit_calculation(request):
         name = request.POST['calc_name']
     else:
         if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys():
-            return render(request, 'frontend/error.html', {
-                'profile': request.user.profile,
-                'error_message': "No calculation name"
-                })
+            return error(request, "No calculation name")
         else:
             if 'starting_struct' in request.POST.keys():
                 if'calc_ensemble_name' in request.POST.keys():
                     ensemble_name = clean(request.POST['calc_ensemble_name'])
                 else:
-                    return render(request, 'frontend/error.html', {
-                        'profile': request.user.profile,
-                        'error_message': "No ensemble name"
-                        })
+                    return error(request, "No ensemble name")
             name = "Followup"
 
     if 'calc_type' in request.POST.keys():
         try:
             step = BasicStep.objects.get(name=clean(request.POST['calc_type']))
         except Procedure.DoesNotExist:
-            return render(request, 'frontend/error.html', {
-                'profile': request.user.profile,
-                'error_message': "No such procedure"
-                })
+            return error(request, "No such procedure")
     else:
-        return render(request, 'frontend/error.html', {
-            'profile': request.user.profile,
-            'error_message': "No calculation type"
-            })
+        return error(request, "No calculation type")
+
     if 'calc_project' in request.POST.keys():
-        project = request.POST['calc_project']
+        project = clean(request.POST['calc_project'])
     else:
-        return render(request, 'frontend/error.html', {
-            'profile': request.user.profile,
-            'error_message': "No calculation project"
-            })
+        return error(request, "No calculation project")
 
     if 'calc_charge' in request.POST.keys():
-        charge = request.POST['calc_charge']
+        charge = clean(request.POST['calc_charge'])
     else:
-        return render(request, 'frontend/error.html', {
-            'profile': request.user.profile,
-            'error_message': "No calculation charge"
-            })
+        return error(request, "No calculation charge")
 
     if 'calc_solvent' in request.POST.keys():
-        solvent = request.POST['calc_solvent']
+        solvent = clean(request.POST['calc_solvent'])
     else:
-        return render(request, 'frontend/error.html', {
-            'profile': request.user.profile,
-            'error_message': "No calculation solvent"
-            })
-
+        return error(request, "No calculation solvent")
 
     if 'calc_ressource' in request.POST.keys():
-        ressource = request.POST['calc_ressource']
+        ressource = clean(request.POST['calc_ressource'])
     else:
-        return render(request, 'frontend/error.html', {
-            'profile': request.user.profile,
-            'error_message': "You have no computing ressource"
-            })
+        return error(request, "You have no computing ressource")
+
+    if 'calc_ressource' in request.POST.keys():
+        ressource = clean(request.POST['calc_ressource'])
+    else:
+        return error(request, "You have no computing ressource")
+
+    if 'calc_software' in request.POST.keys():
+        software = clean(request.POST['calc_software'])
+    else:
+        return error(request, "No software chosen")
+
 
     #Verify parameters
+    if len(name) > 100:
+        return error(request, "The chosen name is too long")
+
+    if len(project) > 100:
+        return error(request, "The chosen project name is too long")
+
+    if charge not in ["-2", "-1", "0", "+1", "+2"]:
+        return error(request, "Invalid charge (-2 to +2)")
+
+    if solvent not in SOLVENT_TABLE.keys() and solvent != "Vacuum":
+        return error(request, "Invalid solvent")
+
+    if software != "xtb":
+        return error(request, "Only xtb is interfaced for now")
+
 
     profile = request.user.profile
     if ressource != "Local":
@@ -394,7 +404,7 @@ def submit_calculation(request):
             return redirect("/home/")
 
     if project == "New Project":
-        new_project_name = request.POST['new_project_name']
+        new_project_name = clean(request.POST['new_project_name'])
         try:
             project_obj = Project.objects.get(name=new_project_name)
         except Project.DoesNotExist:
@@ -404,7 +414,11 @@ def submit_calculation(request):
         else:
             print("Project with that name already exists")
     else:
-        project_set = profile.project_set.filter(name=project)
+        try:
+            project_set = profile.project_set.filter(name=project)
+        except Profile.DoesNotExist:
+            return error("No such project")
+
         if len(project_set) != 1:
             print("More than one project with the same name found!")
         else:
@@ -414,14 +428,6 @@ def submit_calculation(request):
     params.save()
 
     obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
-
-    #project_obj.save()
-
-    #obj.save()
-    #t = str(obj.id)
-
-    #scr = os.path.join(LAB_SCR_HOME, t)
-    #os.mkdir(scr)
 
     drawing = True
 
@@ -437,10 +443,7 @@ def submit_calculation(request):
                 })
         start_author = start_e.parent_molecule.project.author
         if not profile_intersection(profile, start_author):
-            return render(request, 'frontend/error.html', {
-                'profile': request.user.profile,
-                'error_message': "You do not have permission to access the starting calculation"
-                })
+            return error(request, "You do not have permission to access the starting calculation")
         obj.ensemble = start_e
     elif 'starting_struct' in request.POST.keys():
         drawing = False
@@ -448,20 +451,10 @@ def submit_calculation(request):
         try:
             start_s = Structure.objects.get(pk=start_id)
         except Structure.DoesNotExist:
-            return render(request, 'frontend/error.html', {
-                'profile': request.user.profile,
-                'error_message': "No starting ensemble found"
-                })
+            return error(request, "No starting ensemble found")
         start_author = start_s.parent_ensemble.parent_molecule.project.author
         if not profile_intersection(profile, start_author):
-            return render(request, 'frontend/error.html', {
-                'profile': request.user.profile,
-                'error_message': "You do not have permission to access the starting calculation"
-                })
-        #e = Ensemble.objects.create(name=ensemble_name, parent_molecule=start_s.parent_ensemble.parent_molecule)
-        #s = Structure.objects.create(xyz_structure=start_s.xyz_structure)
-        #e.structure_set.add(s)
-        #e.save()
+            return error(request, "You do not have permission to access the starting calculation")
         obj.structure = start_s
 
     else:
@@ -482,11 +475,7 @@ def submit_calculation(request):
             elif ext == 'sdf':
                 s.sdf_structure = in_file
             else:
-                return render(request, 'frontend/error.html', {
-                    'profile': request.user.profile,
-                    'error_message': "Unknown file extension (Known formats: .mol, .xyz, .sdf)"
-                    })
-
+                return error(request, "Unknown file extension (Known formats: .mol, .xyz, .sdf)")
             s.save()
         else:
             if 'structureB' in request.POST.keys():
@@ -504,10 +493,7 @@ def submit_calculation(request):
                 mol = clean(request.POST['structureB'])
                 s.mol_structure = mol
             else:
-                return render(request, 'frontend/error.html', {
-                'profile': request.user.profile,
-                'error_message': "No input structure"
-                })
+                return error(request, "No input structure")
 
         e.save()
         s.save()
@@ -539,7 +525,7 @@ def submit_calculation(request):
                     steps = float(clean(request.POST['calc_scan_{}_3'.format(ind)]))
                     constraints += "{}_{}_{}_{}-{};".format(mode, begin, end, steps, ids)
                 else:
-                    return HttpResponse(status=403)
+                    return error(request, "Invalid constrained optimisation")
 
     obj.constraints = constraints
 

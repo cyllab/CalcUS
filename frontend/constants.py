@@ -1,5 +1,7 @@
 import decimal
 
+decimal.getcontext().prec = 50
+
 HARTREE_VAL = decimal.Decimal(2625.499638)
 E_VAL = decimal.Decimal(2.7182818284590452353602874713527)
 R_CONSTANT = decimal.Decimal(8.314)

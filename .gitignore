@@ -8,3 +8,4 @@ labsandbox/settings.py
 *cluster/
 frontend/migrations/
 *.sqlite3
+.*

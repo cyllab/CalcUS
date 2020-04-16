@@ -1,3 +1,4 @@
+{% load details_tags %}
 
 <span class="tag is-danger is-large">Parameters</span>
 <div class="columns box">
@@ -42,7 +43,18 @@
 <div class="columns box">
 		<div class="column">
 			<table class="table" id="info_table">
+				<tbody>
+							<tr>
+								<th>Boltzmann weighted energy</th>
+								<td>{% get_ensemble_weighted_energy parameters ensemble %}</td>
+							</tr>
+							<tr>
+								<th>Boltzmann weighted free energy</th>
+								<td>{% get_ensemble_weighted_free_energy parameters ensemble %}</td>
+							</tr>
+
+				</tbody>
 			</table>
 		</div>
 </div>
-
+<br />

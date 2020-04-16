@@ -5,6 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django import template
 import random, string
+import numpy as np
 
 from .constants import *
 
@@ -165,18 +166,62 @@ class Ensemble(models.Model):
     @property
     def unique_calculations(self):
         unique = []
-        '''
-        calcs = self.calculation_set.all()
-        for c in calcs:
-            if c.step.name not in unique:
-                unique.append(c.step.name)
-        '''
         structs = self.structure_set.all()
         for s in structs:
             for c in s.calculation_set.all():
                 if c.step.name not in unique:
                     unique.append(c.step.name)
         return unique
+
+    def weighted_free_energy(self, params):
+        data = []
+        for s in self.structure_set.all():
+            try:
+                p = s.properties.get(parameters=params)
+            except Property.DoesNotExist:
+                continue#Handle this better?
+            if p.free_energy == 0.:
+                return '-'
+            data.append([decimal.Decimal(p.free_energy), s.degeneracy])
+
+        if len(data) == 1:
+            return 1
+
+        s = decimal.Decimal(0)
+
+        for e, degen in data:
+            s += degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
+
+        w_energy = decimal.Decimal(0)
+
+        for e, degen in data:
+            w_energy += degen*e*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+
+        return float(w_energy)
+
+    def weighted_energy(self, params):
+        data = []
+        for s in self.structure_set.all():
+            try:
+                p = s.properties.get(parameters=params)
+            except Property.DoesNotExist:
+                continue#Handle this better?
+            data.append([decimal.Decimal(p.energy), s.degeneracy])
+
+        if len(data) == 1:
+            return 1
+
+        s = decimal.Decimal(0)
+
+        for e, degen in data:
+            s += degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
+
+        w_energy = decimal.Decimal(0)
+
+        for e, degen in data:
+            w_energy += degen*e*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+
+        return float(w_energy)
 
     def relative_energy(self, structure, params):
         lowest = 0
@@ -201,40 +246,23 @@ class Ensemble(models.Model):
                 p = s.properties.get(parameters=params)
             except Property.DoesNotExist:
                 continue#Handle this better?
-            data.append([decimal.Decimal(p.energy), structure.degeneracy])
+            data.append([decimal.Decimal(p.energy), s.degeneracy])
 
         if len(data) == 1:
             return 1
 
-        #return 'unimplemented'
         s = decimal.Decimal(0)
 
         for e, degen in data:
-            s += degen*e
+            s += degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
 
         try:
             main_p = structure.properties.get(parameters=params)
         except Property.DoesNotExist:
             return '-'
 
-        return "{:.2f}".format(main_p.boltzmann_weight)
-        #return "{:.2f}".format(float(decimal.Decimal(structure.degeneracy*main_p.energy)/s))
-        '''
-        sumnum = decimal.Decimal(0)
-        sumdenum = decimal.Decimal(0)
-        for i in range(1, len(data)):
-            exp_val = data[i][1]*E_VAL**(-(data[i][0]-data[0][0])/(gas_constant*temp))
-            sumnum += decimal.Decimal(exp_val)*(data[i])
-            sumdenum += exp_val
-        weights = []
-        for i, _ in enumerate(data):
-            weights.append(data[i][1]*E_VAL**(-(data[i][0]-data[0][0])/(gas_constant*temp))/(decimal.Decimal(1)+sumdenum))
-
-        sums[process_name(name, meso)] = [(gas_constant*temp), (decimal.Decimal(1)+sumdenum)]
-
-        return minval, float((data[0]+sumnum)/(decimal.Decimal(1)+sumdenum)), weights
-        '''
-        return 'unimplemented'
+        main_weight = structure.degeneracy*np.exp(-decimal.Decimal(main_p.energy)*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+        return "{:.2f}".format(float(main_weight))
 
 class Property(models.Model):
     parameters = models.ForeignKey('Parameters', on_delete=models.CASCADE, blank=True, null=True)

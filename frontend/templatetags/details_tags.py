@@ -27,4 +27,10 @@ def get_geom_flag(ensemble, param):
     else:
         return ''
 
+@register.simple_tag
+def get_ensemble_weighted_energy(param, ensemble):
+    return ensemble.weighted_energy(param)
 
+@register.simple_tag
+def get_ensemble_weighted_free_energy(param, ensemble):
+    return ensemble.weighted_free_energy(param)

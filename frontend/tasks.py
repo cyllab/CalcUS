@@ -51,8 +51,6 @@ else:
 PAL = os.environ['OMP_NUM_THREADS'][0]
 ORCAPATH = os.environ['ORCAPATH']
 
-decimal.getcontext().prec = 50
-
 REMOTE = False
 connections = {}
 locks = {}
