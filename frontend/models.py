@@ -185,7 +185,7 @@ class Ensemble(models.Model):
             data.append([decimal.Decimal(p.free_energy), s.degeneracy])
 
         if len(data) == 1:
-            return 1
+            return data[0][0]
 
         s = decimal.Decimal(0)
 
@@ -209,7 +209,7 @@ class Ensemble(models.Model):
             data.append([decimal.Decimal(p.energy), s.degeneracy])
 
         if len(data) == 1:
-            return 1
+            return data[0][0]
 
         s = decimal.Decimal(0)
 
