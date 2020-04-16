@@ -452,7 +452,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         button_submit.send_keys(Keys.RETURN)
 
     def launch_ensemble_next_step(self):
+        assert self.is_on_page_ensemble()
         button = self.driver.find_element_by_xpath("/html/body/div[1]/div/div[2]/div[1]/a")
+        button.click()
+
+    def launch_structure_next_step(self):
+        assert self.is_on_page_ensemble()
+        button = self.driver.find_element_by_xpath("/html/body/div[1]/div/div[2]/div[1]/button[5]")
         button.click()
 
 class InterfaceTests(CalcusLiveServer):
@@ -642,7 +648,7 @@ class CalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.click_ensemble("Result Ensemble")
+        self.assertTrue(self.is_on_page_molecule())
 
     def test_proj(self):
         proj = Project.objects.create(author=self.profile, name="TestProj")
@@ -661,6 +667,8 @@ class CalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
 
     def test_opt_freq(self):
         params = {
@@ -678,6 +686,8 @@ class CalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
 
     def test_conf_search(self):
         params = {
@@ -694,6 +704,8 @@ class CalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
 
     def test_ts(self):
         params = {
@@ -710,6 +722,8 @@ class CalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(20)
         self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
 
     def test_ensemble_second_step(self):
         params = {
@@ -727,7 +741,7 @@ class CalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.click_ensemble("Result Ensemble")
+        self.click_ensemble("Geometrical Optimisation Result")
         self.launch_ensemble_next_step()
 
         params2 = {
@@ -740,7 +754,40 @@ class CalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
 
+    def test_structure_second_step(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.launch_structure_next_step()
+
+        params2 = {
+                #'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                #project implicit
+                }
+        self.calc_input_params(params2)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
 
 class CalculationTestsStudent(CalcusLiveServer):
     def setUp(self):
@@ -786,7 +833,7 @@ class CalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.click_ensemble("Result Ensemble")
+        self.assertTrue(self.is_on_page_molecule())
 
     def test_proj(self):
         student = Profile.objects.get(user__username="Student")
@@ -806,6 +853,8 @@ class CalculationTestsStudent(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
 
     def test_opt_freq(self):
         params = {
@@ -823,6 +872,8 @@ class CalculationTestsStudent(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
 
     def test_conf_search(self):
         params = {
@@ -839,6 +890,8 @@ class CalculationTestsStudent(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
 
     def test_ts(self):
         params = {
@@ -855,6 +908,8 @@ class CalculationTestsStudent(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(20)
         self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
 
     def test_ensemble_second_step(self):
         params = {
@@ -872,7 +927,7 @@ class CalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.click_ensemble("Result Ensemble")
+        self.click_ensemble("Geometrical Optimisation Result")
         self.launch_ensemble_next_step()
 
         params2 = {
@@ -885,4 +940,39 @@ class CalculationTestsStudent(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+    def test_structure_second_step(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.launch_structure_next_step()
+
+
+        params2 = {
+                #'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                #project implicit
+                }
+        self.calc_input_params(params2)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
 
