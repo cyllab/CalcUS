@@ -29,8 +29,19 @@ def get_geom_flag(ensemble, param):
 
 @register.simple_tag
 def get_ensemble_weighted_energy(param, ensemble):
-    return ensemble.weighted_energy(param)
+    ret = ensemble.weighted_energy(param)
+    try:
+        ret = float(ret)
+        return "{:.12f}".format(ret)
+    except ValueError:
+        return ret
 
 @register.simple_tag
 def get_ensemble_weighted_free_energy(param, ensemble):
-    return ensemble.weighted_free_energy(param)
+    ret = ensemble.weighted_free_energy(param)
+    try:
+        ret = float(ret)
+        return "{:.12f}".format(ret)
+    except ValueError:
+        return ret
+

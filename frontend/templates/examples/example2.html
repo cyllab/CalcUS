@@ -1,0 +1,76 @@
+{% extends 'frontend/base.html' %}
+
+{% load static %}
+
+{% block extrahead %}
+	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+	<script type="text/x-mathjax-config">
+  	MathJax.Hub.Config({
+    		tex2jax: {
+      		inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      		processEscapes: true
+    		}
+  	});
+	</script>
+
+	<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>	
+	<title>Example 2: Diaryliodonium complexation energies</title>
+{% endblock %}
+
+{% block content %}
+
+<div>
+	In this example, we will study the complexation of a Lewis base (in particular, benzoate) to the diaryliodonium cation. This has been studied experimentally in a recent publication (<i>J. Am. Chem. Soc.</i> <strong>2020</strong>, 142, 5221.) The simplified complexation equilibrium is shown below.
+
+	<br />
+	<center>
+		<img width="70%" src="{% static 'examples/example2/0.png' %}" />	
+	</center>
+	<br />
+
+	As OpenBabel does not handle well this type of compound, you will have to create the 3D structure yourself. You can use the software of your choice, provided that it can generate correct .xyz, .sdf or .mol files. Free softwares include <a href="http://iqmol.org/">IQmol</a> and <a href="https://avogadro.cc/">Avogadro</a>. Create a reasonable first structure for the diphenyliodonium cation, the benzoate anion as well as the adduct. Afterwards, perform geometrical optimisations of all your structures in acetonitrile.
+	
+	<br />
+	<center>
+		<img width="70%" src="{% static 'examples/example2/1.png' %}" />	
+	</center>
+	<br />
+
+	In your project, you should end up with three molecules of two ensembles each. The first ensemble will always be your uploaded structure, while the second is the result of your calculation. CalcUS automatically names the ensembles in a descriptive fashion, but you can rename them to your liking. The molecule's page will also show you which calculations have been performed on each ensemble.
+
+
+	<br />
+	<center>
+		<img width="70%" src="{% static 'examples/example2/2.png' %}" />	
+	</center>
+	<br />
+
+	The adduct should optimize to a structure similar to the one shown below. You can see the calculation details by clicking the "xtb - GFN2-xTB (Acetonitrile) (GEOMETRY)" tab. You will find a full table summarizing the method used as well as ensemble properties. Notice that the Boltzmann weighted free energy is not available; to obtain it, you will need to perform a frequency calculation. To do so, click on "Launch calculation on ensemble", choose the appropriate parameters and click submit. 
+	<br />
+	<center>
+		<img width="70%" src="{% static 'examples/example2/3.png' %}" />	
+	</center>
+	<br />
+	This will augment the ensemble with the frequency modes as well as calculate the free energy of the ensemble. If you had multiple structures in the ensemble, it would perform a frequency calculation for each of them. The ensemble properties are calculated dynamically based on the Boltzmann weighting of the structural properties. They require all the structures to have the corresponding property, otherwise the result would be biased.
+
+	You will find a new section named "Frequencies" in the details section. You can click on any vibrational mode to view its animation. In addition to this, the Boltzmann weighted free energy of the ensemble is now calculated. To find the complexation energy, calculate $G_{adduct} - G_{Ph_2I^+} - G_{BzO^-}$.
+
+	<br />
+	<center>
+		<img width="70%" src="{% static 'examples/example2/4.png' %}" />	
+	</center>
+	<br />
+
+	You should find a complexation energy of around $-0.032708Ha$, or $-85.9kJ/mol$. The equilibrium constant at 298K should then be around $2.0*10^{15}$, which is considerably more than the experimental value of $(1.97 \pm 0.10)*10^5$.
+
+	One big approximation we made was the complete neglect of counter-ions. Experimentally, the counter-ion of the diphenyliodonium cation is the triflate anion, which can act as a weak Lewis base. Our calculations treat the diphenyliodonium cation as a naked cation, which neglects the possible displacement of triflate. The approximative nature of xtb calculations can also induce errors in our calculations. Finally, no conformational sampling was done for the species studied. In particular, the adduct likely has several significant configurations.
+
+	(Note that most thermodynamic corrections are done at 298K. Thus, our free energy values are not technically calculated at the right temperature. The choice of temperature will be implemented in CalcUS in the future.)
+</div>
+
+
+<br />
+{% endblock %}
+

@@ -197,6 +197,7 @@ class Ensemble(models.Model):
         for e, degen in data:
             w_energy += degen*e*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
 
+        print(w_energy)
         return float(w_energy)
 
     def weighted_energy(self, params):

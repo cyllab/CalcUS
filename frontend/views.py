@@ -327,11 +327,6 @@ def submit_calculation(request):
         if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys():
             return error(request, "No calculation name")
         else:
-            if 'starting_struct' in request.POST.keys():
-                if'calc_ensemble_name' in request.POST.keys():
-                    ensemble_name = clean(request.POST['calc_ensemble_name'])
-                else:
-                    return error(request, "No ensemble name")
             name = "Followup"
 
     if 'calc_type' in request.POST.keys():
