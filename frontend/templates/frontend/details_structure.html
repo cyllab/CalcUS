@@ -6,6 +6,10 @@
 
 
 			<div id="vib_animation" style="width: 400px; height: 400px; position: relative;"></div>
+			<div class="slidecontainer">
+				<input type="range" min="1" max="10" value="4" class="slider" id="vib_calibration" onchange="animate_vib(-1);" style="width: 100%;">
+			</div>
+
 		</div>
 		<div class="column">
 			<table class="table">
@@ -26,8 +30,16 @@
 		</div>
 	</div>
 	<script>
-
+		var past_num = -1
 		function animate_vib(num) {
+			if (num == -1) {
+				num = past_num;
+			}
+			else {
+				past_num = num;
+			}
+			amplitude = document.getElementById("vib_calibration").value/10;
+
 			$.ajax({
 				method: "POST",	 	 
 				url: "/get_vib_animation/",
@@ -41,7 +53,7 @@
 					vib_viewer.removeAllModels();
 					vib_viewer.clear();
 					vib_viewer.addModel(data, "xyz");
-					vib_viewer.vibrate(20, 0.6, true, null);
+					vib_viewer.vibrate(10, amplitude, true, null);
 					vib_viewer.animate({'loop': 'backAndForth'});
 					vib_viewer.setStyle({}, {stick:{}});
 					vib_viewer.zoomTo();

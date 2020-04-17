@@ -1078,8 +1078,8 @@ def vib_table(request, pk):
         for ind in range(math.ceil(len(vibs)/3)):
             formatted_vibs.append([
                 [vibs[3*ind], 3*ind],
-                [vibs[3*ind+1] if 3*ind+2 < len(vibs) else '', 3*ind+1],
-                [vibs[3*ind+2] if 3*ind+3 < len(vibs) else '', 3*ind+2]
+                [vibs[3*ind+1] if 3*ind+1 < len(vibs) else '', 3*ind+1],
+                [vibs[3*ind+2] if 3*ind+2 < len(vibs) else '', 3*ind+2]
                     ])
 
         return render(request, 'frontend/vib_table.html', {

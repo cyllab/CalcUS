@@ -502,7 +502,7 @@ def xtb_scan(in_file, calc):
                 E = float(lines[inds[metaind]+1].split()[1])
                 struct = ''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]]])
 
-                r = Structure.objects.create(number=metaind+1)
+                r = Structure.objects.create(number=metaind+1, degeneracy=1)
                 prop = get_or_create(calc.parameters, r)
                 prop.energy = E
                 prop.geom = True
@@ -606,7 +606,6 @@ def xtb_freq(in_file, calc):
                 for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
                     out.write("-{:.1f},{:.5f}\n".format(_x, i))
 
-
     prop = get_or_create(calc.parameters, calc.structure)
     prop.energy = E
     prop.free_energy = G
@@ -624,6 +623,7 @@ def xtb_freq(in_file, calc):
             a, x, y, z = line.strip().split()
             struct.append([a, float(x), float(y), float(z)])
 
+    '''
     with open(os.path.join(folder, "hessian")) as f:
         lines = f.readlines()[1:]
         for line in lines:
@@ -636,45 +636,54 @@ def xtb_freq(in_file, calc):
 
         num_freqs = int(num_freqs)
 
-    '''
-    def output_with_displacement(mol, out, hess):
-        #Simple displacement based on the hessian
-        t = 10
-        mols = [mol]
-        for _t in range(t):
-            new_mol = []
-            for ind, (a, x, y, z) in enumerate(mols[-1]):
-                _x = x + hess[3*ind]
-                _y = y + hess[3*ind+1]
-                _z = z + hess[3*ind+2]
-                new_mol.append([a, _x, _y, _z])
-            mols.append(new_mol)
-
-        for _t in range(t):
-            new_mol = []
-            for ind, (a, x, y, z) in enumerate(mols[0]):
-                _x = x - hess[3*ind]
-                _y = y - hess[3*ind+1]
-                _z = z - hess[3*ind+2]
-                new_mol.append([a, _x, _y, _z])
-            mols.insert(0, new_mol)
-
-        for mol in mols:
-            out.write("{}\n".format(num_atoms))
-            out.write("Free\n")
-            for a, x, y, z in mol:
-                out.write("{} {} {} {}\n".format(a, x, y, z))
-
-    '''
     for ind in range(num_freqs):
         _hess = hess[3*num_atoms*ind:3*num_atoms*(ind+1)]
+        _hess = np.array(_hess)/max(_hess)
         with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
             out.write("{}\n".format(num_atoms))
             assert len(struct) == num_atoms
             out.write("CalcUS\n")
             for ind2, (a, x, y, z) in enumerate(struct):
                 out.write("{} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}\n".format(a, x, y, z, *_hess[3*ind2:3*ind2+3]))
-            #output_with_displacement(struct, out, _hess)
+    '''
+
+    with open(os.path.join(folder, "g98.out")) as f:
+        lines = f.readlines()
+        ind = 0
+        while lines[ind].find("Atom AN") == -1:
+            ind += 1
+        ind += 1
+
+        vibs = []
+        while ind < len(lines) - 1:
+
+            vib = []
+            sline = lines[ind].split()
+            num_vibs = int((len(sline)-2)/3)
+            for i in range(num_vibs):
+                vib.append([])
+            while ind < len(lines) and len(lines[ind].split()) > 3:
+                sline = lines[ind].split()
+                n = sline[0].strip()
+                Z = sline[1].strip()
+                for i in range(num_vibs):
+                    x, y, z = sline[2+3*i:5+3*i]
+                    vib[i].append([x, y, z])
+                ind += 1
+            for i in range(num_vibs):
+                vibs.append(vib[i])
+            while ind < len(lines)-1 and lines[ind].find("Atom AN") == -1:
+                ind += 1
+            ind += 1
+
+        for ind in range(len(vibs)):
+            with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
+                out.write("{}\n".format(num_atoms))
+                assert len(struct) == num_atoms
+                out.write("CalcUS\n")
+                for ind2, (a, x, y, z) in enumerate(struct):
+                    out.write("{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(a, x, y, z, *vibs[ind][ind2]))
+
     return 0
 
 def crest_generic(in_file, calc, mode):
