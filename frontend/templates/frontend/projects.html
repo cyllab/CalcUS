@@ -77,6 +77,9 @@
 						"X-CSRFToken": '{{ csrf_token }}',
 					},
 					data: {'id': proj_id},
+					success: function() {
+						document.getElementById("article_proj_" + proj_id).remove();	
+					}
 				});
 			}
 		}
@@ -95,7 +98,7 @@
 			<div class="grid">
 				{% if target_profile.project_set.count > 0 %}
 					{% for proj in target_profile.project_set.all %}
-							<article class="message grid-item is-danger">
+							<article class="message grid-item is-danger" id="article_proj_{{ proj.id }}">
 								<div class="message-header">
 									<p id="proj_name_{{ proj.id }}">{{ proj.name }}</p>
 									<div>

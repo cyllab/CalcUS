@@ -103,7 +103,12 @@
 						"X-CSRFToken": '{{ csrf_token }}',
 					},
 					data: {'id': e_id},
+					success: function() {
+						document.getElementById("article_ensemble_" + e_id).remove();	
+					}
+
 				});
+
 			}
 		}
 
@@ -169,23 +174,23 @@
 			<div class="grid">
 				{% if ensembles %}
 					{% for e in ensembles %}
-							<article class="message grid-item is-info">
-								<div class="message-header">
-									<p id="e_name_{{ e.id }}">{{ e.name }}</p>
-									<div>
-										<a onclick="edit_field({{ e.id }});"><i class="fas fa-edit" id="icon_{{ e.id}}"></i></a>
-										<a onclick="del({{ e.id }});"><i class="fas fa-trash-alt"></i></a>
-									</div>
-
+						<article class="message grid-item is-info" id="article_ensemble_{{ e.id }}">
+							<div class="message-header">
+								<p id="e_name_{{ e.id }}">{{ e.name }}</p>
+								<div>
+									<a onclick="edit_field({{ e.id }});"><i class="fas fa-edit" id="icon_{{ e.id}}"></i></a>
+									<a onclick="del({{ e.id }});"><i class="fas fa-trash-alt"></i></a>
 								</div>
-								<a href="/ensemble/{{ e.id}}">
-									<div class="message-body" style="height: 80%;">
-										<strong>Ensemble</strong>
-										<br />
-									{{ e.structure_set.count }} Structure(s)	
-									</div>
-								</a>
-							</article>
+
+							</div>
+							<a href="/ensemble/{{ e.id}}">
+								<div class="message-body" style="height: 80%;">
+									<strong>Ensemble</strong>
+									<br />
+								{{ e.structure_set.count }} Structure(s)	
+								</div>
+							</a>
+						</article>
 					{% endfor %}
 				{% else %}
 					No ensemble

@@ -70,6 +70,10 @@
 						"X-CSRFToken": '{{ csrf_token }}',
 					},
 					data: {'id': mol_id},
+					success: function() {
+						document.getElementById("article_mol_" + mol_id).remove();	
+					}
+
 				});
 			}
 		}
@@ -90,22 +94,22 @@
 	<div class="grid">
 		{% if molecules.count > 0 %}
 			{% for mol in molecules %}
-					<article class="message grid-item is-primary">
-						<div class="message-header">
-							<p id="mol_name_{{ mol.id }}">{{ mol.name }}</p>
-							<div>
-								<a onclick="edit_field({{ mol.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}"></i></a>
-								<a onclick="del({{ mol.id }});"><i class="fas fa-trash-alt"></i></a>
-							</div>
+				<article class="message grid-item is-primary" id="article_mol_{{ mol.id }}">
+					<div class="message-header">
+						<p id="mol_name_{{ mol.id }}">{{ mol.name }}</p>
+						<div>
+							<a onclick="edit_field({{ mol.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}"></i></a>
+							<a onclick="del({{ mol.id }});"><i class="fas fa-trash-alt"></i></a>
 						</div>
-						<a href="/molecule/{{ mol.id }}">
-						<div class="message-body" style="height: 80%;">
-							<strong>Molecule</strong>
-							<br />
-						{{ mol.count_vis }} Ensemble(s)	
-						</div>
-						</a>
-					</article>
+					</div>
+					<a href="/molecule/{{ mol.id }}">
+					<div class="message-body" style="height: 80%;">
+						<strong>Molecule</strong>
+						<br />
+					{{ mol.count_vis }} Ensemble(s)	
+					</div>
+					</a>
+				</article>
 			{% endfor %}
 		{% else %}
 			No molecule in this project.
