@@ -7,7 +7,8 @@
 
 			<th>
 			{% if parameters %}
-				{% get_structure_energy res parameters %}
+				{% get_structure_energy res parameters as E %}
+				{{ E|floatformat:-8 }}
 			{% else %}
 			-
 			{% endif %}
@@ -15,7 +16,8 @@
 			
 			<th>
 			{% if parameters %}
-				{% get_structure_relative_energy res parameters ensemble %}
+				{% get_structure_relative_energy res parameters ensemble as rel_E%}
+				{{ rel_E|floatformat:-1 }}
 			{% else %}
 			-
 			{% endif %}
@@ -24,7 +26,8 @@
 			<th>{{ res.degeneracy }}</th>
 			<th>
 			{% if parameters %}
-				{% get_structure_weight res parameters ensemble %}
+				{% get_structure_weight res parameters ensemble as w %}
+				{{ w|floatformat:-2 }}
 			{% else %}
 			-
 			{% endif %}

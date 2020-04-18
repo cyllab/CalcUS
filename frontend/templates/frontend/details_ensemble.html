@@ -21,7 +21,7 @@
 
 					<tr>
 						<th>Program</th>
-						<td>{{ parameters.program }}</td>
+						<td>{{ parameters.software }}</td>
 						<th>Solvation model</th>
 						<td>{{ parameters.solvation_model }}</td>
 					</tr>
@@ -45,14 +45,37 @@
 			<table class="table" id="info_table">
 				<tbody>
 							<tr>
+								{% get_ensemble_weighted_energy parameters ensemble as w_energy%}
 								<th>Boltzmann weighted energy</th>
-								<td>{% get_ensemble_weighted_energy parameters ensemble %}</td>
+								<td>{{ w_energy|floatformat:-8 }}</td>
 							</tr>
 							<tr>
+								{% get_ensemble_weighted_free_energy parameters ensemble as w_f_energy%}
 								<th>Boltzmann weighted free energy</th>
-								<td>{% get_ensemble_weighted_free_energy parameters ensemble %}</td>
+								<td>{{ w_f_energy|floatformat:-8 }}</td>
 							</tr>
+							{% get_simple_nmr_shifts_ensemble parameters ensemble as shifts %}
+							{% if shifts != '' %}
+								<table class="table">
+									<thead>
+										<tr>
+											<th>Atom number</th>
+											<th>Atom type</th>
+											<th>Raw Shift</th>
+										</tr>
+									</thead>
+									<tbody>
+										{% for shift in shifts %}
+											<tr>
+												<td>{{ shift.0 }}</td>
+												<td>{{ shift.1 }}</td>
+												<td>{{ shift.2|floatformat:-3 }}</td>
+											</tr>
+										{% endfor %}
+									</tbody>
+								</table>
 
+							{% endif %}
 				</tbody>
 			</table>
 		</div>

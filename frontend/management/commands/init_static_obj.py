@@ -70,6 +70,11 @@ class Command(BaseCommand):
             self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Calculating UV-Vis spectrum", error_message="Failed to calculate the UV-Vis spectrum", avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
+        name = "NMR Prediction"
+        if self.is_absent(BasicStep, name):
+            self.print("Adding BasicStep: {}".format(name))
+            a = BasicStep.objects.create(name=name, desc="Calculating NMR shifts", error_message="Failed to calculate the NMR shifts", avail_Gaussian=True, avail_ORCA=True)
+
         '''
         name = "Enso"
         if self.is_absent(BasicStep, name):
@@ -98,6 +103,7 @@ class Command(BaseCommand):
         #    self.print("Adding Procedure: {}".format(name))
         #    a = Procedure.objects.create(name=name)
 
+        '''
         name = "Simple Optimisation"
         if self.is_absent(Procedure, name):
             self.print("Adding Procedure: {}".format(name))
@@ -202,7 +208,6 @@ class Command(BaseCommand):
 
             a.save()
 
-        '''
         name = "NMR Prediction"
         if self.is_absent(Procedure, name):
             self.print("Adding Procedure: {}".format(name))

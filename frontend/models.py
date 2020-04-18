@@ -175,6 +175,7 @@ class Ensemble(models.Model):
 
     def weighted_free_energy(self, params):
         data = []
+        en_0 = 0
         for s in self.structure_set.all():
             try:
                 p = s.properties.get(parameters=params)
@@ -182,7 +183,9 @@ class Ensemble(models.Model):
                 continue#Handle this better?
             if p.free_energy == 0.:
                 return '-'
-            data.append([decimal.Decimal(p.free_energy), s.degeneracy])
+            if en_0 == 0:
+                en_0 = p.free_energy
+            data.append([decimal.Decimal(p.free_energy-en_0), s.degeneracy])
 
         if len(data) == 1:
             return data[0][0]
@@ -195,19 +198,25 @@ class Ensemble(models.Model):
         w_energy = decimal.Decimal(0)
 
         for e, degen in data:
-            w_energy += degen*e*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+            w_energy += degen*(e+en_0)*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
 
         print(w_energy)
         return float(w_energy)
 
     def weighted_energy(self, params):
         data = []
+        en_0 = 0
         for s in self.structure_set.all():
             try:
                 p = s.properties.get(parameters=params)
             except Property.DoesNotExist:
                 continue#Handle this better?
-            data.append([decimal.Decimal(p.energy), s.degeneracy])
+            en = decimal.Decimal(p.energy)
+            if en == 0:
+                return ''
+            if en_0 == 0:
+                en_0 = en
+            data.append([en-en_0, s.degeneracy])
 
         if len(data) == 1:
             return data[0][0]
@@ -220,7 +229,7 @@ class Ensemble(models.Model):
         w_energy = decimal.Decimal(0)
 
         for e, degen in data:
-            w_energy += degen*e*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+            w_energy += degen*(e+en_0)*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
 
         return float(w_energy)
 
@@ -238,16 +247,22 @@ class Ensemble(models.Model):
                 continue#Handle this better?
             if p.energy < lowest:
                 lowest = p.energy
-        return "{:.1f}".format((main_p.energy - lowest)*float(HARTREE_VAL))
+        return (main_p.energy - lowest)*float(HARTREE_VAL)
 
     def weight(self, structure, params):
         data = []
+        en_0 = 0
         for s in self.structure_set.all():
             try:
                 p = s.properties.get(parameters=params)
             except Property.DoesNotExist:
                 continue#Handle this better?
-            data.append([decimal.Decimal(p.energy), s.degeneracy])
+            en = p.energy
+            if en == 0:
+                return ''
+            if en_0 == 0:
+                en_0 = en
+            data.append([decimal.Decimal(en-en_0), s.degeneracy])
 
         if len(data) == 1:
             return 1
@@ -262,8 +277,8 @@ class Ensemble(models.Model):
         except Property.DoesNotExist:
             return '-'
 
-        main_weight = structure.degeneracy*np.exp(-decimal.Decimal(main_p.energy)*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
-        return "{:.2f}".format(float(main_weight))
+        main_weight = structure.degeneracy*np.exp(-decimal.Decimal(main_p.energy-en_0)*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+        return float(main_weight)
 
 class Property(models.Model):
     parameters = models.ForeignKey('Parameters', on_delete=models.CASCADE, blank=True, null=True)
@@ -280,6 +295,8 @@ class Property(models.Model):
     nmr = models.PositiveIntegerField(default=0)
     mo = models.PositiveIntegerField(default=0)
     freq = models.PositiveIntegerField(default=0)
+
+    simple_nmr = models.CharField(default="", max_length=100000)
 
     geom = models.BooleanField(default=False)
 
@@ -309,13 +326,13 @@ class Parameters(models.Model):
     multiplicity = models.IntegerField()
     solvent = models.CharField(max_length=100, default='vacuum')
     solvation_model = models.CharField(max_length=100, default='gbsa')
-    program = models.CharField(max_length=100, default='xtb')
+    software = models.CharField(max_length=100, default='xtb')
     basis_set = models.CharField(max_length=100, default='min')
     method = models.CharField(max_length=100, default='GFN2-xTB')
     misc = models.CharField(max_length=1000, default='')
 
     def __repr__(self):
-        return "{} - {} ({})".format(self.program, self.method, self.solvent)
+        return "{} - {} ({})".format(self.software, self.method, self.solvent)
 
     def __str__(self):
         return self.__repr__()
@@ -346,6 +363,7 @@ class CalculationOrder(models.Model):
 
     author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
     project = models.ForeignKey('Project', on_delete=models.CASCADE, blank=True, null=True)
+    software = models.CharField(max_length=100, default="")
 
     parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, blank=True, null=True)
 
@@ -358,11 +376,30 @@ class CalculationOrder(models.Model):
     @property
     def status(self):
         stat = 0
+        num_queued = 0
+        num_running = 0
+        num_done = 0
+        num_error = 0
         for calc in self.calculation_set.all():
-            if calc.status > stat:
-                stat = calc.status
-        return stat
+            if calc.status == 0:
+                num_queued += 1
+            elif calc.status == 1:
+                num_running += 1
+            elif calc.status == 2:
+                num_done += 1
+            elif calc.status == 3:
+                num_error += 1
 
+        if num_running > 0:
+            return 1
+
+        if num_queued == 0:
+            if num_error > 0:
+                return 3
+            else:
+                return 2
+
+        return 0
     @property
     def get_queued(self):
         return len(self.calculation_set.filter(status=0))
@@ -404,6 +441,7 @@ class Calculation(models.Model):
     structure = models.ForeignKey(Structure, on_delete=models.CASCADE)
     step = models.ForeignKey(BasicStep, on_delete=models.CASCADE)
     order = models.ForeignKey(CalculationOrder, on_delete=models.CASCADE)
+    software = models.CharField(max_length=100, default="")
 
     parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE)
     result_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)

@@ -24,7 +24,7 @@ from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property
-from .tasks import run_procedure, dispatcher, del_project, del_molecule, del_ensemble
+from .tasks import run_procedure, dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS
 from .decorators import superuser_required
 from .tasks import system
 from .constants import *
@@ -263,7 +263,10 @@ def details_structure(request):
         except Parameters.DoesNotExist:
             return HttpResponse(status=403)
 
-        prop = s.properties.get(parameters=p)
+        try:
+            prop = s.properties.get(parameters=p)
+        except Property.DoesNotExist:
+            return HttpResponse(status=404)
 
 
         return render(request, 'frontend/details_structure.html', {'profile': request.user.profile,
@@ -367,8 +370,27 @@ def submit_calculation(request):
     else:
         return error(request, "No software chosen")
 
+    if software == 'ORCA' or software == 'Gaussian':
+        if 'calc_functional' in request.POST.keys():
+            functional = clean(request.POST['calc_functional'])
+        else:
+            return error(request, "No functional chosen")
+        if functional not in SPECIAL_FUNCTIONALS:
+            if 'calc_basis_set' in request.POST.keys():
+                basis_set = clean(request.POST['calc_basis_set'])
+            else:
+                return error(request, "No basis set chosen")
+        else:
+            basis_set = ""
+    else:
+        functional = ""
+        basis_set = ""
 
-    #Verify parameters
+    if 'calc_misc' in request.POST.keys():
+        misc = clean(request.POST['calc_misc'])
+    else:
+        misc = ""
+
     if len(name) > 100:
         return error(request, "The chosen name is too long")
 
@@ -381,8 +403,9 @@ def submit_calculation(request):
     if solvent not in SOLVENT_TABLE.keys() and solvent != "Vacuum":
         return error(request, "Invalid solvent")
 
-    if software != "xtb":
-        return error(request, "Only xtb is interfaced for now")
+
+    if step.name not in BASICSTEP_TABLE[software].keys():
+        return error(request, "Invalid calculation type")
 
 
     profile = request.user.profile
@@ -419,7 +442,7 @@ def submit_calculation(request):
         else:
             project_obj = project_set[0]
 
-    params = Parameters.objects.create(charge=charge, solvent=solvent, multiplicity=1)
+    params = Parameters.objects.create(charge=charge, solvent=solvent, multiplicity=1, method=functional, basis_set=basis_set, misc=misc, software=software)
     params.save()
 
     obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
@@ -479,7 +502,7 @@ def submit_calculation(request):
                 obj.ensemble = e
 
                 s = Structure.objects.create(parent_ensemble=e, number=1)
-                params = Parameters.objects.create(program="Open Babel", method="Forcefield", basis_set="", solvation_model="", charge="0", multiplicity="1")
+                params = Parameters.objects.create(software="Open Babel", method="Forcefield", basis_set="", solvation_model="", charge="0", multiplicity="1")
                 p = Property.objects.create(parent_structure=s, parameters=params, geom=True)
                 p.save()
                 params.save()

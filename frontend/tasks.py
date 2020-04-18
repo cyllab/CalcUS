@@ -986,6 +986,61 @@ def xtb_stda(in_file, calc):
 
     return 0
 
+def orca_nmr(in_file, calc):
+    folder = '/'.join(in_file.split('/')[:-1])
+
+    ORCA_TEMPLATE = """!NMR {} {} {}
+    %pal
+    nprocs {}
+    end
+    {}
+    *xyz {} {}
+    {}
+    *"""
+
+    if calc.parameters.solvent == "Vacuum":
+        solvent_add = ""
+    else:
+        solvent_add = '''%cpcm
+        smd true
+        SMDsolvent "{}"
+        end'''.format(calc.parameters.solvent)
+
+    with open(in_file) as f:
+        lines = f.readlines()[2:]
+
+    with open(os.path.join(folder, 'nmr.inp'), 'w') as out:
+        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, PAL, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+
+    os.chdir(folder)
+    a = system("{}/orca nmr.inp".format(ORCAPATH), 'orca_nmr.out')
+    if a != 0:
+        print("Orca failed")
+        return a
+
+    with open(os.path.join(folder, 'orca_nmr.out')) as f:
+        lines = f.readlines()
+    ind = len(lines)-1
+    while lines[ind].find("CHEMICAL SHIELDING SUMMARY (ppm)") == -1:
+        ind -= 1
+
+    nmr = ""
+    ind += 6
+    while lines[ind].strip() != "":
+        n, a, iso, an = lines[ind].strip().split()
+        nmr += "{} {} {}\n".format(int(n)+1, a, iso)
+        ind += 1
+
+    prop = get_or_create(calc.parameters, calc.structure)
+    prop.simple_nmr = nmr
+
+    while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+        ind -= 1
+    E = float(lines[ind].split()[4])
+    prop.energy = E
+    prop.save()
+    return 0
+
 def dist(a, b):
     return math.sqrt((a[1] - b[1])**2 + (a[2] - b[2])**2 + (a[3] - b[3])**2)
 
@@ -1075,7 +1130,10 @@ def gen_fingerprint(structure):
     return inchi
 
 
+SPECIAL_FUNCTIONALS = ['HF-3c', 'PBEh-3c']
 BASICSTEP_TABLE = {
+        'xtb':
+        {
             'Geometrical Optimisation': xtb_opt,
             'Crest': crest,
             'Constrained Optimisation': xtb_scan,
@@ -1086,6 +1144,11 @@ BASICSTEP_TABLE = {
             'Enso': enso,
             'Anmr': anmr,
             'MO Calculation': mo_gen,
+            },
+        'ORCA':
+            {
+                'NMR Prediction': orca_nmr,
+            }
         }
 
 time_dict = {}
@@ -1167,7 +1230,7 @@ def run_calc(calc_id):
     calc = Calculation.objects.get(pk=calc_id)
     calc.status = 1
     calc.save()
-    f = BASICSTEP_TABLE[calc.step.name]
+    f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
 
     os.mkdir(os.path.join(LAB_RESULTS_HOME, str(calc.id)))
     workdir = os.path.join(LAB_SCR_HOME, str(calc.id))

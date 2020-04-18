@@ -64,7 +64,7 @@
 						if (xhr.status != 204) {
 							let mol = ChemDoodle.readXYZ(data);
 
-							
+							ChemDoodle.relabel(mol);	
 							clearInterval(my_refresh);
 							editor.loadMolecule(mol);
 

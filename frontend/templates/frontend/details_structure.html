@@ -1,3 +1,4 @@
+{% load details_tags %}
 
 {% if property.freq != 0 %}
 	<span class="tag is-danger is-large">Frequencies</span>
@@ -240,3 +241,31 @@
 </div>
 {% endif %}
 
+{% if property.simple_nmr != "" %}
+<span class="tag is-danger is-large">NMR</span>
+<div class="columns box">
+	<div class="column">
+	</div>
+	<div class="column">
+		{% get_simple_nmr_shifts_structure property as shifts %}
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Atom number</th>
+					<th>Atom type</th>
+					<th>Raw Shift</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for shift in shifts %}
+					<tr>
+						<td>{{ shift.0 }}</td>
+						<td>{{ shift.1 }}</td>
+						<td>{{ shift.2 }}</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% endif %}
