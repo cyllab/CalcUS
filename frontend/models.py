@@ -369,6 +369,8 @@ class CalculationOrder(models.Model):
 
     constraints = models.CharField(max_length=400, default="", blank=True, null=True)
 
+    filter = models.ForeignKey('Filter', on_delete=models.CASCADE, blank=True, null=True)
+
     date = models.DateTimeField('date', null=True, blank=True)
     date_finished = models.DateTimeField('date', null=True, blank=True)
     unseen = models.BooleanField(default=True)
@@ -479,6 +481,10 @@ class Calculation(models.Model):
     def text_status(self):
         return self.INV_CALC_STATUSES[self.status]
 
+class Filter(models.Model):
+    type = models.CharField(max_length=500)
+    parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE)
+    value = models.FloatField()
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

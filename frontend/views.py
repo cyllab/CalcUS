@@ -23,7 +23,7 @@ from django.contrib.auth.models import User
 from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
-from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property
+from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter
 from .tasks import run_procedure, dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS
 from .decorators import superuser_required
 from .tasks import system
@@ -383,8 +383,12 @@ def submit_calculation(request):
         else:
             basis_set = ""
     else:
-        functional = ""
-        basis_set = ""
+        if software == "xtb":
+            functional = "GFN-xTB"
+            basis_set = "min"
+        else:
+            functional = ""
+            basis_set = ""
 
     if 'calc_misc' in request.POST.keys():
         misc = clean(request.POST['calc_misc'])
@@ -463,6 +467,44 @@ def submit_calculation(request):
         if not profile_intersection(profile, start_author):
             return error(request, "You do not have permission to access the starting calculation")
         obj.ensemble = start_e
+
+        if 'calc_filter' in request.POST.keys():
+            filter_type = clean(request.POST['calc_filter'])
+            if filter_type == "None":
+                pass
+            elif filter_type == "By Relative Energy" or filter_type == "By Boltzmann Weight":
+                if 'filter_value' in request.POST.keys():
+                    try:
+                        filter_value = float(clean(request.POST['filter_value']))
+                    except ValueError:
+                        return error(request, "Invalid filter value")
+                else:
+                    return error(request, "No filter value")
+
+                if 'filter_parameters' in request.POST.keys():
+                    try:
+                        filter_parameters_id = int(clean(request.POST['filter_parameters']))
+                    except ValueError:
+                        return error(request, "Invalid filter parameters")
+
+                    try:
+                        filter_parameters = Parameters.objects.get(pk=filter_parameters_id)
+                    except Parameters.DoesNotExist:
+                        return error(request, "Invalid filter parameters")
+
+                    if not profile_intersection(profile, filter_parameters.property_set.all()[0].parent_structure.parent_ensemble.parent_molecule.project.author):
+                        return error(request, "Invalid filter parameters")
+
+                    filter = Filter.objects.create(type=filter_type, parameters=filter_parameters, value=filter_value)
+                    obj.filter = filter
+                else:
+                    return error(request, "No filter parameters")
+
+
+            else:
+                return error(request, "Invalid filter type")
+
+
     elif 'starting_struct' in request.POST.keys():
         drawing = False
         start_id = int(clean(request.POST['starting_struct']))

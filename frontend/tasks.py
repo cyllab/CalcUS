@@ -699,7 +699,7 @@ def crest_generic(in_file, calc, mode):
     folder = '/'.join(in_file.split('/')[:-1])
     os.chdir(folder)
     if mode == "Final":#Restrict the number of conformers
-        a = system("crest {} --chrg {} {} -rthr 0.4 -ewin 4".format(in_file, charge, solvent_add), 'crest.out')
+        a = system("crest {} --chrg {} {} -rthr 0.6 -ewin 4".format(in_file, charge, solvent_add), 'crest.out')
     elif mode == "NMR":#No restriction, as it will be done by enso
         a = system("crest {} --chrg {} {} -nmr".format(in_file, charge, solvent_add), 'crest.out')
     else:
@@ -1153,6 +1153,33 @@ BASICSTEP_TABLE = {
 
 time_dict = {}
 
+def filter(order, input_structures):
+    '''
+    if order.step.name == "NMR Prediction":
+        structures = []
+        for s in input_structures:
+            #if s.parent_ensemble.weight(s, order.parameters) > 0.05:
+            if s.properties.all()[0].boltzmann_weight > 0.02: #quick fix
+                structures.append(s)
+        return structures
+    else:
+        return input_structures
+    '''
+    if order.filter == None:
+        return input_structures
+
+    structures = []
+
+    if order.filter.type == "By Boltzmann Weight":
+        for s in input_structures:
+            if s.parent_ensemble.weight(s, order.filter.parameters) > order.filter.value:
+                structures.append(s)
+    elif order.filter.type == "By Relative Energy":
+        for s in input_structures:
+            if s.parent_ensemble.relative_energy(s, order.filter.parameters) > order.filter.value:
+                structures.append(s)
+
+    return structures
 @app.task
 def dispatcher(drawing, order_id):
     if is_test:
@@ -1195,6 +1222,8 @@ def dispatcher(drawing, order_id):
             molecule = ensemble.parent_molecule
         input_structures = ensemble.structure_set.all()
     group_order = []
+
+    input_structures = filter(order, input_structures)
 
     if step.creates_ensemble:
         e = Ensemble.objects.create(name="{} Result".format(order.step.name))

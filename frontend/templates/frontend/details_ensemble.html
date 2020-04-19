@@ -65,7 +65,7 @@
 										</tr>
 									</thead>
 									<tbody>
-										{% for shift in shifts %}
+										{% for shift in shifts.0 %}
 											<tr>
 												<td>{{ shift.0 }}</td>
 												<td>{{ shift.1 }}</td>
@@ -74,7 +74,7 @@
 										{% endfor %}
 									</tbody>
 								</table>
-
+								{{ shifts.1 }}
 							{% endif %}
 				</tbody>
 			</table>

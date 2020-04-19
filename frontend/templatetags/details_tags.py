@@ -46,13 +46,16 @@ def get_ensemble_weighted_free_energy(param, ensemble):
 def get_simple_nmr_shifts_ensemble(param, ensemble):
     structures = ensemble.structure_set.all()
     shifts = []
+    s_ids = []
     for s in structures:
         try:
             p = s.properties.get(parameters=param)
         except Property.DoesNotExist:
-            return ''
-
+            continue
+            #return ''
+        s_ids.append(s.number)
         if p.simple_nmr == '':
+            print("No simple nmr")
             return ''
 
 
@@ -65,6 +68,7 @@ def get_simple_nmr_shifts_ensemble(param, ensemble):
             ss = shift.strip().split()
             w = ensemble.weight(s, param)
             if w == '':
+                print("No weight nmr")
                 return ''
             shifts[ind][2] += w*float(ss[2])
             if shifts[ind][0] == '':
@@ -76,8 +80,10 @@ def get_simple_nmr_shifts_ensemble(param, ensemble):
                 shifts[ind][1] = ss[1]
             else:
                 assert shifts[ind][1] == ss[1]
-
-    return shifts
+    s_str = "Based on structures number {}".format(s_ids[0])
+    for num in s_ids[1:]:
+        s_str += ", {}".format(num)
+    return [shifts, s_str]
 
 @register.simple_tag
 def get_simple_nmr_shifts_structure(prop):
