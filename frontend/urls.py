@@ -83,7 +83,7 @@ urlpatterns = [
     path('status/<int:pk>', views.status, name='status'),
     path('icon/<int:pk>', views.icon, name='icon'),
     path('uvvis/<int:pk>', views.uvvis, name='uvvis'),
-    path('nmr/<int:pk>', views.nmr, name='nmr'),
+    path('nmr/', views.nmr, name='nmr'),
     #path('delete/<int:pk>', views.delete, name='delete'),
 
     path('delete_project/', views.delete_project, name='delete_project'),

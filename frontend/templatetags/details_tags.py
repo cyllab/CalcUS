@@ -16,6 +16,10 @@ def get_structure_relative_energy(struct, param, ensemble):
     return ensemble.relative_energy(struct, param)
 
 @register.simple_tag
+def get_relative_energies(param, ensemble):
+    return ensemble.relative_energy(param)
+
+@register.simple_tag
 def get_structure_weight(struct, param, ensemble):
     return ensemble.weight(struct, param)
 
@@ -44,6 +48,7 @@ def get_ensemble_weighted_free_energy(param, ensemble):
 
 @register.simple_tag
 def get_simple_nmr_shifts_ensemble(param, ensemble):
+
     structures = ensemble.structure_set.all()
     shifts = []
     s_ids = []

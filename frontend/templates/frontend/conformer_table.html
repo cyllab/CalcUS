@@ -1,36 +1,21 @@
 {% load details_tags %}
 
-{% if ensemble %}
-	{% for res in ensemble.structure_set.all %}
-	<tr id="conf_{{ res.number }}" {% if res.number == 1 %} class="is-selected" {% endif %}>
-			<th>{{ res.number }}</th>
+{% if data %}
+	{% for entry in data %}
+	<tr id="conf_{{ entry.0.number }}" {% if entry.0.number == 1 %} class="is-selected" {% endif %}>
+			<th>{{ entry.0.number }}</th>
 
 			<th>
-			{% if parameters %}
-				{% get_structure_energy res parameters as E %}
-				{{ E|floatformat:-8 }}
-			{% else %}
-			-
-			{% endif %}
+				{{ entry.1|floatformat:-5 }}
 			</th>
 			
 			<th>
-			{% if parameters %}
-				{% get_structure_relative_energy res parameters ensemble as rel_E%}
-				{{ rel_E|floatformat:-1 }}
-			{% else %}
-			-
-			{% endif %}
+				{{ entry.2|floatformat:-1 }}
 			</th>
 
-			<th>{{ res.degeneracy }}</th>
+			<th>{{ entry.0.degeneracy }}</th>
 			<th>
-			{% if parameters %}
-				{% get_structure_weight res parameters ensemble as w %}
-				{{ w|floatformat:-2 }}
-			{% else %}
-			-
-			{% endif %}
+				{{ entry.3|floatformat:-2 }}
 			</th>
 		</tr>
 	{% endfor %}

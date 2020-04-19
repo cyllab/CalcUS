@@ -234,8 +234,13 @@ def details_ensemble(request):
         if not profile_intersection(request.user.profile, e.parent_molecule.project.author):
             return HttpResponse(status=403)
 
-        return render(request, 'frontend/details_ensemble.html', {'profile': request.user.profile,
-            'ensemble': e, 'parameters': p})
+        if e.has_nmr(p):
+            shifts = e.weighted_nmr_shifts(p)
+            return render(request, 'frontend/details_ensemble.html', {'profile': request.user.profile,
+                'ensemble': e, 'parameters': p, 'shifts': shifts})
+        else:
+            return render(request, 'frontend/details_ensemble.html', {'profile': request.user.profile,
+                'ensemble': e, 'parameters': p})
 
     return HttpResponse(status=403)
 
@@ -371,20 +376,28 @@ def submit_calculation(request):
         return error(request, "No software chosen")
 
     if software == 'ORCA' or software == 'Gaussian':
-        if 'calc_functional' in request.POST.keys():
-            functional = clean(request.POST['calc_functional'])
-        else:
-            return error(request, "No functional chosen")
-        if functional not in SPECIAL_FUNCTIONALS:
-            if 'calc_basis_set' in request.POST.keys():
-                basis_set = clean(request.POST['calc_basis_set'])
+        if 'pbeh3c' in request.POST.keys():
+            field_pbeh3c = clean(request.POST['pbeh3c'])
+            if field_pbeh3c == "on":
+                special_functional = True
+                functional = "PBEh-3c"
+                basis_set = ""
+
+        if not special_functional:
+            if 'calc_functional' in request.POST.keys():
+                functional = clean(request.POST['calc_functional'])
             else:
-                return error(request, "No basis set chosen")
-        else:
-            basis_set = ""
+                return error(request, "No functional chosen")
+            if functional not in SPECIAL_FUNCTIONALS:
+                if 'calc_basis_set' in request.POST.keys():
+                    basis_set = clean(request.POST['calc_basis_set'])
+                else:
+                    return error(request, "No basis set chosen")
+            else:
+                basis_set = ""
     else:
         if software == "xtb":
-            functional = "GFN-xTB"
+            functional = "GFN2-xTB"
             basis_set = "min"
         else:
             functional = ""
@@ -988,10 +1001,21 @@ def conformer_table_post(request):
         except Parameters.DoesNotExist:
             return HttpResponse(status=403)
 
+        properties = []
+        energies = []
+        for s in e.structure_set.all():
+            try:
+                prop = s.properties.get(parameters=p)
+            except Property.DoesNotExist:
+                energies.append([''])
+            else:
+                energies.append(prop.energy)
+        rel_energies = e.relative_energies(p)
+        weights = e.weights(p)
+        data = zip(e.structure_set.all(), energies, rel_energies, weights)
         return render(request, 'frontend/conformer_table.html', {
                 'profile': request.user.profile,
-                'ensemble': e,
-                'parameters': p
+                'data': data,
             })
     else:
         return HttpResponse(status=403)
@@ -1068,7 +1092,7 @@ def get_cube(request):
     return HttpResponse(status=204)
 
 @login_required
-def nmr(request, pk):
+def enso_nmr(request, pk):
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
 
@@ -1088,6 +1112,57 @@ def nmr(request, pk):
             return response
     else:
         return HttpResponse(status=204)
+@login_required
+def nmr(request):
+    if request.method != 'POST':
+        return HttpResponse(status=404)
+
+    if 'id' in request.POST.keys():
+        try:
+            e = Ensemble.objects.get(pk=int(clean(request.POST['id'])))
+        except Ensemble.DoesNotExist:
+            return HttpResponse(status=404)
+    else:
+        return HttpResponse(status=404)
+    if 'p_id' in request.POST.keys():
+        try:
+            params = Parameters.objects.get(pk=int(clean(request.POST['p_id'])))
+        except Parameters.DoesNotExist:
+            return HttpResponse(status=404)
+    else:
+        return HttpResponse(status=404)
+
+    if 'nucleus' in request.POST.keys():
+        nucleus = clean(request.POST['nucleus'])
+    else:
+        return HttpResponse(status=404)
+
+    profile = request.user.profile
+
+    if not profile_intersection(profile, e.parent_molecule.project.author):
+        return HttpResponse(status=403)
+
+    if not e.has_nmr(params):
+        return HttpResponse(status=204)
+
+    shifts = e.weighted_nmr_shifts(params)
+
+    if nucleus == 'H':
+        content = "Shift,Intensity\n-10,0\n0,0\n"
+    else:
+        content = "Shift,Intensity\n-200,0\n0,0\n"
+
+    for shift in shifts:
+        if shift[1] == nucleus:
+            if len(shift) == 4:
+                content += "{},{}\n".format(-(shift[3]-0.001), 0)
+                content += "{},{}\n".format(-shift[3], 1)
+                content += "{},{}\n".format(-(shift[3]+0.001), 0)
+
+    response = HttpResponse(content, content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename={}.csv'.format(id)
+    return response
+
 
 @login_required
 def ir_spectrum(request, pk):

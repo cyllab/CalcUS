@@ -23,3 +23,17 @@ SOLVENT_TABLE = {
     'Toluene': 'toluene',
         }
 
+#Software->Method/Functional->Basis set->Atom->[m, b, R2]
+NMR_REGRESSIONS = {
+    'ORCA': {
+            'PBEh-3c': {
+                    '': {
+                        'H': [-1.0758, 32.4963, 0.9957],
+                        'C': [-1.0126, 198.0555, 0.9970],
+                    },
+                },
+        },
+    'Gaussian': {
+
+        },
+}

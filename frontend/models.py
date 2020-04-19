@@ -173,6 +173,17 @@ class Ensemble(models.Model):
                     unique.append(c.step.name)
         return unique
 
+    def has_nmr(self, params):
+        for s in self.structure_set.all():
+            try:
+                p = s.properties.get(parameters=params)
+            except Property.DoesNotExist:
+                continue#Handle this better?
+            if p.simple_nmr != '':
+                return True
+        return False
+
+
     def weighted_free_energy(self, params):
         data = []
         en_0 = 0
@@ -248,6 +259,91 @@ class Ensemble(models.Model):
             if p.energy < lowest:
                 lowest = p.energy
         return (main_p.energy - lowest)*float(HARTREE_VAL)
+
+    def relative_energies(self, params):
+        lowest = 0
+        energies = []
+        for s in self.structure_set.all():
+            try:
+                p = s.properties.get(parameters=params)
+            except Property.DoesNotExist:
+                energies.append('')
+                continue
+            if p.energy < lowest:
+                lowest = decimal.Decimal(p.energy)
+            energies.append(decimal.Decimal(p.energy))
+        energies_kj = [(i-lowest)*HARTREE_VAL if i != '' else '' for i in energies]
+        return energies_kj
+
+    def weights(self, params):
+        data = []
+        en_0 = 0
+        for s in self.structure_set.all():
+            try:
+                p = s.properties.get(parameters=params)
+            except Property.DoesNotExist:
+                data.append(['', ''])
+                continue
+            en = p.energy
+            if en_0 == 0:
+                en_0 = en
+            data.append([decimal.Decimal(en-en_0), s.degeneracy])
+
+        en_0 = decimal.Decimal(en_0)
+        if len(data) == 1:
+            return [1]
+
+        s = decimal.Decimal(0)
+
+        for e, degen in data:
+            if e != '':
+                s += degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
+
+        weights = []
+        for e, degen in data:
+            if e == '':
+                weights.append('')
+                continue
+
+            w = degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+            weights.append(w)
+        return weights
+
+    def weighted_nmr_shifts(self, params):
+        weights = self.weights(params)
+        shifts = []
+        for ind, s in enumerate(self.structure_set.all()):
+            try:
+                prop = s.properties.get(parameters=params)
+            except Property.DoesNotExist:
+                continue
+            #Handle if simple_nmr is not set
+            w = weights[ind]
+
+            for ind2, shift in enumerate(prop.simple_nmr.split('\n')):
+                if shift.strip() == '':
+                    continue
+
+                ss = shift.strip().split()
+                if ind2 >= len(shifts):
+                    shifts.append([ss[0], ss[1], w*decimal.Decimal(ss[2])])
+                else:
+                    shifts[ind2][2] += w*decimal.Decimal(ss[2])
+                    assert shifts[ind2][0] == ss[0]
+                    assert shifts[ind2][1] == ss[1]
+        try:
+            regressions = NMR_REGRESSIONS[params.software][params.method][params.basis_set]
+        except KeyError:
+            return shifts
+
+        for shift in shifts:
+            try:
+                m, b, R2 = regressions[shift[1]]
+            except KeyError:
+                shift.append('')
+            else:
+                shift.append((float(shift[2])-b)/m)
+        return shifts
 
     def weight(self, structure, params):
         data = []
@@ -363,8 +459,6 @@ class CalculationOrder(models.Model):
 
     author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
     project = models.ForeignKey('Project', on_delete=models.CASCADE, blank=True, null=True)
-    software = models.CharField(max_length=100, default="")
-
     parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, blank=True, null=True)
 
     constraints = models.CharField(max_length=400, default="", blank=True, null=True)
