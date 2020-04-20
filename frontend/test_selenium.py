@@ -173,7 +173,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         if 'theory' in params.keys():
             select = self.driver.find_element_by_id("calc_theory_level")
-            #self.driver.execute_script("var select = arguments[0]; for(var i = 0; i < select.options.length; i++){ if(select.options[i].text == arguments[1]){ select.options[i].selected = true; } }",select, params['theory'])
             self.driver.execute_script("showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",select)
             time.sleep(0.1)
             self.driver.find_element_by_xpath("//*[@id='calc_theory_level']/option[text()='{}']".format(params['theory'])).click()
@@ -217,6 +216,19 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         tabs_list = self.driver.find_element_by_css_selector("#tabs")
         tabs = tabs_list.find_elements_by_css_selector("li")
         return len(tabs)
+
+    def click_calc_method(self, num):
+        assert self.is_on_page_ensemble()
+
+        tabs_list = self.driver.find_element_by_css_selector("#tabs")
+        tabs = tabs_list.find_elements_by_css_selector("li")
+        tabs[num-1].click()
+
+    def get_number_conformers(self):
+        assert self.is_on_page_ensemble()
+        conf_table = self.driver.find_element_by_id("conf_table")
+        conformers = conf_table.find_elements_by_css_selector("tr")
+        return len(conformers)
 
     def get_split_url(self):
         return self.driver.current_url.split('/')[3:]
@@ -417,6 +429,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             if e_name == name:
                 e.click()
                 return
+
+        raise EnsembleNotFound
 
     def click_latest_calc(self):
         assert self.is_on_page_calculations()
@@ -1546,6 +1560,11 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
 
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
     def test_proj(self):
         student = Profile.objects.get(user__username="Student")
         proj = Project.objects.create(author=student, name="TestProj")
@@ -1604,6 +1623,11 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
 
+        self.click_ensemble("Crest Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertGreaterThan(self.get_number_conformers(), 1)
+
     def test_ts(self):
         params = {
                 'calc_name': 'test',
@@ -1622,6 +1646,11 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
 
+        self.click_ensemble("TS Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
     def test_ensemble_second_step(self):
         params = {
                 'calc_name': 'test',
@@ -1639,6 +1668,11 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.click_ensemble("Geometrical Optimisation Result")
+
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
         self.launch_ensemble_next_step()
 
         params2 = {
@@ -1652,6 +1686,11 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
 
     def test_structure_second_step(self):
         params = {
@@ -1670,6 +1709,11 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.click_ensemble("Geometrical Optimisation Result")
+
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
         self.launch_structure_next_step()
 
 
@@ -1684,6 +1728,11 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
 
 class OrcaCalculationTestsPI(CalcusLiveServer):
 
@@ -1730,6 +1779,11 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
 
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
     def test_opt_HF(self):
         params = {
                 'calc_name': 'test',
@@ -1750,6 +1804,11 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
 
     def test_opt_DFT(self):
         params = {
@@ -1773,6 +1832,11 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
 
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
     def test_opt_RIMP2(self):
         params = {
                 'calc_name': 'test',
@@ -1795,6 +1859,10 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
 
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
 
     '''
     def test_freq(self):
@@ -1838,6 +1906,11 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
 
+        self.click_ensemble("TS Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
     def test_ts_HF(self):
         params = {
                 'calc_name': 'test',
@@ -1858,6 +1931,11 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("TS Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
 
     def test_ts_DFT(self):
         params = {
@@ -1881,6 +1959,11 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
 
+        self.click_ensemble("TS Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
     def test_ts_RIMP2(self):
         params = {
                 'calc_name': 'test',
@@ -1902,4 +1985,9 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("TS Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
 
