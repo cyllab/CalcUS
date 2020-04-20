@@ -230,7 +230,7 @@ class Command(BaseCommand):
             a.save()
         '''
         ###Finishing the process
-        self.verify()
+        #self.verify()
 
     def verify(self):
         for proc in Procedure.objects.all():

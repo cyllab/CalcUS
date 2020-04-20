@@ -1654,6 +1654,77 @@ def launch_structure_pk(request, ee, pk):
             'procedures': BasicStep.objects.all(),
         })
 
+@login_required
+def download_project_csv(request, project_id):
+
+    profile = request.user.profile
+
+    try:
+        proj = Project.objects.get(pk=project_id)
+    except Project.DoesNotExist:
+        return HttpResponse(status=403)
+
+    if not profile_intersection(profile, proj.author):
+        return HttpResponse(status=403)
+
+    summary = {}
+
+    csv = "Molecule,Ensemble,Structure\n"
+    for mol in proj.molecule_set.all():
+        csv += "\n\n{}\n".format(mol.name)
+        for e in mol.ensemble_set.all():
+            csv += "\n,{}\n".format(e.name)
+            for params in e.unique_parameters:
+                rel_energies = e.relative_energies(params)
+                weights = e.weights(params)
+                csv += ",,{}\n".format(params)
+                csv += ",,Number,Energy,Relative Energy, Boltzmann Weight,Free energy\n"
+                for s in e.structure_set.all():
+                    try:
+                        prop = s.properties.get(parameters=params)
+                    except Property.DoesNotExist:
+                        pass
+                    else:
+                        csv += ",,{},{},{},{},{}\n".format(s.number, prop.energy*HARTREE_FVAL, rel_energies[s.number-1], weights[s.number-1], prop.free_energy*HARTREE_FVAL)
+
+                w_e = e.weighted_energy(params)
+                print(w_e)
+                if w_e != '' and w_e != '-' and w_e != 0:
+                    w_e *= HARTREE_FVAL
+                w_f_e = e.weighted_free_energy(params)
+                if w_f_e != '' and w_f_e != '-' and w_f_e != 0:
+                    w_f_e *= HARTREE_FVAL
+                csv += "\n,,Ensemble Average,{},,,{}\n".format(w_e, w_f_e)
+                p_name = params.__repr__()
+                if p_name in summary.keys():
+                    if mol.id in summary[p_name].keys():
+                        summary[p_name][mol.id][e.id] = [w_e, w_f_e]
+                    else:
+                        summary[p_name][mol.id] = {e.id: [w_e, w_f_e]}
+                else:
+                    summary[p_name] = {}
+                    summary[p_name][mol.id] = {e.id: [w_e, w_f_e]}
+
+
+    csv += "\n\n\nSummary\n"
+    csv += "Method,Molecule,Ensemble,Average Energy,Average Free Energy\n"
+    for method in summary.keys():
+        csv += "{}\n".format(method)
+        for mol in summary[method].keys():
+            mol_obj = Molecule.objects.get(pk=mol)
+            csv += ",{}\n".format(mol_obj.name)
+            for e in summary[method][mol].keys():
+                e_obj = Ensemble.objects.get(pk=e)
+                csv += ",,{},{},{}\n".format(e_obj.name, summary[method][mol][e][0], summary[method][mol][e][0])
+
+
+
+    proj_name = proj.name.replace(' ', '_')
+    response = HttpResponse(csv, content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename={}.csv'.format(proj_name)
+    return response
+
+
 def handler404(request, *args, **argv):
     return render(request, 'error/404.html', {
             })

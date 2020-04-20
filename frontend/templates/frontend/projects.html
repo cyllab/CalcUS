@@ -102,6 +102,7 @@
 								<div class="message-header">
 									<p id="proj_name_{{ proj.id }}">{{ proj.name }}</p>
 									<div>
+										<a href="/download_project_csv/{{ proj.id }}"><i class="fas fa-download"></i></a>
 										<a onclick="edit_field({{ proj.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}"></i></a>
 										<a onclick="del({{ proj.id }});"><i class="fas fa-trash-alt"></i></a>
 									</div>

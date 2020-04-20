@@ -27,6 +27,8 @@ urlpatterns = [
     path('rename_molecule/', views.rename_molecule, name='rename_molecule'),
     path('rename_ensemble/', views.rename_ensemble, name='rename_ensemble'),
 
+    path('download_project_csv/<int:project_id>', views.download_project_csv, name='download_project_csv'),
+
     #Documentation
     path('examples/', views.ExamplesView.as_view(), name='examples'),
     path('examples/<int:pk>', views.example, name='example'),

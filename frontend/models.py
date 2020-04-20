@@ -199,7 +199,7 @@ class Ensemble(models.Model):
             data.append([decimal.Decimal(p.free_energy-en_0), s.degeneracy])
 
         if len(data) == 1:
-            return data[0][0]
+            return float(en_0)
 
         s = decimal.Decimal(0)
 
@@ -209,9 +209,8 @@ class Ensemble(models.Model):
         w_energy = decimal.Decimal(0)
 
         for e, degen in data:
-            w_energy += degen*(e+en_0)*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+            w_energy += degen*(e+decimal.Decimal(en_0))*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
 
-        print(w_energy)
         return float(w_energy)
 
     def weighted_energy(self, params):
@@ -230,7 +229,7 @@ class Ensemble(models.Model):
             data.append([en-en_0, s.degeneracy])
 
         if len(data) == 1:
-            return data[0][0]
+            return float(en_0)
 
         s = decimal.Decimal(0)
 
