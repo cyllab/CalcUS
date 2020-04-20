@@ -1717,8 +1717,6 @@ def download_project_csv(request, project_id):
                 e_obj = Ensemble.objects.get(pk=e)
                 csv += ",,{},{},{}\n".format(e_obj.name, summary[method][mol][e][0], summary[method][mol][e][0])
 
-
-
     proj_name = proj.name.replace(' ', '_')
     response = HttpResponse(csv, content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename={}.csv'.format(proj_name)

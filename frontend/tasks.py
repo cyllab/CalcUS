@@ -350,7 +350,7 @@ def xtb_opt(in_file, calc):
             hl_gap = float(lines[ind].split()[3])
             E = float(lines[ind-2].split()[3])
 
-        s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=1, degeneracy=1)
+        s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=1)
         prop = get_or_create(calc.parameters, s)
         prop.homo_lumo_gap = hl_gap
         prop.energy = E
@@ -421,7 +421,7 @@ def xtb_ts(in_file, calc):
             ind -= 1
         hl_gap = float(olines[ind].split()[3])
 
-    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=''.join(lines), number=1)
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=''.join(lines), number=calc.structure.number)
     prop = get_or_create(calc.parameters, s)
     prop.homo_lumo_gap = hl_gap
     prop.energy = E
@@ -833,6 +833,114 @@ end
 
     return 0
 
+def orca_opt(in_file, calc):
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
+    folder = '/'.join(in_file.split('/')[:-1])
+
+    ORCA_TEMPLATE = """!OPT {} {} {}
+    %pal
+    nprocs {}
+    end
+    {}
+    *xyz {} {}
+    {}
+    *"""
+
+    if calc.parameters.solvent == "Vacuum":
+        solvent_add = ""
+    else:
+        solvent_add = '''%cpcm
+        smd true
+        SMDsolvent "{}"
+        end'''.format(calc.parameters.solvent)
+
+    with open(in_file) as f:
+        lines = f.readlines()[2:]
+
+    with open(os.path.join(folder, 'opt.inp'), 'w') as out:
+        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, PAL, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join([i.strip() for i in lines])))
+
+    os.chdir(folder)
+    a = system("{}/orca opt.inp".format(ORCAPATH), 'orca_opt.out')
+    if a != 0:
+        print("Orca failed")
+        return a
+
+    with open("opt.xyz") as f:
+        lines = f.readlines()
+    xyz_structure = '\n'.join([i.strip() for i in lines])
+    with open("orca_opt.out") as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+        while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+            ind -= 1
+        E = float(lines[ind].split()[4])
+
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=calc.structure.degeneracy)
+    prop = get_or_create(calc.parameters, s)
+    prop.energy = E
+    prop.geom = True
+    s.save()
+    prop.save()
+
+    return 0
+
+def orca_ts(in_file, calc):
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
+    folder = '/'.join(in_file.split('/')[:-1])
+
+    ORCA_TEMPLATE = """!OPTTS {} {} {}
+    %pal
+    nprocs {}
+    end
+    {}
+    *xyz {} {}
+    {}
+    *"""
+
+    if calc.parameters.solvent == "Vacuum":
+        solvent_add = ""
+    else:
+        solvent_add = '''%cpcm
+        smd true
+        SMDsolvent "{}"
+        end'''.format(calc.parameters.solvent)
+
+    with open(in_file) as f:
+        lines = f.readlines()[2:]
+
+    with open(os.path.join(folder, 'ts.inp'), 'w') as out:
+        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, PAL, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join([i.strip() for i in lines])))
+
+    os.chdir(folder)
+    a = system("{}/orca ts.inp".format(ORCAPATH), 'orca_ts.out')
+    if a != 0:
+        print("Orca failed")
+        return a
+
+    with open("ts.xyz") as f:
+        lines = f.readlines()
+    xyz_structure = '\n'.join([i.strip() for i in lines])
+    with open("orca_ts.out") as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+        while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+            ind -= 1
+        E = float(lines[ind].split()[4])
+
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=1)
+    prop = get_or_create(calc.parameters, s)
+    prop.energy = E
+    prop.geom = True
+    s.save()
+    prop.save()
+
+    return 0
+
 def enso(in_file, calc):
 
     solvent = calc.parameters.solvent
@@ -1148,6 +1256,8 @@ BASICSTEP_TABLE = {
         'ORCA':
             {
                 'NMR Prediction': orca_nmr,
+                'Geometrical Optimisation': orca_opt,
+                'TS Optimisation': orca_ts,
             }
         }
 
