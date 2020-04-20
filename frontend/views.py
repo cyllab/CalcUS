@@ -1229,6 +1229,7 @@ def vib_table(request, pk):
         return HttpResponse(status=403)
 
     vib_file = os.path.join(LAB_RESULTS_HOME, id, "vibspectrum")
+    orca_file = os.path.join(LAB_RESULTS_HOME, id, "orcaspectrum")
 
     if os.path.isfile(vib_file):
         with open(vib_file) as f:
@@ -1246,6 +1247,27 @@ def vib_table(request, pk):
                     pass
                 vib = float(line[20:33].strip())
                 vibs.append(vib)
+
+        formatted_vibs = []
+
+        for ind in range(math.ceil(len(vibs)/3)):
+            formatted_vibs.append([
+                [vibs[3*ind], 3*ind],
+                [vibs[3*ind+1] if 3*ind+1 < len(vibs) else '', 3*ind+1],
+                [vibs[3*ind+2] if 3*ind+2 < len(vibs) else '', 3*ind+2]
+                    ])
+
+        return render(request, 'frontend/vib_table.html', {
+                    'profile': request.user.profile,
+                    'vibs': formatted_vibs
+                })
+    elif os.path.isfile(orca_file):
+        with open(orca_file) as f:
+            lines = f.readlines()
+
+        vibs = []
+        for line in lines:
+            vibs.append(line.strip())
 
         formatted_vibs = []
 

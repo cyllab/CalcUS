@@ -979,6 +979,161 @@ def orca_ts(in_file, calc):
 
     return 0
 
+def orca_freq(in_file, calc):
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
+    folder = '/'.join(in_file.split('/')[:-1])
+
+    ORCA_TEMPLATE = """!FREQ {} {} {}
+    %pal
+    nprocs {}
+    end
+    {}
+    *xyz {} {}
+    {}
+    *"""
+
+    if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
+        pal = 1
+    else:
+        pal = 8
+
+    if calc.parameters.solvent == "Vacuum":
+        solvent_add = ""
+    else:
+        solvent_add = '''%cpcm
+        smd true
+        SMDsolvent "{}"
+        end'''.format(calc.parameters.solvent)
+
+    with open(in_file) as f:
+        lines = f.readlines()[2:]
+
+    with open(os.path.join(folder, 'freq.inp'), 'w') as out:
+        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join([i.strip() for i in lines])))
+
+    os.chdir(folder)
+    a = system("{}/orca freq.inp".format(ORCAPATH), 'orca_freq.out')
+    if a != 0:
+        print("Orca failed")
+        return a
+
+
+    with open("{}/orca_freq.out".format(folder)) as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+    while lines[ind].find("Final Gibbs free energy") == -1:
+        ind -= 1
+
+    G = float(lines[ind].split()[5])
+
+    while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+        ind -= 1
+
+    E = float(lines[ind].split()[4])
+
+    #vib_file = os.path.join(folder, "vibspectrum")
+
+    while lines[ind].find("IR SPECTRUM") == -1 and ind > 0:
+        ind += 1
+
+    assert ind > 0
+
+    ind += 5
+
+    nums = []
+    vibs = []
+    intensities = []
+
+    while lines[ind].strip() != "":
+        sline = lines[ind].strip().split()
+        num = sline[0].replace(':', '')
+        nums.append(num)
+
+        vibs.append(float(sline[1]))
+        intensities.append(float(sline[2]))
+
+        ind += 1
+
+    with open("{}/orcaspectrum".format(os.path.join(LAB_RESULTS_HOME, str(calc.id))), 'w') as out:
+        for vib in vibs:
+            out.write("{}\n".format(vib))
+
+    x = np.arange(500, 4000, 1)#Wave number in cm^-1
+    spectrum = plot_vibs(x, zip(vibs, intensities))
+    with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "IR.csv"), 'w') as out:
+        out.write("Wavenumber,Intensity\n")
+        intensities = 1000*np.array(intensities)/max(intensities)
+        for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
+            out.write("-{:.1f},{:.5f}\n".format(_x, i))
+
+    prop = get_or_create(calc.parameters, calc.structure)
+    prop.energy = E
+    prop.free_energy = G
+    prop.freq = calc.id
+    prop.save()
+
+    raw_lines = calc.structure.xyz_structure.split('\n')
+    xyz_lines = []
+    for line in raw_lines:
+        if line.strip() != '':
+            xyz_lines.append(line)
+
+    num_atoms = int(xyz_lines[0].strip())
+    xyz_lines = xyz_lines[2:]
+    struct = []
+
+    for line in xyz_lines:
+        if line.strip() != '':
+            a, x, y, z = line.strip().split()
+            struct.append([a, float(x), float(y), float(z)])
+
+    while lines[ind].find("NORMAL MODES") == -1 and ind > 0:
+        ind -= 1
+
+    assert ind > 0
+
+    ind += 7
+    start_num = int(nums[0])
+    end_num = int(nums[-1])
+
+    vibs = []
+    while lines[ind].strip() != "":
+        num_line = len(lines[ind].strip().split())
+        ind += 1
+
+        vib = []
+        for i in range(num_line):
+            vib.append([])
+
+        for i in range(end_num+1):
+            sline = lines[ind].split()
+            for i in range(num_line):
+                coord = float(sline[1+i])
+                vib[i].append(coord)
+            ind += 1
+
+        def is_all_null(arr):
+            for el in arr:
+                if float(el) != 0:
+                    return False
+            return True
+
+        for v in vib:
+            if not is_all_null(v):
+                vibs += [v]
+
+    for ind in range(len(vibs)):
+        with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
+            out.write("{}\n".format(num_atoms))
+            assert len(struct) == num_atoms
+            out.write("CalcUS\n")
+            for ind2, (a, x, y, z) in enumerate(struct):
+                out.write("{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(a, x, y, z, *vibs[ind][3*ind2:3*ind2+3]))
+
+    return 0
+
 def enso(in_file, calc):
 
     solvent = calc.parameters.solvent
@@ -1296,6 +1451,7 @@ BASICSTEP_TABLE = {
                 'Geometrical Optimisation': orca_opt,
                 'TS Optimisation': orca_ts,
                 'MO Calculation': orca_mo_gen,
+                'Frequency Calculation': orca_freq,
             }
         }
 
