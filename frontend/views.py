@@ -365,36 +365,69 @@ def submit_calculation(request):
     else:
         return error(request, "You have no computing ressource")
 
-    if 'calc_ressource' in request.POST.keys():
-        ressource = clean(request.POST['calc_ressource'])
-    else:
-        return error(request, "You have no computing ressource")
-
     if 'calc_software' in request.POST.keys():
         software = clean(request.POST['calc_software'])
     else:
         return error(request, "No software chosen")
 
-    if software == 'ORCA' or software == 'Gaussian':
-        if 'pbeh3c' in request.POST.keys():
-            field_pbeh3c = clean(request.POST['pbeh3c'])
-            if field_pbeh3c == "on":
-                special_functional = True
-                functional = "PBEh-3c"
-                basis_set = ""
+    if 'calc_theory_level' in request.POST.keys():
+        theory = clean(request.POST['calc_theory_level'])
+    else:
+        return error(request, "No theory level chosen")
 
-        if not special_functional:
-            if 'calc_functional' in request.POST.keys():
-                functional = clean(request.POST['calc_functional'])
+    if software == 'ORCA' or software == 'Gaussian':
+        if theory == "DFT":
+            special_functional = False
+            if 'pbeh3c' in request.POST.keys():
+                field_pbeh3c = clean(request.POST['pbeh3c'])
+                if field_pbeh3c == "on":
+                    special_functional = True
+                    functional = "PBEh-3c"
+                    basis_set = ""
+
+            if not special_functional:
+                if 'calc_functional' in request.POST.keys():
+                    functional = clean(request.POST['calc_functional'])
+                else:
+                    return error(request, "No method")
+                if functional not in SPECIAL_FUNCTIONALS:
+                    if 'calc_basis_set' in request.POST.keys():
+                        basis_set = clean(request.POST['calc_basis_set'])
+                    else:
+                        return error(request, "No basis set chosen")
+                else:
+                    basis_set = ""
+        elif theory == "Semi-empirical":
+            if 'calc_se_method' in request.POST.keys():
+                functional = clean(request.POST['calc_se_method'])
+                basis_set = ''
             else:
-                return error(request, "No functional chosen")
-            if functional not in SPECIAL_FUNCTIONALS:
+                return error(request, "No semi-empirical method chosen")
+        elif theory == "HF":
+            special_functional = False
+            if 'hf3c' in request.POST.keys():
+                field_hf3c = clean(request.POST['hf3c'])
+                if field_hf3c == "on":
+                    special_functional = True
+                    functional = "HF-3c"
+                    basis_set = ""
+
+            if not special_functional:
+                functional = "HF"
                 if 'calc_basis_set' in request.POST.keys():
                     basis_set = clean(request.POST['calc_basis_set'])
                 else:
                     return error(request, "No basis set chosen")
+        elif theory == "RI-MP2":
+            functional = "RI-MP2"
+            if 'calc_basis_set' in request.POST.keys():
+                basis_set = clean(request.POST['calc_basis_set'])
             else:
-                basis_set = ""
+                return error(request, "No basis set chosen")
+
+        else:
+            return error(request, "Invalid theory level")
+
     else:
         if software == "xtb":
             functional = "GFN2-xTB"

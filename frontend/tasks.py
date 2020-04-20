@@ -768,8 +768,12 @@ def crest_pre_nmr(in_file, calc):
     return crest_generic(in_file, calc, "NMR")
 
 
-def mo_gen(in_file, calc):
-    ORCA_TEMPLATE = """!HF-3c SP PAL8
+def orca_mo_gen(in_file, calc):
+    ORCA_TEMPLATE = """!{} {} {} SP
+%pal
+nprocs {}
+end
+{}
 %plots
 dim1 45
 dim2 45
@@ -788,6 +792,19 @@ MO("in-LUMOB.cube",{},0);
 end
 *xyzfile {} {} {}
 """
+
+    if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
+        pal = 1
+    else:
+        pal = 8
+
+    if calc.parameters.solvent == "Vacuum":
+        solvent_add = ""
+    else:
+        solvent_add = '''%cpcm
+        smd true
+        SMDsolvent "{}"
+        end'''.format(calc.parameters.solvent)
 
     struct = calc.structure.xyz_structure
     electrons = 0
@@ -816,11 +833,20 @@ end
     folder = '/'.join(in_file.split('/')[:-1])
 
     with open("{}/mo.inp".format(folder), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(n_HOMO, n_LUMO, n_LUMO1, n_LUMO2, charge, multiplicity, fname))
+        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, solvent_add, n_HOMO, n_LUMO, n_LUMO1, n_LUMO2, charge, multiplicity, fname))
 
+    os.chdir(folder)
     a = system("{}/orca mo.inp".format(ORCAPATH), 'orca_mo.out')
     if a != 0:
-        return a, 'e'
+        return a
+
+    with open("{}/orca_mo.out".format(folder)) as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+        while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+            ind -= 1
+        E = float(lines[ind].split()[4])
 
     save_to_results("{}/in-HOMO.cube".format(folder), calc)
     save_to_results("{}/in-LUMO.cube".format(folder), calc)
@@ -829,6 +855,7 @@ end
 
     prop = get_or_create(calc.parameters, calc.structure)
     prop.mo = calc.id
+    prop.energy = E
     prop.save()
 
     return 0
@@ -837,6 +864,11 @@ def orca_opt(in_file, calc):
     solvent = calc.parameters.solvent
     charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
+
+    if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
+        pal = 1
+    else:
+        pal = 8
 
     ORCA_TEMPLATE = """!OPT {} {} {}
     %pal
@@ -859,7 +891,7 @@ def orca_opt(in_file, calc):
         lines = f.readlines()[2:]
 
     with open(os.path.join(folder, 'opt.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, PAL, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join([i.strip() for i in lines])))
+        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
 
     os.chdir(folder)
     a = system("{}/orca opt.inp".format(ORCAPATH), 'orca_opt.out')
@@ -888,6 +920,12 @@ def orca_opt(in_file, calc):
     return 0
 
 def orca_ts(in_file, calc):
+
+    if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
+        pal = 1
+    else:
+        pal = 8
+
     solvent = calc.parameters.solvent
     charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
@@ -913,7 +951,7 @@ def orca_ts(in_file, calc):
         lines = f.readlines()[2:]
 
     with open(os.path.join(folder, 'ts.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, PAL, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join([i.strip() for i in lines])))
+        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join([i.strip() for i in lines])))
 
     os.chdir(folder)
     a = system("{}/orca ts.inp".format(ORCAPATH), 'orca_ts.out')
@@ -1251,13 +1289,13 @@ BASICSTEP_TABLE = {
             'Crest Pre NMR': crest_pre_nmr,
             'Enso': enso,
             'Anmr': anmr,
-            'MO Calculation': mo_gen,
             },
         'ORCA':
             {
                 'NMR Prediction': orca_nmr,
                 'Geometrical Optimisation': orca_opt,
                 'TS Optimisation': orca_ts,
+                'MO Calculation': orca_mo_gen,
             }
         }
 
