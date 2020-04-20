@@ -155,6 +155,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if 'charge' in params.keys():
             self.driver.find_element_by_xpath("/html/body/div[1]/div/div[2]/form/div[2]/div[3]/div/div/div/select/option[text()='{}']".format(params['charge'])).click()
 
+        if 'software' in params.keys():
+            self.driver.find_element_by_xpath("//*[@id='calc_software']/option[text()='{}']".format(params['software'])).click()
+
         if 'type' in params.keys():
             self.driver.find_element_by_xpath("//*[@id='calc_type']/option[text()='{}']".format(params['type'])).click()
 
@@ -166,6 +169,30 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         if 'in_file' in params.keys():
             upload_input.send_keys("{}/tests/{}".format(dir_path, params['in_file']))
+
+
+        if 'theory' in params.keys():
+            select = self.driver.find_element_by_id("calc_theory_level")
+            #self.driver.execute_script("var select = arguments[0]; for(var i = 0; i < select.options.length; i++){ if(select.options[i].text == arguments[1]){ select.options[i].selected = true; } }",select, params['theory'])
+            self.driver.execute_script("showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",select)
+            time.sleep(0.1)
+            self.driver.find_element_by_xpath("//*[@id='calc_theory_level']/option[text()='{}']".format(params['theory'])).click()
+
+        if 'method' in params.keys():
+            self.driver.find_element_by_xpath("//*[@id='calc_method']/option[text()='{}']".format(params['method'])).click()
+
+        if 'functional' in params.keys():
+            element = WebDriverWait(self.driver, 5).until(
+                EC.presence_of_element_located((By.ID, "calc_functional"))
+            )
+
+            self.driver.find_element_by_id("calc_functional").send_keys(params['functional'])
+
+        if 'basis_set' in params.keys():
+            self.driver.find_element_by_id("calc_basis_set").send_keys(params['basis_set'])
+
+        if 'misc' in params.keys():
+            self.driver.find_element_by_id("calc_misc").send_keys(params['misc'])
 
     def calc_launch(self):
         submit = self.driver.find_element_by_id('submit_button')
@@ -439,8 +466,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             header = calculations[0].find_element_by_class_name("message-header")
             if "has-background-success" in header.get_attribute("class") or "has-background-danger" in header.get_attribute("class"):
                     return
-            time.sleep(1)
-            ind += 1
+            time.sleep(2)
+            ind += 2
             self.driver.refresh()
 
     def latest_calc_successful(self):
@@ -1294,22 +1321,7 @@ class UserPermissionsTests(CalcusLiveServer):
         self.assertEqual(self.get_number_calc_orders(), 1)
 
 
-class CalculationTestsPI(CalcusLiveServer):
-
-    '''
-    def test_text_opt(self):
-        #Will fail
-        self.client.login(username=self.username, password=self.password)
-        params = {
-                'calc_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_text': 'Cl-iodane_2D.mol',
-                }
-
-        self.basic_launch(params, 10)
-    '''
+class XtbCalculationTestsPI(CalcusLiveServer):
 
     def setUp(self):
         super().setUp()
@@ -1371,7 +1383,7 @@ class CalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
 
-    def test_opt_freq(self):
+    def test_freq(self):
         params = {
                 'calc_name': 'test',
                 'type': 'Frequency Calculation',
@@ -1488,7 +1500,7 @@ class CalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
 
-class CalculationTestsStudent(CalcusLiveServer):
+class XtbCalculationTestsStudent(CalcusLiveServer):
     def setUp(self):
         super().setUp()
 
@@ -1555,7 +1567,7 @@ class CalculationTestsStudent(CalcusLiveServer):
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
 
-    def test_opt_freq(self):
+    def test_freq(self):
         params = {
                 'calc_name': 'test',
                 'type': 'Frequency Calculation',
@@ -1669,6 +1681,224 @@ class CalculationTestsStudent(CalcusLiveServer):
         self.calc_launch()
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+class OrcaCalculationTestsPI(CalcusLiveServer):
+
+    def setUp(self):
+        super().setUp()
+
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+
+
+    def test_opt_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'ORCA',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+    def test_opt_HF(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'ORCA',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+    def test_opt_DFT(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+    def test_opt_RIMP2(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'ORCA',
+                'theory': 'RI-MP2',
+                'basis_set': 'cc-pVDZ',
+                'misc': 'cc-pVDZ/C',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(60)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+
+    '''
+    def test_freq(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+    '''
+
+    def test_ts_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'TS Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'small_ts.xyz',
+                'software': 'ORCA',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(20)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+    def test_ts_HF(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'TS Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'small_ts.xyz',
+                'software': 'ORCA',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(200)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+    def test_ts_DFT(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'TS Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'mini_ts.xyz',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(600)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+    def test_ts_RIMP2(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'TS Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'mini_ts.xyz',
+                'software': 'ORCA',
+                'theory': 'RI-MP2',
+                'basis_set': 'cc-pVDZ',
+                'misc': 'cc-pVDZ/C',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(1000)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())

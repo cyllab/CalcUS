@@ -370,12 +370,13 @@ def submit_calculation(request):
     else:
         return error(request, "No software chosen")
 
-    if 'calc_theory_level' in request.POST.keys():
-        theory = clean(request.POST['calc_theory_level'])
-    else:
-        return error(request, "No theory level chosen")
 
     if software == 'ORCA' or software == 'Gaussian':
+        if 'calc_theory_level' in request.POST.keys():
+            theory = clean(request.POST['calc_theory_level'])
+        else:
+            return error(request, "No theory level chosen")
+
         if theory == "DFT":
             special_functional = False
             if 'pbeh3c' in request.POST.keys():

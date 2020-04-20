@@ -899,10 +899,10 @@ def orca_opt(in_file, calc):
         print("Orca failed")
         return a
 
-    with open("opt.xyz") as f:
+    with open("{}/opt.xyz".format(folder)) as f:
         lines = f.readlines()
     xyz_structure = '\n'.join([i.strip() for i in lines])
-    with open("orca_opt.out") as f:
+    with open("{}/orca_opt.out".format(folder)) as f:
         lines = f.readlines()
         ind = len(lines)-1
 
@@ -959,10 +959,10 @@ def orca_ts(in_file, calc):
         print("Orca failed")
         return a
 
-    with open("ts.xyz") as f:
+    with open("{}/ts.xyz".format(folder)) as f:
         lines = f.readlines()
     xyz_structure = '\n'.join([i.strip() for i in lines])
-    with open("orca_ts.out") as f:
+    with open("{}/orca_ts.out".format(folder)) as f:
         lines = f.readlines()
         ind = len(lines)-1
 
