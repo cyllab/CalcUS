@@ -1134,6 +1134,159 @@ def orca_freq(in_file, calc):
 
     return 0
 
+def orca_scan(in_file, calc):
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
+
+    folder = '/'.join(in_file.split('/')[:-1])
+
+    ORCA_TEMPLATE = """!OPT {} {} {}
+    %pal
+    nprocs {}
+    end
+    {}
+    {}
+    *xyz {} {}
+    {}
+    *"""
+
+    if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
+        pal = 1
+    else:
+        pal = 8
+
+    if calc.parameters.solvent == "Vacuum":
+        solvent_add = ""
+    else:
+        solvent_add = '''%cpcm
+        smd true
+        SMDsolvent "{}"
+        end'''.format(calc.parameters.solvent)
+
+    with open(in_file) as f:
+        lines = f.readlines()[2:]
+
+    orca_constraints = ""
+    has_scan = False
+    scans = []
+    freeze = []
+    for cmd in calc.constraints.split(';'):
+        if cmd.strip() == '':
+            continue
+        _cmd, ids = cmd.split('-')
+        _cmd = _cmd.split('_')
+        ids = ids.split('_')
+        ids = [int(i)-1 for i in ids]
+        type = len(ids)
+        if _cmd[0] == "Scan":
+            has_scan = True
+        else:
+            if type == 2:
+                freeze.append("{{ B {} {} C }}\n".format(*ids))
+            if type == 3:
+                freeze.append("{{ A {} {} {} C }}\n".format(*ids))
+            if type == 4:
+                freeze.append("{{ D {} {} {} {} C }}\n".format(*ids))
+    if has_scan:
+        for cmd in calc.constraints.split(';'):
+            if cmd.strip() == '':
+                continue
+            _cmd, ids = cmd.split('-')
+            ids = ids.split('_')
+            _cmd = _cmd.split('_')
+            ids_str = "{}".format(int(ids[0])-1)
+            for i in ids[1:]:
+                ids_str += " {}".format(int(i)-1)
+            if len(ids) == 2:
+                type = "B"
+            if len(ids) == 3:
+                type = "A"
+            if len(ids) == 4:
+                type = "D"
+            if _cmd[0] == "Scan":
+                scans.append("{} {} = {}, {}, {}\n".format(type, ids_str, *_cmd[1:]))
+
+    if len(scans) > 0:
+        SCAN_TEMPLATE = """%geom Scan
+        {}
+        end
+        end
+        """
+        orca_constraints += SCAN_TEMPLATE.format(''.join(scans))
+
+    if len(freeze) > 0:
+        FREEZE_TEMPLATE = """%geom Constraints
+        {}
+        end
+        end
+        """
+        orca_constraints += FREEZE_TEMPLATE.format(''.join(freeze))
+
+    with open(os.path.join(folder, 'scan.inp'), 'w') as out:
+        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, orca_constraints, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, '\n'.join([i.strip() for i in lines])))
+
+    os.chdir(folder)
+    a = system("{}/orca scan.inp".format(ORCAPATH), 'orca_scan.out')
+    if a != 0:
+        print("Orca failed")
+        return a
+
+    if has_scan:
+        energies = []
+        with open(os.path.join(folder, 'scan.relaxscanact.dat')) as f:
+            lines = f.readlines()
+            for line in lines:
+                energies.append(float(line.split()[1]))
+        with open(os.path.join(folder, 'scan.allxyz')) as f:
+            lines = f.readlines()
+            num_atoms = lines[0]
+            inds = []
+            ind = 0
+            while ind < len(lines)-1:
+                if lines[ind] == num_atoms:
+                    inds.append(ind)
+                ind += 1
+            inds.append(len(lines))
+
+            min_E = 0
+            for metaind, mol in enumerate(inds[:-1]):
+                E = energies[metaind]
+                struct = ''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]-1]])
+
+                r = Structure.objects.create(number=metaind+1, degeneracy=1)
+                prop = get_or_create(calc.parameters, r)
+                prop.energy = E
+                prop.geom = True
+                prop.save()
+                r.xyz_structure = struct
+                r.save()
+                if E < min_E:
+                    min_E = E
+
+                calc.result_ensemble.structure_set.add(r)
+    else:
+        with open(os.path.join(folder, 'scan.xyz')) as f:
+            lines = f.readlines()
+            #E = float(lines[1])
+            r = Structure.objects.create(number=1)
+            r.xyz_structure = ''.join(lines)
+
+        with open(os.path.join(folder, "orca_scan.out")) as f:
+            lines = f.readlines()
+            ind = len(lines)-1
+            while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[4])
+
+            prop = get_or_create(calc.parameters, r)
+            prop.energy = E
+            r.save()
+            prop.save()
+            calc.result_ensemble.structure_set.add(r)
+            calc.result_ensemble.save()
+
+    return 0
+
 def enso(in_file, calc):
 
     solvent = calc.parameters.solvent
@@ -1434,16 +1587,16 @@ def gen_fingerprint(structure):
 SPECIAL_FUNCTIONALS = ['HF-3c', 'PBEh-3c']
 BASICSTEP_TABLE = {
         'xtb':
-        {
-            'Geometrical Optimisation': xtb_opt,
-            'Crest': crest,
-            'Constrained Optimisation': xtb_scan,
-            'Frequency Calculation': xtb_freq,
-            'TS Optimisation': xtb_ts,
-            'UV-Vis Calculation': xtb_stda,
-            'Crest Pre NMR': crest_pre_nmr,
-            'Enso': enso,
-            'Anmr': anmr,
+            {
+                'Geometrical Optimisation': xtb_opt,
+                'Crest': crest,
+                'Constrained Optimisation': xtb_scan,
+                'Frequency Calculation': xtb_freq,
+                'TS Optimisation': xtb_ts,
+                'UV-Vis Calculation': xtb_stda,
+                'Crest Pre NMR': crest_pre_nmr,
+                'Enso': enso,
+                'Anmr': anmr,
             },
         'ORCA':
             {
@@ -1452,6 +1605,7 @@ BASICSTEP_TABLE = {
                 'TS Optimisation': orca_ts,
                 'MO Calculation': orca_mo_gen,
                 'Frequency Calculation': orca_freq,
+                'Constrained Optimisation': orca_scan,
             }
         }
 
