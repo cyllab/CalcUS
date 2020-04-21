@@ -552,6 +552,16 @@ class Calculation(models.Model):
     #    return self.__repr__()
 
     @property
+    def runtime(self):
+        if self.status == 2 or self.status == 3:
+            try:
+                return (self.date_finished - self.date)
+            except TypeError:
+                return ''
+        else:
+            return ''
+
+    @property
     def has_freq(self):
         return self.procedure.has_freq
 

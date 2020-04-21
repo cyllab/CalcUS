@@ -1779,6 +1779,19 @@ def download_project_csv(request, project_id):
     return response
 
 
+@login_required
+def calculationorder(request, pk):
+    try:
+        order = CalculationOrder.objects.get(pk=pk)
+    except CalculationOrder.DoesNotExist:
+        return HttpResponse(status=404)
+
+    profile = request.user.profile
+    if not profile_intersection(profile, order.author):
+        return HttpResponse(status=404)
+
+    return render(request, 'frontend/calculationorder.html', {'order': order})
+
 def handler404(request, *args, **argv):
     return render(request, 'error/404.html', {
             })

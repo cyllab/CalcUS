@@ -33,6 +33,8 @@ urlpatterns = [
     path('examples/', views.ExamplesView.as_view(), name='examples'),
     path('examples/<int:pk>', views.example, name='example'),
 
+    path('calculationorder/<int:pk>', views.calculationorder, name='calculationorder'),
+
     #Group management
     path('apply_pi/', views.apply_pi, name='apply_pi'),
     path('get_pi_requests/', views.get_pi_requests, name='get_pi_requests'),

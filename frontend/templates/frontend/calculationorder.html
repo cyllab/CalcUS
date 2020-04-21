@@ -1,0 +1,45 @@
+{% extends 'frontend/base.html' %}
+
+{% load static %}
+
+{% block extrahead %}
+	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+	{% endblock %}
+
+{% block content %}
+<div class="container">
+	<div class="box">
+	<center>
+				{% if order.ensemble %}
+					<h3 class="title is-h3">Calculation Order {{ order.id }} - {{ order.ensemble.name }}</h3>
+				{% else %}
+				<h3 class="title is-h3">Calculation Order {{ order.id }} - {{ order.structure.parent_ensemble.name }}</h3>
+				{% endif %}
+
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Calculation id</th>
+					<th>Status</th>
+					<th>CPU time (s)</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for calc in order.calculation_set.all %}
+				<tr>
+					<th>{{ calc.id }}</th>
+					<th>{{ calc.text_status }}</th>
+					<th>{{ calc.runtime }}</th>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</center>
+	</div>
+</div>
+<br />
+{% endblock %}
+
+

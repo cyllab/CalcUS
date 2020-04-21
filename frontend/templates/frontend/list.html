@@ -1,11 +1,6 @@
 {% if latest_frontend %}
 <div class="grid">
     {% for order in latest_frontend %}
-    	{% if order.ensemble %}
-    		<a href="/molecule/{{ order.ensemble.parent_molecule.id }}" >
-	{% else %}
-    		<a href="/molecule/{{ order.structure.parent_ensemble.parent_molecule.id }}" >
-	{% endif %}
 		<article class="grid-item message">
 			<div class="message-header {% if order.status == 1 %} has-background-warning {% elif order.status == 2 %} has-background-success {% elif order.status == 3 %} has-background-danger{% endif %}">
     				{% if order.ensemble %}
@@ -13,9 +8,16 @@
 				{% else %}
 					{{ order.id }}: {{ order.structure.parent_ensemble.name }}
 				{% endif %}
+				<p><a href="/calculationorder/{{ order.id }}"><i class="fas fa-sitemap"></i></a>
 {% if order.status == 1 %} <i class="fas fa-spinner"></i> {% elif order.status == 2 %} 
-<i class="fas fa-check"></i>{% elif order.status == 3 %} <i class="fas fa-times"></i>{% endif %}
+<i class="fas fa-check"></i>{% elif order.status == 3 %} <i class="fas fa-times"></i>{% endif %}</p>
 			</div>
+    	{% if order.ensemble %}
+    		<a href="/molecule/{{ order.ensemble.parent_molecule.id }}" >
+	{% else %}
+    		<a href="/molecule/{{ order.structure.parent_ensemble.parent_molecule.id }}" >
+	{% endif %}
+
 			<div class"message-body">
 				<center>
 					<strong>{{ order.step.name }}</strong> <br />
@@ -42,8 +44,8 @@
 					</table>
 				</center>
 			</div>
-		</article>
 	</a>
+		</article>
     {% endfor %}
 </div>
 {% else %}
