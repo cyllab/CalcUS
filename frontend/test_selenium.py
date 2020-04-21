@@ -1626,7 +1626,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.click_ensemble("Crest Result")
         self.assertEqual(self.get_number_conformers(), 0)
         self.click_calc_method(1)
-        self.assertGreaterThan(self.get_number_conformers(), 1)
+        self.assertGreater(self.get_number_conformers(), 1)
 
     def test_ts(self):
         params = {
