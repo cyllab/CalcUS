@@ -1609,7 +1609,7 @@ def log(request, pk):
 
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+    if not profile_intersection(profile, calc.order.author):
         return HttpResponse(status=403)
 
     for out in glob.glob(os.path.join(LAB_RESULTS_HOME, str(pk)) + '/*.out'):

@@ -1719,7 +1719,8 @@ def run_calc(calc_id):
     calc.save()
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
 
-    os.mkdir(os.path.join(LAB_RESULTS_HOME, str(calc.id)))
+    res_dir = os.path.join(LAB_RESULTS_HOME, str(calc.id))
+    os.mkdir(res_dir)
     workdir = os.path.join(LAB_SCR_HOME, str(calc.id))
     os.mkdir(workdir)
     in_file = os.path.join(workdir, 'in.xyz')
@@ -1734,6 +1735,9 @@ def run_calc(calc_id):
     else:
         calc.status = 2
         calc.save()
+    for f in glob.glob("{}/*.out".format(workdir)):
+        fname = f.split('/')[-1]
+        copyfile(f, "{}/{}".format(res_dir, fname))
     return ret
 
 @app.task
@@ -1899,5 +1903,4 @@ def del_ensemble(ensemble_id):
 @app.task(name='celery.ping')
 def ping():
     return 'pong'
-
 
