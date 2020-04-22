@@ -56,9 +56,6 @@ connections = {}
 locks = {}
 remote_dirs = {}
 
-
-
-
 def direct_command(command, conn, lock):
     lock.acquire()
     sess = conn[2]
@@ -208,12 +205,6 @@ def system(command, log_file="", force_local=False):
 
 def generate_xyz_structure(drawing, structure):
 
-    if drawing:
-        SCALE = 1
-        #SCALE = 20
-    else:
-        SCALE = 1
-
     if structure.xyz_structure == "":
         if structure.mol_structure != '':
             t = time()
@@ -234,7 +225,7 @@ def generate_xyz_structure(drawing, structure):
                     try:
                         a = int(sline[3])
                     except ValueError:
-                        to_print.append("{} {} {} {}\n".format(sline[3], float(sline[0])*SCALE, float(sline[1])*SCALE, float(sline[2])*SCALE))
+                        to_print.append("{} {} {} {}\n".format(sline[3], float(sline[0]), float(sline[1]), float(sline[2])))
                     else:
                         break
                 num = len(to_print)
@@ -262,67 +253,6 @@ def generate_xyz_structure(drawing, structure):
             return -1
     else:
         return 0
-
-def handle_input_file(drawing, calc_obj):
-    #if os.path.isfile("{}/initial_2D.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)))):
-    #    a = system("obabel {}/initial_2D.mol -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
-    #    return system("obabel {}/initial_2D.mol -O {}/initial.xyz -h --gen3D".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
-
-    if drawing:
-        SCALE = 1
-        #SCALE = 20
-    else:
-        SCALE = 1
-
-    if len(calc_obj.ensemble.structure_set.all()) == 1:#TODO: expend to multiple structures?
-        in_struct = calc_obj.ensemble.structure_set.all()[0]
-        if in_struct.xyz_structure == "":
-            if in_struct.mol_structure != '':
-                with open("{}/initial.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))), 'w') as out:
-                    out.write(in_struct.mol_structure)
-                if drawing:
-                    a = system("obabel {}/initial.mol -O {}/initial_H.mol -h --gen3D".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
-                    a = system("mv {}/initial_H.mol {}/initial.mol ".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
-
-                a = system("obabel {}/initial.mol -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
-
-                with open(os.path.join("{}/initial.mol".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))))) as f:
-                    lines = f.readlines()[4:]
-
-                to_print = []
-                for line in lines:
-                    sline = line.split()
-                    try:
-                        a = int(sline[3])
-                    except ValueError:
-                        to_print.append("{} {} {} {}\n".format(sline[3], float(sline[0])*SCALE, float(sline[1])*SCALE, float(sline[2])*SCALE))
-                    else:
-                        break
-                num = len(to_print)
-                in_struct.xyz_structure = "{}\n".format(num)
-                in_struct.xyz_structure += "CalcUS\n"
-                for line in to_print:
-                    in_struct.xyz_structure += line
-                in_struct.save()
-                return 0
-            elif in_struct.sdf_structure != '':
-                with open("{}/initial.sdf".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id))), 'w') as out:
-                    out.write(in_struct.sdf_structure)
-                a = system("obabel {}/initial.sdf -O {}/icon.svg -d --title '' -xb none".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
-                a = system("obabel {}/initial.sdf -O {}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), os.path.join(LAB_SCR_HOME, str(calc_obj.id))), force_local=True)
-
-                with open(os.path.join("{}/initial.xyz".format(os.path.join(LAB_SCR_HOME, str(calc.id))))) as f:
-                    lines = f.readlines()
-                in_struct.xyz_structure = '\n'.join([i.strip() for i in lines])
-                in_struct.save()
-                return 0
-            else:
-                print("Unimplemented")
-                return -1
-        else:
-            return 0
-
-
 
 def xtb_opt(in_file, calc):
     solvent = calc.parameters.solvent
@@ -520,7 +450,6 @@ def xtb_scan(in_file, calc):
     else:
         with open(os.path.join(folder, 'xtbopt.xyz')) as f:
             lines = f.readlines()
-            #E = float(lines[1])
             r = Structure.objects.create(number=1)
             r.xyz_structure = ''.join(lines)
 
@@ -622,30 +551,6 @@ def xtb_freq(in_file, calc):
         if line.strip() != '':
             a, x, y, z = line.strip().split()
             struct.append([a, float(x), float(y), float(z)])
-
-    '''
-    with open(os.path.join(folder, "hessian")) as f:
-        lines = f.readlines()[1:]
-        for line in lines:
-            hess += [float(i) for i in line.strip().split()]
-
-        num_freqs = len(hess)/(3*num_atoms)
-        if not num_freqs.is_integer():
-            print("Incorrect number of frequencies!")
-            exit(0)
-
-        num_freqs = int(num_freqs)
-
-    for ind in range(num_freqs):
-        _hess = hess[3*num_atoms*ind:3*num_atoms*(ind+1)]
-        _hess = np.array(_hess)/max(_hess)
-        with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
-            out.write("{}\n".format(num_atoms))
-            assert len(struct) == num_atoms
-            out.write("CalcUS\n")
-            for ind2, (a, x, y, z) in enumerate(struct):
-                out.write("{} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}\n".format(a, x, y, z, *_hess[3*ind2:3*ind2+3]))
-    '''
 
     with open(os.path.join(folder, "g98.out")) as f:
         lines = f.readlines()
@@ -1033,8 +938,6 @@ def orca_freq(in_file, calc):
 
     E = float(lines[ind].split()[4])
 
-    #vib_file = os.path.join(folder, "vibspectrum")
-
     while lines[ind].find("IR SPECTRUM") == -1 and ind > 0:
         ind += 1
 
@@ -1267,7 +1170,6 @@ def orca_scan(in_file, calc):
     else:
         with open(os.path.join(folder, 'scan.xyz')) as f:
             lines = f.readlines()
-            #E = float(lines[1])
             r = Structure.objects.create(number=1)
             r.xyz_structure = ''.join(lines)
 
@@ -1612,17 +1514,6 @@ BASICSTEP_TABLE = {
 time_dict = {}
 
 def filter(order, input_structures):
-    '''
-    if order.step.name == "NMR Prediction":
-        structures = []
-        for s in input_structures:
-            #if s.parent_ensemble.weight(s, order.parameters) > 0.05:
-            if s.properties.all()[0].boltzmann_weight > 0.02: #quick fix
-                structures.append(s)
-        return structures
-    else:
-        return input_structures
-    '''
     if order.filter == None:
         return input_structures
 
@@ -1742,109 +1633,6 @@ def run_calc(calc_id):
         fname = f.split('/')[-1]
         copyfile(f, "{}/{}".format(res_dir, fname))
     return ret
-
-@app.task
-def run_procedure(drawing, calc_id):
-
-    calc_obj = Calculation.objects.get(pk=calc_id)
-    calc_obj.status = 1
-    calc_obj.save()
-
-    if len(calc_obj.ensemble.structure_set.all()) == 1:
-        in_struct = calc_obj.ensemble.structure_set.all()[0]
-    else:
-        print("Not implemented")
-        return -1
-
-
-    a = system("mkdir -p {}".format(os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
-    if a != 0:
-        calc_obj.status = 3
-        calc_obj.error_message = "Failed to create the results directory"
-        calc_obj.save()
-        return
-
-    if in_struct.xyz_structure == '':
-        a = handle_input_file(drawing, calc_obj)
-
-        id = str(calc_obj.id)
-        if a != 0:
-            calc_obj.status = 3
-            calc_obj.error_message = "Failed to convert the input structure"
-            calc_obj.save()
-            return
-
-    if REMOTE:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = "/scratch/{}/calcus/{}".format(conn[0].cluster_username, calc_obj.id)
-        remote_dirs[pid] = remote_dir
-
-        direct_command("mkdir -p {}".format(remote_dir), conn, lock)
-        for f in glob.glob(os.path.join(LAB_SCR_HOME, str(calc_obj.id)) + '/*'):
-            fname = f.split('/')[-1]
-            sftp_put(f, os.path.join(remote_dir, fname), conn, lock)
-
-    procedure = calc_obj.procedure
-    steps_to_do = list(procedure.initial_steps.all())
-    calc_obj.num_steps = len(procedure.step_set.all())+1
-
-    if not isinstance(steps_to_do, list):
-        steps_to_do = [steps_to_do]
-
-    in_ensemble = calc_obj.ensemble
-    ind = 1
-    step_ind = 1
-    while len(steps_to_do) > 0:
-        step = steps_to_do.pop()
-        calc_obj.current_status = step.step_model.desc
-        calc_obj.current_step = ind
-        calc_obj.save()
-        function = BASICSTEP_TABLE[step.step_model.name]
-
-        if not step.same_dir:
-            step_dir = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(step_ind))
-            a = system("mkdir -p {}".format(step_dir), force_local=True)
-
-            in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(step_ind), "in.xyz")
-            with open(in_file, 'w') as out:
-                out.write(in_ensemble.structure_set.all()[0].xyz_structure)
-        else:
-            in_file = os.path.join(LAB_SCR_HOME, str(calc_obj.id), "step{}".format(step_ind), "in.xyz")
-            step_ind -= 1
-
-
-        os.chdir(step_dir)
-        a, e = function(in_file, calc_obj)
-
-        ind += 1
-        step_ind += 1
-
-        if a != 0:
-            calc_obj.status = 3
-            calc_obj.error_message = step.step_model.error_message
-            calc_obj.save()
-            return a
-        else:
-            calc_obj.result_ensemble = e
-            calc_obj.save()
-
-        next_steps = step.step_set.all()
-        if len(next_steps) > 0:
-            for ss in next_steps:
-                steps_to_do.append(ss)
-
-    calc_obj.current_step = calc_obj.num_steps
-    calc_obj.status = 2
-    calc_obj.save()
-
-    if REMOTE:
-        files = direct_command("ls {}".format(remote_dir), conn, lock)
-        for f in files:
-            if f.strip() != '':
-                sftp_get(os.path.join(remote_dir, f), os.path.join(LAB_SCR_HOME, str(calc_obj.id), f), conn, lock)
-    return 0
 
 @app.task
 def del_project(proj_id):
