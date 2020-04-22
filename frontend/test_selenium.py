@@ -156,7 +156,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             self.driver.find_element_by_xpath("/html/body/div[1]/div/div[2]/form/div[2]/div[3]/div/div/div/select/option[text()='{}']".format(params['charge'])).click()
 
         if 'software' in params.keys():
-            self.driver.find_element_by_xpath("//*[@id='calc_software']/option[text()='{}']".format(params['software'])).click()
+            select = self.driver.find_element_by_id("calc_software")
+            self.driver.execute_script("showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",select)
+            time.sleep(0.1)
+            select.find_element_by_xpath("option[text()='{}']".format(params['software'])).click()
+
+            #self.driver.find_element_by_xpath("//*[@id='calc_software']/option[text()='{}']".format(params['software'])).click()
 
         if 'type' in params.keys():
             self.driver.find_element_by_xpath("//*[@id='calc_type']/option[text()='{}']".format(params['type'])).click()
@@ -169,6 +174,46 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         if 'in_file' in params.keys():
             upload_input.send_keys("{}/tests/{}".format(dir_path, params['in_file']))
+
+        if 'constraints' in params.keys():
+            assert params['type'] == 'Constrained Optimisation'
+            #[['Scan', 'Distance', [1, 3], [3.5, 1.5, 20]]].
+            def handle_constraint(constraint, ind):
+                c_mode = constraint[0]
+                select = self.driver.find_element_by_id("constraint_mode_{}".format(ind))
+                self.driver.execute_script("showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",select)
+                time.sleep(0.1)
+                select.find_element_by_xpath("option[text()='{}']".format(c_mode)).click()
+
+                c_type = constraint[1]
+                select = self.driver.find_element_by_id("constraint_type_{}".format(ind))
+                self.driver.execute_script("showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",select)
+                time.sleep(0.1)
+                select.find_element_by_xpath("option[text()='{}']".format(c_type)).click()
+
+                atoms = constraint[2]
+                self.driver.find_element_by_id("calc_constraint_{}_1".format(ind)).send_keys(str(atoms[0]))
+                self.driver.find_element_by_id("calc_constraint_{}_2".format(ind)).send_keys(str(atoms[1]))
+                if c_type == 'Angle':
+                    self.driver.find_element_by_id("calc_constraint_{}_3".format(ind)).send_keys(str(atoms[2]))
+                elif c_type == 'Dihedral':
+                    self.driver.find_element_by_id("calc_constraint_{}_3".format(ind)).send_keys(str(atoms[2]))
+                    self.driver.find_element_by_id("calc_constraint_{}_4".format(ind)).send_keys(str(atoms[3]))
+                if c_mode == "Scan":
+                    scan = constraint[3]
+                    self.driver.find_element_by_id("calc_scan_{}_1".format(ind)).send_keys(str(scan[0]))
+                    self.driver.find_element_by_id("calc_scan_{}_2".format(ind)).send_keys(str(scan[1]))
+                    self.driver.find_element_by_id("calc_scan_{}_3".format(ind)).send_keys(str(scan[2]))
+
+
+            constr = params['constraints']
+            handle_constraint(constr[0], 1)
+            if len(constr) > 1:
+                ind = 2
+                for c in params['constraints'][1:]:
+                    #click add
+                    handle_constraint(c)
+                    ind += 1
 
 
         if 'theory' in params.keys():
@@ -1687,6 +1732,156 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_scan_distance(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Distance', [1, 4], [3.5, 1.5, 20]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 20)
+
+    def test_scan_angle(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 130, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 10)
+
+    def test_scan_dihedral(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Dihedral', [1, 2, 3, 4], [0, 10, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 10)
+
+    def test_freeze_distance(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Freeze', 'Distance', [1, 4]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_freeze_angle(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Freeze', 'Angle', [1, 2, 3]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_freeze_dihedral(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Freeze', 'Dihedral', [1, 2, 3, 4]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
     def test_ensemble_second_step(self):
         params = {
                 'calc_name': 'test',
@@ -2176,4 +2371,172 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 1)
         self.assertTrue(self.is_loaded_mo())
+
+    def test_scan_distance_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Distance', [1, 4], [3.5, 1.5, 20]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'ORCA',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 20)
+
+    def test_scan_angle_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 130, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'ORCA',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 10)
+
+    def test_scan_dihedral_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Dihedral', [1, 2, 3, 4], [0, 10, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'ORCA',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 10)
+
+    def test_freeze_distance_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Freeze', 'Distance', [1, 4]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'ORCA',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_freeze_angle_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Freeze', 'Angle', [1, 2, 3]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'ORCA',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_freeze_dihedral_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Freeze', 'Dihedral', [1, 2, 3, 4]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'ORCA',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
 

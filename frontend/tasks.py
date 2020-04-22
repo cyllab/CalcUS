@@ -74,8 +74,6 @@ def direct_command(command, conn, lock):
         print("Command timed out")
         lock.release()
         return
-
-
     try:
         chan.wait_eof()
         chan.close()
@@ -1171,7 +1169,7 @@ def orca_scan(in_file, calc):
         with open(os.path.join(folder, 'scan.xyz')) as f:
             lines = f.readlines()
             r = Structure.objects.create(number=1)
-            r.xyz_structure = ''.join(lines)
+            r.xyz_structure = ''.join([i.strip() + '\n' for i in lines])
 
         with open(os.path.join(folder, "orca_scan.out")) as f:
             lines = f.readlines()
