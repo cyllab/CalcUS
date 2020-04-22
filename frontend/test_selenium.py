@@ -1267,6 +1267,7 @@ class InterfaceTests(CalcusLiveServer):
         self.lget("/projects/")
         self.group_click_member("Student")
         self.click_project("Test project")
+        self.driver.implicitly_wait(5)
         self.click_molecule("Test molecule")
 
         self.assertEqual(get_ensemble(), 0)
@@ -1626,7 +1627,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.click_ensemble("Crest Result")
         self.assertEqual(self.get_number_conformers(), 0)
         self.click_calc_method(1)
-        self.assertGreater(self.get_number_conformers(), 1)
+        self.assertGreater(self.get_number_conformers(), 0)
 
     def test_ts(self):
         params = {
@@ -1864,8 +1865,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 1)
 
-    '''
-    def test_freq(self):
+    def test_freq_SE(self):
         params = {
                 'calc_name': 'test',
                 'type': 'Frequency Calculation',
@@ -1873,16 +1873,108 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
                 'charge': '+1',
+                'software': 'ORCA',
+                'theory': 'Semi-empirical',
+                'method': 'PM3',
                 }
 
         self.lget("/launch/")
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(10)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_freq_HF(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                'software': 'ORCA',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    '''
+    def test_freq_DFT(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'PW92',
+                'basis_set': 'Def2-SVP',
+                'misc': 'NUMFREQ',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_freq_RIMP2(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'ORCA',
+                'theory': 'RI-MP2',
+                'basis_set': 'cc-pVDZ',
+                'misc': 'cc-pVDZ/C NUMFREQ',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(60)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
     '''
 
     def test_ts_SE(self):
