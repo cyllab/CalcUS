@@ -1727,8 +1727,11 @@ def run_calc(calc_id):
 
     with open(in_file, 'w') as out:
         out.write(calc.structure.xyz_structure)
-
+    ti = time()
     ret = f(in_file, calc)
+    tf = time()
+    calc.execution_time = int((tf-ti)*PAL)
+
     if ret != 0:
         calc.status = 3
         calc.save()
