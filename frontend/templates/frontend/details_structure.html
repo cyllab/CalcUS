@@ -2,7 +2,7 @@
 
 {% if property.freq != 0 %}
 	<span class="tag is-danger is-large">Frequencies</span>
-	<div class="columns box">
+	<div class="columns box" id="frequency_structure_details">
 		<div class="column">
 
 
@@ -99,7 +99,7 @@
 
 {% if property.uvvis != 0 %}
 <span class="tag is-danger is-large">UV-Vis</span>
-<div class="columns box">
+<div class="columns box" id="uvvis_structure_details">
 	<div class="column">
 <center>
 	<div id="uvvis_spectrum" style="width:80%; height:400px; margin-bottom: 30px;"></div>
@@ -123,7 +123,7 @@
 
 {% if property.nmr != 0 %}
 <span class="tag is-danger is-large">NMR</span>
-<div class="columns box">
+<div class="columns box" id="enso_structure_details">
 	<div class="column">
 <center>
 	<div id="nmr_spectrum" style="width:80%; height:400px; margin-bottom: 30px;"></div>
@@ -159,7 +159,7 @@
 
 {% if property.mo != 0 %}
 <span class="tag is-danger is-large">Molecular Orbitals</span>
-<div class="columns box">
+<div class="columns box" id="mo_structure_details">
 	<div class="column">
 	</div>
 	<div class="column is-tight">
@@ -243,7 +243,7 @@
 
 {% if property.simple_nmr != "" %}
 <span class="tag is-danger is-large">NMR</span>
-<div class="columns box">
+<div class="columns box" id="nmr_structure_details">
 	<div class="column">
 	</div>
 	<div class="column">

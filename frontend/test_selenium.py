@@ -607,6 +607,41 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.lget("/profile/")
         self.add_user_to_group("Student")
 
+    def is_loaded_frequencies(self):
+        assert self.is_on_page_ensemble()
+
+        try:
+            freq_div = self.driver.find_element_by_id("frequency_structure_details")
+        except selenium.common.exceptions.NoSuchElementException:
+            return False
+        table = self.driver.find_element_by_css_selector(".column:nth-child(2) > table")
+
+        try:
+            table2 = self.driver.find_element_by_id("vib_table")
+        except selenium.common.exceptions.NoSuchElementException:
+            return False
+
+        rows = table.find_elements_by_css_selector("tr")
+
+        if len(rows) > 0:
+            return True
+        return False
+
+    def is_loaded_mo(self):
+        assert self.is_on_page_ensemble()
+
+        try:
+            mo_div = self.driver.find_element_by_id("mo_structure_details")
+        except selenium.common.exceptions.NoSuchElementException:
+            return False
+
+        try:
+            mo_viewer = mo_div.find_element_by_id("mo_viewer_div")
+            mo_container = mo_div.find_element_by_id("mo_container")
+        except selenium.common.exceptions.NoSuchElementException:
+            return False
+
+        return True
 
 class InterfaceTests(CalcusLiveServer):
     def test_default_login_page(self):
@@ -1891,6 +1926,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.assertEqual(self.get_number_conformers(), 0)
         self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 1)
+        self.assertTrue(self.is_loaded_frequencies())
 
     def test_freq_HF(self):
         params = {
@@ -1918,6 +1954,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.assertEqual(self.get_number_conformers(), 0)
         self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 1)
+        self.assertTrue(self.is_loaded_frequencies())
 
     '''
     def test_freq_DFT(self):
@@ -2082,4 +2119,61 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.assertEqual(self.get_number_conformers(), 0)
         self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_mo_HF(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'MO Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                'software': 'ORCA',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+        self.assertTrue(self.is_loaded_mo())
+
+    def test_mo_DFT(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'MO Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+        self.assertTrue(self.is_loaded_mo())
 

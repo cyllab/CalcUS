@@ -1137,7 +1137,7 @@ def enso_nmr(request, pk):
     if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
-    if not calc.has_nmr: 
+    if not calc.has_nmr:
         return HttpResponse(status=403)
     spectrum_file = os.path.join(LAB_RESULTS_HOME, id, "nmr.csv")
 
@@ -1746,7 +1746,6 @@ def download_project_csv(request, project_id):
                         csv += ",,{},{},{},{},{}\n".format(s.number, prop.energy*HARTREE_FVAL, rel_energies[s.number-1], weights[s.number-1], prop.free_energy*HARTREE_FVAL)
 
                 w_e = e.weighted_energy(params)
-                print(w_e)
                 if w_e != '' and w_e != '-' and w_e != 0:
                     w_e *= HARTREE_FVAL
                 w_f_e = e.weighted_free_energy(params)

@@ -303,7 +303,7 @@ class Ensemble(models.Model):
             if e == '':
                 weights.append('')
                 continue
-
+            assert degen != 0
             w = degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
             weights.append(w)
         return weights

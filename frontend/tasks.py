@@ -1730,7 +1730,7 @@ def run_calc(calc_id):
     ti = time()
     ret = f(in_file, calc)
     tf = time()
-    calc.execution_time = int((tf-ti)*PAL)
+    calc.execution_time = int((tf-ti)*int(PAL))
 
     if ret != 0:
         calc.status = 3
