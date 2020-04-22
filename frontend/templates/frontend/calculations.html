@@ -139,9 +139,9 @@
 			</div>
 			<div class="select" >
 				<select name="calc_type" id="calc_type" onchange="refresh_list('new');">
-					<option name="all">All procedures</option>
-					{% for proc in procedures %}
-					<option name="{{ proc.name }}">{{ proc.name }}</option>
+					<option name="all">All steps</option>
+					{% for s in steps %}
+					<option name="{{ s.name }}">{{ s.name }}</option>
 					{% endfor %}
 
 				</select>

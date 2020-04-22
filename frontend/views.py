@@ -79,10 +79,14 @@ class IndexView(generic.ListView):
             hits = target_profile.calculationorder_set.all()
             if proj != "All projects":
                 hits = hits.filter(project__name=proj)
-            #if type != "All procedures":
-            #    hits = hits.filter(procedure__name=type)
-            #if status != "All statuses":
-            #    hits = hits.filter(status=Calculation.CALC_STATUSES[status])
+            if type != "All steps":
+                hits = hits.filter(step__name=type)
+            if status != "All statuses":
+                new_hits = []
+                for hit in hits:
+                    if hit.status == Calculation.CALC_STATUSES[status]:
+                        new_hits.append(hit)
+                hits = new_hits
             #if unseen == "true":
             #    hits = hits.filter(unseen=True)
             return sorted(hits, key=lambda d: d.date, reverse=True)
@@ -94,6 +98,7 @@ class IndexView(generic.ListView):
 def calculations(request):
     return render(request, 'frontend/calculations.html', {
             'profile': request.user.profile,
+            'steps': BasicStep.objects.all(),
         })
 
 @login_required
@@ -139,9 +144,6 @@ def get_projects(request):
             return HttpResponse(status=404)
     else:
         return HttpResponse(status=404)
-
-def index(request, page=1):
-    return render(request, 'frontend/index.html', {"page": page, "procedures": Procedure.objects.all()})
 
 @login_required
 def get_theory_details(request):
