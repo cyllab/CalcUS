@@ -19,7 +19,7 @@ from shutil import copyfile, rmtree
 
 from celery.contrib.testing.worker import start_worker
 
-from labsandbox.celery import app
+from calcus.celery import app
 
 from .models import *
 from django.core.management import call_command

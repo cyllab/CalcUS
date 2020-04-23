@@ -1,6 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 
-from labsandbox.celery import app
+from calcus.celery import app
 
 from celery.signals import task_prerun, task_postrun
 from .models import Calculation, Structure
@@ -30,7 +30,7 @@ from ssh2.sftp import LIBSSH2_FXF_CREAT, LIBSSH2_FXF_WRITE, \
     LIBSSH2_SFTP_S_IROTH
 
 try:
-    is_test = os.environ['LAB_TEST']
+    is_test = os.environ['CALCUS_TEST']
 except:
     is_test = False
 import periodictable
@@ -42,11 +42,11 @@ for el in periodictable.elements:
     ATOMIC_NUMBER[el.symbol] = el.number
 
 if is_test:
-    LAB_SCR_HOME = os.environ['LAB_TEST_SCR_HOME']
-    LAB_RESULTS_HOME = os.environ['LAB_TEST_RESULTS_HOME']
+    CALCUS_SCR_HOME = os.environ['CALCUS_TEST_SCR_HOME']
+    CALCUS_RESULTS_HOME = os.environ['CALCUS_TEST_RESULTS_HOME']
 else:
-    LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
-    LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
+    CALCUS_SCR_HOME = os.environ['CALCUS_SCR_HOME']
+    CALCUS_RESULTS_HOME = os.environ['CALCUS_RESULTS_HOME']
 
 PAL = os.environ['OMP_NUM_THREADS'][0]
 ORCAPATH = os.environ['ORCAPATH']
@@ -527,7 +527,7 @@ def xtb_freq(in_file, calc):
         if len(vibs) == len(intensities):
             x = np.arange(500, 4000, 1)#Wave number in cm^-1
             spectrum = plot_vibs(x, zip(vibs, intensities))
-            with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "IR.csv"), 'w') as out:
+            with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "IR.csv"), 'w') as out:
                 out.write("Wavenumber,Intensity\n")
                 intensities = 1000*np.array(intensities)/max(intensities)
                 for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
@@ -580,7 +580,7 @@ def xtb_freq(in_file, calc):
             ind += 1
 
         for ind in range(len(vibs)):
-            with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
+            with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
                 out.write("{}\n".format(num_atoms))
                 assert len(struct) == num_atoms
                 out.write("CalcUS\n")
@@ -957,13 +957,13 @@ def orca_freq(in_file, calc):
 
         ind += 1
 
-    with open("{}/orcaspectrum".format(os.path.join(LAB_RESULTS_HOME, str(calc.id))), 'w') as out:
+    with open("{}/orcaspectrum".format(os.path.join(CALCUS_RESULTS_HOME, str(calc.id))), 'w') as out:
         for vib in vibs:
             out.write("{}\n".format(vib))
 
     x = np.arange(500, 4000, 1)#Wave number in cm^-1
     spectrum = plot_vibs(x, zip(vibs, intensities))
-    with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "IR.csv"), 'w') as out:
+    with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "IR.csv"), 'w') as out:
         out.write("Wavenumber,Intensity\n")
         intensities = 1000*np.array(intensities)/max(intensities)
         for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
@@ -1026,7 +1026,7 @@ def orca_freq(in_file, calc):
                 vibs += [v]
 
     for ind in range(len(vibs)):
-        with open(os.path.join(LAB_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
+        with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
             out.write("{}\n".format(num_atoms))
             assert len(struct) == num_atoms
             out.write("CalcUS\n")
@@ -1216,7 +1216,7 @@ def anmr(in_file, calc):
 
     with open("{}/anmr.dat".format(folder)) as f:
         lines = f.readlines()
-        with open("{}/nmr.csv".format(os.path.join(LAB_RESULTS_HOME, str(calc.id))), 'w') as out:
+        with open("{}/nmr.csv".format(os.path.join(CALCUS_RESULTS_HOME, str(calc.id))), 'w') as out:
                 out.write("Chemical shift (ppm),Intensity\n")
                 for ind, line in enumerate(lines):
                     if ind % 15 == 0:
@@ -1245,14 +1245,14 @@ def save_to_results(f, calc_obj, multiple=False, out_name=""):
         name, ext = s
         if ext == 'xyz':
             if multiple:
-                a = system("babel -ixyz {}/{} -oxyz {}/conf.xyz -m".format(os.path.join(LAB_SCR_HOME, str(calc_obj.id)), f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id))), force_local=True)
+                a = system("babel -ixyz {}/{} -oxyz {}/conf.xyz -m".format(os.path.join(CALCUS_SCR_HOME, str(calc_obj.id)), f, os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id))), force_local=True)
             else:
-                copyfile(os.path.join(LAB_SCR_HOME, str(calc_obj.id), fname), os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), out_name))
+                copyfile(os.path.join(CALCUS_SCR_HOME, str(calc_obj.id), fname), os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id), out_name))
         else:
-            copyfile(f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), out_name))
+            copyfile(f, os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id), out_name))
     elif len(s) == 1:
         name = s
-        copyfile(f, os.path.join(LAB_RESULTS_HOME, str(calc_obj.id), out_name))
+        copyfile(f, os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id), out_name))
     else:
         print("Odd number of periods!")
         return -1
@@ -1329,7 +1329,7 @@ def xtb_stda(in_file, calc):
     yy = np.array(yy)/max(yy)
 
 
-    with open("{}/uvvis.csv".format(os.path.join(LAB_RESULTS_HOME, str(calc.id))), 'w') as out:
+    with open("{}/uvvis.csv".format(os.path.join(CALCUS_RESULTS_HOME, str(calc.id))), 'w') as out:
         out.write("Wavelength (nm), Absorbance\n")
         for ind, x in enumerate(f_x):
             out.write("{},{:.8f}\n".format(x, yy[ind]))
@@ -1455,7 +1455,6 @@ def write_mol(xyz):
     return content
 
 def gen_fingerprint(structure):
-
     if structure.xyz_structure == '':
         print("No xyz structure!")
         return -1
@@ -1608,9 +1607,9 @@ def run_calc(calc_id):
     calc.save()
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
 
-    res_dir = os.path.join(LAB_RESULTS_HOME, str(calc.id))
+    res_dir = os.path.join(CALCUS_RESULTS_HOME, str(calc.id))
     os.mkdir(res_dir)
-    workdir = os.path.join(LAB_SCR_HOME, str(calc.id))
+    workdir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     os.mkdir(workdir)
     in_file = os.path.join(workdir, 'in.xyz')
 
@@ -1640,11 +1639,11 @@ def del_project(proj_id):
             for s in e.structure_set.all():
                 for c in s.calculation_set.all():
                     try:
-                        rmtree(os.path.join(LAB_SCR_HOME, str(c.id)))
+                        rmtree(os.path.join(CALCUS_SCR_HOME, str(c.id)))
                     except OSError:
                         pass
                     try:
-                        rmtree(os.path.join(LAB_RESULTS_HOME, str(c.id)))
+                        rmtree(os.path.join(CALCUS_RESULTS_HOME, str(c.id)))
                     except OSError:
                         pass
                     c.delete()
@@ -1660,11 +1659,11 @@ def del_molecule(mol_id):
         for s in e.structure_set.all():
             for c in s.calculation_set.all():
                 try:
-                    rmtree(os.path.join(LAB_SCR_HOME, str(c.id)))
+                    rmtree(os.path.join(CALCUS_SCR_HOME, str(c.id)))
                 except OSError:
                     pass
                 try:
-                    rmtree(os.path.join(LAB_RESULTS_HOME, str(c.id)))
+                    rmtree(os.path.join(CALCUS_RESULTS_HOME, str(c.id)))
                 except OSError:
                     pass
                 c.delete()
@@ -1678,11 +1677,11 @@ def del_ensemble(ensemble_id):
     for s in e.structure_set.all():
         for c in s.calculation_set.all():
             try:
-                rmtree(os.path.join(LAB_SCR_HOME, str(c.id)))
+                rmtree(os.path.join(CALCUS_SCR_HOME, str(c.id)))
             except OSError:
                 pass
             try:
-                rmtree(os.path.join(LAB_RESULTS_HOME, str(c.id)))
+                rmtree(os.path.join(CALCUS_RESULTS_HOME, str(c.id)))
             except OSError:
                 pass
             c.delete()

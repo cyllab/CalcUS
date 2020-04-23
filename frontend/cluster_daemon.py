@@ -31,7 +31,7 @@ CONNECTION_CODE = {
         }
 
 sys.path.append("/home/raphael/LabSandbox")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "labsandbox.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calcus.settings")
 django.setup()
 
 from frontend.models import *

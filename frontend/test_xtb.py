@@ -16,7 +16,7 @@ from .tasks import dispatcher, run_calc
 from django.core.management import call_command
 
 from celery.contrib.testing.worker import start_worker
-from labsandbox.celery import app
+from calcus.celery import app
 
 tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
 SCR_DIR = os.path.join(tests_dir, "scr")

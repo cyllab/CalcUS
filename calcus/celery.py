@@ -4,14 +4,14 @@ import os
 
 from celery import Celery
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'labsandbox.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'calcus.settings')
 
 try:
-    is_test = os.environ['LAB_TEST']
+    is_test = os.environ['CALCUS_TEST']
 except:
-    app = Celery('labsandbox')
+    app = Celery('calcus')
 else:
-    app = Celery('labsandbox')
+    app = Celery('calcus')
 
 app.config_from_object('django.conf:settings', namespace='CELERY')
 

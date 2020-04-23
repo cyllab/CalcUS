@@ -33,19 +33,19 @@ from shutil import copyfile
 
 
 try:
-    is_test = os.environ['LAB_TEST']
+    is_test = os.environ['CALCUS_TEST']
 except:
     is_test = False
 
 if is_test:
-    LAB_SCR_HOME = os.environ['LAB_TEST_SCR_HOME']
-    LAB_RESULTS_HOME = os.environ['LAB_TEST_RESULTS_HOME']
+    CALCUS_SCR_HOME = os.environ['CALCUS_TEST_SCR_HOME']
+    CALCUS_RESULTS_HOME = os.environ['CALCUS_TEST_RESULTS_HOME']
 else:
-    LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
-    LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
+    CALCUS_SCR_HOME = os.environ['CALCUS_SCR_HOME']
+    CALCUS_RESULTS_HOME = os.environ['CALCUS_RESULTS_HOME']
 
-LAB_KEY_HOME = os.environ['LAB_KEY_HOME']
-LAB_CLUSTER_HOME = os.environ['LAB_CLUSTER_HOME']
+CALCUS_KEY_HOME = os.environ['CALCUS_KEY_HOME']
+CALCUS_CLUSTER_HOME = os.environ['CALCUS_CLUSTER_HOME']
 
 KEY_SIZE = 32
 
@@ -645,7 +645,7 @@ def submit_calculation(request):
         dispatcher.delay(drawing, obj.id)
     else:
         cmd = ClusterCommand.objects.create(issuer=profile)
-        with open(os.path.join(LAB_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
+        with open(os.path.join(CALCUS_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
             out.write("launch\n")
             out.write("{}\n".format(t))
             out.write("{}\n".format(access.id))
@@ -800,10 +800,10 @@ def add_clusteraccess(request):
         public_key = key.public_key().public_bytes(serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH)
 
         pem = key.private_bytes(encoding=serialization.Encoding.PEM, format=serialization.PrivateFormat.TraditionalOpenSSL, encryption_algorithm=serialization.NoEncryption())
-        with open(os.path.join(LAB_KEY_HOME, key_private_name), 'wb') as out:
+        with open(os.path.join(CALCUS_KEY_HOME, key_private_name), 'wb') as out:
             out.write(pem)
 
-        with open(os.path.join(LAB_KEY_HOME, key_public_name), 'wb') as out:
+        with open(os.path.join(CALCUS_KEY_HOME, key_public_name), 'wb') as out:
             out.write(public_key)
             out.write(b' %b@calcUS' % bytes(owner.username, 'utf-8'))
 
@@ -826,7 +826,7 @@ def test_access(request):
     cmd.save()
     profile.save()
 
-    with open(os.path.join(LAB_CLUSTER_HOME, "todo", str(cmd.id)), 'w') as out:
+    with open(os.path.join(CALCUS_CLUSTER_HOME, "todo", str(cmd.id)), 'w') as out:
         out.write("access_test\n")
         out.write("{}\n".format(pk))
 
@@ -842,7 +842,7 @@ def get_command_status(request):
     if cmd not in profile.clustercommand_set.all():
         return HttpResponse(status=403)
 
-    expected_file = os.path.join(LAB_CLUSTER_HOME, "done", str(cmd.id))
+    expected_file = os.path.join(CALCUS_CLUSTER_HOME, "done", str(cmd.id))
     if not os.path.isfile(expected_file):
         return HttpResponse("Pending")
     else:
@@ -1066,7 +1066,7 @@ def icon(request, pk):
     if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
-    icon_file = os.path.join(LAB_RESULTS_HOME, id, "icon.svg")
+    icon_file = os.path.join(CALCUS_RESULTS_HOME, id, "icon.svg")
 
     if os.path.isfile(icon_file):
         with open(icon_file, 'rb') as f:
@@ -1085,7 +1085,7 @@ def uvvis(request, pk):
     if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
         return HttpResponse(status=403)
 
-    spectrum_file = os.path.join(LAB_RESULTS_HOME, str(pk), "uvvis.csv")
+    spectrum_file = os.path.join(CALCUS_RESULTS_HOME, str(pk), "uvvis.csv")
 
     if os.path.isfile(spectrum_file):
         with open(spectrum_file, 'rb') as f:
@@ -1117,7 +1117,7 @@ def get_cube(request):
             cube_file = "in-LUMOB.cube"
         else:
             return HttpResponse(status=204)
-        spectrum_file = os.path.join(LAB_RESULTS_HOME, str(id), cube_file)
+        spectrum_file = os.path.join(CALCUS_RESULTS_HOME, str(id), cube_file)
 
         if os.path.isfile(spectrum_file):
             with open(spectrum_file, 'r') as f:
@@ -1139,7 +1139,7 @@ def enso_nmr(request, pk):
 
     if not calc.has_nmr:
         return HttpResponse(status=403)
-    spectrum_file = os.path.join(LAB_RESULTS_HOME, id, "nmr.csv")
+    spectrum_file = os.path.join(CALCUS_RESULTS_HOME, id, "nmr.csv")
 
     if os.path.isfile(spectrum_file):
         with open(spectrum_file, 'rb') as f:
@@ -1210,7 +1210,7 @@ def ir_spectrum(request, pk):
     if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
         return HttpResponse(status=403)
 
-    spectrum_file = os.path.join(LAB_RESULTS_HOME, id, "IR.csv")
+    spectrum_file = os.path.join(CALCUS_RESULTS_HOME, id, "IR.csv")
 
     if os.path.isfile(spectrum_file):
         with open(spectrum_file, 'rb') as f:
@@ -1230,8 +1230,8 @@ def vib_table(request, pk):
     if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
         return HttpResponse(status=403)
 
-    vib_file = os.path.join(LAB_RESULTS_HOME, id, "vibspectrum")
-    orca_file = os.path.join(LAB_RESULTS_HOME, id, "orcaspectrum")
+    vib_file = os.path.join(CALCUS_RESULTS_HOME, id, "vibspectrum")
+    orca_file = os.path.join(CALCUS_RESULTS_HOME, id, "orcaspectrum")
 
     if os.path.isfile(vib_file):
         with open(vib_file) as f:
@@ -1527,7 +1527,7 @@ def get_vib_animation(request):
             return HttpResponse(status=403)
 
         num = request.POST['num']
-        expected_file = os.path.join(LAB_RESULTS_HOME, id, "freq_{}.xyz".format(num))
+        expected_file = os.path.join(CALCUS_RESULTS_HOME, id, "freq_{}.xyz".format(num))
         if os.path.isfile(expected_file):
             with open(expected_file) as f:
                 lines = f.readlines()
@@ -1554,7 +1554,7 @@ def get_scan_animation(request):
         if type != 5:
             return HttpResponse(status=403)
 
-        expected_file = os.path.join(LAB_RESULTS_HOME, id, "xtbscan.xyz")
+        expected_file = os.path.join(CALCUS_RESULTS_HOME, id, "xtbscan.xyz")
         if os.path.isfile(expected_file):
             with open(expected_file) as f:
                 lines = f.readlines()
@@ -1614,7 +1614,7 @@ def log(request, pk):
     if not profile_intersection(profile, calc.order.author):
         return HttpResponse(status=403)
 
-    for out in glob.glob(os.path.join(LAB_RESULTS_HOME, str(pk)) + '/*.out'):
+    for out in glob.glob(os.path.join(CALCUS_RESULTS_HOME, str(pk)) + '/*.out'):
         out_name = out.split('/')[-1]
         with open(out) as f:
             lines = f.readlines()
