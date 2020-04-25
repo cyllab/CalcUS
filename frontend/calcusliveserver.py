@@ -165,6 +165,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             time.sleep(0.1)
             select.find_element_by_xpath("option[text()='{}']".format(params['software'])).click()
 
+            self.driver.implicitly_wait(5)
             #self.driver.find_element_by_xpath("//*[@id='calc_software']/option[text()='{}']".format(params['software'])).click()
 
         if 'type' in params.keys():

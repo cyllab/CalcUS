@@ -297,7 +297,6 @@ class ClusterTests(CalcusLiveServer):
         #test if it loads
 
 
-    '''
     def test_cluster_xtb_ts(self):
         self.setup_cluster()
         params = {
@@ -316,4 +315,175 @@ class ClusterTests(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
-    '''
+
+    def test_cluster_orca_mo(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'MO Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                'software': 'ORCA',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+        self.assertTrue(self.is_loaded_mo())
+
+    def test_cluster_orca_opt(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'ORCA',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
+
+    def test_cluster_orca_ts(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'TS Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'mini_ts.xyz',
+                'software': 'ORCA',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(200)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("TS Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_cluster_orca_freq(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                'software': 'ORCA',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+        self.assertTrue(self.is_loaded_frequencies())
+
+    def test_cluster_orca_scan(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 130, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'ORCA',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 10)
+
+    def test_cluster_orca_freeze(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Freeze', 'Dihedral', [1, 2, 3, 4]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'ORCA',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 0)
+        self.click_calc_method(1)
+        self.assertEqual(self.get_number_conformers(), 1)
+

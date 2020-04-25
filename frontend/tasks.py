@@ -54,7 +54,7 @@ else:
     CALCUS_KEY_HOME = os.environ['CALCUS_KEY_HOME']
 
 PAL = os.environ['OMP_NUM_THREADS'][0]
-ORCAPATH = os.environ['ORCAPATH']
+EBROOTORCA = os.environ['EBROOTORCA']
 
 REMOTE = False
 connections = {}
@@ -356,7 +356,7 @@ def xtb_ts(in_file, calc):
         remote_dir = remote_dirs[pid]
 
         sftp_put(os.path.join(local_folder, 'ts.inp'), os.path.join(folder, 'ts.inp'), conn, lock)
-        a = system("orca ts.inp", 'xtb_ts.out')
+        a = system("$EBROOTORCA/orca ts.inp", 'xtb_ts.out')
     else:
         os.chdir(local_folder)
         a = system("{}/orca ts.inp".format(ORCAPATH), 'xtb_ts.out')
@@ -685,9 +685,7 @@ def crest_generic(in_file, calc, mode):
     if a != 0:
         return -1
 
-    if local:
-        path = "{}/crest.out".format(folder)
-    else:
+    if not local:
         pid = int(threading.get_ident())
         conn = connections[pid]
         lock = locks[pid]
@@ -785,6 +783,9 @@ end
     else:
         pal = 8
 
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
+
     if calc.parameters.solvent == "Vacuum":
         solvent_add = ""
     else:
@@ -819,15 +820,40 @@ end
     fname = in_file.split('/')[-1]
     folder = '/'.join(in_file.split('/')[:-1])
 
-    with open("{}/mo.inp".format(folder), 'w') as out:
+    with open("{}/mo.inp".format(local_folder), 'w') as out:
         out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, solvent_add, n_HOMO, n_LUMO, n_LUMO1, n_LUMO2, charge, multiplicity, fname))
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        sftp_put("{}/mo.inp".format(local_folder), os.path.join(folder, "mo.inp"), conn, lock)
+        a = system("$EBROOTORCA/orca mo.inp", 'orca_mo.out')
+    else:
+        os.chdir(local_folder)
+        a = system("{}/orca mo.inp".format(EBROOTORCA), 'orca_mo.out')
 
-    os.chdir(folder)
-    a = system("{}/orca mo.inp".format(ORCAPATH), 'orca_mo.out')
     if a != 0:
         return a
 
-    with open("{}/orca_mo.out".format(folder)) as f:
+    if not local:
+        a = sftp_get("{}/orca_mo.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "orca_mo.out"), conn, lock)
+        b = sftp_get("{}/in-HOMO.cube".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "in-HOMO.cube"), conn, lock)
+        c = sftp_get("{}/in-LUMO.cube".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "in-LUMO.cube"), conn, lock)
+        d = sftp_get("{}/in-LUMOA.cube".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "in-LUMOA.cube"), conn, lock)
+        e = sftp_get("{}/in-LUMOB.cube".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "in-LUMOB.cube"), conn, lock)
+        if a != 0:
+            return a
+        if b != 0:
+            return b
+        if c != 0:
+            return c
+        if d != 0:
+            return d
+        if e != 0:
+            return e
+
+    with open("{}/orca_mo.out".format(local_folder)) as f:
         lines = f.readlines()
         ind = len(lines)-1
 
@@ -835,10 +861,10 @@ end
             ind -= 1
         E = float(lines[ind].split()[4])
 
-    save_to_results("{}/in-HOMO.cube".format(folder), calc)
-    save_to_results("{}/in-LUMO.cube".format(folder), calc)
-    save_to_results("{}/in-LUMOA.cube".format(folder), calc)
-    save_to_results("{}/in-LUMOB.cube".format(folder), calc)
+    save_to_results("{}/in-HOMO.cube".format(local_folder), calc)
+    save_to_results("{}/in-LUMO.cube".format(local_folder), calc)
+    save_to_results("{}/in-LUMOA.cube".format(local_folder), calc)
+    save_to_results("{}/in-LUMOB.cube".format(local_folder), calc)
 
     prop = get_or_create(calc.parameters, calc.structure)
     prop.mo = calc.id
@@ -851,6 +877,9 @@ def orca_opt(in_file, calc):
     solvent = calc.parameters.solvent
     charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
+
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
 
     if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
         pal = 1
@@ -874,22 +903,38 @@ def orca_opt(in_file, calc):
         SMDsolvent "{}"
         end'''.format(calc.parameters.solvent)
 
-    with open(in_file) as f:
-        lines = f.readlines()[2:]
+    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
 
-    with open(os.path.join(folder, 'opt.inp'), 'w') as out:
+    with open(os.path.join(local_folder, 'opt.inp'), 'w') as out:
         out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
 
-    os.chdir(folder)
-    a = system("{}/orca opt.inp".format(ORCAPATH), 'orca_opt.out')
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        sftp_put("{}/opt.inp".format(local_folder), os.path.join(folder, "opt.inp"), conn, lock)
+        a = system("$EBROOTORCA/orca opt.inp", 'orca_opt.out')
+    else:
+        os.chdir(local_folder)
+        a = system("{}/orca opt.inp".format(EBROOTORCA), 'orca_opt.out')
+
     if a != 0:
         print("Orca failed")
         return a
 
-    with open("{}/opt.xyz".format(folder)) as f:
+    if not local:
+        a = sftp_get("{}/opt.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "opt.xyz"), conn, lock)
+        b = sftp_get("{}/orca_opt.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "orca_opt.out"), conn, lock)
+        if a != 0:
+            return a
+        if b != 0:
+            return b
+
+    with open("{}/opt.xyz".format(local_folder)) as f:
         lines = f.readlines()
     xyz_structure = '\n'.join([i.strip() for i in lines])
-    with open("{}/orca_opt.out".format(folder)) as f:
+    with open("{}/orca_opt.out".format(local_folder)) as f:
         lines = f.readlines()
         ind = len(lines)-1
 
@@ -913,6 +958,8 @@ def orca_ts(in_file, calc):
     else:
         pal = 8
 
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
     solvent = calc.parameters.solvent
     charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
@@ -934,22 +981,38 @@ def orca_ts(in_file, calc):
         SMDsolvent "{}"
         end'''.format(calc.parameters.solvent)
 
-    with open(in_file) as f:
-        lines = f.readlines()[2:]
+    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
 
-    with open(os.path.join(folder, 'ts.inp'), 'w') as out:
+    with open(os.path.join(local_folder, 'ts.inp'), 'w') as out:
         out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join([i.strip() for i in lines])))
 
-    os.chdir(folder)
-    a = system("{}/orca ts.inp".format(ORCAPATH), 'orca_ts.out')
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        sftp_put("{}/ts.inp".format(local_folder), os.path.join(folder, "ts.inp"), conn, lock)
+        a = system("$EBROOTORCA/orca ts.inp".format(EBROOTORCA), 'orca_ts.out')
+    else:
+        os.chdir(local_folder)
+        a = system("{}/orca ts.inp".format(EBROOTORCA), 'orca_ts.out')
+
     if a != 0:
         print("Orca failed")
         return a
 
-    with open("{}/ts.xyz".format(folder)) as f:
+    if not local:
+        a = sftp_get("{}/ts.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "ts.xyz"), conn, lock)
+        b = sftp_get("{}/orca_ts.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "orca_ts.out"), conn, lock)
+        if a != 0:
+            return a
+        if b != 0:
+            return b
+
+    with open("{}/ts.xyz".format(local_folder)) as f:
         lines = f.readlines()
     xyz_structure = '\n'.join([i.strip() for i in lines])
-    with open("{}/orca_ts.out".format(folder)) as f:
+    with open("{}/orca_ts.out".format(local_folder)) as f:
         lines = f.readlines()
         ind = len(lines)-1
 
@@ -970,6 +1033,8 @@ def orca_freq(in_file, calc):
     solvent = calc.parameters.solvent
     charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
 
     ORCA_TEMPLATE = """!FREQ {} {} {}
     %pal
@@ -993,20 +1058,33 @@ def orca_freq(in_file, calc):
         SMDsolvent "{}"
         end'''.format(calc.parameters.solvent)
 
-    with open(in_file) as f:
-        lines = f.readlines()[2:]
+    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
 
-    with open(os.path.join(folder, 'freq.inp'), 'w') as out:
+    with open(os.path.join(local_folder, 'freq.inp'), 'w') as out:
         out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join([i.strip() for i in lines])))
 
-    os.chdir(folder)
-    a = system("{}/orca freq.inp".format(ORCAPATH), 'orca_freq.out')
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        sftp_put("{}/freq.inp".format(local_folder), os.path.join(folder, "freq.inp"), conn, lock)
+
+        a = system("$EBROOTORCA/orca freq.inp", 'orca_freq.out')
+    else:
+        os.chdir(local_folder)
+        a = system("{}/orca freq.inp".format(EBROOTORCA), 'orca_freq.out')
+
     if a != 0:
         print("Orca failed")
         return a
 
+    if not local:
+        a = sftp_get("{}/orca_freq.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "orca_freq.out"), conn, lock)
+        if a != 0:
+            return a
 
-    with open("{}/orca_freq.out".format(folder)) as f:
+    with open("{}/orca_freq.out".format(local_folder)) as f:
         lines = f.readlines()
         ind = len(lines)-1
 
@@ -1047,6 +1125,7 @@ def orca_freq(in_file, calc):
 
     x = np.arange(500, 4000, 1)#Wave number in cm^-1
     spectrum = plot_vibs(x, zip(vibs, intensities))
+
     with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "IR.csv"), 'w') as out:
         out.write("Wavenumber,Intensity\n")
         intensities = 1000*np.array(intensities)/max(intensities)
@@ -1124,6 +1203,8 @@ def orca_scan(in_file, calc):
     charge = calc.parameters.charge
 
     folder = '/'.join(in_file.split('/')[:-1])
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
 
     ORCA_TEMPLATE = """!OPT {} {} {}
     %pal
@@ -1148,8 +1229,7 @@ def orca_scan(in_file, calc):
         SMDsolvent "{}"
         end'''.format(calc.parameters.solvent)
 
-    with open(in_file) as f:
-        lines = f.readlines()[2:]
+    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
 
     orca_constraints = ""
     has_scan = False
@@ -1207,22 +1287,48 @@ def orca_scan(in_file, calc):
         """
         orca_constraints += FREEZE_TEMPLATE.format(''.join(freeze))
 
-    with open(os.path.join(folder, 'scan.inp'), 'w') as out:
+    with open(os.path.join(local_folder, 'scan.inp'), 'w') as out:
         out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, orca_constraints, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, '\n'.join([i.strip() for i in lines])))
 
-    os.chdir(folder)
-    a = system("{}/orca scan.inp".format(ORCAPATH), 'orca_scan.out')
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        sftp_put("{}/scan.inp".format(local_folder), os.path.join(folder, "scan.inp"), conn, lock)
+        a = system("$EBROOTORCA/orca scan.inp", 'orca_scan.out')
+    else:
+        os.chdir(local_folder)
+        a = system("{}/orca scan.inp".format(EBROOTORCA), 'orca_scan.out')
+
     if a != 0:
         print("Orca failed")
         return a
 
+    if not local:
+        a = sftp_get("{}/orca_scan.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "orca_scan.out"), conn, lock)
+        if a != 0:
+            return a
+
+        if has_scan:
+            a = sftp_get("{}/scan.relaxscanact.dat".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "scan.relaxscanact.dat"), conn, lock)
+            if a != 0:
+                return a
+            a = sftp_get("{}/scan.allxyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "scan.allxyz"), conn, lock)
+            if a != 0:
+                return a
+        else:
+            a = sftp_get("{}/scan.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "scan.xyz"), conn, lock)
+            if a != 0:
+                return a
+
     if has_scan:
         energies = []
-        with open(os.path.join(folder, 'scan.relaxscanact.dat')) as f:
+        with open(os.path.join(local_folder, 'scan.relaxscanact.dat')) as f:
             lines = f.readlines()
             for line in lines:
                 energies.append(float(line.split()[1]))
-        with open(os.path.join(folder, 'scan.allxyz')) as f:
+        with open(os.path.join(local_folder, 'scan.allxyz')) as f:
             lines = f.readlines()
             num_atoms = lines[0]
             inds = []
@@ -1250,7 +1356,7 @@ def orca_scan(in_file, calc):
 
                 calc.result_ensemble.structure_set.add(r)
     else:
-        with open(os.path.join(folder, 'scan.xyz')) as f:
+        with open(os.path.join(local_folder, 'scan.xyz')) as f:
             lines = f.readlines()
             r = Structure.objects.create(number=1)
             r.xyz_structure = ''.join([i.strip() + '\n' for i in lines])
