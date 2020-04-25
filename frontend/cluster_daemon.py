@@ -12,13 +12,21 @@ from ssh2.session import Session
 import socket
 import threading
 from threading import Lock
+try:
+    is_test = os.environ['CALCUS_TEST']
+except:
+    is_test = False
 
-
-
-LAB_SCR_HOME = os.environ['LAB_SCR_HOME']
-LAB_RESULTS_HOME = os.environ['LAB_RESULTS_HOME']
-LAB_KEY_HOME = os.environ['LAB_KEY_HOME']
-LAB_CLUSTER_HOME = os.environ['LAB_CLUSTER_HOME']
+if is_test:
+    CALCUS_SCR_HOME = os.environ['CALCUS_TEST_SCR_HOME']
+    CALCUS_RESULTS_HOME = os.environ['CALCUS_TEST_RESULTS_HOME']
+    CALCUS_KEY_HOME = os.environ['CALCUS_TEST_KEY_HOME']
+    CALCUS_CLUSTER_HOME = os.environ['CALCUS_TEST_CLUSTER_HOME']
+else:
+    CALCUS_SCR_HOME = os.environ['CALCUS_SCR_HOME']
+    CALCUS_RESULTS_HOME = os.environ['CALCUS_RESULTS_HOME']
+    CALCUS_KEY_HOME = os.environ['CALCUS_KEY_HOME']
+    CALCUS_CLUSTER_HOME = os.environ['CALCUS_CLUSTER_HOME']
 
 GRIMME_SUITE = ['xtb', 'crest', 'xtb4stda', 'stda', 'enso.py', 'anmr']
 
@@ -30,9 +38,12 @@ CONNECTION_CODE = {
 
         }
 
-sys.path.append("/home/raphael/LabSandbox")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calcus.settings")
-django.setup()
+if is_test:
+    pass
+else:
+    sys.path.append("/home/raphael/CalcUS")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calcus.settings")
+    django.setup()
 
 from frontend.models import *
 from frontend import tasks
@@ -89,12 +100,12 @@ class ClusterDaemon:
         return subprocess.run(shlex.split(command)).returncode
 
     def output(self, id, msg):
-        with open(os.path.join(LAB_CLUSTER_HOME, 'done', str(id)), 'w') as out:
+        with open(os.path.join(CALCUS_CLUSTER_HOME, 'done', str(id)), 'w') as out:
             out.write(msg)
 
     def setup_connection(self, conn):
         addr = conn.cluster_address
-        keypath = os.path.join(LAB_KEY_HOME, conn.private_key_path)
+        keypath = os.path.join(CALCUS_KEY_HOME, conn.private_key_path)
         username = conn.cluster_username
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -118,26 +129,13 @@ class ClusterDaemon:
         sftp = session.sftp_init()
         return [conn, sock, session, sftp]
 
-    def xtb_job(self, calc_id, access_id, calc_obj, args):
+    def job(self, calc_id, access_id):
 
         tasks.connections[threading.get_ident()] = self.connections[int(access_id)]
         tasks.locks[threading.get_ident()] = self.locks[int(access_id)]
+        tasks.remote_dirs[threading.get_ident()] = "/home/{}/scratch/calcus/{}".format(self.connections[int(access_id)][0].cluster_username, calc_id)
 
-        type, charge, solvent, drawing = args
-
-        type = int(type)
-
-        if type == 0:
-            return tasks.geom_opt(calc_id, drawing, charge, solvent, calc_obj=calc_obj)
-        elif type == 1:
-            return tasks.conf_search(calc_id, drawing, charge, solvent, calc_obj=calc_obj)
-        elif type == 2:
-            return tasks.uvvis_simple(calc_id, drawing, charge, solvent, calc_obj=calc_obj)
-        elif type == 3:
-            return tasks.nmr_enso(calc_id, drawing, charge, solvent, calc_obj=calc_obj)
-        else:
-            print("Unknown type: {}".format(type))
-            return 3
+        return tasks.run_calc(calc_id)
 
     def process_command(self, c):
         with open(c) as f:
@@ -147,6 +145,7 @@ class ClusterDaemon:
         id = int(c.split('/')[-1])
 
         if cmd == "access_test":
+            print("Testing connection {}".format(id))
             access_id = int(lines[1])
             r = self.access_test(access_id)
             if r in [1, 2, 3, 4]:
@@ -157,27 +156,12 @@ class ClusterDaemon:
             calc_id = lines[1].strip()
             access_id = lines[2].strip()
 
-            calc_obj = Calculation.objects.get(pk=calc_id)
-            calc_obj.status = 1
-            calc_obj.save()
             if cmd == "launch":
                 tasks.connections[threading.get_ident()] = self.connections
-                retval = self.xtb_job(calc_id, access_id, calc_obj, [i.strip() for i in lines[3:]])
+                retval = self.job(calc_id, access_id)
             else:
                 print("Unknown command: {} (command id {})".format(cmd, c.id))
                 return
-
-            for f in glob.glob(os.path.join(LAB_SCR_HOME, str(calc_id)) + '/*.out'):
-                fname = f.split('/')[-1]
-                copyfile(f, os.path.join(LAB_RESULTS_HOME, str(calc_id)) + '/' + fname)
-
-            if retval == 0:
-                calc_obj.status = 2
-            else:
-                calc_obj.status = 3
-                calc_obj.error_message = "Unknown error"
-
-            calc_obj.save()
 
     def __init__(self):
         for conn in ClusterAccess.objects.all():
@@ -192,10 +176,8 @@ class ClusterDaemon:
                 print("Error with cluster access: {}".format(CONNECTION_CODE[c]))
 
         while True:
-            todo = glob.glob(os.path.join(LAB_CLUSTER_HOME, 'todo/*'))
+            todo = glob.glob(os.path.join(CALCUS_CLUSTER_HOME, 'todo/*'))
             for c in todo:
-                #w = Process(target=self.process_command, args=(c,) )
-                #w.start()
                 t = threading.Thread(target=self.process_command, args=(c,))
                 t.start()
             time.sleep(5)

@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from frontend.models import *
 
 try:
-    os.environ['LAB_TEST']
+    os.environ['CALCUS_TEST']
 except:
     is_test = False
 else:

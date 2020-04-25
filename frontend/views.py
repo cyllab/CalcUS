@@ -40,12 +40,13 @@ except:
 if is_test:
     CALCUS_SCR_HOME = os.environ['CALCUS_TEST_SCR_HOME']
     CALCUS_RESULTS_HOME = os.environ['CALCUS_TEST_RESULTS_HOME']
+    CALCUS_KEY_HOME = os.environ['CALCUS_TEST_KEY_HOME']
+    CALCUS_CLUSTER_HOME = os.environ['CALCUS_TEST_CLUSTER_HOME']
 else:
     CALCUS_SCR_HOME = os.environ['CALCUS_SCR_HOME']
     CALCUS_RESULTS_HOME = os.environ['CALCUS_RESULTS_HOME']
-
-CALCUS_KEY_HOME = os.environ['CALCUS_KEY_HOME']
-CALCUS_CLUSTER_HOME = os.environ['CALCUS_CLUSTER_HOME']
+    CALCUS_KEY_HOME = os.environ['CALCUS_KEY_HOME']
+    CALCUS_CLUSTER_HOME = os.environ['CALCUS_CLUSTER_HOME']
 
 KEY_SIZE = 32
 
@@ -466,13 +467,13 @@ def submit_calculation(request):
         try:
             access = ClusterAccess.objects.get(cluster_address=ressource)
         except ClusterAccess.DoesNotExist:
-            return redirect("/home/")
+            return error(request, "No such cluster access")
 
-        if profile not in access.users and access.owner != profile:
-            return redirect("/home/")
+        if access.owner != profile:
+            return error(request, "You do not have the right to use this cluster access")
     else:
         if not profile.is_PI and profile.group == None:
-            return redirect("/home/")
+            return error(request, "You have no computing resource")
 
     if project == "New Project":
         new_project_name = clean(request.POST['new_project_name'])
@@ -638,21 +639,14 @@ def submit_calculation(request):
 
     obj.constraints = constraints
 
+
+    if ressource != "Local":
+        obj.resource = access
+
     obj.save()
     profile.save()
 
-    if ressource == "Local":
-        dispatcher.delay(drawing, obj.id)
-    else:
-        cmd = ClusterCommand.objects.create(issuer=profile)
-        with open(os.path.join(CALCUS_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
-            out.write("launch\n")
-            out.write("{}\n".format(t))
-            out.write("{}\n".format(access.id))
-            out.write("{}\n".format(type))
-            out.write("{}\n".format(charge))
-            out.write("{}\n".format(solvent))
-            out.write("{}\n".format(drawing))
+    dispatcher.delay(drawing, obj.id)
 
     return redirect("/projects/")
 
@@ -778,9 +772,6 @@ def add_clusteraccess(request):
         username = clean(request.POST['cluster_username'])
         owner = request.user.profile
 
-        if not owner.is_PI:
-            return HttpResponse(status=403)
-
         try:
             existing_access = owner.clusteraccess_owner.get(cluster_address=address, cluster_username=username, owner=owner)
         except ClusterAccess.DoesNotExist:
@@ -791,7 +782,7 @@ def add_clusteraccess(request):
         key_private_name = "{}_{}_{}".format(owner.username, username, ''.join(ch for ch in address if ch.isalnum()))
         key_public_name = key_private_name + '.pub'
 
-        access = ClusterAccess.objects.create(cluster_address=address, cluster_username=username, private_key_path=key_private_name, public_key_path=key_public_name, owner=owner, group=owner.researchgroup_PI.all()[0])
+        access = ClusterAccess.objects.create(cluster_address=address, cluster_username=username, private_key_path=key_private_name, public_key_path=key_public_name, owner=owner)
         access.save()
         owner.save()
 
@@ -819,7 +810,7 @@ def test_access(request):
 
     profile = request.user.profile
 
-    if access not in profile.clusteraccess_owner.all():
+    if access.owner != profile:
         return HttpResponse(status=403)
 
     cmd = ClusterCommand.objects.create(issuer=profile)
@@ -856,7 +847,7 @@ def delete_access(request, pk):
 
     profile = request.user.profile
 
-    if access not in profile.clusteraccess_owner.all():
+    if access.owner != profile:
         return HttpResponse(status=403)
 
     access.delete()
@@ -1628,7 +1619,7 @@ def manage_access(request, pk):
 
     profile = request.user.profile
 
-    if access not in profile.clusteraccess_owner.all():
+    if access.owner != profile:
         return HttpResponse(status=403)
 
     return render(request, 'frontend/manage_access.html', {
@@ -1636,19 +1627,6 @@ def manage_access(request, pk):
             'access': access,
         })
 
-@login_required
-def key_table(request, pk):
-    access = ClusterAccess.objects.get(pk=pk)
-
-    profile = request.user.profile
-
-    if access not in profile.clusteraccess_owner.all():
-        return HttpResponse(status=403)
-
-    return render(request, 'frontend/key_table.html', {
-            'profile': request.user.profile,
-            'access': access,
-        })
 
 @login_required
 def owned_accesses(request):

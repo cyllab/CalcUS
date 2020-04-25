@@ -39,13 +39,7 @@ class Profile(models.Model):
 
     @property
     def accesses(self):
-        accesses = []
-        if self.group != None:
-            for acc in self.group.clusteraccess_set.all():
-                accesses.append(acc)
-        for i in self.clusteraccess_owner.all():
-            accesses.append(i)
-        return accesses
+        return self.clusteraccess_owner.all()
 
 class Example(models.Model):
     title = models.CharField(max_length=100)
@@ -80,26 +74,9 @@ class ClusterAccess(models.Model):
     private_key_path = models.CharField(max_length=100)
     public_key_path = models.CharField(max_length=100)
     owner = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True, related_name="clusteraccess_owner")
-    group = models.ForeignKey(ResearchGroup, on_delete=models.CASCADE, blank=True, null=True)
 
     cluster_address = models.CharField(max_length=200, blank=True)
     cluster_username = models.CharField(max_length=50, blank=True)
-
-    @property
-    def num_claimed_keys(self):
-        count = 0
-        for i in self.clusterpersonalkey_set.all():
-            if i.claimer is not None:
-                count += 1
-        return count
-
-    @property
-    def users(self):
-        users = []
-        for i in self.group.members.all():
-            users.append(i)
-        users.append(self.group.PI)
-        return users
 
 class BasicStep(models.Model):
     name = models.CharField(max_length=100)
@@ -468,6 +445,8 @@ class CalculationOrder(models.Model):
     date_finished = models.DateTimeField('date', null=True, blank=True)
     unseen = models.BooleanField(default=True)
 
+    resource = models.ForeignKey('ClusterAccess', on_delete=models.CASCADE, blank=True, null=True)
+
     @property
     def status(self):
         stat = 0
@@ -544,6 +523,7 @@ class Calculation(models.Model):
     constraints = models.CharField(max_length=400, default="", blank=True, null=True)
 
     has_scan = models.BooleanField(default=False)
+    local = models.BooleanField(default=True)
 
     def __str__(self):
         return self.step.name
