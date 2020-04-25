@@ -124,13 +124,13 @@ def sftp_get(src, dst, conn, lock):
     except ssh2.exceptions.SFTPProtocolError:
         print("Could not get remote file {}".format(src))
         lock.release()
-        return
+        return -1
     except ssh2.exceptions.Timeout:
         print("Timeout")
         lock.release()
-        sftp_get(src, dst, conn)
-        return
+        return sftp_get(src, dst, conn)
     lock.release()
+    return 0
 
 
 def sftp_put(src, dst, conn, lock):
@@ -272,6 +272,8 @@ def xtb_opt(in_file, calc):
 
     os.chdir(local_folder)
     a = system("xtb {} --opt -o vtight -a 0.05 --chrg {} {} ".format(in_file, charge, solvent_add), 'xtb_opt.out')
+    if a != 0:
+        return a
 
     if not local:
         pid = int(threading.get_ident())
@@ -279,32 +281,32 @@ def xtb_opt(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
 
-        sftp_get("{}/xtb_opt.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_opt.out"), conn, lock)
-        sftp_get("{}/xtbopt.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbopt.xyz"), conn, lock)
+        a = sftp_get("{}/xtb_opt.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_opt.out"), conn, lock)
+        b = sftp_get("{}/xtbopt.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbopt.xyz"), conn, lock)
+        if a == -1:
+            return a
+        if b == -1:
+            return b
+    with open("{}/xtbopt.xyz".format(local_folder)) as f:
+        lines = f.readlines()
+    xyz_structure = ''.join(lines)
+    with open("{}/xtb_opt.out".format(local_folder)) as f:
+        lines = f.readlines()
+        ind = len(lines)-1
 
-    if a == 0:
-        with open("{}/xtbopt.xyz".format(local_folder)) as f:
-            lines = f.readlines()
-        xyz_structure = ''.join(lines)
-        with open("{}/xtb_opt.out".format(local_folder)) as f:
-            lines = f.readlines()
-            ind = len(lines)-1
+        while lines[ind].find("HOMO-LUMO GAP") == -1:
+            ind -= 1
+        hl_gap = float(lines[ind].split()[3])
+        E = float(lines[ind-2].split()[3])
 
-            while lines[ind].find("HOMO-LUMO GAP") == -1:
-                ind -= 1
-            hl_gap = float(lines[ind].split()[3])
-            E = float(lines[ind-2].split()[3])
-
-        s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=1)
-        prop = get_or_create(calc.parameters, s)
-        prop.homo_lumo_gap = hl_gap
-        prop.energy = E
-        prop.geom = True
-        s.save()
-        prop.save()
-        return 0
-    else:
-        return a
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=1)
+    prop = get_or_create(calc.parameters, s)
+    prop.homo_lumo_gap = hl_gap
+    prop.energy = E
+    prop.geom = True
+    s.save()
+    prop.save()
+    return 0
 
 def get_or_create(params, struct):
     for p in struct.properties.all():
@@ -363,8 +365,12 @@ def xtb_ts(in_file, calc):
             return a
 
     if not local:
-        sftp_get("{}/xtb_ts.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_ts.out"), conn, lock)
-        sftp_get("{}/ts.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "ts.xyz"), conn, lock)
+        a = sftp_get("{}/xtb_ts.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_ts.out"), conn, lock)
+        b = sftp_get("{}/ts.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "ts.xyz"), conn, lock)
+        if a == -1:
+            return a
+        if b == -1:
+            return b
 
     with open(os.path.join(folder, "ts.xyz")) as f:
         lines = f.readlines()
@@ -453,11 +459,15 @@ def xtb_scan(in_file, calc):
         return a
 
     if not local:
-        sftp_get("{}/xtb_scan.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_scan.out"), conn, lock)
+        a = sftp_get("{}/xtb_scan.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_scan.out"), conn, lock)
         if has_scan:
-            sftp_get("{}/xtbscan.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbscan.log"), conn, lock)
+            b = sftp_get("{}/xtbscan.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbscan.log"), conn, lock)
         else:
-            sftp_get("{}/xtbopt.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbopt.xyz"), conn, lock)
+            b = sftp_get("{}/xtbopt.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbopt.xyz"), conn, lock)
+        if a == -1:
+            return a
+        if b == -1:
+            return b
 
     if has_scan:
         with open(os.path.join(local_folder, 'xtbscan.log')) as f:
@@ -474,7 +484,7 @@ def xtb_scan(in_file, calc):
             min_E = 0
             for metaind, mol in enumerate(inds[:-1]):
                 E = float(lines[inds[metaind]+1].split()[2])
-                #E = float(lines[inds[metaind]+1].split()[1])
+                #E = float(lines[inds[metaind]+1].split()[2])
                 struct = ''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]]])
 
                 r = Structure.objects.create(number=metaind+1, degeneracy=1)
@@ -1365,6 +1375,8 @@ def xtb_stda(in_file, calc):
     PP = []
 
     folder = '/'.join(in_file.split('/')[:-1])
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
 
     solvent = calc.parameters.solvent
     charge = calc.parameters.charge
@@ -1374,18 +1386,26 @@ def xtb_stda(in_file, calc):
     else:
         solvent_add_xtb = ''
 
-    os.chdir(folder)
+    os.chdir(local_folder)
     a = system("xtb4stda {} -chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
     if a != 0:
         return a
 
-    os.chdir(folder)
+    os.chdir(local_folder)
     a = system("stda -xtb -e 12", 'stda.out')
     if a != 0:
         return a
 
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+
+        sftp_get("{}/tda.dat".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "tda.dat"), conn, lock)
+
     f_x = np.arange(120.0, 1200.0, 1.0)
-    with open("{}/tda.dat".format(folder)) as f:
+    with open("{}/tda.dat".format(local_folder)) as f:
         lines = f.readlines()
 
     ind = 0

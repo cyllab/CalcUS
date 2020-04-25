@@ -274,6 +274,28 @@ class ClusterTests(CalcusLiveServer):
         self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_cluster_uvvis(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'UV-Vis Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        #test if it loads
+
 
     '''
     def test_cluster_xtb_ts(self):
