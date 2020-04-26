@@ -126,8 +126,24 @@ class ClusterDaemon:
             print("Could not connect to cluster {} with username {}".format(addr, username))
             return 3
 
+        with open(os.path.join(CALCUS_CLUSTER_HOME, 'connections', str(conn.id)), 'w') as out:
+            out.write("Connected\n{}\n".format(int(time.time())))
+
         sftp = session.sftp_init()
         return [conn, sock, session, sftp]
+
+    def delete_access(self, access_id):
+        try:
+            conn = self.connections[int(access_id)]
+        except KeyError:
+            print("Cannot delete connection {}: no such connection".format(access_id))
+            return
+        conn = self.connections[int(access_id)][0]
+        os.remove(os.path.join(CALCUS_KEY_HOME, conn.public_key_path))
+        os.remove(os.path.join(CALCUS_KEY_HOME, conn.private_key_path))
+
+        del self.connections[int(access_id)]
+        del self.locks[int(access_id)]
 
     def job(self, calc_id, access_id):
 
@@ -145,13 +161,17 @@ class ClusterDaemon:
         id = int(c.split('/')[-1])
 
         if cmd == "access_test":
-            print("Testing connection {}".format(id))
             access_id = int(lines[1])
+            print("Testing connection {}".format(access_id))
             r = self.access_test(access_id)
             if r in [1, 2, 3, 4]:
                 self.output(id, "Error: {}".format(CONNECTION_CODE[r]))
             else:
                 self.output(id, "Connection successful")
+        elif cmd == "delete_access":
+            access_id = int(lines[1])
+            print("Deleting connection {}".format(access_id))
+            self.delete_access(access_id)
         else:
             calc_id = lines[1].strip()
             access_id = lines[2].strip()
@@ -174,13 +194,20 @@ class ClusterDaemon:
                 pass
             else:
                 print("Error with cluster access: {}".format(CONNECTION_CODE[c]))
-
+        ind = 1
         while True:
             todo = glob.glob(os.path.join(CALCUS_CLUSTER_HOME, 'todo/*'))
             for c in todo:
                 t = threading.Thread(target=self.process_command, args=(c,))
                 t.start()
             time.sleep(5)
+            ind += 1
+            if ind % 60 == 0:
+                ind = 1
+                for conn_name in self.connections.keys():
+                    conn, sock, session, sftp = self.connections[conn_name]
+                    with open(os.path.join(CALCUS_CLUSTER_HOME, 'connections', str(conn.id)), 'w') as out:
+                        out.write("Connected\n{}\n".format(int(time.time())))
 
 if __name__ == "__main__":
     a = ClusterDaemon()

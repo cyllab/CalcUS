@@ -47,8 +47,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             os.mkdir(RESULTS_DIR)
         if not os.path.isdir(CLUSTER_DIR):
             os.mkdir(CLUSTER_DIR)
+        if not os.path.isdir(os.path.join(CLUSTER_DIR, 'todo')):
             os.mkdir(os.path.join(CLUSTER_DIR, 'todo'))
+        if not os.path.isdir(os.path.join(CLUSTER_DIR, 'done')):
             os.mkdir(os.path.join(CLUSTER_DIR, 'done'))
+        if not os.path.isdir(os.path.join(CLUSTER_DIR, 'connections')):
+            os.mkdir(os.path.join(CLUSTER_DIR, 'connections'))
         if not os.path.isdir(KEYS_DIR):
             os.mkdir(KEYS_DIR)
 

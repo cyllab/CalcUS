@@ -54,6 +54,7 @@ urlpatterns = [
     path('test_access/', views.test_access, name='test_access'),
     path('get_command_status/', views.get_command_status, name='get_command_status'),
     path('delete_access/<int:pk>', views.delete_access, name='delete_access'),
+    path('status_access/', views.status_access, name='status_access'),
 
     #Calculations
     path('molecule/<int:pk>', views.molecule, name='molecule'),

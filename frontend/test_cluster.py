@@ -115,6 +115,7 @@ class ClusterTests(CalcusLiveServer):
         status = self.get_command_status(str(cmd.id))
         self.assertEqual(status, "Connection successful")
 
+
     def setup_cluster(self):
         self.lget("/profile")
 
@@ -123,6 +124,15 @@ class ClusterTests(CalcusLiveServer):
 
         username = self.driver.find_element_by_name("cluster_username")
         username.send_keys("calcus")
+
+        pal = self.driver.find_element_by_name("cluster_cores")
+        pal.clear()
+        pal.send_keys("8")
+
+        memory = self.driver.find_element_by_name("cluster_memory")
+        memory.clear()
+        memory.send_keys("10000")
+
         self.driver.find_element_by_css_selector("button.button:nth-child(1)").click()
 
 
@@ -142,13 +152,13 @@ class ClusterTests(CalcusLiveServer):
         child.expect('\$')
         child.sendline("echo '{}' > /home/calcus/.ssh/authorized_keys".format(public_key))
 
-        self.driver.implicitly_wait(5)
-        manage = self.driver.find_element_by_css_selector("#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a")
+        element = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#owned_accesses > center > table > tbody > tr > th:nth-child(5) > a"))
+        )
+
+        manage = self.driver.find_element_by_css_selector("#owned_accesses > center > table > tbody > tr > th:nth-child(5) > a")
         manage.send_keys(Keys.RETURN)
-
-
-
-        test_access = self.driver.find_element_by_css_selector("#content_container > div > div:nth-child(2) > div > button")
+        test_access = self.driver.find_element_by_css_selector("#content_container > div > div:nth-child(3) > div > button")
         test_access.click()
         ind = 0
         while ind < 10:
@@ -160,10 +170,90 @@ class ClusterTests(CalcusLiveServer):
             except:
                 pass
 
+    def test_delete_access(self):
+        self.setup_cluster()
+        keys = glob.glob("{}/*".format(KEYS_DIR))
+        self.assertEqual(len(keys), 2)
+
+        delete_access = self.driver.find_element_by_css_selector("a.button:nth-child(3)")
+        delete_access.click()
+
+        time.sleep(10)
+        keys = glob.glob("{}/*".format(KEYS_DIR))
+        self.assertEqual(len(keys), 0)
+
+    def test_cluster_settings(self):
+        self.lget("/profile")
+
+        adress = self.driver.find_element_by_name("cluster_address")
+        adress.send_keys("localhost")
+
+        username = self.driver.find_element_by_name("cluster_username")
+        username.send_keys("calcus")
+
+        pal = self.driver.find_element_by_name("cluster_cores")
+        pal.clear()
+        pal.send_keys("8")
+
+        memory = self.driver.find_element_by_name("cluster_memory")
+        memory.clear()
+        memory.send_keys("10000")
+
+        self.driver.find_element_by_css_selector("button.button:nth-child(1)").click()
+        element = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "public_key_area"))
+        )
+        time.sleep(1)
+
+        acc = ClusterAccess.objects.all()
+        self.assertEqual(len(acc), 1)
+        access = acc[0]
+        self.assertEqual(access.memory, 10000)
+        self.assertEqual(access.pal, 8)
+
+    def test_cluster_settings2(self):
+        self.lget("/profile")
+
+        adress = self.driver.find_element_by_name("cluster_address")
+        adress.send_keys("localhost")
+
+        username = self.driver.find_element_by_name("cluster_username")
+        username.send_keys("calcus")
+
+        pal = self.driver.find_element_by_name("cluster_cores")
+        pal.clear()
+        pal.send_keys("24")
+
+        memory = self.driver.find_element_by_name("cluster_memory")
+        memory.clear()
+        memory.send_keys("31000")
+
+        self.driver.find_element_by_css_selector("button.button:nth-child(1)").click()
+        element = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "public_key_area"))
+        )
+        time.sleep(1)
+
+        acc = ClusterAccess.objects.all()
+        self.assertEqual(len(acc), 1)
+        access = acc[0]
+        self.assertEqual(access.memory, 31000)
+        self.assertEqual(access.pal, 24)
+
     def test_connection_gui(self):
         self.setup_cluster()
         msg = self.driver.find_element_by_id("test_msg").text
         self.assertEqual(msg, "Connection successful")
+
+        self.lget("/profile/")
+        manage = self.driver.find_element_by_css_selector("#owned_accesses > center > table > tbody > tr > th:nth-child(5) > a")
+        manage.send_keys(Keys.RETURN)
+
+        element = WebDriverWait(self.driver, 10).until(
+            EC.text_to_be_present_in_element((By.ID, "status_box"), "Connected")
+        )
+        self.assertNotEqual(self.driver.find_element_by_id("status_box").text.find("Connected"), -1)
+
 
     def test_cluster_xtb_crest(self):
         self.setup_cluster()

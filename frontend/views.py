@@ -770,6 +770,9 @@ def add_clusteraccess(request):
     if request.method == 'POST':
         address = clean(request.POST['cluster_address'])
         username = clean(request.POST['cluster_username'])
+        pal = int(clean(request.POST['cluster_cores']))
+        memory = int(clean(request.POST['cluster_memory']))
+
         owner = request.user.profile
 
         try:
@@ -782,7 +785,7 @@ def add_clusteraccess(request):
         key_private_name = "{}_{}_{}".format(owner.username, username, ''.join(ch for ch in address if ch.isalnum()))
         key_public_name = key_private_name + '.pub'
 
-        access = ClusterAccess.objects.create(cluster_address=address, cluster_username=username, private_key_path=key_private_name, public_key_path=key_public_name, owner=owner)
+        access = ClusterAccess.objects.create(cluster_address=address, cluster_username=username, private_key_path=key_private_name, public_key_path=key_public_name, owner=owner, pal=pal, memory=memory)
         access.save()
         owner.save()
 
@@ -804,7 +807,7 @@ def add_clusteraccess(request):
 
 @login_required
 def test_access(request):
-    pk = request.POST['access_id']
+    pk = clean(request.POST['access_id'])
 
     access = ClusterAccess.objects.get(pk=pk)
 
@@ -820,6 +823,33 @@ def test_access(request):
     with open(os.path.join(CALCUS_CLUSTER_HOME, "todo", str(cmd.id)), 'w') as out:
         out.write("access_test\n")
         out.write("{}\n".format(pk))
+
+    return HttpResponse(cmd.id)
+
+@login_required
+def status_access(request):
+    pk = clean(request.POST['access_id'])
+
+    access = ClusterAccess.objects.get(pk=pk)
+
+    profile = request.user.profile
+
+    if access.owner != profile:
+        return HttpResponse(status=403)
+
+    path = os.path.join(CALCUS_CLUSTER_HOME, "connections", pk)
+    if os.path.isfile(path):
+        with open(path) as f:
+            lines = f.readlines()
+            if lines[0].strip() == "Connected":
+                t = int(lines[1].strip())
+                dtime = time.time() - t
+                if dtime < 6*60:
+                    return HttpResponse("Connected {} seconds ago".format(int(dtime)))
+                else:
+                    return HttpResponse("Disconnected")
+    else:
+        return HttpResponse("Disconnected")
 
     return HttpResponse(cmd.id)
 
@@ -851,6 +881,15 @@ def delete_access(request, pk):
         return HttpResponse(status=403)
 
     access.delete()
+
+    cmd = ClusterCommand.objects.create(issuer=profile)
+    cmd.save()
+    profile.save()
+
+    with open(os.path.join(CALCUS_CLUSTER_HOME, "todo", str(cmd.id)), 'w') as out:
+        out.write("delete_access\n")
+        out.write("{}\n".format(pk))
+
     return HttpResponseRedirect("/profile")
 
 @login_required

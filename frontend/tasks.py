@@ -54,16 +54,6 @@ else:
     CALCUS_KEY_HOME = os.environ['CALCUS_KEY_HOME']
 
 PAL = os.environ['OMP_NUM_THREADS'][0]
-
-STACKSIZE = os.environ['OMP_STACKSIZE']
-if STACKSIZE.find('G') != -1:
-    MEMORY = int(STACKSIZE.replace('G', ''))*1024*int(PAL)
-elif STACKSIZE.find('MB') != -1:
-    MEMORY = int(STACKSIZE.replace('MB', ''))*int(PAL)
-else:
-    print("Invalid OMP_STACKSIZE")
-    exit(0)
-
 EBROOTORCA = os.environ['EBROOTORCA']
 
 REMOTE = False
@@ -81,8 +71,7 @@ def direct_command(command, conn, lock):
             print("Failed to open channel, trying again")
             lock.release()
             sleep(1)
-            direct_command(command, conn, lock)
-            return
+            return direct_command(command, conn, lock)
         chan.execute("source ~/.bashrc; " + command)
 
     except ssh2.exceptions.Timeout:
@@ -189,7 +178,7 @@ def wait_until_done(job_id, conn, lock):
         if _output != None and len(_output) < 2:
             return 0
 
-def system(command, log_file="", force_local=False):
+def system(command, log_file="", force_local=False, software="xtb"):
     if REMOTE and not force_local:
         pid = int(threading.get_ident())
         #Get the variables based on thread ID
@@ -199,10 +188,12 @@ def system(command, log_file="", force_local=False):
         remote_dir = remote_dirs[pid]
 
         if log_file != "":
-            output = direct_command("cd {}; cp /home/{}/calcus/submit.sh .; echo '{} | tee {}' >> submit.sh; sbatch submit.sh".format(remote_dir, conn[0].cluster_username, command, log_file), conn, lock)
+            output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{} | tee {}' >> submit_{}.sh; sbatch submit_{}.sh".format(remote_dir, conn[0].cluster_username, software, command, log_file, software, software), conn, lock)
         else:
-            output = direct_command("cd {}; cp /home/{}/calcus/submit.sh .; echo '{}' >> submit.sh; sbatch submit.sh".format(remote_dir, conn[0].cluster_username, command), conn, lock)
+            output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{}' >> submit_{}.sh; sbatch submit_{}.sh".format(remote_dir, conn[0].cluster_username, software, command, software, software), conn, lock)
 
+        if output == None:
+            return 1
         if output[-2].find("Submitted batch job") != -1:
             job_id = output[-2].replace('Submitted batch job', '').strip()
             wait_until_done(job_id, conn, lock)
@@ -358,7 +349,7 @@ def xtb_ts(in_file, calc):
     lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
 
     with open(os.path.join(local_folder, 'ts.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(calc.pal, solvent_add, charge, multiplicity, ''.join(lines)))
+        out.write(ORCA_TEMPLATE.format(PAL, solvent_add, charge, multiplicity, ''.join(lines)))
     if not local:
         pid = int(threading.get_ident())
         conn = connections[pid]
@@ -366,10 +357,10 @@ def xtb_ts(in_file, calc):
         remote_dir = remote_dirs[pid]
 
         sftp_put(os.path.join(local_folder, 'ts.inp'), os.path.join(folder, 'ts.inp'), conn, lock)
-        a = system("$EBROOTORCA/orca ts.inp", 'xtb_ts.out')
+        a = system("$EBROOTORCA/orca ts.inp", 'xtb_ts.out', software="ORCA")
     else:
         os.chdir(local_folder)
-        a = system("{}/orca ts.inp".format(EBROOTORCA), 'xtb_ts.out')
+        a = system("{}/orca ts.inp".format(EBROOTORCA), 'xtb_ts.out', software="ORCA")
         if a != 0:
             print("Orca failed")
             return a
@@ -791,7 +782,7 @@ end
     if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
         pal = 1
     else:
-        pal = calc.pal
+        pal = 8
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
@@ -838,10 +829,10 @@ end
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/mo.inp".format(local_folder), os.path.join(folder, "mo.inp"), conn, lock)
-        a = system("$EBROOTORCA/orca mo.inp", 'orca_mo.out')
+        a = system("$EBROOTORCA/orca mo.inp", 'orca_mo.out', software="ORCA")
     else:
         os.chdir(local_folder)
-        a = system("{}/orca mo.inp".format(EBROOTORCA), 'orca_mo.out')
+        a = system("{}/orca mo.inp".format(EBROOTORCA), 'orca_mo.out', software="ORCA")
 
     if a != 0:
         return a
@@ -894,7 +885,7 @@ def orca_opt(in_file, calc):
     if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
         pal = 1
     else:
-        pal = calc.pal
+        pal = 8
 
     ORCA_TEMPLATE = """!OPT {} {} {}
     %pal
@@ -924,10 +915,10 @@ def orca_opt(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/opt.inp".format(local_folder), os.path.join(folder, "opt.inp"), conn, lock)
-        a = system("$EBROOTORCA/orca opt.inp", 'orca_opt.out')
+        a = system("$EBROOTORCA/orca opt.inp", 'orca_opt.out', software="ORCA")
     else:
         os.chdir(local_folder)
-        a = system("{}/orca opt.inp".format(EBROOTORCA), 'orca_opt.out')
+        a = system("{}/orca opt.inp".format(EBROOTORCA), 'orca_opt.out', software="ORCA")
 
     if a != 0:
         print("Orca failed")
@@ -966,7 +957,7 @@ def orca_ts(in_file, calc):
     if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
         pal = 1
     else:
-        pal = calc.pal
+        pal = 8
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
@@ -1002,10 +993,10 @@ def orca_ts(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/ts.inp".format(local_folder), os.path.join(folder, "ts.inp"), conn, lock)
-        a = system("$EBROOTORCA/orca ts.inp".format(EBROOTORCA), 'orca_ts.out')
+        a = system("$EBROOTORCA/orca ts.inp".format(EBROOTORCA), 'orca_ts.out', software="ORCA")
     else:
         os.chdir(local_folder)
-        a = system("{}/orca ts.inp".format(EBROOTORCA), 'orca_ts.out')
+        a = system("{}/orca ts.inp".format(EBROOTORCA), 'orca_ts.out', software="ORCA")
 
     if a != 0:
         print("Orca failed")
@@ -1058,7 +1049,7 @@ def orca_freq(in_file, calc):
     if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
         pal = 1
     else:
-        pal = calc.pal
+        pal = 8
 
     if calc.parameters.solvent == "Vacuum":
         solvent_add = ""
@@ -1080,10 +1071,10 @@ def orca_freq(in_file, calc):
         remote_dir = remote_dirs[pid]
         sftp_put("{}/freq.inp".format(local_folder), os.path.join(folder, "freq.inp"), conn, lock)
 
-        a = system("$EBROOTORCA/orca freq.inp", 'orca_freq.out')
+        a = system("$EBROOTORCA/orca freq.inp", 'orca_freq.out', software="ORCA")
     else:
         os.chdir(local_folder)
-        a = system("{}/orca freq.inp".format(EBROOTORCA), 'orca_freq.out')
+        a = system("{}/orca freq.inp".format(EBROOTORCA), 'orca_freq.out', software="ORCA")
 
     if a != 0:
         print("Orca failed")
@@ -1229,7 +1220,7 @@ def orca_scan(in_file, calc):
     if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
         pal = 1
     else:
-        pal = calc.pal
+        pal = 8
 
     if calc.parameters.solvent == "Vacuum":
         solvent_add = ""
@@ -1306,10 +1297,10 @@ def orca_scan(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/scan.inp".format(local_folder), os.path.join(folder, "scan.inp"), conn, lock)
-        a = system("$EBROOTORCA/orca scan.inp", 'orca_scan.out')
+        a = system("$EBROOTORCA/orca scan.inp", 'orca_scan.out', software="ORCA")
     else:
         os.chdir(local_folder)
-        a = system("{}/orca scan.inp".format(EBROOTORCA), 'orca_scan.out')
+        a = system("{}/orca scan.inp".format(EBROOTORCA), 'orca_scan.out', software="ORCA")
 
     if a != 0:
         print("Orca failed")
@@ -1575,10 +1566,18 @@ def orca_nmr(in_file, calc):
     lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
 
     with open(os.path.join(local_folder, 'nmr.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, calc.pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, PAL, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        sftp_put("{}/nmr.inp".format(local_folder), os.path.join(folder, "nmr.inp"), conn, lock)
+        a = system("$EBROOTORCA/orca nmr.inp", 'orca_nmr.out', software="ORCA")
+    else:
+        os.chdir(local_folder)
+        a = system("{}/orca nmr.inp".format(EBROOTORCA), 'orca_nmr.out', software="ORCA")
 
-    os.chdir(local_folder)
-    a = system("{}/orca nmr.inp".format(EBROOTORCA), 'orca_nmr.out')
     if a != 0:
         print("Orca failed")
         return a
@@ -1752,12 +1751,8 @@ def dispatcher(drawing, order_id):
     ensemble = order.ensemble
 
     local = True
-    calc_memory = MEMORY
-    calc_pal = PAL
     if order.resource is not None:
         local = False
-        calc_memory = order.resource.memory
-        calc_pal = order.resource.pal
 
     step = order.step
 
@@ -1805,7 +1800,7 @@ def dispatcher(drawing, order_id):
         e.save()
 
         for s in input_structures:
-            c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), step=step, parameters=order.parameters, result_ensemble=e, constraints=order.constraints, memory=calc_memory, pal=calc_pal)
+            c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), step=step, parameters=order.parameters, result_ensemble=e, constraints=order.constraints)
             c.save()
             if local:
                 if not is_test:
@@ -1824,7 +1819,7 @@ def dispatcher(drawing, order_id):
 
     else:
         for s in input_structures:
-            c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), parameters=order.parameters, step=step, constraints=order.constraints, memory=calc_memory, pal=calc_pal)
+            c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), parameters=order.parameters, step=step, constraints=order.constraints)
             c.save()
             if local:
                 if not is_test:
@@ -1877,7 +1872,7 @@ def run_calc(calc_id):
     ti = time()
     ret = f(in_file, calc)
     tf = time()
-    calc.execution_time = int((tf-ti)*int(calc.pal))
+    calc.execution_time = int((tf-ti)*int(PAL))
 
     if ret != 0:
         calc.status = 3
