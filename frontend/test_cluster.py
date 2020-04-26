@@ -143,7 +143,7 @@ class ClusterTests(CalcusLiveServer):
         child.sendline("echo '{}' > /home/calcus/.ssh/authorized_keys".format(public_key))
 
         self.driver.implicitly_wait(5)
-        manage = self.driver.find_element_by_css_selector("#owned_accesses > center > table > tbody > tr > th:nth-child(5) > a")
+        manage = self.driver.find_element_by_css_selector("#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a")
         manage.send_keys(Keys.RETURN)
 
 

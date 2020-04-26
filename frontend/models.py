@@ -78,6 +78,9 @@ class ClusterAccess(models.Model):
     cluster_address = models.CharField(max_length=200, blank=True)
     cluster_username = models.CharField(max_length=50, blank=True)
 
+    pal = models.PositiveIntegerField(default=8)
+    memory = models.PositiveIntegerField(default=15000)
+
 class BasicStep(models.Model):
     name = models.CharField(max_length=100)
     desc = models.CharField(max_length=500, default="")
@@ -525,11 +528,11 @@ class Calculation(models.Model):
     has_scan = models.BooleanField(default=False)
     local = models.BooleanField(default=True)
 
+    pal = models.PositiveIntegerField(default=8)
+    memory = models.PositiveIntegerField(default=15000)
+
     def __str__(self):
         return self.step.name
-
-    #def __str__(self):
-    #    return self.__repr__()
 
     @property
     def runtime(self):

@@ -54,6 +54,16 @@ else:
     CALCUS_KEY_HOME = os.environ['CALCUS_KEY_HOME']
 
 PAL = os.environ['OMP_NUM_THREADS'][0]
+
+STACKSIZE = os.environ['OMP_STACKSIZE']
+if STACKSIZE.find('G') != -1:
+    MEMORY = int(STACKSIZE.replace('G', ''))*1024*int(PAL)
+elif STACKSIZE.find('MB') != -1:
+    MEMORY = int(STACKSIZE.replace('MB', ''))*int(PAL)
+else:
+    print("Invalid OMP_STACKSIZE")
+    exit(0)
+
 EBROOTORCA = os.environ['EBROOTORCA']
 
 REMOTE = False
@@ -348,7 +358,7 @@ def xtb_ts(in_file, calc):
     lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
 
     with open(os.path.join(local_folder, 'ts.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(PAL, solvent_add, charge, multiplicity, ''.join(lines)))
+        out.write(ORCA_TEMPLATE.format(calc.pal, solvent_add, charge, multiplicity, ''.join(lines)))
     if not local:
         pid = int(threading.get_ident())
         conn = connections[pid]
@@ -359,7 +369,7 @@ def xtb_ts(in_file, calc):
         a = system("$EBROOTORCA/orca ts.inp", 'xtb_ts.out')
     else:
         os.chdir(local_folder)
-        a = system("{}/orca ts.inp".format(ORCAPATH), 'xtb_ts.out')
+        a = system("{}/orca ts.inp".format(EBROOTORCA), 'xtb_ts.out')
         if a != 0:
             print("Orca failed")
             return a
@@ -781,7 +791,7 @@ end
     if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
         pal = 1
     else:
-        pal = 8
+        pal = calc.pal
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
@@ -884,7 +894,7 @@ def orca_opt(in_file, calc):
     if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
         pal = 1
     else:
-        pal = 8
+        pal = calc.pal
 
     ORCA_TEMPLATE = """!OPT {} {} {}
     %pal
@@ -956,7 +966,7 @@ def orca_ts(in_file, calc):
     if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
         pal = 1
     else:
-        pal = 8
+        pal = calc.pal
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
@@ -1048,7 +1058,7 @@ def orca_freq(in_file, calc):
     if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
         pal = 1
     else:
-        pal = 8
+        pal = calc.pal
 
     if calc.parameters.solvent == "Vacuum":
         solvent_add = ""
@@ -1219,7 +1229,7 @@ def orca_scan(in_file, calc):
     if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
         pal = 1
     else:
-        pal = 8
+        pal = calc.pal
 
     if calc.parameters.solvent == "Vacuum":
         solvent_add = ""
@@ -1542,6 +1552,8 @@ def xtb_stda(in_file, calc):
 
 def orca_nmr(in_file, calc):
     folder = '/'.join(in_file.split('/')[:-1])
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
 
     ORCA_TEMPLATE = """!NMR {} {} {}
     %pal
@@ -1560,19 +1572,23 @@ def orca_nmr(in_file, calc):
         SMDsolvent "{}"
         end'''.format(calc.parameters.solvent)
 
-    with open(in_file) as f:
-        lines = f.readlines()[2:]
+    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
 
-    with open(os.path.join(folder, 'nmr.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, PAL, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+    with open(os.path.join(local_folder, 'nmr.inp'), 'w') as out:
+        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, calc.pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
 
-    os.chdir(folder)
-    a = system("{}/orca nmr.inp".format(ORCAPATH), 'orca_nmr.out')
+    os.chdir(local_folder)
+    a = system("{}/orca nmr.inp".format(EBROOTORCA), 'orca_nmr.out')
     if a != 0:
         print("Orca failed")
         return a
 
-    with open(os.path.join(folder, 'orca_nmr.out')) as f:
+    if not local:
+        a = sftp_get("{}/orca_nmr.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "orca_nmr.out"), conn, lock)
+        if a != 0:
+            return a
+
+    with open(os.path.join(local_folder, 'orca_nmr.out')) as f:
         lines = f.readlines()
     ind = len(lines)-1
     while lines[ind].find("CHEMICAL SHIELDING SUMMARY (ppm)") == -1:
@@ -1736,8 +1752,12 @@ def dispatcher(drawing, order_id):
     ensemble = order.ensemble
 
     local = True
+    calc_memory = MEMORY
+    calc_pal = PAL
     if order.resource is not None:
         local = False
+        calc_memory = order.resource.memory
+        calc_pal = order.resource.pal
 
     step = order.step
 
@@ -1785,7 +1805,7 @@ def dispatcher(drawing, order_id):
         e.save()
 
         for s in input_structures:
-            c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), step=step, parameters=order.parameters, result_ensemble=e, constraints=order.constraints)
+            c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), step=step, parameters=order.parameters, result_ensemble=e, constraints=order.constraints, memory=calc_memory, pal=calc_pal)
             c.save()
             if local:
                 if not is_test:
@@ -1804,7 +1824,7 @@ def dispatcher(drawing, order_id):
 
     else:
         for s in input_structures:
-            c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), parameters=order.parameters, step=step, constraints=order.constraints)
+            c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), parameters=order.parameters, step=step, constraints=order.constraints, memory=calc_memory, pal=calc_pal)
             c.save()
             if local:
                 if not is_test:
@@ -1857,7 +1877,7 @@ def run_calc(calc_id):
     ti = time()
     ret = f(in_file, calc)
     tf = time()
-    calc.execution_time = int((tf-ti)*int(PAL))
+    calc.execution_time = int((tf-ti)*int(calc.pal))
 
     if ret != 0:
         calc.status = 3
