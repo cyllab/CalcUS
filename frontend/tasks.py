@@ -77,7 +77,9 @@ def direct_command(command, conn, lock):
     except ssh2.exceptions.Timeout:
         print("Command timed out")
         lock.release()
-        return
+
+        time.sleep(1)
+        return direct_command(command, conn, lock)
     try:
         chan.wait_eof()
         chan.close()
@@ -86,7 +88,8 @@ def direct_command(command, conn, lock):
     except ssh2.exceptions.Timeout:
         print("Channel timed out")
         lock.release()
-        return
+        time.sleep(1)
+        return direct_command(command, conn, lock)
 
     total = b''
     while size > 0:
