@@ -274,8 +274,6 @@ TYPES = [
             "Frequency Calculation",
             "TS Optimisation",
             "UV-Vis Calculation",
-            #"NMR Prediction",
-            #"MO Generation",
         ]
 
 for _type in TYPES:
@@ -287,10 +285,9 @@ for _type in TYPES:
         setattr(JobTestCase, test_name, test)
 
 for solv in SOLVENTS:
-    for f in [input_files[i] for i in [0, 4, 6]]:
-        for type in TYPES:
-            in_name = f.split('.')[0]
-            test_name = "test_{}_{}_{}".format(in_name, type, solv)
-            test = gen_test(os.path.join(tests_dir, f), type, solv)
-            setattr(JobTestCase, test_name, test)
+    for type in ["Geometrical Optimisation", "Crest", "UV-Vis Calculation"]:
+        in_name = input_files[0].split('.')[0]
+        test_name = "test_{}_{}_{}".format(in_name, type, solv)
+        test = gen_test(os.path.join(tests_dir, f), type, solv)
+        setattr(JobTestCase, test_name, test)
 

@@ -114,19 +114,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def lget(self, url):
         self.driver.get('{}{}'.format(self.live_server_url, url))
 
-    def get_charge(self, fname):
-        charge = 0
-        if fname.find("anion"):
-            charge = -1
-        elif fname.find("dianion"):
-            charge = -2
-        elif fname.find("cation"):
-            charge = 1
-        elif fname.find("dication"):
-            charge = 2
-
-        return charge, fname.replace('dianion', '').replace('dication', '').replace('anion', '').replace('cation', '')
-
     def calc_input_params(self, params):
         self.driver.implicitly_wait(10)
         if 'calc_name' in params.keys():
