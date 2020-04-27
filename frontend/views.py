@@ -465,7 +465,7 @@ def submit_calculation(request):
     profile = request.user.profile
     if ressource != "Local":
         try:
-            access = ClusterAccess.objects.get(cluster_address=ressource)
+            access = ClusterAccess.objects.get(cluster_address=ressource, owner=profile)
         except ClusterAccess.DoesNotExist:
             return error(request, "No such cluster access")
 

@@ -119,6 +119,7 @@ class ClusterDaemon:
         session = Session()
         session.handshake(sock)
         session.set_timeout(5*1000)
+        session.keepalive_config(True, 60)
 
         try:
             session.userauth_publickey_fromfile(username, keypath, passphrase="")
@@ -185,6 +186,7 @@ class ClusterDaemon:
 
     def __init__(self):
         for conn in ClusterAccess.objects.all():
+            print("Trying to add access {}".format(conn.id))
             c = self.access_test(conn.id)
             if c not in [0, 1, 2, 3, 4]:
                 self.connections[c[0].id] = c
@@ -195,6 +197,7 @@ class ClusterDaemon:
             else:
                 print("Error with cluster access: {}".format(CONNECTION_CODE[c]))
         ind = 1
+        print("Startup complete")
         while True:
             todo = glob.glob(os.path.join(CALCUS_CLUSTER_HOME, 'todo/*'))
             for c in todo:
@@ -202,6 +205,11 @@ class ClusterDaemon:
                 t.start()
             time.sleep(5)
             ind += 1
+            if ind % 12 == 0:
+                for conn_name in self.connections.keys():
+                    conn, sock, session, sftp = self.connections[conn_name]
+                    session.keepalive_send()
+
             if ind % 60 == 0:
                 ind = 1
                 for conn_name in self.connections.keys():
