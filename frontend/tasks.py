@@ -73,13 +73,11 @@ def direct_command(command, conn, lock):
             sleep(1)
             return direct_command(command, conn, lock)
         chan.execute("source ~/.bashrc; " + command)
-
     except ssh2.exceptions.Timeout:
         print("Command timed out")
         lock.release()
 
-        time.sleep(1)
-        return direct_command(command, conn, lock)
+        return 0
     try:
         chan.wait_eof()
         chan.close()
@@ -88,8 +86,7 @@ def direct_command(command, conn, lock):
     except ssh2.exceptions.Timeout:
         print("Channel timed out")
         lock.release()
-        time.sleep(1)
-        return direct_command(command, conn, lock)
+        return 1
 
     total = b''
     while size > 0:
@@ -181,7 +178,7 @@ def wait_until_done(job_id, conn, lock):
         if _output != None and len(_output) < 2:
             return 0
 
-def system(command, log_file="", force_local=False, software="xtb"):
+def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
     if REMOTE and not force_local:
         pid = int(threading.get_ident())
         #Get the variables based on thread ID
@@ -191,18 +188,39 @@ def system(command, log_file="", force_local=False, software="xtb"):
         remote_dir = remote_dirs[pid]
 
         if log_file != "":
-            output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{} | tee {}' >> submit_{}.sh; sbatch submit_{}.sh".format(remote_dir, conn[0].cluster_username, software, command, log_file, software, software), conn, lock)
+            output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{} | tee {}' >> submit_{}.sh; sbatch submit_{}.sh | tee calcus".format(remote_dir, conn[0].cluster_username, software, command, log_file, software, software), conn, lock)
         else:
-            output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{}' >> submit_{}.sh; sbatch submit_{}.sh".format(remote_dir, conn[0].cluster_username, software, command, software, software), conn, lock)
+            output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{}' >> submit_{}.sh; sbatch submit_{}.sh | tee calcus".format(remote_dir, conn[0].cluster_username, software, command, software, software), conn, lock)
 
-        if output == None:
+        if output == 1:#Channel timed out
+            if calc_id != -1:
+                ind = 0
+
+                while ind < 10:
+                    output = direct_command("cd {}; cat calcus".format(remote_dir), conn, lock)
+                    if isinstance(job_id, int):
+                        ind += 3
+                        time.sleep(1)
+                    else:
+                        break
+                if not isinstance(output, int):
+                    job_id = output[-2].replace('Submitted batch job', '').strip()
+                    wait_until_done(job_id, conn, lock)
+                else:
+                    return output
+            else:
+                print("Channel timed out and no calculation id is set")
+                return 1
+        elif output == 0:#Command timed out
+            print("Command timed out")
             return 1
-        if output[-2].find("Submitted batch job") != -1:
-            job_id = output[-2].replace('Submitted batch job', '').strip()
-            wait_until_done(job_id, conn, lock)
-            return 0
         else:
-            return 1
+            if output[-2].find("Submitted batch job") != -1:
+                job_id = output[-2].replace('Submitted batch job', '').strip()
+                wait_until_done(job_id, conn, lock)
+                return 0
+            else:
+                return 1
     else:
         if log_file != "":
             with open(log_file, 'w') as out:
@@ -275,7 +293,7 @@ def xtb_opt(in_file, calc):
         solvent_add = ''
 
     os.chdir(local_folder)
-    a = system("xtb {} --opt -o vtight -a 0.05 --chrg {} {} ".format(in_file, charge, solvent_add), 'xtb_opt.out')
+    a = system("xtb {} --opt -o vtight -a 0.05 --chrg {} {} ".format(in_file, charge, solvent_add), 'xtb_opt.out', calc_id=calc.id)
     if a != 0:
         return a
 
@@ -360,10 +378,10 @@ def xtb_ts(in_file, calc):
         remote_dir = remote_dirs[pid]
 
         sftp_put(os.path.join(local_folder, 'ts.inp'), os.path.join(folder, 'ts.inp'), conn, lock)
-        a = system("$EBROOTORCA/orca ts.inp", 'xtb_ts.out', software="ORCA")
+        a = system("$EBROOTORCA/orca ts.inp", 'xtb_ts.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        a = system("{}/orca ts.inp".format(EBROOTORCA), 'xtb_ts.out', software="ORCA")
+        a = system("{}/orca ts.inp".format(EBROOTORCA), 'xtb_ts.out', software="ORCA", calc_id=calc.id)
         if a != 0:
             print("Orca failed")
             return a
@@ -458,7 +476,7 @@ def xtb_scan(in_file, calc):
         sftp_put("{}/scan".format(local_folder), os.path.join(folder, 'scan'), conn, lock)
 
     os.chdir(local_folder)
-    a = system("xtb {} --input scan --chrg {} {} --opt".format(in_file, charge, solvent_add), 'xtb_scan.out')
+    a = system("xtb {} --input scan --chrg {} {} --opt".format(in_file, charge, solvent_add), 'xtb_scan.out', calc_id=calc.id)
     if a != 0:
         return a
 
@@ -546,7 +564,7 @@ def xtb_freq(in_file, calc):
         solvent_add = ''
 
     os.chdir(local_folder)
-    system("xtb {} --uhf 1 --chrg {} {} --hess".format(in_file, charge, solvent_add), 'xtb_freq.out')
+    system("xtb {} --uhf 1 --chrg {} {} --hess".format(in_file, charge, solvent_add), 'xtb_freq.out', calc_id=calc.id)
 
     if not local:
         pid = int(threading.get_ident())
@@ -679,9 +697,9 @@ def crest_generic(in_file, calc, mode):
     os.chdir(local_folder)
 
     if mode == "Final":#Restrict the number of conformers
-        a = system("crest {} --chrg {} {} -rthr 0.6 -ewin 4".format(in_file, charge, solvent_add), 'crest.out')
+        a = system("crest {} --chrg {} {} -rthr 0.6 -ewin 4".format(in_file, charge, solvent_add), 'crest.out', calc_id=calc.id)
     elif mode == "NMR":#No restriction, as it will be done by enso
-        a = system("crest {} --chrg {} {} -nmr".format(in_file, charge, solvent_add), 'crest.out')
+        a = system("crest {} --chrg {} {} -nmr".format(in_file, charge, solvent_add), 'crest.out', calc_id=calc.id)
     else:
         print("Invalid crest mode selected!")
         return -1
@@ -832,10 +850,10 @@ end
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/mo.inp".format(local_folder), os.path.join(folder, "mo.inp"), conn, lock)
-        a = system("$EBROOTORCA/orca mo.inp", 'orca_mo.out', software="ORCA")
+        a = system("$EBROOTORCA/orca mo.inp", 'orca_mo.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        a = system("{}/orca mo.inp".format(EBROOTORCA), 'orca_mo.out', software="ORCA")
+        a = system("{}/orca mo.inp".format(EBROOTORCA), 'orca_mo.out', software="ORCA", calc_id=calc.id)
 
     if a != 0:
         return a
@@ -918,10 +936,10 @@ def orca_opt(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/opt.inp".format(local_folder), os.path.join(folder, "opt.inp"), conn, lock)
-        a = system("$EBROOTORCA/orca opt.inp", 'orca_opt.out', software="ORCA")
+        a = system("$EBROOTORCA/orca opt.inp", 'orca_opt.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        a = system("{}/orca opt.inp".format(EBROOTORCA), 'orca_opt.out', software="ORCA")
+        a = system("{}/orca opt.inp".format(EBROOTORCA), 'orca_opt.out', software="ORCA", calc_id=calc.id)
 
     if a != 0:
         print("Orca failed")
@@ -996,10 +1014,10 @@ def orca_ts(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/ts.inp".format(local_folder), os.path.join(folder, "ts.inp"), conn, lock)
-        a = system("$EBROOTORCA/orca ts.inp".format(EBROOTORCA), 'orca_ts.out', software="ORCA")
+        a = system("$EBROOTORCA/orca ts.inp".format(EBROOTORCA), 'orca_ts.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        a = system("{}/orca ts.inp".format(EBROOTORCA), 'orca_ts.out', software="ORCA")
+        a = system("{}/orca ts.inp".format(EBROOTORCA), 'orca_ts.out', software="ORCA", calc_id=calc.id)
 
     if a != 0:
         print("Orca failed")
@@ -1074,10 +1092,10 @@ def orca_freq(in_file, calc):
         remote_dir = remote_dirs[pid]
         sftp_put("{}/freq.inp".format(local_folder), os.path.join(folder, "freq.inp"), conn, lock)
 
-        a = system("$EBROOTORCA/orca freq.inp", 'orca_freq.out', software="ORCA")
+        a = system("$EBROOTORCA/orca freq.inp", 'orca_freq.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        a = system("{}/orca freq.inp".format(EBROOTORCA), 'orca_freq.out', software="ORCA")
+        a = system("{}/orca freq.inp".format(EBROOTORCA), 'orca_freq.out', software="ORCA", calc_id=calc.id)
 
     if a != 0:
         print("Orca failed")
@@ -1300,10 +1318,10 @@ def orca_scan(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/scan.inp".format(local_folder), os.path.join(folder, "scan.inp"), conn, lock)
-        a = system("$EBROOTORCA/orca scan.inp", 'orca_scan.out', software="ORCA")
+        a = system("$EBROOTORCA/orca scan.inp", 'orca_scan.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        a = system("{}/orca scan.inp".format(EBROOTORCA), 'orca_scan.out', software="ORCA")
+        a = system("{}/orca scan.inp".format(EBROOTORCA), 'orca_scan.out', software="ORCA", calc_id=calc.id)
 
     if a != 0:
         print("Orca failed")
@@ -1391,17 +1409,17 @@ def enso(in_file, calc):
     else:
         solvent_add = ''
 
-    a = system("enso.py {} --charge {}".format(solvent_add, charge), 'enso_pre.out')
+    a = system("enso.py {} --charge {}".format(solvent_add, charge), 'enso_pre.out', calc_id=calc.id)
 
     if a != 0:
         return a, 'e'
 
-    a = system("enso.py -run", 'enso.out')
+    a = system("enso.py -run", 'enso.out', calc_id=calc.id)
 
     return a, calc.ensemble
 
 def anmr(in_file, calc):
-    a = system("anmr", 'anmr.out')
+    a = system("anmr", 'anmr.out', calc_id=calc.id)
 
     if a != 0:
         return a, 'e'
@@ -1497,12 +1515,12 @@ def xtb_stda(in_file, calc):
         solvent_add_xtb = ''
 
     os.chdir(local_folder)
-    a = system("xtb4stda {} -chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out')
+    a = system("xtb4stda {} -chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out', calc_id=calc.id)
     if a != 0:
         return a
 
     os.chdir(local_folder)
-    a = system("stda -xtb -e 12", 'stda.out')
+    a = system("stda -xtb -e 12", 'stda.out', calc_id=calc.id)
     if a != 0:
         return a
 
@@ -1576,10 +1594,10 @@ def orca_nmr(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/nmr.inp".format(local_folder), os.path.join(folder, "nmr.inp"), conn, lock)
-        a = system("$EBROOTORCA/orca nmr.inp", 'orca_nmr.out', software="ORCA")
+        a = system("$EBROOTORCA/orca nmr.inp", 'orca_nmr.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        a = system("{}/orca nmr.inp".format(EBROOTORCA), 'orca_nmr.out', software="ORCA")
+        a = system("{}/orca nmr.inp".format(EBROOTORCA), 'orca_nmr.out', software="ORCA", calc_id=calc.id)
 
     if a != 0:
         print("Orca failed")
