@@ -1,0 +1,164 @@
+{% extends 'frontend/base.html' %}
+
+{% load static %}
+
+{% block extrahead %}
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script src="{% static 'frontend/jquery.toc.min.js' %}"></script>
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.1/styles/default.min.css">
+	<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.1/highlight.min.js"></script>
+	<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+  document.querySelectorAll('sh code').forEach((block) => {
+    hljs.highlightBlock(block);
+  });
+});
+	</script>
+	<style>
+		.title {
+			margin-top: 50px;
+			margin-bottom: 20px;
+		}
+		sh {
+			white-space: pre-line;
+			border: 1px solid #ddd;
+			color: #666;
+			font-size: 15px;
+			line-height: 1.6;
+			margin-top: 1.6em;
+			margin-bottom: 1.6em;
+			max-width: 100%;
+			padding: 1em 1.5em;
+			display: block;
+		}
+		codetitle {
+			font-weight: bold;
+			text-align: center;
+		}
+		p {
+ 			white-space: pre-line;
+		}
+		h1 {
+			text-align: center;
+		}
+		#toc {
+			list-style-type: none;
+		}
+		li > a, p > a {
+			color: green;
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+<div class="content" style="width: 50%; margin-left: 25%;">
+	<h1 class="title is-1">Documentation</h1>
+
+	<ul data-toc=".content" data-toc-headings="h2,h3,h4,h5" id="toc"></ul>
+
+	<h3 class="title is-3">What is CalcUS</h3>
+	CalcUS is a computational chemistry plateform. It strives for simplicity, clarity and efficiency. It brings all the necessary tools to perform computational chemistry in a user-friendly web interface.
+	<h3 class="title is-3">User Guide</h3>
+	<h4 class="title is-4">Calculation Structure</h4>
+	<p>
+	CalcUS uses a hierarchy to sort the calculations and their results in a chemically meaningful way.
+
+	The topmost level is composed of projects, which should be completely independant. All the results from a project can be downloaded as a single CSV file from the main page. Projects are created when creating a new molecule. You can also pick an existing project to put that molecule into.
+
+	Molecules are defined by their atoms and bonds, without considering the exact 3D orientation. When a new molecule is created, its InChI code is determined as to have a unique tag for each molecule. If you create a new molecule which already exists in the project, the results will be merged.
+
+	Molecules contain ensembles, which are groups of structures stemming from the same source. If you perform a conformational search, every conformer will be in the same ensemble. In this case, the ensemble represents the true and complete picture of how the molecule will be oriented in space at equilibrium. Here, the ensemble has a thermodynamic meaning. On the other hand, if you performed a constrained optimisation, like scanning a bond distance, an ensemble will be generated to hold all the structures of that scan. In this case, the ensemble itself has no thermodynamic meaning and is just a way of keeping the results organized. Ensembles will also be generated to hold the input structures, either for uploaded structures or drawn structures. These can often be deleted if not needed for further calculations.
+
+	Structures are unique positionings of the molecule in space. If a structure is reoptimized at a different theory level, it will generate another structure (as the exact coordinates will change slightly), which will be held in a new ensemble. An entire ensemble can be reoptimized to generated a single new ensemble. Every calculation that changes the coordinates (geometrical optimisation, constrained optimisation, conformer search, transition state optimisation) will generate new structures.
+
+	The other calculations which don't change the coordinates will create properties. These are attached to a structure and a particular computational method. On CalcUS, different computational methods will create new tabs on the ensemble page and can be browser through that way. All the properties calculated will appear when you choose a set of parameters. The ensemble properties are calculated from all the structural properties (for example, the Boltzmann-weighted free energy). Structural properties also appear below the ensemble properties and will be updated if you select another structure. The properties do not have to be calculated with the same computational method as the geometries were obtained (although make sure you are interpreting the results correctly!)
+	</p>
+
+
+	<h4 class="title is-4">Quickstart</h4>
+	You can quickly get started by going to <a href="/launch/">New Molecule</a> and drawing the molecule you want to study. After choosing a molecule name and new project name, you can choose the type of calculation you want to perform. The fields should generally be filled from the top to the bottom, as choices you make might change the number of options to choose. Make sure you have at least once computing resource to carry out the calculation (see below). After submitting your calculation, you will be taken back to the home page, where your new project will be created. You can view the calculation's status by going to <a href="/calculations/">Calculations</a>. Once it is done, you can click directly on the calculation order to be taken to the molecule's page and browse through the results
+
+	<h4 class="title is-4">Local Calculations</h4>
+	<p>
+		To launch calculations directly on the server, you must either be the Principal Investigator (PI) of a research group or belong to such a group. Once one of these conditions are met, you will have access to the "Local" resource on the calculation launching page.
+
+		If you are a newly registered PI, you can make a request to create your group in your profile. The site's administrator will have to approve your request, so contact him or her to validate your identity and accelerate the process. You will then be able to add members with their username and unique code (which is generated upon account creation.) 
+
+		If you are a newly registered student, send your username and unique code to your PI to be added to their group.
+	</p>
+	<h4 class="title is-4">Remote Calculations</h4>
+		CalcUS can also use external computing resources. The process of launching calculations is exactly the same as for local calculations, except that the external computing resource must be selected in the "Resource" field. Once the calculations are done, the results will be parsed from the remote server, analysed and added to your project. Local calculations can also be used as starting points for calculations on other resources, as every calculation is independant of the resource used.
+
+	<h5 class="title is-5">Setup</h5>
+		Before launching calculations, you will need to configure the resource a bit. Firstly, create a folder named "calcus" in your remote home (the full path should be <code>/home/&lt;username&gt;/calcus</code>). Make sure you the following programs in that folder:
+		<ul>
+			<li><a href="https://github.com/grimme-lab/xtb/releases">xtb</a></li>
+			<li><a href="https://github.com/grimme-lab/crest/releases">crest</a></li>
+			<li><a href="https://github.com/grimme-lab/stda/releases">xtb4stda</a></li>
+			<li><a href="https://github.com/grimme-lab/stda/releases">stda</a></li>
+			<li><a href="https://github.com/grimme-lab/enso/releases">enso.py</a></li>
+			<li><a href="https://github.com/grimme-lab/enso/releases">anmr</a></li>
+		</ul>
+	<p>
+		Make sure that every file is executable. If they are not, you can make them executable by executing the command <code>chmod 700 *</code> in the calcus folder. Then, add <code>/home/&lt;username&gt;/calcus</code> to your path variable, in your <code>.bashrc</code> file. This will ensure that CalcUS will be able to find and use these programs. You will also need the parameter files for xtb and xtb4stda (named <code>.param_...</code>). You will find them in the Github repositories (<a href="https://github.com/grimme-lab/xtb4stda">here</a> and <a href="https://github.com/grimme-lab/xtb">here</a>); they can be simply dropped in your home directory.
+
+		If you do not intend to use these programs on the remote resource, you can simply create empty files (ex. by using <code>touch &lt;file&gt;</code>).
+
+		Secondly, you will need to supply sample submission scripts. As of right now, only the SLURM cluster manager is supported. You need to provide one submission script per software, named <code>submit_&lt;software&gt;.sh</code> (be careful of the capitalization in the software name) and located in your calcus folder. For xtb and other related programs, the script might look like this:
+
+	</p>
+
+		<sh>
+			<codetitle>submit_xtb.sh</codetitle>
+			<code>
+				#!/bin/bash
+				#SBATCH --job-name=CalcUS
+				#SBATCH --output=%x-%j.log
+				#SBATCH --account=def-mygroup
+				#SBATCH --time=168:00:00
+				#SBATCH --nodes=1
+				#SBATCH --ntasks=24
+				#SBATCH --mem=31000M
+
+				module load python/3.8.0
+
+				export OMP_NUM_THREADS=24.1
+				export OMP_STACKSIZE=1G
+
+				cd $SLURM_SUBMIT_DIR
+			</code>
+		</sh>
+
+
+		And for ORCA, it might look like this:
+		<sh>
+			<codetitle>submit_ORCA.sh</codetitle>
+			<code class="bash">
+			#!/bin/bash
+			#SBATCH --job-name=CalcUS
+			#SBATCH --output=%x-%j.log
+			#SBATCH --account=def-mygroup
+			#SBATCH --time=168:00:00
+			#SBATCH --nodes=1
+			#SBATCH --ntasks=24
+			#SBATCH --mem=31000M
+
+			module load nixpkgs/16.09  gcc/7.3.0  openmpi/3.1.2 orca/4.2.0
+
+			cd $SLURM_SUBMIT_DIR
+			</code>
+		</sh>
+
+		CalcUS will automatically append the correct command to this file when submitting a calculation.
+
+		The final step is adding the access on CalcUS. To do that, go on your profile page and enter the correct information about the remote resource you want to add, then click "Submit". 
+		
+		<center>
+			<img src="{% static 'documentation/cluster_access.png' %}" />
+		</center>
+
+		You will be given a public key to add to your authorized keys (in <code>/home/&lt;username&gt;/.ssh/authorized_keys</code>) on the remote server. Once that is done, click "Manage" on the corresponding entry in the "Owned accesses" table. Click "Test connection" to initiate the connection between CalcUS and the cluster. If everything goes well, the status of the access will become "Connected". You will then be able to use this resource when launching calculations.
+
+</div>
+{% endblock %}
+
