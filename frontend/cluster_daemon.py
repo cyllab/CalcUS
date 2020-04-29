@@ -154,6 +154,22 @@ class ClusterDaemon:
 
         return tasks.run_calc(calc_id)
 
+    def test_connection(self, conn_name):
+        print("Testing connection {}".format(conn_name))
+        conn, sock, session, sftp = self.connections[conn_name]
+        lock = self.locks[conn_name]
+        output = tasks.direct_command("ls", self.connections[conn_name], lock)
+        if isinstance(output, int):
+            print("Detected connection failure with {}".format(conn_name))
+            a = self.setup_connection(conn)
+            if a in [2, 3]:
+                print("Failed to reconnect with {}".format(conn_name))
+            else:
+                print("Connection established with {}".format(conn_name))
+                self.connections[conn_name] = a
+        else:
+            print("Connection normal for {}".format(conn_name))
+
     def process_command(self, c):
         with open(c) as f:
             lines = f.readlines()
@@ -204,11 +220,13 @@ class ClusterDaemon:
                 t = threading.Thread(target=self.process_command, args=(c,))
                 t.start()
             time.sleep(5)
+
             ind += 1
+
             if ind % 12 == 0:
                 for conn_name in self.connections.keys():
-                    conn, sock, session, sftp = self.connections[conn_name]
-                    session.keepalive_send()
+                    t = threading.Thread(target=self.test_connection, args=(conn_name,))
+                    t.start()
 
             if ind % 60 == 0:
                 ind = 1
