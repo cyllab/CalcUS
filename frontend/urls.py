@@ -2,7 +2,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth.decorators import login_required
-
+from django.views.generic import TemplateView
 from . import views
 
 app_name = 'frontend'
@@ -11,6 +11,7 @@ urlpatterns = [
     path('', views.projects, name='projects'),
     path('home/', views.projects, name='projects'),
     path('list/', views.IndexView.as_view(), name='list'),
+    path('documentation/', TemplateView.as_view(template_name="frontend/documentation.html"), name='documentation'),
     path('calculations/', views.calculations, name='calculations'),
 
     path('projects/', views.projects, name='projects'),

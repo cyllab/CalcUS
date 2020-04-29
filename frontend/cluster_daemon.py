@@ -118,7 +118,7 @@ class ClusterDaemon:
         password = None
         session = Session()
         session.handshake(sock)
-        session.set_timeout(5*1000)
+        session.set_timeout(20*1000)
         session.keepalive_config(True, 60)
 
         try:
