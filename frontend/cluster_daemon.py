@@ -225,8 +225,10 @@ class ClusterDaemon:
 
             if ind % 12 == 0:
                 for conn_name in self.connections.keys():
-                    t = threading.Thread(target=self.test_connection, args=(conn_name,))
-                    t.start()
+                    conn, sock, session, sftp = self.connections[conn_name]
+                    session.keepalive_send()
+                    #t = threading.Thread(target=self.test_connection, args=(conn_name,))
+                    #t.start()
 
             if ind % 60 == 0:
                 ind = 1

@@ -198,17 +198,19 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
 
                 while ind < 10:
                     output = direct_command("cd {}; cat calcus".format(remote_dir), conn, lock)
-                    if isinstance(job_id, int):
+                    print(output)
+                    if isinstance(output, int):
                         ind += 1
                         time.sleep(1)
                     else:
                         break
                 if not isinstance(output, int):
-                    if output.strip() == '':
+                    if len(output) == 1 and output[0].strip() == '':
                         print("calcus file empty")
                         return 1
                     job_id = output[-2].replace('Submitted batch job', '').strip()
                     wait_until_done(job_id, conn, lock)
+                    return 0
                 else:
                     return output
             else:
