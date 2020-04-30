@@ -175,14 +175,15 @@ def wait_until_done(job_id, conn, lock):
         if ind < len(DELAY)-1:
             ind += 1
         output = direct_command("squeue -j {}".format(job_id), conn, lock)
-        if output.strip() == '':
-            print("Received nothing, ignoring")
-        else:
-            _output = [i for i in output if i.strip() != '' ]
-            print("Waiting ({})".format(job_id))
-            if _output != None and len(_output) < 2:
-                print("Job done")
-                return 0
+        if not isinstance(output, int):
+            if len(output) == 1 and output[0].strip() == '':
+                print("Received nothing, ignoring")
+            else:
+                _output = [i for i in output if i.strip() != '' ]
+                print("Waiting ({})".format(job_id))
+                if _output != None and len(_output) < 2:
+                    print("Job done")
+                    return 0
 
 def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
     if REMOTE and not force_local:
@@ -202,7 +203,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
             if calc_id != -1:
                 ind = 0
 
-                while ind < 10:
+                while ind < 20:
                     output = direct_command("cd {}; cat calcus".format(remote_dir), conn, lock)
                     print(output)
                     if isinstance(output, int):
