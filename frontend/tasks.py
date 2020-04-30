@@ -167,6 +167,7 @@ def sftp_put(src, dst, conn, lock):
     lock.release()
 
 def wait_until_done(job_id, conn, lock):
+    print("Waiting for job {} to finish".format(job_id))
     DELAY = [5, 10, 15, 20, 30]
     ind = 0
     while True:
@@ -174,9 +175,14 @@ def wait_until_done(job_id, conn, lock):
         if ind < len(DELAY)-1:
             ind += 1
         output = direct_command("squeue -j {}".format(job_id), conn, lock)
-        _output = [i for i in output if i.strip() != '' ]
-        if _output != None and len(_output) < 2:
-            return 0
+        if output.strip() == '':
+            print("Received nothing, ignoring")
+        else:
+            _output = [i for i in output if i.strip() != '' ]
+            print("Waiting ({})".format(job_id))
+            if _output != None and len(_output) < 2:
+                print("Job done")
+                return 0
 
 def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
     if REMOTE and not force_local:
