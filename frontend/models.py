@@ -467,6 +467,9 @@ class CalculationOrder(models.Model):
             elif calc.status == 3:
                 num_error += 1
 
+        if num_queued + num_running + num_done + num_error == 0:
+            return 0
+
         if num_running > 0:
             return 1
 

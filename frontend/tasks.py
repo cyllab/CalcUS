@@ -166,6 +166,27 @@ def sftp_put(src, dst, conn, lock):
 
     lock.release()
 
+def wait_until_logfile(remote_dir, conn, lock):
+    print("Waiting for job {} to finish".format(job_id))
+    DELAY = [5, 30, 60, 180, 300, 300, 300, 300]
+    ind = 0
+    while ind < len(DELAY):
+        output = direct_command("ls {}".format(remote_dir), conn, lock)
+        if not isinstance(output, int):
+            if len(output) == 1 and output[0].strip() == '':
+                print("Received nothing, ignoring")
+            else:
+                _output = [i for i in output if i.strip() != '' ]
+                for i in _output:
+                    if i.find("CalcUS-") != -1 and i.find(".log") != -1:
+                        job_id = i.replace('CalcUS-', '').replace('.log', '')
+                        print("Log found: {}".format(job_id))
+                        return job_id
+        sleep(DELAY[ind])
+        ind += 1
+    print("Failed to find a job log")
+    return -1
+
 def wait_until_done(job_id, conn, lock):
     print("Waiting for job {} to finish".format(job_id))
     DELAY = [5, 10, 15, 20, 30]
@@ -205,7 +226,6 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
 
                 while ind < 20:
                     output = direct_command("cd {}; cat calcus".format(remote_dir), conn, lock)
-                    print(output)
                     if isinstance(output, int):
                         ind += 1
                         time.sleep(1)
@@ -213,11 +233,17 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                         break
                 if not isinstance(output, int):
                     if len(output) == 1 and output[0].strip() == '':
-                        print("calcus file empty")
-                        return 1
-                    job_id = output[-2].replace('Submitted batch job', '').strip()
-                    wait_until_done(job_id, conn, lock)
-                    return 0
+                        print("Calcus file empty, waiting for a log file")
+                        job_id = wait_until_logfile(remote_dir, conn, lock)
+                        if job_id == -1:
+                            return 1
+                        else:
+                            wait_until_done(job_id, conn, lock)
+                            return 0
+                    else:
+                        job_id = output[-2].replace('Submitted batch job', '').strip()
+                        wait_until_done(job_id, conn, lock)
+                        return 0
                 else:
                     return output
             else:
