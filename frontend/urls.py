@@ -47,6 +47,7 @@ urlpatterns = [
     path('add_user/', views.add_user, name='add_user'),
     path('gen_3D/', views.gen_3D, name='gen_3D'),
     path('remove_user/', views.remove_user, name='remove_user'),
+    path('server_summary/', views.server_summary, name='server_summary'),
 
     #Access management
     path('manage_access/<int:pk>', views.manage_access, name='manage_access'),

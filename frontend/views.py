@@ -834,7 +834,7 @@ def status_access(request):
 
     profile = request.user.profile
 
-    if access.owner != profile:
+    if access.owner != profile and not profile.user.is_superuser:
         return HttpResponse(status=403)
 
     path = os.path.join(CALCUS_CLUSTER_HOME, "connections", pk)
@@ -907,6 +907,18 @@ def get_pi_requests_table(request):
     return render(request, 'frontend/pi_requests_table.html', {
         'profile': request.user.profile,
         'reqs': reqs,
+        })
+
+@login_required
+@superuser_required
+def server_summary(request):
+    users = Profile.objects.all()
+    groups = ResearchGroup.objects.all()
+    accesses = ClusterAccess.objects.all()
+    return render(request, 'frontend/server_summary.html', {
+        'users': users,
+        'groups': groups,
+        'accesses': accesses,
         })
 
 @login_required

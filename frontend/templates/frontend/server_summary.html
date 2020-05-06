@@ -1,0 +1,109 @@
+{% extends 'frontend/base.html' %}
+
+{% load i18n bulma_tags %}
+{% load static %}
+
+{% block extrahead %}
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script>
+		function refresh_status(a_id) {
+			$.ajax({
+				type: "POST",
+				url: "/status_access/",
+				headers:{
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				data: {'access_id': a_id}, 
+				success: function(data)
+				{
+					if(data.search("Connected") != -1) {
+						$("#status_" + a_id).html(data);		
+						$("#status_" + a_id).removeClass("has-background-danger");		
+						$("#status_" + a_id).addClass("has-background-success");		
+					}
+					else {
+						$("#status_" + a_id).html(data);		
+						$("#status_" + a_id).addClass("has-background-danger");		
+						$("#status_" + a_id).removeClass("has-background-success");		
+
+					}
+				}});
+		}
+
+		$(document).ready(function() {
+			{% for a in accesses %}
+			refresh_status({{ a.id }});
+			{% endfor %}
+		});
+	</script>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+
+<div class="container">
+	<h1 class="title is-1">Users</h1>
+	<table class="table">
+		<thead>
+			<tr>
+			<th>Username</th>
+			<th>Group</th>
+			<th>Date joined</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for u in users %}
+				<tr>
+					<td>{{ u.username }}</td>
+					<td>{{ u.group }}</td>
+					<td>{{ u.user.date_joined }}</td>
+				</tr>
+				
+			{% endfor %}	
+		</tbody>
+	</table>
+
+	<h1 class="title is-1">Groups</h1>
+	{% for g in groups %}
+		<table class="table">
+			<thead>
+				<tr>
+					<th>{{ g.name }}</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>{{ g.PI.username }} (PI)</td>
+				</tr>
+
+				{% for u in g.members.all %}
+					<tr>
+						<td>{{ u.username }}</td>
+					</tr>
+				{% endfor %}	
+			</tbody>
+		</table>
+	{% endfor %}
+
+	<h1 class="title is-1">Cluster Accesses</h1>
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Server</th>
+					<th>Owner</th>
+					<th>Status</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for a in accesses %}
+					<tr>
+						<td>{{ a.cluster_address }}</td>
+						<td>{{ a.owner.username }}</td>
+						<td><div class="box" id="status_{{ a.id }}"></div></td>
+					</tr>
+				{% endfor %}	
+			</tbody>
+		</table>
+
+</div>
+{% endblock content %}
