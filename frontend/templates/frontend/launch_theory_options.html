@@ -1,3 +1,18 @@
+<datalist id="basis_sets_options">
+    <option value="6-31+G(d,p)">6-31+G(d,p)</option>
+    <option value="Def2SVP">Def2SVP</option>
+    <option value="Def2TZVP">Def2TZVP</option>
+    <option value="aug-cc-pVTZ">aug-cc-pVDZ</option>
+    <option value="aug-cc-pVTZ">aug-cc-pVTZ</option>
+</datalist>
+<datalist id="functional_options">
+    <option value="M06">M06</option>
+    <option value="M062X">M062X</option>
+    <option value="PBE0">PBE0</option>
+    <option value="B3LYP">B3LYP</option>
+    <option value="wB97XD">wB97XD</option>
+</datalist>
+
 {% if theory == 'Semi-empirical' %}
 <div class="field">
 	<label class="label">Method</label>
@@ -42,7 +57,7 @@
 		<div class="field" id="calc_basis_set_field">
 			<label class="label">Basis set</label>
 			<div class="control">
-				<input class="input" name="calc_basis_set" id="calc_basis_set" type="text" placeholder="Def2SVP">
+				<input class="input" name="calc_basis_set" id="calc_basis_set" type="text" list="basis_sets_options">
 			</div>
 		</div>
 	</div>
@@ -54,7 +69,6 @@
 			</div>
 		</div>
 	</div>
-
 </div>
 
 {% elif theory == 'DFT' %}
@@ -88,7 +102,7 @@
 		<div class="field" id="calc_functional_field">
 			<label class="label">Functional</label>
 			<div class="control">
-				<input class="input" name="calc_functional" id="calc_functional" type="text" placeholder="M062X">
+				<input class="input" name="calc_functional" id="calc_functional" type="text" list="functional_options">
 			</div>
 		</div>
 	</div>
@@ -96,7 +110,7 @@
 		<div class="field" id="calc_basis_set_field">
 			<label class="label">Basis set</label>
 			<div class="control">
-				<input class="input" name="calc_basis_set" id="calc_basis_set" type="text" placeholder="Def2SVP">
+				<input class="input" name="calc_basis_set" id="calc_basis_set" type="text" list="basis_sets_options">
 			</div>
 		</div>
 	</div>
@@ -116,7 +130,7 @@
 		<div class="field" id="calc_basis_set_field">
 			<label class="label">Basis set</label>
 			<div class="control">
-				<input class="input" name="calc_basis_set" id="calc_basis_set" type="text" placeholder="Def2SVP" required>
+				<input class="input" name="calc_basis_set" id="calc_basis_set" type="text" list="basis_sets_options">
 			</div>
 		</div>
 	</div>
