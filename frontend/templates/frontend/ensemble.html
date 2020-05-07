@@ -18,14 +18,14 @@
 
 	<script>
 		$(document).ready(function(){
-	(function(ChemDoodle) {
-	  ChemDoodle.relabel = function(molecule){
-	    for(let i = 0, ii = molecule.atoms.length; i<ii; i++){
-	    	molecule.atoms[i].altLabel = String(i+1);
-	    }
-	  };
+			(function(ChemDoodle) {
+				ChemDoodle.relabel = function(molecule){
+				for(let i = 0, ii = molecule.atoms.length; i<ii; i++){
+					molecule.atoms[i].altLabel = String(i+1);
+				}
+	  		};
 
-	})(ChemDoodle);
+			})(ChemDoodle);
 		});
 	</script>
 	<script>
@@ -52,6 +52,7 @@
 
 		$.ajaxSetup({ cache: false }); 
 		$(document).ready(function(){
+
 			var my_refresh = setInterval(function() {
 				$.ajax({
 					method: "POST",	 	 
@@ -79,6 +80,7 @@
 									if (xhr.status != 204) {
 										$("#conf_table").html(data);
 										conf_number = document.getElementById("conf_table").rows.length;
+										refresh_details({{ ensemble.unique_parameters.0.id }});
 									}
 								}
 							});
@@ -291,7 +293,6 @@
 	<div id="details_structure_div">	
 
 	</div>
-
 
 	<br />
 	{% if profile == calculation.author %}
