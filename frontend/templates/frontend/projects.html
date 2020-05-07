@@ -10,7 +10,13 @@
 
 	<script src="https://unpkg.com/masonry-layout@4.2.0/dist/masonry.pkgd.min.js"></script>
 	<style>
-
+		#projects_list > center >  article {
+			width: 80%;
+			height: 200px;
+		}
+		#projects_list > center {
+			margin-bottom: 30px;
+		}
 	</style>
 
 {% endblock %}
@@ -83,7 +89,18 @@
 				});
 			}
 		}
-
+		function create_project() {
+			$.ajax({
+				method: "POST",	 	 
+				url: "/create_project/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				success: function(data) {
+					$("#projects_center").append(data);	
+				}
+			});
+		}
 	</script>
 
 <div class="container">
@@ -95,31 +112,40 @@
 	</nav>
 
 		<div id="projects_list">
-			<div class="grid">
-				{% if target_profile.project_set.count > 0 %}
-					{% for proj in target_profile.project_set.all %}
-							<article class="message grid-item is-danger" id="article_proj_{{ proj.id }}">
-								<div class="message-header">
-									<p id="proj_name_{{ proj.id }}">{{ proj.name }}</p>
-									<div>
-										<a href="/download_project_csv/{{ proj.id }}"><i class="fas fa-download"></i></a>
-										<a onclick="edit_field({{ proj.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}"></i></a>
-										<a onclick="del({{ proj.id }});"><i class="fas fa-trash-alt"></i></a>
-									</div>
+			<center id="projects_center">
+				{% for proj in target_profile.project_set.all %}
+						<article class="message is-danger" id="article_proj_{{ proj.id }}">
+							<div class="message-header">
+								<p id="proj_name_{{ proj.id }}">{{ proj.name }}</p>
+								<div>
+									<a href="/download_project_csv/{{ proj.id }}"><i class="fas fa-download"></i></a>
+									<a onclick="edit_field({{ proj.id }});"><i class="fas fa-edit" id="icon_{{ proj.id}}"></i></a>
+									<a onclick="del({{ proj.id }});"><i class="fas fa-trash-alt"></i></a>
 								</div>
-								<a href="/projects/{{ proj.author }}/{{ proj.name }}">
-									<div class="message-body" style="height: 80%;">
-										<strong>Project</strong>
-										<br />
-									{{ proj.molecule_set.count }} Molecule(s)	
-									</div>
-								</a>
-							</article>
-					{% endfor %}
-				{% else %}
-					No project
-				{% endif %}
-			</div>
+							</div>
+							<a href="/projects/{{ proj.author }}/{{ proj.name }}">
+								<div class="message-body" style="height: 80%;">
+									<strong>Project</strong>
+									<br />
+								</div>
+							</a>
+						</article>
+				{% endfor %}
+			</center>
+			{% if request.user.profile == target_profile %}
+				<center>
+					<article class="message is-danger" style="opacity: 0.5;">
+					<div class="message-header">
+						New Project
+					</div>
+						<a onclick="create_project();">
+							<div class="message-body" style="height: 80%;">
+								<i class="fas fa-plus" style="margin-top: 50px;"></i>
+							</div>
+						</a>
+					</article>
+				</center>
+			{% endif %}
 		</div>
 {% endblock %}
 

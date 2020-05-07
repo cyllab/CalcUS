@@ -28,6 +28,8 @@ urlpatterns = [
     path('rename_molecule/', views.rename_molecule, name='rename_molecule'),
     path('rename_ensemble/', views.rename_ensemble, name='rename_ensemble'),
 
+    path('create_project/', views.create_project, name='create_project'),
+
     path('download_project_csv/<int:project_id>', views.download_project_csv, name='download_project_csv'),
 
     #Documentation

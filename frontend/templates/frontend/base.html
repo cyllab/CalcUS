@@ -118,6 +118,10 @@
 			<a class="navbar-item" href="/manage_pi_requests/">
 				Manage PI requests <strong><font color="red" id="pi_requests" style="margin-left: 5px;"></font></strong>
 			</a>
+			<a class="navbar-item" href="/server_summary/">
+				Server Summary	
+			</a>
+
 			{% endif %}
     		</div>
     	</div>
@@ -148,7 +152,7 @@
 		</p>
 		{% if user.profile.is_PI %}
 			<div class="panel-block">
-				<a class="button is-primary" href="/projects/{{ user.profile.group.PI.username }}">{{ user.profile.group.PI.username }}</a>
+				<a class="button is-info" href="/projects/{{ user.profile.group.PI.username }}">{{ user.profile.group.PI.username }}</a>
 			</div>
 				{% for u in user.profile.group.members.all %}
 					<div class="panel-block">
