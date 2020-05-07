@@ -543,7 +543,9 @@ def xtb_scan(in_file, calc):
 
             min_E = 0
             for metaind, mol in enumerate(inds[:-1]):
-                E = float(lines[inds[metaind]+1].split()[2])
+                sline = lines[inds[metaind]+1].strip().split()
+                en_index = sline.index('energy:')
+                E = float(sline[en_index+1])
                 #E = float(lines[inds[metaind]+1].split()[2])
                 struct = ''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]]])
 
