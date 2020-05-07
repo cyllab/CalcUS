@@ -1857,6 +1857,8 @@ def dispatcher(drawing, order_id):
     if step.creates_ensemble:
         e = Ensemble.objects.create(name="{} Result".format(order.step.name), origin=ensemble)
         print("creating ensemble {}".format(e.id))
+        order.result_ensemble = e
+        order.save()
         molecule.ensemble_set.add(e)
         molecule.save()
         e.save()

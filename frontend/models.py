@@ -130,9 +130,24 @@ class Ensemble(models.Model):
     parent_molecule = models.ForeignKey('Molecule', on_delete=models.CASCADE, blank=True, null=True)
     origin = models.ForeignKey('Ensemble', on_delete=models.CASCADE, blank=True, null=True)
 
+    NODE_COLORS = {0: '#000000', 1: '#ffdd57', 2: '#23d160', 3: '#ff3860'}
     hidden = models.BooleanField(default=False)
     def __repr__(self):
         return self.id
+
+    @property
+    def get_node_color(self):
+        orders = self.result_of.all()
+        if len(orders) == 0:
+            return self.NODE_COLORS[2]
+        statuses = [i.status for i in orders]
+        orders2 = self.calculationorder_set.all()
+        statuses += [i.status for i in orders2]
+        if 3 in statuses:
+            return self.NODE_COLORS[3]
+        else:
+            return self.NODE_COLORS[min(statuses)]
+
 
     @property
     def unique_parameters(self):
