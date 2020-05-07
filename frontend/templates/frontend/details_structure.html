@@ -33,10 +33,13 @@
 	<script>
 		var past_num = -1
 		function animate_vib(num) {
+			
 			if (num == -1) {
 				num = past_num;
 			}
 			else {
+				$("#vib_mode_" + past_num).removeClass("has-background-primary");
+				$("#vib_mode_" + num).addClass("has-background-primary");
 				past_num = num;
 			}
 			amplitude = document.getElementById("vib_calibration").value/10;

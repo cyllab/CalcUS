@@ -1,7 +1,7 @@
 {% for line in vibs %}
 	<tr>
-		<td><a class="button" onclick="animate_vib({{ line.0.1}});">{{ line.0.0 }}</a></td>
-		<td>{% if line.1.0 != "" %}<a class="button" onclick="animate_vib({{ line.1.1}});">{{ line.1.0 }}</a>{% endif %}</td>
-		<td>{% if line.2.0 != "" %}<a class="button" onclick="animate_vib({{ line.2.1}});">{{ line.2.0 }}</a>{% endif %}</td>
+		<td><a class="button" id="vib_mode_{{ line.0.1}}" onclick="animate_vib({{ line.0.1}});">{{ line.0.0 }}</a></td>
+		<td>{% if line.1.0 != "" %}<a id="vib_mode_{{ line.1.1}}"class="button" onclick="animate_vib({{ line.1.1}});">{{ line.1.0 }}</a>{% endif %}</td>
+		<td>{% if line.2.0 != "" %}<a id="vib_mode_{{ line.2.1}}"class="button" onclick="animate_vib({{ line.2.1}});">{{ line.2.0 }}</a>{% endif %}</td>
 	</tr>
 {% endfor %}
