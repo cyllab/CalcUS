@@ -10,8 +10,81 @@
 
 	<script src="https://unpkg.com/masonry-layout@4.2.0/dist/masonry.pkgd.min.js"></script>
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+	<script type="text/javascript" src="{% static 'frontend/jquery.connections.js' %}"></script>
 
-{% endblock %}
+
+	<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+
+    	<script src="https://unpkg.com/dagre@0.8.2/dist/dagre.js"></script>
+	<script src="{% static 'frontend/cytoscape-dagre.js' %}"></script>
+	<style>
+		#ensembles_graph {
+			height: 400px;
+		}
+	</style>
+	<script>
+	window.addEventListener('DOMContentLoaded', function(){
+		var cy = window.cy = cytoscape({
+			container: document.getElementById('ensembles_graph'),
+			boxSelectionEnabled: false,
+			autounselectify: true,
+			wheelSensitivity: 0.1,
+		  	layout: {
+				name: 'dagre'
+			},
+			style: [
+				{
+					selector: 'node',
+					style: {
+						'background-color': '#23d160',
+						'shape': 'round-rectangle',
+						'label': 'data(name)',
+						'text-valign': 'center',
+						'text-halign': 'center',
+						'font-size': '10px',
+						'width': 'label',
+						'padding': '5px',
+					}
+				},
+
+				{
+				selector: 'edge',
+					style: {
+					'width': 4,
+					'target-arrow-shape': 'triangle',
+					'line-color': '#000000',
+					'target-arrow-color': '#000000',
+					'curve-style': 'bezier'
+					}
+				}
+			],
+
+		  elements: {
+			nodes: [
+				{% for e in ensembles %}
+				{data: {id: '{{ e.id }}', name: '{{ e.name }}', href: '/ensemble/{{ e.id }}'}},
+				{% endfor %}
+				],
+			edges: [
+				{% for e in ensembles %}
+					{% if e.origin != None %}
+				{ data: { source: '{{ e.origin.id }}', target: '{{ e.id }}' } },
+					{% endif %}
+				{% endfor %}
+		    		]
+		  }
+		});
+cy.on('tap', 'node', function(){
+	  try { // your browser may block popups
+	    window.open( this.data('href') );
+	  } catch(e){ // fall back on url change
+	    window.location.href = this.data('href');
+	  }
+	});  
+
+	      });
+		    </script>
+	    {% endblock %}
 
 {% block content %}
 	<script>
@@ -147,7 +220,7 @@
 					</tr>
 				{% for e in molecule.ensemble_set.all %}
 					<tr>
-						<td>{{ e.name }}</td>
+						<td><a href="/ensemble/{{ e.id }}">{{ e.name }} <i class="fas fa-external-link-alt"></i></a></td>
 						<td>
 							{% for p in e.unique_parameters %}
 								{{ p }} <br />
@@ -169,28 +242,18 @@
 
 	</div>
 	
+	<!--
 	<center>
 		<div id="ensembles_list">
 			<div class="grid">
 				{% if ensembles %}
 					{% for e in ensembles %}
-						<article class="message grid-item is-info" id="article_ensemble_{{ e.id }}">
-							<div class="message-header">
-								<p id="e_name_{{ e.id }}">{{ e.name }}</p>
-								<div>
-									<a onclick="edit_field({{ e.id }});"><i class="fas fa-edit" id="icon_{{ e.id}}"></i></a>
-									<a onclick="del({{ e.id }});"><i class="fas fa-trash-alt"></i></a>
-								</div>
-
-							</div>
-							<a href="/ensemble/{{ e.id}}">
-								<div class="message-body" style="height: 80%;">
-									<strong>Ensemble</strong>
-									<br />
-								{{ e.structure_set.count }} Structure(s)	
-								</div>
-							</a>
-						</article>
+						<div class="grid-item box has-background-info" id="article_ensemble_{{ e.id }}" style="height: 100px">
+							<strong><p id="e_name_{{ e.id }}">{{ e.name }}</p></strong>
+							<a href="/ensemble/{{ e.id }}"><i class="fas fa-external-link-alt"></i></a>
+							<a onclick="edit_field({{ e.id }});"><i class="fas fa-edit" id="icon_{{ e.id}}"></i></a>
+							<a onclick="del({{ e.id }});"><i class="fas fa-trash-alt"></i></a>
+						</div>
 					{% endfor %}
 				{% else %}
 					No ensemble
@@ -198,5 +261,9 @@
 			</div>
 		</div>
 	</center>
+	--!>
+	<div id="ensembles_graph">
+	</div>
+
 {% endblock %}
 

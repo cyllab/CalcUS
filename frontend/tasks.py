@@ -1822,6 +1822,7 @@ def dispatcher(drawing, order_id):
         generate_xyz_structure(drawing, order.structure)
         input_structures = [order.structure]
         molecule = order.structure.parent_ensemble.parent_molecule
+        ensemble = order.structure.parent_ensemble
     else:
         for s in ensemble.structure_set.all():
             generate_xyz_structure(drawing, s)
@@ -1852,7 +1853,7 @@ def dispatcher(drawing, order_id):
     input_structures = filter(order, input_structures)
 
     if step.creates_ensemble:
-        e = Ensemble.objects.create(name="{} Result".format(order.step.name))
+        e = Ensemble.objects.create(name="{} Result".format(order.step.name), origin=ensemble)
         print("creating ensemble {}".format(e.id))
         molecule.ensemble_set.add(e)
         molecule.save()
