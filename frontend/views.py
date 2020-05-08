@@ -1667,7 +1667,7 @@ def get_details_sections(request, pk):
 def log(request, pk):
     LOG_HTML = """
     <label class="label">{}</label>
-    <textarea class="textarea" readonly>
+    <textarea class="textarea" style="height: 300px;" readonly>
     {}
     </textarea>
     """
