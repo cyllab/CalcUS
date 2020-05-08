@@ -583,7 +583,6 @@ class InterfaceTests(CalcusLiveServer):
 
         self.assertRaises(Project.DoesNotExist, get_proj)
 
-
     def test_basic_delete_molecule(self):
         def get_mol():
             mol = Molecule.objects.get(name="Test molecule", project=proj)
@@ -703,6 +702,118 @@ class InterfaceTests(CalcusLiveServer):
             time.sleep(1)
             ind += 1
 
+    def test_create_empty_project(self):
+        self.setup_test_group()
+        self.lget("/projects/")
+
+        self.create_empty_project()
+
+        self.driver.implicitly_wait(5)
+
+        self.assertEqual(self.get_number_projects(), 1)
+        self.assertEqual(self.get_name_projects()[0], "New Project")
+
+    def test_rename_project(self):
+        self.setup_test_group()
+        self.lget("/projects/")
+
+        self.create_empty_project()
+
+        self.driver.implicitly_wait(5)
+
+        project = self.get_projects()[0]
+        self.rename_project(project, "Test Project")
+        self.lget("/projects/")
+
+        self.assertEqual(self.get_number_projects(), 1)
+        self.assertEqual(self.get_name_projects()[0], "Test Project")
+
+    def test_rename_project2(self):
+        self.setup_test_group()
+        self.lget("/projects/")
+
+        self.create_empty_project()
+
+        self.driver.implicitly_wait(5)
+
+        project = self.get_projects()[0]
+        self.rename_project2(project, "Test Project")
+        self.lget("/projects/")
+
+        self.assertEqual(self.get_number_projects(), 1)
+        self.assertEqual(self.get_name_projects()[0], "Test Project")
+
+    def test_rename_molecule(self):
+        self.setup_test_group()
+        self.lget("/projects/")
+
+        proj = Project.objects.create(name="Test project", author=self.profile)
+        mol = Molecule.objects.create(name="Test molecule", project=proj)
+        self.lget("/projects/")
+        self.click_project("Test project")
+
+        mol = self.get_molecules()[0]
+        self.rename_molecule(mol, "My Molecule")
+
+        self.lget("/projects/")
+        self.click_project("Test project")
+
+        self.assertEqual(self.get_number_molecules(), 1)
+        self.assertEqual(self.get_name_molecules()[0], "My Molecule")
+
+    def test_rename_molecule2(self):
+        self.setup_test_group()
+        self.lget("/projects/")
+
+        proj = Project.objects.create(name="Test project", author=self.profile)
+        mol = Molecule.objects.create(name="Test molecule", project=proj)
+        self.lget("/projects/")
+        self.click_project("Test project")
+
+        mol = self.get_molecules()[0]
+        self.rename_molecule2(mol, "My Molecule")
+
+        self.lget("/projects/")
+        self.click_project("Test project")
+
+        self.assertEqual(self.get_number_molecules(), 1)
+        self.assertEqual(self.get_name_molecules()[0], "My Molecule")
+
+    def test_rename_ensemble(self):
+        proj = Project.objects.create(name="Test project", author=self.profile)
+        mol = Molecule.objects.create(name="Test molecule", project=proj)
+        e = Ensemble.objects.create(name="Test ensemble", parent_molecule=mol)
+        self.lget("/projects/")
+        self.click_project("Test project")
+        self.click_molecule("Test molecule")
+
+        ensemble = self.get_ensemble_rows()[0]
+        self.rename_ensemble(ensemble, "My Ensemble")
+
+        self.lget("/projects/")
+        self.click_project("Test project")
+        self.click_molecule("Test molecule")
+
+        self.assertEqual(self.get_number_ensembles(), 1)
+        self.assertEqual(self.get_name_ensembles()[0], "My Ensemble")
+
+    def test_rename_ensemble2(self):
+        proj = Project.objects.create(name="Test project", author=self.profile)
+        mol = Molecule.objects.create(name="Test molecule", project=proj)
+        e = Ensemble.objects.create(name="Test ensemble", parent_molecule=mol)
+        self.lget("/projects/")
+        self.click_project("Test project")
+        self.click_molecule("Test molecule")
+
+        ensemble = self.get_ensemble_rows()[0]
+        self.rename_ensemble2(ensemble, "My Ensemble")
+
+        self.lget("/projects/")
+        self.click_project("Test project")
+        self.click_molecule("Test molecule")
+
+        self.assertEqual(self.get_number_ensembles(), 1)
+        self.assertEqual(self.get_name_ensembles()[0], "My Ensemble")
 
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):

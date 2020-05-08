@@ -405,20 +405,50 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         else:
             return False
 
-    def get_number_projects(self):
+    def get_projects(self):
         assert self.is_on_page_projects()
 
         project_div = self.driver.find_element_by_id("projects_list")
         projects = project_div.find_elements_by_css_selector(".box")
+        return projects
+
+    def get_number_projects(self):
+        projects = self.get_projects()
 
         num = len(projects)
         return num
 
-    def click_project(self, name):
-        assert self.is_on_page_projects()
+    def rename_project(self, proj, name):
+        rename_icon = proj.find_element_by_class_name("fa-edit")
+        rename_icon.click()
+        text_box = proj.find_element_by_css_selector("a > strong > p")
+        text_box.clear()
+        text_box.send_keys(name)
+        text_box.send_keys(Keys.RETURN)
 
-        project_div = self.driver.find_element_by_id("projects_list")
-        projects = project_div.find_elements_by_css_selector(".box")
+    def rename_project2(self, proj, name):
+        rename_icon = proj.find_element_by_class_name("fa-edit")
+        rename_icon.click()
+
+        text_box = proj.find_element_by_css_selector("a > strong > p")
+        text_box.clear()
+        text_box.send_keys(name)
+
+        done_icon = proj.find_element_by_class_name("fa-check")
+        done_icon.click()
+
+    def get_name_projects(self):
+        projects = self.get_projects()
+        names = [proj.find_element_by_css_selector("strong > p").text for proj in projects]
+        return names
+
+    def create_empty_project(self):
+        assert self.is_on_page_projects()
+        create_proj_box = self.driver.find_element_by_css_selector(".container > div > center > a")
+        create_proj_box.click()
+
+    def click_project(self, name):
+        projects = self.get_projects()
 
         for proj in projects:
             p_name = proj.find_element_by_css_selector("strong > p").text
@@ -586,14 +616,43 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 self.driver.switch_to_default_content()
                 return
 
+    def get_molecules(self):
+        molecule_div = self.driver.find_element_by_css_selector(".grid")
+        molecules = molecule_div.find_elements_by_css_selector("article")
+        return molecules
+
+    def get_name_molecules(self):
+        molecules = self.get_molecules()
+        names = [mol.find_element_by_css_selector("div > p").text for mol in molecules]
+
+        return names
+
+    def rename_molecule(self, mol, name):
+        rename_icon = mol.find_element_by_class_name("fa-edit")
+        rename_icon.click()
+        text_box = mol.find_element_by_css_selector(".message-header > p")
+        text_box.clear()
+        text_box.send_keys(name)
+        text_box.send_keys(Keys.RETURN)
+
+    def rename_molecule2(self, mol, name):
+        rename_icon = mol.find_element_by_class_name("fa-edit")
+        rename_icon.click()
+
+        text_box = mol.find_element_by_css_selector(".message-header > p")
+        text_box.clear()
+        text_box.send_keys(name)
+
+        done_icon = mol.find_element_by_class_name("fa-check")
+        done_icon.click()
+
     def delete_molecule(self, name):
         assert self.is_on_page_user_project()
         main_window_handle = None
         while not main_window_handle:
             main_window_handle = self.driver.current_window_handle
 
-        molecule_div = self.driver.find_element_by_css_selector(".grid")
-        molecules = molecule_div.find_elements_by_css_selector("article")
+        molecules = self.get_molecules()
 
         for mol in molecules:
             mol_name = mol.find_element_by_css_selector("div > p").text
@@ -606,14 +665,43 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 self.driver.switch_to_default_content()
                 return
 
+    def get_ensemble_rows(self):
+        table_body = self.driver.find_element_by_css_selector(".table > tbody")
+        ensemble_rows = table_body.find_elements_by_css_selector("tr")
+        return ensemble_rows
+
+    def get_name_ensembles(self):
+        ensemble_rows = self.get_ensemble_rows()
+        names = [e.find_element_by_css_selector("td:first-child > a").text for e in ensemble_rows]
+
+        return names
+
+    def rename_ensemble(self, e, name):
+        rename_icon = e.find_element_by_class_name("fa-edit")
+        rename_icon.click()
+        text_box = e.find_element_by_css_selector("tr > td > a")
+        text_box.clear()
+        text_box.send_keys(name)
+        text_box.send_keys(Keys.RETURN)
+
+    def rename_ensemble2(self, e, name):
+        rename_icon = e.find_element_by_class_name("fa-edit")
+        rename_icon.click()
+
+        text_box = e.find_element_by_css_selector("tr > td > a")
+        text_box.clear()
+        text_box.send_keys(name)
+
+        done_icon = e.find_element_by_class_name("fa-check")
+        done_icon.click()
+
     def delete_ensemble(self, name):
         assert self.is_on_page_molecule()
         main_window_handle = None
         while not main_window_handle:
             main_window_handle = self.driver.current_window_handle
 
-        table_body = self.driver.find_element_by_css_selector(".table > tbody")
-        ensembles_rows = table_body.find_elements_by_css_selector("tr")
+        ensembles_rows = self.get_ensemble_rows()
 
         for e in ensembles_rows:
             e_name = e.find_element_by_css_selector("td:first-child > a").text
