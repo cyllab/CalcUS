@@ -357,7 +357,9 @@ def error(request, msg):
 @login_required
 def submit_calculation(request):
     if 'calc_name' in request.POST.keys():
-        name = request.POST['calc_name']
+        name = clean(request.POST['calc_name'])
+        if name.strip() == '':
+            return error(request, "No calculation name")
     else:
         if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys():
             return error(request, "No calculation name")
@@ -367,33 +369,43 @@ def submit_calculation(request):
     if 'calc_type' in request.POST.keys():
         try:
             step = BasicStep.objects.get(name=clean(request.POST['calc_type']))
-        except Procedure.DoesNotExist:
+        except BasicStep.DoesNotExist:
             return error(request, "No such procedure")
     else:
         return error(request, "No calculation type")
 
     if 'calc_project' in request.POST.keys():
         project = clean(request.POST['calc_project'])
+        if project.strip() == '':
+            return error(request, "No calculation project")
     else:
         return error(request, "No calculation project")
 
     if 'calc_charge' in request.POST.keys():
         charge = clean(request.POST['calc_charge'])
+        if charge.strip() == '':
+            return error(request, "No calculation charge")
     else:
         return error(request, "No calculation charge")
 
     if 'calc_solvent' in request.POST.keys():
         solvent = clean(request.POST['calc_solvent'])
+        if solvent.strip() == '':
+            return error(request, "No calculation solvent")
     else:
         return error(request, "No calculation solvent")
 
     if 'calc_ressource' in request.POST.keys():
         ressource = clean(request.POST['calc_ressource'])
+        if ressource.strip() == '':
+            return error(request, "No computing resource chosen")
     else:
-        return error(request, "You have no computing ressource")
+        return error(request, "No computing resource chosen")
 
     if 'calc_software' in request.POST.keys():
         software = clean(request.POST['calc_software'])
+        if software.strip() == '':
+            return error(request, "No software chosen")
     else:
         return error(request, "No software chosen")
 
@@ -401,6 +413,8 @@ def submit_calculation(request):
     if software == 'ORCA' or software == 'Gaussian':
         if 'calc_theory_level' in request.POST.keys():
             theory = clean(request.POST['calc_theory_level'])
+            if theory.strip() == '':
+                return error(request, "No theory level chosen")
         else:
             return error(request, "No theory level chosen")
 
@@ -416,11 +430,15 @@ def submit_calculation(request):
             if not special_functional:
                 if 'calc_functional' in request.POST.keys():
                     functional = clean(request.POST['calc_functional'])
+                    if functional.strip() == '':
+                        return error(request, "No method")
                 else:
                     return error(request, "No method")
                 if functional not in SPECIAL_FUNCTIONALS:
                     if 'calc_basis_set' in request.POST.keys():
                         basis_set = clean(request.POST['calc_basis_set'])
+                        if basis_set.strip() == '':
+                            return error(request, "No basis set chosen")
                     else:
                         return error(request, "No basis set chosen")
                 else:
@@ -428,6 +446,8 @@ def submit_calculation(request):
         elif theory == "Semi-empirical":
             if 'calc_se_method' in request.POST.keys():
                 functional = clean(request.POST['calc_se_method'])
+                if functional.strip() == '':
+                    return error(request, "No semi-empirical method chosen")
                 basis_set = ''
             else:
                 return error(request, "No semi-empirical method chosen")
@@ -670,7 +690,8 @@ def submit_calculation(request):
     obj.save()
     profile.save()
 
-    dispatcher.delay(drawing, obj.id)
+    if not 'test' in request.POST.keys():
+        dispatcher.delay(drawing, obj.id)
 
     return redirect("/projects/")
 
