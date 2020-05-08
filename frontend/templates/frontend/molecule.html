@@ -213,35 +213,39 @@
 				<br />
 				<center>
 				<table class="table">
-					<tr>
-						<th>Ensemble</th>
-						<th>Unique methods</th>
-						<th>Unique calculations</th>
-						<th></th>
-					</tr>
-				{% for e in molecule.ensemble_set.all %}
-					<tr>
-						<td id="e_name_{{ e.id }}"><a href="/ensemble/{{ e.id }}">{{ e.name }}</a></td>
-						<td>
-							{% for p in e.unique_parameters %}
-								{{ p }} <br />
-							{% endfor %}
-						</td>
-						<td>
-							{% for c in e.unique_calculations %}
-								{{ c }} <br />
-							{% endfor %}
-						</td>
-						<td>
-							<a href="/ensemble/{{ e.id }}"><i class="fas fa-external-link-alt"></i></a>
-							<a onclick="edit_field({{ e.id }});"><i class="fas fa-edit" id="icon_{{ e.id}}"></i></a>
-							<a onclick="del({{ e.id }});"><i class="fas fa-trash-alt"></i></a>
-							<td>
+					<thead>
+						<tr>
+							<th>Ensemble</th>
+							<th>Unique methods</th>
+							<th>Unique calculations</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for e in molecule.ensemble_set.all %}
+							<tr>
+								<td id="e_name_{{ e.id }}"><a href="/ensemble/{{ e.id }}">{{ e.name }}</a></td>
+								<td>
+									{% for p in e.unique_parameters %}
+										{{ p }} <br />
+									{% endfor %}
+								</td>
+								<td>
+									{% for c in e.unique_calculations %}
+										{{ c }} <br />
+									{% endfor %}
+								</td>
+								<td>
+									<a href="/ensemble/{{ e.id }}"><i class="fas fa-external-link-alt"></i></a>
+									<a onclick="edit_field({{ e.id }});"><i class="fas fa-edit" id="icon_{{ e.id}}"></i></a>
+									<a onclick="del({{ e.id }});"><i class="fas fa-trash-alt"></i></a>
+									<td>
 
 
-					</tr>
+							</tr>
 
-				{% endfor %}
+						{% endfor %}
+					</tbody>
 				</table>
 				</center>
 			</div>

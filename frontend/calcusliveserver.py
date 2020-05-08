@@ -408,23 +408,23 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def get_number_projects(self):
         assert self.is_on_page_projects()
 
-        project_div = self.driver.find_element_by_css_selector(".grid")
-        projects = project_div.find_elements_by_css_selector("article")
+        project_div = self.driver.find_element_by_id("projects_list")
+        projects = project_div.find_elements_by_css_selector(".box")
+
         num = len(projects)
-        if num == 0:
-            assert project_div.text.find('No project') != -1
         return num
 
     def click_project(self, name):
         assert self.is_on_page_projects()
 
-        project_div = self.driver.find_element_by_css_selector(".grid")
-        projects = project_div.find_elements_by_css_selector("article")
+        project_div = self.driver.find_element_by_id("projects_list")
+        projects = project_div.find_elements_by_css_selector(".box")
 
         for proj in projects:
-            p_name = proj.find_element_by_css_selector("div > p").text
+            p_name = proj.find_element_by_css_selector("strong > p").text
             if p_name == name:
-                proj.click()
+                link = proj.find_element_by_css_selector("div > a")
+                link.click()
                 return
 
     def get_number_molecules(self):
@@ -452,23 +452,22 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def get_number_ensembles(self):
         assert self.is_on_page_molecule()
 
-        ensembles_div = self.driver.find_element_by_css_selector(".grid")
-        ensembles = ensembles_div.find_elements_by_css_selector("article")
+        table_body = self.driver.find_element_by_css_selector(".table > tbody")
+        ensembles = table_body.find_elements_by_css_selector("tr")
         num = len(ensembles)
-        if num == 0:
-            assert ensembles_div.text.find('No ensemble') != -1
         return num
 
     def click_ensemble(self, name):
         assert self.is_on_page_molecule()
 
-        ensembles_div = self.driver.find_element_by_css_selector(".grid")
-        ensembles = ensembles_div.find_elements_by_css_selector("article")
+        table_body = self.driver.find_element_by_css_selector(".table > tbody")
+        ensembles = table_body.find_elements_by_css_selector("tr")
 
         for e in ensembles:
-            e_name = e.find_element_by_css_selector("div > p").text
+            e_link = e.find_element_by_css_selector("td:first-child > a")
+            e_name = e_link.text
             if e_name == name:
-                e.click()
+                e_link.click()
                 return
 
         raise EnsembleNotFound
@@ -572,13 +571,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         while not main_window_handle:
             main_window_handle = self.driver.current_window_handle
 
-        project_div = self.driver.find_element_by_css_selector(".grid")
-        projects = project_div.find_elements_by_css_selector("article")
+        project_div = self.driver.find_element_by_id("projects_list")
+        projects = project_div.find_elements_by_css_selector(".box")
 
         for proj in projects:
-            p_name = proj.find_element_by_css_selector("div > p").text
+            p_name = proj.find_element_by_css_selector("strong > p").text
+
             if p_name == name:
-                trash = proj.find_element_by_css_selector(".message-header > div > a > i.fa-trash-alt")
+                trash = proj.find_element_by_css_selector("a > i.fa-trash-alt")
                 trash.click()
 
                 alert = self.driver.switch_to_alert()
@@ -612,13 +612,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         while not main_window_handle:
             main_window_handle = self.driver.current_window_handle
 
-        ensemble_div = self.driver.find_element_by_css_selector(".grid")
-        ensembles = ensemble_div.find_elements_by_css_selector("article")
+        table_body = self.driver.find_element_by_css_selector(".table > tbody")
+        ensembles_rows = table_body.find_elements_by_css_selector("tr")
 
-        for e in ensembles:
-            e_name = e.find_element_by_css_selector("div > p").text
+        for e in ensembles_rows:
+            e_name = e.find_element_by_css_selector("td:first-child > a").text
             if e_name == name:
-                trash = e.find_element_by_css_selector(".message-header > div > a > i.fa-trash-alt")
+                trash = e.find_element_by_css_selector("i.fa-trash-alt")
                 trash.click()
 
                 alert = self.driver.switch_to_alert()

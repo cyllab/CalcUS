@@ -70,6 +70,7 @@ class Project(models.Model):
     def __repr__(self):
         return self.name
 
+
 class ClusterAccess(models.Model):
     private_key_path = models.CharField(max_length=100)
     public_key_path = models.CharField(max_length=100)
@@ -465,6 +466,7 @@ class CalculationOrder(models.Model):
     unseen = models.BooleanField(default=True)
 
     resource = models.ForeignKey('ClusterAccess', on_delete=models.CASCADE, blank=True, null=True)
+
 
     @property
     def status(self):

@@ -101,3 +101,4 @@ def get_simple_nmr_shifts_structure(prop):
         ret.append(shift.split())
     return ret
 
+

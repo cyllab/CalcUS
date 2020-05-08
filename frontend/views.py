@@ -152,22 +152,19 @@ def create_project(request):
         profile = request.user.profile
         proj = Project.objects.create(name="New Project", author=profile)
         proj.save()
-        response = """<article class="message is-danger" id="article_proj_{}">
-                    <div class="message-header">
-                            <p id="proj_name_{}">{}</p>
-                            <div>
-                                    <a href="/download_project_csv/{}"><i class="fas fa-download"></i></a>
-                                    <a onclick="edit_field({});"><i class="fas fa-edit" id="icon_{}"></i></a>
-                                    <a onclick="del({});"><i class="fas fa-trash-alt"></i></a>
-                            </div>
-                    </div>
-                    <a href="/projects/{}/{}">
-                            <div class="message-body" style="height: 80%;">
-                                    <strong>Project</strong>
-                                    <br />
-                            </div>
-                    </a>
-            </article>""".format(proj.id, proj.id, proj.name, proj.id, proj.id, proj.id, proj.id, profile, proj.name)
+        response = """  
+<div class="box has-background-danger" id="proj_box_{}">
+        <p style="float: right;">
+                        <a href="/download_project_csv/{}"><i class="fas fa-download"></i></a>
+                        <a onclick="edit_field({});"><i class="fas fa-edit" id="icon_{}"></i></a>
+                        <a onclick="del({});"><i class="fas fa-trash-alt"></i></a>
+        </p>
+        <a href="/projects/{}/{}">
+                <strong><p id="proj_name_{}">{}</p></strong>
+                <p>0 Molecules &nbsp; (0 Calculations: &nbsp; 0 Queued; &nbsp; 0 Running; &nbsp; 0 Completed) </p>
+        </a>
+</div>
+""".format(proj.id, proj.id, proj.id, proj.id, proj.id, profile.username, proj.name, proj.id, proj.name)
             
 
         return HttpResponse(response)
