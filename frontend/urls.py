@@ -18,6 +18,7 @@ urlpatterns = [
     path('projects/<str:username>', views.projects_username, name='projects_username'),
     path('get_projects/', views.get_projects, name='get_projects'),
     path('projects/<str:username>/<str:proj>', views.project_details, name='project_details'),
+    path('project_list/', views.project_list, name='project_list'),
 
     path('please_register/', views.please_register, name='please_register'),
     path('register/', views.RegisterView.as_view(), name='register'),
