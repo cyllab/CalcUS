@@ -522,9 +522,9 @@ def submit_calculation(request):
     if project == "New Project":
         new_project_name = clean(request.POST['new_project_name'])
         try:
-            project_obj = Project.objects.get(name=new_project_name)
+            project_obj = Project.objects.get(name=new_project_name, author=profile)
         except Project.DoesNotExist:
-            project_obj = Project.objects.create(name=new_project_name)
+            project_obj = Project.objects.create(name=new_project_name, author=profile)
             profile.project_set.add(project_obj)
             pass
         else:

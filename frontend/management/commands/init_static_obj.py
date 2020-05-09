@@ -75,18 +75,24 @@ class Command(BaseCommand):
             self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Calculating NMR shifts", error_message="Failed to calculate the NMR shifts", avail_Gaussian=True, avail_ORCA=True)
 
+        name = "Single-Point Energy"
+        if self.is_absent(BasicStep, name):
+            self.print("Adding BasicStep: {}".format(name))
+            a = BasicStep.objects.create(name=name, desc="Calculating single-point energy", error_message="Failed to calculate single-point energy", avail_Gaussian=True, avail_ORCA=True, avail_xtb=True)
+
         '''
         name = "Enso"
         if self.is_absent(BasicStep, name):
             self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Calculating NMR Spectrum", error_message="Failed to calculate the NMR spectrum")
 
-        '''
 
         name = "Anmr"
         if self.is_absent(BasicStep, name):
             self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Creating the final NMR Spectrum", error_message="Failed to create the final NMR spectrum", avail_xtb=True)
+
+        '''
 
         name = "MO Calculation"
         if self.is_absent(BasicStep, name):

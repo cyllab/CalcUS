@@ -274,6 +274,25 @@ class ClusterTests(CalcusLiveServer):
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
 
+    def test_cluster_xtb_sp(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.sdf',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
     def test_cluster_xtb_opt(self):
         self.setup_cluster()
         params = {
@@ -334,8 +353,6 @@ class ClusterTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_molecule())
 
         self.click_ensemble("Constrained Optimisation Result")
-        self.assertEqual(self.get_number_conformers(), 0)
-        self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 20)
 
     def test_cluster_freeze_distance(self):
@@ -360,8 +377,6 @@ class ClusterTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_molecule())
 
         self.click_ensemble("Constrained Optimisation Result")
-        self.assertEqual(self.get_number_conformers(), 0)
-        self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_cluster_uvvis(self):
@@ -430,8 +445,6 @@ class ClusterTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_molecule())
 
         self.click_ensemble("File Upload")
-        self.assertEqual(self.get_number_conformers(), 0)
-        self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 1)
         self.assertTrue(self.is_loaded_mo())
 
@@ -458,10 +471,32 @@ class ClusterTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_molecule())
 
         self.click_ensemble("Geometrical Optimisation Result")
-        self.assertEqual(self.get_number_conformers(), 0)
-        self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_cluster_orca_sp(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'ORCA',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 1)
 
     def test_cluster_orca_ts(self):
         self.setup_cluster()
@@ -486,8 +521,6 @@ class ClusterTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_molecule())
 
         self.click_ensemble("TS Optimisation Result")
-        self.assertEqual(self.get_number_conformers(), 0)
-        self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_cluster_orca_freq(self):
@@ -514,8 +547,6 @@ class ClusterTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_molecule())
 
         self.click_ensemble("File Upload")
-        self.assertEqual(self.get_number_conformers(), 0)
-        self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 1)
         self.assertTrue(self.is_loaded_frequencies())
 
@@ -544,8 +575,6 @@ class ClusterTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_molecule())
 
         self.click_ensemble("Constrained Optimisation Result")
-        self.assertEqual(self.get_number_conformers(), 0)
-        self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 10)
 
     def test_cluster_orca_freeze(self):
@@ -573,8 +602,6 @@ class ClusterTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_molecule())
 
         self.click_ensemble("Constrained Optimisation Result")
-        self.assertEqual(self.get_number_conformers(), 0)
-        self.click_calc_method(1)
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_add_cluster_student(self):

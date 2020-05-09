@@ -368,6 +368,48 @@ def xtb_opt(in_file, calc):
     prop.save()
     return 0
 
+def xtb_sp(in_file, calc):
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
+    folder = '/'.join(in_file.split('/')[:-1])
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
+
+    if solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+    else:
+        solvent_add = ''
+
+    os.chdir(local_folder)
+    a = system("xtb {} --chrg {} {} ".format(in_file, charge, solvent_add), 'xtb_sp.out', calc_id=calc.id)
+    if a != 0:
+        return a
+
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+
+        a = sftp_get("{}/xtb_sp.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_sp.out"), conn, lock)
+        if a == -1:
+            return a
+
+    with open("{}/xtb_sp.out".format(local_folder)) as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+        while lines[ind].find("HOMO-LUMO GAP") == -1:
+            ind -= 1
+        hl_gap = float(lines[ind].split()[3])
+        E = float(lines[ind-2].split()[3])
+
+    prop = get_or_create(calc.parameters, calc.structure)
+    prop.homo_lumo_gap = hl_gap
+    prop.energy = E
+    prop.save()
+    return 0
+
 def get_or_create(params, struct):
     for p in struct.properties.all():
         if p.parameters == params:
@@ -1009,6 +1051,75 @@ def orca_opt(in_file, calc):
     prop.energy = E
     prop.geom = True
     s.save()
+    prop.save()
+
+    return 0
+
+def orca_sp(in_file, calc):
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
+    folder = '/'.join(in_file.split('/')[:-1])
+
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
+
+    if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
+        pal = 1
+    else:
+        pal = 8
+
+    ORCA_TEMPLATE = """!SP {} {} {}
+    %pal
+    nprocs {}
+    end
+    {}
+    *xyz {} {}
+    {}
+    *"""
+
+    if calc.parameters.solvent == "Vacuum":
+        solvent_add = ""
+    else:
+        solvent_add = '''%cpcm
+        smd true
+        SMDsolvent "{}"
+        end'''.format(calc.parameters.solvent)
+
+    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+
+    with open(os.path.join(local_folder, 'sp.inp'), 'w') as out:
+        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        sftp_put("{}/sp.inp".format(local_folder), os.path.join(folder, "sp.inp"), conn, lock)
+        a = system("$EBROOTORCA/orca sp.inp", 'orca_sp.out', software="ORCA", calc_id=calc.id)
+    else:
+        os.chdir(local_folder)
+        a = system("{}/orca sp.inp".format(EBROOTORCA), 'orca_sp.out', software="ORCA", calc_id=calc.id)
+
+    if a != 0:
+        print("Orca failed")
+        return a
+
+    if not local:
+        b = sftp_get("{}/orca_sp.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "orca_sp.out"), conn, lock)
+        if a != 0:
+            return a
+
+    with open("{}/orca_sp.out".format(local_folder)) as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+        while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+            ind -= 1
+        E = float(lines[ind].split()[4])
+
+    prop = get_or_create(calc.parameters, calc.structure)
+    prop.energy = E
     prop.save()
 
     return 0
@@ -1769,9 +1880,10 @@ BASICSTEP_TABLE = {
                 'Frequency Calculation': xtb_freq,
                 'TS Optimisation': xtb_ts,
                 'UV-Vis Calculation': xtb_stda,
-                'Crest Pre NMR': crest_pre_nmr,
-                'Enso': enso,
-                'Anmr': anmr,
+                #'Crest Pre NMR': crest_pre_nmr,
+                #'Enso': enso,
+                #'Anmr': anmr,
+                'Single-Point Energy': xtb_sp,
             },
         'ORCA':
             {
@@ -1781,6 +1893,7 @@ BASICSTEP_TABLE = {
                 'MO Calculation': orca_mo_gen,
                 'Frequency Calculation': orca_freq,
                 'Constrained Optimisation': orca_scan,
+                'Single-Point Energy': orca_sp,
             }
         }
 
