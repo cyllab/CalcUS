@@ -406,6 +406,8 @@ def submit_calculation(request):
         software = clean(request.POST['calc_software'])
         if software.strip() == '':
             return error(request, "No software chosen")
+        if software not in BASICSTEP_TABLE.keys():
+            return error(request, "Invalid software chosen")
     else:
         return error(request, "No software chosen")
 
@@ -464,15 +466,18 @@ def submit_calculation(request):
                 functional = "HF"
                 if 'calc_basis_set' in request.POST.keys():
                     basis_set = clean(request.POST['calc_basis_set'])
+                    if basis_set.strip() == '':
+                        return error(request, "No basis set chosen")
                 else:
                     return error(request, "No basis set chosen")
         elif theory == "RI-MP2":
             functional = "RI-MP2"
             if 'calc_basis_set' in request.POST.keys():
                 basis_set = clean(request.POST['calc_basis_set'])
+                if basis_set.strip() == '':
+                    return error(request, "No basis set chosen")
             else:
                 return error(request, "No basis set chosen")
-
         else:
             return error(request, "Invalid theory level")
 
@@ -553,10 +558,8 @@ def submit_calculation(request):
         try:
             start_e = Ensemble.objects.get(pk=start_id)
         except Ensemble.DoesNotExist:
-            return render(request, 'frontend/error.html', {
-                'profile': request.user.profile,
-                'error_message': "No starting ensemble found"
-                })
+            return error(request, "No starting ensemble found")
+
         start_author = start_e.parent_molecule.project.author
         if not profile_intersection(profile, start_author):
             return error(request, "You do not have permission to access the starting calculation")

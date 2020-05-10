@@ -347,6 +347,13 @@ def xtb_opt(in_file, calc):
             return a
         if b == -1:
             return b
+
+    if not os.path.isfile("{}/xtbopt.xyz".format(local_folder)):
+        return 1
+
+    if not os.path.isfile("{}/xtb_opt.out".format(local_folder)):
+        return 1
+
     with open("{}/xtbopt.xyz".format(local_folder)) as f:
         lines = f.readlines()
     xyz_structure = ''.join(lines)
@@ -394,6 +401,9 @@ def xtb_sp(in_file, calc):
         a = sftp_get("{}/xtb_sp.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_sp.out"), conn, lock)
         if a == -1:
             return a
+
+    if not os.path.isfile("{}/xtb_sp.out".format(local_folder)):
+        return 1
 
     with open("{}/xtb_sp.out".format(local_folder)) as f:
         lines = f.readlines()
@@ -473,6 +483,12 @@ def xtb_ts(in_file, calc):
             return a
         if b == -1:
             return b
+
+    if not os.path.isfile("{}/ts.xyz".format(local_folder)):
+        return 1
+
+    if not os.path.isfile("{}/xtb_ts.out".format(local_folder)):
+        return 1
 
     with open(os.path.join(folder, "ts.xyz")) as f:
         lines = f.readlines()
@@ -572,6 +588,11 @@ def xtb_scan(in_file, calc):
             return b
 
     if has_scan:
+        if not os.path.isfile("{}/xtbscan.log".format(local_folder)):
+            return 1
+
+        if not os.path.isfile("{}/xtb_scan.out".format(local_folder)):
+            return 1
         with open(os.path.join(local_folder, 'xtbscan.log')) as f:
             lines = f.readlines()
             num_atoms = lines[0]
@@ -607,6 +628,12 @@ def xtb_scan(in_file, calc):
                 s.properties.get(parameters=calc.parameters).save()
 
     else:
+        if not os.path.isfile("{}/xtbopt.xyz".format(local_folder)):
+            return 1
+
+        if not os.path.isfile("{}/xtb_scan.out".format(local_folder)):
+            return 1
+
         with open(os.path.join(local_folder, 'xtbopt.xyz')) as f:
             lines = f.readlines()
             r = Structure.objects.create(number=1)
@@ -661,6 +688,12 @@ def xtb_freq(in_file, calc):
     a = save_to_results(os.path.join(local_folder, "vibspectrum"), calc)
     if a != 0:
         return -1, 'e'
+
+    if not os.path.isfile("{}/xtb_freq.out".format(local_folder)):
+        return 1
+
+    if not os.path.isfile("{}/g98.out".format(local_folder)):
+        return 1
 
     with open("{}/xtb_freq.out".format(local_folder)) as f:
         lines = f.readlines()
@@ -797,6 +830,12 @@ def crest_generic(in_file, calc, mode):
 
         sftp_get("{}/crest.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "crest.out"), conn, lock)
         sftp_get("{}/crest_conformers.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "crest_conformers.xyz"), conn, lock)
+
+    if not os.path.isfile("{}/crest.out".format(local_folder)):
+        return 1
+
+    if not os.path.isfile("{}/crest_conformers.xyz".format(local_folder)):
+        return 1
 
     with open(os.path.join(local_folder, "crest.out")) as f:
         lines = f.readlines()
@@ -957,6 +996,9 @@ end
         if e != 0:
             return e
 
+    if not os.path.isfile("{}/orca_mo.out".format(local_folder)):
+        return 1
+
     with open("{}/orca_mo.out".format(local_folder)) as f:
         lines = f.readlines()
         ind = len(lines)-1
@@ -1035,6 +1077,12 @@ def orca_opt(in_file, calc):
         if b != 0:
             return b
 
+    if not os.path.isfile("{}/opt.xyz".format(local_folder)):
+        return 1
+
+    if not os.path.isfile("{}/orca_opt.out".format(local_folder)):
+        return 1
+
     with open("{}/opt.xyz".format(local_folder)) as f:
         lines = f.readlines()
     xyz_structure = '\n'.join([i.strip() for i in lines])
@@ -1110,6 +1158,9 @@ def orca_sp(in_file, calc):
         if a != 0:
             return a
 
+    if not os.path.isfile("{}/orca_sp.out".format(local_folder)):
+        return 1
+
     with open("{}/orca_sp.out".format(local_folder)) as f:
         lines = f.readlines()
         ind = len(lines)-1
@@ -1181,6 +1232,12 @@ def orca_ts(in_file, calc):
             return a
         if b != 0:
             return b
+
+    if not os.path.isfile("{}/ts.xyz".format(local_folder)):
+        return 1
+
+    if not os.path.isfile("{}/orca_ts.out".format(local_folder)):
+        return 1
 
     with open("{}/ts.xyz".format(local_folder)) as f:
         lines = f.readlines()
@@ -1256,6 +1313,9 @@ def orca_freq(in_file, calc):
         a = sftp_get("{}/orca_freq.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "orca_freq.out"), conn, lock)
         if a != 0:
             return a
+
+    if not os.path.isfile("{}/orca_freq.out".format(local_folder)):
+        return 1
 
     with open("{}/orca_freq.out".format(local_folder)) as f:
         lines = f.readlines()
@@ -1496,6 +1556,13 @@ def orca_scan(in_file, calc):
                 return a
 
     if has_scan:
+
+        if not os.path.isfile("{}/scan.relaxscanact.dat".format(local_folder)):
+            return 1
+
+        if not os.path.isfile("{}/scan.allxyz".format(local_folder)):
+            return 1
+
         energies = []
         with open(os.path.join(local_folder, 'scan.relaxscanact.dat')) as f:
             lines = f.readlines()
@@ -1529,6 +1596,12 @@ def orca_scan(in_file, calc):
 
                 calc.result_ensemble.structure_set.add(r)
     else:
+        if not os.path.isfile("{}/scan.xyz".format(local_folder)):
+            return 1
+
+        if not os.path.isfile("{}/orca_scan.out".format(local_folder)):
+            return 1
+
         with open(os.path.join(local_folder, 'scan.xyz')) as f:
             lines = f.readlines()
             r = Structure.objects.create(number=1)
@@ -1684,6 +1757,10 @@ def xtb_stda(in_file, calc):
         sftp_get("{}/tda.dat".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "tda.dat"), conn, lock)
 
     f_x = np.arange(120.0, 1200.0, 1.0)
+
+    if not os.path.isfile("{}/tda.dat".format(local_folder)):
+        return 1
+
     with open("{}/tda.dat".format(local_folder)) as f:
         lines = f.readlines()
 
@@ -1758,6 +1835,9 @@ def orca_nmr(in_file, calc):
         a = sftp_get("{}/orca_nmr.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "orca_nmr.out"), conn, lock)
         if a != 0:
             return a
+
+    if not os.path.isfile("{}/orca_nmr.out".format(local_folder)):
+        return 1
 
     with open(os.path.join(local_folder, 'orca_nmr.out')) as f:
         lines = f.readlines()
