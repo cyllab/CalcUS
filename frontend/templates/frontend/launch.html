@@ -29,7 +29,6 @@
   		return a
 	}
 	</script>
-
 	<script>
 		{% if ensemble %}
 			function filter_changed() {
@@ -198,276 +197,277 @@
 
 {% csrf_token %}
 
-<div class="columns">
-	<div class="column is-half">
-		{% if not ensemble and not structure %}
-		<script>
-		  	let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 500, 300, {useServices:false, oneMolecule:false});
-		  	sketcher.styles.atoms_useJMOLColors = true;
-		  	sketcher.oneMolecule = false;
-		  	sketcher.styles.bonds_clearOverlaps_2D = true;
-		  	sketcher.styles.shapes_color = 'c10000';
-		  	sketcher.repaint();
-		</script>
-		<button class="button" onclick="get_3D();">Generate 3D representation</button>
-		{% endif %}
-
-		<script>
-		  	let editor = new ChemDoodle.EditorCanvas3D('editor', 500, 300, {useServices:false, oneMolecule:false});
-		  	editor.styles.atoms_useJMOLColors = true;
-		  	editor.oneMolecule = false;
-			editor.styles.set3DRepresentation('Stick');
-		  	editor.styles.shapes_color = 'c10000';
-		  	editor.repaint();
-		</script>
-
-	</div>
-	<div class="column">
-		<form action="/submit_calculation/" method="post" id="calcform" enctype="multipart/form-data">
-
+<div class="container">
+	<div class="columns">
+		<div class="column is-half">
 			{% if not ensemble and not structure %}
-			<div class="field">
-				<label class="label">Draw a structure or choose a file</label>
-				<div class="control">
-					<input type="file" name="file_structure">
-				</div>
-			</div>
+			<script>
+				let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 400, 300, {useServices:false, oneMolecule:false});
+				sketcher.styles.atoms_useJMOLColors = true;
+				sketcher.oneMolecule = false;
+				sketcher.styles.bonds_clearOverlaps_2D = true;
+				sketcher.styles.shapes_color = 'c10000';
+				sketcher.repaint();
+			</script>
+			<button class="button" onclick="get_3D();">Generate 3D representation</button>
 			{% endif %}
-			{% csrf_token %}
 
-			<div class="columns">
+			<script>
+				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 300, {useServices:false, oneMolecule:false});
+				editor.styles.atoms_useJMOLColors = true;
+				editor.oneMolecule = false;
+				editor.styles.set3DRepresentation('Stick');
+				editor.styles.shapes_color = 'c10000';
+				editor.repaint();
+			</script>
+
+		</div>
+		<div class="column">
+			<form action="/submit_calculation/" method="post" id="calcform" enctype="multipart/form-data">
+
 				{% if not ensemble and not structure %}
-				<div class="column">
-						<div class="field">
-							<label class="label">Molecule Name</label>
-							<div class="control">
-								<input class="input" name="calc_name" type="text" placeholder="My Molecule" required>
-							</div>
-						</div>
+				<div class="field">
+					<label class="label">Draw a structure or choose a file</label>
+					<div class="control">
+						<input type="file" name="file_structure">
+					</div>
 				</div>
 				{% endif %}
+				{% csrf_token %}
 
-				<div class="column is-narrow">
-					<div class="field">
-						<label class="label">Solvent</label>
-						<div class="control" >
-							<div class="select">
-							  <select name="calc_solvent">
-							    <option selected="selected">Vacuum</option>
-							    <option>Acetone</option>
-							    <option>Acetonitrile</option>
-							    <option>Benzene</option>
-							    <option>Dichloromethane</option>
-							    <option>Chloroform</option>
-							    <option>Carbon disulfide</option>
-							    <option>Dimethylformamide</option>
-							    <option>Dimethylsulfoxide</option>
-							    <option>Diethyl ether</option>
-							    <option>Methanol</option>
-							    <option>n-Hexane</option>
-							    <option>Tetrahydrofuran</option>
-							    <option>Toluene</option>
-							    <option>Water</option>
-							  </select>
+				<div class="columns">
+					{% if not ensemble and not structure %}
+					<div class="column">
+							<div class="field">
+								<label class="label">Molecule Name</label>
+								<div class="control">
+									<input class="input" name="calc_name" type="text" placeholder="My Molecule" required>
+								</div>
 							</div>
-						</div>
 					</div>
-				</div>
+					{% endif %}
 
-				<div class="column is-narrow">
-					<div class="field">
-						<label class="label">Charge</label>
-						<div class="control" >
-							<div class="select">
-							  <select  name="calc_charge">
-							    <option>+2</option>
-							    <option>+1</option>
-							    <option selected="selected">0</option>
-							    <option>-1</option>
-							    <option>-2</option>
-							  </select>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="columns">
-				<div class="column is-narrow">
-					<div class="field">
-						<label class="label">Project</label>
-						<div class="control">
-							<div class="select" >
-							  <select name="calc_project" onchange="project_selection_changed()" id="calc_project">
-								  {% for proj in profile.project_set.all %}
-								  <option name="{{ proj }}">{{ proj }}</option>
-								  {% endfor %}
-								  <option name="new_project">New Project</option>
-							  </select>
+					<div class="column is-narrow">
+						<div class="field">
+							<label class="label">Solvent</label>
+							<div class="control" >
+								<div class="select">
+								  <select name="calc_solvent">
+								    <option selected="selected">Vacuum</option>
+								    <option>Acetone</option>
+								    <option>Acetonitrile</option>
+								    <option>Benzene</option>
+								    <option>Dichloromethane</option>
+								    <option>Chloroform</option>
+								    <option>Carbon disulfide</option>
+								    <option>Dimethylformamide</option>
+								    <option>Dimethylsulfoxide</option>
+								    <option>Diethyl ether</option>
+								    <option>Methanol</option>
+								    <option>n-Hexane</option>
+								    <option>Tetrahydrofuran</option>
+								    <option>Toluene</option>
+								    <option>Water</option>
+								  </select>
+								</div>
 							</div>
 						</div>
 					</div>
 
+					<div class="column is-narrow">
+						<div class="field">
+							<label class="label">Charge</label>
+							<div class="control" >
+								<div class="select">
+								  <select  name="calc_charge">
+								    <option>+2</option>
+								    <option>+1</option>
+								    <option selected="selected">0</option>
+								    <option>-1</option>
+								    <option>-2</option>
+								  </select>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
-				<div class="column">
-					<div class="field" style="display: none;" id="new_project_name_field">
-						<label class="label">Name of new project</label>
-						<div class="control">
-							<input class="input" name="new_project_name" type="text" placeholder="My Project">
+				<div class="columns">
+					<div class="column is-narrow">
+						<div class="field">
+							<label class="label">Project</label>
+							<div class="control">
+								<div class="select" >
+								  <select name="calc_project" onchange="project_selection_changed()" id="calc_project">
+									  {% for proj in profile.project_set.all %}
+									  <option name="{{ proj }}">{{ proj }}</option>
+									  {% endfor %}
+									  <option name="new_project">New Project</option>
+								  </select>
+								</div>
+							</div>
+						</div>
+
+					</div>
+					<div class="column">
+						<div class="field" style="display: none;" id="new_project_name_field">
+							<label class="label">Name of new project</label>
+							<div class="control">
+								<input class="input" name="new_project_name" type="text" placeholder="My Project">
+							</div>
+						</div>
+					</div>
+
+				</div>
+
+				<div class="field">
+					<label class="label">Software</label>
+					<div class="control" >
+						<div class="select">
+							<select name="calc_software" id="calc_software" onchange="software_selection_changed();">
+								<option>xtb</option>
+								<option>ORCA</option>
+								<option>Gaussian</option>
+							</select>
 						</div>
 					</div>
 				</div>
 
-			</div>
+				<div id="software_specific_div">
+				</div>
 
-			<div class="field">
-				<label class="label">Software</label>
-				<div class="control" >
-					<div class="select">
-						<select name="calc_software" id="calc_software" onchange="software_selection_changed();">
-							<option>xtb</option>
-							<option>ORCA</option>
-							<option>Gaussian</option>
-					  	</select>
+				<div class="field">
+					<label class="label">Resource</label>
+					<div class="control" >
+						<div class="select">
+						<select name="calc_ressource">
+							{% if profile.group or profile.is_PI %}
+								<option>Local</option>
+							{% endif %}
+							{% for access in profile.accesses %}
+								<option>{{ access.cluster_address }}</option>
+							{% endfor %}
+						  </select>
+						</div>
 					</div>
 				</div>
-			</div>
 
-			<div id="software_specific_div">
-			</div>
+				{% if ensemble %}
+					<div class="columns">
+						<div class="column">
+							<div class="field">
+								<label class="label">Filter</label>
+								<div class="control" >
+									<div class="select">
+									<select name="calc_filter" onchange="filter_changed();" id="calc_filter">
+										<option>None</option>
+										<option>By Relative Energy</option>
+										<option>By Boltzmann Weight</option>
+									  </select>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="column">
+							<div class="field" style="display: none;" id="calc_filter_value">
+								<label class="label">Higher than</label>
+								<div class="control">
+									<input class="input" name="filter_value" type="text" id="filter_value_input">
+								</div>
+							</div>
+						</div>
+						<div class="column">
+							<div class="field" id="calc_filter_params">
+								<label class="label">Parameters</label>
+								<div class="control" >
+									<div class="select">
+									<select name="filter_parameters">
+										{% for p in ensemble.unique_parameters %}
+											<option value="{{ p.id }}">{{ p }}</option>
+										{% endfor %}
+									  </select>
+									</div>
+								</div>
+							</div>
+						</div>
 
-			<div class="field">
-				<label class="label">Resource</label>
-				<div class="control" >
-					<div class="select">
-					<select name="calc_ressource">
-						{% if profile.group or profile.is_PI %}
-							<option>Local</option>
-						{% endif %}
-					    	{% for access in profile.accesses %}
-							<option>{{ access.cluster_address }}</option>
-						{% endfor %}
-					  </select>
+					</div>
+
+				{% endif %}
+
+				<div class="field">
+					<div class="control">
+						<button class="button is-primary" id="submit_button">Submit</button>
 					</div>
 				</div>
-			</div>
+			</form>
+		</div>
+	</div>
+	<script>
+		$('#calcform').submit(function(){
+			$('<input />').attr('type', 'hidden')
+				.attr('name', "constraint_num")
+				.attr('value', constraint_num)
+				.appendTo(this);
 
 			{% if ensemble %}
-				<div class="columns">
-					<div class="column">
-						<div class="field">
-							<label class="label">Filter</label>
-							<div class="control" >
-								<div class="select">
-								<select name="calc_filter" onchange="filter_changed();" id="calc_filter">
-									<option>None</option>
-									<option>By Relative Energy</option>
-									<option>By Boltzmann Weight</option>
-								  </select>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="column">
-						<div class="field" style="display: none;" id="calc_filter_value">
-							<label class="label">Higher than</label>
-							<div class="control">
-								<input class="input" name="filter_value" type="text" id="filter_value_input">
-							</div>
-						</div>
-					</div>
-					<div class="column">
-						<div class="field" id="calc_filter_params">
-							<label class="label">Parameters</label>
-							<div class="control" >
-								<div class="select">
-								<select name="filter_parameters">
-									{% for p in ensemble.unique_parameters %}
-										<option value="{{ p.id }}">{{ p }}</option>
-									{% endfor %}
-								  </select>
-								</div>
-							</div>
-						</div>
-					</div>
-
-				</div>
+			$('<input />').attr('type', 'hidden')
+				.attr('name', "starting_ensemble")
+				.attr('value', {{ ensemble.id }})
+				.appendTo(this);
 
 			{% endif %}
 
-			<div class="field">
-				<div class="control">
-					<button class="button is-primary" id="submit_button">Submit</button>
-				</div>
-			</div>
-		</form>
-	</div>
-</div>
-<script>
-	$('#calcform').submit(function(){
-		$('<input />').attr('type', 'hidden')
-			.attr('name', "constraint_num")
-			.attr('value', constraint_num)
-			.appendTo(this);
-
-		{% if ensemble %}
-		$('<input />').attr('type', 'hidden')
-			.attr('name', "starting_ensemble")
-			.attr('value', {{ ensemble.id }})
-			.appendTo(this);
-
-		{% endif %}
-
-		{% if structure %}
-		$('<input />').attr('type', 'hidden')
-			.attr('name', "starting_struct")
-			.attr('value', {{ structure.id }})
-			.appendTo(this);
-
-		{% endif %}
-		if (editor.molecules.length > 0) {
-			let mol2 = ChemDoodle.writeMOL(editor.getMolecule());
-
+			{% if structure %}
 			$('<input />').attr('type', 'hidden')
-				.attr('name', "structure").val(mol2).appendTo("#calcform");
-		}
+				.attr('name', "starting_struct")
+				.attr('value', {{ structure.id }})
+				.appendTo(this);
 
-		if (sketcher.molecules.length > 0) {
-			let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
+			{% endif %}
+			if (editor.molecules.length > 0) {
+				let mol2 = ChemDoodle.writeMOL(editor.getMolecule());
 
-			$('<input />').attr('type', 'hidden')
-				.attr('name', "structureB").val(mol).appendTo("#calcform");
-		}
+				$('<input />').attr('type', 'hidden')
+					.attr('name', "structure").val(mol2).appendTo("#calcform");
+			}
 
-		return true;
-	}); 
+			if (sketcher.molecules.length > 0) {
+				let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
 
-$( document ).ready(function() {
-	project_selection_changed();
-});
-{% if ensemble %}
-	$("#calc_project").val("{{ ensemble.parent_molecule.project.name }}");
-	$.ajax({
-		method: "POST",	 	 
-		url: "/get_structure/",
-		headers: {
-			"X-CSRFToken": '{{ csrf_token }}',
-		},
+				$('<input />').attr('type', 'hidden')
+					.attr('name', "structureB").val(mol).appendTo("#calcform");
+			}
 
-		data: {'id': {{ ensemble.id }}, 'num': 1},
-		success: function(data, textStatus, xhr) {
-			let mol_read = ChemDoodle.readXYZ(data);
-			ChemDoodle.relabel(mol_read);
-			editor.loadMolecule(mol_read);	
-		}
+			return true;
+		}); 
+
+	$( document ).ready(function() {
+		project_selection_changed();
 	});
+	{% if ensemble %}
+		$("#calc_project").val("{{ ensemble.parent_molecule.project.name }}");
+		$.ajax({
+			method: "POST",	 	 
+			url: "/get_structure/",
+			headers: {
+				"X-CSRFToken": '{{ csrf_token }}',
+			},
 
-{% endif %}
+			data: {'id': {{ ensemble.id }}, 'num': 1},
+			success: function(data, textStatus, xhr) {
+				let mol_read = ChemDoodle.readXYZ(data);
+				ChemDoodle.relabel(mol_read);
+				editor.loadMolecule(mol_read);	
+			}
+		});
 
-{% if structure %}
-	let mol_read = ChemDoodle.readXYZ(`{{ structure.xyz_structure }}`);
-	ChemDoodle.relabel(mol_read);
-	editor.loadMolecule(mol_read);	
-{% endif %}
-</script>
+	{% endif %}
 
+	{% if structure %}
+		let mol_read = ChemDoodle.readXYZ(`{{ structure.xyz_structure }}`);
+		ChemDoodle.relabel(mol_read);
+		editor.loadMolecule(mol_read);	
+	{% endif %}
+	</script>
+</div>
 {% endblock content %}

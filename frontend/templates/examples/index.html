@@ -10,15 +10,16 @@
 		src="https://cdn.jsdelivr.net/npm/mathjax@3.0.0/es5/tex-mml-chtml.js">
 	</script>
 	<title>Examples</title>
+
 {% endblock %}
 
 {% block content %}
 
-<div>
+<div class="container">
 	{% for ex in examples %}
 	<a href="/examples/{{ ex.id }}">
 		<div class="box">
-			{{ ex.title }}	
+			{{ ex.title }}
 		</div>
 	</a>
 	{% endfor %}

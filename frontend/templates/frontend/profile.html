@@ -4,7 +4,7 @@
 {% load static %}
 
 {% block extrahead %}
-<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 
 	<script charset="utf-8">
 		function refresh_claimed_key_table() {
@@ -63,120 +63,128 @@
 			$("#groups_div").load("/profile_groups/");
 		}
 	</script>
+	<style>
+		.container {
+			width: 80%;
+		}
+	</style>
+
+
 {% endblock %}
 {% block content %}
 {% csrf_token %}
 
-<br>
-<div class="box">
-	Calculation time used: {{ profile.calculation_time_used }} seconds
-	<progress class="progress" value="{{ profile.calculation_time_used }}" max="3600"></progress>
-</div>
-
-<br>
-
-{% if not profile.is_PI %}
-<div class="box">
-	<div class="columns is-vcentered">
-		<div class="column is-4">
-			<form action="/apply_pi/" method="POST">
-				{% csrf_token %}
-				<div class="field">
-					<div class="control">
-						<label class="label">Group name</label>
-						<input type="text" name="group_name"></input>
-					</div>
-				</div>
-				<button class="button is-primary">Apply for a PI account</button>
-			</form>
-		</div>
-
-		<div class="column">
-			Your account will have to be approved by the administrator before you are able to launch calculations.	
-		</div>
+<div class="container">
+	<br>
+	<div class="box">
+		Calculation time used: {{ profile.calculation_time_used }} seconds
+		<progress class="progress" value="{{ profile.calculation_time_used }}" max="3600"></progress>
 	</div>
-</div>
-{% endif %}
-<div class="box">
-	<div class="columns">
-		<div class="column is-narrow has-text-centered">
-			<h5 class="title is-5">Add new cluster access</h5>
-			<form class="form" id="add_clusteraccess_form" method="post">
-				{% csrf_token %}
 
-				<div class="field">
-					<label class="label">Cluster Address</label>
-					<div class="control">
-						<input class="input" name="cluster_address" type="text" required>
-					</div>
-				</div>
-				<div class="field">
-					<label class="label">Username</label>
-					<div class="control">
-						<input class="input" name="cluster_username" type="text" required>
-					</div>
-				</div>
-				<div class="field">
-					<label class="label">Cores</label>
-					<div class="control">
-						<input class="input" name="cluster_cores" type="number" value="8" min="1" max="64" required>
-					</div>
-				</div>
-				<div class="field">
-					<label class="label">Memory (MB)</label>
-					<div class="control">
-						<input class="input" name="cluster_memory" type="number" value="15000" min="2000" step="1000" required>
-					</div>
-				</div>
+	<br>
 
-				<div class="field">
-					<div class="control has-text-centered">
-						<button class="button is-primary">Submit</button>
+	{% if not profile.is_PI %}
+	<div class="box">
+		<div class="columns is-vcentered">
+			<div class="column is-4">
+				<form action="/apply_pi/" method="POST">
+					{% csrf_token %}
+					<div class="field">
+						<div class="control">
+							<label class="label">Group name</label>
+							<input type="text" name="group_name"></input>
+						</div>
 					</div>
-				</div>
-			</form>
-			<div class="control is-hidden" id="public_key_div">
-				<label class="label">Public Key (add this to your allowed keys!)</label>
-				<textarea class="textarea" id="public_key_area" readonly></textarea>
+					<button class="button is-primary">Apply for a PI account</button>
+				</form>
 			</div>
 
-		</div>
-		<div class="column has-text-centered">
-			<h5 class="title is-5">Owned accesses</h5>
-			<div id="owned_accesses">
-				
+			<div class="column">
+				Your account will have to be approved by the administrator before you are able to launch calculations.	
 			</div>
 		</div>
 	</div>
-</div>
+	{% endif %}
+	<div class="box">
+		<div class="columns">
+			<div class="column is-narrow has-text-centered">
+				<h5 class="title is-5">Add new cluster access</h5>
+				<form class="form" id="add_clusteraccess_form" method="post">
+					{% csrf_token %}
 
-<div class="box">
-	<center>
-		<h5 class="title is-5">Group</h5>
-	</center>
-	<div id="groups_div">
+					<div class="field">
+						<label class="label">Cluster Address</label>
+						<div class="control">
+							<input class="input" name="cluster_address" type="text" required>
+						</div>
+					</div>
+					<div class="field">
+						<label class="label">Username</label>
+						<div class="control">
+							<input class="input" name="cluster_username" type="text" required>
+						</div>
+					</div>
+					<div class="field">
+						<label class="label">Cores</label>
+						<div class="control">
+							<input class="input" name="cluster_cores" type="number" value="8" min="1" max="64" required>
+						</div>
+					</div>
+					<div class="field">
+						<label class="label">Memory (MB)</label>
+						<div class="control">
+							<input class="input" name="cluster_memory" type="number" value="15000" min="2000" step="1000" required>
+						</div>
+					</div>
+
+					<div class="field">
+						<div class="control has-text-centered">
+							<button class="button is-primary">Submit</button>
+						</div>
+					</div>
+				</form>
+				<div class="control is-hidden" id="public_key_div">
+					<label class="label">Public Key (add this to your allowed keys!)</label>
+					<textarea class="textarea" id="public_key_area" readonly></textarea>
+				</div>
+
+			</div>
+			<div class="column has-text-centered">
+				<h5 class="title is-5">Owned accesses</h5>
+				<div id="owned_accesses">
+					
+				</div>
+			</div>
+		</div>
 	</div>
+
+	<div class="box">
+		<center>
+			<h5 class="title is-5">Group</h5>
+		</center>
+		<div id="groups_div">
+		</div>
+	</div>
+
+	<script>
+		$("#add_clusteraccess_form").submit(function(e) {
+
+		    e.preventDefault(); 
+		    var form = $(this);
+
+		    $.ajax({
+			   type: "POST",
+			   url: "/add_clusteraccess/",
+			   data: form.serialize(), 
+			   success: function(data)
+			   {
+				$("#public_key_div").removeClass('is-hidden');
+				$("#public_key_area").html(data);
+				$("#owned_accesses").load("/owned_accesses/")
+			   }
+			 });
+		});
+
+	</script>
 </div>
-
-<script>
-	$("#add_clusteraccess_form").submit(function(e) {
-
-	    e.preventDefault(); 
-	    var form = $(this);
-
-	    $.ajax({
-		   type: "POST",
-		   url: "/add_clusteraccess/",
-		   data: form.serialize(), 
-		   success: function(data)
-		   {
-			$("#public_key_div").removeClass('is-hidden');
-			$("#public_key_area").html(data);
-			$("#owned_accesses").load("/owned_accesses/")
-		   }
-		 });
-	});
-
-</script>
-
 {% endblock content %}

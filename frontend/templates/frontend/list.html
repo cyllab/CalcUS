@@ -48,6 +48,12 @@
 		</article>
     {% endfor %}
 </div>
+<script>
+	$('.grid').masonry({
+	  itemSelector: '.grid-item',
+	  fitWidth: true
+	});
+</script>
 {% else %}
     <p>No calculation found</p>
 {% endif %}
