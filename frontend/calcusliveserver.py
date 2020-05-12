@@ -99,7 +99,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         username_f = self.driver.find_element_by_id('id_username')
         password_f = self.driver.find_element_by_id('id_password')
-        submit = self.driver.find_element_by_xpath('/html/body/div/div[2]/div/section/div[1]/div/form/div[2]/input[1]')
+        submit = self.driver.find_element_by_css_selector('input.control')
         username_f.send_keys(username)
         password_f.send_keys(password)
         submit.send_keys(Keys.RETURN)
@@ -275,7 +275,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         return self.driver.current_url.split('/')[3:]
 
     def get_group_panel(self):
-        return self.driver.find_element_by_xpath("/html/body/article")
+        return self.driver.find_element_by_css_selector(".navbar-start > div")
 
     def group_panel_present(self):
         try:
@@ -289,7 +289,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.group_panel_present()
 
         panel = self.get_group_panel()
-        users = panel.find_elements_by_css_selector(".panel-block")
+        users = panel.find_elements_by_css_selector(".navbar-dropdown > .navbar-item")
 
         assert len(users) > 0
 
@@ -299,13 +299,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.group_panel_present()
 
         panel = self.get_group_panel()
-        users = panel.find_elements_by_css_selector(".panel-block")
+
+        panel.click()
+        users = panel.find_elements_by_css_selector(".navbar-dropdown > .navbar-item")
 
         for u in users:
             username = u.text
             if username == name:
-                button = u.find_element_by_css_selector("a.button")
-                button.click()
+                u.click()
                 return
     def is_user(self, username):
         try:

@@ -146,6 +146,7 @@
 							{% endfor %}
 						</div>
 					</div>
+					{% endif %}
 
 					{% if user.is_superuser %}
 						<a class="navbar-item" href="/manage_pi_requests/">
@@ -176,8 +177,6 @@
 				</div>
 			</div>
 		</nav>
-
-	{% endif %}
 
 <div class="container" id="content_container">
 
