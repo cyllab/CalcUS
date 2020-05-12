@@ -6,178 +6,181 @@
  		<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 		<link rel="stylesheet" href="{% static 'bulma/css/style.min.css' %}" />
 		<script src="https://kit.fontawesome.com/55d0fd4831.js" crossorigin="anonymous"></script>
-	{% block extrahead %}
-	{% endblock %}
-	{% if user.is_superuser %}
-		<script>
-			function refresh_pi_requests_notification() {
-				$.ajax({
-				url: "/get_pi_requests/",
-				type: 'GET',
-				success: function(data) {
-					if (data != "0") {
-						$("#pi_requests").html("(" + data + ")");
-						
+		{% block extrahead %}
+		{% endblock %}
+		{% if user.is_superuser %}
+			<script>
+				function refresh_pi_requests_notification() {
+					$.ajax({
+					url: "/get_pi_requests/",
+					type: 'GET',
+					success: function(data) {
+						if (data != "0") {
+							$("#pi_requests").html("(" + data + ")");
+							
+						}
+						else {
+							$("#pi_requests").html("");
+						}
+
 					}
-					else {
-						$("#pi_requests").html("");
-					}
+				});
 
 				}
-			});
+			$(document).ready(function() {
+				refresh_pi_requests_notification();
+				  $(".navbar-burger").click(function() {
 
-			}
-		$(document).ready(function() {
-			refresh_pi_requests_notification();
-		});
-		</script>
-	{% endif %}
-	<style>
-		.container {
-			width: 90%;
-		}
+				      // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+				      $(".navbar-burger").toggleClass("is-active");
+				      $(".navbar-menu").toggleClass("is-active");
 
-		#content_container {
-			margin-bottom: 30px;
-		}
-		nav {
-			margin-bottom: 50px;
-		}
-		a {
-			color: inherit;
-		}
-		.fas {
-			margin-left: 10px;
-		}
-		.slider {
-		  	-webkit-appearance: none;
-		  	background: #d3d3d3;
-		  	outline: none;
-		  	-webkit-transition: .2s;
-		  	border-radius: 5px;  
-		  	height: 15px;
-		  	margin-top: 10px;
-		}
-		.slider::-moz-range-thumb {
-		  	border-radius: 50%;
-		  	background: #23d160;
-		  	width: 25px;
-		  	height: 25px;
-		}
-		.slider::-webkit-slider-thumb {
-		  	-webkit-appearance: none;
-		  	appearance: none;
-		  	border-radius: 50%; 
-		  	background: #23d160;
-		  	cursor: pointer;
-		  	width: 25px;
-		  	height: 25px;
-		}
-		.panel {
-			min-width: 100px;
-			width: 10%;
-			float: left;
-		}
-		div.panel-block > a {
-			width: 100%;
-		}
-		.grid-item {
-			float: left;
-			width: 400px;
-			height: 200px;
-			margin: 10px;
-		}
-		.grid-item:hover {
-			opacity: 0.5;
-		}
-		.message-body {
-			text-align: center;
-		}
-	</style>
-	</head>
-	<body>
-
-<nav class="navbar is-success" role="navigation" aria-label="main navigation">
-  	<div class="navbar-menu">
-    		<div class="navbar-start">
-			<a class="navbar-item" href="/projects/">
-				Home
-			</a>
-
-			<a class="navbar-item" href="/launch/">
-				New Molecule
-			</a>
-			<a class="navbar-item" href="/calculations/">
-				Calculations
-			</a>
-
-			<a class="navbar-item" href="/documentation/">
-				Documentation
-			</a>
-
-			<a class="navbar-item" href="/examples/">
-				Examples
-			</a>
-
-			{% if user.is_superuser %}
-			<a class="navbar-item" href="/manage_pi_requests/">
-				Manage PI requests <strong><font color="red" id="pi_requests" style="margin-left: 5px;"></font></strong>
-			</a>
-			<a class="navbar-item" href="/server_summary/">
-				Server Summary	
-			</a>
-
-			{% endif %}
-    		</div>
-    	</div>
-    	<div class="navbar-end">
-      		<div class="navbar-item">
-        		<div class="buttons">
-			{% if user.is_authenticated %}
-				Welcome <a href="{% url 'frontend:profile' %}"> &nbsp;<strong>{{ user.get_username }}</strong></a>
-				&nbsp;&nbsp;&nbsp;&nbsp;
-			     	<a href="{% url 'logout'%}?next={{request.path}}">Logout <i class="fas fa-sign-out-alt"></i></a>
-			{% else %}
-				<a class="button is-primary" href="{% url 'frontend:register' %}">
-			    	<strong>Sign up</strong>
-			  	</a>
-				<a class="button is-light" href="{% url 'login' %}">
-			    	Log in  <i class="fas fa-sign-in-alt"></i>
-			  	</a>
-			{% endif %} 
-			</div>
-      		</div>
-    	</div>
-</nav>
-
-{% if user.profile.group != None %}
-	<article class="panel is-info">
-		<p class="panel-heading">
-			Research Group
-		</p>
-		{% if user.profile.is_PI %}
-			<div class="panel-block">
-				<a class="button is-info" href="/projects/{{ user.profile.group.PI.username }}">{{ user.profile.group.PI.username }}</a>
-			</div>
-				{% for u in user.profile.group.members.all %}
-					<div class="panel-block">
-						<a class="button" href="/projects/{{ u.username }}">{{ u.username }}</a>
-					</div>
-				{% endfor %}
-		{% else %}
-			<div class="panel-block">
-				<a class="button is-primary" href="/projects/{{ user.profile.group.PI.username }}">{{ user.profile.group.PI.username }}</a>
-			</div>
-				{% for u in user.profile.group.members.all %}
-					<div class="panel-block">
-						<a class="button" href="/projects/{{ u.username }}">{{ u.username }}</a>
-					</div>
-				{% endfor %}
+				  });
+});
+			</script>
 		{% endif %}
-	</article>
-{% endif %}
+		<style>
+			.container {
+				width: 90%;
+			}
+
+			#content_container {
+				margin-bottom: 30px;
+			}
+			nav {
+				margin-bottom: 50px;
+			}
+			a {
+				color: inherit;
+			}
+			.fas {
+				margin-left: 10px;
+			}
+			.slider {
+				-webkit-appearance: none;
+				background: #d3d3d3;
+				outline: none;
+				-webkit-transition: .2s;
+				border-radius: 5px;  
+				height: 15px;
+				margin-top: 10px;
+			}
+			.slider::-moz-range-thumb {
+				border-radius: 50%;
+				background: #23d160;
+				width: 25px;
+				height: 25px;
+			}
+			.slider::-webkit-slider-thumb {
+				-webkit-appearance: none;
+				appearance: none;
+				border-radius: 50%; 
+				background: #23d160;
+				cursor: pointer;
+				width: 25px;
+				height: 25px;
+			}
+			.panel {
+				min-width: 100px;
+				width: 10%;
+				float: left;
+			}
+			div.panel-block > a {
+				width: 100%;
+			}
+			.main-grid-item {
+				float: left;
+				width: 30em;
+				margin: 10px;
+			}
+			.main-grid-item:hover {
+				opacity: 0.5;
+			}
+			.grid-item {
+				margin: 10px;
+				display: inline-block;
+			}
+
+			.message-body {
+				text-align: center;
+			}
+		</style>
+	</head>
+
+	<body>
+		<nav class="navbar is-success" role="navigation" aria-label="main navigation">
+ 			<div class="navbar-brand">
+				<a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="calcusnavbar" onclick="document.querySelector('.navbar-menu').classList.toggle('is-active');">
+					<span aria-hidden="true"></span>
+					<span aria-hidden="true"></span>
+					<span aria-hidden="true"></span>
+				</a>
+			</div>
+			<div id="calcusnavbar" class="navbar-menu" >
+				<div class="navbar-start">
+					<a class="navbar-item" href="/projects/">
+						Home
+					</a>
+
+					<a class="navbar-item" href="/launch/">
+						New Molecule
+					</a>
+					<a class="navbar-item" href="/calculations/">
+						Calculations
+					</a>
+
+					<a class="navbar-item" href="/documentation/">
+						Documentation
+					</a>
+
+					<a class="navbar-item" href="/examples/">
+						Examples
+					</a>
+					{% if user.profile.group != None %}
+					<div class="navbar-item has-dropdown is-hoverable">
+						<a class="navbar-link">Research Group</a>
+						<div class="navbar-dropdown">
+							<a class="navbar-item" href="/projects/{{ user.profile.group.PI.username }}">{{ user.profile.group.PI.username }}</a>
+							{% for u in user.profile.group.members.all %}
+								<a class="navbar-item" href="/projects/{{ u.username }}">{{ u.username }}</a>
+							{% endfor %}
+						</div>
+					</div>
+
+					{% if user.is_superuser %}
+						<a class="navbar-item" href="/manage_pi_requests/">
+							Manage PI requests <strong><font color="red" id="pi_requests" style="margin-left: 5px;"></font></strong>
+						</a>
+						<a class="navbar-item" href="/server_summary/">
+							Server Summary	
+						</a>
+					{% endif %}
+				</div>
+				<div class="navbar-end">
+					<div class="navbar-item">
+						<div class="buttons">
+						{% if user.is_authenticated %}
+							Welcome <a href="{% url 'frontend:profile' %}"> &nbsp;<strong>{{ user.get_username }}</strong></a>
+							&nbsp;&nbsp;&nbsp;&nbsp;
+							<a href="{% url 'logout'%}?next={{request.path}}">Logout <i class="fas fa-sign-out-alt"></i></a>
+						{% else %}
+							<a class="button is-primary" href="{% url 'frontend:register' %}">
+							<strong>Sign up</strong>
+							</a>
+							<a class="button is-light" href="{% url 'login' %}">
+							Log in  <i class="fas fa-sign-in-alt"></i>
+							</a>
+						{% endif %} 
+						</div>
+					</div>
+				</div>
+			</div>
+		</nav>
+
+	{% endif %}
 
 <div class="container" id="content_container">
+
 {% block content %}
 
 {% endblock %}
@@ -189,6 +192,5 @@
 		<img width="30%" src="{% static 'frontend/calcus.png' %}" />
 	</div>
 </section>
-
 </body>
 </html>

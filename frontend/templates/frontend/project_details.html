@@ -91,10 +91,11 @@
 			<li class="is-active"><a aria-current="page" href="#">{{ project.name }}</a></li>
 	  	</ul>
 	</nav>
+	<center>
 	<div class="grid">
 		{% if molecules.count > 0 %}
 			{% for mol in molecules %}
-				<article class="message grid-item is-primary" id="article_mol_{{ mol.id }}">
+				<article class="message grid-item main-grid-item is-primary" id="article_mol_{{ mol.id }}">
 					<div class="message-header">
 						<p id="mol_name_{{ mol.id }}">{{ mol.name }}</p>
 						<div>
@@ -103,11 +104,9 @@
 						</div>
 					</div>
 					<a href="/molecule/{{ mol.id }}">
-					<div class="message-body" style="height: 80%;">
-						<strong>Molecule</strong>
-						<br />
-					{{ mol.count_vis }} Ensemble(s)	
-					</div>
+						<div class="message-body" >
+							{{ mol.count_vis }} Ensemble(s)	
+						</div>
 					</a>
 				</article>
 			{% endfor %}
@@ -115,7 +114,14 @@
 			No molecule in this project.
 		{% endif %}
 	</div>
+	</center>
 </div>
-<br />
+<script>
+	$('.grid').masonry({
+	  itemSelector: '.grid-item',
+	  fitWidth: true
+	});
+</script>
+
 {% endblock %}
 
