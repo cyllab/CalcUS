@@ -3,6 +3,7 @@
 
 <html>
 	<head>
+ 		<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 		<link rel="stylesheet" href="{% static 'bulma/css/style.min.css' %}" />
 		<script src="https://kit.fontawesome.com/55d0fd4831.js" crossorigin="anonymous"></script>
 	{% block extrahead %}
@@ -33,7 +34,7 @@
 	{% endif %}
 	<style>
 		.container {
-			width: 80%;
+			width: 90%;
 		}
 
 		#content_container {
@@ -73,6 +74,7 @@
 		  	height: 25px;
 		}
 		.panel {
+			min-width: 100px;
 			width: 10%;
 			float: left;
 		}
@@ -91,7 +93,6 @@
 		.message-body {
 			text-align: center;
 		}
-
 	</style>
 	</head>
 	<body>

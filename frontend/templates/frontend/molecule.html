@@ -20,6 +20,10 @@
 	<style>
 		#ensembles_graph {
 			height: 400px;
+			width: 90%;
+		}
+		.hscroll {
+			overflow-x: auto;
 		}
 	</style>
 	<script>
@@ -203,51 +207,53 @@
 		<div class="columns">
 			<div class="column is-narrow">
 				<script>
-					let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {useServices: false});
+					let editor = new ChemDoodle.EditorCanvas3D('editor', 200, 200, {useServices: false});
 					editor.styles.set3DRepresentation('Stick');
 					editor.styles.backgroundColor = '#FFFFFF';
 					editor.oneMolecule = false;
 				</script>
 			</div>
 			<div class="column">
-				<br />
-				<center>
-				<table class="table">
-					<thead>
-						<tr>
-							<th>Ensemble</th>
-							<th>Unique methods</th>
-							<th>Unique calculations</th>
-							<th></th>
-						</tr>
-					</thead>
-					<tbody>
-						{% for e in molecule.ensemble_set.all %}
+				<div class="hscroll">
+					<br />
+					<center>
+					<table class="table">
+						<thead>
 							<tr>
-								<td id="e_name_{{ e.id }}"><a href="/ensemble/{{ e.id }}">{{ e.name }}</a></td>
-								<td>
-									{% for p in e.unique_parameters %}
-										{{ p }} <br />
-									{% endfor %}
-								</td>
-								<td>
-									{% for c in e.unique_calculations %}
-										{{ c }} <br />
-									{% endfor %}
-								</td>
-								<td>
-									<a href="/ensemble/{{ e.id }}"><i class="fas fa-external-link-alt"></i></a>
-									<a onclick="edit_field({{ e.id }});"><i class="fas fa-edit" id="icon_{{ e.id}}"></i></a>
-									<a onclick="del({{ e.id }});"><i class="fas fa-trash-alt"></i></a>
-									<td>
-
-
+								<th>Ensemble</th>
+								<th>Unique methods</th>
+								<th>Unique calculations</th>
+								<th></th>
 							</tr>
+						</thead>
+						<tbody>
+							{% for e in molecule.ensemble_set.all %}
+								<tr>
+									<td id="e_name_{{ e.id }}"><a href="/ensemble/{{ e.id }}">{{ e.name }}</a></td>
+									<td>
+										{% for p in e.unique_parameters %}
+											{{ p }} <br />
+										{% endfor %}
+									</td>
+									<td>
+										{% for c in e.unique_calculations %}
+											{{ c }} <br />
+										{% endfor %}
+									</td>
+									<td>
+										<a href="/ensemble/{{ e.id }}"><i class="fas fa-external-link-alt"></i></a>
+										<a onclick="edit_field({{ e.id }});"><i class="fas fa-edit" id="icon_{{ e.id}}"></i></a>
+										<a onclick="del({{ e.id }});"><i class="fas fa-trash-alt"></i></a>
+										<td>
 
-						{% endfor %}
-					</tbody>
-				</table>
-				</center>
+
+								</tr>
+
+							{% endfor %}
+						</tbody>
+					</table>
+					</center>
+				</div>
 			</div>
 		</div>
 

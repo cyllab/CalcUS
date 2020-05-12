@@ -216,6 +216,12 @@
 		}
 
 	</script>
+	<style>
+		.hscroll {
+			overflow-x: auto;
+		}
+
+	</style>
 
 {% endblock %}
 
@@ -234,9 +240,8 @@
 
 	<br />
 	<span class="tag is-danger is-large">Geometries</span>
-	<div class="columns box">
-
-		<div class="column">
+	<div class="columns box is-desktop">
+		<div class="column is-narrow">
 			<script>
 				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {useServices: false});
 				editor.styles.set3DRepresentation('Stick');
@@ -259,20 +264,24 @@
 
 		</div>
 		<div class="column">
-			<table class="table">
-				<thead>
-					<tr>
-						<th>#</th>
-						<th>Energy (Ha)</th>
-						<th>Relative energy (kJ/mol)</th>
-						<th>Degeneracy</th>
-						<th>Boltzmann Weight at 298K</th>
-					</tr>
-				</thead>
-				<tbody id="conf_table">
+			<center>
+			<div class="hscroll">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Energy (Ha)</th>
+							<th>Relative energy (kJ/mol)</th>
+							<th>Degeneracy</th>
+							<th>Boltzmann Weight at 298K</th>
+						</tr>
+					</thead>
+					<tbody id="conf_table">
 
-				</tbody>
-			</table>
+					</tbody>
+				</table>
+			</div>
+			</center>
 		</div>
 	</div>
 
