@@ -970,6 +970,26 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
 
+    def test_freq_solv(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                'solvent': 'Chloroform',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
     def test_conf_search(self):
         params = {
                 'calc_name': 'test',
@@ -1515,6 +1535,31 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_sp_DFT2(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M06-2X',
+                'basis_set': 'Def2SVP',
                 }
 
         self.lget("/launch/")

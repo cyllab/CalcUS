@@ -249,7 +249,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
             else:
                 print("Channel timed out and no calculation id is set")
                 return 1
-        elif output == 0:#Command timed out
+        elif output == 0:
             print("Command timed out")
             return 1
         else:
@@ -299,7 +299,7 @@ def generate_xyz_structure(drawing, structure):
                     structure.xyz_structure += line
                 structure.save()
                 return 0
-        elif structure.sdf_structure != '':#unimplemented
+        elif structure.sdf_structure != '':#unimplemented #not sure anymore
             t = time()
             fname = "{}_{}".format(t, structure.id)
 
@@ -317,6 +317,32 @@ def generate_xyz_structure(drawing, structure):
             return -1
     else:
         return 0
+
+def get_abs_method(method):
+    for m in SYN_METHODS.keys():
+        if method.lower() in SYN_METHODS[m] or method.lower() == m:
+            return m
+    return -1
+
+def get_abs_basis_set(basis_set):
+    for bs in SYN_BASIS_SETS.keys():
+        if basis_set.lower() in SYN_BASIS_SETS[bs] or basis_set.lower() == bs:
+            return bs
+    return -1
+
+def get_method(method, software):
+    abs_method = get_abs_method(method)
+    if abs_method == -1:
+        print("Method not found: {}".format(method))
+        return method
+    return SOFTWARE_METHODS[software][abs_method]
+
+def get_basis_set(basis_set, software):
+    abs_basis_set = get_abs_basis_set(basis_set)
+    if abs_basis_set == -1:
+        print("Basis set not found: {}".format(basis_set))
+        return basis_set
+    return SOFTWARE_BASIS_SETS[software][abs_basis_set]
 
 def xtb_opt(in_file, calc):
     solvent = calc.parameters.solvent
@@ -963,8 +989,11 @@ end
     fname = in_file.split('/')[-1]
     folder = '/'.join(in_file.split('/')[:-1])
 
+    method = get_method(calc.parameters.method, "ORCA")
+    basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
+
     with open("{}/mo.inp".format(local_folder), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, solvent_add, n_HOMO, n_LUMO, n_LUMO1, n_LUMO2, charge, multiplicity, fname))
+        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, pal, solvent_add, n_HOMO, n_LUMO, n_LUMO1, n_LUMO2, charge, multiplicity, fname))
     if not local:
         pid = int(threading.get_ident())
         conn = connections[pid]
@@ -1051,8 +1080,11 @@ def orca_opt(in_file, calc):
 
     lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
 
+    method = get_method(calc.parameters.method, "ORCA")
+    basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
+
     with open(os.path.join(local_folder, 'opt.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
 
     if not local:
         pid = int(threading.get_ident())
@@ -1135,8 +1167,11 @@ def orca_sp(in_file, calc):
 
     lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
 
+    method = get_method(calc.parameters.method, "ORCA")
+    basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
+
     with open(os.path.join(local_folder, 'sp.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
 
     if not local:
         pid = int(threading.get_ident())
@@ -1207,8 +1242,11 @@ def orca_ts(in_file, calc):
 
     lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
 
+    method = get_method(calc.parameters.method, "ORCA")
+    basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
+
     with open(os.path.join(local_folder, 'ts.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join([i.strip() for i in lines])))
+        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join([i.strip() for i in lines])))
 
     if not local:
         pid = int(threading.get_ident())
@@ -1290,8 +1328,11 @@ def orca_freq(in_file, calc):
 
     lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
 
+    method = get_method(calc.parameters.method, "ORCA")
+    basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
+
     with open(os.path.join(local_folder, 'freq.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join([i.strip() for i in lines])))
+        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join([i.strip() for i in lines])))
 
     if not local:
         pid = int(threading.get_ident())
@@ -1520,8 +1561,11 @@ def orca_scan(in_file, calc):
         """
         orca_constraints += FREEZE_TEMPLATE.format(''.join(freeze))
 
+    method = get_method(calc.parameters.method, "ORCA")
+    basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
+
     with open(os.path.join(local_folder, 'scan.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, pal, orca_constraints, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, '\n'.join([i.strip() for i in lines])))
+        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, pal, orca_constraints, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, '\n'.join([i.strip() for i in lines])))
 
     if not local:
         pid = int(threading.get_ident())
@@ -1814,8 +1858,11 @@ def orca_nmr(in_file, calc):
 
     lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
 
+    method = get_method(calc.parameters.method, "ORCA")
+    basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
+
     with open(os.path.join(local_folder, 'nmr.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(calc.parameters.method, calc.parameters.basis_set, calc.parameters.misc, PAL, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, PAL, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
     if not local:
         pid = int(threading.get_ident())
         conn = connections[pid]
