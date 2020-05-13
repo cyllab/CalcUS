@@ -2619,7 +2619,6 @@ BASICSTEP_TABLE = {
                 #'NMR Prediction': orca_nmr,
                 'Geometrical Optimisation': gaussian_opt,
                 'TS Optimisation': gaussian_ts,
-                #'MO Calculation': orca_mo_gen,
                 'Frequency Calculation': gaussian_freq,
                 'Constrained Optimisation': gaussian_scan,
                 'Single-Point Energy': gaussian_sp,

@@ -23,10 +23,13 @@ def basis_sets():
             if bs not in basis_sets:
                 basis_sets.append(bs)
     body = ""
-    for bs in basis_sets:
+    for bs in sorted(basis_sets):
         availabilities = ""
+        name = ""
         for software in softwares:
             if bs in SOFTWARE_BASIS_SETS[software].keys():
+                if name == "":
+                    name = SOFTWARE_BASIS_SETS[software][bs]
                 availabilities += "<td>X</td>\n"
             else:
                 availabilities += "<td></td>\n"
@@ -35,7 +38,7 @@ def basis_sets():
             <tr>
                 <td>{}</td>
                 {}
-            </tr>""".format(SOFTWARE_BASIS_SETS['ORCA'][bs], availabilities)
+            </tr>""".format(name, availabilities)
 
     print(TABLE_TEMPLATE.format("Basis Set", header, body))
 
@@ -49,10 +52,13 @@ def functionals():
             if f not in functionals:
                 functionals.append(f)
     body = ""
-    for f in functionals:
+    for f in sorted(functionals):
         availabilities = ""
+        name = ""
         for software in softwares:
             if f in SOFTWARE_METHODS[software].keys():
+                if name == "":
+                    name = SOFTWARE_METHODS[software][f]
                 availabilities += "<td>X</td>\n"
             else:
                 availabilities += "<td></td>\n"
@@ -61,10 +67,10 @@ def functionals():
             <tr>
                 <td>{}</td>
                 {}
-            </tr>""".format(SOFTWARE_METHODS['ORCA'][f], availabilities)
+            </tr>""".format(name, availabilities)
 
     print(TABLE_TEMPLATE.format("Functionals", header, body))
 
 if __name__ == "__main__":
-    #basis_sets()
-    functionals()
+    basis_sets()
+    #functionals()
