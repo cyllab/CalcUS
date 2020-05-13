@@ -2140,3 +2140,535 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
+class GaussianCalculationTestsPI(CalcusLiveServer):
+
+    def setUp(self):
+        super().setUp()
+
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+
+    def test_sp_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'Gaussian',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_sp_HF(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'Gaussian',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_sp_DFT(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_sp_DFT2(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M06-2X',
+                'basis_set': 'Def2SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+
+    def test_opt_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'Gaussian',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_opt_HF(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'Gaussian',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_opt_DFT(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+
+    def test_freq_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                'software': 'Gaussian',
+                'theory': 'Semi-empirical',
+                'method': 'PM3',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 1)
+        self.assertTrue(self.is_loaded_frequencies())
+
+    def test_freq_HF(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                'software': 'Gaussian',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 1)
+        self.assertTrue(self.is_loaded_frequencies())
+
+    def test_freq_DFT(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+
+    def test_ts_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'TS Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'small_ts.xyz',
+                'software': 'Gaussian',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(20)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("TS Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_ts_HF(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'TS Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'small_ts.xyz',
+                'software': 'Gaussian',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(200)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("TS Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_ts_DFT(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'TS Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'mini_ts.xyz',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(600)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("TS Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+
+    def test_scan_distance_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Distance', [1, 4], [3.5, 1.5, 20]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 21)
+
+    def test_scan_angle_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 130, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 11)
+
+    def test_scan_dihedral_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Dihedral', [1, 2, 3, 4], [0, 10, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 11)
+
+    def test_freeze_distance_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Freeze', 'Distance', [1, 4]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_freeze_angle_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Freeze', 'Angle', [1, 2, 3]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_freeze_dihedral_SE(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Freeze', 'Dihedral', [1, 2, 3, 4]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    '''
+    def test_nmr_DFT(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'NMR Prediction',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'misc': 'Def2/JK',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(60)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 1)
+    '''

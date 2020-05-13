@@ -741,13 +741,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_ensemble()
 
         try:
-            freq_div = self.driver.find_element_by_id("frequency_structure_details")
-        except selenium.common.exceptions.NoSuchElementException:
-            return False
-        table = self.driver.find_element_by_css_selector(".column:nth-child(2) > table")
-
-        try:
-            table2 = self.driver.find_element_by_id("vib_table")
+            table = self.driver.find_element_by_id("vib_table")
         except selenium.common.exceptions.NoSuchElementException:
             return False
 

@@ -572,7 +572,12 @@ SOFTWARE_METHODS = {
                     'pwpb95' : 'PWPB95',
                     'wb2plyp' : 'wB2PLYP',
                     'wb2gp-plyp' : 'wB2GP-PLYP',
+                },
+       'Gaussian':
+                {
+                    'm062x' : 'M062X',
                 }
+
     }
 
 SOFTWARE_BASIS_SETS = {
@@ -886,8 +891,11 @@ SOFTWARE_BASIS_SETS = {
                     'cc-pcvdz-f12': 'cc-pCVDZ-F12',
                     'cc-pcvtz-f12': 'cc-pCVTZ-F12',
                     'cc-pcvqz-f12': 'cc-pCVQZ-F12',
-                }
-
+                },
+        'Gaussian':
+                {
+                    'def2-svp': 'Def2SVP',
+                },
     }
 
 

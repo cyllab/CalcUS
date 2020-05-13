@@ -21,6 +21,8 @@ import ssh2
 from threading import Lock
 import threading
 
+from .libxyz import *
+
 from celery import group
 
 from .models import *
@@ -39,8 +41,12 @@ from .constants import *
 
 ATOMIC_NUMBER = {
         }
+ATOMIC_SYMBOL = {
+
+        }
 for el in periodictable.elements:
     ATOMIC_NUMBER[el.symbol] = el.number
+    ATOMIC_SYMBOL[el.number] = el.symbol
 
 if is_test:
     CALCUS_SCR_HOME = os.environ['CALCUS_TEST_SCR_HOME']
@@ -54,6 +60,14 @@ else:
     CALCUS_KEY_HOME = os.environ['CALCUS_KEY_HOME']
 
 PAL = os.environ['OMP_NUM_THREADS'][0]
+STACKSIZE = os.environ['OMP_STACKSIZE']
+if STACKSIZE.find("G") != -1:
+    STACKSIZE = int(STACKSIZE.replace('G', ''))*1024
+elif STACKSIZE.find("MB") != -1:
+    STACKSIZE = int(STACKSIZE.replace('MB', ''))
+
+MEM = int(PAL)*STACKSIZE
+
 EBROOTORCA = os.environ['EBROOTORCA']
 
 REMOTE = False
@@ -1909,6 +1923,584 @@ def orca_nmr(in_file, calc):
     prop.save()
     return 0
 
+def gaussian_sp(in_file, calc):
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
+    folder = '/'.join(in_file.split('/')[:-1])
+
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
+
+    GAUSSIAN_TEMPLATE = """%chk=in.chk
+%nproc={}
+%mem={}MB
+#p SP {} {} {}
+
+CalcUS
+
+{} {}
+{}
+"""
+
+    if calc.parameters.solvent == "Vacuum":
+        solvent_add = ""
+    else:
+        solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
+
+    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+
+    method = get_method(calc.parameters.method, "Gaussian")
+    basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
+    command_str = "{}/{}".format(method, basis_set)
+
+    with open(os.path.join(local_folder, 'sp.com'), 'w') as out:
+        out.write(GAUSSIAN_TEMPLATE.format(PAL, MEM, command_str, solvent_add, calc.parameters.misc, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        sftp_put("{}/sp.com".format(local_folder), os.path.join(folder, "sp.com"), conn, lock)
+        a = system("g16 sp.com", software="Gaussian", calc_id=calc.id)
+    else:
+        os.chdir(local_folder)
+        a = system("g16 sp.com", software="Gaussian", calc_id=calc.id)
+
+    if a != 0:
+        print("Gaussian failed")
+        return a
+
+    if not local:
+        b = sftp_get("{}/sp.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "sp.log"), conn, lock)
+        if a != 0:
+            return a
+
+    if not os.path.isfile("{}/sp.log".format(local_folder)):
+        return 1
+
+    with open("{}/sp.log".format(local_folder)) as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+        while lines[ind].find("SCF Done") == -1:
+            ind -= 1
+        E = float(lines[ind].split()[4])
+
+    prop = get_or_create(calc.parameters, calc.structure)
+    prop.energy = E
+    prop.save()
+
+    return 0
+
+def gaussian_opt(in_file, calc):
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
+    folder = '/'.join(in_file.split('/')[:-1])
+
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
+
+    GAUSSIAN_TEMPLATE = """%chk=in.chk
+%nproc={}
+%mem={}MB
+#p OPT {} {} {}
+
+CalcUS
+
+{} {}
+{}
+"""
+
+    if calc.parameters.solvent == "Vacuum":
+        solvent_add = ""
+    else:
+        solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
+
+    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+
+    method = get_method(calc.parameters.method, "Gaussian")
+    basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
+    command_str = "{}/{}".format(method, basis_set)
+
+    with open(os.path.join(local_folder, 'opt.com'), 'w') as out:
+        out.write(GAUSSIAN_TEMPLATE.format(PAL, MEM, command_str, solvent_add, calc.parameters.misc, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        sftp_put("{}/opt.com".format(local_folder), os.path.join(folder, "opt.com"), conn, lock)
+        a = system("g16 opt.com", software="Gaussian", calc_id=calc.id)
+    else:
+        os.chdir(local_folder)
+        a = system("g16 opt.com", software="Gaussian", calc_id=calc.id)
+
+    if a != 0:
+        print("Gaussian failed")
+        return a
+
+    if not local:
+        b = sftp_get("{}/opt.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "opt.log"), conn, lock)
+        if a != 0:
+            return a
+
+    if not os.path.isfile("{}/opt.log".format(local_folder)):
+        return 1
+
+    with open("{}/opt.log".format(local_folder)) as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+        while lines[ind].find("SCF Done") == -1:
+            ind -= 1
+        E = float(lines[ind].split()[4])
+        while lines[ind].find("Center     Atomic      Atomic             Coordinates (Angstroms)") == -1:
+            ind += 1
+        ind += 3
+
+        xyz = []
+        while lines[ind].find("----") == -1:
+            n, a, t, x, y, z = lines[ind].strip().split()
+            xyz.append([ATOMIC_SYMBOL[int(a)], x, y, z])
+            ind += 1
+
+        xyz_structure = "{}\nCalcUS\n".format(len(xyz))
+        for el in xyz:
+            xyz_structure += "{} {} {} {}\n".format(*el)
+
+
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=calc.structure.degeneracy)
+    prop = get_or_create(calc.parameters, s)
+    prop.energy = E
+    prop.geom = True
+    s.save()
+    prop.save()
+
+    return 0
+
+def gaussian_freq(in_file, calc):
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
+    folder = '/'.join(in_file.split('/')[:-1])
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
+
+    GAUSSIAN_TEMPLATE = """%chk=in.chk
+%nproc={}
+%mem={}MB
+#p FREQ {} {} {}
+
+CalcUS
+
+{} {}
+{}
+"""
+
+    if calc.parameters.solvent == "Vacuum":
+        solvent_add = ""
+    else:
+        solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
+
+    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+
+    method = get_method(calc.parameters.method, "Gaussian")
+    basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
+    command_str = "{}/{}".format(method, basis_set)
+
+    with open(os.path.join(local_folder, 'freq.com'), 'w') as out:
+        out.write(GAUSSIAN_TEMPLATE.format(PAL, MEM, command_str, solvent_add, calc.parameters.misc, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        sftp_put("{}/freq.com".format(local_folder), os.path.join(folder, "freq.com"), conn, lock)
+
+        a = system("g16 freq.com", software="Gaussian", calc_id=calc.id)
+    else:
+        os.chdir(local_folder)
+        a = system("g16 freq.com", software="Gaussian", calc_id=calc.id)
+
+    if a != 0:
+        print("Gaussian failed")
+        return a
+
+    if not local:
+        a = sftp_get("{}/freq.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "freq.log"), conn, lock)
+        if a != 0:
+            return a
+
+    if not os.path.isfile("{}/freq.log".format(local_folder)):
+        return 1
+
+    with open("{}/freq.log".format(local_folder)) as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+    while lines[ind].find('Zero-point correction') == -1:
+        ind -= 1
+
+    ZPE = lines[ind].split()[-2]
+    H = lines[ind+2].split()[-1]
+    G = lines[ind+3].split()[-1]
+
+    while lines[ind].find('SCF Done') == -1:
+        ind -= 1
+
+    SCF = lines[ind].split()[4]
+
+
+    prop = get_or_create(calc.parameters, calc.structure)
+    prop.energy = SCF
+    prop.free_energy = float(0.0030119 + float(G) + float(SCF))
+    prop.freq = calc.id
+    prop.save()
+
+    raw_lines = calc.structure.xyz_structure.split('\n')
+    xyz_lines = []
+    for line in raw_lines:
+        if line.strip() != '':
+            xyz_lines.append(line)
+
+    num_atoms = int(xyz_lines[0].strip())
+    xyz_lines = xyz_lines[2:]
+    struct = []
+
+    for line in xyz_lines:
+        if line.strip() != '':
+            a, x, y, z = line.strip().split()
+            struct.append([a, float(x), float(y), float(z)])
+
+    ind = 0
+    while lines[ind].find("and normal coordinates:") == -1:
+        ind += 1
+    ind += 3
+
+    vibs = []
+    wavenumbers = []
+    intensities = []
+    while ind < len(lines) - 1:
+        vib = []
+        intensity = []
+        sline = lines[ind].split()
+        num_vibs = int((len(sline)-2))
+
+        for i in range(num_vibs):
+            wavenumbers.append(float(sline[2+i]))
+            intensities.append(float(lines[ind+3].split()[3+i]))
+            vib.append([])
+
+        while lines[ind].find("Atom  AN") == -1:
+            ind += 1
+
+        while ind < len(lines) and len(lines[ind].split()) > 3:
+            sline = lines[ind].split()
+            n = sline[0].strip()
+            Z = sline[1].strip()
+            for i in range(num_vibs):
+                x, y, z = sline[2+3*i:5+3*i]
+                vib[i].append([x, y, z])
+            ind += 1
+        for i in range(num_vibs):
+            vibs.append(vib[i])
+        while ind < len(lines)-1 and lines[ind].find("Frequencies --") == -1:
+            ind += 1
+
+    for ind in range(len(vibs)):
+        with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
+            out.write("{}\n".format(num_atoms))
+            assert len(struct) == num_atoms
+            out.write("CalcUS\n")
+            for ind2, (a, x, y, z) in enumerate(struct):
+                out.write("{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(a, x, y, z, *vibs[ind][ind2]))
+
+    with open("{}/orcaspectrum".format(os.path.join(CALCUS_RESULTS_HOME, str(calc.id))), 'w') as out:
+        for vib in wavenumbers:
+            out.write("{:.1f}\n".format(vib))
+
+    x = np.arange(500, 4000, 1)#Wave number in cm^-1
+    spectrum = plot_vibs(x, zip(wavenumbers, intensities))
+
+    with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "IR.csv"), 'w') as out:
+        out.write("Wavenumber,Intensity\n")
+        intensities = 1000*np.array(intensities)/max(intensities)
+        for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
+            out.write("-{:.1f},{:.5f}\n".format(_x, i))
+
+    return 0
+
+def gaussian_ts(in_file, calc):
+
+    if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
+        pal = 1
+    else:
+        pal = 8
+
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
+    folder = '/'.join(in_file.split('/')[:-1])
+
+    GAUSSIAN_TEMPLATE = """%chk=in.chk
+%nproc={}
+%mem={}MB
+#p opt(ts,noeigentest,calcfc) {} {} {}
+
+CalcUS
+
+{} {}
+{}
+"""
+
+    if calc.parameters.solvent == "Vacuum":
+        solvent_add = ""
+    else:
+        solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
+
+    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+
+    method = get_method(calc.parameters.method, "Gaussian")
+    basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
+    command_str = "{}/{}".format(method, basis_set)
+
+    with open(os.path.join(local_folder, 'ts.com'), 'w') as out:
+        out.write(GAUSSIAN_TEMPLATE.format(PAL, MEM, command_str, solvent_add, calc.parameters.misc, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        sftp_put("{}/ts.com".format(local_folder), os.path.join(folder, "ts.com"), conn, lock)
+        a = system("g16 ts.com", software="Gaussian", calc_id=calc.id)
+    else:
+        os.chdir(local_folder)
+        a = system("g16 ts.com", software="Gaussian", calc_id=calc.id)
+
+    if a != 0:
+        print("Gaussian failed")
+        return a
+
+    if not local:
+        b = sftp_get("{}/ts.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "ts.log"), conn, lock)
+        if a != 0:
+            return a
+
+    if not os.path.isfile("{}/ts.log".format(local_folder)):
+        return 1
+
+    with open("{}/ts.log".format(local_folder)) as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+        while lines[ind].find("SCF Done") == -1:
+            ind -= 1
+        E = float(lines[ind].split()[4])
+        while lines[ind].find("Center     Atomic      Atomic             Coordinates (Angstroms)") == -1:
+            ind += 1
+        ind += 3
+
+        xyz = []
+        while lines[ind].find("----") == -1:
+            n, a, t, x, y, z = lines[ind].strip().split()
+            xyz.append([ATOMIC_SYMBOL[int(a)], x, y, z])
+            ind += 1
+
+        xyz_structure = "{}\nCalcUS\n".format(len(xyz))
+        for el in xyz:
+            xyz_structure += "{} {} {} {}\n".format(*el)
+
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=1)
+    prop = get_or_create(calc.parameters, s)
+    prop.energy = E
+    prop.geom = True
+    s.save()
+    prop.save()
+
+    return 0
+
+def gaussian_scan(in_file, calc):
+    solvent = calc.parameters.solvent
+    charge = calc.parameters.charge
+
+    folder = '/'.join(in_file.split('/')[:-1])
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
+
+    GAUSSIAN_TEMPLATE = """%chk=in.chk
+%nproc={}
+%mem={}MB
+#p opt(modredundant) {} {} {}
+
+CalcUS
+
+{} {}
+{}
+{}
+"""
+
+    if calc.parameters.solvent == "Vacuum":
+        solvent_add = ""
+    else:
+        solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
+
+    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+
+    xyz = []
+    for line in lines:
+        if line.strip() != '':
+            a, x, y, z = line.split()
+            xyz.append([a, np.array([float(x), float(y), float(z)])])
+
+    method = get_method(calc.parameters.method, "Gaussian")
+    basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
+    command_str = "{}/{}".format(method, basis_set)
+
+
+    gaussian_constraints = ""
+    has_scan = False
+    scans = []
+    freeze = []
+    for cmd in calc.constraints.split(';'):
+        if cmd.strip() == '':
+            continue
+        _cmd, ids = cmd.split('-')
+        _cmd = _cmd.split('_')
+        ids = ids.split('_')
+        ids = [int(i) for i in ids]
+        type = len(ids)
+
+        if _cmd[0] == "Scan":
+            has_scan = True
+            end = float(_cmd[2])
+            num_steps = int(float(_cmd[3]))
+
+            if type == 2:
+                start = get_distance(xyz, *ids)
+                step_size = "{:.2f}".format((end-start)/num_steps)
+                gaussian_constraints += "B {} {} S {} {}\n".format(*ids, num_steps, step_size)
+            if type == 3:
+                start = get_angle(xyz, *ids)
+                step_size = "{:.2f}".format((end-start)/num_steps)
+                gaussian_constraints += "A {} {} {} S {} {}\n".format(*ids, num_steps, step_size)
+            if type == 4:
+                start = get_dihedral(xyz, *ids)
+                step_size = "{:.2f}".format((end-start)/num_steps)
+                gaussian_constraints += "D {} {} {} {} S {} {}\n".format(*ids, num_steps, step_size)
+        else:
+            if type == 2:
+                gaussian_constraints += "B {} {} F\n".format(*ids)
+            if type == 3:
+                gaussian_constraints += "A {} {} {} F\n".format(*ids)
+            if type == 4:
+                gaussian_constraints += "D {} {} {} {} F\n".format(*ids)
+
+
+    with open(os.path.join(local_folder, 'scan.com'), 'w') as out:
+        out.write(GAUSSIAN_TEMPLATE.format(PAL, MEM, command_str, solvent_add, calc.parameters.misc, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines).replace('\n\n', '\n'), gaussian_constraints))
+
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        sftp_put("{}/scan.com".format(local_folder), os.path.join(folder, "scan.com"), conn, lock)
+        a = system("g16 scan.com", software="Gaussian", calc_id=calc.id)
+    else:
+        os.chdir(local_folder)
+        a = system("g16 scan.com", software="Gaussian", calc_id=calc.id)
+
+    if a != 0:
+        print("Gaussian failed")
+        return a
+
+    if not local:
+        a = sftp_get("{}/scan.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "scan.log"), conn, lock)
+        if a != 0:
+            return a
+
+    if not os.path.isfile("{}/scan.log".format(local_folder)):
+        return 1
+
+    with open(os.path.join(local_folder, 'scan.log')) as f:
+        lines = f.readlines()
+
+    if has_scan:
+        s_ind = 1
+        ind = 0
+        done = False
+        while not done:
+            while ind < len(lines) - 1 and lines[ind].find("Optimization completed.") == -1:
+                ind += 1
+
+            if ind == len(lines) - 1:
+                done = True
+                break
+
+            ind2 = ind
+
+            while lines[ind].find("Input orientation:") == -1:
+                ind += 1
+            ind += 5
+
+            xyz = []
+            while lines[ind].find("----") == -1:
+                n, a, t, x, y, z = lines[ind].strip().split()
+                xyz.append([ATOMIC_SYMBOL[int(a)], x, y, z])
+                ind += 1
+
+            xyz_structure = "{}\nCalcUS\n".format(len(xyz))
+            for el in xyz:
+                xyz_structure += "{} {} {} {}\n".format(*el)
+
+            while lines[ind2].find("SCF Done") == -1:
+                ind2 -= 1
+
+            E = float(lines[ind2].split()[4])
+
+            s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=s_ind, degeneracy=1)
+            prop = get_or_create(calc.parameters, s)
+            prop.energy = E
+            prop.geom = True
+            s.save()
+            prop.save()
+
+            s_ind += 1
+
+
+    else:
+        ind = len(lines)-1
+
+        while lines[ind].find("SCF Done") == -1:
+            ind -= 1
+        E = float(lines[ind].split()[4])
+        while lines[ind].find("Center     Atomic      Atomic             Coordinates (Angstroms)") == -1:
+            ind += 1
+        ind += 3
+
+        xyz = []
+        while lines[ind].find("----") == -1:
+            n, a, t, x, y, z = lines[ind].strip().split()
+            xyz.append([ATOMIC_SYMBOL[int(a)], x, y, z])
+            ind += 1
+
+        xyz_structure = "{}\nCalcUS\n".format(len(xyz))
+        for el in xyz:
+            xyz_structure += "{} {} {} {}\n".format(*el)
+
+        s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=calc.structure.degeneracy)
+        prop = get_or_create(calc.parameters, s)
+        prop.energy = E
+        prop.geom = True
+        s.save()
+        prop.save()
+
+    return 0
+
 def dist(a, b):
     return math.sqrt((a[1] - b[1])**2 + (a[2] - b[2])**2 + (a[3] - b[3])**2)
 
@@ -2021,7 +2613,18 @@ BASICSTEP_TABLE = {
                 'Frequency Calculation': orca_freq,
                 'Constrained Optimisation': orca_scan,
                 'Single-Point Energy': orca_sp,
+            },
+        'Gaussian':
+            {
+                #'NMR Prediction': orca_nmr,
+                'Geometrical Optimisation': gaussian_opt,
+                'TS Optimisation': gaussian_ts,
+                #'MO Calculation': orca_mo_gen,
+                'Frequency Calculation': gaussian_freq,
+                'Constrained Optimisation': gaussian_scan,
+                'Single-Point Energy': gaussian_sp,
             }
+
         }
 
 time_dict = {}
