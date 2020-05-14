@@ -40,7 +40,7 @@ class Command(BaseCommand):
             self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Optimizing geometry", error_message="Failed to optimize geometry", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
-        name = "Crest"
+        name = "Conformational Search"
         if self.is_absent(BasicStep, name):
             self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Finding conformers", error_message="Failed to find the conformers", creates_ensemble=True, avail_xtb=True)

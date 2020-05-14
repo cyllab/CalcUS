@@ -197,7 +197,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     self.driver.find_element_by_id("calc_constraint_{}_4".format(ind)).send_keys(str(atoms[3]))
                 if c_mode == "Scan":
                     scan = constraint[3]
-                    self.driver.find_element_by_id("calc_scan_{}_1".format(ind)).send_keys(str(scan[0]))
+                    if not 'software' in params.keys() or params['software'] != "Gaussian":
+                        self.driver.find_element_by_id("calc_scan_{}_1".format(ind)).send_keys(str(scan[0]))
                     self.driver.find_element_by_id("calc_scan_{}_2".format(ind)).send_keys(str(scan[1]))
                     self.driver.find_element_by_id("calc_scan_{}_3".format(ind)).send_keys(str(scan[2]))
 

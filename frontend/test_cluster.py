@@ -145,6 +145,7 @@ class ClusterTests(CalcusLiveServer):
             if public_key.strip() != "":
                 break
             time.sleep(1)
+            ind += 1
 
         child = pexpect.spawn('su - calcus')
         child.expect ('Password:')
@@ -259,7 +260,7 @@ class ClusterTests(CalcusLiveServer):
         self.setup_cluster()
         params = {
                 'calc_name': 'test',
-                'type': 'Crest',
+                'type': 'Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'ethanol.sdf',
@@ -656,4 +657,160 @@ class ClusterTests(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
+
+    def test_cluster_gaussian_opt(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'Gaussian',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_cluster_gaussian_sp(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'benzene.mol',
+                'software': 'Gaussian',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_cluster_gaussian_ts(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'TS Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'mini_ts.xyz',
+                'software': 'Gaussian',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(200)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("TS Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_cluster_gaussian_freq(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                'software': 'Gaussian',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 1)
+        self.assertTrue(self.is_loaded_frequencies())
+
+    def test_cluster_gaussian_scan(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 130, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 11)
+
+    def test_cluster_gaussian_freeze(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Freeze', 'Dihedral', [1, 2, 3, 4]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'benzene.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Constrained Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 1)
 

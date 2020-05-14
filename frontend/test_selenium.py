@@ -993,7 +993,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
     def test_conf_search(self):
         params = {
                 'calc_name': 'test',
-                'type': 'Crest',
+                'type': 'Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'ethanol.sdf',
@@ -1180,7 +1180,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
     def test_conf_search(self):
         params = {
                 'calc_name': 'test',
-                'type': 'Crest',
+                'type': 'Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'ethanol.sdf',
@@ -1195,7 +1195,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.click_latest_calc()
         self.assertTrue(self.is_on_page_molecule())
 
-        self.click_ensemble("Crest Result")
+        self.click_ensemble("Conformational Search Result")
         self.assertGreater(self.get_number_conformers(), 0)
 
     def test_ts(self):
