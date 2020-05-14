@@ -216,9 +216,8 @@
 
 {% csrf_token %}
 
-<div class="container">
 	<div class="columns is-desktop">
-		<div class="column is-half">
+		<div class="column">
 			{% if not ensemble and not structure %}
 			<script>
 				let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 400, 300, {useServices:false, oneMolecule:false});
@@ -228,6 +227,7 @@
 				sketcher.styles.shapes_color = 'c10000';
 				sketcher.repaint();
 			</script>
+			<br />
 			<button class="button" onclick="get_3D();">Generate 3D representation</button>
 			{% endif %}
 
@@ -488,5 +488,4 @@
 		editor.loadMolecule(mol_read);	
 	{% endif %}
 	</script>
-</div>
 {% endblock content %}
