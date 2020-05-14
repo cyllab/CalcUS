@@ -711,7 +711,7 @@ class InterfaceTests(CalcusLiveServer):
         self.driver.implicitly_wait(5)
 
         self.assertEqual(self.get_number_projects(), 1)
-        self.assertEqual(self.get_name_projects()[0], "New Project")
+        self.assertEqual(self.get_name_projects()[0], "My Project")
 
     def test_rename_project(self):
         self.setup_test_group()
@@ -822,7 +822,7 @@ class UserPermissionsTests(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -863,7 +863,7 @@ class UserPermissionsTests(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
         self.calc_input_params(params)
         self.calc_launch()
@@ -901,7 +901,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -919,7 +919,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -939,7 +939,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'calc_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'TestProj',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -1032,7 +1032,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -1063,7 +1063,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -1122,7 +1122,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -1146,7 +1146,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'calc_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'TestProj',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -1204,7 +1204,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'ts.xyz',
+                'in_file': 'small_ts.xyz',
                 }
 
         self.lget("/launch/")
@@ -1223,10 +1223,10 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         params = {
                 'calc_name': 'test',
                 'type': 'Constrained Optimisation',
-                'constraints': [['Scan', 'Distance', [1, 4], [3.5, 1.5, 20]]],
+                'constraints': [['Scan', 'Distance', [1, 2], [1.5, 3.5, 10]]],
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -1240,7 +1240,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.assertTrue(self.is_on_page_molecule())
 
         self.click_ensemble("Constrained Optimisation Result")
-        self.assertEqual(self.get_number_conformers(), 20)
+        self.assertEqual(self.get_number_conformers(), 10)
 
     def test_scan_angle(self):
         params = {
@@ -1249,7 +1249,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 130, 10]]],
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -1272,7 +1272,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'constraints': [['Scan', 'Dihedral', [1, 2, 3, 4], [0, 10, 10]]],
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -1295,7 +1295,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'constraints': [['Freeze', 'Distance', [1, 4]]],
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -1318,7 +1318,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'constraints': [['Freeze', 'Angle', [1, 2, 3]]],
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -1341,7 +1341,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'constraints': [['Freeze', 'Dihedral', [1, 2, 3, 4]]],
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -1363,7 +1363,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'type': 'UV-Vis Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -1384,7 +1384,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -1421,7 +1421,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 }
 
         self.lget("/launch/")
@@ -1482,7 +1482,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'ORCA',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
@@ -1506,7 +1506,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'ORCA',
                 'theory': 'HF',
                 'basis_set': 'Def2-SVP',
@@ -1530,7 +1530,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'ORCA',
                 'theory': 'DFT',
                 'functional': 'M062X',
@@ -1555,7 +1555,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'ORCA',
                 'theory': 'DFT',
                 'functional': 'M06-2X',
@@ -1580,7 +1580,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'H2.sdf',
                 'software': 'ORCA',
                 'theory': 'RI-MP2',
                 'basis_set': 'cc-pVDZ',
@@ -1605,7 +1605,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'ORCA',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
@@ -1629,7 +1629,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'ORCA',
                 'theory': 'HF',
                 'basis_set': 'Def2-SVP',
@@ -1653,7 +1653,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'ORCA',
                 'theory': 'DFT',
                 'functional': 'M062X',
@@ -1678,7 +1678,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'H2.sdf',
                 'software': 'ORCA',
                 'theory': 'RI-MP2',
                 'basis_set': 'cc-pVDZ',
@@ -1785,7 +1785,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'ORCA',
                 'theory': 'RI-MP2',
                 'basis_set': 'cc-pVDZ',
@@ -1813,7 +1813,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'small_ts.xyz',
+                'in_file': 'mini_ts.xyz',
                 'software': 'ORCA',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
@@ -1837,7 +1837,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'small_ts.xyz',
+                'in_file': 'mini_ts.xyz',
                 'software': 'ORCA',
                 'theory': 'HF',
                 'basis_set': 'Def2-SVP',
@@ -1962,11 +1962,11 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         params = {
                 'calc_name': 'test',
                 'type': 'Constrained Optimisation',
-                'constraints': [['Scan', 'Distance', [1, 4], [3.5, 1.5, 20]]],
+                'constraints': [['Scan', 'Distance', [1, 2], [3.5, 1.5, 5]]],
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'software': 'ORCA',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
                 }
@@ -1982,7 +1982,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.assertTrue(self.is_on_page_molecule())
 
         self.click_ensemble("Constrained Optimisation Result")
-        self.assertEqual(self.get_number_conformers(), 20)
+        self.assertEqual(self.get_number_conformers(), 5)
 
     def test_scan_angle_SE(self):
         params = {
@@ -1992,7 +1992,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'software': 'ORCA',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
                 }
@@ -2018,7 +2018,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'software': 'ORCA',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
                 }
@@ -2044,7 +2044,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'software': 'ORCA',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
                 }
@@ -2070,7 +2070,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'software': 'ORCA',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
                 }
@@ -2096,7 +2096,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'software': 'ORCA',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
                 }
@@ -2120,7 +2120,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'type': 'NMR Prediction',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'ORCA',
                 'theory': 'DFT',
                 'functional': 'M062X',
@@ -2169,7 +2169,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'Gaussian',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
@@ -2193,7 +2193,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'Gaussian',
                 'theory': 'HF',
                 'basis_set': 'Def2-SVP',
@@ -2217,7 +2217,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'Gaussian',
                 'theory': 'DFT',
                 'functional': 'M062X',
@@ -2242,7 +2242,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'Gaussian',
                 'theory': 'DFT',
                 'functional': 'M06-2X',
@@ -2268,7 +2268,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'Gaussian',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
@@ -2292,7 +2292,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'Gaussian',
                 'theory': 'HF',
                 'basis_set': 'Def2-SVP',
@@ -2316,7 +2316,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'Gaussian',
                 'theory': 'DFT',
                 'functional': 'M062X',
@@ -2421,7 +2421,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'small_ts.xyz',
+                'in_file': 'mini_ts.xyz',
                 'software': 'Gaussian',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
@@ -2445,7 +2445,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'small_ts.xyz',
+                'in_file': 'mini_ts.xyz',
                 'software': 'Gaussian',
                 'theory': 'HF',
                 'basis_set': 'Def2-SVP',
@@ -2493,11 +2493,11 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         params = {
                 'calc_name': 'test',
                 'type': 'Constrained Optimisation',
-                'constraints': [['Scan', 'Distance', [1, 4], [3.5, 1.5, 20]]],
+                'constraints': [['Scan', 'Distance', [1, 2], [3.5, 5.0, 10]]],
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'software': 'Gaussian',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
                 }
@@ -2513,7 +2513,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.assertTrue(self.is_on_page_molecule())
 
         self.click_ensemble("Constrained Optimisation Result")
-        self.assertEqual(self.get_number_conformers(), 21)
+        self.assertEqual(self.get_number_conformers(), 11)
 
     def test_scan_angle_SE(self):
         params = {
@@ -2523,7 +2523,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'software': 'Gaussian',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
                 }
@@ -2549,7 +2549,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'software': 'Gaussian',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
                 }
@@ -2571,11 +2571,11 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         params = {
                 'calc_name': 'test',
                 'type': 'Constrained Optimisation',
-                'constraints': [['Freeze', 'Distance', [1, 4]]],
+                'constraints': [['Freeze', 'Distance', [1, 2]]],
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'software': 'Gaussian',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
                 }
@@ -2601,7 +2601,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'software': 'Gaussian',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
                 }
@@ -2627,7 +2627,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'software': 'Gaussian',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
                 }
@@ -2651,7 +2651,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'type': 'NMR Prediction',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
+                'in_file': 'CH4.mol',
                 'software': 'Gaussian',
                 'theory': 'DFT',
                 'functional': 'M062X',

@@ -359,19 +359,17 @@ def get_basis_set(basis_set, software):
     return SOFTWARE_BASIS_SETS[software][abs_basis_set]
 
 def xtb_opt(in_file, calc):
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    if solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+    if calc.parameters.solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
     else:
         solvent_add = ''
 
     os.chdir(local_folder)
-    a = system("xtb {} --opt -o vtight -a 0.05 --chrg {} {} ".format(in_file, charge, solvent_add), 'xtb_opt.out', calc_id=calc.id)
+    a = system("xtb {} --opt -o vtight -a 0.05 --chrg {} {} ".format(in_file, calc.parameters.charge, solvent_add), 'xtb_opt.out', calc_id=calc.id)
     if a != 0:
         return a
 
@@ -416,19 +414,17 @@ def xtb_opt(in_file, calc):
     return 0
 
 def xtb_sp(in_file, calc):
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    if solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+    if calc.parameters.solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
     else:
         solvent_add = ''
 
     os.chdir(local_folder)
-    a = system("xtb {} --chrg {} {} ".format(in_file, charge, solvent_add), 'xtb_sp.out', calc_id=calc.id)
+    a = system("xtb {} --chrg {} {} ".format(in_file, calc.parameters.charge, solvent_add), 'xtb_sp.out', calc_id=calc.id)
     if a != 0:
         return a
 
@@ -467,16 +463,9 @@ def get_or_create(params, struct):
     return Property.objects.create(parameters=params, parent_structure=struct)
 
 def xtb_ts(in_file, calc):
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
-    multiplicity = calc.parameters.multiplicity
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
-    if solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
-    else:
-        solvent_add = ''
 
     folder = '/'.join(in_file.split('/')[:-1])
 
@@ -489,18 +478,18 @@ def xtb_ts(in_file, calc):
     {}
     *"""
 
-    if solvent == "Vacuum":
+    if calc.parameters.solvent == "Vacuum":
         solvent_add = ""
     else:
         solvent_add = '''%cpcm
         smd true
         SMDsolvent "{}"
-        end'''.format(solvent)
+        end'''.format(calc.parameters.solvent)
 
     lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
 
     with open(os.path.join(local_folder, 'ts.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(PAL, solvent_add, charge, multiplicity, ''.join(lines)))
+        out.write(ORCA_TEMPLATE.format(PAL, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
     if not local:
         pid = int(threading.get_ident())
         conn = connections[pid]
@@ -558,11 +547,8 @@ def xtb_ts(in_file, calc):
 
 
 def xtb_scan(in_file, calc):
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
-
-    if solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+    if calc.parameters.solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
     else:
         solvent_add = ''
 
@@ -612,7 +598,7 @@ def xtb_scan(in_file, calc):
         sftp_put("{}/scan".format(local_folder), os.path.join(folder, 'scan'), conn, lock)
 
     os.chdir(local_folder)
-    a = system("xtb {} --input scan --chrg {} {} --opt".format(in_file, charge, solvent_add), 'xtb_scan.out', calc_id=calc.id)
+    a = system("xtb {} --input scan --chrg {} {} --opt".format(in_file, calc.parameters.charge, solvent_add), 'xtb_scan.out', calc_id=calc.id)
     if a != 0:
         return a
 
@@ -701,19 +687,17 @@ def xtb_scan(in_file, calc):
     return 0
 
 def xtb_freq(in_file, calc):
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    if solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+    if calc.parameters.solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
     else:
         solvent_add = ''
 
     os.chdir(local_folder)
-    system("xtb {} --uhf 1 --chrg {} {} --hess".format(in_file, charge, solvent_add), 'xtb_freq.out', calc_id=calc.id)
+    system("xtb {} --uhf 1 --chrg {} {} --hess".format(in_file, calc.parameters.charge, solvent_add), 'xtb_freq.out', calc_id=calc.id)
 
     if not local:
         pid = int(threading.get_ident())
@@ -836,13 +820,10 @@ def xtb_freq(in_file, calc):
     return 0
 
 def crest_generic(in_file, calc, mode):
-
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
     local = calc.local
 
-    if solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[solvent])
+    if calc.parameters.solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
     else:
         solvent_add = ''
 
@@ -852,9 +833,9 @@ def crest_generic(in_file, calc, mode):
     os.chdir(local_folder)
 
     if mode == "Final":#Restrict the number of conformers
-        a = system("crest {} --chrg {} {} -rthr 0.6 -ewin 4".format(in_file, charge, solvent_add), 'crest.out', calc_id=calc.id)
+        a = system("crest {} --chrg {} {} -rthr 0.6 -ewin 4".format(in_file, calc.parameters.charge, solvent_add), 'crest.out', calc_id=calc.id)
     elif mode == "NMR":#No restriction, as it will be done by enso
-        a = system("crest {} --chrg {} {} -nmr".format(in_file, charge, solvent_add), 'crest.out', calc_id=calc.id)
+        a = system("crest {} --chrg {} {} -nmr".format(in_file, calc.parameters.charge, solvent_add), 'crest.out', calc_id=calc.id)
     else:
         print("Invalid crest mode selected!")
         return -1
@@ -996,10 +977,6 @@ end
     n_LUMO1 = int(electrons/2)+1
     n_LUMO2 = int(electrons/2)+2
 
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
-    multiplicity = calc.parameters.multiplicity
-
     fname = in_file.split('/')[-1]
     folder = '/'.join(in_file.split('/')[:-1])
 
@@ -1007,7 +984,7 @@ end
     basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
 
     with open("{}/mo.inp".format(local_folder), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, pal, solvent_add, n_HOMO, n_LUMO, n_LUMO1, n_LUMO2, charge, multiplicity, fname))
+        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, pal, solvent_add, n_HOMO, n_LUMO, n_LUMO1, n_LUMO2, calc.parameters.charge, calc.parameters.multiplicity, fname))
     if not local:
         pid = int(threading.get_ident())
         conn = connections[pid]
@@ -1063,8 +1040,6 @@ end
     return 0
 
 def orca_opt(in_file, calc):
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
@@ -1150,8 +1125,6 @@ def orca_opt(in_file, calc):
     return 0
 
 def orca_sp(in_file, calc):
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
@@ -1233,8 +1206,6 @@ def orca_ts(in_file, calc):
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
 
     ORCA_TEMPLATE = """!OPTTS {} {} {}
@@ -1312,8 +1283,6 @@ def orca_ts(in_file, calc):
     return 0
 
 def orca_freq(in_file, calc):
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
@@ -1487,9 +1456,6 @@ def orca_freq(in_file, calc):
     return 0
 
 def orca_scan(in_file, calc):
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
-
     folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
@@ -1683,15 +1649,12 @@ def orca_scan(in_file, calc):
 
 def enso(in_file, calc):
 
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
-
     if solvent != "Vacuum":
-        solvent_add = '-solv {}'.format(SOLVENT_TABLE[solvent])
+        solvent_add = '-solv {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
     else:
         solvent_add = ''
 
-    a = system("enso.py {} --charge {}".format(solvent_add, charge), 'enso_pre.out', calc_id=calc.id)
+    a = system("enso.py {} --charge {}".format(solvent_add, calc.parameters.charge), 'enso_pre.out', calc_id=calc.id)
 
     if a != 0:
         return a, 'e'
@@ -1788,16 +1751,13 @@ def xtb_stda(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
-
-    if solvent != "Vacuum":
-        solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[solvent])
+    if calc.parameters.solvent != "Vacuum":
+        solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
     else:
         solvent_add_xtb = ''
 
     os.chdir(local_folder)
-    a = system("xtb4stda {} -chrg {} {}".format(in_file, charge, solvent_add_xtb), 'xtb4stda.out', calc_id=calc.id)
+    a = system("xtb4stda {} -chrg {} {}".format(in_file, calc.parameters.charge, solvent_add_xtb), 'xtb4stda.out', calc_id=calc.id)
     if a != 0:
         return a
 
@@ -1924,8 +1884,6 @@ def orca_nmr(in_file, calc):
     return 0
 
 def gaussian_sp(in_file, calc):
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
@@ -1994,8 +1952,6 @@ CalcUS
     return 0
 
 def gaussian_opt(in_file, calc):
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
@@ -2081,8 +2037,6 @@ CalcUS
     return 0
 
 def gaussian_freq(in_file, calc):
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
@@ -2241,8 +2195,6 @@ def gaussian_ts(in_file, calc):
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
     folder = '/'.join(in_file.split('/')[:-1])
 
     GAUSSIAN_TEMPLATE = """%chk=in.chk
@@ -2324,9 +2276,6 @@ CalcUS
     return 0
 
 def gaussian_scan(in_file, calc):
-    solvent = calc.parameters.solvent
-    charge = calc.parameters.charge
-
     folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
@@ -2676,7 +2625,7 @@ BASICSTEP_TABLE = {
         'xtb':
             {
                 'Geometrical Optimisation': xtb_opt,
-                'Crest': crest,
+                'Conformational Search': crest,
                 'Constrained Optimisation': xtb_scan,
                 'Frequency Calculation': xtb_freq,
                 'TS Optimisation': xtb_ts,
@@ -2842,7 +2791,6 @@ def run_calc(calc_id):
     os.mkdir(workdir)
     in_file = os.path.join(workdir, 'in.xyz')
 
-
     with open(in_file, 'w') as out:
         out.write(calc.structure.xyz_structure)
 
@@ -2871,6 +2819,11 @@ def run_calc(calc_id):
     for f in glob.glob("{}/*.out".format(workdir)):
         fname = f.split('/')[-1]
         copyfile(f, "{}/{}".format(res_dir, fname))
+
+    for f in glob.glob("{}/*.log".format(workdir)):
+        fname = f.split('/')[-1].replace('.log', '.out')
+        copyfile(f, "{}/{}".format(res_dir, fname))
+
     return ret
 
 @app.task
