@@ -230,6 +230,16 @@
 {% csrf_token %}
 
 <div class="container">
+	<nav class="breadcrumb" aria-label="breadcrumbs">
+	 	<ul>
+	    		<li><a href="/projects/">Projects</a></li>
+			<li><a href="/projects/{{ ensemble.parent_molecule.project.author }}">{{ ensemble.parent_molecule.project.author }}</a></li>
+			<li><a href="/projects/{{ ensemble.parent_molecule.project.author }}/{{ ensemble.parent_molecule.project }}">{{ ensemble.parent_molecule.project }}</a></li>
+			<li><a href="/molecule/{{ ensemble.parent_molecule.id }}">{{ ensemble.parent_molecule.name }}</a></li>
+			<li class="is-active"><a aria-current="page" href="#">{{ ensemble.name }}</a></li>
+	  	</ul>
+	</nav>
+
 	<div id="status_box">
 		<div class="box is-rounded" id="ensemble_title">
 			<center>

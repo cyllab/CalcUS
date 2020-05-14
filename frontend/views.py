@@ -150,7 +150,7 @@ def get_projects(request):
 def create_project(request):
     if request.method == 'POST':
         profile = request.user.profile
-        proj = Project.objects.create(name="New Project", author=profile)
+        proj = Project.objects.create(name="My Project", author=profile)
         proj.save()
         response = """
 <div class="box has-background-danger" id="proj_box_{}">
@@ -248,7 +248,11 @@ def ensemble(request, pk):
 def details_ensemble(request):
     if request.method == 'POST':
         pk = int(clean(request.POST['id']))
-        p_id = int(clean(request.POST['p_id']))
+        try:
+            p_id = int(clean(request.POST['p_id']))
+        except KeyError:
+            return HttpResponse(status=204)
+
         try:
             e = Ensemble.objects.get(pk=pk)
         except Ensemble.DoesNotExist:
@@ -275,8 +279,12 @@ def details_ensemble(request):
 def details_structure(request):
     if request.method == 'POST':
         pk = int(clean(request.POST['id']))
-        p_id = int(clean(request.POST['p_id']))
-        num = int(clean(request.POST['num']))
+        try:
+            p_id = int(clean(request.POST['p_id']))
+            num = int(clean(request.POST['num']))
+        except KeyError:
+            return HttpResponse(status=204)
+
         try:
             e = Ensemble.objects.get(pk=pk)
         except Ensemble.DoesNotExist:
@@ -1112,8 +1120,12 @@ def conformer_table(request, pk):
 @login_required
 def conformer_table_post(request):
     if request.method == 'POST':
-        id = int(clean(request.POST['ensemble_id']))
-        p_id = int(clean(request.POST['param_id']))
+        try:
+            id = int(clean(request.POST['ensemble_id']))
+            p_id = int(clean(request.POST['param_id']))
+        except KeyError:
+            return HttpResponse(status=204)
+
         try:
             e = Ensemble.objects.get(pk=id)
         except Ensemble.DoesNotExist:
