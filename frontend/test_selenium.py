@@ -2645,7 +2645,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
-    '''
     def test_nmr_DFT(self):
         params = {
                 'calc_name': 'test',
@@ -2653,11 +2652,10 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'benzene.mol',
-                'software': 'ORCA',
+                'software': 'Gaussian',
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'misc': 'Def2/JK',
                 }
 
         self.lget("/launch/")
@@ -2671,4 +2669,3 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
         self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
-    '''

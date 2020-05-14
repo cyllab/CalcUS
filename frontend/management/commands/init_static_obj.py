@@ -45,10 +45,12 @@ class Command(BaseCommand):
             self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Finding conformers", error_message="Failed to find the conformers", creates_ensemble=True, avail_xtb=True)
 
+        '''
         name = "Crest Pre NMR"
         if self.is_absent(BasicStep, name):
             self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Finding conformers", error_message="Failed to find the conformers", creates_ensemble=True, avail_xtb=True)
+        '''
 
         name = "Constrained Optimisation"
         if self.is_absent(BasicStep, name):

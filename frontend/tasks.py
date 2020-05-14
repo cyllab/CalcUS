@@ -2501,6 +2501,88 @@ CalcUS
 
     return 0
 
+def gaussian_nmr(in_file, calc):
+    folder = '/'.join(in_file.split('/')[:-1])
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
+
+    GAUSSIAN_TEMPLATE = """%chk=in.chk
+%nproc={}
+%mem={}MB
+#p nmr {} {} {}
+
+CalcUS
+
+{} {}
+{}
+"""
+
+    if calc.parameters.solvent == "Vacuum":
+        solvent_add = ""
+    else:
+        solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
+
+    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+
+    xyz = []
+    for line in lines:
+        if line.strip() != '':
+            a, x, y, z = line.split()
+            xyz.append([a, np.array([float(x), float(y), float(z)])])
+
+    method = get_method(calc.parameters.method, "Gaussian")
+    basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
+    command_str = "{}/{}".format(method, basis_set)
+
+    with open(os.path.join(local_folder, 'nmr.com'), 'w') as out:
+        out.write(GAUSSIAN_TEMPLATE.format(PAL, MEM, command_str, solvent_add, calc.parameters.misc, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines).replace('\n\n', '\n')))
+
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        sftp_put("{}/nmr.com".format(local_folder), os.path.join(folder, "nmr.com"), conn, lock)
+        a = system("g16 nmr.com", software="Gaussian", calc_id=calc.id)
+    else:
+        os.chdir(local_folder)
+        a = system("g16 nmr.com", software="Gaussian", calc_id=calc.id)
+
+    if a != 0:
+        print("Gaussian failed")
+        return a
+
+    if not local:
+        a = sftp_get("{}/nmr.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "nmr.log"), conn, lock)
+        if a != 0:
+            return a
+
+    if not os.path.isfile("{}/nmr.log".format(local_folder)):
+        return 1
+
+    with open(os.path.join(local_folder, 'nmr.log')) as f:
+        lines = f.readlines()
+    ind = len(lines)-1
+    while lines[ind].find("SCF GIAO Magnetic shielding tensor (ppm):") == -1:
+        ind -= 1
+
+    nmr = ""
+    ind += 1
+    while lines[ind].find("End of Minotr") == -1:
+        sline = lines[ind].strip().split()
+        nmr += "{} {} {}\n".format(int(sline[0]), sline[1], sline[4])
+        ind += 5
+
+    while lines[ind].find("SCF Done") == -1:
+        ind -= 1
+    E = float(lines[ind].split()[4])
+
+    prop = get_or_create(calc.parameters, calc.structure)
+    prop.simple_nmr = nmr
+    prop.energy = E
+    prop.save()
+    return 0
+
 def dist(a, b):
     return math.sqrt((a[1] - b[1])**2 + (a[2] - b[2])**2 + (a[3] - b[3])**2)
 
@@ -2616,7 +2698,7 @@ BASICSTEP_TABLE = {
             },
         'Gaussian':
             {
-                #'NMR Prediction': orca_nmr,
+                'NMR Prediction': gaussian_nmr,
                 'Geometrical Optimisation': gaussian_opt,
                 'TS Optimisation': gaussian_ts,
                 'Frequency Calculation': gaussian_freq,
