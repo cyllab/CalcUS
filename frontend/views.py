@@ -1861,7 +1861,7 @@ def download_project_csv(request, project_id):
             csv += ",{}\n".format(mol_obj.name)
             for e in summary[method][mol].keys():
                 e_obj = Ensemble.objects.get(pk=e)
-                csv += ",,{},{},{}\n".format(e_obj.name, summary[method][mol][e][0], summary[method][mol][e][0])
+                csv += ",,{},{},{}\n".format(e_obj.name, summary[method][mol][e][0], summary[method][mol][e][1])
 
     proj_name = proj.name.replace(' ', '_')
     response = HttpResponse(csv, content_type='text/csv')
