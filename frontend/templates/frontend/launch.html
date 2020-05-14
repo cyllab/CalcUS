@@ -89,6 +89,23 @@
 			}
 			else if (choice.value == "Scan") {
 				div.style.display = "block";	
+				check_scan_from();
+			}
+		}
+
+		function check_scan_from() {
+			software = document.getElementById("calc_software");
+			if (software.value == "Gaussian") {
+				to_hide = $(".scan_from");
+				for (i=0; i < to_hide.length; i++) {
+					to_hide[i].style.display = "none";
+				}
+			}
+			else {
+				to_hide = $(".scan_from");
+				for (i=0; i < to_hide.length; i++) {
+					to_hide[i].style.display = "block";
+				}
 			}
 		}
 
@@ -96,7 +113,7 @@
 			choice = document.getElementById("calc_project");
 			field = document.getElementById("new_project_name_field");
 			if(choice.value == "New Project") {
-				field.style.display = "block";	
+				field.style.display = "block";
 			}
 			else {
 				field.style.display = "none";	
@@ -106,6 +123,7 @@
 		function software_selection_changed() {
 			choice = document.getElementById("calc_software");
 			$("#software_specific_div").load("/software/" + choice.value);
+			check_scan_from();
 		}
 
 		function add_constraint() {
@@ -150,7 +168,7 @@
 				<div class="columns"> \
 				<div class="column"> \
 					From \
-				<input class="input" type="text" width="5" name="calc_scan_{15}_1" id="calc_scan_{16}_1"> \
+				<input class="input scan_from" type="text" width="5" name="calc_scan_{15}_1" id="calc_scan_{16}_1"> \
 				</div> \
 				<div class="column"> \
 					To \
@@ -203,7 +221,7 @@
 			{% if not ensemble and not structure %}
 			<script>
 				let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 400, 300, {useServices:false, oneMolecule:false});
-				sketcher.styles.atoms_useJMOLColors = true;
+				sketcher.styles.atoms_usePYMOLColors = true;
 				sketcher.oneMolecule = false;
 				sketcher.styles.bonds_clearOverlaps_2D = true;
 				sketcher.styles.shapes_color = 'c10000';
@@ -214,7 +232,7 @@
 
 			<script>
 				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 300, {useServices:false, oneMolecule:false});
-				editor.styles.atoms_useJMOLColors = true;
+				editor.styles.atoms_usePYMOLColors = true;
 				editor.oneMolecule = false;
 				editor.styles.set3DRepresentation('Stick');
 				editor.styles.shapes_color = 'c10000';
