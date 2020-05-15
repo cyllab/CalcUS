@@ -1752,12 +1752,12 @@ def xtb_stda(in_file, calc):
     local = calc.local
 
     if calc.parameters.solvent != "Vacuum":
-        solvent_add_xtb = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
     else:
-        solvent_add_xtb = ''
+        solvent_add = ''
 
     os.chdir(local_folder)
-    a = system("xtb4stda {} -chrg {} {}".format(in_file, calc.parameters.charge, solvent_add_xtb), 'xtb4stda.out', calc_id=calc.id)
+    a = system("xtb4stda {} -chrg {} {}".format(in_file, calc.parameters.charge, solvent_add), 'xtb4stda.out', calc_id=calc.id)
     if a != 0:
         return a
 
