@@ -2671,7 +2671,7 @@ def filter(order, input_structures):
                 structures.append(s)
     elif order.filter.type == "By Relative Energy":
         for s in input_structures:
-            if s.parent_ensemble.relative_energy(s, order.filter.parameters) > order.filter.value:
+            if s.parent_ensemble.relative_energy(s, order.filter.parameters) < order.filter.value:
                 structures.append(s)
 
     return structures

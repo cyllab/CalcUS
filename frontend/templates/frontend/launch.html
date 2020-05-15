@@ -35,13 +35,20 @@
 				choice = document.getElementById("calc_filter");
 				value_input = document.getElementById("calc_filter_value");
 				param_input = document.getElementById("calc_filter_params");
+				label = document.getElementById("filter_label");
 				if(choice.value == "None") {
 					value_input.style.display = "none";
 					param_input.style.display = "none";
 				}
-				else {
+				else if(choice.value == "By Boltzmann Weight") {
 					value_input.style.display = "block";
 					param_input.style.display = "block";
+					label.innerHTML = "Higher than";
+				}
+				else if(choice.value == "By Relative Energy") {
+					value_input.style.display = "block";
+					param_input.style.display = "block";
+					label.innerHTML = "Lower than";
 				}
 			}
 
@@ -388,7 +395,7 @@
 						</div>
 						<div class="column">
 							<div class="field" style="display: none;" id="calc_filter_value">
-								<label class="label">Higher than</label>
+								<label class="label" id="filter_label">Higher than</label>
 								<div class="control">
 									<input class="input" name="filter_value" type="text" id="filter_value_input">
 								</div>
