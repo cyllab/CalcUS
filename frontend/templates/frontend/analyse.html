@@ -1,0 +1,33 @@
+{% extends 'frontend/base.html' %}
+
+{% load static %}
+
+{% block extrahead %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script src="{% static 'frontend/jquery-ui-1.9.2.custom.min.js' %}"></script>
+	<script src="{% static 'frontend/ip.grid.min.js' %}"></script>
+	<link href="{% static 'frontend/ip.grid.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<div class="container">
+	<center>
+		<h1 class="title is-1">{{ proj.name }}</h1>
+		<br />
+	</center>
+
+	<div id="spreadsheet" style="width: 100%; height: 100%;">
+	</div>
+</div>
+	<script>
+		$(document).ready(function() {
+			$("#spreadsheet").ip_Grid({rows: {{ len }}, cols: 50});
+			{% for entry in data %}
+				$("#spreadsheet").ip_CellInput({ valueRAW: '{{ entry.0 }}', row: {{ entry.1 }}, col: {{ entry.2 }} });
+			{% endfor %}
+			$('#spreadsheet').ip_ResizeColumn({ columns: [-1], size: 200 })
+		});
+	</script>
+
+{% endblock %}
+
