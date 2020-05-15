@@ -1801,21 +1801,9 @@ def launch_structure_pk(request, ee, pk):
             'procedures': BasicStep.objects.all(),
         })
 
-@login_required
-def download_project_csv(request, project_id):
-
-    profile = request.user.profile
-
-    try:
-        proj = Project.objects.get(pk=project_id)
-    except Project.DoesNotExist:
-        return HttpResponse(status=403)
-
-    if not profile_intersection(profile, proj.author):
-        return HttpResponse(status=403)
+def get_csv(proj):
 
     summary = {}
-
     csv = "Molecule,Ensemble,Structure\n"
     for mol in proj.molecule_set.all():
         csv += "\n\n{}\n".format(mol.name)
@@ -1862,12 +1850,48 @@ def download_project_csv(request, project_id):
             for e in summary[method][mol].keys():
                 e_obj = Ensemble.objects.get(pk=e)
                 csv += ",,{},{},{}\n".format(e_obj.name, summary[method][mol][e][0], summary[method][mol][e][1])
+    return csv
+
+@login_required
+def download_project_csv(request, project_id):
+
+    profile = request.user.profile
+
+    try:
+        proj = Project.objects.get(pk=project_id)
+    except Project.DoesNotExist:
+        return HttpResponse(status=403)
+
+    if not profile_intersection(profile, proj.author):
+        return HttpResponse(status=403)
+
+
+    csv = get_csv(proj)
 
     proj_name = proj.name.replace(' ', '_')
     response = HttpResponse(csv, content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename={}.csv'.format(proj_name)
     return response
 
+@login_required
+def analyse(request, project_id):
+    profile = request.user.profile
+
+    try:
+        proj = Project.objects.get(pk=project_id)
+    except Project.DoesNotExist:
+        return HttpResponse(status=403)
+
+    if not profile_intersection(profile, proj.author):
+        return HttpResponse(status=403)
+
+    csv = get_csv(proj)
+    js_csv = []
+    for ind1, line in enumerate(csv.split('\n')):
+        for ind2, el in enumerate(line.split(',')):
+            js_csv.append([el, ind1, ind2])
+    l = len(csv.split('\n')) + 5
+    return render(request, 'frontend/analyse.html', {'data': js_csv, 'len': l, 'proj': proj})
 
 @login_required
 def calculationorder(request, pk):
