@@ -754,7 +754,7 @@ def xtb_freq(in_file, calc):
                     continue
                 else:
                     intensities.append(intensity)
-        if len(vibs) == len(intensities):
+        if len(vibs) == len(intensities) and len(intensities) > 0:
             x = np.arange(500, 4000, 1)#Wave number in cm^-1
             spectrum = plot_vibs(x, zip(vibs, intensities))
             with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "IR.csv"), 'w') as out:
