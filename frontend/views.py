@@ -1151,6 +1151,7 @@ def conformer_table_post(request):
         rel_energies = e.relative_energies(p)
         weights = e.weights(p)
         data = zip(e.structure_set.all(), energies, rel_energies, weights)
+        data = sorted(data, key=lambda i: i[0].number)
         return render(request, 'frontend/conformer_table.html', {
                 'profile': request.user.profile,
                 'data': data,
