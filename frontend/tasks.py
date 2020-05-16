@@ -563,7 +563,7 @@ def xtb_scan(in_file, calc):
 
     with open("{}/scan".format(local_folder), 'w') as out:
         out.write("$constrain\n")
-        out.write("force constant=99\n")
+        out.write("force constant=20\n")
         has_scan = False
         for cmd in constraints:
             _cmd, ids = cmd.split('-')
