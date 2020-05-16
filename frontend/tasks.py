@@ -833,7 +833,7 @@ def crest_generic(in_file, calc, mode):
     os.chdir(local_folder)
 
     if mode == "Final":#Restrict the number of conformers
-        a = system("crest {} --chrg {} {} -rthr 0.6 -ewin 4".format(in_file, calc.parameters.charge, solvent_add), 'crest.out', calc_id=calc.id)
+        a = system("crest {} --chrg {} {} -rthr 0.5 -ewin 6".format(in_file, calc.parameters.charge, solvent_add), 'crest.out', calc_id=calc.id)
     elif mode == "NMR":#No restriction, as it will be done by enso
         a = system("crest {} --chrg {} {} -nmr".format(in_file, calc.parameters.charge, solvent_add), 'crest.out', calc_id=calc.id)
     else:
