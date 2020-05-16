@@ -2841,6 +2841,8 @@ def run_calc(calc_id):
 
     for f in glob.glob("{}/*.log".format(workdir)):
         fname = f.split('/')[-1].replace('.log', '.out')
+        if fname == "xtbscan.out" or fname == "xtbopt.out":
+            continue
         copyfile(f, "{}/{}".format(res_dir, fname))
 
     return ret

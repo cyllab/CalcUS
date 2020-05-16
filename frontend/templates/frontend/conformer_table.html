@@ -2,7 +2,7 @@
 
 {% if data %}
 	{% for entry in data %}
-	<tr id="conf_{{ entry.0.number }}">
+	<tr id="conf_{{ entry.0.number }}" onclick="select_conf({{ forloop.counter0 }});">
 			<th>{{ entry.0.number }}</th>
 
 			<th>

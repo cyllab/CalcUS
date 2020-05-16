@@ -92,6 +92,14 @@
 			 }, 1000);
 		});
 
+		function select_conf(conf_num) {
+			document.getElementById("conf_table").rows[num].classList.remove("is-selected");
+			
+			num = conf_num;
+			document.getElementById("conf_table").rows[num].classList.add("is-selected");
+			refresh();
+		}
+
 		function refresh() {
 			$.ajax({
 				method: "POST",	 	 
