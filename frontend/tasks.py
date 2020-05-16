@@ -39,6 +39,8 @@ except:
 import periodictable
 from .constants import *
 
+import traceback
+
 ATOMIC_NUMBER = {
         }
 ATOMIC_SYMBOL = {
@@ -392,6 +394,9 @@ def xtb_opt(in_file, calc):
     if not os.path.isfile("{}/xtb_opt.out".format(local_folder)):
         return 1
 
+    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
+        return 1
+
     with open("{}/xtbopt.xyz".format(local_folder)) as f:
         lines = f.readlines()
     xyz_structure = ''.join(lines)
@@ -427,6 +432,9 @@ def xtb_sp(in_file, calc):
     a = system("xtb {} --chrg {} {} ".format(in_file, calc.parameters.charge, solvent_add), 'xtb_sp.out', calc_id=calc.id)
     if a != 0:
         return a
+
+    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
+        return 1
 
     if not local:
         pid = int(threading.get_ident())
@@ -533,7 +541,7 @@ def xtb_ts(in_file, calc):
             ind -= 1
         hl_gap = float(olines[ind].split()[3])
 
-    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=''.join(lines), number=calc.structure.number)
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=''.join(lines), number=1)
     prop = get_or_create(calc.parameters, s)
     prop.homo_lumo_gap = hl_gap
     prop.energy = E
@@ -601,6 +609,9 @@ def xtb_scan(in_file, calc):
     a = system("xtb {} --input scan --chrg {} {} --opt".format(in_file, calc.parameters.charge, solvent_add), 'xtb_scan.out', calc_id=calc.id)
     if a != 0:
         return a
+
+    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
+        return 1
 
     if not local:
         a = sftp_get("{}/xtb_scan.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_scan.out"), conn, lock)
@@ -711,7 +722,10 @@ def xtb_freq(in_file, calc):
 
     a = save_to_results(os.path.join(local_folder, "vibspectrum"), calc)
     if a != 0:
-        return -1, 'e'
+        return 1
+
+    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
+        return 1
 
     if not os.path.isfile("{}/xtb_freq.out".format(local_folder)):
         return 1
@@ -1273,7 +1287,7 @@ def orca_ts(in_file, calc):
             ind -= 1
         E = float(lines[ind].split()[4])
 
-    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=1)
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=1, degeneracy=1)
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
     prop.geom = True
@@ -2266,7 +2280,7 @@ CalcUS
         for el in xyz:
             xyz_structure += "{} {} {} {}\n".format(*el)
 
-    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=1)
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=1, degeneracy=1)
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
     prop.geom = True
@@ -2320,7 +2334,7 @@ CalcUS
         _cmd, ids = cmd.split('-')
         _cmd = _cmd.split('_')
         ids = ids.split('_')
-        ids = [int(i) for i in ids]
+        ids = [int(i) if i.strip() != '' else -1 for i in ids]
         type = len(ids)
 
         if _cmd[0] == "Scan":
@@ -2806,7 +2820,12 @@ def run_calc(calc_id):
         in_file = os.path.join(remote_dir, "in.xyz")
 
     ti = time()
-    ret = f(in_file, calc)
+    try:
+        ret = f(in_file, calc)
+    except:
+        ret = 1
+        traceback.print_exc()
+
     tf = time()
     calc.execution_time = int((tf-ti)*int(PAL))
 

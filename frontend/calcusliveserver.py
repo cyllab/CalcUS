@@ -589,13 +589,22 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def launch_ensemble_next_step(self):
         assert self.is_on_page_ensemble()
-        button = self.driver.find_element_by_xpath("/html/body/div[1]/div/div[2]/div[1]/a")
-        button.click()
+        button = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.ID, "next_step_ensemble"))
+        )
+        button.send_keys(Keys.RETURN)
 
     def launch_structure_next_step(self):
         assert self.is_on_page_ensemble()
-        button = self.driver.find_element_by_xpath("/html/body/div[1]/div/div[2]/div[1]/button[5]")
-        button.click()
+
+        button = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.ID, "next_step_structure"))
+        )
+        table = WebDriverWait(self.driver, 4).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#conf_table > tr"))
+        )
+
+        button.send_keys(Keys.RETURN)
 
     def delete_project(self, name):
         assert self.is_on_page_projects()
