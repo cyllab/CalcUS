@@ -46,8 +46,8 @@
 		    document.documentElement.firstChild.appendChild(newScript);
 		}
 
-		let num = 1;
-		let conf_number = 1;
+		let num = 0;
+		let conf_length = 1;
 		var curr_p = 0;
 
 		$.ajaxSetup({ cache: false }); 
@@ -60,7 +60,7 @@
 					headers: {
 						"X-CSRFToken": '{{ csrf_token }}',
 					},
-					data: {'id': {{ ensemble.id }}, 'num': 1},
+					data: {'id': {{ ensemble.id }}},
 					success: function(data, textStatus, xhr) {
 						if (xhr.status != 204) {
 							let mol = ChemDoodle.readXYZ(data);
@@ -79,7 +79,8 @@
 								success: function(data, textStatus, xhr) {
 									if (xhr.status != 204) {
 										$("#conf_table").html(data);
-										conf_number = document.getElementById("conf_table").rows.length;
+										conf_length = document.getElementById("conf_table").rows.length;
+
 										refresh_details({{ ensemble.unique_parameters.0.id }});
 									}
 								}
@@ -99,7 +100,7 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 
-				data: {'id': {{ ensemble.id }} , 'num': num},
+				data: {'id': {{ ensemble.id }} , 'num': get_conf_number()},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						let mol = ChemDoodle.readXYZ(data);
@@ -115,20 +116,20 @@
 		}
 
 		function increase_conf() {
-			if(num < conf_number) {
-				document.getElementById('conf_' + num).classList.remove("is-selected");
+			if(num < conf_length - 1) {
+				document.getElementById("conf_table").rows[num].classList.remove("is-selected");
 				num = num + 1;
-				document.getElementById('conf_' + num).classList.add("is-selected");
+				document.getElementById("conf_table").rows[num].classList.add("is-selected");
 				refresh();
 			}
 
 		}
 
 		function decrease_conf() {
-			if(num > 1) {
-				document.getElementById('conf_' + num).classList.remove("is-selected");
+			if(num > 0) {
+				document.getElementById("conf_table").rows[num].classList.remove("is-selected");
 				num = num - 1;
-				document.getElementById('conf_' + num).classList.add("is-selected");
+				document.getElementById("conf_table").rows[num].classList.add("is-selected");
 				refresh();
 			}
 		}
@@ -160,7 +161,7 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 
-				data: {'id': {{ ensemble.id }}, 'num': num, 'p_id': curr_p},
+				data: {'id': {{ ensemble.id }}, 'num': get_conf_number(), 'p_id': curr_p},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						$("#details_structure_div").html(data);
@@ -183,8 +184,6 @@
 			}
 			
 			$("#tab_" + p_id).addClass("is-active");
-			refresh_ensemble();
-			refresh_structure();
 
 			$.ajax({
 				method: "POST",	 	 
@@ -199,19 +198,25 @@
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						$("#conf_table").html(data);
-						conf_number = document.getElementById("conf_table").rows.length;
+						conf_length = document.getElementById("conf_table").rows.length;
+						document.getElementById("conf_table").rows[num].classList.add("is-selected");
+						refresh_ensemble();
+						refresh_structure();
 					}
 				}
 			});
 
 		}
 		
+		function get_conf_number() {
+			return document.getElementById("conf_table").rows[parseInt(num)].cells[0].innerHTML;
+		}
 		function launch_selected() {
-			url = "/launch/{{ ensemble.id }}/" + num;
+			url = "/launch/{{ ensemble.id }}/" + get_conf_number();
 			window.location.href = url;
 		}
 		function download_selected_structure() {
-			url = "/download_structures/{{ ensemble.id }}/" + num;
+			url = "/download_structures/{{ ensemble.id }}/" + get_conf_number();
 			window.location.href = url;
 		}
 

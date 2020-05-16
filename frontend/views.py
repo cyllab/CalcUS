@@ -1603,17 +1603,27 @@ def get_structure(request):
         if e.parent_molecule.project.author != profile and not profile_intersection(profile, e.parent_molecule.project.author):
             return HttpResponse(status=403)
 
+        structs = e.structure_set.all()
+
         if 'num' in request.POST.keys():
             num = int(clean(request.POST['num']))
-        else:
-            num = 1
+            try:
+                struct = structs.get(number=num)
+            except Structure.DoesNotExist:
+                if len(structs) == 0:
+                    return HttpResponse(status=204)
 
-        try:
-            struct = e.structure_set.get(number=num)
-        except Structure.DoesNotExist:
-            return HttpResponse(status=204)
+                inds = [i.number for i in structs]
+                m = inds.index(min(inds))
+                return HttpResponse(structs[m].xyz_structure)
+
+            else:
+                return HttpResponse(struct.xyz_structure)
         else:
-            return HttpResponse(struct.xyz_structure)
+            inds = [i.number for i in structs]
+            m = inds.index(min(inds))
+            return HttpResponse(structs[m].xyz_structure)
+
 
 @login_required
 def get_vib_animation(request):

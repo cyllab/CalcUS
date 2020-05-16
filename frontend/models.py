@@ -402,9 +402,6 @@ class Structure(models.Model):
     sdf_structure = models.CharField(default="", max_length=5000000)
 
     number = models.PositiveIntegerField(default=0)
-    energy = models.FloatField(default=0)
-    free_energy = models.FloatField(default=0)
-
     degeneracy = models.PositiveIntegerField(default=0)
 
     def __repr__(self):
