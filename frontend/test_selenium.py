@@ -1506,7 +1506,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'CH4.mol',
+                'in_file': 'H2.mol2',
                 'software': 'ORCA',
                 'theory': 'HF',
                 'basis_set': 'Def2-SVP',

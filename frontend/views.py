@@ -640,8 +640,10 @@ def submit_calculation(request):
                 s.xyz_structure = in_file
             elif ext == 'sdf':
                 s.sdf_structure = in_file
+            elif ext == 'mol2':
+                s.mol2_structure = in_file
             else:
-                return error(request, "Unknown file extension (Known formats: .mol, .xyz, .sdf)")
+                return error(request, "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf)")
             s.save()
         else:
             if 'structureB' in request.POST.keys():

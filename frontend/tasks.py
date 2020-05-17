@@ -315,7 +315,7 @@ def generate_xyz_structure(drawing, structure):
                     structure.xyz_structure += line
                 structure.save()
                 return 0
-        elif structure.sdf_structure != '':#unimplemented #not sure anymore
+        elif structure.sdf_structure != '':
             t = time()
             fname = "{}_{}".format(t, structure.id)
 
@@ -328,6 +328,20 @@ def generate_xyz_structure(drawing, structure):
             structure.xyz_structure = '\n'.join([i.strip() for i in lines])
             structure.save()
             return 0
+        elif structure.mol2_structure != '':
+            t = time()
+            fname = "{}_{}".format(t, structure.id)
+
+            with open("/tmp/{}.mol2".format(fname), 'w') as out:
+                out.write(structure.mol2_structure.replace('&lt;', '<').replace('&gt;', '>'))
+            a = system("obabel /tmp/{}.mol2 -O /tmp/{}.xyz".format(fname, fname), force_local=True)
+
+            with open("/tmp/{}.xyz".format(fname)) as f:
+                lines = f.readlines()
+            structure.xyz_structure = '\n'.join([i.strip() for i in lines])
+            structure.save()
+            return 0
+
         else:
             print("Unimplemented")
             return -1
