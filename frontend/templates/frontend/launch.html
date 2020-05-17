@@ -23,9 +23,9 @@
 	let constraint_num = 1;
 	String.prototype.format = function() {
   		a = this;
-  		for (k in arguments[1]) {
-    			a = a.replace("{" + k + "}", arguments[0])
-  		}
+		for (i=0; i < 30; i++) {
+    			a = a.replace("{}", arguments[0])
+		}
   		return a
 	}
 	</script>
@@ -48,7 +48,7 @@
 				else if(choice.value == "By Relative Energy") {
 					value_input.style.display = "block";
 					param_input.style.display = "block";
-					label.innerHTML = "Lower than";
+					label.innerHTML = "Lower than (kJ/mol)";
 				}
 			}
 
@@ -67,10 +67,10 @@
 			}
 		}
 		function constraint_type_selection_changed(id) {
-			choice = document.getElementById("constraint_type_{0}".format(id, [0]));
-			inp2 = document.getElementById("calc_constraint_{0}_2".format(id, [0]));
-			inp3 = document.getElementById("calc_constraint_{0}_3".format(id, [0]));
-			inp4 = document.getElementById("calc_constraint_{0}_4".format(id, [0]));
+			choice = document.getElementById("constraint_type_{}".format(id));
+			inp2 = document.getElementById("calc_constraint_{}_2".format(id));
+			inp3 = document.getElementById("calc_constraint_{}_3".format(id));
+			inp4 = document.getElementById("calc_constraint_{}_4".format(id));
 			if (choice.value == "Distance") {
 				inp2.style.display = "block";	
 				inp3.style.display = "none";	
@@ -89,8 +89,8 @@
 		}
 
 		function constraint_mode_changed(id) {
-			choice = document.getElementById("constraint_mode_{0}".format(id, [0]));
-			div = document.getElementById("calc_scan_div_{0}".format(id, [0]));
+			choice = document.getElementById("constraint_mode_{}".format(id));
+			div = document.getElementById("calc_scan_div_{}".format(id));
 			if (choice.value == "Freeze") {
 				div.style.display = "none";	
 			}
@@ -140,7 +140,7 @@
 				<div class="columns"> \
 					<div class="column"> \
 						<div class="select"> \
-							<select name="constraint_mode_{0}" id="constraint_mode_{1}" onchange="constraint_mode_changed({13})"> \
+							<select name="constraint_mode_{}" id="constraint_mode_{}" onchange="constraint_mode_changed({})"> \
 							<option>Freeze</option> \
 							<option>Scan</option> \
 							</select> \
@@ -148,7 +148,7 @@
 					</div> \
 					<div class="column"> \
 						<div class="select"> \
-				<select name="constraint_type_{2}" id="constraint_type_{3}" onchange="constraint_type_selection_changed({12});"> \
+				<select name="constraint_type_{}" id="constraint_type_{}" onchange="constraint_type_selection_changed({});"> \
 							<option>Distance</option> \
 							<option>Angle</option> \
 							<option>Dihedral</option> \
@@ -156,38 +156,38 @@
 						</div> \
 					</div> \
 					<div class="column"> \
-						<input class="input" type="text" width="5" name="calc_constraint_{4}_1" id="calc_constraint_{5}_1"> \
+						<input class="input" type="text" width="5" name="calc_constraint_{}_1" id="calc_constraint_{}_1"> \
 					</div> \
 					<div class="column"> \
-						<input class="input" type="text" width="5" name="calc_constraint_{6}_2" id="calc_constraint_{7}_2"> \
+						<input class="input" type="text" width="5" name="calc_constraint_{}_2" id="calc_constraint_{}_2"> \
 					</div> \
 					<div class="column"> \
-						<input class="input" type="text" width="5" name="calc_constraint_{8}_3" id="calc_constraint_{9}_3" style="display: none;"> \
+						<input class="input" type="text" width="5" name="calc_constraint_{}_3" id="calc_constraint_{}_3" style="display: none;"> \
 					</div> \
 					<div class="column"> \
-						<input class="input" type="text" width="5" name="calc_constraint_{10}_4" id="calc_constraint_{11}_4" style="display: none;"> \
+						<input class="input" type="text" width="5" name="calc_constraint_{}_4" id="calc_constraint_{}_4" style="display: none;"> \
 					</div> \
 					<div class="column"> \
-				<button type="button" class="button is-danger" onclick="$('#calc_scan_div_{21}').remove(); $(this).parent().parent().parent().remove();">-</button> \
+				<button type="button" class="button is-danger" onclick="$('#calc_scan_div_{}').remove(); $(this).parent().parent().parent().remove();">-</button> \
 					</div> \
 				</div> \
 			</div> \
-				<div style="display: none;" id="calc_scan_div_{14}"> \
+				<div style="display: none;" id="calc_scan_div_{}"> \
 				<div class="columns"> \
 				<div class="column"> \
-					From \
-				<input class="input scan_from" type="text" width="5" name="calc_scan_{15}_1" id="calc_scan_{16}_1"> \
+					From (Å)\
+				<input class="input scan_from" type="text" width="5" name="calc_scan_{}_1" id="calc_scan_{}_1"> \
 				</div> \
 				<div class="column"> \
-					To \
-				<input class="input" type="text" width="5" name="calc_scan_{17}_2" id="calc_scan_{18}_2"> \
+					To (Å) \
+				<input class="input" type="text" width="5" name="calc_scan_{}_2" id="calc_scan_{}_2"> \
 				</div> \
 				<div class="column"> \
 					# Steps \
-				<input class="input" type="text" width="5" name="calc_scan_{19}_3" id="calc_scan_{20}_3"> \
+				<input class="input" type="text" width="5" name="calc_scan_{}_3" id="calc_scan_{}_3"> \
 				</div> \
 			</div> \
-			</div>`.format(constraint_num, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]));
+			</div>`.format(constraint_num));
 
 		}
 		
@@ -440,7 +440,6 @@
 				.attr('name', "starting_ensemble")
 				.attr('value', {{ ensemble.id }})
 				.appendTo(this);
-
 			{% endif %}
 
 			{% if structure %}
@@ -448,8 +447,8 @@
 				.attr('name', "starting_struct")
 				.attr('value', {{ structure.id }})
 				.appendTo(this);
-
 			{% endif %}
+
 			if (editor.molecules.length > 0) {
 				let mol2 = ChemDoodle.writeMOL(editor.getMolecule());
 
