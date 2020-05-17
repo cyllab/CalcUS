@@ -186,7 +186,8 @@
 					},
 					data: {'id': e_id},
 					success: function() {
-						document.getElementById("article_ensemble_" + e_id).remove();	
+						document.getElementById("e_name_" + e_id).parentNode.remove();	
+						refresh_map();
 					}
 
 				});
