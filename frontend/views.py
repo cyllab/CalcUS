@@ -367,7 +367,8 @@ def submit_calculation(request):
     if 'calc_name' in request.POST.keys():
         name = clean(request.POST['calc_name'])
         if name.strip() == '':
-            return error(request, "No calculation name")
+            if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys():
+                return error(request, "No calculation name")
     else:
         if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys():
             return error(request, "No calculation name")
@@ -1912,7 +1913,6 @@ def ensemble_map(request, pk):
     edges = edges[:-1]
     response = HttpResponse(json.format(nodes, edges), content_type='text/json')
 
-    print(json.format(nodes,edges))
     return HttpResponse(response)
 
 @login_required

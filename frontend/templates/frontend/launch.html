@@ -65,7 +65,27 @@
 				constraint_div.style.display = "none";	
 				editor.styles.atoms_displayLabels_3D = false;
 			}
+			set_visibility_name();
 		}
+		
+		function set_visibility_name() {
+			choice = document.getElementById("calc_type");
+			field = document.getElementById("calc_name_field");
+			if(ensemble == true) {
+				if(choice.value == "Geometrical Optimisation" ||  choice.value == "Constrained Optimisation" || choice.value == "Conformational Search" ||  choice.value == "TS Optimisation") {
+					field.style.display = "block";
+				}
+				else {
+					field.style.display = "none";
+				}
+			}
+			else {
+				field.style.display = "block";
+
+			}
+
+		}
+
 		function constraint_type_selection_changed(id) {
 			choice = document.getElementById("constraint_type_{}".format(id));
 			inp2 = document.getElementById("calc_constraint_{}_2".format(id));
@@ -192,24 +212,28 @@
 		}
 		
 		function get_3D() {
-		let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
+			let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
 
-		$.ajax({
-			method: "POST",	 	 
-			url: "/gen_3D/",
-			headers: {
-				"X-CSRFToken": '{{ csrf_token }}',
-			},
+			$.ajax({
+				method: "POST",	 	 
+				url: "/gen_3D/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
 
-			data: {'mol': mol},
-			success: function(data, textStatus, xhr) {
-				let mol_read = ChemDoodle.readXYZ(data);
-				ChemDoodle.relabel(mol_read);
-				editor.loadMolecule(mol_read);	
-			}
-		});
-		
+				data: {'mol': mol},
+				success: function(data, textStatus, xhr) {
+					let mol_read = ChemDoodle.readXYZ(data);
+					ChemDoodle.relabel(mol_read);
+					editor.loadMolecule(mol_read);	
+				}
+			});
 		}
+		{% if ensemble %}
+		let ensemble = true;
+		{% else %}
+		let ensemble = false;
+		{% endif %}
 		$(document).ready(function () {
 			software_selection_changed();
 			{% if ensemble %}
@@ -258,20 +282,19 @@
 						<input type="file" name="file_structure">
 					</div>
 				</div>
+
 				{% endif %}
 				{% csrf_token %}
 
 				<div class="columns">
-					{% if not ensemble and not structure %}
 					<div class="column">
-							<div class="field">
-								<label class="label">Name</label>
-								<div class="control">
-									<input class="input" name="calc_name" type="text" placeholder="My Molecule" required>
-								</div>
+						<div class="field" id="calc_name_field">
+							<label class="label">Name</label>
+							<div class="control">
+								<input class="input" name="calc_name" type="text">
 							</div>
+						</div>
 					</div>
-					{% endif %}
 
 					<div class="column is-narrow">
 						<div class="field">

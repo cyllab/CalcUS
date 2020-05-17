@@ -2706,6 +2706,7 @@ def dispatcher(drawing, order_id):
 
     mode = "e"#Mode for input structure (Ensemble/Structure)
     input_structures = None
+    created_molecule = False
     if order.structure != None:
         mode = "s"
         generate_xyz_structure(drawing, order.structure)
@@ -2731,6 +2732,7 @@ def dispatcher(drawing, order_id):
                 molecule = Molecule.objects.get(inchi=fingerprint, project=order.project)
             except Molecule.DoesNotExist:
                 molecule = Molecule.objects.create(name=order.name, inchi=fingerprint, project=order.project)
+                created_molecule = True
                 molecule.save()
             ensemble.parent_molecule = molecule
             ensemble.save()
@@ -2742,7 +2744,10 @@ def dispatcher(drawing, order_id):
     input_structures = filter(order, input_structures)
 
     if step.creates_ensemble:
-        e = Ensemble.objects.create(name="{} Result".format(order.step.name), origin=ensemble)
+        if order.name.strip() == "" or created_molecule:
+            e = Ensemble.objects.create(name="{} Result".format(order.step.name), origin=ensemble)
+        else:
+            e = Ensemble.objects.create(name=order.name, origin=ensemble)
         print("creating ensemble {}".format(e.id))
         order.result_ensemble = e
         order.save()
