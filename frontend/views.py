@@ -1884,6 +1884,37 @@ def download_project_csv(request, project_id):
     response['Content-Disposition'] = 'attachment; filename={}.csv'.format(proj_name)
     return response
 
+def ensemble_map(request, pk):
+    try:
+        mol = Molecule.objects.get(pk=pk)
+    except Molecule.DoesNotExist:
+        return redirect('/home/')
+
+    if not profile_intersection(request.user.profile, mol.project.author):
+        return redirect('/home/')
+    json = """{{
+                "nodes": [
+                        {}
+                        ],
+                "edges": [
+                        {}
+                    ]
+                }}"""
+    nodes = ""
+    for e in mol.ensemble_set.all():
+        nodes += """{{ "data": {{"id": "{}", "name": "{}", "href": "/ensemble/{}", "color": "{}"}} }},""".format(e.id, e.name, e.id, e.get_node_color)
+    nodes = nodes[:-1]
+
+    edges = ""
+    for e in mol.ensemble_set.all():
+        if e.origin != None:
+            edges += """{{ "data": {{"source": "{}", "target": "{}"}} }},""".format(e.origin.id, e.id)
+    edges = edges[:-1]
+    response = HttpResponse(json.format(nodes, edges), content_type='text/json')
+
+    print(json.format(nodes,edges))
+    return HttpResponse(response)
+
 @login_required
 def analyse(request, project_id):
     profile = request.user.profile

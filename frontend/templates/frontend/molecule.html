@@ -28,63 +28,61 @@
 	</style>
 	<script>
 		function refresh_map() {
-			var cy = window.cy = cytoscape({
-			container: document.getElementById('ensembles_graph'),
-			boxSelectionEnabled: false,
-			autounselectify: true,
-			wheelSensitivity: 0.1,
-		  	layout: {
-				name: 'dagre'
-			},
-			style: [
-				{
-					selector: 'node',
-					style: {
-						'background-color': 'data(color)',
-						'shape': 'round-rectangle',
-						'label': 'data(name)',
-						'text-valign': 'center',
-						'text-halign': 'center',
-						'font-size': '10px',
-						'width': 'label',
-						'padding': '5px',
-					}
+			$.ajax({
+				method: "GET",	 	 
+				url: "/ensemble_map/{{ molecule.id }}",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
 				},
+				success: function(data) {
+					var cy = window.cy = cytoscape({
+					container: document.getElementById('ensembles_graph'),
+					boxSelectionEnabled: false,
+					autounselectify: true,
+					wheelSensitivity: 0.1,
+					layout: {
+						name: 'dagre'
+					},
+					style: [
+						{
+							selector: 'node',
+							style: {
+								'background-color': 'data(color)',
+								'shape': 'round-rectangle',
+								'label': 'data(name)',
+								'text-valign': 'center',
+								'text-halign': 'center',
+								'font-size': '10px',
+								'width': 'label',
+								'padding': '5px',
+							}
+						},
 
-				{
-				selector: 'edge',
-					style: {
-					'width': 4,
-					'target-arrow-shape': 'triangle',
-					'line-color': '#000000',
-					'target-arrow-color': '#000000',
-					'curve-style': 'bezier'
-					}
+						{
+						selector: 'edge',
+							style: {
+							'width': 4,
+							'target-arrow-shape': 'triangle',
+							'line-color': '#000000',
+							'target-arrow-color': '#000000',
+							'curve-style': 'bezier'
+							}
+						}
+					],
+						elements: JSON.parse(data),
+					});
+				cy.on('tap', 'node', function() {
+					//try {
+					//	window.open( this.data('href') );
+					//} catch(e){
+						window.location.href = this.data('href');
+					//}
+				});  
+
 				}
-			],
 
-		  elements: {
-			nodes: [
-				{% for e in ensembles %}
-				{data: {id: '{{ e.id }}', name: '{{ e.name }}', href: '/ensemble/{{ e.id }}', color: '{{ e.get_node_color }}'}},
-				{% endfor %}
-				],
-			edges: [
-				{% for e in ensembles %}
-					{% if e.origin != None %}
-				{ data: { source: '{{ e.origin.id }}', target: '{{ e.id }}' } },
-					{% endif %}
-				{% endfor %}
-		    		]
-		  }
-		});
-		cy.on('tap', 'node', function(){
-			//try {
-			//	window.open( this.data('href') );
-			//} catch(e){
-				window.location.href = this.data('href');
-			//}
-	});  
+			});
+
 
 		}
 

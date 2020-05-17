@@ -33,6 +33,7 @@ urlpatterns = [
 
     path('download_project_csv/<int:project_id>', views.download_project_csv, name='download_project_csv'),
     path('analyse/<int:project_id>', views.analyse, name='analyse'),
+    path('ensemble_map/<int:pk>', views.ensemble_map, name='ensemble_map'),
 
     #Documentation
     path('examples/', views.ExamplesView.as_view(), name='examples'),
