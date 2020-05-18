@@ -35,6 +35,7 @@ urlpatterns = [
     path('analyse/<int:project_id>', views.analyse, name='analyse'),
     path('ensemble_map/<int:pk>', views.ensemble_map, name='ensemble_map'),
 
+    path('see/<int:pk>', views.see, name='see'),
     path('update_preferences/', views.update_preferences, name='update_preferences'),
 
     #Documentation

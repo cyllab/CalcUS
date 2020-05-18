@@ -9,13 +9,31 @@
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 
 	<script src="https://unpkg.com/masonry-layout@4.2.0/dist/masonry.pkgd.min.js"></script>
-	
+	<style>
+		.new {
+			border: 4px solid yellow;
+		}
+	</style>
 	<script>
 		let page = 1;
 		$(document).ready(function(){
 			refresh_list('add');
 		});
 		
+		function see(o_id) {
+			$.ajax({
+				data: {
+					csrfmiddlewaretoken: ('{{csrf_token}}'),
+				},
+				method: "POST",
+				url: '/see/' + o_id,
+				success: function () {
+					$("#order_" + o_id).removeClass("new");	
+				},
+			    });
+
+		}
+
 		function refresh_list(mode) {
 			var sel = document.getElementById("calc_project");
 			opt = sel.options[sel.selectedIndex].text;

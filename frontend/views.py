@@ -1991,6 +1991,21 @@ def calculationorder(request, pk):
 
     return render(request, 'frontend/calculationorder.html', {'order': order})
 
+@login_required
+def see(request, pk):
+    try:
+        order = CalculationOrder.objects.get(pk=pk)
+    except CalculationOrder.DoesNotExist:
+        return HttpResponse(status=404)
+
+    profile = request.user.profile
+    if not profile_intersection(profile, order.author):
+        return HttpResponse(status=404)
+
+    order.see()
+
+    return HttpResponse(status=200)
+
 def handler404(request, *args, **argv):
     return render(request, 'error/404.html', {
             })

@@ -471,10 +471,13 @@ class CalculationOrder(models.Model):
 
     date = models.DateTimeField('date', null=True, blank=True)
     date_finished = models.DateTimeField('date', null=True, blank=True)
-    unseen = models.BooleanField(default=True)
+    last_seen_status = models.PositiveIntegerField(default=0)
 
     resource = models.ForeignKey('ClusterAccess', on_delete=models.CASCADE, blank=True, null=True)
 
+    def see(self):
+        self.last_seen_status = self.status
+        self.save()
 
     @property
     def status(self):
@@ -506,6 +509,7 @@ class CalculationOrder(models.Model):
                 return 2
 
         return 0
+
     @property
     def get_queued(self):
         return len(self.calculation_set.filter(status=0))
@@ -521,6 +525,13 @@ class CalculationOrder(models.Model):
     @property
     def get_error(self):
         return len(self.calculation_set.filter(status=3))
+
+    @property
+    def new_status(self):
+        if self.last_seen_status != self.status:
+            return True
+        else:
+            return False
 
 class Calculation(models.Model):
 

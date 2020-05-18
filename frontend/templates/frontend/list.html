@@ -1,14 +1,14 @@
 {% if latest_frontend %}
 <div class="grid">
     {% for order in latest_frontend %}
-		<article class="grid-item main-grid-item message">
+    <article class="grid-item main-grid-item message {% if order.new_status %}new{% endif %}" id="order_{{ order.id }}" >
 			<div class="message-header {% if order.status == 1 %} has-background-warning {% elif order.status == 2 %} has-background-success {% elif order.status == 3 %} has-background-danger{% endif %}">
     				{% if order.ensemble %}
 					{{ order.id }}: {{ order.ensemble.name }}
 				{% else %}
 					{{ order.id }}: {{ order.structure.parent_ensemble.name }}
 				{% endif %}
-				<p><a href="/calculationorder/{{ order.id }}"><i class="fas fa-sitemap"></i></a>
+				<p><a  onclick="see({{ order.id}});"><i class="fas fa-eye"></i></a><a href="/calculationorder/{{ order.id }}"><i class="fas fa-sitemap"></i></a>
 {% if order.status == 1 %} <i class="fas fa-spinner"></i> {% elif order.status == 2 %} 
 <i class="fas fa-check"></i>{% elif order.status == 3 %} <i class="fas fa-times"></i>{% endif %}</p>
 			</div>
