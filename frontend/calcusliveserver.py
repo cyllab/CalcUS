@@ -516,7 +516,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def apply_PI(self, group_name):
         assert self.is_on_page_profile()
         group_name = self.driver.find_element_by_name('group_name')
-        submit = self.driver.find_element_by_xpath('/html/body/div/div/div[2]/div/div[1]/form/button')
+        submit = self.driver.find_element_by_css_selector("button.button:nth-child(3)")
         group_name.send_keys("Test group")
         submit.send_keys(Keys.RETURN)
 
@@ -582,7 +582,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         code = p.code
         field_username = self.driver.find_element_by_id("user_to_add")
         field_code = self.driver.find_element_by_id("code")
-        button_submit = self.driver.find_element_by_xpath("/html/body/div/div/div[3]/div/div/div[1]/div/button")
+        button_submit = self.driver.find_element_by_css_selector("button.button:nth-child(4)")
         field_username.send_keys(username)
         field_code.send_keys(code)
         button_submit.send_keys(Keys.RETURN)
