@@ -155,6 +155,7 @@ def create_project(request):
         response = """
 <div class="box has-background-danger" id="proj_box_{}">
         <p style="float: right;">
+                        <a href="/analyse/{}"><i class="fas fa-table"></i></a>
                         <a href="/download_project_csv/{}"><i class="fas fa-download"></i></a>
                         <a onclick="edit_field({});"><i class="fas fa-edit" id="icon_{}"></i></a>
                         <a onclick="del({});"><i class="fas fa-trash-alt"></i></a>
@@ -164,7 +165,7 @@ def create_project(request):
                 <p>0 Molecule(s) &nbsp; (0 Calculation(s): &nbsp; 0 Queued; &nbsp; 0 Running; &nbsp; 0 Completed) </p>
         </a>
 </div>
-""".format(proj.id, proj.id, proj.id, proj.id, proj.id, profile.username, proj.name, proj.id, proj.name)
+""".format(proj.id, proj.id, proj.id, proj.id, proj.id, proj.id, profile.username, proj.name, proj.id, proj.name)
 
         return HttpResponse(response)
     else:
