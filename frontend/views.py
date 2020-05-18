@@ -1151,7 +1151,17 @@ def conformer_table_post(request):
                 energies.append([''])
             else:
                 energies.append(prop.energy)
-        rel_energies = e.relative_energies(p)
+
+        _rel_energies = e.relative_energies(p)
+
+        pref_units = profile.pref_units
+        if pref_units == 0:
+            rel_energies = ["{:.2f}".format(float(i)*HARTREE_FVAL) for i in _rel_energies]
+        elif pref_units == 1:
+            rel_energies = ["{:.2f}".format(float(i)*HARTREE_TO_KCAL_F) for i in _rel_energies]
+        elif pref_units == 2:
+            rel_energies = ["{:.5f}".format(i) for i in _rel_energies]
+
         weights = e.weights(p)
         data = zip(e.structure_set.all(), energies, rel_energies, weights)
         data = sorted(data, key=lambda i: i[0].number)
@@ -1631,7 +1641,7 @@ def get_structure(request):
 
 @login_required
 def get_vib_animation(request):
-    if request.method == 'POST' or True:
+    if request.method == 'POST':
         url = request.POST['id']
         id = url.split('/')[-1]
 
@@ -1654,7 +1664,7 @@ def get_vib_animation(request):
 
 @login_required
 def get_scan_animation(request):
-    if request.method == 'POST' or True:
+    if request.method == 'POST':
         url = request.POST['id']
         id = url.split('/')[-1]
 
@@ -1766,6 +1776,27 @@ def profile(request):
         })
 
 @login_required
+def update_preferences(request):
+    if request.method == 'POST':
+        profile = request.user.profile
+
+        if 'pref_units' not in request.POST.keys():
+            return HttpResponse(status=204)
+
+        units = clean(request.POST['pref_units'])
+        print(units)
+        try:
+            unit_code = profile.INV_UNITS[units]
+        except KeyError:
+            return HttpResponse(status=204)
+
+        profile.pref_units = unit_code
+        profile.save()
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=404)
+
+@login_required
 def launch(request):
     return render(request, 'frontend/launch.html', {
             'profile': request.user.profile,
@@ -1815,7 +1846,16 @@ def launch_structure_pk(request, ee, pk):
             'procedures': BasicStep.objects.all(),
         })
 
-def get_csv(proj):
+def get_csv(proj, profile):
+    pref_units = profile.pref_units
+    units = profile.pref_units_name
+
+    if pref_units == 0:
+        CONVERSION = HARTREE_FVAL
+    elif pref_units == 1:
+        CONVERSION = HARTREE_TO_KCAL_F
+    elif pref_units == 2:
+        CONVERSION = 1
 
     summary = {}
     csv = "Molecule,Ensemble,Structure\n"
@@ -1825,23 +1865,24 @@ def get_csv(proj):
             csv += "\n,{}\n".format(e.name)
             for params in e.unique_parameters:
                 rel_energies = e.relative_energies(params)
+                rel_energies = [float(i)*CONVERSION for i in rel_energies]
                 weights = e.weights(params)
                 csv += ",,{}\n".format(params)
-                csv += ",,Number,Energy,Relative Energy, Boltzmann Weight,Free energy\n"
+                csv += ",,Number,Energy ({}),Relative Energy ({}), Boltzmann Weight,Free energy ({})\n".format(units, units, units)
                 for s in e.structure_set.all():
                     try:
                         prop = s.properties.get(parameters=params)
                     except Property.DoesNotExist:
                         pass
                     else:
-                        csv += ",,{},{},{},{},{}\n".format(s.number, prop.energy*HARTREE_FVAL, rel_energies[s.number-1], weights[s.number-1], prop.free_energy*HARTREE_FVAL)
+                        csv += ",,{},{},{},{},{}\n".format(s.number, prop.energy*CONVERSION, rel_energies[s.number-1], weights[s.number-1], prop.free_energy*CONVERSION)
 
                 w_e = e.weighted_energy(params)
                 if w_e != '' and w_e != '-' and w_e != 0:
-                    w_e *= HARTREE_FVAL
+                    w_e *= CONVERSION
                 w_f_e = e.weighted_free_energy(params)
                 if w_f_e != '' and w_f_e != '-' and w_f_e != 0:
-                    w_f_e *= HARTREE_FVAL
+                    w_f_e *= CONVERSION
                 csv += "\n,,Ensemble Average,{},,,{}\n".format(w_e, w_f_e)
                 p_name = params.__repr__()
                 if p_name in summary.keys():
@@ -1855,7 +1896,7 @@ def get_csv(proj):
 
 
     csv += "\n\n\nSummary\n"
-    csv += "Method,Molecule,Ensemble,Average Energy,Average Free Energy\n"
+    csv += "Method,Molecule,Ensemble,Average Energy ({}),Average Free Energy ({})\n".format(units, units)
     for method in summary.keys():
         csv += "{}\n".format(method)
         for mol in summary[method].keys():
@@ -1880,7 +1921,7 @@ def download_project_csv(request, project_id):
         return HttpResponse(status=403)
 
 
-    csv = get_csv(proj)
+    csv = get_csv(proj, profile)
 
     proj_name = proj.name.replace(' ', '_')
     response = HttpResponse(csv, content_type='text/csv')
@@ -1929,7 +1970,7 @@ def analyse(request, project_id):
     if not profile_intersection(profile, proj.author):
         return HttpResponse(status=403)
 
-    csv = get_csv(proj)
+    csv = get_csv(proj, profile)
     js_csv = []
     for ind1, line in enumerate(csv.split('\n')):
         for ind2, el in enumerate(line.split(',')):

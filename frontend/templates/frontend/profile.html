@@ -17,6 +17,20 @@
     			refresh_groups();
 		});
 
+		function update_pref() {
+			$.ajax({
+				type: 'POST',
+				url: "/update_preferences/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				data: $("#pref_form").serialize(), 
+				success: function(response) { 
+					$("#pref_msg_box").html("Updated!");	
+				},
+			});
+		}
+
 		function add_user(group_id) {
 			let username = $("#user_to_add").val();
 			let code = $("#code").val();
@@ -81,6 +95,32 @@
 		<progress class="progress" value="{{ profile.calculation_time_used }}" max="3600"></progress>
 	</div>
 
+	<br>
+	<div class="box">
+		<h5 class="title is-5">Preferences</h5>
+		<form onsubmit="update_pref(); return false;" id="pref_form">
+			{% csrf_token %}
+			<div class="field">
+				<label class="label">Units</label>
+				<div class="control">
+					<div class="select">
+					 	<select name="pref_units" id="pref_units">
+							<option {% if profile.pref_units == 0 %}selected="selected"{% endif %} value="kJ/mol">kJ/mol</option>
+					    		<option {% if profile.pref_units == 1 %}selected="selected"{% endif %} value="kcal/mol">kcal/mol</option>
+					    		<option {% if profile.pref_units == 2 %}selected="selected"{% endif %} value="Ha">Ha</option>
+					  	</select>
+					</div>
+				</div>
+			</div>
+			<div class="field">
+				<div class="control">
+					<button class="button is-primary" id="submit_button">Update</button>
+				</div>
+			</div>
+		</form>
+		<div id="pref_msg_box">
+		</div>
+	</div>
 	<br>
 
 	{% if not profile.is_PI %}

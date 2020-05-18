@@ -23,6 +23,16 @@ class Profile(models.Model):
 
     code = models.CharField(max_length=16)
 
+    pref_units = models.PositiveIntegerField(default=0)
+
+    UNITS = {0: 'kJ/mol', 1: 'kcal/mol', 2: 'Ha'}
+
+    INV_UNITS = {v: k for k, v in UNITS.items()}
+
+    @property
+    def pref_units_name(self):
+        return self.UNITS[self.pref_units]
+
     @property
     def username(self):
         return self.user.username
@@ -254,7 +264,7 @@ class Ensemble(models.Model):
                 continue#Handle this better?
             if p.energy < lowest:
                 lowest = p.energy
-        return (main_p.energy - lowest)*float(HARTREE_VAL)
+        return (main_p.energy - lowest)
 
     def relative_energies(self, params):
         lowest = 0
@@ -268,8 +278,8 @@ class Ensemble(models.Model):
             if p.energy < lowest:
                 lowest = decimal.Decimal(p.energy)
             energies.append(decimal.Decimal(p.energy))
-        energies_kj = [(i-lowest)*HARTREE_VAL if i != '' else '' for i in energies]
-        return energies_kj
+        rel_energies = [(i-lowest) if i != '' else '' for i in energies]
+        return rel_energies
 
     def weights(self, params):
         data = []

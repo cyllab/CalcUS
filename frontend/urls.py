@@ -35,6 +35,8 @@ urlpatterns = [
     path('analyse/<int:project_id>', views.analyse, name='analyse'),
     path('ensemble_map/<int:pk>', views.ensemble_map, name='ensemble_map'),
 
+    path('update_preferences/', views.update_preferences, name='update_preferences'),
+
     #Documentation
     path('examples/', views.ExamplesView.as_view(), name='examples'),
     path('examples/<int:pk>', views.example, name='example'),
@@ -96,7 +98,6 @@ urlpatterns = [
     path('icon/<int:pk>', views.icon, name='icon'),
     path('uvvis/<int:pk>', views.uvvis, name='uvvis'),
     path('nmr/', views.nmr, name='nmr'),
-    #path('delete/<int:pk>', views.delete, name='delete'),
 
     path('delete_project/', views.delete_project, name='delete_project'),
     path('delete_molecule/', views.delete_molecule, name='delete_molecule'),
