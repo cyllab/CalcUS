@@ -397,10 +397,11 @@ def xtb_opt(in_file, calc):
 
         a = sftp_get("{}/xtb_opt.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_opt.out"), conn, lock)
         b = sftp_get("{}/xtbopt.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbopt.xyz"), conn, lock)
-        if a == -1:
-            return a
-        if b == -1:
-            return b
+
+        if a == -1 or b == -1:
+            return -1
+
+        sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
 
     if not os.path.isfile("{}/xtbopt.xyz".format(local_folder)):
         return 1
@@ -447,9 +448,6 @@ def xtb_sp(in_file, calc):
     if a != 0:
         return a
 
-    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
-        return 1
-
     if not local:
         pid = int(threading.get_ident())
         conn = connections[pid]
@@ -458,7 +456,12 @@ def xtb_sp(in_file, calc):
 
         a = sftp_get("{}/xtb_sp.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_sp.out"), conn, lock)
         if a == -1:
-            return a
+            return -1
+
+        sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
+
+    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
+        return 1
 
     if not os.path.isfile("{}/xtb_sp.out".format(local_folder)):
         return 1
@@ -520,6 +523,7 @@ def xtb_ts(in_file, calc):
 
         sftp_put(os.path.join(local_folder, 'ts.inp'), os.path.join(folder, 'ts.inp'), conn, lock)
         a = system("$EBROOTORCA/orca ts.inp", 'xtb_ts.out', software="ORCA", calc_id=calc.id)
+
     else:
         os.chdir(local_folder)
         a = system("{}/orca ts.inp".format(EBROOTORCA), 'xtb_ts.out', software="ORCA", calc_id=calc.id)
@@ -530,15 +534,19 @@ def xtb_ts(in_file, calc):
     if not local:
         a = sftp_get("{}/xtb_ts.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_ts.out"), conn, lock)
         b = sftp_get("{}/ts.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "ts.xyz"), conn, lock)
-        if a == -1:
-            return a
-        if b == -1:
-            return b
+
+        if a == -1 or b == -1:
+            return -1
+
+        sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
 
     if not os.path.isfile("{}/ts.xyz".format(local_folder)):
         return 1
 
     if not os.path.isfile("{}/xtb_ts.out".format(local_folder)):
+        return 1
+
+    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
         return 1
 
     with open(os.path.join(folder, "ts.xyz")) as f:
@@ -624,26 +632,34 @@ def xtb_scan(in_file, calc):
     if a != 0:
         return a
 
-    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
-        return 1
-
     if not local:
         a = sftp_get("{}/xtb_scan.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_scan.out"), conn, lock)
         if has_scan:
             b = sftp_get("{}/xtbscan.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbscan.log"), conn, lock)
         else:
             b = sftp_get("{}/xtbopt.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbopt.xyz"), conn, lock)
-        if a == -1:
-            return a
-        if b == -1:
-            return b
+        if a == -1 or b == -1:
+            return -1
+
+        sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
+
+
+    if not os.path.isfile("{}/xtb_scan.out".format(local_folder)):
+        return 1
+
+    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
+        return 1
+
+    with open("{}/xtb_scan.out".format(local_folder)) as f:
+        lines = f.readlines()
+        for line in lines:
+            if line.find("[WARNING] Runtime exception occurred") != -1:
+                return 1
 
     if has_scan:
         if not os.path.isfile("{}/xtbscan.log".format(local_folder)):
             return 1
 
-        if not os.path.isfile("{}/xtb_scan.out".format(local_folder)):
-            return 1
         with open(os.path.join(local_folder, 'xtbscan.log')) as f:
             lines = f.readlines()
             num_atoms = lines[0]
@@ -680,9 +696,6 @@ def xtb_scan(in_file, calc):
 
     else:
         if not os.path.isfile("{}/xtbopt.xyz".format(local_folder)):
-            return 1
-
-        if not os.path.isfile("{}/xtb_scan.out".format(local_folder)):
             return 1
 
         with open(os.path.join(local_folder, 'xtbopt.xyz')) as f:
@@ -729,9 +742,14 @@ def xtb_freq(in_file, calc):
         conn = connections[pid]
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
-        sftp_get("{}/xtb_freq.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_freq.out"), conn, lock)
-        sftp_get("{}/vibspectrum".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "vibspectrum"), conn, lock)
-        sftp_get("{}/g98.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "g98.out"), conn, lock)
+        a = sftp_get("{}/xtb_freq.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtb_freq.out"), conn, lock)
+        b = sftp_get("{}/vibspectrum".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "vibspectrum"), conn, lock)
+        c = sftp_get("{}/g98.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "g98.out"), conn, lock)
+
+        if a == -1 or b == -1 or c == -1:
+            return -1
+
+        sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
 
 
     a = save_to_results(os.path.join(local_folder, "vibspectrum"), calc)
@@ -877,8 +895,10 @@ def crest_generic(in_file, calc, mode):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
 
-        sftp_get("{}/crest.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "crest.out"), conn, lock)
-        sftp_get("{}/crest_conformers.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "crest_conformers.xyz"), conn, lock)
+        a = sftp_get("{}/crest.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "crest.out"), conn, lock)
+        b = sftp_get("{}/crest_conformers.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "crest_conformers.xyz"), conn, lock)
+        if a == -1 or b == -1:
+            return -1
 
     if not os.path.isfile("{}/crest.out".format(local_folder)):
         return 1
@@ -1033,16 +1053,8 @@ end
         c = sftp_get("{}/in-LUMO.cube".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "in-LUMO.cube"), conn, lock)
         d = sftp_get("{}/in-LUMOA.cube".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "in-LUMOA.cube"), conn, lock)
         e = sftp_get("{}/in-LUMOB.cube".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "in-LUMOB.cube"), conn, lock)
-        if a != 0:
-            return a
-        if b != 0:
-            return b
-        if c != 0:
-            return c
-        if d != 0:
-            return d
-        if e != 0:
-            return e
+        if a == -1 or b == -1 or c == -1 or d == -1 or e == -1:
+            return -1
 
     if not os.path.isfile("{}/orca_mo.out".format(local_folder)):
         return 1
@@ -2532,7 +2544,7 @@ CalcUS
     if not local:
         a = sftp_get("{}/nmr.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "nmr.log"), conn, lock)
         if a != 0:
-            return a
+            return -1
 
     if not os.path.isfile("{}/nmr.log".format(local_folder)):
         return 1

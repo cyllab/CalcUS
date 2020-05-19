@@ -1223,7 +1223,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         params = {
                 'calc_name': 'test',
                 'type': 'Constrained Optimisation',
-                'constraints': [['Scan', 'Distance', [1, 2], [1.5, 3.5, 10]]],
+                'constraints': [['Scan', 'Distance', [1, 2], [1.5, 2.0, 10]]],
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'CH4.mol',
@@ -1241,6 +1241,23 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
         self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 10)
+
+    def test_scan_distance_not_converged(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Distance', [1, 2], [0.01, 3.5, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertFalse(self.latest_calc_successful())
 
     def test_scan_angle(self):
         params = {
