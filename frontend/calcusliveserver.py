@@ -157,7 +157,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             select.find_element_by_xpath("option[text()='{}']".format(params['software'])).click()
 
             self.driver.implicitly_wait(5)
-            #self.driver.find_element_by_xpath("//*[@id='calc_software']/option[text()='{}']".format(params['software'])).click()
 
         if 'type' in params.keys():
             self.driver.find_element_by_xpath("//*[@id='calc_type']/option[text()='{}']".format(params['type'])).click()
@@ -173,7 +172,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         if 'constraints' in params.keys():
             assert params['type'] == 'Constrained Optimisation'
-            #[['Scan', 'Distance', [1, 3], [3.5, 1.5, 20]]].
+
             def handle_constraint(constraint, ind):
                 c_mode = constraint[0]
                 select = self.driver.find_element_by_id("constraint_mode_{}".format(ind))

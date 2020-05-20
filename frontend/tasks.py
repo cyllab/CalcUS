@@ -41,11 +41,9 @@ from .constants import *
 
 import traceback
 
-ATOMIC_NUMBER = {
-        }
-ATOMIC_SYMBOL = {
+ATOMIC_NUMBER = {}
+ATOMIC_SYMBOL = {}
 
-        }
 for el in periodictable.elements:
     ATOMIC_NUMBER[el.symbol] = el.number
     ATOMIC_SYMBOL[el.number] = el.symbol
@@ -284,7 +282,6 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
             return subprocess.run(shlex.split(command)).returncode
 
 def generate_xyz_structure(drawing, structure):
-
     if structure.xyz_structure == "":
         if structure.mol_structure != '':
             t = time()
@@ -1133,10 +1130,8 @@ def orca_opt(in_file, calc):
     if not local:
         a = sftp_get("{}/opt.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "opt.xyz"), conn, lock)
         b = sftp_get("{}/orca_opt.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "orca_opt.out"), conn, lock)
-        if a != 0:
-            return a
-        if b != 0:
-            return b
+        if a == -1 or b == -1:
+            return -1
 
     if not os.path.isfile("{}/opt.xyz".format(local_folder)):
         return 1
@@ -1291,10 +1286,8 @@ def orca_ts(in_file, calc):
     if not local:
         a = sftp_get("{}/ts.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "ts.xyz"), conn, lock)
         b = sftp_get("{}/orca_ts.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "orca_ts.out"), conn, lock)
-        if a != 0:
-            return a
-        if b != 0:
-            return b
+        if a == -1 or b == -1:
+            return -1
 
     if not os.path.isfile("{}/ts.xyz".format(local_folder)):
         return 1
@@ -1375,8 +1368,8 @@ def orca_freq(in_file, calc):
 
     if not local:
         a = sftp_get("{}/orca_freq.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "orca_freq.out"), conn, lock)
-        if a != 0:
-            return a
+        if a == -1:
+            return -1
 
     if not os.path.isfile("{}/orca_freq.out".format(local_folder)):
         return 1
@@ -1604,23 +1597,20 @@ def orca_scan(in_file, calc):
 
     if not local:
         a = sftp_get("{}/orca_scan.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "orca_scan.out"), conn, lock)
-        if a != 0:
-            return a
+        if a == -1:
+            return -1
 
         if has_scan:
             a = sftp_get("{}/scan.relaxscanact.dat".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "scan.relaxscanact.dat"), conn, lock)
-            if a != 0:
-                return a
-            a = sftp_get("{}/scan.allxyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "scan.allxyz"), conn, lock)
-            if a != 0:
-                return a
+            b = sftp_get("{}/scan.allxyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "scan.allxyz"), conn, lock)
+            if a == -1 or b == -1:
+                return -1
         else:
             a = sftp_get("{}/scan.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "scan.xyz"), conn, lock)
-            if a != 0:
-                return a
+            if a == -1:
+                return -1
 
     if has_scan:
-
         if not os.path.isfile("{}/scan.relaxscanact.dat".format(local_folder)):
             return 1
 

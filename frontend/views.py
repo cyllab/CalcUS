@@ -123,7 +123,6 @@ def projects_username(request, username):
                     'profile': request.user.profile,
                     'target_profile': target_profile,
                 })
-
     else:
         return HttpResponse(status=404)
 
@@ -1847,6 +1846,7 @@ def launch_structure_pk(request, ee, pk):
             'procedures': BasicStep.objects.all(),
         })
 
+@login_required
 def get_csv(proj, profile):
     pref_units = profile.pref_units
     units = profile.pref_units_name
@@ -1929,6 +1929,7 @@ def download_project_csv(request, project_id):
     response['Content-Disposition'] = 'attachment; filename={}.csv'.format(proj_name)
     return response
 
+@login_required
 def ensemble_map(request, pk):
     try:
         mol = Molecule.objects.get(pk=pk)

@@ -12,6 +12,7 @@ from ssh2.session import Session
 import socket
 import threading
 from threading import Lock
+
 try:
     is_test = os.environ['CALCUS_TEST']
 except:
@@ -37,17 +38,15 @@ CONNECTION_CODE = {
             4: "No calcus folder found",
 
         }
-
 if is_test:
     pass
 else:
-    sys.path.append("/home/raphael/CalcUS")
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calcus.settings")
     django.setup()
 
 from frontend.models import *
 from frontend import tasks
-
 
 tasks.REMOTE = True
 
@@ -77,7 +76,6 @@ class ClusterDaemon:
 
         if b != 4:
             self.connections[a[0].id] = a
-            #self.upload_tasks(a)
             return a
         return b
 
@@ -115,7 +113,6 @@ class ClusterDaemon:
             print("Invalid host")
             return 2
 
-        password = None
         session = Session()
         session.handshake(sock)
         session.set_timeout(20*1000)
@@ -227,8 +224,6 @@ class ClusterDaemon:
                 for conn_name in self.connections.keys():
                     conn, sock, session, sftp = self.connections[conn_name]
                     session.keepalive_send()
-                    #t = threading.Thread(target=self.test_connection, args=(conn_name,))
-                    #t.start()
 
             if ind % 60 == 0:
                 ind = 1
