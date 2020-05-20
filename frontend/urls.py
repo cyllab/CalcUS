@@ -8,8 +8,9 @@ from . import views
 app_name = 'frontend'
 urlpatterns = [
     #Home and index
-    path('', views.projects, name='projects'),
-    path('home/', views.projects, name='projects'),
+    path('', views.home, name='home'),
+    path('home/', views.home, name='home'),
+
     path('list/', views.IndexView.as_view(), name='list'),
     path('documentation/', TemplateView.as_view(template_name="frontend/documentation.html"), name='documentation'),
     path('calculations/', views.calculations, name='calculations'),

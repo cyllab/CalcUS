@@ -95,6 +95,9 @@ class IndexView(generic.ListView):
         else:
             return []
 
+def home(request):
+    return render(request, 'frontend/home.html')
+
 @login_required
 def calculations(request):
     return render(request, 'frontend/calculations.html', {
