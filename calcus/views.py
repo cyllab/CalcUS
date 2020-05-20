@@ -22,7 +22,7 @@ class LoginView(TemplateView):
 
 class LogoutView(TemplateView):
 
-    template_name = 'front/index.html'
+    template_name = 'frontend/index.html'
 
     def get(self, request, **kwargs):
         logout(request)

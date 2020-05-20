@@ -82,10 +82,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.profile = Profile.objects.get(user__username=self.username)
 
     def tearDown(self):
-        for method, error in self._outcome.errors:
-            if error:
-                test_method_name = self._testMethodName
-                self.driver.get_screenshot_as_file("{}/selenium_screenshots/{}.png".format(dir_path, test_method_name))
+        pass
 
     def login(self, username, password):
         self.driver.get('{}/accounts/login/'.format(self.live_server_url))

@@ -29,9 +29,6 @@ tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
 SCR_DIR = os.path.join(tests_dir, "scr")
 RESULTS_DIR = os.path.join(tests_dir, "results")
 
-for s in glob.glob("{}/selenium_screenshots/*.png".format(dir_path)):
-    os.remove(s)
-
 class InterfaceTests(CalcusLiveServer):
     def test_default_login_page(self):
         self.assertTrue(self.is_on_page_projects())
