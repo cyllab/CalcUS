@@ -69,6 +69,8 @@ def create_calculation(in_file, step_name, solvent, user, project):
         s = Structure.objects.create(xyz_structure=struct)
     elif ext == 'mol':
         s = Structure.objects.create(mol_structure=struct)
+    elif ext == 'mol2':
+        s = Structure.objects.create(mol2_structure=struct)
     elif ext == 'sdf':
         s = Structure.objects.create(sdf_structure=struct)
     else:
@@ -83,19 +85,8 @@ def create_calculation(in_file, step_name, solvent, user, project):
     params = Parameters.objects.create(solvent=solvent, charge=charge, multiplicity=1)
     c = CalculationOrder.objects.create(id=counter, name="TestOrder", date=timezone.now(), parameters=params, ensemble=e, step=step)
 
-    #user.profile.calculationorder_set.add(c)
-    #project.calculationorder_set.add(c)
-
     c.save()
-    #project.save()
-    #user.profile.save()
-
-    #scr = os.path.join(SCR_DIR, id)
-
-    #os.mkdir(scr)
-
     counter += 1
-    #copyfile(in_file, os.path.join(scr, "initial.{}".format(ext)))
 
     return c.id
 
@@ -107,18 +98,9 @@ def create_project(user, name):
 class JobTestCase(StaticLiveServerTestCase):
 
     def run_calc(self, drawing, order_id):
-
-        #os.chdir(os.path.join(SCR_DIR, str(calc.id)))
-
         ti = time.time()
 
         submit_val = dispatcher.delay(drawing, order_id)
-        time.sleep(1)
-
-        #calculations = CalculationOrder.objects.all()[0].calculation_set.all()
-
-        #for c in calculations:
-        #    run_calc(c.id)
 
         ind = 0
         done = False
@@ -137,24 +119,7 @@ class JobTestCase(StaticLiveServerTestCase):
             self.assertEqual(c.status, 2)
 
         return 0
-        #calc = CalculationOrder.objects.get(pk=calc.id)
 
-        tf = time.time()
-        execution_time = tf - ti
-
-        #job_id = str(calc.id)
-
-        if retval == 0:
-            calc.status = 2
-        else:
-            calc.status = 3
-            calc.error_message = "Unknown error"
-
-        calc.save()
-
-        self.status = calc.status
-        self.id = str(calc.id)
-        return calc
 
     def tearDown(self):
         try:
@@ -197,7 +162,6 @@ class JobTestCase(StaticLiveServerTestCase):
 
     @classmethod
     def tearDownClass(self):
-        #super().tearDownClass()
         self.celery_worker.__exit__(None, None, None)
 
 def gen_test(in_file, _type, solvent):
@@ -218,45 +182,37 @@ def gen_test(in_file, _type, solvent):
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
 
-        elif _type == "Crest":
+        elif _type == "Conformational Search":
             with open(os.path.join(calc_path, "crest.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("CREST terminated normally.") != -1)
+
         elif _type == "Constrained Optimisation":
             pass
+
         elif _type == "UV-Vis Calculation":
             with open(os.path.join(calc_path, "xtb4stda.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("wall time for all") != -1)
-
             with open(os.path.join(calc_path, "stda.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-2].find("sTDA done.") != -1)
-        elif _type == "MO Generation":
-            with open(os.path.join(calc_path, "xtb_opt.out")) as f:
-                lines = f.readlines()
-            self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
-            with open(os.path.join(calc_path, "orca_mo.out")) as f:
-                lines = f.readlines()
-            self.assertTrue(lines[-2].find("ORCA TERMINATED NORMALLY") != -1)
-        elif _type == "Frequency Calculation":
+                elif _type == "Frequency Calculation":
             with open(os.path.join(calc_path, "xtb_freq.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-1].find("normal termination of xtb") != -1)
+
         elif _type == "TS Optimisation":
             with open(os.path.join(calc_path, "xtb_ts.out")) as f:
                 lines = f.readlines()
             self.assertTrue(lines[-2].find("ORCA TERMINATED NORMALLY") != -1)
-        elif _type == "NMR Prediction":
-            pass
         else:
             assert 1 == -1
     return test
 
 
-input_files = glob.glob(tests_dir + '*.*')
-input_files = [
-                'benzene.mol',
+EQUILIBRIUM_INPUT_FILES = [
+                'CH4.mol',
                 'carbo_cation.mol',
                 #'Cl-iodane_2D.mol',
                 'enolate_anion.mol',
@@ -264,30 +220,48 @@ input_files = [
                 'EtMgBr.mol',
                 'FeCl2.mol',
                 'NH3.mol',
-                'propane.mol'
+                'H2.mol2'
                 ]
-#TYPES = [0, 1, 2, 3]
-TYPES = [
+
+EQUILIBRIUM_CALCULATIONS = [
             "Geometrical Optimisation",
             #"Constrained Optimisation",
-            "Crest",
+            "Conformational Search",
             "Frequency Calculation",
-            "TS Optimisation",
             "UV-Vis Calculation",
         ]
 
-for _type in TYPES:
+TS_INPUT_FILES = [
+            "small_ts.xyz",
+            "mini_ts.xyz",
+        ]
+
+TS_CALCULATION = "TS Optimisation"
+
+for _type in EQUILIBRIUM_CALCULATIONS:
     solvent = "Vacuum"
-    for f in input_files:
+    for f in EQUILIBRIUM_INPUT_FILES:
         in_name = f.split('.')[0]
         test_name = "test_{}_{}_{}".format(in_name, _type.replace(' ', '_'), solvent)
         test = gen_test(os.path.join(tests_dir, f), _type, solvent)
         setattr(JobTestCase, test_name, test)
 
+for f in TS_INPUT_FILES:
+    in_name = f.split('.')[0]
+    test_name = "test_{}_{}_{}".format(in_name, TS_CALCULATION.replace(' ', '_'), solvent)
+    test = gen_test(os.path.join(tests_dir, f), TS_CALCULATION, solvent)
+    setattr(JobTestCase, test_name, test)
+
 for solv in SOLVENTS:
-    for type in ["Geometrical Optimisation", "Crest", "UV-Vis Calculation"]:
-        in_name = input_files[0].split('.')[0]
-        test_name = "test_{}_{}_{}".format(in_name, type, solv)
-        test = gen_test(os.path.join(tests_dir, f), type, solv)
+    for type in ["Geometrical Optimisation", "Conformational Search", "UV-Vis Calculation"]:
+        in_name = EQUILIBRIUM_INPUT_FILES[0].split('.')[0]
+        test_name = "test_{}_{}_{}".format(in_name, type.replace(' ', '_'), solv)
+        test = gen_test(os.path.join(tests_dir, EQUILIBRIUM_INPUT_FILES[0]), type, solv)
         setattr(JobTestCase, test_name, test)
+
+    type = TS_CALCULATION
+    in_name = TS_INPUT_FILES[0].split('.')[0]
+    test_name = "test_{}_{}_{}".format(in_name, type.replace(' ', '_'), solv)
+    test = gen_test(os.path.join(tests_dir, EQUILIBRIUM_INPUT_FILES[0]), type, solv)
+    setattr(JobTestCase, test_name, test)
 
