@@ -14,6 +14,10 @@ urlpatterns = [
     path('list/', views.IndexView.as_view(), name='list'),
     path('documentation/', TemplateView.as_view(template_name="frontend/documentation.html"), name='documentation'),
     path('calculations/', views.calculations, name='calculations'),
+    path('learn/', views.ExerciseView.as_view(), name='learn'),
+    path('learn/<int:pk>', views.exercise, name='exercise'),
+
+    path('answer/', views.answer, name='answer'),
 
     path('projects/', views.projects, name='projects'),
     path('projects/<str:username>', views.projects_username, name='projects_username'),

@@ -55,6 +55,18 @@ class Example(models.Model):
     title = models.CharField(max_length=100)
     page_path = models.CharField(max_length=100)
 
+class Exercise(models.Model):
+    title = models.CharField(max_length=100)
+    page_path = models.CharField(max_length=100)
+
+class Question(models.Model):
+    exercise = models.ForeignKey(Exercise, on_delete=models.SET_NULL, blank=True, null=True)
+    question = models.CharField(max_length=2000)
+    answer = models.FloatField()
+
+class CompletedExercise(models.Model):
+    exercise = models.ForeignKey(Exercise, on_delete=models.SET_NULL, blank=True, null=True)
+    completed_by = models.ForeignKey(Profile, on_delete=models.SET_NULL, blank=True, null=True)
 
 class ClusterCommand(models.Model):
     issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)

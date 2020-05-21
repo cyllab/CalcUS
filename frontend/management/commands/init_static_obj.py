@@ -14,13 +14,21 @@ class Command(BaseCommand):
     help = 'Initializes the procedures'
 
     def is_absent(self, cls, name):
-
         try:
             a = cls.objects.get(name=name)
         except cls.DoesNotExist:
             return True
         else:
             return False
+
+    def is_absent_title(self, cls, title):
+        try:
+            a = cls.objects.get(title=title)
+        except cls.DoesNotExist:
+            return True
+        else:
+            return False
+
 
     def print(self, txt):
         if not is_test:
@@ -239,6 +247,24 @@ class Command(BaseCommand):
         '''
         ###Finishing the process
         #self.verify()
+
+        title = "Example 1: Simple equilibrium calculation"
+        if self.is_absent_title(Example, title):
+            self.print("Adding Example: {}".format(title))
+            a = Example.objects.create(title=title, page_path="example1.html")
+
+        title = "Example 2: Diaryliodonium complexation energies"
+        if self.is_absent_title(Example, title):
+            self.print("Adding Example: {}".format(title))
+            a = Example.objects.create(title=title, page_path="example2.html")
+
+        title = "Geometrical Optimisation"
+        if self.is_absent_title(Exercise, title):
+            self.print("Adding Exercise: {}".format(title))
+            a = Exercise.objects.create(title=title, page_path="geometrical_optimisation.html")
+            q1 = Question.objects.create(exercise=a, question="What is the equilibrium carbon-carbon bond length?", answer=1.38)
+            q2 = Question.objects.create(exercise=a, question="What is the equilibrium angle between three consecutive carbons?", answer=120.0)
+
 
     def verify(self):
         for proc in Procedure.objects.all():

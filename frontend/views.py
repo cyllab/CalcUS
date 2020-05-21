@@ -23,7 +23,7 @@ from django.contrib.auth.models import User
 from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
-from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter
+from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise
 from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS
 from .decorators import superuser_required
 from .tasks import system
@@ -339,6 +339,69 @@ class ExamplesView(generic.ListView):
 
     def get_queryset(self):
         return Example.objects.all()
+
+class ExerciseView(generic.ListView):
+    model = Exercise
+    template_name = 'exercises/index.html'
+    context_object_name = 'exercises'
+    paginate_by = '10'
+
+    def get_queryset(self):
+        return Exercise.objects.all()
+
+def is_close(num1, num2):
+    TOLERANCE = 0.02
+    if num2 > num1*(1 - TOLERANCE) and num2 < num1*(1 + TOLERANCE):
+        return True
+    else:
+        return False
+
+def answer(request):
+    if request.method != "POST":
+        return HttpResponse(status=404)
+
+    if 'exercise' not in request.POST.keys():
+        return HttpResponse("Error")
+
+    try:
+        ex_id = int(clean(request.POST['exercise']))
+    except ValueError:
+        return HttpResponse("Error")
+
+    try:
+        ex = Exercise.objects.get(pk=ex_id)
+    except Exercise.DoesNotExist:
+        return HttpResponse("Error")
+
+    questions = ex.question_set.all()
+    for q in questions:
+        try:
+            answer = float(clean(request.POST['answer_{}'.format(q.id)]))
+        except KeyError:
+            return HttpResponse("Error")
+        except ValueError:
+            return HttpResponse("Please enter numbers")
+
+        if not is_close(answer, q.answer):
+            return HttpResponse("Not all answers are correct")
+
+    profile = request.user.profile
+
+    try:
+        c = CompletedExercise.objects.get(exercise=ex, completed_by=profile)
+    except CompletedExercise.DoesNotExist:
+        c = CompletedExercise.objects.create(exercise=ex, completed_by=profile)
+        c.save()
+
+    return HttpResponse("Correct!")
+
+def exercise(request, pk):
+    try:
+        ex = Exercise.objects.get(pk=pk)
+    except Exercise.DoesNotExist:
+        pass
+
+    return render(request, 'exercises/' + ex.page_path, {'questions': ex.question_set.all(), 'exercise': ex})
 
 def example(request, pk):
     try:
