@@ -2066,7 +2066,7 @@ def see(request, pk):
         return HttpResponse(status=404)
 
     profile = request.user.profile
-    if not profile_intersection(profile, order.author):
+    if profile != order.author:
         return HttpResponse(status=404)
 
     order.see()
