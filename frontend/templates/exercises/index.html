@@ -1,0 +1,32 @@
+{% extends 'frontend/base.html' %}
+
+{% load static %}
+
+{% load exercises_tags %}
+
+{% block extrahead %}
+	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+	<script type="text/javascript" id="MathJax-script" async
+		src="https://cdn.jsdelivr.net/npm/mathjax@3.0.0/es5/tex-mml-chtml.js">
+	</script>
+	<title>Exercises</title>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+	{% for ex in exercises %}
+	{% completed ex request.user.profile as comp %}
+	<a href="/learn/{{ ex.id }}">
+		<div class="box {% if comp %}has-background-success{% endif %}">
+			{{ ex.title }}
+		</div>
+	</a>
+	{% endfor %}
+</div>
+<br />
+{% endblock %}
+
