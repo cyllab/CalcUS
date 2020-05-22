@@ -1912,7 +1912,6 @@ def launch_structure_pk(request, ee, pk):
             'procedures': BasicStep.objects.all(),
         })
 
-@login_required
 def get_csv(proj, profile):
     pref_units = profile.pref_units
     units = profile.pref_units_name
@@ -1932,7 +1931,7 @@ def get_csv(proj, profile):
             csv += "\n,{}\n".format(e.name)
             for params in e.unique_parameters:
                 rel_energies = e.relative_energies(params)
-                rel_energies = [float(i)*CONVERSION for i in rel_energies]
+                rel_energies = [float(i)*CONVERSION if i != '' else '' for i in rel_energies]
                 weights = e.weights(params)
                 csv += ",,{}\n".format(params)
                 csv += ",,Number,Energy ({}),Relative Energy ({}), Boltzmann Weight,Free energy ({})\n".format(units, units, units)
@@ -1987,7 +1986,7 @@ def download_project_csv(request, project_id):
     if not profile_intersection(profile, proj.author):
         return HttpResponse(status=403)
 
-
+    
     csv = get_csv(proj, profile)
 
     proj_name = proj.name.replace(' ', '_')
