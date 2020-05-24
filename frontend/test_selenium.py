@@ -1686,6 +1686,32 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_opt_DFT_single_atom(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'Cl.xyz',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 1)
+
     def test_opt_RIMP2(self):
         params = {
                 'calc_name': 'test',
@@ -2349,6 +2375,32 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_opt_DFT_single_atom(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("Geometrical Optimisation Result")
+        self.assertEqual(self.get_number_conformers(), 1)
+
 
     def test_freq_SE(self):
         params = {
@@ -2410,6 +2462,32 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
                 'charge': '+1',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertTrue(self.is_on_page_molecule())
+
+        self.click_ensemble("File Upload")
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_freq_DFT_single_atom(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Frequency Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'Cl.xyz',
+                'charge': '-1',
                 'software': 'Gaussian',
                 'theory': 'DFT',
                 'functional': 'M062X',
