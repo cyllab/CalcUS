@@ -349,9 +349,8 @@ class ExerciseView(generic.ListView):
     def get_queryset(self):
         return Exercise.objects.all()
 
-def is_close(num1, num2):
-    TOLERANCE = 0.02
-    if num2 > num1*(1 - TOLERANCE) and num2 < num1*(1 + TOLERANCE):
+def is_close(ans, question):
+    if ans >= question.answer - question.tolerance and ans <= question.answer + question.tolerance:
         return True
     else:
         return False
@@ -382,7 +381,7 @@ def answer(request):
         except ValueError:
             return HttpResponse("Please enter numbers")
 
-        if not is_close(answer, q.answer):
+        if not is_close(answer, q):
             return HttpResponse("Not all answers are correct")
 
     profile = request.user.profile

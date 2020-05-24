@@ -262,8 +262,34 @@ class Command(BaseCommand):
         if self.is_absent_title(Exercise, title):
             self.print("Adding Exercise: {}".format(title))
             a = Exercise.objects.create(title=title, page_path="geometrical_optimisation.html")
-            q1 = Question.objects.create(exercise=a, question="What is the equilibrium carbon-carbon bond length?", answer=1.38)
-            q2 = Question.objects.create(exercise=a, question="What is the equilibrium angle between three consecutive carbons?", answer=120.0)
+            q1 = Question.objects.create(exercise=a, question="What is the equilibrium carbon-carbon bond length?", answer=1.38, tolerance=0.01)
+            q2 = Question.objects.create(exercise=a, question="What is the equilibrium angle between three consecutive carbons?", answer=120.0, tolerance=0.5)
+
+        title = "Frequency Calculation"
+        if self.is_absent_title(Exercise, title):
+            self.print("Adding Exercise: {}".format(title))
+            a = Exercise.objects.create(title=title, page_path="frequency.html")
+            q1 = Question.objects.create(exercise=a, question="What is the wavenumber of the lowest vibration mode?", answer=368.35, tolerance=3.)
+
+        title = "Conformational Search"
+        if self.is_absent_title(Exercise, title):
+            self.print("Adding Exercise: {}".format(title))
+            a = Exercise.objects.create(title=title, page_path="conformational_search.html")
+            q1 = Question.objects.create(exercise=a, question="What is the free energy of the most stable conformer (Ha)?", answer=18.69417171, tolerance=0.0005)
+            q2 = Question.objects.create(exercise=a, question="What is the weighted free energy of the ensemble (Ha)?", answer=-18.69355, tolerance=0.0005)
+
+        title = "Constrained Optimisation"
+        if self.is_absent_title(Exercise, title):
+            self.print("Adding Exercise: {}".format(title))
+            a = Exercise.objects.create(title=title, page_path="constrained_optimisation.html")
+            q1 = Question.objects.create(exercise=a, question="What is the carbon-carbon distance near the transition state?", answer=1.94, tolerance=0.03)
+
+        title = "Transition State Optimisation"
+        if self.is_absent_title(Exercise, title):
+            self.print("Adding Exercise: {}".format(title))
+            a = Exercise.objects.create(title=title, page_path="transition_state.html")
+            q1 = Question.objects.create(exercise=a, question="What is the wavenumber of the negative vibration mode of the transition state?", answer=-492.77, tolerance=10.)
+            q2 = Question.objects.create(exercise=a, question="What is the free energy barrier of the rearrangement (kJ/mol)?", answer=92.98, tolerance=3.)
 
 
     def verify(self):

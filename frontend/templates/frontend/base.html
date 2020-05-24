@@ -1,4 +1,4 @@
-{% load bulma_tags %}
+
 {% load static %}
 
 <html>
@@ -140,6 +140,11 @@
 					<a class="navbar-item" href="/examples/">
 						Examples
 					</a>
+
+					<a class="navbar-item" href="/learn/">
+						Learn
+					</a>
+
 					{% if user.profile.group != None %}
 					<div class="navbar-item has-dropdown is-hoverable">
 						<a class="navbar-link">Research Group</a>

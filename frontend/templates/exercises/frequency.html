@@ -1,0 +1,75 @@
+{% extends 'frontend/base.html' %}
+
+{% load static %}
+
+{% block extrahead %}
+	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+	<script type="text/x-mathjax-config">
+  	MathJax.Hub.Config({
+    		tex2jax: {
+      		inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      		processEscapes: true
+    		}
+  	});
+	</script>
+
+	<style>
+		p {
+			white-space: pre-line;
+		}
+	</style>
+
+	<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>	
+	<title>Frequency Calculation</title>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+	<p>
+	Frequency calculations involve calculating the curvature of the potential energy surface around the structure. By calculating the second derivative of the energy with respect to atomic displacements (also called hessian) and by assuming a harmonic potential, the modes of vibration can be obtained. An optimized equilibrium structure should only have positive frequencies, meaning that any displacement is associated with an increase in energy. In other words, the structure sits at the bottom of potential wells for every degree of freedom. On the other hand, transition states will have a single negative frequency which corresponds to the movements of the atoms involved in the reaction.  
+
+	This type of calculation also provides thermochemical corrections to the electronic energy. With these corrections, the free energy can be obtained, which is of course of great importance in studying reaction mechanisms.
+	
+	On CalcUS, frequency calculations do not create new ensembles, but augment them with properties.
+	
+	<strong>Exercise:</strong> Using xtb, calculate the frequency modes of an optimized structure of benzene and inspect the results.
+
+	</p>
+	<form class="form" id="questions_form" method="post">
+		{% csrf_token %}
+		{% for q in questions %}
+		<div class="field">
+			<label class="label">{{ q.question }}</label>
+			<div class="control">
+				<input type="text" name="answer_{{ q.id }}">
+			</div>
+		</div>
+		{% endfor %}
+		<input type="hidden" name="exercise" value="{{ exercise.id}}">
+		<div class="field">
+			<button class="button is-primary">Submit</button>
+		</div>
+	</form>
+	<div id="feedback">
+	</div>
+</div>
+<script>
+	$("#questions_form").submit(function(e) {
+		e.preventDefault();
+		$.ajax({
+			url: "/answer/",
+			type: 'POST',
+			data: $("#questions_form").serialize(),
+			success: function(data) {
+				$("#feedback").html(data);
+			}
+		});
+	});
+</script>
+
+{% endblock %}
+

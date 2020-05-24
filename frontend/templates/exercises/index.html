@@ -22,7 +22,7 @@
 	{% completed ex request.user.profile as comp %}
 	<a href="/learn/{{ ex.id }}">
 		<div class="box {% if comp %}has-background-success{% endif %}">
-			{{ ex.title }}
+			{{ ex.title }} {% if comp %}(Completed){% endif %}
 		</div>
 	</a>
 	{% endfor %}
