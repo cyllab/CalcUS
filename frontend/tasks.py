@@ -2734,9 +2734,18 @@ def dispatcher(drawing, order_id):
     if order.structure != None:
         mode = "s"
         generate_xyz_structure(drawing, order.structure)
-        input_structures = [order.structure]
         molecule = order.structure.parent_ensemble.parent_molecule
-        ensemble = order.structure.parent_ensemble
+        if order.project == molecule.project:
+            ensemble = order.structure.parent_ensemble
+            input_structures = [order.structure]
+        else:
+            molecule = Molecule.objects.create(name=molecule.name, inchi=molecule.inchi, project=order.project)
+            ensemble = Ensemble.objects.create(name=order.structure.parent_ensemble.name, parent_molecule=molecule)
+            structure = Structure.objects.create(parent_ensemble=ensemble, xyz_structure=order.structure.xyz_structure, number=1)
+            molecule.save()
+            ensemble.save()
+            structure.save()
+            input_structures = [structure]
     else:
         for s in ensemble.structure_set.all():
             generate_xyz_structure(drawing, s)
@@ -2760,9 +2769,21 @@ def dispatcher(drawing, order_id):
                 molecule.save()
             ensemble.parent_molecule = molecule
             ensemble.save()
+            input_structures = ensemble.structure_set.all()
         else:
-            molecule = ensemble.parent_molecule
-        input_structures = ensemble.structure_set.all()
+            if ensemble.parent_molecule.project == order.project:
+                molecule = ensemble.parent_molecule
+                input_structures = ensemble.structure_set.all()
+            else:
+                molecule = Molecule.objects.create(name=ensemble.parent_molecule.name, inchi=ensemble.parent_molecule.inchi, project=order.project)
+                ensemble = Ensemble.objects.create(name=ensemble.name, parent_molecule=molecule)
+                for s in order.ensemble.structure_set.all():
+                    _s = Structure.objects.create(parent_ensemble=ensemble, xyz_structure=s.xyz_structure, number=s.number, degeneracy=s.degeneracy)
+                    _s.save()
+                ensemble.save()
+                molecule.save()
+                input_structures = ensemble.structure_set.all()
+
     group_order = []
 
     input_structures = filter(order, input_structures)
