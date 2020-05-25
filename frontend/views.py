@@ -235,6 +235,20 @@ def molecule(request, pk):
         'molecule': mol})
 
 @login_required
+def ensemble_table_body(request, pk):
+    try:
+        mol = Molecule.objects.get(pk=pk)
+    except Molecule.DoesNotExist:
+        return redirect('/home/')
+
+    if not profile_intersection(request.user.profile, mol.project.author):
+        return redirect('/home/')
+
+    return render(request, 'frontend/ensemble_table_body.html', {'profile': request.user.profile,
+        'molecule': mol})
+
+
+@login_required
 def ensemble(request, pk):
     try:
         e = Ensemble.objects.get(pk=pk)

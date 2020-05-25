@@ -39,6 +39,7 @@ urlpatterns = [
     path('download_project_csv/<int:project_id>', views.download_project_csv, name='download_project_csv'),
     path('analyse/<int:project_id>', views.analyse, name='analyse'),
     path('ensemble_map/<int:pk>', views.ensemble_map, name='ensemble_map'),
+    path('ensemble_table_body/<int:pk>', views.ensemble_table_body, name='ensemble_table_body'),
 
     path('see/<int:pk>', views.see, name='see'),
     path('update_preferences/', views.update_preferences, name='update_preferences'),
