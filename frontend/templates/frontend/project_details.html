@@ -99,8 +99,8 @@
 					<div class="message-header">
 						<p id="mol_name_{{ mol.id }}">{{ mol.name }}</p>
 						<div>
-							<a onclick="edit_field({{ mol.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}"></i></a>
-							<a onclick="del({{ mol.id }});"><i class="fas fa-trash-alt"></i></a>
+							<a onclick="edit_field({{ mol.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}" title="Rename"></i></a>
+							<a onclick="del({{ mol.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>
 						</div>
 					</div>
 					<a href="/molecule/{{ mol.id }}">
