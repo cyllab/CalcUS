@@ -2,13 +2,14 @@
 
 {% load static %}
 
+{% load project_details_tags %}
+
 {% block extrahead %}
 	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
 	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
 	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 
-	<script src="https://unpkg.com/masonry-layout@4.2.0/dist/masonry.pkgd.min.js"></script>
 
 	<script>
 		function selectText(node) {
@@ -91,37 +92,27 @@
 			<li class="is-active"><a aria-current="page" href="#">{{ project.name }}</a></li>
 	  	</ul>
 	</nav>
-	<center>
 	<div class="grid">
 		{% if molecules.count > 0 %}
 			{% for mol in molecules %}
-				<article class="message grid-item main-grid-item is-primary" id="article_mol_{{ mol.id }}">
-					<div class="message-header">
-						<p id="mol_name_{{ mol.id }}">{{ mol.name }}</p>
-						<div>
+					<div class="box has-background-danger" id="proj_box_{{ proj.id }}">
+						<p style="float: right;">
 							<a onclick="edit_field({{ mol.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}" title="Rename"></i></a>
 							<a onclick="del({{ mol.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>
-						</div>
+						</p>
+							<a href="/molecule/{{ mol.id }}">
+							<strong><p id="mol_name_{{ mol.id }}">{{ mol.name }}</p></strong>
+							{% get_molecule_summary mol as mol_summary %}
+							<p>{{ mol.ensemble_set.count }} Ensembles(s) &nbsp; ({{ mol_summary.0 }} Calculation(s): &nbsp; {{ mol_summary.1 }} Queued; &nbsp; {{ mol_summary.2 }} Running; &nbsp;{{ mol_summary.3 }} Completed) </p>
+						</a>
 					</div>
-					<a href="/molecule/{{ mol.id }}">
-						<div class="message-body" >
-							{{ mol.count_vis }} Ensemble(s)	
-						</div>
-					</a>
-				</article>
+
 			{% endfor %}
 		{% else %}
 			No molecule in this project.
 		{% endif %}
 	</div>
-	</center>
 </div>
-<script>
-	$('.grid').masonry({
-	  itemSelector: '.grid-item',
-	  fitWidth: true
-	});
-</script>
 
 {% endblock %}
 
