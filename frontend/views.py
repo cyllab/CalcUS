@@ -1605,6 +1605,10 @@ def gen_3D(request):
         system("babel -imol /tmp/{}.mol -oxyz /tmp/{}.xyz -h --gen3D".format(t, t), force_local=True)
         with open("/tmp/{}.xyz".format(t)) as f:
             lines = f.readlines()
+        print(lines)
+        if ''.join(lines).strip() == '':
+            return HttpResponse(status=404)
+
         return HttpResponse(lines)
     return HttpResponse(status=403)
 

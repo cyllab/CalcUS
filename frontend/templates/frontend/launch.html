@@ -222,10 +222,16 @@
 				},
 
 				data: {'mol': mol},
-				success: function(data, textStatus, xhr) {
-					let mol_read = ChemDoodle.readXYZ(data);
-					ChemDoodle.relabel(mol_read);
-					editor.loadMolecule(mol_read);	
+				statusCode: {
+					404: function(data) {
+						$("#3d_msg").html("Error while generating structure");
+					},
+					200: function(data) {
+						$("#3d_msg").html("");
+						let mol_read = ChemDoodle.readXYZ(data);
+						ChemDoodle.relabel(mol_read);
+						editor.loadMolecule(mol_read);	
+					}
 				}
 			});
 		}
@@ -270,6 +276,8 @@
 				editor.styles.shapes_color = 'c10000';
 				editor.repaint();
 			</script>
+			<div id="3d_msg">
+			</div>
 
 		</div>
 		<div class="column">
