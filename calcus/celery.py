@@ -9,9 +9,9 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'calcus.settings')
 try:
     is_test = os.environ['CALCUS_TEST']
 except:
-    app = Celery('calcus')
+    app = Celery('calcus', backend="amqp", broker='amqp://calcus:rabbitmqcalcuspassword@localhost//')
 else:
-    app = Celery('calcus')
+    app = Celery('calcus', backend="amqp", broker='amqp://calcus:rabbitmqcalcuspassword@localhost//')
 
 app.config_from_object('django.conf:settings', namespace='CELERY')
 

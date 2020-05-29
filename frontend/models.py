@@ -488,6 +488,7 @@ class CalculationOrder(models.Model):
 
     resource = models.ForeignKey('ClusterAccess', on_delete=models.CASCADE, blank=True, null=True)
 
+
     def see(self):
         self.last_seen_status = self.status
         self.save()
@@ -592,6 +593,8 @@ class Calculation(models.Model):
 
     pal = models.PositiveIntegerField(default=8)
     memory = models.PositiveIntegerField(default=15000)
+
+    task_id = models.CharField(max_length=100, default="")
 
     def __str__(self):
         return self.step.name

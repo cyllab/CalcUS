@@ -6,6 +6,9 @@ from celery.signals import task_prerun, task_postrun
 from .models import Calculation, Structure
 from django.utils import timezone
 
+from django.db.utils import IntegrityError
+from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
+
 import os
 import numpy as np
 import decimal
@@ -24,6 +27,7 @@ import threading
 from .libxyz import *
 
 from celery import group
+from celery.task.control import revoke
 
 from .models import *
 from ssh2.sftp import LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IWGRP, LIBSSH2_SFTP_S_IRWXU
@@ -276,12 +280,39 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
             else:
                 return 1
     else:
+        if calc_id != -1:
+            calc = Calculation.objects.get(pk=calc_id)
+            res = AbortableAsyncResult(calc.task_id)
+
         if log_file != "":
             with open(log_file, 'w') as out:
-                a = subprocess.run(shlex.split(command), stdout=out, stderr=out).returncode
-            return a
+                t = subprocess.Popen(shlex.split(command), stdout=out, stderr=out)
+                while True:
+                    poll = t.poll()
+
+                    if not poll is None:
+                        return t.returncode
+
+                    if calc_id != -1 and res.is_aborted() == True:
+                        t.kill()
+                        t.wait()
+                        return -2
+
+                    sleep(1)
         else:
-            return subprocess.run(shlex.split(command)).returncode
+            t = subprocess.Popen(shlex.split(command))
+            while True:
+                poll = t.poll()
+
+                if not poll is None:
+                    return t.returncode
+
+                if calc_id != -1 and res.is_aborted() == True:
+                    t.kill()
+                    t.wait()
+                    return -1
+
+                sleep(1)
 
 def generate_xyz_structure(drawing, structure):
     if structure.xyz_structure == "":
@@ -753,7 +784,7 @@ def xtb_freq(in_file, calc):
 
     a = save_to_results(os.path.join(local_folder, "vibspectrum"), calc)
     if a != 0:
-        return 1
+        return a
 
     if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
         return 1
@@ -886,7 +917,7 @@ def crest_generic(in_file, calc, mode):
         return -1
 
     if a != 0:
-        return -1
+        return a
 
     if not local:
         pid = int(threading.get_ident())
@@ -2554,7 +2585,7 @@ CalcUS
     if not local:
         a = sftp_get("{}/nmr.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "nmr.log"), conn, lock)
         if a != 0:
-            return -1
+            return a
 
     if not os.path.isfile("{}/nmr.log".format(local_folder)):
         return 1
@@ -2726,7 +2757,7 @@ def filter(order, input_structures):
 
     return structures
 
-@app.task
+@app.task(base=AbortableTask)
 def dispatcher(drawing, order_id):
     if is_test:
         print("TEST MODE DISPATCHER")
@@ -2857,11 +2888,12 @@ def dispatcher(drawing, order_id):
     result = g.apply_async()
 
 
-@app.task
+@app.task(base=AbortableTask)
 def run_calc(calc_id):
     print("Processing calc {}".format(calc_id))
     calc = Calculation.objects.get(pk=calc_id)
     calc.status = 1
+    calc.task_id = run_calc.request.id
     calc.save()
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
 
@@ -2892,6 +2924,10 @@ def run_calc(calc_id):
         ret = 1
         traceback.print_exc()
 
+    if ret == -2:
+        print("Job {} cancelled".format(calc.id))
+        return
+
     tf = time()
     calc.execution_time = int((tf-ti)*int(PAL))
 
@@ -2915,60 +2951,67 @@ def run_calc(calc_id):
 
 @app.task
 def del_project(proj_id):
-    proj = Project.objects.get(pk=proj_id)
-    for m in proj.molecule_set.all():
-        for e in m.ensemble_set.all():
-            for s in e.structure_set.all():
-                for c in s.calculation_set.all():
-                    try:
-                        rmtree(os.path.join(CALCUS_SCR_HOME, str(c.id)))
-                    except OSError:
-                        pass
-                    try:
-                        rmtree(os.path.join(CALCUS_RESULTS_HOME, str(c.id)))
-                    except OSError:
-                        pass
-                    c.delete()
-                s.delete()
-            e.delete()
-        m.delete()
-    proj.delete()
+    _del_project(proj_id)
 
 @app.task
 def del_molecule(mol_id):
-    mol = Molecule.objects.get(pk=mol_id)
-    for e in mol.ensemble_set.all():
-        for s in e.structure_set.all():
-            for c in s.calculation_set.all():
-                try:
-                    rmtree(os.path.join(CALCUS_SCR_HOME, str(c.id)))
-                except OSError:
-                    pass
-                try:
-                    rmtree(os.path.join(CALCUS_RESULTS_HOME, str(c.id)))
-                except OSError:
-                    pass
-                c.delete()
-            s.delete()
-        e.delete()
-    mol.delete()
+    _del_molecule(mol_id)
 
 @app.task
 def del_ensemble(ensemble_id):
-    e = Ensemble.objects.get(pk=ensemble_id)
+    _del_ensemble(ensemble_id)
+
+def _del_project(id):
+    proj = Project.objects.get(pk=id)
+    for m in proj.molecule_set.all():
+        _del_molecule(m.id)
+    proj.delete()
+
+def _del_molecule(id):
+    mol = Molecule.objects.get(pk=id)
+    for e in mol.ensemble_set.all():
+        _del_ensemble(e.id)
+    mol.delete()
+
+def _del_ensemble(id):
+    e = Ensemble.objects.get(pk=id)
     for s in e.structure_set.all():
-        for c in s.calculation_set.all():
-            try:
-                rmtree(os.path.join(CALCUS_SCR_HOME, str(c.id)))
-            except OSError:
-                pass
-            try:
-                rmtree(os.path.join(CALCUS_RESULTS_HOME, str(c.id)))
-            except OSError:
-                pass
-            c.delete()
-        s.delete()
+        _del_structure(s)
+
+    for c in e.calculation_set.all():
+        if c.status == 1 or c.status == 2:
+            kill_calc(c)
+        c.delete()
+        try:
+            rmtree(os.path.join(CALCUS_SCR_HOME, str(c.id)))
+        except OSError:
+            pass
+        try:
+            rmtree(os.path.join(CALCUS_RESULTS_HOME, str(c.id)))
+        except OSError:
+            pass
     e.delete()
+
+def _del_structure(s):
+    calcs = s.calculation_set.all()
+    for c in calcs:
+        if c.status == 1 or c.status == 2:
+            kill_calc(c)
+        c.delete()
+        try:
+            rmtree(os.path.join(CALCUS_SCR_HOME, str(c.id)))
+        except OSError:
+            pass
+        try:
+            rmtree(os.path.join(CALCUS_RESULTS_HOME, str(c.id)))
+        except OSError:
+            pass
+
+    s.delete()
+
+def kill_calc(calc):
+    res = AbortableAsyncResult(calc.task_id)
+    res.abort()
 
 @app.task(name='celery.ping')
 def ping():

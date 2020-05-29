@@ -72,7 +72,7 @@
 					},
 					data: {'id': mol_id},
 					success: function() {
-						document.getElementById("article_mol_" + mol_id).remove();	
+						document.getElementById("mol_box_" + mol_id).remove();	
 					}
 
 				});
@@ -95,7 +95,7 @@
 	<div class="grid">
 		{% if molecules.count > 0 %}
 			{% for mol in molecules %}
-					<div class="box has-background-danger" id="proj_box_{{ proj.id }}">
+					<div class="box has-background-danger" id="mol_box_{{ mol.id }}">
 						<p style="float: right;">
 							<a onclick="edit_field({{ mol.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}" title="Rename"></i></a>
 							<a onclick="del({{ mol.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>
