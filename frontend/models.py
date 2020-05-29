@@ -493,6 +493,15 @@ class CalculationOrder(models.Model):
         self.save()
 
     @property
+    def molecule_name(self):
+        if self.ensemble != None:
+            return self.ensemble.parent_molecule.name
+        elif self.structure != None:
+            return self.structure.parent_ensemble.parent_molecule.name
+        else:
+            return "Unknown"
+
+    @property
     def status(self):
         stat = 0
         num_queued = 0
