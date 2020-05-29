@@ -140,6 +140,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             pass
 
         if 'calc_name' in params.keys():
+            name_input.clear()
             name_input.send_keys(params['calc_name'])
 
         if 'solvent' in params.keys():

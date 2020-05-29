@@ -235,6 +235,13 @@
 				}
 			});
 		}
+		
+		function add_file_name() {
+			path = $("#file_structure").val();
+			file_name = path.replace('C:\\fakepath\\', '').split('.')[0];
+			$("#calc_name").val(file_name);
+		}
+
 		{% if ensemble %}
 		let ensemble = true;
 		{% else %}
@@ -287,7 +294,7 @@
 				<div class="field">
 					<label class="label">Draw a structure or choose a file</label>
 					<div class="control">
-						<input type="file" name="file_structure">
+						<input type="file" name="file_structure" id="file_structure" onchange="add_file_name()">
 					</div>
 				</div>
 
@@ -299,7 +306,7 @@
 						<div class="field" id="calc_name_field">
 							<label class="label">Name</label>
 							<div class="control">
-								<input class="input" name="calc_name" type="text">
+								<input class="input" name="calc_name" id="calc_name" type="text">
 							</div>
 						</div>
 					</div>
