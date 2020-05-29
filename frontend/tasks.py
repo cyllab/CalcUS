@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 from calcus.celery import app
+import string
 
 from celery.signals import task_prerun, task_postrun
 from .models import Calculation, Structure
@@ -2022,7 +2023,8 @@ CalcUS
     else:
         solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
 
-    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+    xyz_structure = ''.join([x for x in calc.structure.xyz_structure if x in string.printable])
+    lines = [i + '\n' for i in xyz_structure.split('\n')[2:]]
 
     method = get_method(calc.parameters.method, "Gaussian")
     basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
