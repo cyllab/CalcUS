@@ -1823,7 +1823,14 @@ def log(request, pk):
     if not profile_intersection(profile, calc.order.author):
         return HttpResponse(status=403)
 
-    for out in glob.glob(os.path.join(CALCUS_RESULTS_HOME, str(pk)) + '/*.out'):
+    if calc.status == 2 or calc.status == 3:
+        dir = os.path.join(CALCUS_RESULTS_HOME, str(pk))
+    elif calc.status == 1:
+        dir = os.path.join(CALCUS_SCR_HOME, str(pk))
+    elif calc.status == 0:
+        return HttpResponse(status=204)
+
+    for out in glob.glob(dir + '/*.out'):
         out_name = out.split('/')[-1]
         with open(out) as f:
             lines = f.readlines()

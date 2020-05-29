@@ -494,9 +494,9 @@ class CalculationOrder(models.Model):
 
     @property
     def molecule_name(self):
-        if self.ensemble != None:
+        if self.ensemble != None and self.ensemble.parent_molecule != None:
             return self.ensemble.parent_molecule.name
-        elif self.structure != None:
+        elif self.structure != None and self.structure.parent_ensemble != None and self.structure.parent_ensemble.parent_molecule != None:
             return self.structure.parent_ensemble.parent_molecule.name
         else:
             return "Unknown"
