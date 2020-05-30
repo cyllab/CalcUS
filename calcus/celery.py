@@ -3,17 +3,14 @@ from __future__ import absolute_import, unicode_literals
 import os
 
 from celery import Celery
+from django.conf import settings
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'calcus.settings')
 
-try:
-    is_test = os.environ['CALCUS_TEST']
-except:
-    app = Celery('calcus', backend="amqp", broker='amqp://calcus:rabbitmqcalcuspassword@localhost//')
-else:
-    app = Celery('calcus', backend="amqp", broker='amqp://calcus:rabbitmqcalcuspassword@localhost//')
+username = settings.RABBITMQ_USERNAME
+password = settings.RABBITMQ_PASSWORD
 
-app.config_from_object('django.conf:settings', namespace='CELERY')
+app = Celery('calcus', backend="amqp", broker='amqp://{}:{}@localhost//'.format(username, password))
 
 app.autodiscover_tasks()
 
