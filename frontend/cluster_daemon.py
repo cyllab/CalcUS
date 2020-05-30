@@ -54,6 +54,7 @@ class ClusterDaemon:
 
     connections = {}
     locks = {}
+    calculations = {}
 
     def access_test(self, id):
         for conn in self.connections:
@@ -191,8 +192,13 @@ class ClusterDaemon:
             access_id = lines[2].strip()
 
             if cmd == "launch":
-                tasks.connections[threading.get_ident()] = self.connections
+                pid = threading.get_ident()
+                tasks.connections[pid] = self.connections
+                self.calculations[calc_id] = pid
                 retval = self.job(calc_id, access_id)
+            elif cmd == "kill":
+                pid = self.calculations[calc_id]
+                tasks.kill_sig.append(pid)
             else:
                 print("Unknown command: {} (command id {})".format(cmd, c.id))
                 return
