@@ -21,7 +21,7 @@ def get_molecule_summary(mol):
                         running += 1
                     else:
                         completed += 1
-        else:
+        elif o.structure != None:
             if o.structure.parent_ensemble.parent_molecule == mol:
                 num += o.calculation_set.count()
                 for c in o.calculation_set.all():
