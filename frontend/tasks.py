@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 from calcus.celery import app
+import string
 
 from celery.signals import task_prerun, task_postrun
 from .models import Calculation, Structure
