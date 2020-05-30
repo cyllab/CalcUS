@@ -339,10 +339,11 @@ def generate_xyz_structure(drawing, structure):
                     else:
                         break
                 num = len(to_print)
-                structure.xyz_structure = "{}\n".format(num)
-                structure.xyz_structure += "CalcUS\n"
+                _xyz = "{}\n".format(num)
+                _xyz += "CalcUS\n"
                 for line in to_print:
-                    structure.xyz_structure += line
+                    _xyz += line
+                structure.xyz_structure = clean_xyz(_xyz)
                 structure.save()
                 return 0
         elif structure.sdf_structure != '':
@@ -355,7 +356,7 @@ def generate_xyz_structure(drawing, structure):
 
             with open("/tmp/{}.xyz".format(fname)) as f:
                 lines = f.readlines()
-            structure.xyz_structure = '\n'.join([i.strip() for i in lines])
+            structure.xyz_structure = clean_xyz('\n'.join([i.strip() for i in lines]))
             structure.save()
             return 0
         elif structure.mol2_structure != '':
@@ -368,7 +369,7 @@ def generate_xyz_structure(drawing, structure):
 
             with open("/tmp/{}.xyz".format(fname)) as f:
                 lines = f.readlines()
-            structure.xyz_structure = '\n'.join([i.strip() for i in lines])
+            structure.xyz_structure = clean_xyz('\n'.join([i.strip() for i in lines]))
             structure.save()
             return 0
 
@@ -403,6 +404,9 @@ def get_basis_set(basis_set, software):
         print("Basis set not found: {}".format(basis_set))
         return basis_set
     return SOFTWARE_BASIS_SETS[software][abs_basis_set]
+
+def clean_xyz(xyz):
+    return ''.join([x for x in xyz if x in string.printable])
 
 def xtb_opt(in_file, calc):
     folder = '/'.join(in_file.split('/')[:-1])
@@ -444,7 +448,9 @@ def xtb_opt(in_file, calc):
 
     with open("{}/xtbopt.xyz".format(local_folder)) as f:
         lines = f.readlines()
-    xyz_structure = ''.join(lines)
+
+    xyz_structure = clean_xyz(''.join(lines))
+
     with open("{}/xtb_opt.out".format(local_folder)) as f:
         lines = f.readlines()
         ind = len(lines)-1
@@ -593,7 +599,7 @@ def xtb_ts(in_file, calc):
             ind -= 1
         hl_gap = float(olines[ind].split()[3])
 
-    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=''.join(lines), number=1)
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=clean_xyz(''.join(lines)), number=1)
     prop = get_or_create(calc.parameters, s)
     prop.homo_lumo_gap = hl_gap
     prop.energy = E
@@ -714,7 +720,7 @@ def xtb_scan(in_file, calc):
                 prop.energy = E
                 prop.geom = True
                 prop.save()
-                r.xyz_structure = struct
+                r.xyz_structure = clean_xyz(struct)
                 r.save()
                 if E < min_E:
                     min_E = E
@@ -731,7 +737,7 @@ def xtb_scan(in_file, calc):
         with open(os.path.join(local_folder, 'xtbopt.xyz')) as f:
             lines = f.readlines()
             r = Structure.objects.create(number=1)
-            r.xyz_structure = ''.join(lines)
+            r.xyz_structure = clean_xyz(''.join(lines))
 
         with open(os.path.join(local_folder, "xtb_scan.out")) as f:
             lines = f.readlines()
@@ -986,7 +992,7 @@ def crest_generic(in_file, calc, mode):
             for l in raw_lines[2:]:
                 clean_lines.append(clean_struct_line(l))
 
-            struct = ''.join([i.strip() + '\n' for i in clean_lines])
+            struct = clean_xyz(''.join([i.strip() + '\n' for i in clean_lines]))
             r = calc.result_ensemble.structure_set.get(number=metaind+1)
             #assert r.energy == E
             r.xyz_structure = struct
@@ -1046,7 +1052,7 @@ end
         SMDsolvent "{}"
         end'''.format(calc.parameters.solvent)
 
-    struct = calc.structure.xyz_structure
+    struct = clean_xyz(calc.structure.xyz_structure)
     electrons = 0
     for line in struct.split('\n')[2:]:
         if line.strip() == "":
@@ -1147,7 +1153,7 @@ def orca_opt(in_file, calc):
         SMDsolvent "{}"
         end'''.format(calc.parameters.solvent)
 
-    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:-1]]
+    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:-1]]
 
     if len(lines) == 1:#Single atom
         s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=calc.structure.xyz_structure, number=calc.structure.number, degeneracy=calc.structure.degeneracy)
@@ -1191,7 +1197,7 @@ def orca_opt(in_file, calc):
 
     with open("{}/opt.xyz".format(local_folder)) as f:
         lines = f.readlines()
-    xyz_structure = '\n'.join([i.strip() for i in lines])
+    xyz_structure = clean_xyz('\n'.join([i.strip() for i in lines]))
     with open("{}/orca_opt.out".format(local_folder)) as f:
         lines = f.readlines()
         ind = len(lines)-1
@@ -1237,7 +1243,7 @@ def orca_sp(in_file, calc):
         SMDsolvent "{}"
         end'''.format(calc.parameters.solvent)
 
-    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
 
     method = get_method(calc.parameters.method, "ORCA")
     basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
@@ -1310,7 +1316,7 @@ def orca_ts(in_file, calc):
         SMDsolvent "{}"
         end'''.format(calc.parameters.solvent)
 
-    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
 
     method = get_method(calc.parameters.method, "ORCA")
     basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
@@ -1347,7 +1353,7 @@ def orca_ts(in_file, calc):
 
     with open("{}/ts.xyz".format(local_folder)) as f:
         lines = f.readlines()
-    xyz_structure = '\n'.join([i.strip() for i in lines])
+    xyz_structure = clean_xyz('\n'.join([i.strip() for i in lines]))
     with open("{}/orca_ts.out".format(local_folder)) as f:
         lines = f.readlines()
         ind = len(lines)-1
@@ -1392,7 +1398,7 @@ def orca_freq(in_file, calc):
         SMDsolvent "{}"
         end'''.format(calc.parameters.solvent)
 
-    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
 
     method = get_method(calc.parameters.method, "ORCA")
     basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
@@ -1566,7 +1572,7 @@ def orca_scan(in_file, calc):
         SMDsolvent "{}"
         end'''.format(calc.parameters.solvent)
 
-    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
 
     orca_constraints = ""
     has_scan = False
@@ -1686,7 +1692,7 @@ def orca_scan(in_file, calc):
             min_E = 0
             for metaind, mol in enumerate(inds[:-1]):
                 E = energies[metaind]
-                struct = ''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]-1]])
+                struct = clean_xyz(''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]-1]]))
 
                 r = Structure.objects.create(number=metaind+1, degeneracy=1)
                 prop = get_or_create(calc.parameters, r)
@@ -1709,7 +1715,7 @@ def orca_scan(in_file, calc):
         with open(os.path.join(local_folder, 'scan.xyz')) as f:
             lines = f.readlines()
             r = Structure.objects.create(number=1)
-            r.xyz_structure = ''.join([i.strip() + '\n' for i in lines])
+            r.xyz_structure = clean_xyz(''.join([i.strip() + '\n' for i in lines]))
 
         with open(os.path.join(folder, "orca_scan.out")) as f:
             lines = f.readlines()
@@ -1910,7 +1916,7 @@ def orca_nmr(in_file, calc):
         SMDsolvent "{}"
         end'''.format(calc.parameters.solvent)
 
-    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
 
     method = get_method(calc.parameters.method, "ORCA")
     basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
@@ -1985,7 +1991,7 @@ CalcUS
     else:
         solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
 
-    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
 
     method = get_method(calc.parameters.method, "Gaussian")
     basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
@@ -2053,7 +2059,7 @@ CalcUS
     else:
         solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
 
-    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
 
     method = get_method(calc.parameters.method, "Gaussian")
     basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
@@ -2106,6 +2112,8 @@ CalcUS
         for el in xyz:
             xyz_structure += "{} {} {} {}\n".format(*el)
 
+        xyz_structure = clean_xyz(xyz_structure)
+
 
     s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=calc.structure.degeneracy)
     prop = get_or_create(calc.parameters, s)
@@ -2137,7 +2145,7 @@ CalcUS
     else:
         solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
 
-    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:-1]]
+    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:-1]]
 
     method = get_method(calc.parameters.method, "Gaussian")
     basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
@@ -2294,7 +2302,7 @@ CalcUS
     else:
         solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
 
-    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
 
     method = get_method(calc.parameters.method, "Gaussian")
     basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
@@ -2347,6 +2355,8 @@ CalcUS
         for el in xyz:
             xyz_structure += "{} {} {} {}\n".format(*el)
 
+        xyz_structure = clean_xyz(xyz_structure)
+
     s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=1, degeneracy=1)
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
@@ -2378,7 +2388,7 @@ CalcUS
     else:
         solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
 
-    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
 
     xyz = []
     for line in lines:
@@ -2487,6 +2497,8 @@ CalcUS
             for el in xyz:
                 xyz_structure += "{} {} {} {}\n".format(*el)
 
+            xyz_structure = clean_xyz(xyz_structure)
+
             while lines[ind2].find("SCF Done") == -1:
                 ind2 -= 1
 
@@ -2522,6 +2534,8 @@ CalcUS
         for el in xyz:
             xyz_structure += "{} {} {} {}\n".format(*el)
 
+        xyz_structure = clean_xyz(xyz_structure)
+
         s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=calc.structure.degeneracy)
         prop = get_or_create(calc.parameters, s)
         prop.energy = E
@@ -2552,7 +2566,7 @@ CalcUS
     else:
         solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
 
-    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
+    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
 
     xyz = []
     for line in lines:
@@ -2974,7 +2988,11 @@ def _del_molecule(id):
     mol.delete()
 
 def _del_ensemble(id):
-    e = Ensemble.objects.get(pk=id)
+    try:
+        e = Ensemble.objects.get(pk=id)
+    except Ensemble.DoesNotExist:
+        return
+
     for s in e.structure_set.all():
         _del_structure(s)
 

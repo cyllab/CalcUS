@@ -460,9 +460,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def get_number_molecules(self):
         assert self.is_on_page_user_project()
 
-        molecules_div = self.driver.find_element_by_css_selector(".grid")
-        molecules = molecules_div.find_elements_by_css_selector("article")
+        molecules = self.get_molecules()
         num = len(molecules)
+
+        molecules_div = self.driver.find_element_by_css_selector(".grid")
         if num == 0:
             assert molecules_div.text.find('No molecule') != -1
         return num
@@ -470,20 +471,20 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def click_molecule(self, name):
         assert self.is_on_page_user_project()
 
-        molecules_div = self.driver.find_element_by_css_selector(".grid")
-        molecules = molecules_div.find_elements_by_css_selector("article")
-
+        #molecules_div = self.driver.find_element_by_css_selector(".grid")
+        molecules = self.get_molecules()
         for mol in molecules:
-            mol_name = mol.find_element_by_css_selector("div > p").text
+            mol_name = mol.find_element_by_css_selector("a > strong > p").text
             if mol_name == name:
+                #link = mol.find_element_by_css_selector("a")
+                #link.click()
                 mol.click()
                 return
 
     def get_number_ensembles(self):
         assert self.is_on_page_molecule()
 
-        table_body = self.driver.find_element_by_css_selector(".table > tbody")
-        ensembles = table_body.find_elements_by_css_selector("tr")
+        ensembles = self.get_ensemble_rows()
         num = len(ensembles)
         return num
 
@@ -627,19 +628,19 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def get_molecules(self):
         molecule_div = self.driver.find_element_by_css_selector(".grid")
-        molecules = molecule_div.find_elements_by_css_selector("article")
+        molecules = molecule_div.find_elements_by_css_selector(".box")
         return molecules
 
     def get_name_molecules(self):
         molecules = self.get_molecules()
-        names = [mol.find_element_by_css_selector("div > p").text for mol in molecules]
+        names = [mol.find_element_by_css_selector("strong > p").text for mol in molecules]
 
         return names
 
     def rename_molecule(self, mol, name):
         rename_icon = mol.find_element_by_class_name("fa-edit")
         rename_icon.click()
-        text_box = mol.find_element_by_css_selector(".message-header > p")
+        text_box = mol.find_element_by_css_selector("a > strong > p")
         text_box.clear()
         text_box.send_keys(name)
         text_box.send_keys(Keys.RETURN)
@@ -648,7 +649,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         rename_icon = mol.find_element_by_class_name("fa-edit")
         rename_icon.click()
 
-        text_box = mol.find_element_by_css_selector(".message-header > p")
+        text_box = mol.find_element_by_css_selector("a > strong > p")
         text_box.clear()
         text_box.send_keys(name)
 
@@ -664,9 +665,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         molecules = self.get_molecules()
 
         for mol in molecules:
-            mol_name = mol.find_element_by_css_selector("div > p").text
+            mol_name = mol.find_element_by_css_selector("strong > p").text
             if mol_name == name:
-                trash = mol.find_element_by_css_selector(".message-header > div > a > i.fa-trash-alt")
+                trash = mol.find_element_by_css_selector("i.fa-trash-alt")
                 trash.click()
 
                 alert = self.driver.switch_to_alert()
@@ -674,7 +675,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 self.driver.switch_to_default_content()
                 return
 
+        assert False
+
     def get_ensemble_rows(self):
+        assert self.is_on_page_molecule()
         table_body = self.driver.find_element_by_css_selector(".table > tbody")
         ensemble_rows = table_body.find_elements_by_css_selector("tr")
         return ensemble_rows
