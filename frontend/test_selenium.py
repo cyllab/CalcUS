@@ -812,6 +812,20 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.get_number_ensembles(), 1)
         self.assertEqual(self.get_name_ensembles()[0], "My Ensemble")
 
+    def test_automatic_name(self):
+        self.lget("/launch/")
+
+        upload_input = self.driver.find_element_by_name('file_structure')
+        upload_input.send_keys("{}/tests/CH4.mol".format(dir_path))
+
+
+        element = WebDriverWait(self.driver, 5).until(
+            EC.text_to_be_present_in_element_value((By.ID, "calc_name"), "CH4")
+        )
+
+        name = self.driver.find_element_by_id("calc_name").get_attribute("value")
+        self.assertEqual(name, "CH4")
+
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):
         params = {

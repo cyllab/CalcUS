@@ -8,7 +8,7 @@
 				{% else %}
 					{{ order.id }}: {{ order.structure.parent_ensemble.name }}
 				{% endif %}
-				<p><a  onclick="see({{ order.id}});"><i class="fas fa-eye"></i></a><a href="/calculationorder/{{ order.id }}"><i class="fas fa-sitemap"></i></a>
+				<p><a  onclick="see({{ order.id}});"><i class="fas fa-eye" title="Mark as seen"></i></a><a href="/calculationorder/{{ order.id }}"><i class="fas fa-sitemap" title="Go to calculation list"></i></a>
 {% if order.status == 1 %} <i class="fas fa-spinner"></i> {% elif order.status == 2 %} 
 <i class="fas fa-check"></i>{% elif order.status == 3 %} <i class="fas fa-times"></i>{% endif %}</p>
 			</div>
@@ -21,6 +21,8 @@
 			<div class"message-body">
 				<center>
 					<strong>{{ order.step.name }}</strong> <br />
+					Project: {{ order.project.name }} <br />
+					Molecule: {{ order.molecule_name }} <br />
     					{% if order.ensemble %}
 						{{ order.ensemble.structure_set.count }} Calculation(s): <br />
 					{% else %}

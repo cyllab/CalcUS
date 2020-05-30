@@ -488,9 +488,19 @@ class CalculationOrder(models.Model):
 
     resource = models.ForeignKey('ClusterAccess', on_delete=models.CASCADE, blank=True, null=True)
 
+
     def see(self):
         self.last_seen_status = self.status
         self.save()
+
+    @property
+    def molecule_name(self):
+        if self.ensemble != None and self.ensemble.parent_molecule != None:
+            return self.ensemble.parent_molecule.name
+        elif self.structure != None and self.structure.parent_ensemble != None and self.structure.parent_ensemble.parent_molecule != None:
+            return self.structure.parent_ensemble.parent_molecule.name
+        else:
+            return "Unknown"
 
     @property
     def status(self):
@@ -583,6 +593,8 @@ class Calculation(models.Model):
 
     pal = models.PositiveIntegerField(default=8)
     memory = models.PositiveIntegerField(default=15000)
+
+    task_id = models.CharField(max_length=100, default="")
 
     def __str__(self):
         return self.step.name

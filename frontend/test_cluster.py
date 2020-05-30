@@ -133,7 +133,7 @@ class ClusterTests(CalcusLiveServer):
         memory.clear()
         memory.send_keys("10000")
 
-        self.driver.find_element_by_css_selector("button.button:nth-child(1)").click()
+        self.driver.find_element_by_css_selector("div.field:nth-child(6) > div:nth-child(1) > button:nth-child(1)").click()
 
 
         element = WebDriverWait(self.driver, 10).until(

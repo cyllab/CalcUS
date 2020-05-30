@@ -222,13 +222,26 @@
 				},
 
 				data: {'mol': mol},
-				success: function(data, textStatus, xhr) {
-					let mol_read = ChemDoodle.readXYZ(data);
-					ChemDoodle.relabel(mol_read);
-					editor.loadMolecule(mol_read);	
+				statusCode: {
+					404: function(data) {
+						$("#3d_msg").html("Error while generating structure");
+					},
+					200: function(data) {
+						$("#3d_msg").html("");
+						let mol_read = ChemDoodle.readXYZ(data);
+						ChemDoodle.relabel(mol_read);
+						editor.loadMolecule(mol_read);	
+					}
 				}
 			});
 		}
+		
+		function add_file_name() {
+			path = $("#file_structure").val();
+			file_name = path.replace('C:\\fakepath\\', '').split('.')[0];
+			$("#calc_name").val(file_name);
+		}
+
 		{% if ensemble %}
 		let ensemble = true;
 		{% else %}
@@ -270,6 +283,8 @@
 				editor.styles.shapes_color = 'c10000';
 				editor.repaint();
 			</script>
+			<div id="3d_msg">
+			</div>
 
 		</div>
 		<div class="column">
@@ -279,7 +294,7 @@
 				<div class="field">
 					<label class="label">Draw a structure or choose a file</label>
 					<div class="control">
-						<input type="file" name="file_structure">
+						<input type="file" name="file_structure" id="file_structure" onchange="add_file_name()">
 					</div>
 				</div>
 
@@ -291,7 +306,7 @@
 						<div class="field" id="calc_name_field">
 							<label class="label">Name</label>
 							<div class="control">
-								<input class="input" name="calc_name" type="text">
+								<input class="input" name="calc_name" id="calc_name" type="text">
 							</div>
 						</div>
 					</div>
@@ -512,6 +527,7 @@
 	{% endif %}
 
 	{% if structure %}
+		$("#calc_project").val("{{ structure.parent_ensemble.parent_molecule.project.name }}");
 		let mol_read = ChemDoodle.readXYZ(`{{ structure.xyz_structure }}`);
 		ChemDoodle.relabel(mol_read);
 		editor.loadMolecule(mol_read);	

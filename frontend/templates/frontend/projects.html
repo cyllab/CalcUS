@@ -112,10 +112,10 @@
 				{% for proj in target_profile.project_set.all %}
 					<div class="box has-background-danger" id="proj_box_{{ proj.id }}">
 						<p style="float: right;">
-								<a href="/analyse/{{ proj.id }}"><i class="fas fa-table"></i></a>
-								<a href="/download_project_csv/{{ proj.id }}"><i class="fas fa-download"></i></a>
-								<a onclick="edit_field({{ proj.id }});"><i class="fas fa-edit" id="icon_{{ proj.id}}"></i></a>
-								<a onclick="del({{ proj.id }});"><i class="fas fa-trash-alt"></i></a>
+								<a href="/analyse/{{ proj.id }}"><i class="fas fa-table" title="Go to spreadsheet"></i></a>
+								<a href="/download_project_csv/{{ proj.id }}"><i class="fas fa-download" title="Download spreadsheet"></i></a>
+								<a onclick="edit_field({{ proj.id }});"><i class="fas fa-edit" title="Rename" id="icon_{{ proj.id}}"></i></a>
+								<a onclick="del({{ proj.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>
 						</p>
 						<a href="/projects/{{ proj.author }}/{{ proj.name }}">
 							<strong><p id="proj_name_{{ proj.id }}">{{ proj.name }}</p></strong>
