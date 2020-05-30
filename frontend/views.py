@@ -24,7 +24,7 @@ from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise
-from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS
+from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel
 from .decorators import superuser_required
 from .tasks import system
 from .constants import *
@@ -2010,13 +2010,39 @@ def download_project_csv(request, project_id):
     if not profile_intersection(profile, proj.author):
         return HttpResponse(status=403)
 
-    
     csv = get_csv(proj, profile)
 
     proj_name = proj.name.replace(' ', '_')
     response = HttpResponse(csv, content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename={}.csv'.format(proj_name)
     return response
+
+@login_required
+def cancel_calc(request):
+
+    if request.method != "POST":
+        return HttpResponse(status=403)
+
+    profile = request.user.profile
+
+    if 'id' in request.POST.keys():
+        try:
+            id = int(clean(request.POST['id']))
+        except ValueError:
+            return HttpResponse(status=404)
+
+    try:
+        calc = Calculation.objects.get(pk=id)
+    except Calculation.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if profile != calc.order.author:
+        return HttpResponse(status=403)
+
+    if calc.status == 0 or calc.status == 1:
+        cancel.delay(calc.id)
+
+    return HttpResponse(status=200)
 
 @login_required
 def ensemble_map(request, pk):

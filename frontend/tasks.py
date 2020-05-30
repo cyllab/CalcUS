@@ -295,6 +295,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                         return t.returncode
 
                     if calc_id != -1 and res.is_aborted() == True:
+                        t.terminate()
                         t.kill()
                         t.wait()
                         return -2
@@ -309,6 +310,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     return t.returncode
 
                 if calc_id != -1 and res.is_aborted() == True:
+                    t.terminate()
                     t.kill()
                     t.wait()
                     return -1
@@ -2847,6 +2849,7 @@ def dispatcher(drawing, order_id):
                 input_structures = ensemble.structure_set.all()
 
     group_order = []
+    calculations = []
 
     input_structures = filter(order, input_structures)
 
@@ -2866,6 +2869,7 @@ def dispatcher(drawing, order_id):
             c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), step=step, parameters=order.parameters, result_ensemble=e, constraints=order.constraints)
             c.save()
             if local:
+                calculations.append(c)
                 if not is_test:
                     group_order.append(run_calc.s(c.id).set(queue='comp'))
                 else:
@@ -2885,6 +2889,7 @@ def dispatcher(drawing, order_id):
             c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), parameters=order.parameters, step=step, constraints=order.constraints)
             c.save()
             if local:
+                calculations.append(c)
                 if not is_test:
                     group_order.append(run_calc.s(c.id).set(queue='comp'))
                 else:
@@ -2899,14 +2904,24 @@ def dispatcher(drawing, order_id):
                     out.write("{}\n".format(c.id))
                     out.write("{}\n".format(order.resource.id))
 
-    g = group(group_order)
-    result = g.apply_async()
+    #g = group(group_order)
+    #result = g.apply_async()
+
+    #print("RESULT")
+    for task, c in zip(group_order, calculations):
+        res = task.apply_async()
+        c.task_id = res
+        c.save()
 
 
 @app.task(base=AbortableTask)
 def run_calc(calc_id):
     print("Processing calc {}".format(calc_id))
     calc = Calculation.objects.get(pk=calc_id)
+
+    if calc.status == 3:#Already revoked:
+        return
+
     calc.status = 1
     calc.task_id = run_calc.request.id
     calc.save()
@@ -2940,6 +2955,8 @@ def run_calc(calc_id):
         traceback.print_exc()
 
     if ret == -2:
+        calc.status = 3
+        calc.save()
         print("Job {} cancelled".format(calc.id))
         return
 
@@ -3028,9 +3045,23 @@ def _del_structure(s):
 
     s.delete()
 
+@app.task
+def cancel(calc_id):
+    print("Cancelling calc {}".format(calc_id))
+    calc = Calculation.objects.get(pk=calc_id)
+    kill_calc(calc)
+
 def kill_calc(calc):
-    res = AbortableAsyncResult(calc.task_id)
-    res.abort()
+    if calc.task_id != '':
+        if calc.status == 1:
+            res = AbortableAsyncResult(calc.task_id)
+            res.abort()
+        else:
+            revoke(calc.task_id)
+            calc.status = 3
+            calc.save()
+    else:
+        print("Cannot cancel calculation without task id")
 
 @app.task(name='celery.ping')
 def ping():
