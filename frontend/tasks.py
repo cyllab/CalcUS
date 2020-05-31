@@ -337,7 +337,7 @@ def generate_xyz_structure(drawing, structure):
                 a = system("obabel /tmp/{}.mol -O /tmp/{}.xyz -h --gen3D".format(fname, fname), force_local=True)
                 with open("/tmp/{}.xyz".format(fname)) as f:
                     lines = f.readlines()
-                    structure.xyz_structure = ''.join(lines)
+                    structure.xyz_structure = clean_xyz(''.join(lines))
                     structure.save()
                     return 0
             else:
