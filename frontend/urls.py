@@ -18,6 +18,7 @@ urlpatterns = [
     path('learn/<int:pk>', views.exercise, name='exercise'),
 
     path('answer/', views.answer, name='answer'),
+    path('cancel_calc/', views.cancel_calc, name='cancel_calc'),
 
     path('projects/', views.projects, name='projects'),
     path('projects/<str:username>', views.projects_username, name='projects_username'),

@@ -344,6 +344,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         else:
             return True
 
+    def is_on_page_order_details(self):
+        url = self.get_split_url()
+        if url[0] == 'calculationorder' and url[1] != '':
+            return True
+        else:
+            return False
+
     def is_on_page_projects(self):
         url = self.get_split_url()
         if (url[0] == 'projects' or url[0] == 'home') and (url[1] == '' or self.is_user(url[1])):
@@ -503,14 +510,58 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         raise EnsembleNotFound
 
+    def get_calc_orders(self):
+        calculations_container = self.driver.find_element_by_id("calculations_list")
+        calculations_div = calculations_container.find_element_by_css_selector(".grid")
+        calculations = calculations_div.find_elements_by_css_selector("article")
+        return calculations
+
     def click_latest_calc(self):
         assert self.is_on_page_calculations()
         assert self.get_number_calc_orders() > 0
 
-        calculations_container = self.driver.find_element_by_id("calculations_list")
-        calculations_div = calculations_container.find_element_by_css_selector(".grid")
-        calculations = calculations_div.find_elements_by_css_selector("article")
+        calculations = self.get_calc_orders()
         calculations[0].click()
+
+    def details_latest_order(self):
+        assert self.is_on_page_calculations()
+        assert self.get_number_calc_orders() > 0
+
+        calculations = self.get_calc_orders()
+
+        link = calculations[0].find_element_by_class_name("fa-sitemap")
+        link.click()
+
+    def cancel_all_calc(self):
+        assert self.is_on_page_order_details()
+
+        calcs = self.driver.find_elements_by_css_selector("tbody > tr")
+        for c in calcs:
+            buttons = c.find_elements_by_css_selector(".button")
+            for b in buttons:
+                if b.text == "Cancel":
+                    b.click()
+
+                    ind = 0
+                    while ind < 3:
+                        c = b.get_attribute("class")
+                        if c.find("has-background-success") != -1:
+                            break
+                        time.sleep(1)
+                        ind += 1
+
+                    assert b.get_attribute("class").find("has-background-success") != -1
+
+    def get_calculation_statuses(self):
+        assert self.is_on_page_order_details()
+        calcs = self.driver.find_elements_by_css_selector("tbody > tr")
+
+        statuses = []
+        for c in calcs:
+            status = c.find_element_by_css_selector("th:nth-child(2)").text
+            statuses.append(status)
+
+        return statuses
 
     def apply_PI(self, group_name):
         assert self.is_on_page_profile()
@@ -542,12 +593,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_calculations()
         assert self.get_number_calc_orders() > 0
 
-
         ind = 0
         while ind < timeout:
-            calculations_container = self.driver.find_element_by_id("calculations_list")
-            calculations_div = calculations_container.find_element_by_css_selector(".grid")
-            calculations = calculations_div.find_elements_by_css_selector("article")
+            calculations = self.get_calc_orders()
+
             header = calculations[0].find_element_by_class_name("message-header")
             if "has-background-success" in header.get_attribute("class") or "has-background-danger" in header.get_attribute("class"):
                     return
@@ -753,10 +802,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_ensemble()
 
         try:
-            table = self.driver.find_element_by_id("vib_table")
-        except selenium.common.exceptions.NoSuchElementException:
+            element = WebDriverWait(self.driver, 5).until(
+                EC.presence_of_element_located((By.ID, "vib_table"))
+            )
+        except selenium.common.exceptions.TimeoutException:
             return False
 
+        table = self.driver.find_element_by_id("vib_table")
         rows = table.find_elements_by_css_selector("tr")
 
         if len(rows) > 0:

@@ -81,6 +81,7 @@ REMOTE = False
 connections = {}
 locks = {}
 remote_dirs = {}
+kill_sig = []
 
 def direct_command(command, conn, lock):
     lock.acquire()
@@ -212,6 +213,9 @@ def wait_until_done(job_id, conn, lock):
     print("Waiting for job {} to finish".format(job_id))
     DELAY = [5, 10, 15, 20, 30]
     ind = 0
+
+    pid = int(threading.get_ident())
+
     while True:
         sleep(DELAY[ind])
         if ind < len(DELAY)-1:
@@ -226,6 +230,11 @@ def wait_until_done(job_id, conn, lock):
                 if _output != None and len(_output) < 2:
                     print("Job done")
                     return 0
+
+        if pid in kill_sig:
+            direct_command("scancel {}".format(job_id), conn, lock)
+            kill_sig.remove(pid)
+            return -2
 
 def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
     if REMOTE and not force_local:
@@ -259,12 +268,12 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                         if job_id == -1:
                             return 1
                         else:
-                            wait_until_done(job_id, conn, lock)
-                            return 0
+                            ret = wait_until_done(job_id, conn, lock)
+                            return ret
                     else:
                         job_id = output[-2].replace('Submitted batch job', '').strip()
-                        wait_until_done(job_id, conn, lock)
-                        return 0
+                        ret = wait_until_done(job_id, conn, lock)
+                        return ret
                 else:
                     return output
             else:
@@ -276,8 +285,8 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         else:
             if output[-2].find("Submitted batch job") != -1:
                 job_id = output[-2].replace('Submitted batch job', '').strip()
-                wait_until_done(job_id, conn, lock)
-                return 0
+                ret = wait_until_done(job_id, conn, lock)
+                return ret
             else:
                 return 1
     else:
@@ -295,6 +304,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                         return t.returncode
 
                     if calc_id != -1 and res.is_aborted() == True:
+                        t.terminate()
                         t.kill()
                         t.wait()
                         return -2
@@ -309,6 +319,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     return t.returncode
 
                 if calc_id != -1 and res.is_aborted() == True:
+                    t.terminate()
                     t.kill()
                     t.wait()
                     return -1
@@ -2847,6 +2858,7 @@ def dispatcher(drawing, order_id):
                 input_structures = ensemble.structure_set.all()
 
     group_order = []
+    calculations = []
 
     input_structures = filter(order, input_structures)
 
@@ -2866,11 +2878,13 @@ def dispatcher(drawing, order_id):
             c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), step=step, parameters=order.parameters, result_ensemble=e, constraints=order.constraints)
             c.save()
             if local:
+                calculations.append(c)
                 if not is_test:
                     group_order.append(run_calc.s(c.id).set(queue='comp'))
                 else:
                     group_order.append(run_calc.s(c.id))
             else:
+                calculations.append(c)
                 c.local = False
                 c.save()
                 cmd = ClusterCommand.objects.create(issuer=order.author)
@@ -2885,6 +2899,7 @@ def dispatcher(drawing, order_id):
             c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), parameters=order.parameters, step=step, constraints=order.constraints)
             c.save()
             if local:
+                calculations.append(c)
                 if not is_test:
                     group_order.append(run_calc.s(c.id).set(queue='comp'))
                 else:
@@ -2899,16 +2914,22 @@ def dispatcher(drawing, order_id):
                     out.write("{}\n".format(c.id))
                     out.write("{}\n".format(order.resource.id))
 
-    g = group(group_order)
-    result = g.apply_async()
+    for task, c in zip(group_order, calculations):
+        res = task.apply_async()
+        c.task_id = res
+        print(res)
+        c.save()
 
 
 @app.task(base=AbortableTask)
 def run_calc(calc_id):
     print("Processing calc {}".format(calc_id))
     calc = Calculation.objects.get(pk=calc_id)
+
+    if calc.status == 3:#Already revoked:
+        return
+
     calc.status = 1
-    calc.task_id = run_calc.request.id
     calc.save()
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
 
@@ -2940,6 +2961,8 @@ def run_calc(calc_id):
         traceback.print_exc()
 
     if ret == -2:
+        calc.status = 3
+        calc.save()
         print("Job {} cancelled".format(calc.id))
         return
 
@@ -3028,9 +3051,32 @@ def _del_structure(s):
 
     s.delete()
 
+@app.task
+def cancel(calc_id):
+    print("Cancelling calc {}".format(calc_id))
+    calc = Calculation.objects.get(pk=calc_id)
+    kill_calc(calc)
+
 def kill_calc(calc):
-    res = AbortableAsyncResult(calc.task_id)
-    res.abort()
+    if calc.local:
+        if calc.task_id != '':
+            if calc.status == 1:
+                res = AbortableAsyncResult(calc.task_id)
+                res.abort()
+            else:
+                revoke(calc.task_id)
+                calc.status = 3
+                calc.save()
+        else:
+            print("Cannot cancel calculation without task id")
+    else:
+        cmd = ClusterCommand.objects.create(issuer=calc.order.author)
+        cmd.save()
+        with open(os.path.join(CALCUS_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
+            out.write("kill\n")
+            out.write("{}\n".format(calc.id))
+            out.write("{}\n".format(calc.order.resource.id))#####
+
 
 @app.task(name='celery.ping')
 def ping():
