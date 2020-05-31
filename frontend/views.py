@@ -2040,7 +2040,10 @@ def cancel_calc(request):
         return HttpResponse(status=403)
 
     if calc.status == 0 or calc.status == 1:
-        cancel.delay(calc.id)
+        if is_test:
+            cancel(calc.id)
+        else:
+            cancel.delay(calc.id)
 
     return HttpResponse(status=200)
 

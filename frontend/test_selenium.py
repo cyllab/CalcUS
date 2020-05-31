@@ -812,20 +812,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.get_number_ensembles(), 1)
         self.assertEqual(self.get_name_ensembles()[0], "My Ensemble")
 
-    def test_automatic_name(self):
-        self.lget("/launch/")
-
-        upload_input = self.driver.find_element_by_name('file_structure')
-        upload_input.send_keys("{}/tests/CH4.mol".format(dir_path))
-
-
-        element = WebDriverWait(self.driver, 5).until(
-            EC.text_to_be_present_in_element_value((By.ID, "calc_name"), "CH4")
-        )
-
-        name = self.driver.find_element_by_id("calc_name").get_attribute("value")
-        self.assertEqual(name, "CH4")
-
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):
         params = {
@@ -2775,3 +2761,57 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
         self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
+
+class MiscCalculationTests(CalcusLiveServer):
+
+    def setUp(self):
+        super().setUp()
+
+        self.lget('/profile/')
+
+        self.apply_PI("Test group")
+        self.logout()
+
+        u = User.objects.create_superuser(username="SU", password=self.password)
+        u.save()
+        p = Profile.objects.get(user__username="SU")
+        p.save()
+
+        self.login("SU", self.password)
+        self.lget('/manage_pi_requests/')
+
+        self.accept_PI_request()
+        self.logout()
+
+        self.login(self.username, self.password)
+
+
+    def test_cancel_calc(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Conformational Search',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'pentane.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.details_latest_order()
+        self.cancel_all_calc()
+
+        ind = 0
+        while ind < 10:
+            self.driver.refresh()
+            s = self.get_calculation_statuses()
+            self.assertEqual(len(s), 1)
+            if s[0] == "Error":
+                break
+
+            time.sleep(1)
+            ind += 1
+
+        s = self.get_calculation_statuses()
+        self.assertEqual(s[0], "Error")

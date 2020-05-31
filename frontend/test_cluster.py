@@ -814,3 +814,33 @@ class ClusterTests(CalcusLiveServer):
         self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_cancel_calc(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Conformational Search',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'pentane.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.details_latest_order()
+        self.cancel_all_calc()
+
+        ind = 0
+        while ind < 10:
+            self.driver.refresh()
+            s = self.get_calculation_statuses()
+            self.assertEqual(len(s), 1)
+            if s[0] == "Error":
+                break
+
+            time.sleep(1)
+            ind += 1
+
+        s = self.get_calculation_statuses()
+        self.assertEqual(s[0], "Error")

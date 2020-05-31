@@ -233,6 +233,7 @@ def wait_until_done(job_id, conn, lock):
 
         if pid in kill_sig:
             direct_command("scancel {}".format(job_id), conn, lock)
+            kill_sig.remove(pid)
             return -2
 
 def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
