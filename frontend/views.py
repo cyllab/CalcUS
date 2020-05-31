@@ -709,6 +709,11 @@ def submit_calculation(request):
 
             s = Structure.objects.create(parent_ensemble=e, number=1)
 
+            params = Parameters.objects.create(software="Unknown", method="Unknown", basis_set="", solvation_model="", charge=charge, multiplicity="1")
+            p = Property.objects.create(parent_structure=s, parameters=params, geom=True)
+            p.save()
+            params.save()
+
             drawing = False
             in_file = clean(request.FILES['file_structure'].read().decode('utf-8'))
             filename, ext = request.FILES['file_structure'].name.split('.')
@@ -723,6 +728,7 @@ def submit_calculation(request):
                 s.mol2_structure = in_file
             else:
                 return error(request, "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf)")
+            e.save()
             s.save()
         else:
             if 'structureB' in request.POST.keys():
@@ -731,7 +737,7 @@ def submit_calculation(request):
                 obj.ensemble = e
 
                 s = Structure.objects.create(parent_ensemble=e, number=1)
-                params = Parameters.objects.create(software="Open Babel", method="Forcefield", basis_set="", solvation_model="", charge="0", multiplicity="1")
+                params = Parameters.objects.create(software="Open Babel", method="Forcefield", basis_set="", solvation_model="", charge=charge, multiplicity="1")
                 p = Property.objects.create(parent_structure=s, parameters=params, geom=True)
                 p.save()
                 params.save()
