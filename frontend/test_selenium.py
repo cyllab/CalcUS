@@ -1761,6 +1761,8 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
         self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
+
+        self.click_calc_method(2)
         self.assertTrue(self.is_loaded_frequencies())
 
     def test_freq_HF(self):
@@ -1787,6 +1789,8 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
         self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
+
+        self.click_calc_method(2)
         self.assertTrue(self.is_loaded_frequencies())
 
     '''
@@ -1816,7 +1820,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
         self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 0)
-        self.click_calc_method(1)
+        self.click_calc_method(2)
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_freq_RIMP2(self):
@@ -1843,7 +1847,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
         self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 0)
-        self.click_calc_method(1)
+        self.click_calc_method(2)
         self.assertEqual(self.get_number_conformers(), 1)
     '''
 
@@ -1969,6 +1973,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
         self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
+        self.click_calc_method(2)
         self.assertTrue(self.is_loaded_mo())
 
     def test_mo_DFT(self):
@@ -1996,6 +2001,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
         self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
+        self.click_calc_method(2)
         self.assertTrue(self.is_loaded_mo())
 
     def test_scan_distance_SE(self):
@@ -2426,6 +2432,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
         self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
+        self.click_calc_method(2)
         self.assertTrue(self.is_loaded_frequencies())
 
     def test_freq_HF(self):
@@ -2452,6 +2459,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
         self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
+        self.click_calc_method(2)
         self.assertTrue(self.is_loaded_frequencies())
 
     def test_freq_DFT(self):

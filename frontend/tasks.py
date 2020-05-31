@@ -2899,6 +2899,7 @@ def dispatcher(drawing, order_id):
             c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), parameters=order.parameters, step=step, constraints=order.constraints)
             c.save()
             if local:
+                calculations.append(c)
                 if not is_test:
                     group_order.append(run_calc.s(c.id).set(queue='comp'))
                 else:

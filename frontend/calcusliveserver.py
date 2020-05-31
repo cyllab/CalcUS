@@ -802,10 +802,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_ensemble()
 
         try:
-            table = self.driver.find_element_by_id("vib_table")
-        except selenium.common.exceptions.NoSuchElementException:
+            element = WebDriverWait(self.driver, 5).until(
+                EC.presence_of_element_located((By.ID, "vib_table"))
+            )
+        except selenium.common.exceptions.TimeoutException:
             return False
 
+        table = self.driver.find_element_by_id("vib_table")
         rows = table.find_elements_by_css_selector("tr")
 
         if len(rows) > 0:
