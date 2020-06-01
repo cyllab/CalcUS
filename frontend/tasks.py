@@ -2940,7 +2940,7 @@ def run_calc(calc_id):
     in_file = os.path.join(workdir, 'in.xyz')
 
     with open(in_file, 'w') as out:
-        out.write(calc.structure.xyz_structure)
+        out.write(clean_xyz(calc.structure.xyz_structure))
 
     if not calc.local:
         pid = int(threading.get_ident())
