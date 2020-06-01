@@ -30,6 +30,7 @@ from .tasks import system
 from .constants import *
 
 from shutil import copyfile
+from django.db.models.functions import Lower
 
 
 try:
@@ -208,7 +209,7 @@ def project_details(request, username, proj):
         except Project.DoesNotExist:
                 return render(request, 'frontend/error.html', {'error_message': 'Invalid project'})
         return render(request, 'frontend/project_details.html', {
-        'molecules': project.molecule_set.all(),
+        'molecules': project.molecule_set.all().order_by(Lower('name')),
         'project': project,
         })
 
