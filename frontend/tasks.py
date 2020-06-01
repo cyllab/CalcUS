@@ -418,7 +418,7 @@ def get_basis_set(basis_set, software):
     return SOFTWARE_BASIS_SETS[software][abs_basis_set]
 
 def clean_xyz(xyz):
-    return ''.join([x for x in xyz if x in string.printable else ' '])
+    return ''.join([x if x in string.printable else ' ' for x in xyz])
 
 def xtb_opt(in_file, calc):
     folder = '/'.join(in_file.split('/')[:-1])
