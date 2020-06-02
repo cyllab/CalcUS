@@ -12,10 +12,14 @@
 {% if order.status == 1 %} <i class="fas fa-spinner"></i> {% elif order.status == 2 %} 
 <i class="fas fa-check"></i>{% elif order.status == 3 %} <i class="fas fa-times"></i>{% endif %}</p>
 			</div>
-    	{% if order.ensemble %}
-    		<a href="/molecule/{{ order.ensemble.parent_molecule.id }}" >
+	{% if order.result_ensemble %}
+		<a href="/ensemble/{{ order.result_ensemble.id }}" >
 	{% else %}
-    		<a href="/molecule/{{ order.structure.parent_ensemble.parent_molecule.id }}" >
+		{% if order.ensemble %}
+			<a href="/ensemble/{{ order.ensemble.id }}" >
+		{% else %}
+			<a href="/ensemble/{{ order.structure.parent_ensemble.id }}" >
+		{% endif %}
 	{% endif %}
 
 			<div class"message-body">

@@ -804,7 +804,7 @@ def submit_calculation(request):
     if not 'test' in request.POST.keys():
         dispatcher.delay(drawing, obj.id)
 
-    return redirect("/projects/")
+    return redirect("/calculations/")
 
 @login_required
 def launch_software(request, software):

@@ -907,8 +907,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_sp(self):
         params = {
@@ -925,8 +923,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_proj(self):
         proj = Project.objects.create(author=self.profile, name="TestProj")
@@ -945,8 +941,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_freq(self):
         params = {
@@ -965,7 +959,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_freq_solv(self):
         params = {
@@ -985,7 +978,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_conf_search(self):
         params = {
@@ -1002,8 +994,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_ts(self):
         params = {
@@ -1020,8 +1010,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(20)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_ensemble_second_step(self):
         params = {
@@ -1039,7 +1027,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.click_ensemble("Geometrical Optimisation Result")
         self.launch_ensemble_next_step()
 
         params2 = {
@@ -1051,8 +1038,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_structure_second_step(self):
         params = {
@@ -1070,7 +1055,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.click_ensemble("Geometrical Optimisation Result")
         self.launch_structure_next_step()
 
         params2 = {
@@ -1082,8 +1066,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
 class XtbCalculationTestsStudent(CalcusLiveServer):
     def setUp(self):
@@ -1129,9 +1111,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_proj(self):
@@ -1152,8 +1131,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_freq(self):
         params = {
@@ -1171,8 +1148,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_conf_search(self):
         params = {
@@ -1190,9 +1165,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Conformational Search Result")
         self.assertGreater(self.get_number_conformers(), 0)
 
     def test_ts(self):
@@ -1211,9 +1183,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(20)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("TS Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_scan_distance(self):
@@ -1233,10 +1202,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 10)
 
     def test_scan_distance_not_converged(self):
@@ -1273,10 +1238,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 10)
 
     def test_scan_dihedral(self):
@@ -1296,10 +1257,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 10)
 
     def test_freeze_distance(self):
@@ -1320,9 +1277,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_freeze_angle(self):
@@ -1342,10 +1296,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_freeze_dihedral(self):
@@ -1365,10 +1315,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_uvvis(self):
@@ -1387,8 +1333,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
 
         #test if it loads
 
@@ -1408,8 +1352,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.click_ensemble("Geometrical Optimisation Result")
-
         self.assertEqual(self.get_number_conformers(), 1)
 
         self.launch_ensemble_next_step()
@@ -1424,9 +1366,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_structure_second_step(self):
@@ -1445,8 +1384,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.click_ensemble("Geometrical Optimisation Result")
-
         self.assertEqual(self.get_number_conformers(), 1)
 
         self.launch_structure_next_step()
@@ -1462,9 +1399,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
 class OrcaCalculationTestsPI(CalcusLiveServer):
@@ -1509,9 +1443,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_sp_HF(self):
@@ -1533,9 +1464,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_sp_DFT(self):
@@ -1558,9 +1486,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_sp_DFT2(self):
@@ -1583,9 +1508,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_sp_RIMP2(self):
@@ -1608,9 +1530,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(60)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_opt_SE(self):
@@ -1632,9 +1551,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_opt_HF(self):
@@ -1656,9 +1572,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_opt_DFT(self):
@@ -1681,9 +1594,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_opt_DFT_single_atom(self):
@@ -1707,9 +1617,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_opt_RIMP2(self):
@@ -1732,9 +1639,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(60)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_freq_SE(self):
@@ -1757,9 +1661,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
         self.click_calc_method(2)
@@ -1785,9 +1686,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
         self.click_calc_method(2)
@@ -1870,9 +1768,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(20)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("TS Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_ts_HF(self):
@@ -1894,9 +1789,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(200)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("TS Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_ts_DFT(self):
@@ -1919,9 +1811,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(600)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("TS Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_ts_RIMP2(self):
@@ -1944,9 +1833,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(1000)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("TS Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_mo_HF(self):
@@ -1969,9 +1855,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
         self.click_calc_method(2)
         self.assertTrue(self.is_loaded_mo())
@@ -1997,9 +1880,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
         self.click_calc_method(2)
         self.assertTrue(self.is_loaded_mo())
@@ -2024,10 +1904,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 5)
 
     def test_scan_angle_SE(self):
@@ -2050,10 +1926,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 10)
 
     def test_scan_dihedral_SE(self):
@@ -2076,10 +1948,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 10)
 
     def test_freeze_distance_SE(self):
@@ -2102,10 +1970,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_freeze_angle_SE(self):
@@ -2128,10 +1992,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_freeze_dihedral_SE(self):
@@ -2154,10 +2014,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_nmr_DFT(self):
@@ -2181,9 +2037,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(60)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
 class GaussianCalculationTestsPI(CalcusLiveServer):
@@ -2228,9 +2081,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_sp_HF(self):
@@ -2252,9 +2102,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_sp_DFT(self):
@@ -2277,9 +2124,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_sp_DFT2(self):
@@ -2302,9 +2146,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
 
@@ -2327,9 +2168,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_opt_HF(self):
@@ -2351,9 +2189,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_opt_DFT(self):
@@ -2376,9 +2211,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_opt_DFT_single_atom(self):
@@ -2402,9 +2234,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
 
@@ -2428,9 +2257,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
         self.click_calc_method(2)
         self.assertTrue(self.is_loaded_frequencies())
@@ -2455,9 +2281,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
         self.click_calc_method(2)
         self.assertTrue(self.is_loaded_frequencies())
@@ -2483,9 +2306,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_freq_DFT_single_atom(self):
@@ -2509,9 +2329,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
 
@@ -2534,9 +2351,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(20)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("TS Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_ts_HF(self):
@@ -2558,9 +2372,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(200)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("TS Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_ts_DFT(self):
@@ -2583,9 +2394,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(600)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("TS Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
 
@@ -2609,10 +2417,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 11)
 
     def test_scan_angle_SE(self):
@@ -2635,10 +2439,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 11)
 
     def test_scan_dihedral_SE(self):
@@ -2661,10 +2461,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 11)
 
     def test_freeze_distance_SE(self):
@@ -2687,10 +2483,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_freeze_angle_SE(self):
@@ -2713,10 +2505,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_freeze_dihedral_SE(self):
@@ -2739,10 +2527,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_nmr_DFT(self):
@@ -2765,9 +2549,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(60)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
 class MiscCalculationTests(CalcusLiveServer):

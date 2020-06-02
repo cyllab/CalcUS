@@ -265,8 +265,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         tabs[num-1].click()
 
     def get_number_conformers(self):
+        conf_table = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.ID, "conf_table"))
+        )
+
         assert self.is_on_page_ensemble()
-        conf_table = self.driver.find_element_by_id("conf_table")
         conformers = conf_table.find_elements_by_css_selector("tr")
         return len(conformers)
 
@@ -478,7 +481,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def click_molecule(self, name):
         assert self.is_on_page_user_project()
 
-        #molecules_div = self.driver.find_element_by_css_selector(".grid")
         molecules = self.get_molecules()
         for mol in molecules:
             mol_name = mol.find_element_by_css_selector("a > strong > p").text
