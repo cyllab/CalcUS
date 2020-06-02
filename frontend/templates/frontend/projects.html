@@ -98,6 +98,40 @@
 				}
 			});
 		}
+
+		function toggle_private(id) {
+			icon = document.getElementById("private_icon_" + id);
+			if(icon.style.color == "silver") {
+				$.ajax({
+					method: "POST",	 	 
+					url: "/toggle_private/",
+					data: {
+						'id': id, 'val': 0,
+					},
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					success: function() {
+						icon.style.color = "";
+					}
+				});
+			}
+			else {
+				$.ajax({
+					method: "POST",	 	 
+					url: "/toggle_private/",
+					data: {
+						'id': id, 'val': 1,
+					},
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					success: function() {
+						icon.style.color = "silver";
+					}
+				});
+			}
+		}
 	</script>
 
 <div class="container">
@@ -109,13 +143,14 @@
 	</nav>
 
 		<div id="projects_list">
-				{% for proj in target_profile.project_set.all %}
+				{% for proj in projects %}
 					<div class="box has-background-danger" id="proj_box_{{ proj.id }}">
 						<p style="float: right;">
-								<a href="/analyse/{{ proj.id }}"><i class="fas fa-table" title="Go to spreadsheet"></i></a>
-								<a href="/download_project_csv/{{ proj.id }}"><i class="fas fa-download" title="Download spreadsheet"></i></a>
-								<a onclick="edit_field({{ proj.id }});"><i class="fas fa-edit" title="Rename" id="icon_{{ proj.id}}"></i></a>
-								<a onclick="del({{ proj.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>
+							<a onclick="toggle_private({{ proj.id }});"><i class="fas fa-user-shield" id="private_icon_{{ proj.id }}" title="Toggle private" {% if proj.private %}style="color: silver;"{% endif %}></i></a>
+							<a href="/analyse/{{ proj.id }}"><i class="fas fa-table" title="Go to spreadsheet"></i></a>
+							<a href="/download_project_csv/{{ proj.id }}"><i class="fas fa-download" title="Download spreadsheet"></i></a>
+							<a onclick="edit_field({{ proj.id }});"><i class="fas fa-edit" title="Rename" id="icon_{{ proj.id}}"></i></a>
+							<a onclick="del({{ proj.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>
 						</p>
 						<a href="/projects/{{ proj.author }}/{{ proj.name }}">
 							<strong><p id="proj_name_{{ proj.id }}">{{ proj.name }}</p></strong>

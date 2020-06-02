@@ -219,3 +219,231 @@ class LaunchTests(TestCase):
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
+class PermissionTestsStudent(TestCase):
+    def setUp(self):
+        call_command('init_static_obj')
+        self.username = "Student"
+        self.password = "test1234"
+
+        u = User.objects.create_user(username=self.username, password=self.password)
+        u.profile.is_PI = False
+        u.save()
+
+        self.profile = Profile.objects.get(user__username=self.username)
+
+        u2 = User.objects.create_user(username="PI", password=self.password)
+        u2.profile.is_PI = True
+        u2.save()
+
+        self.PI = Profile.objects.get(user__username="PI")
+
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.PI)
+        self.group.save()
+
+        self.client = Client()
+        self.client.force_login(u)
+
+    def test_project_public_nonmember(self):
+        p = Project.objects.create(name="Public Project", author=self.PI, private=0)
+        m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
+        e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
+        s = Structure.objects.create(parent_ensemble=e, number=0)
+        p.save()
+        m.save()
+        e.save()
+        s.save()
+
+        response = self.client.get("/projects/PI")
+        self.assertEqual(response.status_code, 404)
+
+        response = self.client.get("/projects/PI/Public Project")
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get("/molecule/{}".format(m.id))
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get("/ensemble/{}".format(e.id))
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get("/download_structures/{}".format(e.id))
+        self.assertEqual(response.status_code, 404)
+
+        response = self.client.get("/download_structures/{}/0".format(e.id))
+        self.assertEqual(response.status_code, 404)
+
+    def test_project_public(self):
+        self.profile.member_of = self.group
+        self.profile.save()
+
+        p = Project.objects.create(name="Public Project", author=self.PI, private=0)
+        m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
+        e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
+        s = Structure.objects.create(parent_ensemble=e, number=0)
+        p.save()
+        m.save()
+        e.save()
+        s.save()
+
+        response = self.client.get("/projects/PI")
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/projects/PI/Public Project")
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/molecule/{}".format(m.id))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/ensemble/{}".format(e.id))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/download_structures/{}".format(e.id))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/download_structures/{}/0".format(e.id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_project_private(self):
+        self.profile.member_of = self.group
+        self.profile.save()
+
+        p = Project.objects.create(name="Public Project", author=self.PI, private=1)
+        m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
+        e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
+        s = Structure.objects.create(parent_ensemble=e, number=0)
+        p.save()
+        m.save()
+        e.save()
+        s.save()
+
+        response = self.client.get("/projects/PI")
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/projects/PI/Public Project")
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get("/molecule/{}".format(m.id))
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get("/ensemble/{}".format(e.id))
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get("/download_structures/{}".format(e.id))
+        self.assertEqual(response.status_code, 404)
+
+        response = self.client.get("/download_structures/{}/0".format(e.id))
+        self.assertEqual(response.status_code, 404)
+
+class PermissionTestsPI(TestCase):
+    def setUp(self):
+        call_command('init_static_obj')
+        self.username = "PI"
+        self.password = "test1234"
+
+        u = User.objects.create_user(username=self.username, password=self.password)
+        u.profile.is_PI = True
+        u.save()
+
+        self.profile = Profile.objects.get(user__username=self.username)
+
+        u2 = User.objects.create_user(username="Student", password=self.password)
+        u2.profile.is_PI = False
+        u2.save()
+
+        self.student = Profile.objects.get(user__username="Student")
+
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.profile)
+        self.group.save()
+
+        self.client = Client()
+        self.client.force_login(u)
+
+    def test_project_public_nonmember(self):
+        p = Project.objects.create(name="Public Project", author=self.student, private=0)
+        m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
+        e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
+        s = Structure.objects.create(parent_ensemble=e, number=0)
+        p.save()
+        m.save()
+        e.save()
+        s.save()
+
+        response = self.client.get("/projects/Student")
+        self.assertEqual(response.status_code, 404)
+
+        response = self.client.get("/projects/Student/Public Project")
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get("/molecule/{}".format(m.id))
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get("/ensemble/{}".format(e.id))
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get("/download_structures/{}".format(e.id))
+        self.assertEqual(response.status_code, 404)
+
+        response = self.client.get("/download_structures/{}/0".format(e.id))
+        self.assertEqual(response.status_code, 404)
+
+    def test_project_public(self):
+        self.student.member_of = self.group
+        self.student.save()
+
+        p = Project.objects.create(name="Public Project", author=self.student, private=0)
+        m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
+        e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
+        s = Structure.objects.create(parent_ensemble=e, number=0)
+        p.save()
+        m.save()
+        e.save()
+        s.save()
+
+        response = self.client.get("/projects/Student")
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/projects/Student/Public Project")
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/molecule/{}".format(m.id))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/ensemble/{}".format(e.id))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/download_structures/{}".format(e.id))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/download_structures/{}/0".format(e.id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_project_private(self):
+        self.student.member_of = self.group
+        self.student.save()
+
+        p = Project.objects.create(name="Public Project", author=self.student, private=1)
+        m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
+        e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
+        s = Structure.objects.create(parent_ensemble=e, number=0)
+        p.save()
+        m.save()
+        e.save()
+        s.save()
+
+        response = self.client.get("/projects/Student")
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/projects/Student/Public Project")
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/molecule/{}".format(m.id))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/ensemble/{}".format(e.id))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/download_structures/{}".format(e.id))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/download_structures/{}/0".format(e.id))
+        self.assertEqual(response.status_code, 200)
+

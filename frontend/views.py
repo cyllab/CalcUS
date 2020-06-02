@@ -111,6 +111,7 @@ def projects(request):
     return render(request, 'frontend/projects.html', {
             'profile': request.user.profile,
             'target_profile': request.user.profile,
+            'projects': request.user.profile.project_set.all(),
         })
 
 @login_required
@@ -122,11 +123,19 @@ def projects_username(request, username):
     except User.DoesNotExist:
         return HttpResponse(status=404)
 
-    if profile_intersection(request.user.profile, target_profile):
+    if request.user.profile == target_profile:
         return render(request, 'frontend/projects.html', {
                     'profile': request.user.profile,
                     'target_profile': target_profile,
+                    'projects': request.user.profile.project_set.all(),
                 })
+    elif profile_intersection(request.user.profile, target_profile):
+        return render(request, 'frontend/projects.html', {
+                    'profile': request.user.profile,
+                    'target_profile': target_profile,
+                    'projects': target_profile.project_set.filter(private=0),
+                })
+
     else:
         return HttpResponse(status=404)
 
@@ -141,9 +150,10 @@ def get_projects(request):
         except User.DoesNotExist:
             return HttpResponse(status=404)
 
-        if profile_intersection(request.user.profile, target_profile):
+        if profile == target_profile:
             return render(request, 'frontend/project_list.html', {'projects' : target_profile.project_set.all()})
-
+        elif profile_intersection(profile, target_profile):
+            return render(request, 'frontend/project_list.html', {'projects' : target_profile.project_set.filter(private=0)})
         else:
             return HttpResponse(status=404)
     else:
@@ -201,21 +211,22 @@ def project_details(request, username, proj):
     try:
         target_profile = User.objects.get(username=target_username).profile
     except User.DoesNotExist:
-        return render(request, 'frontend/error.html', {'error_message': 'Invalid user'})
+        return HttpResponseRedirect("/home/")
 
     if profile_intersection(request.user.profile, target_profile):
         try:
             project = target_profile.project_set.get(name=target_project)
         except Project.DoesNotExist:
-                return render(request, 'frontend/error.html', {'error_message': 'Invalid project'})
-        return render(request, 'frontend/project_details.html', {
-        'molecules': project.molecule_set.all().order_by(Lower('name')),
-        'project': project,
-        })
-
-
+                return HttpResponseRedirect("/home/")
+        if can_view_project(project, request.user.profile):
+            return render(request, 'frontend/project_details.html', {
+            'molecules': project.molecule_set.all().order_by(Lower('name')),
+            'project': project,
+            })
+        else:
+            return HttpResponseRedirect("/home/")
     else:
-        return render(request, 'frontend/error.html', {'error_message': 'Invalid user'})
+        return HttpResponseRedirect("/home/")
 
 
 def clean(txt):
@@ -228,7 +239,7 @@ def molecule(request, pk):
     except Molecule.DoesNotExist:
         return redirect('/home/')
 
-    if not profile_intersection(request.user.profile, mol.project.author):
+    if not can_view_molecule(mol, request.user.profile):
         return redirect('/home/')
 
     return render(request, 'frontend/molecule.html', {'profile': request.user.profile,
@@ -242,7 +253,7 @@ def ensemble_table_body(request, pk):
     except Molecule.DoesNotExist:
         return redirect('/home/')
 
-    if not profile_intersection(request.user.profile, mol.project.author):
+    if not can_view_molecule(mol, request.user.profile):
         return redirect('/home/')
 
     return render(request, 'frontend/ensemble_table_body.html', {'profile': request.user.profile,
@@ -256,7 +267,7 @@ def ensemble(request, pk):
     except Ensemble.DoesNotExist:
         return redirect('/home/')
 
-    if not profile_intersection(request.user.profile, e.parent_molecule.project.author):
+    if not can_view_ensemble(e, request.user.profile):
         return redirect('/home/')
 
     return render(request, 'frontend/ensemble.html', {'profile': request.user.profile,
@@ -280,7 +291,7 @@ def details_ensemble(request):
         except Parameters.DoesNotExist:
             return HttpResponse(status=403)
 
-        if not profile_intersection(request.user.profile, e.parent_molecule.project.author):
+        if not can_view_ensemble(e, request.user.profile):
             return HttpResponse(status=403)
 
         if e.has_nmr(p):
@@ -308,7 +319,7 @@ def details_structure(request):
         except Ensemble.DoesNotExist:
             return HttpResponse(status=403)
 
-        if not profile_intersection(request.user.profile, e.parent_molecule.project.author):
+        if not can_view_ensemble(e, request.user.profile):
             return HttpResponse(status=403)
 
         try:
@@ -340,7 +351,7 @@ def details(request, pk):
     except Calculation.DoesNotExist:
         return redirect('/home/')
 
-    if not profile_intersection(request.user.profile, calc.author):
+    if not can_view_calculation(calc, request.user.profile):
         return redirect('/home/')
 
     return render(request, 'frontend/details.html', {'profile': request.user.profile,
@@ -650,7 +661,7 @@ def submit_calculation(request):
             return error(request, "No starting ensemble found")
 
         start_author = start_e.parent_molecule.project.author
-        if not profile_intersection(profile, start_author):
+        if not can_view_ensemble(start_e, profile):
             return error(request, "You do not have permission to access the starting calculation")
         obj.ensemble = start_e
 
@@ -810,6 +821,36 @@ def launch_software(request, software):
     else:
         return HttpResponse(status=404)
 
+def can_view_project(proj, profile):
+    if proj.author == profile:
+        return True
+    else:
+        if not profile_intersection(proj.author, profile):
+            return False
+        if proj.private and not profile.is_PI:
+            return False
+        return True
+
+def can_view_molecule(mol, profile):
+    return can_view_project(mol.project, profile)
+
+def can_view_ensemble(e, profile):
+    return can_view_molecule(e.parent_molecule, profile)
+
+def can_view_structure(s, profile):
+    return can_view_structure(s.parent_ensemble, profile)
+
+def can_view_order(order, profile):
+    if order.author == profile:
+        return True
+    elif profile_intersection(order.author, profile):
+        if order.project.private and not profile.is_PI:
+            return False
+        return True
+
+def can_view_calculation(calc, profile):
+    return can_view_order(calc.order, profile)
+
 def profile_intersection(profile1, profile2):
     if profile1 == profile2:
         return True
@@ -818,6 +859,12 @@ def profile_intersection(profile1, profile2):
             return True
         if profile2 == profile1.group.PI:
             return True
+    else:
+        return False
+
+    if profile2.group == None:
+        return False
+
     if profile1.researchgroup_PI != None:
         for group in profile1.researchgroup_PI:
             if profile2 in group.members.all():
@@ -1559,10 +1606,9 @@ def download_structures(request, ee):
     except Ensemble.DoesNotExist:
         return HttpResponse(status=404)
 
-
     profile = request.user.profile
 
-    if e.parent_molecule.project.author != profile and not profile_intersection(profile, e.parent_molecule.project.author):
+    if not can_view_ensemble(e, profile):
         return HttpResponse(status=404)
 
     structs = ""
@@ -1584,10 +1630,9 @@ def download_structure(request, ee, num):
     except Ensemble.DoesNotExist:
         return HttpResponse(status=404)
 
-
     profile = request.user.profile
 
-    if e.parent_molecule.project.author != profile and not profile_intersection(profile, e.parent_molecule.project.author):
+    if not can_view_ensemble(e, profile):
         return HttpResponse(status=404)
 
     try:
@@ -1668,6 +1713,40 @@ def rename_project(request):
         return HttpResponse(status=403)
 
 @login_required
+def toggle_private(request):
+    if request.method == 'POST':
+        id = int(clean(request.POST['id']))
+
+        try:
+            proj = Project.objects.get(pk=id)
+        except Project.DoesNotExist:
+            return HttpResponse(status=403)
+
+        profile = request.user.profile
+
+        if proj.author != profile:
+            return HttpResponse(status=403)
+
+        if 'val' in request.POST.keys():
+            try:
+                val = int(clean(request.POST['val']))
+            except ValueError:
+                return HttpResponse(status=403)
+        else:
+            return HttpResponse(status=403)
+
+        if val not in [0, 1]:
+            return HttpResponse(status=403)
+
+        proj.private = val
+        proj.save()
+
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=403)
+
+
+@login_required
 def rename_ensemble(request):
     if request.method == 'POST':
         id = int(clean(request.POST['id']))
@@ -1695,7 +1774,10 @@ def rename_ensemble(request):
 @login_required
 def get_structure(request):
     if request.method == 'POST':
-        id = int(clean(request.POST['id']))
+        try:
+            id = int(clean(request.POST['id']))
+        except ValueError:
+            return HttpResponse(status=404)
 
         try:
             e = Ensemble.objects.get(pk=id)
@@ -1704,7 +1786,7 @@ def get_structure(request):
 
         profile = request.user.profile
 
-        if e.parent_molecule.project.author != profile and not profile_intersection(profile, e.parent_molecule.project.author):
+        if not can_view_ensemble(e, profile):
             return HttpResponse(status=403)
 
         structs = e.structure_set.all()
@@ -1732,14 +1814,20 @@ def get_structure(request):
 @login_required
 def get_vib_animation(request):
     if request.method == 'POST':
-        url = request.POST['id']
-        id = url.split('/')[-1]
+        url = clean(request.POST['id'])
+        try:
+            id = int(url.split('/')[-1])
+        except ValueError:
+            return HttpResponse(status=404)
 
-        calc = Calculation.objects.get(pk=id)
+        try:
+            calc = Calculation.objects.get(pk=id)
+        except Calculation.DoesNotExist:
+            return HttpResponse(status=404)
 
         profile = request.user.profile
 
-        if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
+        if not can_view_calculation(calc, profile):
             return HttpResponse(status=403)
 
         num = request.POST['num']
@@ -1755,14 +1843,17 @@ def get_vib_animation(request):
 @login_required
 def get_scan_animation(request):
     if request.method == 'POST':
-        url = request.POST['id']
-        id = url.split('/')[-1]
+        url = clean(request.POST['id'])
+        id = int(url.split('/')[-1])
 
-        calc = Calculation.objects.get(pk=id)
+        try:
+            calc = Calculation.objects.get(pk=id)
+        except Calculation.DoesNotExist:
+            return HttpResponse(status=404)
 
         profile = request.user.profile
 
-        if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+        if not can_view_calculation(calc, profile):
             return HttpResponse(status=403)
 
         type = calc.type
@@ -1805,7 +1896,7 @@ def get_details_sections(request, pk):
 
     profile = request.user.profile
 
-    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
+    if not can_view_calculation(calc, profile):
         return HttpResponse(status=403)
 
     return render(request, 'frontend/details_sections.html', {
@@ -1823,11 +1914,14 @@ def log(request, pk):
 
     response = ''
 
-    calc = Calculation.objects.get(pk=pk)
+    try:
+        calc = Calculation.objects.get(pk=pk)
+    except Calculation.DoesNotExist:
+        return HttpResponse(status=404)
 
     profile = request.user.profile
 
-    if not profile_intersection(profile, calc.order.author):
+    if not can_view_calculation(calc, profile):
         return HttpResponse(status=403)
 
     if calc.status == 2 or calc.status == 3:
@@ -1910,7 +2004,7 @@ def launch_pk(request, pk):
 
     profile = request.user.profile
 
-    if e.parent_molecule.project.author != profile and not profile_intersection(profile, e.parent_molecule.project.author):
+    if not can_view_ensemble(e, profile):
         return HttpResponse(status=403)
 
     return render(request, 'frontend/launch.html', {
@@ -1929,7 +2023,7 @@ def launch_structure_pk(request, ee, pk):
 
     profile = request.user.profile
 
-    if e.parent_molecule.project.author != profile and not profile_intersection(profile, e.parent_molecule.project.author):
+    if not can_view_ensemble(e, profile):
         return HttpResponse(status=403)
 
     try:
@@ -2014,7 +2108,7 @@ def download_project_csv(request, project_id):
     except Project.DoesNotExist:
         return HttpResponse(status=403)
 
-    if not profile_intersection(profile, proj.author):
+    if not can_view_project(proj, profile):
         return HttpResponse(status=403)
 
     csv = get_csv(proj, profile)
@@ -2061,7 +2155,8 @@ def ensemble_map(request, pk):
     except Molecule.DoesNotExist:
         return redirect('/home/')
 
-    if not profile_intersection(request.user.profile, mol.project.author):
+    profile = request.user.profile
+    if not can_view_molecule(mol, profile):
         return redirect('/home/')
     json = """{{
                 "nodes": [
@@ -2094,7 +2189,7 @@ def analyse(request, project_id):
     except Project.DoesNotExist:
         return HttpResponse(status=403)
 
-    if not profile_intersection(profile, proj.author):
+    if not can_view_project(proj, profile):
         return HttpResponse(status=403)
 
     csv = get_csv(proj, profile)
@@ -2113,7 +2208,7 @@ def calculationorder(request, pk):
         return HttpResponse(status=404)
 
     profile = request.user.profile
-    if not profile_intersection(profile, order.author):
+    if not can_view_order(order, profile):
         return HttpResponse(status=404)
 
     return render(request, 'frontend/calculationorder.html', {'order': order})

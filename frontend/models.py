@@ -86,6 +86,8 @@ class PIRequest(models.Model):
 class Project(models.Model):
     name = models.CharField(max_length=100)
     author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    private = models.PositiveIntegerField(default=0)
+
 
     def __str__(self):
         return self.name
