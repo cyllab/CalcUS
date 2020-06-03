@@ -443,6 +443,7 @@ class Parameters(models.Model):
     solvation_model = models.CharField(max_length=100, default='gbsa')
     software = models.CharField(max_length=100, default='xtb')
     basis_set = models.CharField(max_length=100, default='min')
+    theory_level = models.CharField(max_length=100, default='')
     method = models.CharField(max_length=100, default='GFN2-xTB')
     misc = models.CharField(max_length=1000, default='')
 

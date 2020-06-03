@@ -645,7 +645,7 @@ def submit_calculation(request):
         else:
             project_obj = project_set[0]
 
-    params = Parameters.objects.create(charge=charge, solvent=solvent, multiplicity=1, method=functional, basis_set=basis_set, misc=misc, software=software)
+    params = Parameters.objects.create(charge=charge, solvent=solvent, multiplicity=1, method=functional, basis_set=basis_set, misc=misc, software=software, theory_level=theory)
     params.save()
 
     obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
@@ -838,7 +838,11 @@ def can_view_ensemble(e, profile):
     return can_view_molecule(e.parent_molecule, profile)
 
 def can_view_structure(s, profile):
-    return can_view_structure(s.parent_ensemble, profile)
+    return can_view_ensemble(s.parent_ensemble, profile)
+
+def can_view_parameters(p, profile):
+    prop = p.property_set.all()[0]
+    return can_view_structure(prop.parent_structure, profile)
 
 def can_view_order(order, profile):
     if order.author == profile:
@@ -1991,7 +1995,7 @@ def update_preferences(request):
 def launch(request):
     return render(request, 'frontend/launch.html', {
             'profile': request.user.profile,
-            'procedures': BasicStep.objects.all(),
+            'procs': BasicStep.objects.all(),
         })
 
 @login_required
@@ -2007,10 +2011,28 @@ def launch_pk(request, pk):
     if not can_view_ensemble(e, profile):
         return HttpResponse(status=403)
 
+    init_params = e.structure_set.all()[0].properties.all()[0].parameters
+
     return render(request, 'frontend/launch.html', {
             'profile': request.user.profile,
             'ensemble': e,
-            'procedures': BasicStep.objects.all(),
+            'procs': BasicStep.objects.all(),
+            'init_params_id': init_params.id,
+        })
+
+def load_params(request, pk):
+    try:
+        p = Parameters.objects.get(pk=pk)
+    except Parameters.DoesNotExist:
+        return HttpResponse(status=404)
+
+    profile = request.user.profile
+
+    if not can_view_parameters(p, profile):
+        return HttpResponse(status=403)
+
+    return render(request, 'frontend/load_params.js', {
+            'params': p,
         })
 
 @login_required
@@ -2031,10 +2053,12 @@ def launch_structure_pk(request, ee, pk):
     except Structure.DoesNotExist:
         return redirect('/home/')
 
+    init_params = s.properties.all()[0].parameters
     return render(request, 'frontend/launch.html', {
             'profile': request.user.profile,
             'structure': s,
             'procedures': BasicStep.objects.all(),
+            'init_params': init_params,
         })
 
 def get_csv(proj, profile):

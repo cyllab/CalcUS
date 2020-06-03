@@ -30,6 +30,21 @@
 	}
 	</script>
 	<script>
+		function load_params(id) {
+			$.ajax({
+				method: "POST",	 	 
+				url: "/load_params/" + id,
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				success: function(data) {
+					eval(data);
+					refresh_availabilities();
+				},
+			});
+
+		}
+
 		{% if ensemble %}
 			function filter_changed() {
 				choice = document.getElementById("calc_filter");
@@ -147,10 +162,55 @@
 			}
 		}
 
-		function software_selection_changed() {
+		function refresh_availabilities() {
 			choice = document.getElementById("calc_software");
-			$("#software_specific_div").load("/software/" + choice.value);
-			check_scan_from();
+
+			full_options = document.querySelectorAll(".software_specific");
+
+			full_options.forEach(element => {
+  				element.style.display = 'none';
+			});
+
+			options = document.querySelectorAll('.avail_' + choice.value);
+			options.forEach(element => {
+  				element.style.display = 'block';
+			});
+
+
+			choice = document.getElementById("calc_theory_level");
+
+			full_options = document.querySelectorAll(".method_specific");
+
+			full_options.forEach(element => {
+  				element.style.display = 'none';
+			});
+
+			options = document.querySelectorAll('.avail_' + choice.value);
+			options.forEach(element => {
+  				element.style.display = 'block';
+			});
+
+			if(choice.value == "HF"){
+				hf3c = document.getElementById("hf3c").checked;
+				if (hf3c == true) {
+					document.getElementById("calc_basis_set_field").style.display = "none";
+				}
+				else {
+					document.getElementById("calc_basis_set_field").style.display = "block";
+				}
+			}
+			else if(choice.value == "DFT") {
+				pbeh3c = document.getElementById("pbeh3c").checked;
+				if (pbeh3c == true) {
+					document.getElementById("calc_basis_set_field").style.display = "none";
+					document.getElementById("calc_functional_field").style.display = "none";
+				}
+				else {
+					document.getElementById("calc_basis_set_field").style.display = "block";
+					document.getElementById("calc_functional_field").style.display = "block";
+				}
+			}
+
 		}
 
 		function add_constraint() {
@@ -196,7 +256,7 @@
 				<div class="columns"> \
 				<div class="column"> \
 					From (Å)\
-				<input class="input scan_from" type="text" width="5" name="calc_scan_{}_1" id="calc_scan_{}_1"> \
+				<input class="input software_specific avail_xtb avail_ORCA" type="text" width="5" name="calc_scan_{}_1" id="calc_scan_{}_1"> \
 				</div> \
 				<div class="column"> \
 					To (Å) \
@@ -236,6 +296,7 @@
 			});
 		}
 		
+
 		function add_file_name() {
 			path = $("#file_structure").val();
 			file_name = path.replace('C:\\fakepath\\', '').split('.')[0];
@@ -248,7 +309,7 @@
 		let ensemble = false;
 		{% endif %}
 		$(document).ready(function () {
-			software_selection_changed();
+			refresh_availabilities();
 			{% if ensemble %}
 			filter_changed();
 			{% endif %}
@@ -259,6 +320,20 @@
 {% block content %}
 
 {% csrf_token %}
+	<datalist id="basis_sets_options">
+	    <option value="6-31+G(d,p)">6-31+G(d,p)</option>
+	    <option value="Def2SVP">Def2SVP</option>
+	    <option value="Def2TZVP">Def2TZVP</option>
+	    <option value="aug-cc-pVDZ">aug-cc-pVDZ</option>
+	    <option value="aug-cc-pVTZ">aug-cc-pVTZ</option>
+	</datalist>
+	<datalist id="functional_options">
+	    <option value="M06">M06</option>
+	    <option value="M062X">M062X</option>
+	    <option value="PBE0">PBE0</option>
+	    <option value="B3LYP">B3LYP</option>
+	    <option value="wB97XD">wB97XD</option>
+	</datalist>
 
 	<div class="columns is-desktop">
 		<div class="column">
@@ -387,7 +462,7 @@
 					<label class="label">Software</label>
 					<div class="control" >
 						<div class="select">
-							<select name="calc_software" id="calc_software" onchange="software_selection_changed();">
+							<select name="calc_software" id="calc_software" onchange="refresh_availabilities();">
 								<option>xtb</option>
 								<option>ORCA</option>
 								<option>Gaussian</option>
@@ -396,7 +471,143 @@
 					</div>
 				</div>
 
-				<div id="software_specific_div">
+				<div class="field">
+					<label class="label">Calculation Type</label>
+					<div class="control" >
+						<div class="select">
+							<select name="calc_type" id="calc_type" onchange="calc_selection_changed();">
+							{% for proc in procs %}
+							<option class="software_specific {% if proc.avail_xtb %}avail_xtb{% endif %} {% if proc.avail_ORCA %}avail_ORCA{% endif %} {% if proc.avail_Gaussian %}avail_Gaussian{% endif %}">{{ proc.name }}</option>
+							{% endfor %}
+							</select>
+						</div>
+					</div>
+				</div>
+				<div style="display: none;" id="constraint_div">
+					<div class="field">
+						<label class="label">Constraints and scan coordinates</label>
+						<div id="constraint_list">
+							<div class="control" id="constraint_1">
+								<div class="columns">
+									<div class="column">
+										<div class="select">
+											<select name="constraint_mode_1" id="constraint_mode_1" onchange="constraint_mode_changed(1)">
+											<option selected="selected">Freeze</option>
+											<option>Scan</option>
+											</select>
+										</div>
+									</div>
+
+									<div class="column">
+										<div class="select">
+											<select name="constraint_type_1" id="constraint_type_1" onchange="constraint_type_selection_changed(1);">
+											<option selected="selected">Distance</option>
+											<option>Angle</option>
+											<option>Dihedral</option>
+											</select>
+										</div>
+									</div>
+									<div class="column">
+										<input class="input" type="text" width="5" name="calc_constraint_1_1" id="calc_constraint_1_1">
+									</div>
+									<div class="column">
+										<input class="input" type="text" width="5" name="calc_constraint_1_2" id="calc_constraint_1_2">
+									</div>
+									<div class="column">
+										<input class="input" type="text" width="5" name="calc_constraint_1_3" id="calc_constraint_1_3" style="display: none;">
+									</div>
+									<div class="column">
+										<input class="input" type="text" width="5" name="calc_constraint_1_4" id="calc_constraint_1_4" style="display: none;">
+									</div>
+									<div class="column">
+										<button type="button" class="button is-primary" onclick="add_constraint();">+</button>
+									</div>
+								</div>
+								<div style="display: none;" id="calc_scan_div_1">
+								<div class="columns" >
+									<div class="column">
+										From (Å)
+										<input class="input software_specific avail_xtb avail_ORCA" type="text" width="5" name="calc_scan_1_1" id="calc_scan_1_1">
+									</div>
+									<div class="column">
+										To (Å)
+										<input class="input" type="text" width="5" name="calc_scan_1_2" id="calc_scan_1_2">
+									</div>
+									<div class="column">
+										# Steps
+										<input class="input" type="text" width="5" name="calc_scan_1_3" id="calc_scan_1_3">
+									</div>
+								</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="software_specific avail_ORCA avail_Gaussian">
+					<div class="field">
+						<label class="label">Theory Level</label>
+						<div class="control" >
+							<div class="select">
+								<select name="calc_theory_level" id="calc_theory_level" onchange="refresh_availabilities();">
+									<option>Semi-empirical</option>
+									<option>HF</option>
+									<option>DFT</option>
+									<option class="software_specific avail_ORCA">RI-MP2</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="columns">
+						<div class="method_specific avail_DFT">
+						<div class="column is-narrow software_specific avail_ORCA ">
+							<div class="field">
+								<label class="label">Special</label>
+								<label class="checkbox">
+									<input type="checkbox" name="pbeh3c" id="pbeh3c" onchange="refresh_availabilities();">
+									PBEh-3c
+								</label>		
+							</div>
+						</div>
+						</div>
+						<div class="method_specific avail_HF">
+						<div class="column is-narrow software_specific avail_ORCA ">
+							<div class="field">
+								<label class="label">Special</label>
+								<label class="checkbox">
+									<input type="checkbox" id="hf3c" name="hf3c" onchange="refresh_availabilities();">
+									HF-3c
+								</label>		
+							</div>
+						</div>
+						</div>
+
+						<div class="column method_specific avail_DFT">
+							<div class="field" id="calc_functional_field">
+								<label class="label">Functional</label>
+								<div class="control">
+									<input class="input" name="calc_functional" id="calc_functional" type="text" list="functional_options">
+								</div>
+							</div>
+						</div>
+						<div class="column method_specific avail_DFT avail_RI-MP2 avail_HF">
+							<div class="field" id="calc_basis_set_field">
+								<label class="label">Basis set</label>
+								<div class="control">
+									<input class="input" name="calc_basis_set" id="calc_basis_set" type="text" list="basis_sets_options">
+								</div>
+							</div>
+						</div>
+						<div class="column">
+							<div class="field">
+								<label class="label">Additional keyword</label>
+								<div class="control">
+									<input class="input" name="calc_misc" id="calc_misc" type="text" placeholder="" >
+								</div>
+							</div>
+						</div>
+
+					</div>
 				</div>
 
 				<div class="field">
@@ -506,6 +717,9 @@
 
 	$( document ).ready(function() {
 		project_selection_changed();
+		{% if init_params_id %}
+			load_params({{ init_params_id}});
+		{% endif %}
 	});
 	{% if ensemble %}
 		$("#calc_project").val("{{ ensemble.parent_molecule.project.name }}");
