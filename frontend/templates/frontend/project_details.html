@@ -108,6 +108,19 @@
 					</div>
 
 			{% endfor %}
+			<div style="margin-top: 30px; margin-bottom: 30px;">
+			{% if request.user.profile == project.author %}
+				<center>
+					<a href="/launch/project/{{ project.id }}">
+						<div class="box has-background-info"style="opacity: 0.5;">
+							<i class="fas fa-plus"></i>
+						</div>
+					</a>
+				</center>
+			{% endif %}
+
+		</div>
+
 		{% else %}
 			No molecule in this project.
 		{% endif %}

@@ -303,6 +303,60 @@
 			$("#calc_name").val(file_name);
 		}
 
+		function set_project_default() {
+			$.ajax({
+				data: $("#calcform").serialize(), 
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				type: "POST", 
+				url: "/set_project_default/",
+				success: function (response) { 
+					$("#preset_msg").html(response);
+				}
+			});
+		}
+		
+		function save_preset() {
+			preset_name = prompt("Name of the preset?", "")
+			data = $("#calcform").serializeArray();
+			data.push({ name: 'preset_name', value: preset_name});
+			$.ajax({
+				data: data, 
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				type: "POST", 
+				url: "/save_preset/",
+				success: function (response) { 
+					$("#preset_msg").html(response);
+				}
+			});
+
+		}
+		
+		function load_preset() {
+			preset = document.getElementById("presets").value;
+			load_params(preset);
+		}
+		function delete_preset() {
+			preset = document.getElementById("presets").value;
+			$.ajax({
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				type: "POST", 
+				url: "/delete_preset/" + preset,
+				success: function (response) { 
+					$("#preset_msg").html(response);
+				}
+			});
+
+		}
+
 		{% if ensemble %}
 		let ensemble = true;
 		{% else %}
@@ -335,6 +389,7 @@
 	    <option value="wB97XD">wB97XD</option>
 	</datalist>
 
+
 	<div class="columns is-desktop">
 		<div class="column">
 			{% if not ensemble and not structure %}
@@ -363,6 +418,29 @@
 
 		</div>
 		<div class="column">
+			<div class="column">
+				<div class="box">
+					<center>
+						<div class="select">
+							<select id="presets">
+								{% for p in profile.preset_set.all %}
+								<option value="{{ p.id }}">{{ p.name }}</option>
+								{% endfor %}
+							</select>
+						</div>
+						<br />
+						<a class="button" onclick="load_preset()">Load Preset</a>
+						<a class="button" onclick="save_preset()">Save Preset</a>
+						<a class="button" onclick="delete_preset()">Delete Preset</a>
+						<br />
+						<a class="button" onclick="set_project_default()">Set current parameters as project defaults</a>
+						<div id="preset_msg">
+
+						</div>
+					</center>
+				</div>
+			</div>
+
 			<form action="/submit_calculation/" method="post" id="calcform" enctype="multipart/form-data">
 
 				{% if not ensemble and not structure %}

@@ -88,6 +88,7 @@ class Project(models.Model):
     author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
     private = models.PositiveIntegerField(default=0)
 
+    preset = models.ForeignKey('Preset', on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -137,6 +138,11 @@ class Step(models.Model):
     @property
     def name(self):
         return self.step_model.name
+
+class Preset(models.Model):
+    name = models.CharField(max_length=100, default="My Preset")
+    params = models.ForeignKey('Parameters', on_delete=models.CASCADE, blank=True, null=True)
+    author = models.ForeignKey('Profile', on_delete=models.CASCADE, blank=True, null=True)
 
 class Procedure(models.Model):
     name = models.CharField(max_length=100)

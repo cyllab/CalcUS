@@ -46,6 +46,9 @@ urlpatterns = [
     path('see/<int:pk>', views.see, name='see'),
     path('update_preferences/', views.update_preferences, name='update_preferences'),
 
+    path('set_project_default/', views.set_project_default, name='set_project_default'),
+    path('save_preset/', views.save_preset, name='save_preset'),
+
     #Documentation
     path('examples/', views.ExamplesView.as_view(), name='examples'),
     path('examples/<int:pk>', views.example, name='example'),
@@ -83,7 +86,9 @@ urlpatterns = [
     path('launch/', views.launch, name='launch'),
     path('launch/<int:pk>', views.launch_pk, name='launch_pk'),
     path('launch/<int:ee>/<int:pk>', views.launch_structure_pk, name='launch_structure_pk'),
+    path('launch/project/<int:pk>', views.launch_project, name='launch_project'),
     path('load_params/<int:pk>', views.load_params, name='load_params'),
+    path('delete_preset/<int:pk>', views.delete_preset, name='delete_preset'),
     #path('software/<str:software>', views.launch_software, name='launch_software'),
     #path('get_theory_details/', views.get_theory_details, name='get_theory_details'),
 

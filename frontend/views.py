@@ -23,7 +23,7 @@ from django.contrib.auth.models import User
 from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
-from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise
+from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset
 from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel
 from .decorators import superuser_required
 from .tasks import system
@@ -452,73 +452,74 @@ def error(request, msg):
         'error_message': msg,
         })
 
-
-@login_required
-def submit_calculation(request):
-    if 'calc_name' in request.POST.keys():
-        name = clean(request.POST['calc_name'])
-        if name.strip() == '':
-            if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys():
-                return error(request, "No calculation name")
-    else:
-        if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys():
-            return error(request, "No calculation name")
+def parse_parameters(request, name_required=True):
+    if name_required:
+        if 'calc_name' in request.POST.keys():
+            name = clean(request.POST['calc_name'])
+            if name.strip() == '':
+                if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys():
+                    return "No calculation name"
         else:
-            name = "Followup"
+            if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys():
+                return "No calculation name"
+            else:
+                name = "Followup"
+    else:
+        name = ""
 
     if 'calc_type' in request.POST.keys():
         try:
             step = BasicStep.objects.get(name=clean(request.POST['calc_type']))
         except BasicStep.DoesNotExist:
-            return error(request, "No such procedure")
+            return "No such procedure"
     else:
-        return error(request, "No calculation type")
+        return "No calculation type"
 
     if 'calc_project' in request.POST.keys():
         project = clean(request.POST['calc_project'])
         if project.strip() == '':
-            return error(request, "No calculation project")
+            return "No calculation project"
     else:
-        return error(request, "No calculation project")
+        return "No calculation project"
 
     if 'calc_charge' in request.POST.keys():
         charge = clean(request.POST['calc_charge'])
         if charge.strip() == '':
-            return error(request, "No calculation charge")
+            return "No calculation charge"
     else:
-        return error(request, "No calculation charge")
+        return "No calculation charge"
 
     if 'calc_solvent' in request.POST.keys():
         solvent = clean(request.POST['calc_solvent'])
         if solvent.strip() == '':
-            return error(request, "No calculation solvent")
+            return "No calculation solvent"
     else:
-        return error(request, "No calculation solvent")
+        return "No calculation solvent"
 
     if 'calc_ressource' in request.POST.keys():
         ressource = clean(request.POST['calc_ressource'])
         if ressource.strip() == '':
-            return error(request, "No computing resource chosen")
+            return "No computing resource chosen"
     else:
-        return error(request, "No computing resource chosen")
+        return "No computing resource chosen"
 
     if 'calc_software' in request.POST.keys():
         software = clean(request.POST['calc_software'])
         if software.strip() == '':
-            return error(request, "No software chosen")
+            return "No software chosen"
         if software not in BASICSTEP_TABLE.keys():
-            return error(request, "Invalid software chosen")
+            return "Invalid software chosen"
     else:
-        return error(request, "No software chosen")
+        return "No software chosen"
 
 
     if software == 'ORCA' or software == 'Gaussian':
         if 'calc_theory_level' in request.POST.keys():
             theory = clean(request.POST['calc_theory_level'])
             if theory.strip() == '':
-                return error(request, "No theory level chosen")
+                return "No theory level chosen"
         else:
-            return error(request, "No theory level chosen")
+            return "No theory level chosen"
 
         if theory == "DFT":
             special_functional = False
@@ -533,26 +534,26 @@ def submit_calculation(request):
                 if 'calc_functional' in request.POST.keys():
                     functional = clean(request.POST['calc_functional'])
                     if functional.strip() == '':
-                        return error(request, "No method")
+                        return "No method"
                 else:
-                    return error(request, "No method")
+                    return "No method"
                 if functional not in SPECIAL_FUNCTIONALS:
                     if 'calc_basis_set' in request.POST.keys():
                         basis_set = clean(request.POST['calc_basis_set'])
                         if basis_set.strip() == '':
-                            return error(request, "No basis set chosen")
+                            return "No basis set chosen"
                     else:
-                        return error(request, "No basis set chosen")
+                        return "No basis set chosen"
                 else:
                     basis_set = ""
         elif theory == "Semi-empirical":
             if 'calc_se_method' in request.POST.keys():
                 functional = clean(request.POST['calc_se_method'])
                 if functional.strip() == '':
-                    return error(request, "No semi-empirical method chosen")
+                    return "No semi-empirical method chosen"
                 basis_set = ''
             else:
-                return error(request, "No semi-empirical method chosen")
+                return "No semi-empirical method chosen"
         elif theory == "HF":
             special_functional = False
             if 'hf3c' in request.POST.keys():
@@ -567,19 +568,19 @@ def submit_calculation(request):
                 if 'calc_basis_set' in request.POST.keys():
                     basis_set = clean(request.POST['calc_basis_set'])
                     if basis_set.strip() == '':
-                        return error(request, "No basis set chosen")
+                        return "No basis set chosen"
                 else:
-                    return error(request, "No basis set chosen")
+                    return "No basis set chosen"
         elif theory == "RI-MP2":
             functional = "RI-MP2"
             if 'calc_basis_set' in request.POST.keys():
                 basis_set = clean(request.POST['calc_basis_set'])
                 if basis_set.strip() == '':
-                    return error(request, "No basis set chosen")
+                    return "No basis set chosen"
             else:
-                return error(request, "No basis set chosen")
+                return "No basis set chosen"
         else:
-            return error(request, "Invalid theory level")
+            return "Invalid theory level"
 
     else:
         if software == "xtb":
@@ -595,20 +596,20 @@ def submit_calculation(request):
         misc = ""
 
     if len(name) > 100:
-        return error(request, "The chosen name is too long")
+        return "The chosen name is too long"
 
     if len(project) > 100:
-        return error(request, "The chosen project name is too long")
+        return "The chosen project name is too long"
 
     if charge not in ["-2", "-1", "0", "+1", "+2"]:
-        return error(request, "Invalid charge (-2 to +2)")
+        return "Invalid charge (-2 to +2)"
 
     if solvent not in SOLVENT_TABLE.keys() and solvent != "Vacuum":
-        return error(request, "Invalid solvent")
+        return "Invalid solvent"
 
 
     if step.name not in BASICSTEP_TABLE[software].keys():
-        return error(request, "Invalid calculation type")
+        return "Invalid calculation type"
 
 
     profile = request.user.profile
@@ -616,13 +617,13 @@ def submit_calculation(request):
         try:
             access = ClusterAccess.objects.get(cluster_address=ressource, owner=profile)
         except ClusterAccess.DoesNotExist:
-            return error(request, "No such cluster access")
+            return "No such cluster access"
 
         if access.owner != profile:
-            return error(request, "You do not have the right to use this cluster access")
+            return "You do not have the right to use this cluster access"
     else:
         if not profile.is_PI and profile.group == None:
-            return error(request, "You have no computing resource")
+            return "You have no computing resource"
 
     if project == "New Project":
         new_project_name = clean(request.POST['new_project_name'])
@@ -638,7 +639,7 @@ def submit_calculation(request):
         try:
             project_set = profile.project_set.filter(name=project)
         except Profile.DoesNotExist:
-            return error("No such project")
+            return "No such project"
 
         if len(project_set) != 1:
             print("More than one project with the same name found!")
@@ -647,6 +648,52 @@ def submit_calculation(request):
 
     params = Parameters.objects.create(charge=charge, solvent=solvent, multiplicity=1, method=functional, basis_set=basis_set, misc=misc, software=software, theory_level=theory)
     params.save()
+
+    return params, project_obj, name
+
+@login_required
+def save_preset(request):
+    ret = parse_parameters(request, name_required=False)
+
+    if isinstance(ret, str):
+        return HttpResponse(ret)
+    params, project_obj, name = ret
+
+    if 'preset_name' in request.POST.keys():
+        preset_name = clean(request.POST['preset_name'])
+    else:
+        return HttpResponse("No preset name")
+
+    preset = Preset.objects.create(name=preset_name, author=request.user.profile, params=params)
+    preset.save()
+    return HttpResponse("Preset created")
+
+@login_required
+def set_project_default(request):
+    ret = parse_parameters(request, name_required=False)
+
+    if isinstance(ret, str):
+        return HttpResponse(ret)
+
+    params, project_obj, name = ret
+
+    preset = Preset.objects.create(name="{} Default".format(project_obj.name), author=request.user.profile, params=params)
+    preset.save()
+    project_obj.preset = preset
+    project_obj.save()
+
+    return HttpResponse("Default parameters updated")
+
+@login_required
+def submit_calculation(request):
+    ret = parse_parameters(request, name_required=True)
+
+    if isinstance(ret, str):
+        return error(request, ret)
+
+    profile = request.user.profile
+
+    params, project_obj, name = ret
 
     obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
 
@@ -689,7 +736,7 @@ def submit_calculation(request):
                     except Parameters.DoesNotExist:
                         return error(request, "Invalid filter parameters")
 
-                    if not profile_intersection(profile, filter_parameters.property_set.all()[0].parent_structure.parent_ensemble.parent_molecule.project.author):
+                    if not can_view_parameters(filter_parameters, profile):
                         return error(request, "Invalid filter parameters")
 
                     filter = Filter.objects.create(type=filter_type, parameters=filter_parameters, value=filter_value)
@@ -709,8 +756,7 @@ def submit_calculation(request):
             start_s = Structure.objects.get(pk=start_id)
         except Structure.DoesNotExist:
             return error(request, "No starting ensemble found")
-        start_author = start_s.parent_ensemble.parent_molecule.project.author
-        if not profile_intersection(profile, start_author):
+        if not can_view_structure(start_s, profile):
             return error(request, "You do not have permission to access the starting calculation")
         obj.structure = start_s
 
@@ -806,20 +852,6 @@ def submit_calculation(request):
 
     return redirect("/calculations/")
 
-@login_required
-def launch_software(request, software):
-    _software = clean(software)
-    if _software == 'xtb':
-        procs = BasicStep.objects.filter(avail_xtb=True)
-        return render(request, 'frontend/launch_software.html', {'procs': procs, 'software': _software})
-    elif _software == 'Gaussian':
-        procs = BasicStep.objects.filter(avail_Gaussian=True)
-        return render(request, 'frontend/launch_software.html', {'procs': procs, 'software': _software})
-    elif _software == 'ORCA':
-        procs = BasicStep.objects.filter(avail_ORCA=True)
-        return render(request, 'frontend/launch_software.html', {'procs': procs, 'software': _software})
-    else:
-        return HttpResponse(status=404)
 
 def can_view_project(proj, profile):
     if proj.author == profile:
@@ -843,6 +875,9 @@ def can_view_structure(s, profile):
 def can_view_parameters(p, profile):
     prop = p.property_set.all()[0]
     return can_view_structure(prop.parent_structure, profile)
+
+def can_view_preset(p, profile):
+    return profile_intersection(p.author, profile)
 
 def can_view_order(order, profile):
     if order.author == profile:
@@ -2020,19 +2055,61 @@ def launch_pk(request, pk):
             'init_params_id': init_params.id,
         })
 
-def load_params(request, pk):
+@login_required
+def launch_project(request, pk):
     try:
-        p = Parameters.objects.get(pk=pk)
-    except Parameters.DoesNotExist:
+        proj = Project.objects.get(pk=pk)
+    except Project.DoesNotExist:
+        return redirect('/home/')
+
+    profile = request.user.profile
+
+    if not can_view_project(proj, profile):
+        return HttpResponse(status=403)
+
+    if proj.preset is not None:
+        init_params_id = proj.preset.id
+
+        return render(request, 'frontend/launch.html', {
+                'profile': request.user.profile,
+                'procs': BasicStep.objects.all(),
+                'init_params_id': init_params_id,
+            })
+    else:
+        return render(request, 'frontend/launch.html', {
+                'profile': request.user.profile,
+                'procs': BasicStep.objects.all(),
+            })
+
+@login_required
+def delete_preset(request, pk):
+    try:
+        p = Preset.objects.get(pk=pk)
+    except Preset.DoesNotExist:
         return HttpResponse(status=404)
 
     profile = request.user.profile
 
-    if not can_view_parameters(p, profile):
+    if not can_view_preset(p, profile):
+        return HttpResponse(status=403)
+
+    p.delete()
+    return HttpResponse("Preset deleted")
+
+@login_required
+def load_params(request, pk):
+    try:
+        p = Preset.objects.get(pk=pk)
+    except Preset.DoesNotExist:
+        return HttpResponse(status=404)
+
+    profile = request.user.profile
+
+    if not can_view_preset(p, profile):
         return HttpResponse(status=403)
 
     return render(request, 'frontend/load_params.js', {
-            'params': p,
+            'params': p.params,
         })
 
 @login_required
