@@ -1165,7 +1165,7 @@ def orca_opt(in_file, calc):
         SMDsolvent "{}"
         end'''.format(calc.parameters.solvent)
 
-    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
+    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:] if i != '' ]
 
     if len(lines) == 1:#Single atom
         s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=calc.structure.xyz_structure, number=calc.structure.number, degeneracy=calc.structure.degeneracy)

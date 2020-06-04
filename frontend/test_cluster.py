@@ -200,7 +200,7 @@ class ClusterTests(CalcusLiveServer):
         memory.clear()
         memory.send_keys("10000")
 
-        self.driver.find_element_by_css_selector("button.button:nth-child(1)").click()
+        self.driver.find_element_by_css_selector("div.field:nth-child(6) > div:nth-child(1) > button:nth-child(1)").click()
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "public_key_area"))
         )
@@ -229,7 +229,7 @@ class ClusterTests(CalcusLiveServer):
         memory.clear()
         memory.send_keys("31000")
 
-        self.driver.find_element_by_css_selector("button.button:nth-child(1)").click()
+        self.driver.find_element_by_css_selector("div.field:nth-child(6) > div:nth-child(1) > button:nth-child(1)").click()
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "public_key_area"))
         )
@@ -272,8 +272,6 @@ class ClusterTests(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_cluster_xtb_sp(self):
         self.setup_cluster()
@@ -291,8 +289,6 @@ class ClusterTests(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_cluster_xtb_opt(self):
         self.setup_cluster()
@@ -310,8 +306,6 @@ class ClusterTests(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_cluster_xtb_freq(self):
         self.setup_cluster()
@@ -329,8 +323,6 @@ class ClusterTests(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_cluster_scan_distance(self):
         self.setup_cluster()
@@ -350,10 +342,6 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 20)
 
     def test_cluster_freeze_distance(self):
@@ -374,10 +362,6 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_cluster_uvvis(self):
@@ -397,10 +381,6 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        #test if it loads
 
 
     def test_cluster_xtb_ts(self):
@@ -419,8 +399,6 @@ class ClusterTests(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_cluster_orca_mo(self):
         self.setup_cluster()
@@ -443,10 +421,8 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
+        self.click_calc_method(2)
         self.assertTrue(self.is_loaded_mo())
 
     def test_cluster_orca_opt(self):
@@ -469,9 +445,6 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_cluster_orca_sp(self):
@@ -494,9 +467,6 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_cluster_orca_ts(self):
@@ -519,9 +489,6 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(200)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("TS Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_cluster_orca_freq(self):
@@ -545,10 +512,8 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
+        self.click_calc_method(2)
         self.assertTrue(self.is_loaded_frequencies())
 
     def test_cluster_orca_scan(self):
@@ -572,10 +537,6 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 10)
 
     def test_cluster_orca_freeze(self):
@@ -599,10 +560,6 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_add_cluster_student(self):
@@ -631,8 +588,6 @@ class ClusterTests(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_cluster_two_connections(self):
         self.setup_test_group()
@@ -655,8 +610,6 @@ class ClusterTests(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
 
     def test_cluster_gaussian_opt(self):
         self.setup_cluster()
@@ -678,9 +631,6 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Geometrical Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_cluster_gaussian_sp(self):
@@ -703,9 +653,6 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_cluster_gaussian_ts(self):
@@ -728,9 +675,6 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(200)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("TS Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_cluster_gaussian_freq(self):
@@ -754,10 +698,8 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
         self.assertEqual(self.get_number_conformers(), 1)
+        self.click_calc_method(2)
         self.assertTrue(self.is_loaded_frequencies())
 
     def test_cluster_gaussian_scan(self):
@@ -781,10 +723,6 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 11)
 
     def test_cluster_gaussian_freeze(self):
@@ -808,10 +746,6 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.driver.implicitly_wait(5)
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("Constrained Optimisation Result")
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_cancel_calc(self):

@@ -184,24 +184,6 @@ def create_project(request):
     else:
         return HttpResponse(status=404)
 
-@login_required
-def get_theory_details(request):
-    if request.method == 'POST':
-        if 'theory' in request.POST.keys():
-            theory = clean(request.POST['theory'])
-        else:
-            return HttpResponse(status=403)
-        if 'software' in request.POST.keys():
-            software = clean(request.POST['software'])
-        else:
-            return HttpResponse(status=403)
-        return render(request, 'frontend/launch_theory_options.html', {
-                'profile': request.user.profile,
-                'software': software,
-                'theory': theory,
-            })
-    else:
-        return HttpResponse(status=403)
 
 @login_required
 def project_details(request, username, proj):
@@ -453,6 +435,9 @@ def error(request, msg):
         })
 
 def parse_parameters(request, name_required=True):
+
+    profile = request.user.profile
+
     if name_required:
         if 'calc_name' in request.POST.keys():
             name = clean(request.POST['calc_name'])
@@ -496,12 +481,6 @@ def parse_parameters(request, name_required=True):
     else:
         return "No calculation solvent"
 
-    if 'calc_ressource' in request.POST.keys():
-        ressource = clean(request.POST['calc_ressource'])
-        if ressource.strip() == '':
-            return "No computing resource chosen"
-    else:
-        return "No computing resource chosen"
 
     if 'calc_software' in request.POST.keys():
         software = clean(request.POST['calc_software'])
@@ -583,6 +562,7 @@ def parse_parameters(request, name_required=True):
             return "Invalid theory level"
 
     else:
+        theory = "GFN2-xTB"
         if software == "xtb":
             functional = "GFN2-xTB"
             basis_set = "min"
@@ -612,19 +592,6 @@ def parse_parameters(request, name_required=True):
         return "Invalid calculation type"
 
 
-    profile = request.user.profile
-    if ressource != "Local":
-        try:
-            access = ClusterAccess.objects.get(cluster_address=ressource, owner=profile)
-        except ClusterAccess.DoesNotExist:
-            return "No such cluster access"
-
-        if access.owner != profile:
-            return "You do not have the right to use this cluster access"
-    else:
-        if not profile.is_PI and profile.group == None:
-            return "You have no computing resource"
-
     if project == "New Project":
         new_project_name = clean(request.POST['new_project_name'])
         try:
@@ -649,7 +616,7 @@ def parse_parameters(request, name_required=True):
     params = Parameters.objects.create(charge=charge, solvent=solvent, multiplicity=1, method=functional, basis_set=basis_set, misc=misc, software=software, theory_level=theory)
     params.save()
 
-    return params, project_obj, name
+    return params, project_obj, name, step
 
 @login_required
 def save_preset(request):
@@ -657,7 +624,7 @@ def save_preset(request):
 
     if isinstance(ret, str):
         return HttpResponse(ret)
-    params, project_obj, name = ret
+    params, project_obj, name, steep = ret
 
     if 'preset_name' in request.POST.keys():
         preset_name = clean(request.POST['preset_name'])
@@ -675,7 +642,7 @@ def set_project_default(request):
     if isinstance(ret, str):
         return HttpResponse(ret)
 
-    params, project_obj, name = ret
+    params, project_obj, name, step = ret
 
     preset = Preset.objects.create(name="{} Default".format(project_obj.name), author=request.user.profile, params=params)
     preset.save()
@@ -693,7 +660,26 @@ def submit_calculation(request):
 
     profile = request.user.profile
 
-    params, project_obj, name = ret
+    params, project_obj, name, step = ret
+
+    if 'calc_ressource' in request.POST.keys():
+        ressource = clean(request.POST['calc_ressource'])
+        if ressource.strip() == '':
+            return error(request, "No computing resource chosen")
+    else:
+        return error(request, "No computing resource chosen")
+
+    if ressource != "Local":
+        try:
+            access = ClusterAccess.objects.get(cluster_address=ressource, owner=profile)
+        except ClusterAccess.DoesNotExist:
+            return error(request, "No such cluster access")
+
+        if access.owner != profile:
+            return error(request, "You do not have the right to use this cluster access")
+    else:
+        if not profile.is_PI and profile.group == None:
+            return error(request, "You have no computing resource")
 
     obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
 
@@ -767,7 +753,7 @@ def submit_calculation(request):
 
             s = Structure.objects.create(parent_ensemble=e, number=1)
 
-            params = Parameters.objects.create(software="Unknown", method="Unknown", basis_set="", solvation_model="", charge=charge, multiplicity="1")
+            params = Parameters.objects.create(software="Unknown", method="Unknown", basis_set="", solvation_model="", charge=params.charge, multiplicity="1")
             p = Property.objects.create(parent_structure=s, parameters=params, geom=True)
             p.save()
             params.save()
@@ -2141,7 +2127,7 @@ def launch_structure_pk(request, ee, pk):
     return render(request, 'frontend/launch.html', {
             'profile': request.user.profile,
             'structure': s,
-            'procedures': BasicStep.objects.all(),
+            'procs': BasicStep.objects.all(),
             'init_params': init_params,
         })
 

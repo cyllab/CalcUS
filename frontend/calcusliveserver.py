@@ -348,72 +348,99 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             return True
 
     def is_on_page_order_details(self):
-        url = self.get_split_url()
-        if url[0] == 'calculationorder' and url[1] != '':
-            return True
-        else:
-            return False
+        ind = 0
+        while ind < 3:
+            url = self.get_split_url()
+            if url[0] == 'calculationorder' and url[1] != '':
+                return True
+            time.sleep(1)
+            ind += 1
+
+        return False
 
     def is_on_page_projects(self):
-        url = self.get_split_url()
-        if (url[0] == 'projects' or url[0] == 'home') and (url[1] == '' or self.is_user(url[1])):
-            return True
-        else:
-            return False
+        ind = 0
+        while ind < 3:
+            url = self.get_split_url()
+            if (url[0] == 'projects' or url[0] == 'home') and (url[1] == '' or self.is_user(url[1])):
+                return True
+            time.sleep(1)
+            ind += 1
+
+        return False
 
     def is_on_page_user_project(self):
-        url = self.get_split_url()
-        if url[0] == 'projects' and self.is_user(url[1]) and self.is_user_project(url[1], url[2]):
-            return True
-        else:
-            return False
+        ind = 0
+        while ind < 3:
+            url = self.get_split_url()
+            if url[0] == 'projects' and self.is_user(url[1]) and self.is_user_project(url[1], url[2]):
+                return True
+            time.sleep(1)
+            ind += 1
+
+        return False
 
     def is_on_page_calculations(self):
-        url = self.get_split_url()
-        if url[0] == 'calculations' and url[1] == '':
-            return True
-        else:
-            return False
+        ind = 0
+        while ind < 3:
+            url = self.get_split_url()
+            if url[0] == 'calculations' and url[1] == '':
+                return True
+            time.sleep(1)
+            ind += 1
+
+        return False
 
     def is_on_page_profile(self):
-        url = self.get_split_url()
-        if url[0] == 'profile' and url[1] == '':
-            return True
-        else:
-            return False
+        ind = 0
+        while ind < 3:
+            url = self.get_split_url()
+            if url[0] == 'profile' and url[1] == '':
+                return True
+            time.sleep(1)
+            ind += 1
+        return False
 
     def is_on_page_managePI(self):
-        url = self.get_split_url()
-        if url[0] == 'manage_pi_requests' and url[1] == '':
-            return True
-        else:
-            return False
+        ind = 0
+        while ind < 3:
+            url = self.get_split_url()
+            if url[0] == 'manage_pi_requests' and url[1] == '':
+                return True
+            time.sleep(1)
+            ind += 1
+        return False
 
     def is_on_page_molecule(self):
-        url = self.get_split_url()
-
-        try:
-            mol_id = int(url[1])
-        except:
-            return False
-
-        if url[0] == 'molecule' and self.is_molecule_id(mol_id):
-            return True
-        else:
-            return False
+        ind = 0
+        while ind < 3:
+            url = self.get_split_url()
+            try:
+                mol_id = int(url[1])
+            except ValueError:
+                pass
+            else:
+                if url[0] == 'molecule' and self.is_molecule_id(mol_id):
+                    return True
+            time.sleep(1)
+            ind += 1
+        return False
 
     def is_on_page_ensemble(self):
-        url = self.driver.current_url.split('/')[3:]
+        ind = 0
+        while ind < 3:
+            url = self.driver.current_url.split('/')[3:]
+            try:
+                e_id = int(url[1])
+            except ValueError:
+                pass
+            else:
+                if url[0] == 'ensemble' and self.is_ensemble_id(e_id):
+                    return True
+            time.sleep(1)
+            ind += 1
 
-        try:
-            e_id = int(url[1])
-        except:
-            return False
-
-        if url[0] == 'ensemble' and self.is_ensemble_id(e_id):
-            return True
-        else:
-            return False
+        return False
 
     def get_projects(self):
         assert self.is_on_page_projects()
@@ -684,7 +711,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def get_name_molecules(self):
         molecules = self.get_molecules()
-        names = [mol.find_element_by_css_selector("strong > p").text for mol in molecules]
+        names = []
+        for mol in molecules:
+            try:
+                names.append(mol.find_element_by_css_selector("strong > p").text)
+            except selenium.common.exceptions.NoSuchElementException:
+                pass
 
         return names
 
