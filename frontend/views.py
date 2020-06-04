@@ -781,7 +781,7 @@ def submit_calculation(request):
                 obj.ensemble = e
 
                 s = Structure.objects.create(parent_ensemble=e, number=1)
-                params = Parameters.objects.create(software="Open Babel", method="Forcefield", basis_set="", solvation_model="", charge=charge, multiplicity="1")
+                params = Parameters.objects.create(software="Open Babel", method="Forcefield", basis_set="", solvation_model="", charge=params.charge, multiplicity="1")
                 p = Property.objects.create(parent_structure=s, parameters=params, geom=True)
                 p.save()
                 params.save()
