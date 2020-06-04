@@ -332,6 +332,7 @@
 				url: "/save_preset/",
 				success: function (response) { 
 					$("#preset_msg").html(response);
+					refresh_presets();
 				}
 			});
 
@@ -352,9 +353,14 @@
 				url: "/delete_preset/" + preset,
 				success: function (response) { 
 					$("#preset_msg").html(response);
+					refresh_presets();
 				}
 			});
+	
+		}
 
+		function refresh_presets() {
+			$("#presets").load("/presets/");
 		}
 
 		{% if ensemble %}
@@ -423,9 +429,6 @@
 					<center>
 						<div class="select">
 							<select id="presets">
-								{% for p in profile.preset_set.all %}
-								<option value="{{ p.id }}">{{ p.name }}</option>
-								{% endfor %}
 							</select>
 						</div>
 						<br />
@@ -795,6 +798,7 @@
 
 	$( document ).ready(function() {
 		project_selection_changed();
+		refresh_presets();
 		{% if init_params_id %}
 			load_params({{ init_params_id}});
 		{% endif %}

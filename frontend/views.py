@@ -2097,6 +2097,13 @@ def delete_preset(request, pk):
     return HttpResponse("Preset deleted")
 
 @login_required
+def launch_presets(request):
+    profile = request.user.profile
+
+    presets = profile.preset_set.all()
+    return render(request, 'frontend/launch_presets.html', { 'presets': presets })
+
+@login_required
 def load_params(request, pk):
     try:
         p = Preset.objects.get(pk=pk)

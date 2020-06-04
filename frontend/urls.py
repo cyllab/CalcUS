@@ -89,6 +89,7 @@ urlpatterns = [
     path('launch/project/<int:pk>', views.launch_project, name='launch_project'),
     path('load_params/<int:pk>', views.load_params, name='load_params'),
     path('delete_preset/<int:pk>', views.delete_preset, name='delete_preset'),
+    path('presets/', views.launch_presets, name='presets'),
     #path('software/<str:software>', views.launch_software, name='launch_software'),
     #path('get_theory_details/', views.get_theory_details, name='get_theory_details'),
 
