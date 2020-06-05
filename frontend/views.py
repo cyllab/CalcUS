@@ -256,6 +256,30 @@ def ensemble(request, pk):
         'ensemble': e})
 
 @login_required
+def link_order(request, pk):
+    try:
+        o = CalculationOrder.objects.get(pk=pk)
+    except CalculationOrder.DoesNotExist:
+        return HttpResponseRedirect("/home/")
+
+    profile = request.user.profile
+
+    if not can_view_order(o, profile):
+        return HttpResponseRedirect("/home/")
+
+    if o.last_seen_status != o.status:
+        o.last_seen_status = o.status
+        o.save()
+
+    if o.result_ensemble:
+        return HttpResponseRedirect("/ensemble/{}".format(o.result_ensemble.id))
+    else:
+        if o.ensemble:
+            return HttpResponseRedirect("/ensemble/{}".format(o.ensemble.id))
+        else:
+            return HttpResponseRedirect("/ensemble/{}".format(o.parent_ensemble.id))
+
+@login_required
 def details_ensemble(request):
     if request.method == 'POST':
         pk = int(clean(request.POST['id']))

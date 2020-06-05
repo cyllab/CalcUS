@@ -54,6 +54,7 @@ urlpatterns = [
     path('examples/<int:pk>', views.example, name='example'),
 
     path('calculationorder/<int:pk>', views.calculationorder, name='calculationorder'),
+    path('link_order/<int:pk>', views.link_order, name='link_order'),
 
     #Group management
     path('apply_pi/', views.apply_pi, name='apply_pi'),
