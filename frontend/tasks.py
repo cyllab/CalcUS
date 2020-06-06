@@ -37,6 +37,7 @@ from ssh2.sftp import LIBSSH2_FXF_CREAT, LIBSSH2_FXF_WRITE, \
     LIBSSH2_SFTP_S_IROTH
 
 from .ORCA_calculation import OrcaCalculation
+from .Gaussian_calculation import GaussianCalculation
 from .calculation_helper import *
 
 try:
@@ -1703,30 +1704,10 @@ def gaussian_sp(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    GAUSSIAN_TEMPLATE = """%chk=in.chk
-%nproc={}
-%mem={}MB
-#p SP {} {} {}
-
-CalcUS
-
-{} {}
-{}
-"""
-
-    if calc.parameters.solvent == "Vacuum":
-        solvent_add = ""
-    else:
-        solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
-
-    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
-
-    method = get_method(calc.parameters.method, "Gaussian")
-    basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
-    command_str = "{}/{}".format(method, basis_set)
+    gaussian = GaussianCalculation(calc)
 
     with open(os.path.join(local_folder, 'sp.com'), 'w') as out:
-        out.write(GAUSSIAN_TEMPLATE.format(PAL, MEM, command_str, solvent_add, calc.parameters.misc, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+        out.write(gaussian.input_file)
 
     if not local:
         pid = int(threading.get_ident())
@@ -1771,30 +1752,10 @@ def gaussian_opt(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    GAUSSIAN_TEMPLATE = """%chk=in.chk
-%nproc={}
-%mem={}MB
-#p OPT {} {} {}
-
-CalcUS
-
-{} {}
-{}
-"""
-
-    if calc.parameters.solvent == "Vacuum":
-        solvent_add = ""
-    else:
-        solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
-
-    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
-
-    method = get_method(calc.parameters.method, "Gaussian")
-    basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
-    command_str = "{}/{}".format(method, basis_set)
+    gaussian = GaussianCalculation(calc)
 
     with open(os.path.join(local_folder, 'opt.com'), 'w') as out:
-        out.write(GAUSSIAN_TEMPLATE.format(PAL, MEM, command_str, solvent_add, calc.parameters.misc, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+        out.write(gaussian.input_file)
 
     if not local:
         pid = int(threading.get_ident())
@@ -1857,30 +1818,10 @@ def gaussian_freq(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    GAUSSIAN_TEMPLATE = """%chk=in.chk
-%nproc={}
-%mem={}MB
-#p FREQ {} {} {}
-
-CalcUS
-
-{} {}
-{}
-"""
-
-    if calc.parameters.solvent == "Vacuum":
-        solvent_add = ""
-    else:
-        solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
-
-    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:-1]]
-
-    method = get_method(calc.parameters.method, "Gaussian")
-    basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
-    command_str = "{}/{}".format(method, basis_set)
+    gaussian = GaussianCalculation(calc)
 
     with open(os.path.join(local_folder, 'freq.com'), 'w') as out:
-        out.write(GAUSSIAN_TEMPLATE.format(PAL, MEM, command_str, solvent_add, calc.parameters.misc, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+        out.write(gaussian.input_file)
 
     if not local:
         pid = int(threading.get_ident())
@@ -1906,6 +1847,8 @@ CalcUS
     if not os.path.isfile("{}/freq.log".format(local_folder)):
         return 1
 
+    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:] if i.strip() != '']
+
     with open("{}/freq.log".format(local_folder)) as f:
         outlines = f.readlines()
         ind = len(lines)-1
@@ -1928,6 +1871,7 @@ CalcUS
     prop.free_energy = float(0.0030119 + float(G) + float(SCF))
     prop.freq = calc.id
     prop.save()
+
 
     if len(lines) > 1:
         raw_lines = calc.structure.xyz_structure.split('\n')
@@ -2005,39 +1949,14 @@ CalcUS
 
 def gaussian_ts(in_file, calc):
 
-    if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
-        pal = 1
-    else:
-        pal = 8
-
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
     folder = '/'.join(in_file.split('/')[:-1])
 
-    GAUSSIAN_TEMPLATE = """%chk=in.chk
-%nproc={}
-%mem={}MB
-#p opt(ts,noeigentest,calcfc) {} {} {}
-
-CalcUS
-
-{} {}
-{}
-"""
-
-    if calc.parameters.solvent == "Vacuum":
-        solvent_add = ""
-    else:
-        solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
-
-    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
-
-    method = get_method(calc.parameters.method, "Gaussian")
-    basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
-    command_str = "{}/{}".format(method, basis_set)
+    gaussian = GaussianCalculation(calc)
 
     with open(os.path.join(local_folder, 'ts.com'), 'w') as out:
-        out.write(GAUSSIAN_TEMPLATE.format(PAL, MEM, command_str, solvent_add, calc.parameters.misc, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+        out.write(gaussian.input_file)
 
     if not local:
         pid = int(threading.get_ident())
@@ -2099,77 +2018,10 @@ def gaussian_scan(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    GAUSSIAN_TEMPLATE = """%chk=in.chk
-%nproc={}
-%mem={}MB
-#p opt(modredundant) {} {} {}
-
-CalcUS
-
-{} {}
-{}
-{}
-"""
-
-    if calc.parameters.solvent == "Vacuum":
-        solvent_add = ""
-    else:
-        solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
-
-    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
-
-    xyz = []
-    for line in lines:
-        if line.strip() != '':
-            a, x, y, z = line.split()
-            xyz.append([a, np.array([float(x), float(y), float(z)])])
-
-    method = get_method(calc.parameters.method, "Gaussian")
-    basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
-    command_str = "{}/{}".format(method, basis_set)
-
-
-    gaussian_constraints = ""
-    has_scan = False
-    scans = []
-    freeze = []
-    for cmd in calc.constraints.split(';'):
-        if cmd.strip() == '':
-            continue
-        _cmd, ids = cmd.split('-')
-        _cmd = _cmd.split('_')
-        ids = ids.split('_')
-        ids = [int(i) if i.strip() != '' else -1 for i in ids]
-        type = len(ids)
-
-        if _cmd[0] == "Scan":
-            has_scan = True
-            end = float(_cmd[2])
-            num_steps = int(float(_cmd[3]))
-
-            if type == 2:
-                start = get_distance(xyz, *ids)
-                step_size = "{:.2f}".format((end-start)/num_steps)
-                gaussian_constraints += "B {} {} S {} {}\n".format(*ids, num_steps, step_size)
-            if type == 3:
-                start = get_angle(xyz, *ids)
-                step_size = "{:.2f}".format((end-start)/num_steps)
-                gaussian_constraints += "A {} {} {} S {} {}\n".format(*ids, num_steps, step_size)
-            if type == 4:
-                start = get_dihedral(xyz, *ids)
-                step_size = "{:.2f}".format((end-start)/num_steps)
-                gaussian_constraints += "D {} {} {} {} S {} {}\n".format(*ids, num_steps, step_size)
-        else:
-            if type == 2:
-                gaussian_constraints += "B {} {} F\n".format(*ids)
-            if type == 3:
-                gaussian_constraints += "A {} {} {} F\n".format(*ids)
-            if type == 4:
-                gaussian_constraints += "D {} {} {} {} F\n".format(*ids)
-
+    gaussian = GaussianCalculation(calc)
 
     with open(os.path.join(local_folder, 'scan.com'), 'w') as out:
-        out.write(GAUSSIAN_TEMPLATE.format(PAL, MEM, command_str, solvent_add, calc.parameters.misc, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines).replace('\n\n', '\n'), gaussian_constraints))
+        out.write(gaussian.input_file)
 
     if not local:
         pid = int(threading.get_ident())
@@ -2197,7 +2049,7 @@ CalcUS
     with open(os.path.join(local_folder, 'scan.log')) as f:
         lines = f.readlines()
 
-    if has_scan:
+    if gaussian.has_scan:
         s_ind = 1
         ind = 0
         done = False
@@ -2278,36 +2130,10 @@ def gaussian_nmr(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    GAUSSIAN_TEMPLATE = """%chk=in.chk
-%nproc={}
-%mem={}MB
-#p nmr {} {} {}
-
-CalcUS
-
-{} {}
-{}
-"""
-
-    if calc.parameters.solvent == "Vacuum":
-        solvent_add = ""
-    else:
-        solvent_add = "SCRF(SMD, Solvent={})".format(calc.parameters.solvent)
-
-    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
-
-    xyz = []
-    for line in lines:
-        if line.strip() != '':
-            a, x, y, z = line.split()
-            xyz.append([a, np.array([float(x), float(y), float(z)])])
-
-    method = get_method(calc.parameters.method, "Gaussian")
-    basis_set = get_basis_set(calc.parameters.basis_set, "Gaussian")
-    command_str = "{}/{}".format(method, basis_set)
+    gaussian = GaussianCalculation(calc)
 
     with open(os.path.join(local_folder, 'nmr.com'), 'w') as out:
-        out.write(GAUSSIAN_TEMPLATE.format(PAL, MEM, command_str, solvent_add, calc.parameters.misc, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines).replace('\n\n', '\n')))
+        out.write(gaussian.input_file)
 
     if not local:
         pid = int(threading.get_ident())
