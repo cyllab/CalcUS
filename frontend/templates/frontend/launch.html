@@ -210,6 +210,21 @@
 					document.getElementById("calc_functional_field").style.display = "block";
 				}
 			}
+			[].forEach.call(document.getElementById("parameters_column").querySelectorAll('select'), function(sel) {
+
+				ind = sel.selectedIndex;
+				if(ind != -1) {
+					opt = sel.options[ind];
+					if(opt.style.display == "none") {
+						for(i=0; i < sel.options.length; i++) {
+							opt = sel.options[i];
+							if(opt.style.display != "none") {
+								sel.selectedIndex = i;
+							}
+						}
+					}
+				}
+			})
 
 		}
 
@@ -423,8 +438,8 @@
 			</div>
 
 		</div>
-		<div class="column">
-			<div class="column">
+		<div class="column" id="parameters_column">
+			<div class="column" >
 				<div class="box">
 					<center>
 						<div class="select">
@@ -488,6 +503,21 @@
 								    <option>Tetrahydrofuran</option>
 								    <option>Toluene</option>
 								    <option>Water</option>
+								  </select>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="column is-narrow">
+						<div class="field">
+							<label class="label">Solvation Model</label>
+							<div class="control" >
+								<div class="select">
+								  <select name="calc_solvation_model" id="calc_solvation_model">
+								    <option class="software_specific avail_xtb">GBSA</option>
+								    <option class="software_specific avail_Gaussian avail_ORCA">SMD</option>
+								    <option class="software_specific avail_Gaussian">PCM</option>
+								    <option class="software_specific avail_Gaussian avail_ORCA">CPCM</option>
 								  </select>
 								</div>
 							</div>

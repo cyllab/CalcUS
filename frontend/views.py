@@ -505,6 +505,15 @@ def parse_parameters(request, name_required=True):
     else:
         return "No calculation solvent"
 
+    if solvent != "Vacuum":
+        if 'solvation_model' in request.POST.keys():
+            solvation_model = clean(request.POST['calc_solvation_model'])
+            if solvation_model not in ['SMD', 'PCM', 'CPCM', 'GBSA']:
+                return "Invalid solvation model"
+        else:
+            return "No solvation model"
+    else:
+        solvation_model = ""
 
     if 'calc_software' in request.POST.keys():
         software = clean(request.POST['calc_software'])
@@ -575,6 +584,9 @@ def parse_parameters(request, name_required=True):
                 else:
                     return "No basis set chosen"
         elif theory == "RI-MP2":
+            if software != "ORCA":
+                return "RI-MP2 is only available for ORCA"
+
             functional = "RI-MP2"
             if 'calc_basis_set' in request.POST.keys():
                 basis_set = clean(request.POST['calc_basis_set'])
@@ -637,7 +649,7 @@ def parse_parameters(request, name_required=True):
         else:
             project_obj = project_set[0]
 
-    params = Parameters.objects.create(charge=charge, solvent=solvent, multiplicity=1, method=functional, basis_set=basis_set, misc=misc, software=software, theory_level=theory)
+    params = Parameters.objects.create(charge=charge, solvent=solvent, multiplicity=1, method=functional, basis_set=basis_set, misc=misc, software=software, theory_level=theory, solvation_model=solvation_model)
     params.save()
 
     return params, project_obj, name, step

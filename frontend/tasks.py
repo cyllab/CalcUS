@@ -36,15 +36,17 @@ from ssh2.sftp import LIBSSH2_FXF_CREAT, LIBSSH2_FXF_WRITE, \
     LIBSSH2_SFTP_S_IRUSR, LIBSSH2_SFTP_S_IRGRP, LIBSSH2_SFTP_S_IWUSR, \
     LIBSSH2_SFTP_S_IROTH
 
+from .ORCA_calculation import OrcaCalculation
+from .calculation_helper import *
+
 try:
     is_test = os.environ['CALCUS_TEST']
 except:
     is_test = False
 
-import periodictable
-from .constants import *
 
 import traceback
+import periodictable
 
 ATOMIC_NUMBER = {}
 ATOMIC_SYMBOL = {}
@@ -391,44 +393,11 @@ def generate_xyz_structure(drawing, structure):
     else:
         return 0
 
-def get_abs_method(method):
-    for m in SYN_METHODS.keys():
-        if method.lower() in SYN_METHODS[m] or method.lower() == m:
-            return m
-    return -1
-
-def get_abs_basis_set(basis_set):
-    for bs in SYN_BASIS_SETS.keys():
-        if basis_set.lower() in SYN_BASIS_SETS[bs] or basis_set.lower() == bs:
-            return bs
-    return -1
-
-def get_method(method, software):
-    abs_method = get_abs_method(method)
-    if abs_method == -1:
-        print("Method not found: {}".format(method))
-        return method
-    return SOFTWARE_METHODS[software][abs_method]
-
-def get_basis_set(basis_set, software):
-    abs_basis_set = get_abs_basis_set(basis_set)
-    if abs_basis_set == -1:
-        print("Basis set not found: {}".format(basis_set))
-        return basis_set
-    return SOFTWARE_BASIS_SETS[software][abs_basis_set]
-
-def clean_xyz(xyz):
-    return ''.join([x if x in string.printable else ' ' for x in xyz])
 
 def xtb_opt(in_file, calc):
     folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
-
-    if calc.parameters.solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
-    else:
-        solvent_add = ''
 
     os.chdir(local_folder)
     a = system("xtb {} --opt -o vtight -a 0.05 --chrg {} {} ".format(in_file, calc.parameters.charge, solvent_add), 'xtb_opt.out', calc_id=calc.id)
@@ -1024,73 +993,17 @@ def crest_pre_nmr(in_file, calc):
 
 
 def orca_mo_gen(in_file, calc):
-    ORCA_TEMPLATE = """!{} {} {} SP
-%pal
-nprocs {}
-end
-{}
-%plots
-dim1 45
-dim2 45
-dim3 45
-min1 0
-max1 0
-min2 0
-max2 0
-min3 0
-max3 0
-Format Gaussian_Cube
-MO("in-HOMO.cube",{},0);
-MO("in-LUMO.cube",{},0);
-MO("in-LUMOA.cube",{},0);
-MO("in-LUMOB.cube",{},0);
-end
-*xyzfile {} {} {}
-"""
-
-    if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
-        pal = 1
-    else:
-        pal = 8
-
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
-
-    if calc.parameters.solvent == "Vacuum":
-        solvent_add = ""
-    else:
-        solvent_add = '''%cpcm
-        smd true
-        SMDsolvent "{}"
-        end'''.format(calc.parameters.solvent)
-
-    struct = clean_xyz(calc.structure.xyz_structure)
-    electrons = 0
-    for line in struct.split('\n')[2:]:
-        if line.strip() == "":
-            continue
-        el = line.split()[0]
-        electrons += ATOMIC_NUMBER[el]
-
-    electrons -= calc.parameters.charge
-
-    if calc.parameters.multiplicity != 1:
-        print("Unimplemented multiplicity")
-        return -1
-
-    n_HOMO = int(electrons/2)-1
-    n_LUMO = int(electrons/2)
-    n_LUMO1 = int(electrons/2)+1
-    n_LUMO2 = int(electrons/2)+2
 
     fname = in_file.split('/')[-1]
     folder = '/'.join(in_file.split('/')[:-1])
 
-    method = get_method(calc.parameters.method, "ORCA")
-    basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
+    orca = OrcaCalculation(calc)
 
-    with open("{}/mo.inp".format(local_folder), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, pal, solvent_add, n_HOMO, n_LUMO, n_LUMO1, n_LUMO2, calc.parameters.charge, calc.parameters.multiplicity, fname))
+    with open(os.path.join(local_folder, 'mo.inp'), 'w') as out:
+        out.write(orca.input_file)
+
     if not local:
         pid = int(threading.get_ident())
         conn = connections[pid]
@@ -1143,42 +1056,20 @@ def orca_opt(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
-        pal = 1
-    else:
-        pal = 8
-
-    ORCA_TEMPLATE = """!OPT {} {} {}
-    %pal
-    nprocs {}
-    end
-    {}
-    *xyz {} {}
-    {}
-    *"""
-
-    if calc.parameters.solvent == "Vacuum":
-        solvent_add = ""
-    else:
-        solvent_add = '''%cpcm
-        smd true
-        SMDsolvent "{}"
-        end'''.format(calc.parameters.solvent)
-
     lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:] if i != '' ]
 
     if len(lines) == 1:#Single atom
         s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=calc.structure.xyz_structure, number=calc.structure.number, degeneracy=calc.structure.degeneracy)
         s.save()
         calc.structure = s
+        calc.step = BasicStep.objects.get(name="Single-Point Energy")
         calc.save()
         return orca_sp(in_file, calc)
 
-    method = get_method(calc.parameters.method, "ORCA")
-    basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
+    orca = OrcaCalculation(calc)
 
     with open(os.path.join(local_folder, 'opt.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+        out.write(orca.input_file)
 
     if not local:
         pid = int(threading.get_ident())
@@ -1209,7 +1100,9 @@ def orca_opt(in_file, calc):
 
     with open("{}/opt.xyz".format(local_folder)) as f:
         lines = f.readlines()
+
     xyz_structure = clean_xyz('\n'.join([i.strip() for i in lines]))
+
     with open("{}/orca_opt.out".format(local_folder)) as f:
         lines = f.readlines()
         ind = len(lines)-1
@@ -1233,35 +1126,10 @@ def orca_sp(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
-        pal = 1
-    else:
-        pal = 8
-
-    ORCA_TEMPLATE = """!SP {} {} {}
-    %pal
-    nprocs {}
-    end
-    {}
-    *xyz {} {}
-    {}
-    *"""
-
-    if calc.parameters.solvent == "Vacuum":
-        solvent_add = ""
-    else:
-        solvent_add = '''%cpcm
-        smd true
-        SMDsolvent "{}"
-        end'''.format(calc.parameters.solvent)
-
-    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
-
-    method = get_method(calc.parameters.method, "ORCA")
-    basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
+    orca = OrcaCalculation(calc)
 
     with open(os.path.join(local_folder, 'sp.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+        out.write(orca.input_file)
 
     if not local:
         pid = int(threading.get_ident())
@@ -1301,40 +1169,14 @@ def orca_sp(in_file, calc):
     return 0
 
 def orca_ts(in_file, calc):
-
-    if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
-        pal = 1
-    else:
-        pal = 8
-
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
     folder = '/'.join(in_file.split('/')[:-1])
 
-    ORCA_TEMPLATE = """!OPTTS {} {} {}
-    %pal
-    nprocs {}
-    end
-    {}
-    *xyz {} {}
-    {}
-    *"""
-
-    if calc.parameters.solvent == "Vacuum":
-        solvent_add = ""
-    else:
-        solvent_add = '''%cpcm
-        smd true
-        SMDsolvent "{}"
-        end'''.format(calc.parameters.solvent)
-
-    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
-
-    method = get_method(calc.parameters.method, "ORCA")
-    basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
+    orca = OrcaCalculation(calc)
 
     with open(os.path.join(local_folder, 'ts.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join([i.strip() for i in lines])))
+        out.write(orca.input_file)
 
     if not local:
         pid = int(threading.get_ident())
@@ -1388,35 +1230,10 @@ def orca_freq(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    ORCA_TEMPLATE = """!FREQ {} {} {}
-    %pal
-    nprocs {}
-    end
-    {}
-    *xyz {} {}
-    {}
-    *"""
-
-    if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
-        pal = 1
-    else:
-        pal = 8
-
-    if calc.parameters.solvent == "Vacuum":
-        solvent_add = ""
-    else:
-        solvent_add = '''%cpcm
-        smd true
-        SMDsolvent "{}"
-        end'''.format(calc.parameters.solvent)
-
-    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
-
-    method = get_method(calc.parameters.method, "ORCA")
-    basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
+    orca = OrcaCalculation(calc)
 
     with open(os.path.join(local_folder, 'freq.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, pal, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join([i.strip() for i in lines])))
+        out.write(orca.input_file)
 
     if not local:
         pid = int(threading.get_ident())
@@ -1561,92 +1378,10 @@ def orca_scan(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    ORCA_TEMPLATE = """!OPT {} {} {}
-    %pal
-    nprocs {}
-    end
-    {}
-    {}
-    *xyz {} {}
-    {}
-    *"""
-
-    if calc.parameters.method == "AM1" or calc.parameters.method == "PM3":
-        pal = 1
-    else:
-        pal = 8
-
-    if calc.parameters.solvent == "Vacuum":
-        solvent_add = ""
-    else:
-        solvent_add = '''%cpcm
-        smd true
-        SMDsolvent "{}"
-        end'''.format(calc.parameters.solvent)
-
-    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
-
-    orca_constraints = ""
-    has_scan = False
-    scans = []
-    freeze = []
-    for cmd in calc.constraints.split(';'):
-        if cmd.strip() == '':
-            continue
-        _cmd, ids = cmd.split('-')
-        _cmd = _cmd.split('_')
-        ids = ids.split('_')
-        ids = [int(i)-1 for i in ids]
-        type = len(ids)
-        if _cmd[0] == "Scan":
-            has_scan = True
-        else:
-            if type == 2:
-                freeze.append("{{ B {} {} C }}\n".format(*ids))
-            if type == 3:
-                freeze.append("{{ A {} {} {} C }}\n".format(*ids))
-            if type == 4:
-                freeze.append("{{ D {} {} {} {} C }}\n".format(*ids))
-    if has_scan:
-        for cmd in calc.constraints.split(';'):
-            if cmd.strip() == '':
-                continue
-            _cmd, ids = cmd.split('-')
-            ids = ids.split('_')
-            _cmd = _cmd.split('_')
-            ids_str = "{}".format(int(ids[0])-1)
-            for i in ids[1:]:
-                ids_str += " {}".format(int(i)-1)
-            if len(ids) == 2:
-                type = "B"
-            if len(ids) == 3:
-                type = "A"
-            if len(ids) == 4:
-                type = "D"
-            if _cmd[0] == "Scan":
-                scans.append("{} {} = {}, {}, {}\n".format(type, ids_str, *_cmd[1:]))
-
-    if len(scans) > 0:
-        SCAN_TEMPLATE = """%geom Scan
-        {}
-        end
-        end
-        """
-        orca_constraints += SCAN_TEMPLATE.format(''.join(scans))
-
-    if len(freeze) > 0:
-        FREEZE_TEMPLATE = """%geom Constraints
-        {}
-        end
-        end
-        """
-        orca_constraints += FREEZE_TEMPLATE.format(''.join(freeze))
-
-    method = get_method(calc.parameters.method, "ORCA")
-    basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
+    orca = OrcaCalculation(calc)
 
     with open(os.path.join(local_folder, 'scan.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, pal, orca_constraints, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, '\n'.join([i.strip() for i in lines])))
+        out.write(orca.input_file)
 
     if not local:
         pid = int(threading.get_ident())
@@ -1668,7 +1403,7 @@ def orca_scan(in_file, calc):
         if a == -1:
             return -1
 
-        if has_scan:
+        if orca.has_scan:
             a = sftp_get("{}/scan.relaxscanact.dat".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "scan.relaxscanact.dat"), conn, lock)
             b = sftp_get("{}/scan.allxyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "scan.allxyz"), conn, lock)
             if a == -1 or b == -1:
@@ -1678,7 +1413,7 @@ def orca_scan(in_file, calc):
             if a == -1:
                 return -1
 
-    if has_scan:
+    if orca.has_scan:
         if not os.path.isfile("{}/scan.relaxscanact.dat".format(local_folder)):
             return 1
 
@@ -1911,30 +1646,11 @@ def orca_nmr(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    ORCA_TEMPLATE = """!NMR {} {} {}
-    %pal
-    nprocs {}
-    end
-    {}
-    *xyz {} {}
-    {}
-    *"""
-
-    if calc.parameters.solvent == "Vacuum":
-        solvent_add = ""
-    else:
-        solvent_add = '''%cpcm
-        smd true
-        SMDsolvent "{}"
-        end'''.format(calc.parameters.solvent)
-
-    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:]]
-
-    method = get_method(calc.parameters.method, "ORCA")
-    basis_set = get_basis_set(calc.parameters.basis_set, "ORCA")
+    orca = OrcaCalculation(calc)
 
     with open(os.path.join(local_folder, 'nmr.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(method, basis_set, calc.parameters.misc, PAL, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
+        out.write(orca.input_file)
+
     if not local:
         pid = int(threading.get_ident())
         conn = connections[pid]
