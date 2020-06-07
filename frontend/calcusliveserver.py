@@ -487,6 +487,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         create_proj_box = self.driver.find_element_by_css_selector(".container > div > center > a")
         create_proj_box.click()
 
+    def create_molecule_in_project(self):
+        assert self.is_on_page_user_project()
+        link = self.driver.find_element_by_css_selector("#molecule_in_project")
+        link.click()
+
     def click_project(self, name):
         projects = self.get_projects()
 
@@ -867,4 +872,44 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             return False
 
         return True
+
+    def save_preset(self, name):
+        main_window_handle = None
+        while not main_window_handle:
+            main_window_handle = self.driver.current_window_handle
+
+        button = self.driver.find_element_by_css_selector("a.button:nth-child(4)")
+        button.click()
+
+        alert = self.driver.switch_to_alert()
+        alert.send_keys(name)
+        alert.accept()
+        self.driver.switch_to_default_content()
+
+    def load_preset(self, name):
+        self.select_preset(name)
+        button = self.driver.find_element_by_css_selector("a.button:nth-child(3)")
+        button.click()
+
+    def delete_preset(self, name):
+        self.select_preset(name)
+        button = self.driver.find_element_by_css_selector("a.button:nth-child(5)")
+        button.click()
+
+    def set_project_preset(self):
+        button = self.driver.find_element_by_css_selector("a.button:nth-child(7)")
+        button.click()
+
+    def get_names_presets(self):
+        select = self.driver.find_element_by_css_selector("#presets")
+        presets = select.find_elements_by_css_selector("option")
+        names = [p.text for p in presets]
+        return names
+
+    def select_preset(self, name):
+        element = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.XPATH, "//*[@id='presets']/option[text()='{}']".format(name)))
+        )
+
+        self.driver.find_element_by_xpath("//*[@id='presets']/option[text()='{}']".format(name)).click()
 

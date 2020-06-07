@@ -506,7 +506,7 @@ def parse_parameters(request, name_required=True):
         return "No calculation solvent"
 
     if solvent != "Vacuum":
-        if 'solvation_model' in request.POST.keys():
+        if 'calc_solvation_model' in request.POST.keys():
             solvation_model = clean(request.POST['calc_solvation_model'])
             if solvation_model not in ['SMD', 'PCM', 'CPCM', 'GBSA']:
                 return "Invalid solvation model"

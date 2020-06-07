@@ -23,6 +23,8 @@ from .models import *
 from django.core.management import call_command
 from .calcusliveserver import CalcusLiveServer
 
+from selenium.webdriver.support.select import Select
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
@@ -812,6 +814,125 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.get_number_ensembles(), 1)
         self.assertEqual(self.get_name_ensembles()[0], "My Ensemble")
 
+    def test_save_preset(self):
+        params1 = {
+                'software': 'Gaussian',
+                'type': 'Frequency Calculation',
+                'charge': '+1',
+                'solvent': 'Chloroform',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'solvation_model': 'CPCM',
+                }
+        self.lget("/launch/")
+        self.calc_input_params(params1)
+        self.save_preset("Test Preset")
+
+        presets = self.get_names_presets()
+        self.assertEqual(len(presets), 1)
+        self.assertEqual(presets[0], "Test Preset")
+
+    def test_delete_preset(self):
+        params1 = {
+                'software': 'Gaussian',
+                'type': 'Frequency Calculation',
+                'charge': '+1',
+                'solvent': 'Chloroform',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'solvation_model': 'CPCM',
+                }
+        self.lget("/launch/")
+        self.calc_input_params(params1)
+        self.save_preset("Test Preset")
+        time.sleep(1)
+        self.delete_preset("Test Preset")
+        time.sleep(1)
+        presets = self.get_names_presets()
+        self.assertEqual(len(presets), 0)
+
+    def test_load_preset(self):
+        params1 = {
+                'software': 'Gaussian',
+                'type': 'Frequency Calculation',
+                'charge': '+1',
+                'solvent': 'Chloroform',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'solvation_model': 'CPCM',
+                }
+        self.lget("/launch/")
+        self.calc_input_params(params1)
+        self.save_preset("Test Preset")
+
+        self.lget("/launch/")
+        time.sleep(5)
+        self.load_preset("Test Preset")
+
+        solvent = Select(self.driver.find_element_by_name('calc_solvent'))
+        charge = Select(self.driver.find_element_by_name('calc_charge'))
+        theory = Select(self.driver.find_element_by_id("calc_theory_level"))
+        func = self.driver.find_element_by_id("calc_functional")
+        basis_set = self.driver.find_element_by_id("calc_basis_set")
+        misc = self.driver.find_element_by_id("calc_misc")
+        software = self.driver.find_element_by_id("calc_software")
+
+        self.assertEqual(solvent.first_selected_option.text, params1['solvent'])
+        self.assertEqual(charge.first_selected_option.text, params1['charge'])
+        self.assertEqual(theory.first_selected_option.text, params1['theory'])
+        self.assertEqual(func.get_attribute('value'), params1['functional'])
+        self.assertEqual(basis_set.get_attribute('value'), params1['basis_set'])
+        self.assertEqual(software.get_attribute('value'), params1['software'])
+        self.assertEqual(misc.get_attribute('value'), "")
+
+    def test_project_preset(self):
+        proj = Project.objects.create(name="My Project", author=self.profile)
+        proj.save()
+
+        params1 = {
+                'software': 'Gaussian',
+                'type': 'Frequency Calculation',
+                'charge': '+1',
+                'solvent': 'Chloroform',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'solvation_model': 'CPCM',
+                'project': 'My Project',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params1)
+        self.set_project_preset()
+
+        self.lget("/projects")
+        self.click_project("My Project")
+        self.create_molecule_in_project()
+
+        solvent = Select(self.driver.find_element_by_name('calc_solvent'))
+        charge = Select(self.driver.find_element_by_name('calc_charge'))
+        theory = Select(self.driver.find_element_by_id("calc_theory_level"))
+        func = self.driver.find_element_by_id("calc_functional")
+        basis_set = self.driver.find_element_by_id("calc_basis_set")
+        misc = self.driver.find_element_by_id("calc_misc")
+        software = self.driver.find_element_by_id("calc_software")
+
+        self.assertEqual(solvent.first_selected_option.text, params1['solvent'])
+        self.assertEqual(charge.first_selected_option.text, params1['charge'])
+        self.assertEqual(theory.first_selected_option.text, params1['theory'])
+        self.assertEqual(func.get_attribute('value'), params1['functional'])
+        self.assertEqual(basis_set.get_attribute('value'), params1['basis_set'])
+        self.assertEqual(software.get_attribute('value'), params1['software'])
+        self.assertEqual(misc.get_attribute('value'), "")
+
+
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):
         params = {
@@ -1477,6 +1598,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'theory': 'HF',
                 'basis_set': 'Def2-SVP',
                 'solvation_method': 'CPCM',
+                'solvent': 'Methanol',
                 }
 
         self.lget("/launch/")
@@ -2160,6 +2282,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
                 'solvation_method': 'PCM',
+                'solvent': 'Methanol',
                 }
 
         self.lget("/launch/")
@@ -2183,6 +2306,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
                 'solvation_method': 'CPCM',
+                'solvent': 'Methanol',
                 }
 
         self.lget("/launch/")
