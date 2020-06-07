@@ -267,9 +267,10 @@ def link_order(request, pk):
     if not can_view_order(o, profile):
         return HttpResponseRedirect("/home/")
 
-    if o.last_seen_status != o.status:
-        o.last_seen_status = o.status
-        o.save()
+    if profile == o.author:
+        if o.last_seen_status != o.status:
+            o.last_seen_status = o.status
+            o.save()
 
     if o.result_ensemble:
         return HttpResponseRedirect("/ensemble/{}".format(o.result_ensemble.id))
@@ -1892,7 +1893,7 @@ def get_vib_animation(request):
             return HttpResponse(status=403)
 
         num = request.POST['num']
-        expected_file = os.path.join(CALCUS_RESULTS_HOME, id, "freq_{}.xyz".format(num))
+        expected_file = os.path.join(CALCUS_RESULTS_HOME, str(id), "freq_{}.xyz".format(num))
         if os.path.isfile(expected_file):
             with open(expected_file) as f:
                 lines = f.readlines()
@@ -1995,6 +1996,12 @@ def log(request, pk):
     for out in glob.glob(dir + '/*.out'):
         out_name = out.split('/')[-1]
         with open(out) as f:
+            lines = f.readlines()
+        response += LOG_HTML.format(out_name, ''.join(lines))
+
+    for log in glob.glob(dir + '/*.log'):
+        log_name = log.split('/')[-1]
+        with open(log) as f:
             lines = f.readlines()
         response += LOG_HTML.format(out_name, ''.join(lines))
 
