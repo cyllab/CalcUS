@@ -1,6 +1,9 @@
 solvent = document.getElementById("calc_solvent");
 solvent.value = "{{ params.solvent }}";
 
+solvation_model = document.getElementById("calc_solvation_model");
+solvation_model.value = "{{ params.solvation_model }}";
+
 charge = document.getElementById("calc_charge");
 if("{{ params.charge }}" == "1") {
 	charge.value = "+1";
