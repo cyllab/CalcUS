@@ -277,7 +277,7 @@ def link_order(request, pk):
         if o.ensemble:
             return HttpResponseRedirect("/ensemble/{}".format(o.ensemble.id))
         else:
-            return HttpResponseRedirect("/ensemble/{}".format(o.parent_ensemble.id))
+            return HttpResponseRedirect("/ensemble/{}".format(o.structure.parent_ensemble.id))
 
 @login_required
 def details_ensemble(request):

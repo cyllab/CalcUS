@@ -202,13 +202,13 @@ class OrcaCalculation:
 
     def handle_solvation(self):
         if self.calc.parameters.solvent != "Vacuum":
-            if self.calc.parameters.solvation_method == "SMD":
+            if self.calc.parameters.solvation_model == "SMD":
                 smd_block = '''%cpcm
                 smd true
                 SMDsolvent "{}"
                 end'''.format(self.calc.parameters.solvent)
                 self.blocks.append(smd_block)
-            elif self.calc.parameters.solvation_method == "CPCM":
+            elif self.calc.parameters.solvation_model == "CPCM":
                 self.command_line += "CPCM({}) ".format(self.calc.parameters.solvent)
             else:
                 raise Exception("Invalid solvation method for ORCA")

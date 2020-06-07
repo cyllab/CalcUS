@@ -523,7 +523,7 @@ class InterfaceTests(CalcusLiveServer):
         proj = Project.objects.create(name="Test project", author=self.profile)
         self.lget("/projects/")
         self.click_project("Test project")
-        self.assertEqual(self.get_number_molecules(), 0)
+        self.assertEqual(self.get_number_molecules(), 1)
 
     def test_molecule_appears(self):
         proj = Project.objects.create(name="Test project", author=self.profile)

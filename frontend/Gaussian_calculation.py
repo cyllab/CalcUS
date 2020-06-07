@@ -148,13 +148,13 @@ class GaussianCalculation:
 
     def handle_solvation(self):
         if self.calc.parameters.solvent != "Vacuum":
-            if self.calc.parameters.solvation_method == "SMD":
-                self.command_line += "SCRF(SMD, Solvent={}) ".format(calc.parameters.solvent)
-            elif self.calc.parameters.solvation_method == "PCM":
-                self.command_line += "SCRF(PCM, Solvent={}) ".format(calc.parameters.solvent)
+            if self.calc.parameters.solvation_model == "SMD":
+                self.command_line += "SCRF(SMD, Solvent={}) ".format(self.calc.parameters.solvent)
+            elif self.calc.parameters.solvation_model == "PCM":
+                self.command_line += "SCRF(PCM, Solvent={}) ".format(self.calc.parameters.solvent)
                 self.appendix.append("Radii=Bondi")
-            elif self.calc.parameters.solvation_method == "CPCM":
-                self.command_line += "SCRF(CPCM, Solvent={}) ".format(calc.parameters.solvent)
+            elif self.calc.parameters.solvation_model == "CPCM":
+                self.command_line += "SCRF(CPCM, Solvent={}) ".format(self.calc.parameters.solvent)
                 self.appendix.append("Radii=Bondi")
             else:
                 raise Exception("Invalid solvation method for ORCA")

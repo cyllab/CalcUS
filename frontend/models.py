@@ -446,7 +446,7 @@ class Parameters(models.Model):
     charge = models.IntegerField()
     multiplicity = models.IntegerField()
     solvent = models.CharField(max_length=100, default='vacuum')
-    solvation_model = models.CharField(max_length=100, default='gbsa')
+    solvation_model = models.CharField(max_length=100, default='')
     software = models.CharField(max_length=100, default='xtb')
     basis_set = models.CharField(max_length=100, default='min')
     theory_level = models.CharField(max_length=100, default='')

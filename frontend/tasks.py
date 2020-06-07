@@ -400,6 +400,11 @@ def xtb_opt(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
+    if calc.parameters.solvent != "Vacuum":
+        solvent_add = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
+    else:
+        solvent_add = ''
+
     os.chdir(local_folder)
     a = system("xtb {} --opt -o vtight -a 0.05 --chrg {} {} ".format(in_file, calc.parameters.charge, solvent_add), 'xtb_opt.out', calc_id=calc.id)
     if a != 0:
