@@ -163,6 +163,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if 'project' in params.keys():
             self.driver.find_element_by_xpath("//*[@id='calc_project']/option[text()='{}']".format(params['project'])).click()
 
+        if 'solvation_method' in params.keys():
+            self.driver.find_element_by_xpath("//*[@id='calc_solvation_model']/option[text()='{}']".format(params['solvation_method'])).click()
+
         if 'new_project_name' in params.keys():
             new_project_input.send_keys(params['new_project_name'])
 

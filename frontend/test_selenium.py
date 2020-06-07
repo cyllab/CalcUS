@@ -1466,6 +1466,28 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_sp_HF_CPCM(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'H2.mol2',
+                'software': 'ORCA',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                'solvation_method': 'CPCM',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 1)
+
     def test_sp_DFT(self):
         params = {
                 'calc_name': 'test',
@@ -2115,6 +2137,52 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_sp_DFT_PCM(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'solvation_method': 'PCM',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_sp_DFT_CPCM(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'solvation_method': 'CPCM',
                 }
 
         self.lget("/launch/")
