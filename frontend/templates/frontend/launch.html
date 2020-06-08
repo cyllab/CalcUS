@@ -69,6 +69,17 @@
 
 		{% endif %}
 
+		function solvent_selection_changed() {
+			choice = document.getElementById("calc_solvent");
+			solvation_method = document.getElementById("calc_solvation_model_field");
+			if(choice.value == "Vacuum") {
+				solvation_method.style.display = "none";	
+			}
+			else {
+				solvation_method.style.display = "block";	
+			}
+		}
+
 		function calc_selection_changed() {
 			choice = document.getElementById("calc_type");
 			constraint_div = document.getElementById("constraint_div");
@@ -487,32 +498,32 @@
 							<label class="label">Solvent</label>
 							<div class="control" >
 								<div class="select">
-								  <select name="calc_solvent" id="calc_solvent">
-								    <option selected="selected">Vacuum</option>
-								    <option>Acetone</option>
-								    <option>Acetonitrile</option>
-								    <option>Benzene</option>
-								    <option>Dichloromethane</option>
-								    <option>Chloroform</option>
-								    <option>Carbon disulfide</option>
-								    <option>Dimethylformamide</option>
-								    <option>Dimethylsulfoxide</option>
-								    <option>Diethyl ether</option>
-								    <option>Methanol</option>
-								    <option>n-Hexane</option>
-								    <option>Tetrahydrofuran</option>
-								    <option>Toluene</option>
-								    <option>Water</option>
-								  </select>
+									<select name="calc_solvent" id="calc_solvent" onchange="solvent_selection_changed();">
+								    		<option selected="selected">Vacuum</option>
+								    		<option>Acetone</option>
+								    		<option>Acetonitrile</option>
+								    		<option>Benzene</option>
+								    		<option>Dichloromethane</option>
+								    		<option>Chloroform</option>
+								    		<option>Carbon disulfide</option>
+								    		<option>Dimethylformamide</option>
+								    		<option>Dimethylsulfoxide</option>
+								    		<option>Diethyl ether</option>
+								    		<option>Methanol</option>
+								    		<option>n-Hexane</option>
+								    		<option>Tetrahydrofuran</option>
+								    		<option>Toluene</option>
+								    		<option>Water</option>
+								  	</select>
 								</div>
 							</div>
 						</div>
 					</div>
 					<div class="column is-narrow">
-						<div class="field">
+						<div class="field" id="calc_solvation_model_field">
 							<label class="label">Solvation Model</label>
 							<div class="control" >
-								<div class="select">
+								<div class="select" >
 								  <select name="calc_solvation_model" id="calc_solvation_model">
 								    <option class="software_specific avail_xtb">GBSA</option>
 								    <option class="software_specific avail_Gaussian avail_ORCA">SMD</option>
@@ -848,6 +859,7 @@
 		{% if init_params_id %}
 			load_params({{ init_params_id}});
 		{% endif %}
+		solvent_selection_changed();
 	});
 	{% if ensemble %}
 		$("#calc_project").val("{{ ensemble.parent_molecule.project.name }}");
