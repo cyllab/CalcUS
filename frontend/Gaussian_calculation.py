@@ -78,7 +78,7 @@ class GaussianCalculation:
         elif self.calc.step.name == 'Geometrical Optimisation':
             self.command_line = "opt "
         elif self.calc.step.name == 'TS Optimisation':
-            self.command_line = "opt(ts, NoEigenTest, CalcFC)"
+            self.command_line = "opt(ts, NoEigenTest, CalcFC) "
         elif self.calc.step.name == 'Frequency Calculation':
             self.command_line = "freq "
         elif self.calc.step.name == 'Constrained Optimisation':
@@ -94,7 +94,13 @@ class GaussianCalculation:
             has_scan = False
             scans = []
             freeze = []
-            for cmd in self.calc.constraints.split(';'):
+
+            if self.calc.constraints.strip() == '':
+                raise Exception("No constraint in constrained optimisation mode")
+
+            scmd = self.calc.constraints.split(';')
+
+            for cmd in scmd:
                 if cmd.strip() == '':
                     continue
                 _cmd, ids = cmd.split('-')
@@ -136,11 +142,19 @@ class GaussianCalculation:
         method = get_method(self.calc.parameters.method, "Gaussian")
         basis_set = get_basis_set(self.calc.parameters.basis_set, "Gaussian")
 
+        if method == "":
+            if self.calc.parameters.theory_level == "HF":
+                method = "HF"
+            else:
+                raise Exception("No method")
+
         if basis_set != "":
             self.command_line += "{}/{} ".format(method, basis_set)
         else:
             self.command_line += "{} ".format(method)
-        self.command_line += "{} ".format(self.calc.parameters.misc.strip())
+
+        if self.calc.parameters.misc.strip() != '':
+            self.command_line += "{} ".format(self.calc.parameters.misc.strip())
 
     def handle_xyz(self):
         lines = [i + '\n' for i in clean_xyz(self.calc.structure.xyz_structure).split('\n')[2:] if i != '' ]
@@ -151,15 +165,15 @@ class GaussianCalculation:
             if self.calc.parameters.solvation_model == "SMD":
                 self.command_line += "SCRF(SMD, Solvent={}) ".format(self.calc.parameters.solvent)
             elif self.calc.parameters.solvation_model == "PCM":
-                self.command_line += "SCRF(PCM, Solvent={}) ".format(self.calc.parameters.solvent)
-                self.appendix.append("Radii=Bondi")
+                self.command_line += "SCRF(PCM, Solvent={}, Read) ".format(self.calc.parameters.solvent)
+                self.appendix.append("Radii=Bondi\n")
             elif self.calc.parameters.solvation_model == "CPCM":
-                self.command_line += "SCRF(CPCM, Solvent={}) ".format(self.calc.parameters.solvent)
-                self.appendix.append("Radii=Bondi")
+                self.command_line += "SCRF(CPCM, Solvent={}, Read) ".format(self.calc.parameters.solvent)
+                self.appendix.append("Radii=Bondi\n")
             else:
                 raise Exception("Invalid solvation method for ORCA")
 
     def create_input_file(self):
         raw = self.TEMPLATE.format(PAL, MEM, self.command_line, self.calc.parameters.charge, self.calc.parameters.multiplicity, self.xyz_structure, '\n'.join(self.appendix))
-        self.input_file = '\n'.join([i.strip() for i in raw.split('\n')])
+        self.input_file = '\n'.join([i.strip() for i in raw.split('\n')]).replace('\n\n\n', '\n\n')
 

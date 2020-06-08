@@ -651,7 +651,7 @@ def parse_parameters(request, name_required=True):
             print("More than one project with the same name found!")
         else:
             project_obj = project_set[0]
-
+ 
     params = Parameters.objects.create(charge=charge, solvent=solvent, multiplicity=1, method=functional, basis_set=basis_set, misc=misc, software=software, theory_level=theory, solvation_model=solvation_model)
     params.save()
 
