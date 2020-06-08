@@ -2005,7 +2005,7 @@ def log(request, pk):
         log_name = log.split('/')[-1]
         with open(log) as f:
             lines = f.readlines()
-        response += LOG_HTML.format(out_name, ''.join(lines))
+        response += LOG_HTML.format(log_name, ''.join(lines))
 
     return HttpResponse(response)
 
