@@ -2102,12 +2102,14 @@ def launch_project(request, pk):
         init_params_id = proj.preset.id
 
         return render(request, 'frontend/launch.html', {
+                'proj': proj,
                 'profile': request.user.profile,
                 'procs': BasicStep.objects.all(),
                 'init_params_id': init_params_id,
             })
     else:
         return render(request, 'frontend/launch.html', {
+                'proj': proj,
                 'profile': request.user.profile,
                 'procs': BasicStep.objects.all(),
             })

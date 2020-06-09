@@ -861,6 +861,10 @@
 			load_params({{ init_params_id}});
 		{% endif %}
 		solvent_selection_changed();
+		{% if proj %}
+		proj = document.getElementById("calc_project");
+		proj.value = "{{ proj.name }}";
+		{% endif %}
 	});
 	{% if ensemble %}
 		$("#calc_project").val("{{ ensemble.parent_molecule.project.name }}");
