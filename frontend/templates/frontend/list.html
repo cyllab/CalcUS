@@ -14,11 +14,7 @@
 					<strong>{{ order.step.name }}</strong> <br />
 					Project: {{ order.project.name }} <br />
 					Molecule: {{ order.molecule_name }} <br />
-    					{% if order.ensemble %}
-						{{ order.ensemble.structure_set.count }} Calculation(s): <br />
-					{% else %}
-						1 Calculation: <br />
-					{% endif %}
+					{{ order.calculation_set.count }} Calculation(s): <br />
 					<table class="table">
 						<tr>
 							<td>Queued</td>
