@@ -164,25 +164,33 @@ class OrcaCalculation:
                 scan_block = """%geom Scan
                 {}
                 end
-                end
-                """
-                self.blocks.append(scan_block.format(''.join(scans)))
+                end"""
+                self.blocks.append(scan_block.format(''.join(scans).strip()))
 
             if len(freeze) > 0:
                 freeze_block = """%geom Constraints
                 {}
                 end
-                end
-                """
-                self.blocks.append(freeze_block.format(''.join(freeze)))
+                end"""
+                self.blocks.append(freeze_block.format(''.join(freeze).strip()))
         elif self.calc.step.name == 'Single-Point Energy':
             self.command_line = "SP "
 
         method = get_method(self.calc.parameters.method, "ORCA")
         basis_set = get_basis_set(self.calc.parameters.basis_set, "ORCA")
 
+        if method == "":
+            if self.calc.parameters.theory_level == "HF":
+                method = "HF"
+            elif self.calc.parameters.theory_level == "RI-MP2":
+                method = "RI-MP2"
+            else:
+                raise Exception("No method")
+
         self.command_line += "{} {} ".format(method, basis_set)
-        self.command_line += "{} ".format(self.calc.parameters.misc.strip())
+
+        if self.calc.parameters.misc.strip() != "":
+            self.command_line += "{} ".format(self.calc.parameters.misc.strip())
 
     def handle_xyz(self):
         lines = [i + '\n' for i in clean_xyz(self.calc.structure.xyz_structure).split('\n')[2:] if i != '' ]
@@ -214,7 +222,7 @@ class OrcaCalculation:
                 raise Exception("Invalid solvation method for ORCA")
 
     def create_input_file(self):
-        self.block_lines = ''.join(self.blocks)
+        self.block_lines = '\n'.join(self.blocks)
         raw = self.TEMPLATE.format(self.command_line, self.calc.parameters.charge, self.calc.parameters.multiplicity, self.xyz_structure, self.block_lines)
         self.input_file = '\n'.join([i.strip() for i in raw.split('\n')])
 
