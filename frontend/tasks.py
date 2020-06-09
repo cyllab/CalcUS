@@ -2022,6 +2022,7 @@ def gaussian_scan(in_file, calc):
     folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
+    failed = False
 
     gaussian = GaussianCalculation(calc)
 
@@ -2040,8 +2041,10 @@ def gaussian_scan(in_file, calc):
         a = system("g16 scan.com", software="Gaussian", calc_id=calc.id)
 
     if a != 0:
-        print("Gaussian failed")
-        return a
+        if gaussian.has_scan:
+            failed = True
+        else:
+            return a
 
     if not local:
         a = sftp_get("{}/scan.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "scan.log"), conn, lock)
@@ -2097,8 +2100,6 @@ def gaussian_scan(in_file, calc):
             prop.save()
 
             s_ind += 1
-
-
     else:
         ind = len(lines)-1
 
@@ -2128,7 +2129,10 @@ def gaussian_scan(in_file, calc):
         s.save()
         prop.save()
 
-    return 0
+    if failed:
+        return -1
+    else:
+        return 0
 
 def gaussian_nmr(in_file, calc):
     folder = '/'.join(in_file.split('/')[:-1])
