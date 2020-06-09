@@ -30,6 +30,11 @@
 	}
 	</script>
 	<script>
+		var project_presets = {
+			{% for proj in profile.project_set.all %}
+			'{{ proj.name }}': {% if proj.preset %}{{ proj.preset.id }} {% else %} -1 {% endif %},
+			{% endfor %}
+		}
 		function load_params(id) {
 			$.ajax({
 				method: "POST",	 	 
@@ -171,6 +176,9 @@
 			}
 			else {
 				field.style.display = "none";	
+				if(project_presets[choice.value] != -1) {
+					load_params(project_presets[choice.value]);
+				}
 			}
 		}
 
