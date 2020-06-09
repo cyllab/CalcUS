@@ -355,21 +355,23 @@
 		
 		function save_preset() {
 			preset_name = prompt("Name of the preset?", "")
-			data = $("#calcform").serializeArray();
-			data.push({ name: 'preset_name', value: preset_name});
-			$.ajax({
-				data: data, 
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
+			if(preset_name != null) {
+				data = $("#calcform").serializeArray();
+				data.push({ name: 'preset_name', value: preset_name});
+				$.ajax({
+					data: data, 
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
 
-				type: "POST", 
-				url: "/save_preset/",
-				success: function (response) { 
-					$("#preset_msg").html(response);
-					refresh_presets();
-				}
-			});
+					type: "POST", 
+					url: "/save_preset/",
+					success: function (response) { 
+						$("#preset_msg").html(response);
+						refresh_presets();
+					}
+				});
+			}
 
 		}
 		
