@@ -13,9 +13,13 @@
 		</td>
 		<td>
 			<a href="/ensemble/{{ e.id }}"><i class="fas fa-external-link-alt" title="Go to ensemble"></i></a>
+			{% if e.parent_molecule.project.author == profile %}
+
 			<a onclick="edit_field({{ e.id }});"><i class="fas fa-edit" id="icon_{{ e.id}}" title="Rename"></i></a>
 			<a onclick="del({{ e.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>
+			{% endif %}
 			<td>
+
 
 
 	</tr>
