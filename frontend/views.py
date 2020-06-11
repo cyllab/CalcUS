@@ -89,8 +89,13 @@ class IndexView(generic.ListView):
                     if hit.status == Calculation.CALC_STATUSES[status]:
                         new_hits.append(hit)
                 hits = new_hits
-            #if unseen == "true":
-            #    hits = hits.filter(unseen=True)
+            if unseen == "true":
+                new_hits = []
+                for hit in hits:
+                    if hit.status != hit.last_seen_status:
+                        new_hits.append(hit)
+                hits = new_hits
+
             return sorted(hits, key=lambda d: d.date, reverse=True)
 
         else:
@@ -663,7 +668,7 @@ def save_preset(request):
 
     if isinstance(ret, str):
         return HttpResponse(ret)
-    params, project_obj, name, steep = ret
+    params, project_obj, name, step = ret
 
     if 'preset_name' in request.POST.keys():
         preset_name = clean(request.POST['preset_name'])
@@ -836,7 +841,7 @@ def submit_calculation(request):
 
     TYPE_LENGTH = {'Distance' : 2, 'Angle' : 3, 'Dihedral' : 4}
     constraints = ""
-    if 'constraint_num' in request.POST.keys():
+    if step.name == "Constrained Optimisation" and 'constraint_num' in request.POST.keys():
         for ind in range(1, int(request.POST['constraint_num'])+1):
             try:
                 mode = clean(request.POST['constraint_mode_{}'.format(ind)])
@@ -2191,7 +2196,7 @@ def get_csv(proj, profile):
 
     summary = {}
     csv = "Molecule,Ensemble,Structure\n"
-    for mol in proj.molecule_set.all():
+    for mol in sorted(proj.molecule_set.all(), key=lambda l: l.name):
         csv += "\n\n{}\n".format(mol.name)
         for e in mol.ensemble_set.all():
             csv += "\n,{}\n".format(e.name)
