@@ -52,7 +52,7 @@
 						<th>{{ calc.id }}</th>
 						<th>{{ calc.text_status }}</th>
 						<th>{{ calc.execution_time }}</th>
-						<th><a class="button" onclick="load_logs({{ calc.id }});">Load Logs</a> <a class="button" id="cancel_button_{{ calc.id }}" onclick="cancel({{ calc.id }});">Cancel</a></th>
+						<th><a class="button" onclick="load_logs({{ calc.id }});">Load Logs</a> {% if request.user.profile == order.author %}<a class="button" id="cancel_button_{{ calc.id }}" onclick="cancel({{ calc.id }});">Cancel Calculation</a>{% endif %}</th>
 					</tr>
 					{% endfor %}
 				</tbody>
