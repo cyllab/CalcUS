@@ -752,7 +752,21 @@
 
 					</div>
 				</div>
-
+				<br />
+				<div>
+					<details>
+						<summary>Advanced Options</summary>
+						<div class="method_specific avail_DFT">
+							<div class="field software_specific avail_Gaussian">
+								<label class="label">Density Fitting</label>
+								<div class="control">
+									<input class="input" name="calc_df" id="calc_df" type="text" placeholder="" >
+								</div>
+							</div>
+						</div>
+					</details>
+				</div>
+				<br />
 				<div class="field">
 					<label class="label">Resource</label>
 					<div class="control" >
@@ -866,6 +880,8 @@
 		refresh_presets();
 
 		solvent_selection_changed();
+
+		refresh_availabilities();
 
 		{% if proj %}
 		proj = document.getElementById("calc_project");

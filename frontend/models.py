@@ -422,8 +422,6 @@ class Property(models.Model):
 
     geom = models.BooleanField(default=False)
 
-
-
 class Structure(models.Model):
     parent_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
 
@@ -438,8 +436,6 @@ class Structure(models.Model):
     def __repr__(self):
         return self.id
 
-
-
 class Parameters(models.Model):
     name = models.CharField(max_length=100, default="Nameless parameters")
     charge = models.IntegerField()
@@ -451,6 +447,7 @@ class Parameters(models.Model):
     theory_level = models.CharField(max_length=100, default='')
     method = models.CharField(max_length=100, default='GFN2-xTB')
     misc = models.CharField(max_length=1000, default='')
+    density_fitting = models.CharField(max_length=1000, default='')
 
     def __repr__(self):
         return "{} - {} ({})".format(self.software, self.method, self.solvent)
@@ -464,7 +461,6 @@ class Parameters(models.Model):
         return values == other_values
 
 class Molecule(models.Model):
-
     name = models.CharField(max_length=100)
     inchi = models.CharField(max_length=1000)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)

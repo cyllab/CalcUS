@@ -149,7 +149,10 @@ class GaussianCalculation:
                 raise Exception("No method")
 
         if basis_set != "":
-            self.command_line += "{}/{} ".format(method, basis_set)
+            if self.calc.parameters.density_fitting != '':
+                self.command_line += "{}/{}/{} ".format(method, basis_set, self.calc.parameters.density_fitting)
+            else:
+                self.command_line += "{}/{} ".format(method, basis_set)
         else:
             self.command_line += "{} ".format(method)
 
