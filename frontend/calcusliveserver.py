@@ -576,7 +576,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         for c in calcs:
             buttons = c.find_elements_by_css_selector(".button")
             for b in buttons:
-                if b.text == "Cancel":
+                if b.text == "Cancel Calculation":
                     b.click()
 
                     ind = 0

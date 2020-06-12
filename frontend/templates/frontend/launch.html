@@ -875,6 +875,7 @@
 		proj = document.getElementById("calc_project");
 		proj.value = "{{ proj.name }}";
 		{% endif %}
+
 	});
 	{% if ensemble %}
 		$("#calc_project").val("{{ ensemble.parent_molecule.project.name }}");

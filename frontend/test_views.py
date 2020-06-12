@@ -447,3 +447,52 @@ class PermissionTestsPI(TestCase):
         response = self.client.get("/download_structures/{}/0".format(e.id))
         self.assertEqual(response.status_code, 200)
 
+    def test_delete_project_user(self):
+        self.student.member_of = self.group
+        self.student.save()
+
+        p = Project.objects.create(name="Public Project", author=self.student, private=1)
+        m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
+        e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
+        s = Structure.objects.create(parent_ensemble=e, number=0)
+        p.save()
+        m.save()
+        e.save()
+        s.save()
+
+        response = self.client.post("/delete_project/", {'id': p.id})
+        self.assertEqual(response.status_code, 403)
+
+    def test_delete_molecule_user(self):
+        self.student.member_of = self.group
+        self.student.save()
+
+        p = Project.objects.create(name="Public Project", author=self.student, private=1)
+        m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
+        e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
+        s = Structure.objects.create(parent_ensemble=e, number=0)
+        p.save()
+        m.save()
+        e.save()
+        s.save()
+
+        response = self.client.post("/delete_molecule/", {'id': m.id})
+        self.assertEqual(response.status_code, 403)
+
+    def test_delete_ensemble_user(self):
+        self.student.member_of = self.group
+        self.student.save()
+
+        p = Project.objects.create(name="Public Project", author=self.student, private=1)
+        m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
+        e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
+        s = Structure.objects.create(parent_ensemble=e, number=0)
+        p.save()
+        m.save()
+        e.save()
+        s.save()
+
+        response = self.client.post("/delete_ensemble/", {'id': e.id})
+        self.assertEqual(response.status_code, 403)
+
+
