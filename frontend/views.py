@@ -2142,7 +2142,7 @@ def launch_presets(request):
     return render(request, 'frontend/launch_presets.html', { 'presets': presets })
 
 @login_required
-def load_params(request, pk):
+def load_preset(request, pk):
     try:
         p = Preset.objects.get(pk=pk)
     except Preset.DoesNotExist:
@@ -2155,6 +2155,42 @@ def load_params(request, pk):
 
     return render(request, 'frontend/load_params.js', {
             'params': p.params,
+        })
+
+@login_required
+def load_params_ensemble(request, pk):
+    try:
+        e = Ensemble.objects.get(pk=pk)
+    except Ensemble.DoesNotExist:
+        return HttpResponse(status=404)
+
+    profile = request.user.profile
+
+    if not can_view_ensemble(e, profile):
+        return HttpResponse(status=403)
+
+    params = e.structure_set.all()[0].properties.all()[0].parameters
+
+    return render(request, 'frontend/load_params.js', {
+            'params': params,
+        })
+
+@login_required
+def load_params_structure(request, pk):
+    try:
+        s = Structure.objects.get(pk=pk)
+    except Structure.DoesNotExist:
+        return HttpResponse(status=404)
+
+    profile = request.user.profile
+
+    if not can_view_structure(s, profile):
+        return HttpResponse(status=403)
+
+    params = s.properties.all()[0].parameters
+
+    return render(request, 'frontend/load_params.js', {
+            'params': params,
         })
 
 @login_required

@@ -35,10 +35,10 @@
 			'{{ proj.name }}': {% if proj.preset %}{{ proj.preset.id }} {% else %} -1 {% endif %},
 			{% endfor %}
 		}
-		function load_params(id) {
+		function load_preset(id) {
 			$.ajax({
 				method: "POST",	 	 
-				url: "/load_params/" + id,
+				url: "/load_preset/" + id,
 				headers: {
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
@@ -177,7 +177,7 @@
 			else {
 				field.style.display = "none";	
 				if(project_presets[choice.value] != -1) {
-					load_params(project_presets[choice.value]);
+					load_preset(project_presets[choice.value]);
 				}
 			}
 		}
@@ -375,9 +375,9 @@
 
 		}
 		
-		function load_preset() {
+		function load_selected_preset() {
 			preset = document.getElementById("presets").value;
-			load_params(preset);
+			load_preset(preset);
 		}
 		function delete_preset() {
 			preset = document.getElementById("presets").value;
@@ -405,12 +405,6 @@
 		{% else %}
 		let ensemble = false;
 		{% endif %}
-		$(document).ready(function () {
-			refresh_availabilities();
-			{% if ensemble %}
-			filter_changed();
-			{% endif %}
-		});
 	</script>
 {% endblock %}
 
@@ -469,7 +463,7 @@
 							</select>
 						</div>
 						<br />
-						<a class="button" onclick="load_preset()">Load Preset</a>
+						<a class="button" onclick="load_selected_preset()">Load Preset</a>
 						<a class="button" onclick="save_preset()">Save Preset</a>
 						<a class="button" onclick="delete_preset()">Delete Preset</a>
 						<br />
@@ -865,42 +859,70 @@
 		}); 
 
 	$( document ).ready(function() {
+		{% if not ensemble and not structure %}
 		project_selection_changed();
-		refresh_presets();
-		{% if init_params_id %}
-			load_params({{ init_params_id}});
 		{% endif %}
+
+		refresh_presets();
+
 		solvent_selection_changed();
+
 		{% if proj %}
 		proj = document.getElementById("calc_project");
 		proj.value = "{{ proj.name }}";
 		{% endif %}
 
+		{% if ensemble %}
+			$("#calc_project").val("{{ ensemble.parent_molecule.project.name }}");
+			$.ajax({
+				method: "POST",	 	 
+				url: "/get_structure/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				data: {'id': {{ ensemble.id }}, 'num': 1},
+				success: function(data, textStatus, xhr) {
+					let mol_read = ChemDoodle.readXYZ(data);
+					ChemDoodle.relabel(mol_read);
+					editor.loadMolecule(mol_read);	
+				}
+			});
+			$.ajax({
+				method: "POST",	 	 
+				url: "/load_params_ensemble/" + {{ ensemble.id }},
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				success: function(data) {
+					eval(data);
+					refresh_availabilities();
+					solvent_selection_changed();
+				},
+			});
+
+		{% endif %}
+
+		{% if structure %}
+			$("#calc_project").val("{{ structure.parent_ensemble.parent_molecule.project.name }}");
+			let mol_read = ChemDoodle.readXYZ(`{{ structure.xyz_structure }}`);
+			ChemDoodle.relabel(mol_read);
+			editor.loadMolecule(mol_read);	
+			$.ajax({
+				method: "POST",	 	 
+				url: "/load_params_structure/" + {{ structure.id }},
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				success: function(data) {
+					eval(data);
+					refresh_availabilities();
+					solvent_selection_changed();
+				},
+			});
+
+		{% endif %}
+
 	});
-	{% if ensemble %}
-		$("#calc_project").val("{{ ensemble.parent_molecule.project.name }}");
-		$.ajax({
-			method: "POST",	 	 
-			url: "/get_structure/",
-			headers: {
-				"X-CSRFToken": '{{ csrf_token }}',
-			},
-
-			data: {'id': {{ ensemble.id }}, 'num': 1},
-			success: function(data, textStatus, xhr) {
-				let mol_read = ChemDoodle.readXYZ(data);
-				ChemDoodle.relabel(mol_read);
-				editor.loadMolecule(mol_read);	
-			}
-		});
-
-	{% endif %}
-
-	{% if structure %}
-		$("#calc_project").val("{{ structure.parent_ensemble.parent_molecule.project.name }}");
-		let mol_read = ChemDoodle.readXYZ(`{{ structure.xyz_structure }}`);
-		ChemDoodle.relabel(mol_read);
-		editor.loadMolecule(mol_read);	
-	{% endif %}
 	</script>
 {% endblock content %}
