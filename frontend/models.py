@@ -128,9 +128,9 @@ class Step(models.Model):
 
     from_procedure = models.ForeignKey('Procedure', on_delete=models.CASCADE)
 
-    parameters = models.ForeignKey('Parameters', on_delete=models.CASCADE, blank=True, null=True)
+    parameters = models.ForeignKey('Parameters', on_delete=models.CASCADE, blank=True, null=True)###
 
-    same_dir = models.BooleanField(default=False)
+    same_dir = models.BooleanField(default=False)###
 
     def __repr__(self):
         return self.id
@@ -151,7 +151,6 @@ class Procedure(models.Model):
     has_freq = models.BooleanField(default=False)
     has_uvvis = models.BooleanField(default=False)
     has_mo = models.BooleanField(default=False)
-
 
     avail_xtb = models.BooleanField(default=False)
     avail_Gaussian = models.BooleanField(default=False)

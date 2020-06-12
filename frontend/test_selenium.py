@@ -923,21 +923,10 @@ class XtbCalculationTestsPI(CalcusLiveServer):
     def setUp(self):
         super().setUp()
 
-        self.lget('/profile/')
-
-        self.apply_PI("Test group")
-        self.logout()
-
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget('/manage_pi_requests/')
-
-        self.accept_PI_request()
-        self.logout()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g.save()
+        self.profile.is_PI = True
+        self.profile.save()
 
         self.login(self.username, self.password)
 
@@ -1121,29 +1110,20 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
     def setUp(self):
         super().setUp()
 
-        self.lget('/profile/')
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g.save()
 
-        self.apply_PI("Test group")
-        self.logout()
-
-        u = User.objects.create_superuser(username="SU", password=self.password)
+        u = User.objects.create_user(username="Student", password=self.password)
         u.save()
-        p = Profile.objects.get(user__username="SU")
+
+        p = Profile.objects.get(user__username="Student")
+        p.member_of = g
         p.save()
 
-        self.login("SU", self.password)
-        self.lget('/manage_pi_requests/')
+        self.profile.is_PI = True
+        self.profile.save()
 
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
-        u = User.objects.create_user(username="Student", password=self.password)
-        self.lget("/profile/")
-        self.add_user_to_group("Student")
-        self.logout()
         self.login("Student", self.password)
-
 
     def test_opt(self):
         params = {
@@ -1456,21 +1436,10 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
     def setUp(self):
         super().setUp()
 
-        self.lget('/profile/')
-
-        self.apply_PI("Test group")
-        self.logout()
-
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget('/manage_pi_requests/')
-
-        self.accept_PI_request()
-        self.logout()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g.save()
+        self.profile.is_PI = True
+        self.profile.save()
 
         self.login(self.username, self.password)
 
@@ -2089,6 +2058,30 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_scan_distance_not_converged(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Distance', [1, 2], [0.001, 3.5, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'ORCA',
+                'in_file': 'CH4.mol',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertFalse(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertGreater(self.get_number_conformers(), 5)
+
+
     def test_nmr_DFT(self):
         params = {
                 'calc_name': 'test',
@@ -2117,21 +2110,10 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
     def setUp(self):
         super().setUp()
 
-        self.lget('/profile/')
-
-        self.apply_PI("Test group")
-        self.logout()
-
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget('/manage_pi_requests/')
-
-        self.accept_PI_request()
-        self.logout()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g.save()
+        self.profile.is_PI = True
+        self.profile.save()
 
         self.login(self.username, self.password)
 
@@ -2677,21 +2659,10 @@ class MiscCalculationTests(CalcusLiveServer):
     def setUp(self):
         super().setUp()
 
-        self.lget('/profile/')
-
-        self.apply_PI("Test group")
-        self.logout()
-
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget('/manage_pi_requests/')
-
-        self.accept_PI_request()
-        self.logout()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g.save()
+        self.profile.is_PI = True
+        self.profile.save()
 
         self.login(self.username, self.password)
 
