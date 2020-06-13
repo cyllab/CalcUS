@@ -39,3 +39,6 @@ basis_set.value = "{{ params.basis_set }}";
 misc = document.getElementById("calc_misc");
 misc.value = "{{ params.misc }}";
 
+df = document.getElementById("calc_df");
+df.value = "{{ params.density_fitting }}";
+
