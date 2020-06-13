@@ -239,8 +239,13 @@ def wait_until_done(job_id, conn, lock):
             kill_sig.remove(pid)
             return -2
 
-def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
+def system(command, log_file="", force_local=False, software="xtb", calc_id=-1, stage=-1):
     if REMOTE and not force_local:
+        assert calc_id != -1
+        assert stage != -1
+
+        calc = Calculation.objects.get(pk=calc_id)
+
         pid = int(threading.get_ident())
         #Get the variables based on thread ID
         #These are already set by cluster_daemon when running
@@ -248,50 +253,67 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
 
-        if log_file != "":
-            output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{} | tee {}' >> submit_{}.sh; sbatch submit_{}.sh | tee calcus".format(remote_dir, conn[0].cluster_username, software, command, log_file, software, software), conn, lock)
+        if calc.stage > stage:
+            return 0
+        elif calc.stage == stage:
+            ret = wait_until_done(calc.remote_id, conn, lock)
+            return ret
         else:
-            output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{}' >> submit_{}.sh; sbatch submit_{}.sh | tee calcus".format(remote_dir, conn[0].cluster_username, software, command, software, software), conn, lock)
+            assert calc.stage + 1 == stage
+            calc.stage = stage
+            calc.save()
 
-        if output == 1:#Channel timed out
-            if calc_id != -1:
-                ind = 0
+            if log_file != "":
+                output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{} | tee {}' >> submit_{}.sh; sbatch submit_{}.sh | tee calcus".format(remote_dir, conn[0].cluster_username, software, command, log_file, software, software), conn, lock)
+            else:
+                output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{}' >> submit_{}.sh; sbatch submit_{}.sh | tee calcus".format(remote_dir, conn[0].cluster_username, software, command, software, software), conn, lock)
 
-                while ind < 20:
-                    output = direct_command("cd {}; cat calcus".format(remote_dir), conn, lock)
-                    if isinstance(output, int):
-                        ind += 1
-                        time.sleep(1)
-                    else:
-                        break
-                if not isinstance(output, int):
-                    if len(output) == 1 and output[0].strip() == '':
-                        print("Calcus file empty, waiting for a log file")
-                        job_id = wait_until_logfile(remote_dir, conn, lock)
-                        if job_id == -1:
-                            return 1
+            if output == 1:#Channel timed out
+                if calc_id != -1:
+                    ind = 0
+
+                    while ind < 20:
+                        output = direct_command("cd {}; cat calcus".format(remote_dir), conn, lock)
+                        if isinstance(output, int):
+                            ind += 1
+                            time.sleep(1)
                         else:
+                            break
+                    if not isinstance(output, int):
+                        if len(output) == 1 and output[0].strip() == '':
+                            print("Calcus file empty, waiting for a log file")
+                            job_id = wait_until_logfile(remote_dir, conn, lock)
+                            if job_id == -1:
+                                return 1
+                            else:
+                                calc.remote_id = int(job_id)
+                                calc.save()
+                                ret = wait_until_done(job_id, conn, lock)
+                                return ret
+                        else:
+                            job_id = output[-2].replace('Submitted batch job', '').strip()
+
+                            calc.remote_id = int(job_id)
+                            calc.save()
                             ret = wait_until_done(job_id, conn, lock)
                             return ret
                     else:
-                        job_id = output[-2].replace('Submitted batch job', '').strip()
-                        ret = wait_until_done(job_id, conn, lock)
-                        return ret
+                        return output
                 else:
-                    return output
-            else:
-                print("Channel timed out and no calculation id is set")
+                    print("Channel timed out and no calculation id is set")
+                    return 1
+            elif output == 0:
+                print("Command timed out")
                 return 1
-        elif output == 0:
-            print("Command timed out")
-            return 1
-        else:
-            if output[-2].find("Submitted batch job") != -1:
-                job_id = output[-2].replace('Submitted batch job', '').strip()
-                ret = wait_until_done(job_id, conn, lock)
-                return ret
             else:
-                return 1
+                if output[-2].find("Submitted batch job") != -1:
+                    job_id = output[-2].replace('Submitted batch job', '').strip()
+                    calc.remote_id = int(job_id)
+                    calc.save()
+                    ret = wait_until_done(job_id, conn, lock)
+                    return ret
+                else:
+                    return 1
     else:
         if calc_id != -1:
             calc = Calculation.objects.get(pk=calc_id)
@@ -902,9 +924,9 @@ def crest_generic(in_file, calc, mode):
     os.chdir(local_folder)
 
     if mode == "Final":#Restrict the number of conformers
-        a = system("crest {} --chrg {} {} -rthr 0.5 -ewin 6".format(in_file, calc.parameters.charge, solvent_add), 'crest.out', calc_id=calc.id)
+        a = system("crest {} --chrg {} {} -rthr 0.5 -ewin 6".format(in_file, calc.parameters.charge, solvent_add), 'crest.out', calc_id=calc.id, stage=1)
     elif mode == "NMR":#No restriction, as it will be done by enso
-        a = system("crest {} --chrg {} {} -nmr".format(in_file, calc.parameters.charge, solvent_add), 'crest.out', calc_id=calc.id)
+        a = system("crest {} --chrg {} {} -nmr".format(in_file, calc.parameters.charge, solvent_add), 'crest.out', calc_id=calc.id, stage=1)
     else:
         print("Invalid crest mode selected!")
         return -1
@@ -2471,7 +2493,6 @@ def dispatcher(drawing, order_id):
         print(res)
         c.save()
 
-
 @app.task(base=AbortableTask)
 def run_calc(calc_id):
     print("Processing calc {}".format(calc_id))
@@ -2484,25 +2505,28 @@ def run_calc(calc_id):
     calc.save()
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
 
-    res_dir = os.path.join(CALCUS_RESULTS_HOME, str(calc.id))
-    os.mkdir(res_dir)
-    workdir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    os.mkdir(workdir)
-    in_file = os.path.join(workdir, 'in.xyz')
+    if calc.stage == 0:
+        res_dir = os.path.join(CALCUS_RESULTS_HOME, str(calc.id))
+        os.mkdir(res_dir)
+        workdir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+        os.mkdir(workdir)
+        in_file = os.path.join(workdir, 'in.xyz')
 
-    with open(in_file, 'w') as out:
-        out.write(clean_xyz(calc.structure.xyz_structure))
+        with open(in_file, 'w') as out:
+            out.write(clean_xyz(calc.structure.xyz_structure))
 
     if not calc.local:
         pid = int(threading.get_ident())
         conn = connections[pid]
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
-        direct_command("mkdir -p {}".format(remote_dir), conn, lock)
 
-        sftp_put(in_file, os.path.join(remote_dir, "in.xyz"), conn, lock)
+        if calc.stage == 0:
+            direct_command("mkdir -p {}".format(remote_dir), conn, lock)
+            sftp_put(in_file, os.path.join(remote_dir, "in.xyz"), conn, lock)
 
         in_file = os.path.join(remote_dir, "in.xyz")
+
 
     ti = time()
     try:

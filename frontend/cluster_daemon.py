@@ -61,7 +61,6 @@ class ClusterDaemon:
         for conn in self.connections:
             if self.connections[conn][0].id == int(id):
                 return 0
-
         try:
             conn = ClusterAccess.objects.get(pk=id)
         except ClusterAccess.DoesNotExist:
@@ -169,6 +168,14 @@ class ClusterDaemon:
         else:
             print("Connection normal for {}".format(conn_name))
 
+    def resume_calc(self, c):
+        pid = threading.get_ident()
+        tasks.connections[pid] = self.connections
+        self.calculations[c.id] = pid
+        retval = self.job(c.id, c.order.resource.id)
+        del self.calculations[c.id]
+        del tasks.connections[pid]
+
     def process_command(self, c):
         with open(c) as f:
             lines = f.readlines()
@@ -227,6 +234,11 @@ class ClusterDaemon:
                 pass
             else:
                 print("Error with cluster access: {}".format(CONNECTION_CODE[c]))
+
+        for c in Calculation.objects.filter(local=False).exclude(status=3).exclude(status=2):
+            t = threading.Thread(target=self.resume_calc, args=(c,))
+            t.start()
+
         ind = 1
         print("Startup complete")
         while True:
