@@ -1,11 +1,12 @@
 import os
-import shutil
 import glob
 import random
 import string
 import bleach
 import math
 import time
+import zipfile
+from io import BytesIO
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -29,7 +30,7 @@ from .decorators import superuser_required
 from .tasks import system
 from .constants import *
 
-from shutil import copyfile
+from shutil import copyfile, make_archive
 from django.db.models.functions import Lower
 
 
@@ -1975,6 +1976,37 @@ def get_details_sections(request, pk):
     return render(request, 'frontend/details_sections.html', {
             'calculation': calc
         })
+
+@login_required
+def download_log(request, pk):
+    try:
+        calc = Calculation.objects.get(pk=pk)
+    except Calculation.DoesNotExist:
+        return HttpResponse(status=404)
+
+    profile = request.user.profile
+
+    if not can_view_calculation(calc, profile):
+        return HttpResponse(status=403)
+
+    if calc.status == 2 or calc.status == 3:
+        dir = os.path.join(CALCUS_RESULTS_HOME, str(pk))
+    elif calc.status == 1:
+        dir = os.path.join(CALCUS_SCR_HOME, str(pk))
+    elif calc.status == 0:
+        return HttpResponse(status=204)
+
+    logs = glob.glob(dir + '/*.out')
+    logs += glob.glob(dir + '/*.log')
+
+    mem = BytesIO()
+    with zipfile.ZipFile(mem, 'w', zipfile.ZIP_DEFLATED) as zip:
+        for f in logs:
+            zip.write(f)
+
+    response = HttpResponse(mem.getvalue(), content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename="calc_{}.zip"'.format(calc.id)
+    return response
 
 @login_required
 def log(request, pk):
