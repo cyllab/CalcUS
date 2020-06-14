@@ -24,6 +24,21 @@
 			});
 
 		}
+		function restart(id) {
+			$.ajax({
+				method: "POST",	 	 
+				url: "/restart_calc/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				data: {'id': id},
+				success: function() {
+					$("#restart_button_" + id).addClass("has-background-success");
+				}
+			});
+
+		}
+
 	</script>
 	{% endblock %}
 
@@ -52,7 +67,7 @@
 						<th>{{ calc.id }}</th>
 						<th>{{ calc.text_status }}</th>
 						<th>{{ calc.execution_time }}</th>
-						<th><a class="button" onclick="load_logs({{ calc.id }});">View Logs</a> <a class="button" href="/download_log/{{ calc.id }}">Download Logs</a>{% if request.user.profile == order.author %}<a class="button" id="cancel_button_{{ calc.id }}" onclick="cancel({{ calc.id }});">Cancel Calculation</a>{% endif %}</th>
+						<th><a class="button" onclick="load_logs({{ calc.id }});">View Logs</a> <a class="button" href="/download_log/{{ calc.id }}">Download Logs</a>{% if request.user.profile == order.author %}<a class="button" id="cancel_button_{{ calc.id }}" onclick="cancel({{ calc.id }});">Cancel Calculation</a> <a class="button" id="restart_button_{{ calc.id }}" onclick="restart({{ calc.id }});">Restart Calculation</a>{% endif %}</th>
 					</tr>
 					{% endfor %}
 				</tbody>

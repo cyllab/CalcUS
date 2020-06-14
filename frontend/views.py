@@ -25,12 +25,12 @@ from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset
-from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel
+from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc
 from .decorators import superuser_required
 from .tasks import system
 from .constants import *
 
-from shutil import copyfile, make_archive
+from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
 
 
@@ -2363,6 +2363,61 @@ def cancel_calc(request):
             cancel(calc.id)
         else:
             cancel.delay(calc.id)
+
+    return HttpResponse(status=200)
+
+@login_required
+def restart_calc(request):
+    if request.method != "POST":
+        return HttpResponse(status=403)
+
+    profile = request.user.profile
+
+    if 'id' in request.POST.keys():
+        try:
+            id = int(clean(request.POST['id']))
+        except ValueError:
+            return HttpResponse(status=404)
+
+    try:
+        calc = Calculation.objects.get(pk=id)
+    except Calculation.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if profile != calc.order.author:
+        return HttpResponse(status=403)
+
+    if calc.status != 3:
+        return HttpResponse(status=204)
+
+    scr_dir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    res_dir = os.path.join(CALCUS_RESULTS_HOME, str(calc.id))
+
+    try:
+        rmtree(scr_dir)
+    except FileNotFoundError:
+        pass
+    try:
+        rmtree(res_dir)
+    except FileNotFoundError:
+        pass
+
+    calc.status = 0
+    calc.stage = 0
+    calc.save()
+
+    if calc.local:
+        t = run_calc.s(calc.id).set(queue='comp')
+        res = t.apply_async()
+        calc.task_id = res
+        calc.save()
+    else:
+        cmd = ClusterCommand.objects.create(issuer=calc.order.author)
+        cmd.save()
+        with open(os.path.join(CALCUS_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
+            out.write("launch\n")
+            out.write("{}\n".format(calc.id))
+            out.write("{}\n".format(calc.order.resource.id))
 
     return HttpResponse(status=200)
 

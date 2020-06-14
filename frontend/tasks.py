@@ -101,8 +101,14 @@ def direct_command(command, conn, lock):
     except ssh2.exceptions.Timeout:
         print("Command timed out")
         lock.release()
-
         return 0
+    except ssh2.exceptions.ChannelFailure:
+        print("Channel failure")
+        lock.release()
+        sleep(1)
+        return direct_command(command, conn, lock)
+
+
     try:
         chan.wait_eof()
         chan.close()
@@ -160,7 +166,6 @@ def sftp_get(src, dst, conn, lock):
 def sftp_put(src, dst, conn, lock):
 
     if not os.path.exists(src):
-        lock.release()
         return
 
     direct_command("mkdir -p {}".format('/'.join(dst.split('/')[:-1])), conn, lock)
@@ -182,7 +187,6 @@ def sftp_put(src, dst, conn, lock):
                     break
                 else:
                     remote.write(data)
-
     except ssh2.exceptions.Timeout:
         print("Timeout while uploading, retrying...")
         lock.release()
@@ -192,7 +196,6 @@ def sftp_put(src, dst, conn, lock):
     lock.release()
 
 def wait_until_logfile(remote_dir, conn, lock):
-    print("Waiting for job {} to finish".format(job_id))
     DELAY = [5, 30, 60, 180, 300, 300, 300, 300]
     ind = 0
     while ind < len(DELAY):
@@ -214,7 +217,7 @@ def wait_until_logfile(remote_dir, conn, lock):
 
 def wait_until_done(job_id, conn, lock):
     print("Waiting for job {} to finish".format(job_id))
-    DELAY = [5, 10, 15, 20, 30]
+    DELAY = [5, 10, 15, 20, 60, 200, 400]
     ind = 0
 
     pid = int(threading.get_ident())
@@ -226,7 +229,9 @@ def wait_until_done(job_id, conn, lock):
         output = direct_command("squeue -j {}".format(job_id), conn, lock)
         if not isinstance(output, int):
             if len(output) == 1 and output[0].strip() == '':
-                print("Received nothing, ignoring")
+                #Not sure
+                print("Job done")
+                return 0
             else:
                 _output = [i for i in output if i.strip() != '' ]
                 print("Waiting ({})".format(job_id))
@@ -260,6 +265,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1, 
             return ret
         else:
             assert calc.stage + 1 == stage
+            print("Stage changing from {} to {}".format(calc.stage, stage))
             calc.stage = stage
             calc.save()
 
@@ -2490,7 +2496,6 @@ def dispatcher(drawing, order_id):
     for task, c in zip(group_order, calculations):
         res = task.apply_async()
         c.task_id = res
-        print(res)
         c.save()
 
 @app.task(base=AbortableTask)
@@ -2505,10 +2510,10 @@ def run_calc(calc_id):
     calc.save()
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
 
+    res_dir = os.path.join(CALCUS_RESULTS_HOME, str(calc.id))
+    workdir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     if calc.stage == 0:
-        res_dir = os.path.join(CALCUS_RESULTS_HOME, str(calc.id))
         os.mkdir(res_dir)
-        workdir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
         os.mkdir(workdir)
         in_file = os.path.join(workdir, 'in.xyz')
 
@@ -2647,6 +2652,9 @@ def kill_calc(calc):
     else:
         cmd = ClusterCommand.objects.create(issuer=calc.order.author)
         cmd.save()
+        calc.status = 3
+        calc.save()
+
         with open(os.path.join(CALCUS_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
             out.write("kill\n")
             out.write("{}\n".format(calc.id))
