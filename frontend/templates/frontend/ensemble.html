@@ -52,44 +52,40 @@
 
 		$.ajaxSetup({ cache: false }); 
 		$(document).ready(function(){
+			$.ajax({
+				method: "POST",	 	 
+				url: "/get_structure/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				data: {'id': {{ ensemble.id }}},
+				success: function(data, textStatus, xhr) {
+					if (xhr.status != 204) {
+						let mol = ChemDoodle.readXYZ(data);
 
-			var my_refresh = setInterval(function() {
-				$.ajax({
-					method: "POST",	 	 
-					url: "/get_structure/",
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					data: {'id': {{ ensemble.id }}},
-					success: function(data, textStatus, xhr) {
-						if (xhr.status != 204) {
-							let mol = ChemDoodle.readXYZ(data);
+						ChemDoodle.relabel(mol);	
+						editor.loadMolecule(mol);
 
-							ChemDoodle.relabel(mol);	
-							clearInterval(my_refresh);
-							editor.loadMolecule(mol);
+						$("#next_step_div").load("/next_step/{{ calculation.id }}");
+						$.ajax({
+							method: "GET",	 	 
+							url: "/conformer_table/{{ ensemble.id }}",
+							headers: {
+								"X-CSRFToken": '{{ csrf_token }}',
+							},
+							success: function(data, textStatus, xhr) {
+								if (xhr.status != 204) {
+									$("#conf_table").html(data);
+									conf_length = document.getElementById("conf_table").rows.length;
 
-							$("#next_step_div").load("/next_step/{{ calculation.id }}");
-							$.ajax({
-								method: "GET",	 	 
-								url: "/conformer_table/{{ ensemble.id }}",
-								headers: {
-									"X-CSRFToken": '{{ csrf_token }}',
-								},
-								success: function(data, textStatus, xhr) {
-									if (xhr.status != 204) {
-										$("#conf_table").html(data);
-										conf_length = document.getElementById("conf_table").rows.length;
-
-										refresh_details({{ ensemble.unique_parameters.0.id }});
-									}
+									refresh_details({{ ensemble.unique_parameters.0.id }});
 								}
-							});
+							}
+						});
 
-						}
 					}
-				});
-			 }, 1000);
+				}
+			});
 		});
 
 		function select_conf(conf_num) {
@@ -227,6 +223,75 @@
 			url = "/download_structures/{{ ensemble.id }}/" + get_conf_number();
 			window.location.href = url;
 		}
+		function selectText(node) {
+		    	node = document.getElementById(node);
+
+		    	if (document.body.createTextRange) {
+				const range = document.body.createTextRange();
+				range.moveToElementText(node);
+				range.select();
+		    	} else if (window.getSelection) {
+				const selection = window.getSelection();
+				const range = document.createRange();
+				range.selectNodeContents(node);
+				selection.removeAllRanges();
+				selection.addRange(range);
+			} else {
+				console.warn("Could not select text in node: Unsupported browser.");
+			}
+		}
+
+		function edit_title() {
+			el = document.getElementById("ensemble_name");
+			if (el.getAttribute("contentEditable") == "true") {
+				el.setAttribute("contentEditable", "false");
+				$("#icon_rename").removeClass("fa-check");
+				$("#icon_rename").addClass("fa-edit");
+				name = el.textContent;
+				$.ajax({
+					method: "POST",	 	 
+					url: "/rename_ensemble/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					data: {'id': {{ ensemble.id }}, 'new_name': name},
+				});
+
+			}
+			else {
+				el.setAttribute("contentEditable", "true");
+				$("#icon_rename").removeClass("fa-edit");
+				$("#icon_rename").addClass("fa-check");
+				selectText("ensemble_name");
+				$('[contenteditable=true]').on('keypress', function(e) {
+					if (e.keyCode == 13) {
+						e.preventDefault();
+						edit_title();
+					}
+				});
+
+			}
+						
+		}
+
+		function del_ensemble() {
+			var res = confirm("Delete the ensemble?");	
+			if (res) {
+				$.ajax({
+					method: "POST",	 	 
+					url: "/delete_ensemble/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					data: {'id': {{ ensemble.id }}},
+					success: function() {
+						window.location = "/molecule/" + {{ ensemble.parent_molecule.id }}
+					}
+
+				});
+
+			}
+		}
 
 	</script>
 	<style>
@@ -255,9 +320,11 @@
 
 	<div id="status_box">
 		<div class="box is-rounded" id="ensemble_title" style="background-color: {{ ensemble.get_node_color }};">
-			<center>
-				<h3 class="title is-3">{{ ensemble.name }}</h3>
-			</center>
+				<p class="title is-3" style="display: inline;" id="ensemble_name">{{ ensemble.name }}</p>
+				<p style="float: right;">
+				<a onclick="edit_title();"><i class="fas fa-edit" id="icon_rename" title="Rename"></i></a>
+				<a onclick="del_ensemble();"><i class="fas fa-trash-alt" title="Delete"></i></a>
+				</p>
 		</div>
 	</div>
 
