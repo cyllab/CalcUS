@@ -2369,7 +2369,16 @@ def filter(order, input_structures):
                 structures.append(s)
     elif order.filter.type == "By Relative Energy":
         for s in input_structures:
-            if s.parent_ensemble.relative_energy(s, order.filter.parameters) < order.filter.value:
+            val = s.parent_ensemble.relative_energy(s, order.filter.parameters)
+            if order.author.pref_units == 0:
+                E = val*HARTREE_FVAL
+            elif order.author.pref_units == 1:
+                E = val*HARTREE_TO_KCAL_F
+            elif order.author.pref_units == 2:
+                E = val
+            print(E)
+            print(order.filter.value)
+            if E < order.filter.value:
                 structures.append(s)
 
     return structures
