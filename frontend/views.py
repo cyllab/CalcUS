@@ -615,6 +615,12 @@ def parse_parameters(request, name_required=True):
         if software == "xtb":
             functional = "GFN2-xTB"
             basis_set = "min"
+            if step.name == "Conformational Search":
+                if 'calc_conf_option' in request.POST.keys():
+                    conf_option = clean(request.POST['calc_conf_option'])
+                    if conf_option not in ['GFN2-xTB', 'GFN-FF', 'GFN2-xTB//GFN-FF']:
+                        return "Error in the option for the conformational search"
+                    functional = conf_option
         else:
             functional = ""
             basis_set = ""

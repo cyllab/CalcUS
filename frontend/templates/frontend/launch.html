@@ -98,6 +98,7 @@
 				editor.styles.atoms_displayLabels_3D = false;
 			}
 			set_visibility_name();
+			refresh_availabilities();
 		}
 		
 		function set_visibility_name() {
@@ -230,6 +231,20 @@
 					document.getElementById("calc_functional_field").style.display = "block";
 				}
 			}
+
+			choice = document.getElementById("calc_type");
+
+			full_options = document.querySelectorAll(".type_specific");
+
+			full_options.forEach(element => {
+  				element.style.display = 'none';
+			});
+
+			options = document.querySelectorAll('.avail_' + choice.value.replace(' ', '_'));
+			options.forEach(element => {
+  				element.style.display = 'block';
+			});
+
 			[].forEach.call(document.getElementById("parameters_column").querySelectorAll('select'), function(sel) {
 
 				ind = sel.selectedIndex;
@@ -754,8 +769,9 @@
 				</div>
 				<br />
 				<div>
-					<details>
+					<details class="box">
 						<summary>Advanced Options</summary>
+						<br />
 						<div class="method_specific avail_DFT">
 							<div class="field software_specific avail_Gaussian">
 								<label class="label">Density Fitting</label>
@@ -764,6 +780,21 @@
 								</div>
 							</div>
 						</div>
+						<div class="software_specific avail_xtb">
+							<div class="field type_specific avail_Conformational_Search">
+								<label class="label">Method</label>
+								<div class="control">
+									<div class="select">
+										<select name="calc_conf_option" id="calc_conf_option">
+											<option selected="selected">GFN2-xTB</option>
+											<option>GFN-FF</option>
+											<option>GFN2-xTB//GFN-FF</option>
+										</select>
+									</div>
+								</div>
+							</div>
+						</div>
+
 					</details>
 				</div>
 				<br />

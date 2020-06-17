@@ -97,7 +97,6 @@ def direct_command(command, conn, lock):
             lock.release()
             sleep(1)
             return direct_command(command, conn, lock)
-        chan.execute("source ~/.bashrc; " + command)
     except ssh2.exceptions.Timeout:
         print("Command timed out")
         lock.release()
@@ -107,7 +106,13 @@ def direct_command(command, conn, lock):
         lock.release()
         sleep(1)
         return direct_command(command, conn, lock)
+    except ssh2.exceptions.SocketSendError:
+        print("Socket send error, trying again")
+        lock.release()
+        sleep(1)
+        return direct_command(command, conn, lock)
 
+    chan.execute("source ~/.bashrc; " + command)
 
     try:
         chan.wait_eof()
@@ -929,10 +934,17 @@ def crest_generic(in_file, calc, mode):
 
     os.chdir(local_folder)
 
+    if calc.parameters.method == "GFN-FF":
+        cmd_add = "-gff"
+    elif calc.parameters.method == "GFN2-xTB//GFN-FF":
+        cmd_add = "-gfn2//gfnff"
+    else:
+        cmd_add = ""
+
     if mode == "Final":#Restrict the number of conformers
-        a = system("crest {} --chrg {} {} -rthr 0.5 -ewin 6".format(in_file, calc.parameters.charge, solvent_add), 'crest.out', calc_id=calc.id, stage=1)
+        a = system("crest {} --chrg {} {} -rthr 0.5 -ewin 6 {}".format(in_file, calc.parameters.charge, solvent_add, cmd_add), 'crest.out', calc_id=calc.id, stage=1)
     elif mode == "NMR":#No restriction, as it will be done by enso
-        a = system("crest {} --chrg {} {} -nmr".format(in_file, calc.parameters.charge, solvent_add), 'crest.out', calc_id=calc.id, stage=1)
+        a = system("crest {} --chrg {} {} -nmr {}".format(in_file, calc.parameters.charge, solvent_add, cmd_add), 'crest.out', calc_id=calc.id, stage=1)
     else:
         print("Invalid crest mode selected!")
         return -1

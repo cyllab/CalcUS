@@ -253,7 +253,18 @@ class ClusterDaemon:
             if ind % 12 == 0:
                 for conn_name in self.connections.keys():
                     conn, sock, session, sftp = self.connections[conn_name]
-                    session.keepalive_send()
+                    success = False
+                    for i in range(5):
+                        try:
+                            session.keepalive_send()
+                        except ssh2.exceptions.SocketSendError:
+                            print("Could not send keepalive signal, trying again")
+                            time.sleep(1)
+                        else:
+                            success = True
+                            break
+                    if not success:
+                        print("Could not keep connection {} alive".format(conn_name))
 
             if ind % 60 == 0:
                 ind = 1
