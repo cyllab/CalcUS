@@ -163,7 +163,7 @@ def sftp_get(src, dst, conn, lock):
     except ssh2.exceptions.Timeout:
         print("Timeout")
         lock.release()
-        return sftp_get(src, dst, conn)
+        return sftp_get(src, dst, conn, lock)
     lock.release()
     return 0
 
