@@ -287,7 +287,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1, 
                         output = direct_command("cd {}; cat calcus".format(remote_dir), conn, lock)
                         if isinstance(output, int):
                             ind += 1
-                            time.sleep(1)
+                            sleep(1)
                         else:
                             break
                     if not isinstance(output, int):
