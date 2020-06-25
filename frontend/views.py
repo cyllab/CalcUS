@@ -2428,6 +2428,45 @@ def restart_calc(request):
     return HttpResponse(status=200)
 
 @login_required
+def refetch_calc(request):
+    if request.method != "POST":
+        return HttpResponse(status=403)
+
+    profile = request.user.profile
+
+    if 'id' in request.POST.keys():
+        try:
+            id = int(clean(request.POST['id']))
+        except ValueError:
+            return HttpResponse(status=404)
+
+    try:
+        calc = Calculation.objects.get(pk=id)
+    except Calculation.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if profile != calc.order.author:
+        return HttpResponse(status=403)
+
+    if calc.status != 3:
+        return HttpResponse(status=204)
+
+    if calc.local:
+        return HttpResponse(status=204)
+
+    calc.status = 1
+    calc.save()
+
+    cmd = ClusterCommand.objects.create(issuer=calc.order.author)
+    cmd.save()
+    with open(os.path.join(CALCUS_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
+        out.write("launch\n")
+        out.write("{}\n".format(calc.id))
+        out.write("{}\n".format(calc.order.resource.id))
+
+    return HttpResponse(status=200)
+
+@login_required
 def ensemble_map(request, pk):
     try:
         mol = Molecule.objects.get(pk=pk)
