@@ -1871,14 +1871,14 @@ def get_structure(request):
 
         structs = e.structure_set.all()
 
+        if len(structs) == 0:
+            return HttpResponse(status=204)
+
         if 'num' in request.POST.keys():
             num = int(clean(request.POST['num']))
             try:
                 struct = structs.get(number=num)
             except Structure.DoesNotExist:
-                if len(structs) == 0:
-                    return HttpResponse(status=204)
-
                 inds = [i.number for i in structs]
                 m = inds.index(min(inds))
                 return HttpResponse(structs[m].xyz_structure)

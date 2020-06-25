@@ -2058,30 +2058,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
-    def test_scan_distance_not_converged(self):
-        params = {
-                'calc_name': 'test',
-                'type': 'Constrained Optimisation',
-                'constraints': [['Scan', 'Distance', [1, 2], [0.001, 3.5, 10]]],
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'software': 'ORCA',
-                'in_file': 'CH4.mol',
-                'theory': 'DFT',
-                'functional': 'M062X',
-                'basis_set': 'Def2SVP',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(30)
-        self.assertFalse(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertGreater(self.get_number_conformers(), 5)
-
-
     def test_nmr_DFT(self):
         params = {
                 'calc_name': 'test',

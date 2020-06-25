@@ -487,11 +487,9 @@ class CalculationOrder(models.Model):
     filter = models.ForeignKey('Filter', on_delete=models.CASCADE, blank=True, null=True)
 
     date = models.DateTimeField('date', null=True, blank=True)
-    date_finished = models.DateTimeField('date', null=True, blank=True)
     last_seen_status = models.PositiveIntegerField(default=0)
 
     resource = models.ForeignKey('ClusterAccess', on_delete=models.CASCADE, blank=True, null=True)
-
 
     def see(self):
         self.last_seen_status = self.status
@@ -598,14 +596,12 @@ class Calculation(models.Model):
     structure = models.ForeignKey(Structure, on_delete=models.CASCADE)
     step = models.ForeignKey(BasicStep, on_delete=models.CASCADE)
     order = models.ForeignKey(CalculationOrder, on_delete=models.CASCADE)
-    software = models.CharField(max_length=100, default="")
 
     parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE)
     result_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
 
     constraints = models.CharField(max_length=400, default="", blank=True, null=True)
 
-    has_scan = models.BooleanField(default=False)
     local = models.BooleanField(default=True)
 
     pal = models.PositiveIntegerField(default=8)

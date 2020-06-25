@@ -241,17 +241,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         submit.click()
 
     def get_number_calc_orders(self):
-        assert self.is_on_page_calculations()
-        calculations_container = self.driver.find_element_by_id("calculations_list")
-        try:
-            calculations_div = calculations_container.find_element_by_css_selector(".grid")
-        except selenium.common.exceptions.NoSuchElementException:
-            assert calculations_container.text.find('No calculation') != -1
-            return 0
-
-        calculations = calculations_div.find_elements_by_css_selector("article")
-        num = len(calculations)
-        return num
+        return len(self.get_calc_orders())
 
     def get_number_calc_methods(self):
         assert self.is_on_page_ensemble()
@@ -548,8 +538,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         raise EnsembleNotFound
 
     def get_calc_orders(self):
-        calculations_container = self.driver.find_element_by_id("calculations_list")
-        calculations_div = calculations_container.find_element_by_css_selector(".grid")
+        calculations_div = WebDriverWait(self.driver, 3).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#calculations_list > .grid"))
+        )
+
         calculations = calculations_div.find_elements_by_css_selector("article")
         return calculations
 
@@ -566,7 +558,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         calculations = self.get_calc_orders()
 
-        link = calculations[0].find_element_by_class_name("fa-sitemap")
+        link = calculations[0].find_element_by_class_name("fa-list")
         link.click()
 
     def cancel_all_calc(self):
@@ -576,7 +568,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         for c in calcs:
             buttons = c.find_elements_by_css_selector(".button")
             for b in buttons:
-                if b.text == "Cancel Calculation":
+                if b.text == "Kill":
                     b.click()
 
                     ind = 0
@@ -844,13 +836,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_ensemble()
 
         try:
-            element = WebDriverWait(self.driver, 5).until(
+            table = WebDriverWait(self.driver, 5).until(
                 EC.presence_of_element_located((By.ID, "vib_table"))
             )
         except selenium.common.exceptions.TimeoutException:
             return False
 
-        table = self.driver.find_element_by_id("vib_table")
         rows = table.find_elements_by_css_selector("tr")
 
         if len(rows) > 0:
