@@ -8,14 +8,14 @@ ATOMIC_NUMBER = {}
 ATOMIC_SYMBOL = {}
 LOWERCASE_ATOMIC_SYMBOLS = {}
 
-PAL = os.environ['OMP_NUM_THREADS'][0]
-STACKSIZE = os.environ['OMP_STACKSIZE']
-if STACKSIZE.find("G") != -1:
-    STACKSIZE = int(STACKSIZE.replace('G', ''))*1024
-elif STACKSIZE.find("MB") != -1:
-    STACKSIZE = int(STACKSIZE.replace('MB', ''))
+L_PAL = os.environ['OMP_NUM_THREADS'][0]
+L_STACKSIZE = os.environ['OMP_STACKSIZE']
+if L_STACKSIZE.find("G") != -1:
+    L_STACKSIZE = int(L_STACKSIZE.replace('G', ''))*1024
+elif L_STACKSIZE.find("MB") != -1:
+    L_STACKSIZE = int(L_STACKSIZE.replace('MB', ''))
 
-MEM = int(PAL)*STACKSIZE
+L_MEM = int(L_PAL)*L_STACKSIZE
 
 for el in periodictable.elements:
     ATOMIC_NUMBER[el.symbol] = el.number
@@ -177,6 +177,14 @@ class GaussianCalculation:
                 raise Exception("Invalid solvation method for ORCA")
 
     def create_input_file(self):
+        if self.calc.local:
+            PAL = L_PAL
+            MEM = L_MEM
+        else:
+            r = self.calc.order.resource
+            PAL = r.pal
+            MEM = r.memory
+
         raw = self.TEMPLATE.format(PAL, MEM, self.command_line, self.calc.parameters.charge, self.calc.parameters.multiplicity, self.xyz_structure, '\n'.join(self.appendix))
         self.input_file = '\n'.join([i.strip() for i in raw.split('\n')]).replace('\n\n\n', '\n\n')
 

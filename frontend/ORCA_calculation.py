@@ -7,14 +7,14 @@ ATOMIC_NUMBER = {}
 ATOMIC_SYMBOL = {}
 LOWERCASE_ATOMIC_SYMBOLS = {}
 
-PAL = os.environ['OMP_NUM_THREADS'][0]
-STACKSIZE = os.environ['OMP_STACKSIZE']
-if STACKSIZE.find("G") != -1:
-    STACKSIZE = int(STACKSIZE.replace('G', ''))*1024
-elif STACKSIZE.find("MB") != -1:
-    STACKSIZE = int(STACKSIZE.replace('MB', ''))
+L_PAL = os.environ['OMP_NUM_THREADS'][0]
+L_STACKSIZE = os.environ['OMP_STACKSIZE']
+if L_STACKSIZE.find("G") != -1:
+    L_STACKSIZE = int(L_STACKSIZE.replace('G', ''))*1024
+elif L_STACKSIZE.find("MB") != -1:
+    L_STACKSIZE = int(L_STACKSIZE.replace('MB', ''))
 
-MEM = int(PAL)*STACKSIZE
+L_MEM = int(L_PAL)*L_STACKSIZE
 
 for el in periodictable.elements:
     ATOMIC_NUMBER[el.symbol] = el.number
@@ -200,7 +200,10 @@ class OrcaCalculation:
         if self.calc.parameters.theory_level == "Semi-empirical":
             self.pal = 1
         else:
-            self.pal = PAL
+            if self.calc.local:
+                self.pal = L_PAL
+            else:
+                self.pal = self.calc.order.resource.pal
 
         pal_block = """%pal
         nprocs {}
