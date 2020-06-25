@@ -2111,7 +2111,7 @@ def gaussian_scan(in_file, calc):
 
             ind2 = ind
 
-            while lines[ind].find("Input orientation:") == -1:
+            while lines[ind].find("Input orientation:") == -1 and lines[ind].find("Standard orientation:") == -1:
                 ind += 1
             ind += 5
 
