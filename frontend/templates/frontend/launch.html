@@ -124,20 +124,29 @@
 			inp2 = document.getElementById("calc_constraint_{}_2".format(id));
 			inp3 = document.getElementById("calc_constraint_{}_3".format(id));
 			inp4 = document.getElementById("calc_constraint_{}_4".format(id));
+			from = document.getElementById("calc_label_from_{}".format(id));
+			to = document.getElementById("calc_label_to_{}".format(id));
+
 			if (choice.value == "Distance") {
 				inp2.style.display = "block";	
 				inp3.style.display = "none";	
 				inp4.style.display = "none";	
+				from.innerHTML = "From (Å)";
+				to.innerHTML = "To (Å)";
 			}
 			else if (choice.value == "Angle") {
 				inp2.style.display = "block";	
 				inp3.style.display = "block";	
 				inp4.style.display = "none";	
+				from.innerHTML = "From (°)";
+				to.innerHTML = "To (°)";
 			}
 			else {
 				inp2.style.display = "block";	
 				inp3.style.display = "block";	
 				inp4.style.display = "block";	
+				from.innerHTML = "From (°)";
+				to.innerHTML = "To (°)";
 			}
 		}
 
@@ -305,11 +314,11 @@
 				<div style="display: none;" id="calc_scan_div_{}"> \
 				<div class="columns"> \
 				<div class="column"> \
-					From (Å)\
+					<p id="calc_label_from_{}"> From (Å)</p> \
 				<input class="input software_specific avail_xtb avail_ORCA" type="text" width="5" name="calc_scan_{}_1" id="calc_scan_{}_1"> \
 				</div> \
 				<div class="column"> \
-					To (Å) \
+					<p id="calc_label_to_{}"> To (Å)</p> \
 				<input class="input" type="text" width="5" name="calc_scan_{}_2" id="calc_scan_{}_2"> \
 				</div> \
 				<div class="column"> \
@@ -668,11 +677,11 @@
 								<div style="display: none;" id="calc_scan_div_1">
 								<div class="columns" >
 									<div class="column">
-										From (Å)
+										<p id="calc_label_from_1"> From (Å)</p>
 										<input class="input software_specific avail_xtb avail_ORCA" type="text" width="5" name="calc_scan_1_1" id="calc_scan_1_1">
 									</div>
 									<div class="column">
-										To (Å)
+										<p id="calc_label_to_1"> To (Å)</p>
 										<input class="input" type="text" width="5" name="calc_scan_1_2" id="calc_scan_1_2">
 									</div>
 									<div class="column">
