@@ -372,23 +372,12 @@ def details(request, pk):
     return render(request, 'frontend/details.html', {'profile': request.user.profile,
         'calculation': calc})
 
-class ExamplesView(generic.ListView):
-    model = Example
-    template_name = 'examples/index.html'
-    context_object_name = 'examples'
-    paginate_by = '5'
+def learn(request):
+    exercises = Exercise.objects.all()
+    examples = Example.objects.all()
 
-    def get_queryset(self):
-        return Example.objects.all()
+    return render(request, 'frontend/learn.html', {'exercises': exercises, 'examples': examples})
 
-class ExerciseView(generic.ListView):
-    model = Exercise
-    template_name = 'exercises/index.html'
-    context_object_name = 'exercises'
-    paginate_by = '10'
-
-    def get_queryset(self):
-        return Exercise.objects.all()
 
 def is_close(ans, question):
     if ans >= question.answer - question.tolerance and ans <= question.answer + question.tolerance:

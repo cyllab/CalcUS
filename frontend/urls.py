@@ -14,8 +14,6 @@ urlpatterns = [
     path('list/', views.IndexView.as_view(), name='list'),
     path('documentation/', TemplateView.as_view(template_name="frontend/documentation.html"), name='documentation'),
     path('calculations/', views.calculations, name='calculations'),
-    path('learn/', views.ExerciseView.as_view(), name='learn'),
-    path('learn/<int:pk>', views.exercise, name='exercise'),
 
     path('answer/', views.answer, name='answer'),
     path('cancel_calc/', views.cancel_calc, name='cancel_calc'),
@@ -52,8 +50,11 @@ urlpatterns = [
     path('save_preset/', views.save_preset, name='save_preset'),
 
     #Documentation
-    path('examples/', views.ExamplesView.as_view(), name='examples'),
-    path('examples/<int:pk>', views.example, name='example'),
+    #path('examples/', views.ExamplesView.as_view(), name='examples'),
+
+    path('learn/', views.learn, name='learn'),
+    path('learn/exercise/<int:pk>', views.exercise, name='exercise'),
+    path('learn/examples/<int:pk>', views.example, name='example'),
 
     path('calculationorder/<int:pk>', views.calculationorder, name='calculationorder'),
     path('link_order/<int:pk>', views.link_order, name='link_order'),

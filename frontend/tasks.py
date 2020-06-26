@@ -1956,6 +1956,8 @@ def gaussian_freq(in_file, calc):
             while outlines[ind].find("Atom  AN") == -1:
                 ind += 1
 
+            ind += 1
+
             while ind < len(outlines) and len(outlines[ind].split()) > 3:
                 sline = outlines[ind].split()
                 n = sline[0].strip()
