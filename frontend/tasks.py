@@ -619,7 +619,7 @@ def xtb_ts(in_file, calc):
             ind -= 1
         hl_gap = float(olines[ind].split()[3])
 
-    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=clean_xyz(''.join(lines)), number=1)
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=clean_xyz(''.join(lines)), number=calc.structure.number, degeneracy=calc.structure.degeneracy)
     prop = get_or_create(calc.parameters, s)
     prop.homo_lumo_gap = hl_gap
     prop.energy = E
@@ -1262,7 +1262,7 @@ def orca_ts(in_file, calc):
             ind -= 1
         E = float(lines[ind].split()[4])
 
-    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=1, degeneracy=1)
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=calc.structure.degeneracy)
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
     prop.geom = True
@@ -2051,7 +2051,7 @@ def gaussian_ts(in_file, calc):
 
         xyz_structure = clean_xyz(xyz_structure)
 
-    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=1, degeneracy=1)
+    s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=calc.structure.degeneracy)
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
     prop.geom = True
