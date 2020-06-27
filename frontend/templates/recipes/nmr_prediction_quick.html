@@ -1,0 +1,78 @@
+{% extends 'frontend/base.html' %}
+
+{% load static %}
+
+{% block extrahead %}
+	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+	<script type="text/x-mathjax-config">
+  	MathJax.Hub.Config({
+    		tex2jax: {
+      		inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      		processEscapes: true
+    		}
+  	});
+	</script>
+	<style>
+		p {
+			white-space: pre-line;
+		}
+		p > a {
+
+			color: blue;
+		}
+		.main {
+			width: 50%;
+			margin-left: 25%;
+		}
+		h4 {
+			margin-top: 20px;
+		}
+	</style>
+	<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>	
+	<title>NMR Prediction (Quick)</title>
+{% endblock %}
+
+{% block content %}
+
+<div class="main">
+	<h3 class="title is-3">NMR Prediction (Quick)</h3>
+	<h4 class="title is-4">Details</h4>
+	<p>
+	Relatively good and fast NMR predictions can be obtained by using <code>GFN2-xTB</code> for geometries (with xtb) and <code>PBEh-3c</code> for NMR predictions (with ORCA). For NMR predictions, the method used for the geometry does not have to match with the method used for the NMR prediction (unlike frequency calculations). In fact, it is common to optimize the geometries in a vacuum using a modest basis set (ex. <code>6-31+G(d,p)</code>) and predict the NMR shifts with solvation using a large basis set (ex. <code>6-311++G(d,p)</code>).
+
+	The calculated NMR shifts do not correspond directly to the experimental shifts, but are linearly correlated to them. To obtain predicted shifts (in other words, shifts that should be close to the experimental shifts), the calculated values must be corrected using reference compounds. This could be done with a single compound (ex. TMS), but the fit will be better if several compounds are used. In addition to this, the slope between calculated shifts and experimental shifts may not be exactly $1.00$; having a range of reference compounds allows to correct this deviation.
+
+	To benchmark this method, a set of 77 small organic molecules was used (<a href="http://cheshirenmr.info/MoleculeSets.htm">Prepared by Lodewyk, Siebert, and Tantillo</a>.) Three of the compounds in the original set were ignored due to the importance of relativistic effects (which are not taken in consideration by the method.) These effect arise with heavy atoms, such as multiple chlorine atoms bound to the same carbon. This effect should be negligible for most molecules, although it is worth keeping in mind.
+
+	As the experimental NMR chemical shifts were measured in chloroform, this solvent was used in both computational models. The shifts of equivalent atoms were averaged. Since the reference molecules are small and rigid, no conformational search was necessary. The final method is <code>PBEh-3c (SMD, CHCl3) // GFN2-xTB (GBSA, CHCl3)</code>
+	</p>
+	<center>
+		<figure style="display: flex;">
+			<figure>
+			<img src="{% static 'recipes/H_noCl.png' %}" />
+			<figcaption>Hydrogen</figcaption>
+			</figure>
+			<figure>
+			<img src="{% static 'recipes/C_noCl.png' %}" />
+			<figcaption>Carbon</figcaption>
+			</figure>
+		</figure>
+	</center>
+
+	<p>	
+	CalcUS will automatically apply the regression (if this exact method is used) and calculate the Boltzmann averaged chemical shifts. These results will be shown in the "Ensemble Properties" tab on the ensemble page. The chemical shifts of individual structures can be inspected below, in the "NMR" section.
+	</p>
+
+	<h4 class="title is-4">Recipe</h4>
+	<p>
+	<ol>
+		<li>Optimize your structure with GFN2-xTB (default setting for xtb) and solvation in chloroform. If the molecule is flexible, perform a conformational search with the same settings</li>
+		<li>Perform an NMR prediction on the resulting ensemble using PBEh-3c with ORCA and SMD solvation in chloroform. Specify the additional keyword <code>Def2/JK</code>. You can filter the ensemble to perform the NMR prediction only on the most stable conformers (above 0.01 or 0.02 of Boltzmann weight is a good rule of thumb)</li>
+		<li>If your compound has equivalent atoms, average their chemical shifts. </li>
+	</ol>
+	</p>
+</div>
+{% endblock %}
+

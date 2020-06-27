@@ -1,0 +1,105 @@
+{% extends 'frontend/base.html' %}
+
+{% load static %}
+
+{% load exercises_tags %}
+
+{% block extrahead %}
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script src="{% static 'frontend/jquery.toc.min.js' %}"></script>
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.1/styles/default.min.css">
+	<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.1/highlight.min.js"></script>
+	<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+  document.querySelectorAll('sh code').forEach((block) => {
+    hljs.highlightBlock(block);
+  });
+});
+	</script>
+	<style>
+		p {
+			white-space: pre-line;
+		}
+
+		.title {
+			margin-top: 50px;
+			margin-bottom: 20px;
+		}
+		sh {
+			white-space: pre-line;
+			border: 1px solid #ddd;
+			color: #666;
+			font-size: 15px;
+			line-height: 1.6;
+			margin-top: 1.6em;
+			margin-bottom: 1.6em;
+			max-width: 100%;
+			padding: 1em 1.5em;
+			display: block;
+		}
+		codetitle {
+			font-weight: bold;
+			text-align: center;
+		}
+		h1 {
+			text-align: center;
+		}
+		#toc {
+			list-style-type: none;
+		}
+		li > a, p > a {
+			color: green;
+		}
+		.content {
+			width: 50%; 
+			margin-left: 25%;
+		}
+
+		.learn-item {
+			text-align: center;
+			padding: 5px;
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+<div class="content" >
+	<h1 class="title is-1">Learn</h1>
+
+	<ul data-toc=".content" data-toc-headings="h2,h3,h4,h5" id="toc"></ul>
+
+	<h3 class="title is-3">Theory</h3>
+	<h3 class="title is-3">Practice</h3>
+	<h4 class="title is-4">Exercises</h4>
+
+	<div>
+		{% for ex in exercises %}
+		{% completed ex request.user.profile as comp %}
+		<a class="box learn-item {% if comp %}has-background-success{% endif %}" href="/learn/exercise/{{ ex.id }}" >
+			{{ ex.title }} {% if comp %}(Completed){% endif %}
+		</a>
+		{% endfor %}
+	</div>
+
+	<h3 class="title is-3">Reference</h3>
+	<h4 class="title is-4">Examples</h4>
+	<div>
+		{% for ex in examples %}
+		<a class="box learn-item" href="/learn/example/{{ ex.id }}">
+			{{ ex.title }} 
+		</a>
+		{% endfor %}
+	</div>
+
+	<h4 class="title is-4">Recipes</h4>
+	<div>
+		{% for r in recipes %}
+		<a class="box learn-item" href="/learn/recipe/{{ r.id }}">
+			{{ r.title }} 
+		</a>
+		{% endfor %}
+	</div>
+
+</div>
+{% endblock %}
+
