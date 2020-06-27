@@ -292,6 +292,11 @@ class Command(BaseCommand):
             q2 = Question.objects.create(exercise=a, question="What is the free energy barrier of the rearrangement (kJ/mol)?", answer=92.98, tolerance=3.)
 
 
+        title = "NMR Prediction (Quick)"
+        if self.is_absent_title(Recipe, title):
+            self.print("Adding Recipe: {}".format(title))
+            a = Recipe.objects.create(title=title, page_path="nmr_prediction_quick.html")
+
     def verify(self):
         for proc in Procedure.objects.all():
             assert proc.initial_steps != None

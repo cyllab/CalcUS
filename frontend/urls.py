@@ -50,11 +50,10 @@ urlpatterns = [
     path('save_preset/', views.save_preset, name='save_preset'),
 
     #Documentation
-    #path('examples/', views.ExamplesView.as_view(), name='examples'),
-
     path('learn/', views.learn, name='learn'),
     path('learn/exercise/<int:pk>', views.exercise, name='exercise'),
     path('learn/examples/<int:pk>', views.example, name='example'),
+    path('learn/recipe/<int:pk>', views.recipe, name='recipe'),
 
     path('calculationorder/<int:pk>', views.calculationorder, name='calculationorder'),
     path('link_order/<int:pk>', views.link_order, name='link_order'),

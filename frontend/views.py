@@ -24,7 +24,7 @@ from django.contrib.auth.models import User
 from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
-from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset
+from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe
 from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc
 from .decorators import superuser_required
 from .tasks import system
@@ -375,8 +375,9 @@ def details(request, pk):
 def learn(request):
     exercises = Exercise.objects.all()
     examples = Example.objects.all()
+    recipes = Recipe.objects.all()
 
-    return render(request, 'frontend/learn.html', {'exercises': exercises, 'examples': examples})
+    return render(request, 'frontend/learn.html', {'exercises': exercises, 'examples': examples, 'recipes': recipes})
 
 
 def is_close(ans, question):
@@ -439,6 +440,14 @@ def example(request, pk):
         pass
 
     return render(request, 'examples/' + ex.page_path, {})
+
+def recipe(request, pk):
+    try:
+        r = Recipe.objects.get(pk=pk)
+    except Recipe.DoesNotExist:
+        pass
+
+    return render(request, 'recipes/' + r.page_path, {})
 
 class RegisterView(generic.CreateView):
     form_class = UserCreateForm

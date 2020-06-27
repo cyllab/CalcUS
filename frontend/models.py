@@ -55,6 +55,10 @@ class Example(models.Model):
     title = models.CharField(max_length=100)
     page_path = models.CharField(max_length=100)
 
+class Recipe(models.Model):
+    title = models.CharField(max_length=100)
+    page_path = models.CharField(max_length=100)
+
 class Exercise(models.Model):
     title = models.CharField(max_length=100)
     page_path = models.CharField(max_length=100)
