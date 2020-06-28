@@ -25,7 +25,7 @@ from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe
-from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc
+from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc, cont_calc
 from .decorators import superuser_required
 from .tasks import system
 from .constants import *
@@ -190,7 +190,6 @@ def create_project(request):
     else:
         return HttpResponse(status=404)
 
-
 @login_required
 def project_details(request, username, proj):
     target_project = clean(proj)
@@ -215,7 +214,6 @@ def project_details(request, username, proj):
             return HttpResponseRedirect("/home/")
     else:
         return HttpResponseRedirect("/home/")
-
 
 def clean(txt):
     return bleach.clean(txt)
@@ -246,7 +244,6 @@ def ensemble_table_body(request, pk):
 
     return render(request, 'frontend/ensemble_table_body.html', {'profile': request.user.profile,
         'molecule': mol})
-
 
 @login_required
 def ensemble(request, pk):
@@ -352,12 +349,10 @@ def details_structure(request):
         except Property.DoesNotExist:
             return HttpResponse(status=404)
 
-
         return render(request, 'frontend/details_structure.html', {'profile': request.user.profile,
             'structure': s, 'property': prop, 'ensemble': e})
 
     return HttpResponse(status=403)
-
 
 @login_required
 def details(request, pk):
@@ -378,7 +373,6 @@ def learn(request):
     recipes = Recipe.objects.all()
 
     return render(request, 'frontend/learn.html', {'exercises': exercises, 'examples': examples, 'recipes': recipes})
-
 
 def is_close(ans, question):
     if ans >= question.answer - question.tolerance and ans <= question.answer + question.tolerance:
@@ -457,7 +451,6 @@ class RegisterView(generic.CreateView):
 
 def please_register(request):
         return render(request, 'frontend/please_register.html', {})
-
 
 def error(request, msg):
     return render(request, 'frontend/error.html', {
@@ -640,10 +633,8 @@ def parse_parameters(request, name_required=True):
     if solvent not in SOLVENT_TABLE.keys() and solvent != "Vacuum":
         return "Invalid solvent"
 
-
     if step.name not in BASICSTEP_TABLE[software].keys():
         return "Invalid calculation type"
-
 
     if project == "New Project":
         new_project_name = clean(request.POST['new_project_name'])
@@ -783,10 +774,8 @@ def submit_calculation(request):
                 else:
                     return error(request, "No filter parameters")
 
-
             else:
                 return error(request, "Invalid filter type")
-
 
     elif 'starting_struct' in request.POST.keys():
         drawing = False
@@ -839,7 +828,6 @@ def submit_calculation(request):
                 p.save()
                 params.save()
 
-
                 mol = clean(request.POST['structureB'])
                 s.mol_structure = mol
             else:
@@ -879,7 +867,6 @@ def submit_calculation(request):
 
     obj.constraints = constraints
 
-
     if ressource != "Local":
         obj.resource = access
 
@@ -890,7 +877,6 @@ def submit_calculation(request):
         dispatcher.delay(drawing, obj.id)
 
     return redirect("/calculations/")
-
 
 def can_view_project(proj, profile):
     if proj.author == profile:
@@ -962,7 +948,6 @@ def project_list(request):
 
         if not profile_intersection(profile, target_profile):
             return HttpResponse(status=403)
-
 
         return render(request, 'frontend/project_list.html', {
                 'profile': request.user.profile,
@@ -1271,7 +1256,6 @@ def profile_groups(request):
         'profile': request.user.profile,
         })
 
-
 @login_required
 @superuser_required
 def accept_pi_request(request, pk):
@@ -1525,7 +1509,6 @@ def nmr(request):
     response = HttpResponse(content, content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename={}.csv'.format(id)
     return response
-
 
 @login_required
 def ir_spectrum(request, pk):
@@ -1823,7 +1806,6 @@ def toggle_private(request):
     else:
         return HttpResponse(status=403)
 
-
 @login_required
 def rename_ensemble(request):
     if request.method == 'POST':
@@ -1847,7 +1829,6 @@ def rename_ensemble(request):
         return HttpResponse(status=200)
     else:
         return HttpResponse(status=403)
-
 
 @login_required
 def get_structure(request):
@@ -1887,7 +1868,6 @@ def get_structure(request):
             inds = [i.number for i in structs]
             m = inds.index(min(inds))
             return HttpResponse(structs[m].xyz_structure)
-
 
 @login_required
 def get_vib_animation(request):
@@ -2068,7 +2048,6 @@ def manage_access(request, pk):
             'access': access,
         })
 
-
 @login_required
 def owned_accesses(request):
     return render(request, 'frontend/owned_accesses.html', {
@@ -2129,6 +2108,32 @@ def launch_pk(request, pk):
             'ensemble': e,
             'procs': BasicStep.objects.all(),
             'init_params_id': init_params.id,
+        })
+
+@login_required
+def launch_structure_pk(request, ee, pk):
+
+    try:
+        e = Ensemble.objects.get(pk=ee)
+    except Ensemble.DoesNotExist:
+        return redirect('/home/')
+
+    profile = request.user.profile
+
+    if not can_view_ensemble(e, profile):
+        return HttpResponse(status=403)
+
+    try:
+        s = e.structure_set.get(number=pk)
+    except Structure.DoesNotExist:
+        return redirect('/home/')
+
+    init_params = s.properties.all()[0].parameters
+    return render(request, 'frontend/launch.html', {
+            'profile': request.user.profile,
+            'structure': s,
+            'procs': BasicStep.objects.all(),
+            'init_params': init_params,
         })
 
 @login_required
@@ -2233,32 +2238,6 @@ def load_params_structure(request, pk):
             'params': params,
         })
 
-@login_required
-def launch_structure_pk(request, ee, pk):
-
-    try:
-        e = Ensemble.objects.get(pk=ee)
-    except Ensemble.DoesNotExist:
-        return redirect('/home/')
-
-    profile = request.user.profile
-
-    if not can_view_ensemble(e, profile):
-        return HttpResponse(status=403)
-
-    try:
-        s = e.structure_set.get(number=pk)
-    except Structure.DoesNotExist:
-        return redirect('/home/')
-
-    init_params = s.properties.all()[0].parameters
-    return render(request, 'frontend/launch.html', {
-            'profile': request.user.profile,
-            'structure': s,
-            'procs': BasicStep.objects.all(),
-            'init_params': init_params,
-        })
-
 def get_csv(proj, profile):
     pref_units = profile.pref_units
     units = profile.pref_units_name
@@ -2306,7 +2285,6 @@ def get_csv(proj, profile):
                 else:
                     summary[p_name] = {}
                     summary[p_name][mol.id] = {e.id: [w_e, w_f_e]}
-
 
     csv += "\n\n\nSummary\n"
     csv += "Method,Molecule,Ensemble,Average Energy ({}),Average Free Energy ({})\n".format(units, units)
@@ -2424,6 +2402,41 @@ def restart_calc(request):
             out.write("{}\n".format(calc.order.resource.id))
 
     return HttpResponse(status=200)
+
+@login_required
+def continue_calc(request):
+    if request.method != "POST":
+        return HttpResponse(status=403)
+
+    profile = request.user.profile
+
+    if 'id' in request.POST.keys():
+        try:
+            id = int(clean(request.POST['id']))
+        except ValueError:
+            return HttpResponse(status=404)
+
+    try:
+        calc = Calculation.objects.get(pk=id)
+    except Calculation.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if profile != calc.order.author:
+        return HttpResponse(status=403)
+
+    if calc.status != 3:
+        return HttpResponse(status=404)
+
+    if calc.step.name not in ["Geometrical Optimisation", "TS Optimisation"] or calc.parameters.software != "Gaussian":
+        return HttpResponse(status=404)
+
+    log = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "calc.out")
+    if os.path.isfile(log):
+        cont_calc.delay(id)
+        return HttpResponse(status=204)
+    else:
+        return HttpResponse(status=404)
+
 
 @login_required
 def refetch_calc(request):

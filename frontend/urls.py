@@ -19,6 +19,7 @@ urlpatterns = [
     path('cancel_calc/', views.cancel_calc, name='cancel_calc'),
     path('restart_calc/', views.restart_calc, name='restart_calc'),
     path('refetch_calc/', views.refetch_calc, name='refetch_calc'),
+    path('continue_calc/', views.continue_calc, name='continue_calc'),
     path('toggle_private/', views.toggle_private, name='toggle_private'),
 
     path('projects/', views.projects, name='projects'),
