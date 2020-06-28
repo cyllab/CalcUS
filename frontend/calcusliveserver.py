@@ -538,9 +538,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         raise EnsembleNotFound
 
     def get_calc_orders(self):
-        calculations_div = WebDriverWait(self.driver, 3).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "#calculations_list > .grid"))
-        )
+        try:
+            calculations_div = WebDriverWait(self.driver, 3).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "#calculations_list > .grid"))
+            )
+        except selenium.common.exceptions.TimeoutException:
+            return []
 
         calculations = calculations_div.find_elements_by_css_selector("article")
         return calculations
