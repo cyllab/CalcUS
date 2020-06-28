@@ -52,7 +52,7 @@ urlpatterns = [
     #Documentation
     path('learn/', views.learn, name='learn'),
     path('learn/exercise/<int:pk>', views.exercise, name='exercise'),
-    path('learn/examples/<int:pk>', views.example, name='example'),
+    path('learn/example/<int:pk>', views.example, name='example'),
     path('learn/recipe/<int:pk>', views.recipe, name='recipe'),
 
     path('calculationorder/<int:pk>', views.calculationorder, name='calculationorder'),
