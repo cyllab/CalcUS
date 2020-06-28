@@ -68,8 +68,8 @@
 	<h4 class="title is-4">Recipe</h4>
 	<p>
 	<ol>
-		<li>Optimize your structure with GFN2-xTB (default setting for xtb) and solvation in chloroform. If the molecule is flexible, perform a conformational search with the same settings</li>
-		<li>Perform an NMR prediction on the resulting ensemble using PBEh-3c with ORCA and SMD solvation in chloroform. Specify the additional keyword <code>Def2/JK</code>. You can filter the ensemble to perform the NMR prediction only on the most stable conformers (above 0.01 or 0.02 of Boltzmann weight is a good rule of thumb)</li>
+		<li>Optimize your structure with <code>GFN2-xTB</code> (default setting for xtb) and solvation in chloroform (GBSA). If the molecule is flexible, perform a conformational search with the same settings.</li>
+		<li>Perform an NMR prediction on the resulting ensemble using <code>PBEh-3c</code> with ORCA and SMD solvation in chloroform. Specify the additional keyword <code>Def2/JK</code>. You can filter the ensemble to perform the NMR prediction only on the most stable conformers (above 0.01 or 0.02 of Boltzmann weight is a good rule of thumb.)</li>
 		<li>If your compound has equivalent atoms, average their chemical shifts. </li>
 	</ol>
 	</p>
