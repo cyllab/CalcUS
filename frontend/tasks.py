@@ -1041,7 +1041,6 @@ def crest(in_file, calc):
 def crest_pre_nmr(in_file, calc):
     return crest_generic(in_file, calc, "NMR")
 
-
 def orca_mo_gen(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
@@ -1817,7 +1816,7 @@ def gaussian_opt(in_file, calc):
         ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id, stage=1)
 
     if not local:
-        b = sftp_get("{}/calc.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), conn, lock)
+        a = sftp_get("{}/calc.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), conn, lock)
         if a != 0:
             return a
 
