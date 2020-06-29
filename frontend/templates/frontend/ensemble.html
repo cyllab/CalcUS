@@ -322,6 +322,7 @@
 		<div class="box is-rounded" id="ensemble_title" style="background-color: {{ ensemble.get_node_color }};">
 				<p class="title is-3" style="display: inline;" id="ensemble_name">{{ ensemble.name }}</p>
 				<p style="float: right;">
+				{% if ensemble.origin %}<a href="/ensemble/{{ ensemble.origin.id }}"><i class="fas fa-level-up-alt" title="Go to parent ensemble"></i></a>{% endif %}
 				<a onclick="edit_title();"><i class="fas fa-edit" id="icon_rename" title="Rename"></i></a>
 				<a onclick="del_ensemble();"><i class="fas fa-trash-alt" title="Delete"></i></a>
 				</p>
