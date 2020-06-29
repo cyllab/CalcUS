@@ -598,7 +598,7 @@ def xtb_ts(in_file, calc):
     if ret != 0:
         return ret
 
-    if not os.path.isfile("{}/ts.xyz".format(local_folder)):
+    if not os.path.isfile("{}/calc.xyz".format(local_folder)):
         return 1
 
     if not os.path.isfile("{}/calc.out".format(local_folder)):
@@ -607,7 +607,7 @@ def xtb_ts(in_file, calc):
     if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
         return 1
 
-    with open(os.path.join(folder, "ts.xyz")) as f:
+    with open(os.path.join(folder, "calc.xyz")) as f:
         lines = f.readlines()
 
     with open(os.path.join(folder, "calc.out")) as f:
