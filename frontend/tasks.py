@@ -2088,8 +2088,6 @@ def filter(order, input_structures):
                 E = val*HARTREE_TO_KCAL_F
             elif order.author.pref_units == 2:
                 E = val
-            print(E)
-            print(order.filter.value)
             if E < order.filter.value:
                 structures.append(s)
 
@@ -2317,7 +2315,7 @@ def run_calc(calc_id):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
 
-        if calc.stage == 0:
+        if calc.status == 0:
             direct_command("mkdir -p {}".format(remote_dir), conn, lock)
             sftp_put(in_file, os.path.join(remote_dir, "in.xyz"), conn, lock)
 

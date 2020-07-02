@@ -613,7 +613,6 @@ class Calculation(models.Model):
 
     task_id = models.CharField(max_length=100, default="")
 
-    stage = models.PositiveIntegerField(default=0)
     remote_id = models.PositiveIntegerField(default=0)
 
     def __str__(self):

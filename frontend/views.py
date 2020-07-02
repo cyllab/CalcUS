@@ -2385,7 +2385,6 @@ def restart_calc(request):
         pass
 
     calc.status = 0
-    calc.stage = 0
     calc.save()
 
     if calc.local:
