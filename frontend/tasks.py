@@ -582,7 +582,7 @@ def xtb_ts(in_file, calc):
 
     if not local:
         a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        b = sftp_get("{}/ts.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "ts.xyz"), conn, lock)
+        b = sftp_get("{}/calc.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.xyz"), conn, lock)
 
         if a == -1 or b == -1:
             return -1
