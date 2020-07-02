@@ -145,7 +145,7 @@ def sftp_get(src, dst, conn, lock):
 
     if src.strip() == "":
         lock.release()
-        return
+        return -1
 
     try:
         with sftp.open(_src, LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IRUSR) as f:
@@ -1035,11 +1035,8 @@ def crest(in_file, calc):
 def crest_pre_nmr(in_file, calc):
     return crest_generic(in_file, calc, "NMR")
 
-def orca_mo_gen(in_file, calc):
+def launch_orca_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
-
-    fname = in_file.split('/')[-1]
     folder = '/'.join(in_file.split('/')[:-1])
 
     orca = OrcaCalculation(calc)
@@ -1047,7 +1044,7 @@ def orca_mo_gen(in_file, calc):
     with open(os.path.join(local_folder, 'calc.inp'), 'w') as out:
         out.write(orca.input_file)
 
-    if not local:
+    if not calc.local:
         pid = int(threading.get_ident())
         conn = connections[pid]
         lock = locks[pid]
@@ -1058,20 +1055,28 @@ def orca_mo_gen(in_file, calc):
         os.chdir(local_folder)
         ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
 
-    if not local:
-        a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        b = sftp_get("{}/in-HOMO.cube".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "in-HOMO.cube"), conn, lock)
-        c = sftp_get("{}/in-LUMO.cube".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "in-LUMO.cube"), conn, lock)
-        d = sftp_get("{}/in-LUMOA.cube".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "in-LUMOA.cube"), conn, lock)
-        e = sftp_get("{}/in-LUMOB.cube".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "in-LUMOB.cube"), conn, lock)
-        if a == -1 or b == -1 or c == -1 or d == -1 or e == -1:
+    if not calc.local:
+        for f in files:
+            a = sftp_get("{}/{}".format(folder, f), os.path.join(CALCUS_SCR_HOME, str(calc.id), f), conn, lock)
+            if a == -1:
+                return -1
+
+    for f in files:
+        if not os.path.isfile("{}/{}".format(local_folder, f)):
             return -1
 
     if ret != 0:
         return ret
 
-    if not os.path.isfile("{}/calc.out".format(local_folder)):
-        return 1
+    return 0
+
+def orca_mo_gen(in_file, calc):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+
+    ret = launch_orca_calc(in_file, calc, ['calc.out', 'in-HOMO.cube', 'in-LUMO.cube', 'in-LUMOA.cube', 'in-LUMOB.cube'])
+
+    if ret != 0:
+        return ret
 
     with open("{}/calc.out".format(local_folder)) as f:
         lines = f.readlines()
@@ -1094,11 +1099,6 @@ def orca_mo_gen(in_file, calc):
     return 0
 
 def orca_opt(in_file, calc):
-    folder = '/'.join(in_file.split('/')[:-1])
-
-    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
-
     lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:] if i != '' ]
 
     if len(lines) == 1:#Single atom
@@ -1109,36 +1109,12 @@ def orca_opt(in_file, calc):
         calc.save()
         return orca_sp(in_file, calc)
 
-    orca = OrcaCalculation(calc)
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    with open(os.path.join(local_folder, 'calc.inp'), 'w') as out:
-        out.write(orca.input_file)
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-        sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
-        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
-    else:
-        os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
-
-    if not local:
-        a = sftp_get("{}/calc.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.xyz"), conn, lock)
-        b = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        if a == -1 or b == -1:
-            return -1
+    ret = launch_orca_calc(in_file, calc, ['calc.out', 'calc.xyz'])
 
     if ret != 0:
         return ret
-
-    if not os.path.isfile("{}/calc.xyz".format(local_folder)):
-        return 1
-
-    if not os.path.isfile("{}/calc.out".format(local_folder)):
-        return 1
 
     with open("{}/calc.xyz".format(local_folder)) as f:
         lines = f.readlines()
@@ -1163,37 +1139,12 @@ def orca_opt(in_file, calc):
     return 0
 
 def orca_sp(in_file, calc):
-    folder = '/'.join(in_file.split('/')[:-1])
-
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
 
-    orca = OrcaCalculation(calc)
-
-    with open(os.path.join(local_folder, 'calc.inp'), 'w') as out:
-        out.write(orca.input_file)
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-        sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
-        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
-    else:
-        os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
-
-    if not local:
-        b = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        if a != 0:
-            return a
+    ret = launch_orca_calc(in_file, calc, ['calc.out'])
 
     if ret != 0:
         return ret
-
-    if not os.path.isfile("{}/calc.out".format(local_folder)):
-        return 1
 
     with open("{}/calc.out".format(local_folder)) as f:
         lines = f.readlines()
@@ -1211,39 +1162,11 @@ def orca_sp(in_file, calc):
 
 def orca_ts(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
-    folder = '/'.join(in_file.split('/')[:-1])
 
-    orca = OrcaCalculation(calc)
-
-    with open(os.path.join(local_folder, 'calc.inp'), 'w') as out:
-        out.write(orca.input_file)
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-        sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
-        ret = system("$EBROOTORCA/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
-    else:
-        os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
-
-    if not local:
-        a = sftp_get("{}/calc.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.xyz"), conn, lock)
-        b = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        if a == -1 or b == -1:
-            return -1
+    ret = launch_orca_calc(in_file, calc, ['calc.out', 'calc.xyz'])
 
     if ret != 0:
         return ret
-
-    if not os.path.isfile("{}/calc.xyz".format(local_folder)):
-        return 1
-
-    if not os.path.isfile("{}/calc.out".format(local_folder)):
-        return 1
 
     with open("{}/calc.xyz".format(local_folder)) as f:
         lines = f.readlines()
@@ -1266,37 +1189,12 @@ def orca_ts(in_file, calc):
     return 0
 
 def orca_freq(in_file, calc):
-    folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
 
-    orca = OrcaCalculation(calc)
-
-    with open(os.path.join(local_folder, 'calc.inp'), 'w') as out:
-        out.write(orca.input_file)
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-        sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
-
-        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
-    else:
-        os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
-
-    if not local:
-        a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        if a == -1:
-            return -1
+    ret = launch_orca_calc(in_file, calc, ['calc.out'])
 
     if ret != 0:
         return ret
-
-    if not os.path.isfile("{}/calc.out".format(local_folder)):
-        return 1
 
     with open("{}/calc.out".format(local_folder)) as f:
         lines = f.readlines()
@@ -1413,51 +1311,18 @@ def orca_freq(in_file, calc):
     return 0
 
 def orca_scan(in_file, calc):
-    folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
 
-    orca = OrcaCalculation(calc)
-
-    with open(os.path.join(local_folder, 'calc.inp'), 'w') as out:
-        out.write(orca.input_file)
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-        sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
-        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
+    preparse = OrcaCalculation(calc)
+    if preparse.has_scan:
+        ret = launch_orca_calc(in_file, calc, ['calc.out', 'calc.relaxscanact.dat', 'calc.allxyz'])
     else:
-        os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
-
-    if not local:
-        a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        if a == -1:
-            return -1
-
-        if orca.has_scan:
-            a = sftp_get("{}/scan.relaxscanact.dat".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "scan.relaxscanact.dat"), conn, lock)
-            b = sftp_get("{}/scan.allxyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "scan.allxyz"), conn, lock)
-            if a == -1 or b == -1:
-                return -1
-        else:
-            a = sftp_get("{}/scan.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "scan.xyz"), conn, lock)
-            if a == -1:
-                return -1
+        ret = launch_orca_calc(in_file, calc, ['calc.out', 'calc.xyz'])
 
     if ret != 0:
         return ret
 
-    if orca.has_scan:
-        if not os.path.isfile("{}/calc.relaxscanact.dat".format(local_folder)):
-            return 1
-
-        if not os.path.isfile("{}/calc.allxyz".format(local_folder)):
-            return 1
-
+    if preparse.has_scan:
         energies = []
         with open(os.path.join(local_folder, 'calc.relaxscanact.dat')) as f:
             lines = f.readlines()
@@ -1491,18 +1356,12 @@ def orca_scan(in_file, calc):
 
                 calc.result_ensemble.structure_set.add(r)
     else:
-        if not os.path.isfile("{}/calc.xyz".format(local_folder)):
-            return 1
-
-        if not os.path.isfile("{}/calc.out".format(local_folder)):
-            return 1
-
         with open(os.path.join(local_folder, 'calc.xyz')) as f:
             lines = f.readlines()
             r = Structure.objects.create(number=1)
             r.xyz_structure = clean_xyz(''.join([i.strip() + '\n' for i in lines]))
 
-        with open(os.path.join(folder, "calc.out")) as f:
+        with open(os.path.join(local_folder, "calc.out")) as f:
             lines = f.readlines()
             ind = len(lines)-1
             while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
@@ -1516,6 +1375,37 @@ def orca_scan(in_file, calc):
             calc.result_ensemble.structure_set.add(r)
             calc.result_ensemble.save()
 
+    return 0
+
+def orca_nmr(in_file, calc):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+
+    ret = launch_orca_calc(in_file, calc, ['calc.out'])
+
+    if ret != 0:
+        return ret
+
+    with open(os.path.join(local_folder, 'calc.out')) as f:
+        lines = f.readlines()
+    ind = len(lines)-1
+    while lines[ind].find("CHEMICAL SHIELDING SUMMARY (ppm)") == -1:
+        ind -= 1
+
+    nmr = ""
+    ind += 6
+    while lines[ind].strip() != "":
+        n, a, iso, an = lines[ind].strip().split()
+        nmr += "{} {} {}\n".format(int(n)+1, a, iso)
+        ind += 1
+
+    prop = get_or_create(calc.parameters, calc.structure)
+    prop.simple_nmr = nmr
+
+    while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+        ind -= 1
+    E = float(lines[ind].split()[4])
+    prop.energy = E
+    prop.save()
     return 0
 
 def enso(in_file, calc):
@@ -1681,73 +1571,16 @@ def xtb_stda(in_file, calc):
 
     return 0
 
-def orca_nmr(in_file, calc):
-    folder = '/'.join(in_file.split('/')[:-1])
+def launch_gaussian_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
-
-    orca = OrcaCalculation(calc)
-
-    with open(os.path.join(local_folder, 'calc.inp'), 'w') as out:
-        out.write(orca.input_file)
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-        sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
-        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
-    else:
-        os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
-
-    if not local:
-        a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        if a != 0:
-            return a
-
-    if ret != 0:
-        return ret
-
-    if not os.path.isfile("{}/calc.out".format(local_folder)):
-        return 1
-
-    with open(os.path.join(local_folder, 'calc.out')) as f:
-        lines = f.readlines()
-    ind = len(lines)-1
-    while lines[ind].find("CHEMICAL SHIELDING SUMMARY (ppm)") == -1:
-        ind -= 1
-
-    nmr = ""
-    ind += 6
-    while lines[ind].strip() != "":
-        n, a, iso, an = lines[ind].strip().split()
-        nmr += "{} {} {}\n".format(int(n)+1, a, iso)
-        ind += 1
-
-    prop = get_or_create(calc.parameters, calc.structure)
-    prop.simple_nmr = nmr
-
-    while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
-        ind -= 1
-    E = float(lines[ind].split()[4])
-    prop.energy = E
-    prop.save()
-    return 0
-
-def gaussian_sp(in_file, calc):
     folder = '/'.join(in_file.split('/')[:-1])
-
-    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
 
     gaussian = GaussianCalculation(calc)
 
     with open(os.path.join(local_folder, 'calc.com'), 'w') as out:
         out.write(gaussian.input_file)
 
-    if not local:
+    if not calc.local:
         pid = int(threading.get_ident())
         conn = connections[pid]
         lock = locks[pid]
@@ -1758,16 +1591,28 @@ def gaussian_sp(in_file, calc):
         os.chdir(local_folder)
         ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
 
-    if not local:
-        a = sftp_get("{}/calc.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), conn, lock)
-        if a != 0:
-            return a
+    if not calc.local:
+        for f in files:
+            a = sftp_get("{}/{}".format(folder, f), os.path.join(CALCUS_SCR_HOME, str(calc.id), f), conn, lock)
+            if a == -1:
+                return -1
+
+    for f in files:
+        if not os.path.isfile("{}/{}".format(local_folder, f)):
+            return -1
 
     if ret != 0:
         return ret
 
-    if not os.path.isfile("{}/calc.log".format(local_folder)):
-        return 1
+    return 0
+
+def gaussian_sp(in_file, calc):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+
+    ret = launch_gaussian_calc(in_file, calc, ['calc.log'])
+
+    if ret != 0:
+        return ret
 
     with open("{}/calc.log".format(local_folder)) as f:
         lines = f.readlines()
@@ -1784,37 +1629,12 @@ def gaussian_sp(in_file, calc):
     return 0
 
 def gaussian_opt(in_file, calc):
-    folder = '/'.join(in_file.split('/')[:-1])
-
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
 
-    gaussian = GaussianCalculation(calc)
-
-    with open(os.path.join(local_folder, 'calc.com'), 'w') as out:
-        out.write(gaussian.input_file)
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-        sftp_put("{}/calc.com".format(local_folder), os.path.join(folder, "calc.com"), conn, lock)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
-    else:
-        os.chdir(local_folder)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
-
-    if not local:
-        a = sftp_get("{}/calc.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), conn, lock)
-        if a != 0:
-            return a
+    ret = launch_gaussian_calc(in_file, calc, ['calc.log'])
 
     if ret != 0:
         return ret
-
-    if not os.path.isfile("{}/calc.log".format(local_folder)):
-        return 1
 
     with open("{}/calc.log".format(local_folder)) as f:
         lines = f.readlines()
@@ -1850,37 +1670,12 @@ def gaussian_opt(in_file, calc):
     return 0
 
 def gaussian_freq(in_file, calc):
-    folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
 
-    gaussian = GaussianCalculation(calc)
-
-    with open(os.path.join(local_folder, 'calc.com'), 'w') as out:
-        out.write(gaussian.input_file)
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-        sftp_put("{}/calc.com".format(local_folder), os.path.join(folder, "calc.com"), conn, lock)
-
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
-    else:
-        os.chdir(local_folder)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
-
-    if not local:
-        a = sftp_get("{}/calc.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), conn, lock)
-        if a != 0:
-            return a
+    ret = launch_gaussian_calc(in_file, calc, ['calc.log'])
 
     if ret != 0:
         return ret
-
-    if not os.path.isfile("{}/calc.log".format(local_folder)):
-        return 1
 
     lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:] if i.strip() != '']
 
@@ -1984,37 +1779,12 @@ def gaussian_freq(in_file, calc):
     return 0
 
 def gaussian_ts(in_file, calc):
-
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
-    folder = '/'.join(in_file.split('/')[:-1])
 
-    gaussian = GaussianCalculation(calc)
-
-    with open(os.path.join(local_folder, 'calc.com'), 'w') as out:
-        out.write(gaussian.input_file)
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-        sftp_put("{}/calc.com".format(local_folder), os.path.join(folder, "calc.com"), conn, lock)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
-    else:
-        os.chdir(local_folder)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
-
-    if not local:
-        a = sftp_get("{}/calc.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), conn, lock)
-        if a != 0:
-            return a
+    ret = launch_gaussian_calc(in_file, calc, ['calc.log'])
 
     if ret != 0:
         return ret
-
-    if not os.path.isfile("{}/calc.log".format(local_folder)):
-        return 1
 
     with open("{}/calc.log".format(local_folder)) as f:
         lines = f.readlines()
@@ -2049,45 +1819,22 @@ def gaussian_ts(in_file, calc):
     return 0
 
 def gaussian_scan(in_file, calc):
-    folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
+
+    preparse = GaussianCalculation(calc)
+    ret = launch_gaussian_calc(in_file, calc, ['calc.log'])
+
     failed = False
-
-    gaussian = GaussianCalculation(calc)
-
-    with open(os.path.join(local_folder, 'calc.com'), 'w') as out:
-        out.write(gaussian.input_file)
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-        sftp_put("{}/calc.com".format(local_folder), os.path.join(folder, "calc.com"), conn, lock)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
-    else:
-        os.chdir(local_folder)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
-
-    if not local:
-        a = sftp_get("{}/calc.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), conn, lock)
-        if a != 0:
-            return a
-
     if ret != 0:
-        if gaussian.has_scan:
+        if preparse.has_scan:
             failed = True
         else:
             return ret
 
-    if not os.path.isfile("{}/calc.log".format(local_folder)):
-        return 1
-
     with open(os.path.join(local_folder, 'calc.log')) as f:
         lines = f.readlines()
 
-    if gaussian.has_scan:
+    if preparse.has_scan:
         s_ind = 1
         ind = 0
         done = False
@@ -2165,36 +1912,12 @@ def gaussian_scan(in_file, calc):
         return 0
 
 def gaussian_nmr(in_file, calc):
-    folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
 
-    gaussian = GaussianCalculation(calc)
-
-    with open(os.path.join(local_folder, 'calc.com'), 'w') as out:
-        out.write(gaussian.input_file)
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-        sftp_put("{}/calc.com".format(local_folder), os.path.join(folder, "calc.com"), conn, lock)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
-    else:
-        os.chdir(local_folder)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
-
-    if not local:
-        a = sftp_get("{}/calc.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), conn, lock)
-        if a != 0:
-            return a
+    ret = launch_gaussian_calc(in_file, calc, ['calc.log'])
 
     if ret != 0:
         return ret
-
-    if not os.path.isfile("{}/calc.log".format(local_folder)):
-        return 1
 
     with open(os.path.join(local_folder, 'calc.log')) as f:
         lines = f.readlines()
