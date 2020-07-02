@@ -249,10 +249,9 @@ def wait_until_done(job_id, conn, lock):
             kill_sig.remove(pid)
             return -2
 
-def system(command, log_file="", force_local=False, software="xtb", calc_id=-1, stage=-1):
+def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
     if REMOTE and not force_local:
         assert calc_id != -1
-        assert stage != -1
 
         calc = Calculation.objects.get(pk=calc_id)
 
@@ -263,15 +262,8 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1, 
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
 
-        if calc.stage > stage:
-            return 0
-        elif calc.stage == stage:
-            ret = wait_until_done(calc.remote_id, conn, lock)
-            return ret
-        else:
-            assert calc.stage + 1 == stage
-            print("Stage changing from {} to {}".format(calc.stage, stage))
-            calc.stage = stage
+        if calc.status == 0:
+            calc.status = 1
             calc.save()
 
             if log_file != "":
@@ -328,6 +320,8 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1, 
     else:
         if calc_id != -1:
             calc = Calculation.objects.get(pk=calc_id)
+            calc.status = 1
+            calc.save()
             res = AbortableAsyncResult(calc.task_id)
 
         if log_file != "":
@@ -439,7 +433,7 @@ def xtb_opt(in_file, calc):
         solvent_add = ''
 
     os.chdir(local_folder)
-    ret = system("xtb {} --opt -o vtight -a 0.05 --chrg {} {} ".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id, stage=1)
+    ret = system("xtb {} --opt -o vtight -a 0.05 --chrg {} {} ".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id)
 
     if not local:
         pid = int(threading.get_ident())
@@ -501,7 +495,7 @@ def xtb_sp(in_file, calc):
         solvent_add = ''
 
     os.chdir(local_folder)
-    ret = system("xtb {} --chrg {} {} ".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id, stage=1)
+    ret = system("xtb {} --chrg {} {} ".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id)
 
     if not local:
         pid = int(threading.get_ident())
@@ -580,11 +574,11 @@ def xtb_ts(in_file, calc):
         remote_dir = remote_dirs[pid]
 
         sftp_put(os.path.join(local_folder, 'calc.inp'), os.path.join(folder, 'calc.inp'), conn, lock)
-        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
 
     else:
         os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
 
     if not local:
         a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
@@ -686,7 +680,7 @@ def xtb_scan(in_file, calc):
         sftp_put("{}/scan".format(local_folder), os.path.join(folder, 'scan'), conn, lock)
 
     os.chdir(local_folder)
-    ret = system("xtb {} --input scan --chrg {} {} --opt".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id, stage=1)
+    ret = system("xtb {} --input scan --chrg {} {} --opt".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id)
 
     if not local:
         a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
@@ -793,7 +787,7 @@ def xtb_freq(in_file, calc):
         solvent_add = ''
 
     os.chdir(local_folder)
-    ret = system("xtb {} --uhf 1 --chrg {} {} --hess".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id, stage=1)
+    ret = system("xtb {} --uhf 1 --chrg {} {} --hess".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id)
 
     if not local:
         pid = int(threading.get_ident())
@@ -946,9 +940,9 @@ def crest_generic(in_file, calc, mode):
         cmd_add = ""
 
     if mode == "Final":#Restrict the number of conformers
-        ret = system("crest {} --chrg {} {} -rthr 0.5 -ewin 6 {}".format(in_file, calc.parameters.charge, solvent_add, cmd_add), 'calc.out', calc_id=calc.id, stage=1)
+        ret = system("crest {} --chrg {} {} -rthr 0.5 -ewin 6 {}".format(in_file, calc.parameters.charge, solvent_add, cmd_add), 'calc.out', calc_id=calc.id)
     elif mode == "NMR":#No restriction, as it will be done by enso
-        ret = system("crest {} --chrg {} {} -nmr {}".format(in_file, calc.parameters.charge, solvent_add, cmd_add), 'calc.out', calc_id=calc.id, stage=1)
+        ret = system("crest {} --chrg {} {} -nmr {}".format(in_file, calc.parameters.charge, solvent_add, cmd_add), 'calc.out', calc_id=calc.id)
     else:
         print("Invalid crest mode selected!")
         return -1
@@ -1059,10 +1053,10 @@ def orca_mo_gen(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
-        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
 
     if not local:
         a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
@@ -1126,13 +1120,13 @@ def orca_opt(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
-        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
 
     if not local:
-        a = sftp_get("{}/opt.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "opt.xyz"), conn, lock)
+        a = sftp_get("{}/calc.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.xyz"), conn, lock)
         b = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
         if a == -1 or b == -1:
             return -1
@@ -1140,13 +1134,13 @@ def orca_opt(in_file, calc):
     if ret != 0:
         return ret
 
-    if not os.path.isfile("{}/opt.xyz".format(local_folder)):
+    if not os.path.isfile("{}/calc.xyz".format(local_folder)):
         return 1
 
     if not os.path.isfile("{}/calc.out".format(local_folder)):
         return 1
 
-    with open("{}/opt.xyz".format(local_folder)) as f:
+    with open("{}/calc.xyz".format(local_folder)) as f:
         lines = f.readlines()
 
     xyz_structure = clean_xyz('\n'.join([i.strip() for i in lines]))
@@ -1185,10 +1179,10 @@ def orca_sp(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
-        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
 
     if not local:
         b = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
@@ -1231,13 +1225,13 @@ def orca_ts(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
-        ret = system("$EBROOTORCA/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("$EBROOTORCA/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
 
     if not local:
-        a = sftp_get("{}/ts.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "ts.xyz"), conn, lock)
+        a = sftp_get("{}/calc.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.xyz"), conn, lock)
         b = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
         if a == -1 or b == -1:
             return -1
@@ -1245,13 +1239,13 @@ def orca_ts(in_file, calc):
     if ret != 0:
         return ret
 
-    if not os.path.isfile("{}/ts.xyz".format(local_folder)):
+    if not os.path.isfile("{}/calc.xyz".format(local_folder)):
         return 1
 
     if not os.path.isfile("{}/calc.out".format(local_folder)):
         return 1
 
-    with open("{}/ts.xyz".format(local_folder)) as f:
+    with open("{}/calc.xyz".format(local_folder)) as f:
         lines = f.readlines()
     xyz_structure = clean_xyz('\n'.join([i.strip() for i in lines]))
     with open("{}/calc.out".format(local_folder)) as f:
@@ -1288,10 +1282,10 @@ def orca_freq(in_file, calc):
         remote_dir = remote_dirs[pid]
         sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
 
-        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
 
     if not local:
         a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
@@ -1434,10 +1428,10 @@ def orca_scan(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
-        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
 
     if not local:
         a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
@@ -1458,18 +1452,18 @@ def orca_scan(in_file, calc):
         return ret
 
     if orca.has_scan:
-        if not os.path.isfile("{}/scan.relaxscanact.dat".format(local_folder)):
+        if not os.path.isfile("{}/calc.relaxscanact.dat".format(local_folder)):
             return 1
 
-        if not os.path.isfile("{}/scan.allxyz".format(local_folder)):
+        if not os.path.isfile("{}/calc.allxyz".format(local_folder)):
             return 1
 
         energies = []
-        with open(os.path.join(local_folder, 'scan.relaxscanact.dat')) as f:
+        with open(os.path.join(local_folder, 'calc.relaxscanact.dat')) as f:
             lines = f.readlines()
             for line in lines:
                 energies.append(float(line.split()[1]))
-        with open(os.path.join(local_folder, 'scan.allxyz')) as f:
+        with open(os.path.join(local_folder, 'calc.allxyz')) as f:
             lines = f.readlines()
             num_atoms = lines[0]
             inds = []
@@ -1497,13 +1491,13 @@ def orca_scan(in_file, calc):
 
                 calc.result_ensemble.structure_set.add(r)
     else:
-        if not os.path.isfile("{}/scan.xyz".format(local_folder)):
+        if not os.path.isfile("{}/calc.xyz".format(local_folder)):
             return 1
 
         if not os.path.isfile("{}/calc.out".format(local_folder)):
             return 1
 
-        with open(os.path.join(local_folder, 'scan.xyz')) as f:
+        with open(os.path.join(local_folder, 'calc.xyz')) as f:
             lines = f.readlines()
             r = Structure.objects.create(number=1)
             r.xyz_structure = clean_xyz(''.join([i.strip() + '\n' for i in lines]))
@@ -1634,12 +1628,8 @@ def xtb_stda(in_file, calc):
         solvent_add = ''
 
     os.chdir(local_folder)
-    ret = system("xtb4stda {} -chrg {} {}".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id, stage=1)
-    if ret != 0:
-        return ret
+    ret = system("xtb4stda {} -chrg {} {} && stda -xtb -e 12".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id)
 
-    os.chdir(local_folder)
-    ret = system("stda -xtb -e 12", 'calc2.out', calc_id=calc.id, stage=2)
 
     if not local:
         pid = int(threading.get_ident())
@@ -1707,10 +1697,10 @@ def orca_nmr(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
-        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id, stage=1)
+        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
 
     if not local:
         a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
@@ -1763,10 +1753,10 @@ def gaussian_sp(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/calc.com".format(local_folder), os.path.join(folder, "calc.com"), conn, lock)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id, stage=1)
+        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id, stage=1)
+        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
 
     if not local:
         a = sftp_get("{}/calc.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), conn, lock)
@@ -1810,10 +1800,10 @@ def gaussian_opt(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/calc.com".format(local_folder), os.path.join(folder, "calc.com"), conn, lock)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id, stage=1)
+        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id, stage=1)
+        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
 
     if not local:
         a = sftp_get("{}/calc.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), conn, lock)
@@ -1876,10 +1866,10 @@ def gaussian_freq(in_file, calc):
         remote_dir = remote_dirs[pid]
         sftp_put("{}/calc.com".format(local_folder), os.path.join(folder, "calc.com"), conn, lock)
 
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id, stage=1)
+        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id, stage=1)
+        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
 
     if not local:
         a = sftp_get("{}/calc.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), conn, lock)
@@ -2010,10 +2000,10 @@ def gaussian_ts(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/calc.com".format(local_folder), os.path.join(folder, "calc.com"), conn, lock)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id, stage=1)
+        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id, stage=1)
+        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
 
     if not local:
         a = sftp_get("{}/calc.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), conn, lock)
@@ -2075,10 +2065,10 @@ def gaussian_scan(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/calc.com".format(local_folder), os.path.join(folder, "calc.com"), conn, lock)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id, stage=1)
+        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id, stage=1)
+        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
 
     if not local:
         a = sftp_get("{}/calc.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), conn, lock)
@@ -2190,10 +2180,10 @@ def gaussian_nmr(in_file, calc):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/calc.com".format(local_folder), os.path.join(folder, "calc.com"), conn, lock)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id, stage=1)
+        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id, stage=1)
+        ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
 
     if not local:
         a = sftp_get("{}/calc.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), conn, lock)
@@ -2582,16 +2572,15 @@ def run_calc(calc_id):
     print("Processing calc {}".format(calc_id))
     calc = Calculation.objects.get(pk=calc_id)
 
-    if calc.status == 3:#Already revoked:
-        return
-
-    calc.status = 1
-    calc.save()
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
 
     res_dir = os.path.join(CALCUS_RESULTS_HOME, str(calc.id))
     workdir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    if calc.stage == 0:
+
+    if calc.status == 3:#Already revoked:
+        return
+
+    if calc.status == 0:
         os.mkdir(res_dir)
         os.mkdir(workdir)
         in_file = os.path.join(workdir, 'in.xyz')
@@ -2611,7 +2600,6 @@ def run_calc(calc_id):
 
         in_file = os.path.join(remote_dir, "in.xyz")
 
-
     ti = time()
     try:
         ret = f(in_file, calc)
@@ -2626,7 +2614,7 @@ def run_calc(calc_id):
         return
 
     tf = time()
-    calc.execution_time = int((tf-ti)*int(PAL))
+    calc.execution_time = int((tf-ti)*int(PAL))################
 
     if ret != 0:
         calc.status = 3
@@ -2634,6 +2622,10 @@ def run_calc(calc_id):
     else:
         calc.status = 2
         calc.save()
+
+
+
+    #just calc.out/calc.log?
     for f in glob.glob("{}/*.out".format(workdir)):
         fname = f.split('/')[-1]
         copyfile(f, "{}/{}".format(res_dir, fname))

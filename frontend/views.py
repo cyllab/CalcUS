@@ -2261,13 +2261,13 @@ def get_csv(proj, profile):
                 weights = e.weights(params)
                 csv += ",,{}\n".format(params)
                 csv += ",,Number,Energy ({}),Relative Energy ({}), Boltzmann Weight,Free energy ({})\n".format(units, units, units)
-                for s in e.structure_set.all():
+                for ind, s in enumerate(e.structure_set.all()):
                     try:
                         prop = s.properties.get(parameters=params)
                     except Property.DoesNotExist:
                         pass
                     else:
-                        csv += ",,{},{},{},{},{}\n".format(s.number, prop.energy*CONVERSION, rel_energies[s.number-1], weights[s.number-1], prop.free_energy*CONVERSION)
+                        csv += ",,{},{},{},{},{}\n".format(s.number, prop.energy*CONVERSION, rel_energies[ind], weights[ind], prop.free_energy*CONVERSION)
 
                 w_e = e.weighted_energy(params)
                 if w_e != '' and w_e != '-' and w_e != 0:
