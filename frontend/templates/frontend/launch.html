@@ -359,7 +359,10 @@
 		function add_file_name() {
 			path = $("#file_structure").val();
 			file_name = path.replace('C:\\fakepath\\', '').split('.')[0];
-			$("#calc_name").val(file_name);
+			curr_name = document.getElementById("calc_name").value;
+			if(curr_name == "") {
+				$("#calc_name").val(file_name);
+			}
 		}
 
 		function set_project_default() {
