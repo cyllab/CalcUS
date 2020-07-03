@@ -317,6 +317,9 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     return ret
                 else:
                     return 1
+        else:
+            ret = wait_until_done(calc.remote_id, conn, lock)
+            return ret
     else:
         if calc_id != -1:
             calc = Calculation.objects.get(pk=calc_id)
@@ -1593,7 +1596,7 @@ def launch_gaussian_calc(in_file, calc, files):
 
     if not calc.local:
         for f in files:
-            a = sftp_get("{}/{}".format(folder, f), os.path.join(CALCUS_SCR_HOME, str(calc.id), f), conn, lock)
+            a = sftp_get("{}/{}".format(folder, f), os.path.join(local_folder, f), conn, lock)
             if a == -1:
                 return -1
 
