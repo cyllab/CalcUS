@@ -1340,6 +1340,7 @@ def conformer_table_post(request):
         properties = []
         energies = []
         for s in e.structure_set.all():
+            print(s)
             try:
                 prop = s.properties.get(parameters=p)
             except Property.DoesNotExist:
@@ -1348,14 +1349,13 @@ def conformer_table_post(request):
                 energies.append(prop.energy)
 
         _rel_energies = e.relative_energies(p)
-
         pref_units = profile.pref_units
         if pref_units == 0:
-            rel_energies = ["{:.2f}".format(float(i)*HARTREE_FVAL) for i in _rel_energies]
+            rel_energies = ["{:.2f}".format(float(i)*HARTREE_FVAL) if i != '' else '' for i in _rel_energies]
         elif pref_units == 1:
-            rel_energies = ["{:.2f}".format(float(i)*HARTREE_TO_KCAL_F) for i in _rel_energies]
+            rel_energies = ["{:.2f}".format(float(i)*HARTREE_TO_KCAL_F) if i != '' else '' for i in _rel_energies]
         elif pref_units == 2:
-            rel_energies = ["{:.5f}".format(i) for i in _rel_energies]
+            rel_energies = ["{:.5f}".format(i) if i != '' else '' for i in _rel_energies]
 
         weights = e.weights(p)
         data = zip(e.structure_set.all(), energies, rel_energies, weights)
