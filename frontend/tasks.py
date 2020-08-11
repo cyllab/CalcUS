@@ -2134,65 +2134,6 @@ def filter(order, input_structures):
     return structures
 
 @app.task(base=AbortableTask)
-def cont_calc(calc_id):
-    in_calc = Calculation.objects.get(pk=calc_id)
-    log = os.path.join(CALCUS_RESULTS_HOME, str(calc_id), "calc.out")
-
-    if in_calc.parameters.software == "Gaussian":
-        with open(log) as f:
-            lines = f.readlines()
-
-        ind = len(lines)-1
-
-        while lines[ind].find("Standard orientation:") == -1:
-            ind -= 1
-        ind += 5
-
-        xyz = []
-        while lines[ind].find("----") == -1:
-            n, a, t, x, y, z = lines[ind].strip().split()
-            xyz.append([ATOMIC_SYMBOL[int(a)], x, y, z])
-            ind += 1
-
-        xyz_structure = "{}\nCalcUS\n".format(len(xyz))
-        for el in xyz:
-            xyz_structure += "{} {} {} {}\n".format(*el)
-
-        xyz_structure = clean_xyz(xyz_structure)
-
-        s = Structure.objects.create(parent_ensemble=in_calc.result_ensemble, xyz_structure=xyz_structure, number=in_calc.structure.number, degeneracy=in_calc.structure.degeneracy)
-        s.save()
-
-        c = Calculation.objects.create(structure=s, order=in_calc.order, date=datetime.now(), step=in_calc.step, parameters=in_calc.order.parameters, result_ensemble=in_calc.result_ensemble)#No constraints
-        c.local = in_calc.local
-        c.save()
-
-        if in_calc.local:
-            calculations.append(c)
-            if not is_test:
-                res = run_calc.s(c.id).set(queue='comp').apply_async()
-                c.task_id = res
-                c.save()
-            else:
-                res = run_calc.s(c.id).apply_async()
-                c.task_id = res
-                c.save()
-
-        else:
-            cmd = ClusterCommand.objects.create(issuer=in_calc.order.author)
-            cmd.save()
-            with open(os.path.join(CALCUS_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
-                out.write("launch\n")
-                out.write("{}\n".format(c.id))
-                out.write("{}\n".format(in_calc.order.resource.id))
-
-    else:
-        print("Continuation of calculation only works for Gaussian at the moment")
-        return
-
-
-
-@app.task(base=AbortableTask)
 def dispatcher(drawing, order_id):
     if is_test:
         print("TEST MODE DISPATCHER")
@@ -2278,7 +2219,10 @@ def dispatcher(drawing, order_id):
         s_xyz = multi_xyz.split('\n')
         natoms = int(s_xyz[0])
         xyz = clean_xyz('\n'.join(s_xyz[(fid-1)*(natoms+2):fid*(natoms+2)]))
-        s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz)
+        molecule = calc.result_ensemble.parent_molecule
+        ensemble = Ensemble.objects.create(parent_molecule=molecule, origin=calc.result_ensemble, name="Extracted frame {}".format(fid))
+        s = Structure.objects.create(parent_ensemble=ensemble, xyz_structure=xyz, number=1, degeneracy=1)
+        ensemble.save()
         s.save()
         input_structures = [s]
     else:
@@ -2295,7 +2239,6 @@ def dispatcher(drawing, order_id):
             e = Ensemble.objects.create(name="{} Result".format(order.step.name), origin=ensemble)
         else:
             e = Ensemble.objects.create(name=order.name, origin=ensemble)
-        print("creating ensemble {}".format(e.id))
         order.result_ensemble = e
         order.save()
         molecule.ensemble_set.add(e)
@@ -2323,6 +2266,9 @@ def dispatcher(drawing, order_id):
                     out.write("{}\n".format(order.resource.id))
 
     else:
+        if mode == 'c':
+            order.result_ensemble = e
+            order.save()
         for s in input_structures:
             c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), parameters=order.parameters, step=step, constraints=order.constraints)
             c.save()
