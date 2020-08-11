@@ -1513,7 +1513,10 @@ def nmr(request):
 @login_required
 def ir_spectrum(request, pk):
     id = str(pk)
-    calc = Calculation.objects.get(pk=id)
+    try:
+        calc = Calculation.objects.get(pk=id)
+    except Calculation.DoesNotExist:
+        return HttpResponse(status=404)
 
     profile = request.user.profile
 
@@ -1533,7 +1536,10 @@ def ir_spectrum(request, pk):
 @login_required
 def vib_table(request, pk):
     id = str(pk)
-    calc = Calculation.objects.get(pk=id)
+    try:
+        calc = Calculation.objects.get(pk=id)
+    except Calculation.DoesNotExist:
+        return HttpResponse(status=404)
 
     profile = request.user.profile
 
@@ -1660,6 +1666,45 @@ def next_step(request, pk):
             'calculation': calc,
         })
 
+@login_required
+def download_project_logs(request, pk):
+    try:
+        proj = Project.objects.get(pk=pk)
+    except Project.DoesNotExist:
+        return HttpResponse(status=403)
+
+    profile = request.user.profile
+
+    if not profile_intersection(proj.author, profile):
+        return HttpResponse(status=403)
+
+    tmp_dir = "/tmp/{}_{}_{}".format(profile.username, proj.author.username, time.time())
+    os.mkdir(tmp_dir)
+
+    for mol in sorted(proj.molecule_set.all(), key=lambda l: l.name):
+        for e in mol.ensemble_set.all():
+            for params in e.unique_parameters:
+                p_dir = os.path.join(tmp_dir, params.__repr__())
+                try:
+                    os.mkdir(p_dir)
+                except FileExistsError:
+                    pass
+                for ind, s in enumerate(e.structure_set.all()):
+                    try:
+                        prop = s.properties.get(parameters=params)
+                    except Property.DoesNotExist:
+                        pass
+                    else:
+                        if prop.freq != 0:
+                            print(prop.freq)
+                            try:
+                                copyfile(os.path.join(CALCUS_RESULTS_HOME, str(prop.freq), "calc.out"), os.path.join(p_dir, "{}.log".format(prop.freq)))
+                            except FileNotFoundError:
+                                try:
+                                    copyfile(os.path.join(CALCUS_RESULTS_HOME, str(prop.freq), "freq.out"), os.path.join(p_dir, "{}.log".format(prop.freq)))
+                                except FileNotFoundError:
+                                    print("Not found: {} - {}".format(prop.freq, params.__repr__()))
+    ###to finish
 @login_required
 def download_structures(request, ee):
     try:
