@@ -19,7 +19,7 @@ class Profile(models.Model):
 
     is_PI = models.BooleanField(default=False)
 
-    member_of = models.ForeignKey('ResearchGroup', on_delete=models.CASCADE, blank=True, null=True, related_name='members')
+    member_of = models.ForeignKey('ResearchGroup', on_delete=models.SET_NULL, blank=True, null=True, related_name='members')
 
     code = models.CharField(max_length=16)
 
@@ -77,7 +77,7 @@ class ClusterCommand(models.Model):
     issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
 
 class ResearchGroup(Group):
-    PI = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True, related_name="researchgroup_PI")
+    PI = models.ForeignKey(Profile, on_delete=models.SET_NULL, blank=True, null=True, related_name="researchgroup_PI")
 
     def __repr__(self):
         return self.name
@@ -92,7 +92,7 @@ class Project(models.Model):
     author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
     private = models.PositiveIntegerField(default=0)
 
-    preset = models.ForeignKey('Preset', on_delete=models.CASCADE, blank=True, null=True)
+    preset = models.ForeignKey('Preset', on_delete=models.SET_NULL, blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -145,7 +145,7 @@ class Step(models.Model):
 
 class Preset(models.Model):
     name = models.CharField(max_length=100, default="My Preset")
-    params = models.ForeignKey('Parameters', on_delete=models.CASCADE, blank=True, null=True)
+    params = models.ForeignKey('Parameters', on_delete=models.SET_NULL, blank=True, null=True)
     author = models.ForeignKey('Profile', on_delete=models.CASCADE, blank=True, null=True)
 
 class Procedure(models.Model):
@@ -163,7 +163,7 @@ class Procedure(models.Model):
 class Ensemble(models.Model):
     name = models.CharField(max_length=100, default="Nameless ensemble")
     parent_molecule = models.ForeignKey('Molecule', on_delete=models.CASCADE, blank=True, null=True)
-    origin = models.ForeignKey('Ensemble', on_delete=models.CASCADE, blank=True, null=True)
+    origin = models.ForeignKey('Ensemble', on_delete=models.SET_NULL, blank=True, null=True)
 
     NODE_COLORS = {0: '#ffffff', 1: '#ffdd57', 2: '#23d160', 3: '#ff3860'}
     hidden = models.BooleanField(default=False)
@@ -407,7 +407,7 @@ class Ensemble(models.Model):
         return float(main_weight)
 
 class Property(models.Model):
-    parameters = models.ForeignKey('Parameters', on_delete=models.CASCADE, blank=True, null=True)
+    parameters = models.ForeignKey('Parameters', on_delete=models.SET_NULL, blank=True, null=True)
     parent_structure = models.ForeignKey('Structure', on_delete=models.CASCADE, blank=True, null=True, related_name="properties")
 
     energy = models.FloatField(default=0)
@@ -477,23 +477,23 @@ class Molecule(models.Model):
 class CalculationOrder(models.Model):
     name = models.CharField(max_length=100)
 
-    structure = models.ForeignKey(Structure, on_delete=models.CASCADE, blank=True, null=True)
-    ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
-    result_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True, related_name='result_of')
-    step = models.ForeignKey(BasicStep, on_delete=models.CASCADE, blank=True, null=True)
+    structure = models.ForeignKey(Structure, on_delete=models.SET_NULL, blank=True, null=True)
+    ensemble = models.ForeignKey(Ensemble, on_delete=models.SET_NULL, blank=True, null=True)
+    result_ensemble = models.ForeignKey(Ensemble, on_delete=models.SET_NULL, blank=True, null=True, related_name='result_of')
+    step = models.ForeignKey(BasicStep, on_delete=models.SET_NULL, blank=True, null=True)
 
     author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
     project = models.ForeignKey('Project', on_delete=models.CASCADE, blank=True, null=True)
-    parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, blank=True, null=True)
+    parameters = models.ForeignKey(Parameters, on_delete=models.SET_NULL, blank=True, null=True)
 
     constraints = models.CharField(max_length=400, default="", blank=True, null=True)
 
-    filter = models.ForeignKey('Filter', on_delete=models.CASCADE, blank=True, null=True)
+    filter = models.ForeignKey('Filter', on_delete=models.SET_NULL, blank=True, null=True)
 
     date = models.DateTimeField('date', null=True, blank=True)
     last_seen_status = models.PositiveIntegerField(default=0)
 
-    resource = models.ForeignKey('ClusterAccess', on_delete=models.CASCADE, blank=True, null=True)
+    resource = models.ForeignKey('ClusterAccess', on_delete=models.SET_NULL, blank=True, null=True)
 
     def see(self):
         self.last_seen_status = self.status
@@ -597,12 +597,12 @@ class Calculation(models.Model):
 
     status = models.PositiveIntegerField(default=0)
 
-    structure = models.ForeignKey(Structure, on_delete=models.CASCADE)
-    step = models.ForeignKey(BasicStep, on_delete=models.CASCADE)
+    structure = models.ForeignKey(Structure, on_delete=models.SET_NULL, null=True)
+    step = models.ForeignKey(BasicStep, on_delete=models.SET_NULL, null=True)
     order = models.ForeignKey(CalculationOrder, on_delete=models.CASCADE)
 
-    parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE)
-    result_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
+    parameters = models.ForeignKey(Parameters, on_delete=models.SET_NULL, null=True)
+    result_ensemble = models.ForeignKey(Ensemble, on_delete=models.SET_NULL, blank=True, null=True)
 
     constraints = models.CharField(max_length=400, default="", blank=True, null=True)
 
