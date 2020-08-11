@@ -666,13 +666,11 @@ def xtb_scan(in_file, calc):
         if has_scan:
             calc.save()
             out.write("$scan\n")
-            counter = 1
-            for cmd in constraints:
+            for counter, cmd in enumerate(constraints):
                 _cmd, ids = cmd.split('-')
                 _cmd = _cmd.split('_')
                 if _cmd[0] == "Scan":
-                    out.write("{}: {}, {}, {}\n".format(counter, *_cmd[1:]))
-                    counter += 1
+                    out.write("{}: {}, {}, {}\n".format(counter+1, *_cmd[1:]))
         out.write("$end")
 
     if not local:
