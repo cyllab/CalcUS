@@ -456,7 +456,7 @@
 
 	<div class="columns is-desktop">
 		<div class="column">
-			{% if not ensemble and not structure %}
+			{% if not ensemble and not structure and not calc %}
 			<script>
 				let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 400, 300, {useServices:false, oneMolecule:false});
 				sketcher.styles.atoms_usePYMOLColors = true;
@@ -898,6 +898,17 @@
 				.appendTo(this);
 			{% endif %}
 
+			{% if calc %}
+			$('<input />').attr('type', 'hidden')
+				.attr('name', "starting_calc")
+				.attr('value', {{ calc.id }})
+				.appendTo(this);
+			$('<input />').attr('type', 'hidden')
+				.attr('name', "starting_frame")
+				.attr('value', {{ frame_id }})
+				.appendTo(this);
+			{% endif %}
+
 			if (editor.molecules.length > 0) {
 				let mol2 = ChemDoodle.writeMOL(editor.getMolecule());
 
@@ -977,6 +988,22 @@
 					eval(data);
 					refresh_availabilities();
 					solvent_selection_changed();
+				},
+			});
+
+		{% endif %}
+		{% if calc %}
+			$("#calc_project").val("{{ calc.order.project.name }}");
+			$.ajax({
+				method: "POST",	 	 
+				url: "/get_calc_frame/{{ calc.id }}/{{ frame_id }}",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				success: function(data) {
+					let mol_read = ChemDoodle.readXYZ(data);
+					ChemDoodle.relabel(mol_read);
+					editor.loadMolecule(mol_read);	
 				},
 			});
 

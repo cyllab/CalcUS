@@ -58,6 +58,7 @@ urlpatterns = [
     path('learn/recipe/<int:pk>', views.recipe, name='recipe'),
 
     path('calculationorder/<int:pk>', views.calculationorder, name='calculationorder'),
+    path('calculation/<int:pk>', views.calculation, name='calculation'),
     path('link_order/<int:pk>', views.link_order, name='link_order'),
 
     #Group management
@@ -89,6 +90,7 @@ urlpatterns = [
     path('details_structure/', views.details_structure, name='details_structure'),
 
     path('launch/', views.launch, name='launch'),
+    path('launch/calc/<int:cid>/<int:fid>', views.launch_frame, name='launch_frame'),
     path('launch/<int:pk>', views.launch_pk, name='launch_pk'),
     path('launch/<int:ee>/<int:pk>', views.launch_structure_pk, name='launch_structure_pk'),
     path('launch/project/<int:pk>', views.launch_project, name='launch_project'),
@@ -102,6 +104,9 @@ urlpatterns = [
 
     path('get_cube/', views.get_cube, name='get_cube'),
     path('details/<int:pk>', views.details, name='details'),
+    path('get_calc_data/<int:pk>', views.get_calc_data, name='get_calc_data'),
+    path('get_calc_frame/<int:cid>/<int:fid>', views.get_calc_frame, name='get_calc_frame'),
+
     path('next_step/<int:pk>', views.next_step, name='next_step'),
     path('info_table/<int:pk>', views.info_table, name='info_table'),
     path('conformer_table/<int:pk>', views.conformer_table, name='conformer_table'),

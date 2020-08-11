@@ -1759,7 +1759,7 @@ def gaussian_freq(in_file, calc):
         for ind in range(len(vibs)):
             with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
                 out.write("{}\n".format(num_atoms))
-                assert len(struct) == num_atoms
+                #assert len(struct) == num_atoms
                 out.write("CalcUS\n")
                 for ind2, (a, x, y, z) in enumerate(struct):
                     out.write("{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(a, x, y, z, *vibs[ind][ind2]))
@@ -2030,6 +2030,45 @@ def gen_fingerprint(structure):
         inchi = str(time())
     return inchi
 
+def analyse_opt(fname):
+    with open(fname) as f:
+        lines = f.readlines()
+    ind = 0
+    s_ind = 0
+    RMSD = "Frame,RMS Displacement\n"
+    multi_xyz = ""
+    while lines[ind].find("Symbolic Z-matrix:") == -1:
+        ind += 1
+    ind += 2
+
+    start_ind = ind
+
+    while lines[ind].strip() != "":
+        ind += 1
+    num_atoms = ind - start_ind
+    while ind < len(lines) - 2:
+        while lines[ind].find("Standard orientation:") == -1 and lines[ind].find("RMS     Displacement") == -1:
+            ind += 1
+            if ind > len(lines) - 3:
+                return multi_xyz, RMSD
+        if lines[ind].find("Standard orientation:") != -1:
+            s_ind += 1
+            multi_xyz += "{}\n\n".format(num_atoms)
+            ind += 5
+            while lines[ind].find("---------") == -1:
+                n, z, T, X, Y, Z = lines[ind].strip().split()
+                A = ATOMIC_SYMBOL[int(z)]
+                multi_xyz += "{} {} {} {}\n".format(A, X, Y, Z)
+                ind += 1
+        elif lines[ind].find("RMS     Displacement") != -1:
+            rms = lines[ind].split()[2]
+            RMSD += "{},{}\n".format(s_ind, rms)
+            ind += 1
+        else:
+            print("Error")
+            return ""
+    return multi_xyz, RMSD
+
 
 SPECIAL_FUNCTIONALS = ['HF-3c', 'PBEh-3c']
 BASICSTEP_TABLE = {
@@ -2187,7 +2226,7 @@ def dispatcher(drawing, order_id):
             structure.save()
             order.save()
             input_structures = [structure]
-    else:
+    elif order.ensemble != None:
         for s in ensemble.structure_set.all():
             generate_xyz_structure(drawing, s)
 
@@ -2226,6 +2265,25 @@ def dispatcher(drawing, order_id):
                 ensemble.save()
                 molecule.save()
                 input_structures = ensemble.structure_set.all()
+    elif order.start_calc != None:
+        calc = order.start_calc
+        fid = order.start_calc_frame
+        mode = 'c'
+        if calc.status in [2, 3]:
+            calc_path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'calc.out')
+        else:
+            calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')
+
+        multi_xyz, RMSD = analyse_opt(calc_path)
+        s_xyz = multi_xyz.split('\n')
+        natoms = int(s_xyz[0])
+        xyz = clean_xyz('\n'.join(s_xyz[(fid-1)*(natoms+2):fid*(natoms+2)]))
+        s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz)
+        s.save()
+        input_structures = [s]
+    else:
+        print("Invalid calculation order: {}".format(order.id))
+        return
 
     group_order = []
     calculations = []

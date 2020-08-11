@@ -27,12 +27,11 @@ from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe
 from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc, cont_calc
 from .decorators import superuser_required
-from .tasks import system
+from .tasks import system, analyse_opt
 from .constants import *
 
 from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
-
 
 try:
     is_test = os.environ['CALCUS_TEST']
@@ -787,7 +786,19 @@ def submit_calculation(request):
         if not can_view_structure(start_s, profile):
             return error(request, "You do not have permission to access the starting calculation")
         obj.structure = start_s
-
+    elif 'starting_calc' in request.POST.keys():
+        if not 'starting_frame' in request.POST.keys():
+            return error(request, "Missing starting frame number")
+        c_id = int(clean(request.POST['starting_calc']))
+        f_id = int(clean(request.POST['starting_frame']))
+        try:
+            start_c = Calculation.objects.get(pk=c_id)
+        except Calculation.DoesNotExist:
+            return error(request, "No starting ensemble found")
+        if not can_view_calculation(start_c, profile):
+            return error(request, "You do not have permission to access the starting calculation")
+        obj.start_calc = start_c
+        obj.start_calc_frame = f_id
     else:
         if len(request.FILES) == 1:
             e = Ensemble.objects.create(name="File Upload")
@@ -1405,6 +1416,48 @@ def uvvis(request, pk):
             return response
     else:
         return HttpResponse(status=204)
+
+@login_required
+def get_calc_data(request, pk):
+    try:
+        calc = Calculation.objects.get(pk=pk)
+    except Calculation.DoesNotExist:
+        return HttpResponse(status=403)
+
+    profile = request.user.profile
+
+    if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
+        return HttpResponse(status=403)
+
+    if calc.status in [2, 3]:
+        calc_path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'calc.out')
+    else:
+        calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')
+
+    multi_xyz, RMSD = analyse_opt(calc_path)
+    return HttpResponse(multi_xyz + ';' + RMSD)
+
+def get_calc_frame(request, cid, fid):
+    try:
+        calc = Calculation.objects.get(pk=cid)
+    except Calculation.DoesNotExist:
+        return redirect('/home/')
+
+    profile = request.user.profile
+
+    if not can_view_calculation(calc, profile):
+        return HttpResponse(status=403)
+
+    if calc.status in [2, 3]:
+        calc_path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'calc.out')
+    else:
+        calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')
+
+    multi_xyz, RMSD = analyse_opt(calc_path)
+    s_xyz = multi_xyz.split('\n')
+    natoms = int(s_xyz[0])
+    xyz = '\n'.join(s_xyz[(fid-1)*(natoms+2):fid*(natoms+2)])
+    return HttpResponse(xyz)
 
 @login_required
 def get_cube(request):
@@ -2156,6 +2209,30 @@ def launch_pk(request, pk):
         })
 
 @login_required
+def launch_frame(request, cid, fid):
+
+    try:
+        calc = Calculation.objects.get(pk=cid)
+    except Calculation.DoesNotExist:
+        return redirect('/home/')
+
+    profile = request.user.profile
+
+    if not can_view_calculation(calc, profile):
+        return HttpResponse(status=403)
+
+    init_params = calc.order.parameters
+
+    return render(request, 'frontend/launch.html', {
+            'profile': request.user.profile,
+            'calc': calc,
+            'frame_id': fid,
+            'procs': BasicStep.objects.all(),
+            'init_params_id': init_params.id,
+        })
+
+
+@login_required
 def launch_structure_pk(request, ee, pk):
 
     try:
@@ -2585,6 +2662,19 @@ def calculationorder(request, pk):
         return HttpResponse(status=404)
 
     return render(request, 'frontend/calculationorder.html', {'order': order})
+
+@login_required
+def calculation(request, pk):
+    try:
+        calc = Calculation.objects.get(pk=pk)
+    except Calculation.DoesNotExist:
+        return HttpResponse(status=404)
+
+    profile = request.user.profile
+    if not can_view_calculation(calc, profile):
+        return HttpResponse(status=404)
+
+    return render(request, 'frontend/calculation.html', {'calc': calc})
 
 @login_required
 def see(request, pk):

@@ -479,6 +479,9 @@ class CalculationOrder(models.Model):
 
     structure = models.ForeignKey(Structure, on_delete=models.SET_NULL, blank=True, null=True)
     ensemble = models.ForeignKey(Ensemble, on_delete=models.SET_NULL, blank=True, null=True)
+    start_calc = models.ForeignKey('Calculation', on_delete=models.SET_NULL, blank=True, null=True)
+    start_calc_frame = models.PositiveIntegerField(default=0)
+
     result_ensemble = models.ForeignKey(Ensemble, on_delete=models.SET_NULL, blank=True, null=True, related_name='result_of')
     step = models.ForeignKey(BasicStep, on_delete=models.SET_NULL, blank=True, null=True)
 
