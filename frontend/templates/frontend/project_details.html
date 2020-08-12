@@ -93,7 +93,8 @@
 	  	</ul>
 	</nav>
 	<div class="grid">
-		{% for mol in molecules %}
+		{% get_molecule_summary molecules as mol_summary %}
+		{% for mol, summary in mol_summary %}
 				<div class="box has-background-info" id="mol_box_{{ mol.id }}">
 					{% if mol.project.author == request.user.profile %}
 					<p style="float: right;">
@@ -103,8 +104,7 @@
 					{% endif %}
 						<a href="/molecule/{{ mol.id }}">
 						<strong><p id="mol_name_{{ mol.id }}">{{ mol.name }}</p></strong>
-						{% get_molecule_summary mol as mol_summary %}
-						<p>{{ mol.ensemble_set.count }} Ensembles(s) &nbsp; ({{ mol_summary.0 }} Calculation(s): &nbsp; {{ mol_summary.1 }} Queued; &nbsp; {{ mol_summary.2 }} Running; &nbsp;{{ mol_summary.3 }} Completed) </p>
+						<p>{{ mol.ensemble_set.count }} Ensembles(s) &nbsp; ({{ summary.0 }} Calculation(s): &nbsp; {{ summary.1 }} Queued; &nbsp; {{ summary.2 }} Running; &nbsp;{{ summary.3 }} Completed) </p>
 					</a>
 				</div>
 
