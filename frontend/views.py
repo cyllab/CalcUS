@@ -1429,12 +1429,10 @@ def get_calc_data(request, pk):
     if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
         return HttpResponse(status=403)
 
-    if calc.status in [2, 3]:
-        calc_path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'calc.out')
-    else:
-        calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')
+    if calc.status == 0:
+        return HttpResponse(status=204)
 
-    multi_xyz, RMSD = analyse_opt(calc_path)
+    multi_xyz, RMSD = analyse_opt(calc.id)
     return HttpResponse(multi_xyz + ';' + RMSD)
 
 def get_calc_frame(request, cid, fid):
@@ -1448,12 +1446,10 @@ def get_calc_frame(request, cid, fid):
     if not can_view_calculation(calc, profile):
         return HttpResponse(status=403)
 
-    if calc.status in [2, 3]:
-        calc_path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'calc.out')
-    else:
-        calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')
+    if calc.status == 0:
+        return HttpResponse(status=204)
 
-    multi_xyz, RMSD = analyse_opt(calc_path)
+    multi_xyz, RMSD = analyse_opt(calc.id)
     s_xyz = multi_xyz.split('\n')
     natoms = int(s_xyz[0])
     xyz = '\n'.join(s_xyz[(fid-1)*(natoms+2):fid*(natoms+2)])

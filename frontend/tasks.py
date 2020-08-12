@@ -2030,7 +2030,45 @@ def gen_fingerprint(structure):
         inchi = str(time())
     return inchi
 
-def analyse_opt(fname):
+def analyse_opt(calc_id):
+    calc = Calculation.objects.get(pk=calc_id)
+
+    software = calc.parameters.software
+
+    if software == "Gaussian":
+        if calc.status in [2, 3]:
+            calc_path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'calc.out')
+        elif calc.status == 1:
+            calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')
+        else:
+            return None
+        return analyse_opt_Gaussian(calc_path)
+    elif software == "ORCA":
+        return analyse_opt_ORCA(calc)
+    elif software == "xtb":
+        return analyse_opt_xtb(calc)
+    else:
+        return None
+
+def analyse_opt_xtb(calc):
+    if calc.status in [2, 3]:
+        path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'xtbopt.out')
+    else:
+        path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'xtbopt.log')
+    with open(path) as f:
+        lines = f.readlines()
+
+    xyz = ''.join(lines)
+    natoms = int(lines[0])
+    nn = int(len(lines)/(natoms+2))
+    RMSD = "Frame,RMS Displacement\n"
+    for n in range(nn):
+        rms = lines[n*(natoms+2)+1].split()[3]
+        RMSD += "{},{}\n".format(n+1, rms)
+    return xyz, RMSD
+
+
+def analyse_opt_Gaussian(fname):
     with open(fname) as f:
         lines = f.readlines()
     ind = 0
@@ -2358,8 +2396,6 @@ def run_calc(calc_id):
 
     for f in glob.glob("{}/*.log".format(workdir)):
         fname = f.split('/')[-1].replace('.log', '.out')
-        if fname == "xtbscan.out" or fname == "xtbopt.out":
-            continue
         copyfile(f, "{}/{}".format(res_dir, fname))
 
     return ret
