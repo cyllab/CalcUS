@@ -1,0 +1,144 @@
+{% extends 'frontend/base.html' %}
+
+{% load i18n bulma_tags %}
+
+{% load static %}
+{% load details_tags %}
+
+{% block extrahead %}
+	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
+	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+
+	<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
+	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
+	<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
+	<script>
+		/*
+		function del_ensemble() {
+			var res = confirm("Delete the ensemble?");	
+			if (res) {
+				$.ajax({
+					method: "POST",	 	 
+					url: "/delete_ensemble/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					data: {'id': {{ ensemble.id }}},
+					success: function() {
+						window.location = "/molecule/" + {{ ensemble.parent_molecule.id }}
+					}
+
+				});
+
+			}
+		}*/
+		function launch_from_selected() {
+			frame_num = document.getElementById("opt_scroll").value
+			window.location.href = "/launch/calc/{{ calc.id }}/" + frame_num;
+		}
+	</script>
+	<style>
+		.hscroll {
+			overflow-x: auto;
+		}
+
+	</style>
+
+{% endblock %}
+
+{% block content %}
+
+{% csrf_token %}
+
+<div class="container">
+	<nav class="breadcrumb" aria-label="breadcrumbs">
+	 	<ul>
+	    		<li><a href="/calculations/">Calculations</a></li>
+			<li><a href="/calculationorder/{{ calc.order.id }}">Order {{ calc.order.id }}</a></li>
+			<li class="is-active"><a aria-current="page" href="#">Calculation {{ calc.id }}</a></li>
+	  	</ul>
+	</nav>
+
+	<div>
+		<div class="columns is-vcentered is-desktop">
+			<div class="column">
+				<div style="width: 400px;">
+					<div id="opt_viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
+					<div class="slidecontainer">
+						<center>
+						<input type="range" min="1" max="1" value="1" class="slider" id="opt_scroll" onchange="update_frame();" style="width: 100%;">
+						<label class="label" id="frame_label">Frame 1</label>
+						<div class="button" onclick="launch_from_selected();">Launch from selected frame</div>
+						</center>
+					</div>
+				</div>
+			</div>
+			<div class="column">
+				<div id="rmsd_graph">
+				</div>
+			</div>
+		<div>
+
+		<script>
+
+			var opt_viewer = $3Dmol.createViewer("opt_viewer_div");
+			var num_opt_steps = "1";
+
+			opt_viewer.setBackgroundColor(0xffffff);
+			function get_opt_structs() {
+				$.ajax({
+					method: "POST",	 	 
+					url: "/get_calc_data/" + {{ calc.id }},
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					success: function(data, textStatus, xhr) {
+						sp = data.split(";");
+						xyz = sp[0];
+						rmsd = sp[1];
+						opt_viewer.addModelsAsFrames(xyz, "xyz");
+						opt_viewer.setStyle({}, {stick:{}});
+						opt_viewer.zoomTo();
+						opt_viewer.render();
+						num_opt_steps = opt_viewer.getNumFrames();
+						scroll = document.getElementById("opt_scroll");
+						scroll.max = num_opt_steps;
+						rmsd_graph = new Dygraph(
+							document.getElementById("rmsd_graph"),
+								rmsd, 
+								{
+									strokeWidth: 2,	
+									xlabel: "Frame",
+									ylabel: "RMS Displacement",
+									rangeSelectorPlotStrokeColor: "#BABABA",
+						 			highlightCircleSize:  5, 
+								}
+
+						);
+						rmsd_graph.setSelection(0);
+					}
+				});
+			}
+			function update_frame() {
+				frame_num = document.getElementById("opt_scroll").value;
+				frame_label = document.getElementById("frame_label");
+				opt_viewer.setFrame(parseInt(frame_num));
+				opt_viewer.render();
+				frame_label.textContent = "Frame " + frame_num;
+				rmsd_graph.setSelection(parseInt(frame_num)-1);
+			}
+
+			$(document).ready(function(){
+				get_opt_structs();
+			});
+		</script>
+		</div>
+
+
+	</div>
+</div>
+
+{% endblock content %}
