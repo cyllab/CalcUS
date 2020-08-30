@@ -497,6 +497,13 @@ def parse_parameters(request, name_required=True):
     else:
         return "No calculation charge"
 
+    if 'calc_multiplicity' in request.POST.keys():
+        mult = clean(request.POST['calc_multiplicity'])
+        if mult.strip() == '':
+            return "No calculation multiplicity"
+    else:
+        return "No calculation multiplicity"
+
     if 'calc_solvent' in request.POST.keys():
         solvent = clean(request.POST['calc_solvent'])
         if solvent.strip() == '':
@@ -629,6 +636,9 @@ def parse_parameters(request, name_required=True):
     if charge not in ["-2", "-1", "0", "+1", "+2"]:
         return "Invalid charge (-2 to +2)"
 
+    if mult not in ["1", "2", "3"]:
+        return "Invalid multiplicity (1 to 3)"
+
     if solvent not in SOLVENT_TABLE.keys() and solvent != "Vacuum":
         return "Invalid solvent"
 
@@ -656,7 +666,7 @@ def parse_parameters(request, name_required=True):
         else:
             project_obj = project_set[0]
 
-    params = Parameters.objects.create(charge=charge, solvent=solvent, multiplicity=1, method=functional, basis_set=basis_set, misc=misc, software=software, theory_level=theory, solvation_model=solvation_model, density_fitting=df)
+    params = Parameters.objects.create(charge=charge, multiplicity=mult, solvent=solvent, method=functional, basis_set=basis_set, misc=misc, software=software, theory_level=theory, solvation_model=solvation_model, density_fitting=df)
     params.save()
 
     return params, project_obj, name, step

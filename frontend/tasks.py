@@ -436,7 +436,7 @@ def xtb_opt(in_file, calc):
         solvent_add = ''
 
     os.chdir(local_folder)
-    ret = system("xtb {} --opt -o vtight -a 0.05 --chrg {} {} ".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id)
+    ret = system("xtb {} -o vtight -a 0.05 --chrg {} --uhf {} {} ".format(in_file, calc.parameters.charge, calc.parameters.multiplicity, solvent_add), 'calc.out', calc_id=calc.id)
 
     if not local:
         pid = int(threading.get_ident())
@@ -498,7 +498,7 @@ def xtb_sp(in_file, calc):
         solvent_add = ''
 
     os.chdir(local_folder)
-    ret = system("xtb {} --chrg {} {} ".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id)
+    ret = system("xtb {} --chrg {} --uhf {} {} ".format(in_file, calc.parameters.charge, calc.parameters.multiplicity, solvent_add), 'calc.out', calc_id=calc.id)
 
     if not local:
         pid = int(threading.get_ident())
@@ -681,7 +681,7 @@ def xtb_scan(in_file, calc):
         sftp_put("{}/scan".format(local_folder), os.path.join(folder, 'scan'), conn, lock)
 
     os.chdir(local_folder)
-    ret = system("xtb {} --input scan --chrg {} {} --opt".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id)
+    ret = system("xtb {} --input scan --chrg {} --uhf {} {} --opt".format(in_file, calc.parameters.charge, calc.parameters.multiplicity, solvent_add), 'calc.out', calc_id=calc.id)
 
     if not local:
         a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
@@ -788,7 +788,7 @@ def xtb_freq(in_file, calc):
         solvent_add = ''
 
     os.chdir(local_folder)
-    ret = system("xtb {} --uhf 1 --chrg {} {} --hess".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id)
+    ret = system("xtb {} --uhf 1 --chrg {} --uhf {} {} --hess".format(in_file, calc.parameters.charge, calc.parameters.multiplicity, solvent_add), 'calc.out', calc_id=calc.id)
 
     if not local:
         pid = int(threading.get_ident())
