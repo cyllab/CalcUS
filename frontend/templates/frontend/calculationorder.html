@@ -8,6 +8,7 @@
 
 	<script>
 		function cancel(id) {
+			$("#cancel_button_" + id).addClass("is-loading");
 			$.ajax({
 				method: "POST",	 	 
 				url: "/cancel_calc/",
@@ -16,12 +17,14 @@
 				},
 				data: {'id': id},
 				success: function() {
+					$("#cancel_button_" + id).removeClass("is-loading");
 					$("#cancel_button_" + id).addClass("has-background-success");
 				}
 			});
 
 		}
 		function restart(id) {
+			$("#restart_button_" + id).addClass("is-loading");
 			$.ajax({
 				method: "POST",	 	 
 				url: "/restart_calc/",
@@ -30,6 +33,7 @@
 				},
 				data: {'id': id},
 				success: function() {
+					$("#restart_button_" + id).removeClass("is-loading");
 					$("#restart_button_" + id).addClass("has-background-success");
 				}
 			});
@@ -37,6 +41,7 @@
 		}
 
 		function refetch(id) {
+			$("#refetch_button_" + id).addClass("is-loading");
 			$.ajax({
 				method: "POST",	 	 
 				url: "/refetch_calc/",
@@ -45,6 +50,7 @@
 				},
 				data: {'id': id},
 				success: function() {
+					$("#refetch_button_" + id).removeClass("is-loading");
 					$("#refetch_button_" + id).addClass("has-background-success");
 				}
 			});
