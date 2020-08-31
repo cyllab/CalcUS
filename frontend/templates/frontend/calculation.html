@@ -127,7 +127,7 @@
 			function update_frame() {
 				frame_num = document.getElementById("opt_scroll").value;
 				frame_label = document.getElementById("frame_label");
-				opt_viewer.setFrame(parseInt(frame_num));
+				opt_viewer.setFrame(parseInt(frame_num)-1);
 				opt_viewer.render();
 				frame_label.textContent = "Frame " + frame_num;
 				rmsd_graph.setSelection(parseInt(frame_num)-1);

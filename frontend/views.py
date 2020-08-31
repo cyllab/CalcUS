@@ -1442,7 +1442,15 @@ def get_calc_data(request, pk):
     if calc.status == 0:
         return HttpResponse(status=204)
 
-    multi_xyz, RMSD = analyse_opt(calc.id)
+    analyse_opt(calc.id)###
+
+    multi_xyz = ""
+    RMSD = "Frame,RMSD\n"
+    for f in calc.calculationframe_set.all():
+        print(f.number, f.RMSD)
+        multi_xyz += f.xyz_structure
+        RMSD += "{},{}\n".format(f.number, f.RMSD)
+
     return HttpResponse(multi_xyz + ';' + RMSD)
 
 def get_calc_frame(request, cid, fid):
@@ -1459,10 +1467,12 @@ def get_calc_frame(request, cid, fid):
     if calc.status == 0:
         return HttpResponse(status=204)
 
-    multi_xyz, RMSD = analyse_opt(calc.id)
-    s_xyz = multi_xyz.split('\n')
-    natoms = int(s_xyz[0])
-    xyz = '\n'.join(s_xyz[(fid-1)*(natoms+2):fid*(natoms+2)])
+    #multi_xyz, RMSD = analyse_opt(calc.id)
+    #s_xyz = multi_xyz.split('\n')
+    #natoms = int(s_xyz[0])
+    #xyz = '\n'.join(s_xyz[(fid-1)*(natoms+2):fid*(natoms+2)])
+    #return HttpResponse(xyz)
+    xyz = calc.calculationframe_set.get(number=fid).xyz_structure
     return HttpResponse(xyz)
 
 @login_required

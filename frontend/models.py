@@ -440,6 +440,17 @@ class Structure(models.Model):
     def __repr__(self):
         return self.id
 
+class CalculationFrame(models.Model):
+    parent_calculation = models.ForeignKey('Calculation', on_delete=models.CASCADE, blank=True, null=True)
+
+    xyz_structure = models.CharField(default="", max_length=5000000)
+    RMSD = models.FloatField(default=0)
+
+    number = models.PositiveIntegerField(default=0)
+
+    def __repr__(self):
+        return self.id
+
 class Parameters(models.Model):
     name = models.CharField(max_length=100, default="Nameless parameters")
     charge = models.IntegerField()

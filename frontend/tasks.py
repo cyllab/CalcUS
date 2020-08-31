@@ -2040,13 +2040,7 @@ def analyse_opt(calc_id):
     software = calc.parameters.software
 
     if software == "Gaussian":
-        if calc.status in [2, 3]:
-            calc_path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'calc.out')
-        elif calc.status == 1:
-            calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')
-        else:
-            return None
-        return analyse_opt_Gaussian(calc_path)
+        return analyse_opt_Gaussian(calc)
     elif software == "ORCA":
         return analyse_opt_ORCA(calc)
     elif software == "xtb":
@@ -2072,13 +2066,18 @@ def analyse_opt_xtb(calc):
     return xyz, RMSD
 
 
-def analyse_opt_Gaussian(fname):
-    with open(fname) as f:
+def analyse_opt_Gaussian(calc):
+    if calc.status in [2, 3]:
+        calc_path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'calc.out')
+    elif calc.status == 1:
+        calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')
+    else:
+        return None
+
+    with open(calc_path) as f:
         lines = f.readlines()
     ind = 0
     s_ind = 0
-    RMSD = "Frame,RMS Displacement\n"
-    multi_xyz = ""
     while lines[ind].find("Symbolic Z-matrix:") == -1:
         ind += 1
     ind += 2
@@ -2088,28 +2087,40 @@ def analyse_opt_Gaussian(fname):
     while lines[ind].strip() != "":
         ind += 1
     num_atoms = ind - start_ind
+
+    xyz = ""
+
     while ind < len(lines) - 2:
         while lines[ind].find("Standard orientation:") == -1 and lines[ind].find("RMS     Displacement") == -1:
             ind += 1
             if ind > len(lines) - 3:
-                return multi_xyz, RMSD
+                calc.save()
+                return
         if lines[ind].find("Standard orientation:") != -1:
             s_ind += 1
-            multi_xyz += "{}\n\n".format(num_atoms)
+            xyz += "{}\n\n".format(num_atoms)
             ind += 5
             while lines[ind].find("---------") == -1:
                 n, z, T, X, Y, Z = lines[ind].strip().split()
                 A = ATOMIC_SYMBOL[int(z)]
-                multi_xyz += "{} {} {} {}\n".format(A, X, Y, Z)
+                xyz += "{} {} {} {}\n".format(A, X, Y, Z)
                 ind += 1
         elif lines[ind].find("RMS     Displacement") != -1:
-            rms = lines[ind].split()[2]
-            RMSD += "{},{}\n".format(s_ind, rms)
+            rms = float(lines[ind].split()[2])
+            try:
+                f = calc.calculationframe_set.get(number=s_ind)
+            except CalculationFrame.DoesNotExist:
+                f = CalculationFrame.objects.create(number=s_ind, xyz_structure=xyz, parent_calculation=calc, RMSD=rms)
+            else:
+                f.xyz_structure = xyz
+            f.save()
+            xyz = ""
             ind += 1
         else:
             print("Error")
-            return ""
-    return multi_xyz, RMSD
+            calc.save()
+            return
+    calc.save()
 
 
 SPECIAL_FUNCTIONALS = ['HF-3c', 'PBEh-3c']
