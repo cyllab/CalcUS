@@ -44,7 +44,9 @@
 		.hscroll {
 			overflow-x: auto;
 		}
-
+		#buttons_center {
+			margin: 20px;
+		}
 	</style>
 
 {% endblock %}
@@ -131,13 +133,41 @@
 				rmsd_graph.setSelection(parseInt(frame_num)-1);
 			}
 
+			function load_logs() {
+				$("#load_logs_button").addClass("is-loading");
+				$.ajax({
+					data: {
+						csrfmiddlewaretoken: ('{{csrf_token}}'),
+					},
+					method: "POST",
+					url: '/log/' + {{ calc.id }},
+					success: function (data) {
+						$("#log_div").html(data);
+						$("#load_logs_button").removeClass("is-loading");
+						$("#load_logs_button").addClass("is-success");
+					},
+				    });
+
+			}
+
 			$(document).ready(function(){
 				get_opt_structs();
 			});
 		</script>
 		</div>
 
-
+	</div>
+	<div>
+		<label class="label">Input File</label>
+		<textarea class="textarea" style="height: 300px;" readonly>
+			{{ calc.input_file }}
+		</textarea>
+		<center id="buttons_center">
+			<button class="button" onclick="load_logs()" id="load_logs_button">View Logs</button>
+			<a class="button" href="/download_log/{{ calc.id }}">Download Logs</a>
+		</center>
+		<div id="log_div">
+		</div>
 	</div>
 </div>
 

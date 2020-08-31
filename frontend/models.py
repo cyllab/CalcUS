@@ -609,6 +609,8 @@ class Calculation(models.Model):
 
     constraints = models.CharField(max_length=400, default="", blank=True, null=True)
 
+    input_file = models.CharField(max_length=50000, default="", blank=True, null=True)
+
     local = models.BooleanField(default=True)
 
     pal = models.PositiveIntegerField(default=8)

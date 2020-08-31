@@ -1041,6 +1041,8 @@ def launch_orca_calc(in_file, calc, files):
     folder = '/'.join(in_file.split('/')[:-1])
 
     orca = OrcaCalculation(calc)
+    calc.input_file = orca.input_file
+    calc.save()
 
     with open(os.path.join(local_folder, 'calc.inp'), 'w') as out:
         out.write(orca.input_file)
@@ -1577,6 +1579,8 @@ def launch_gaussian_calc(in_file, calc, files):
     folder = '/'.join(in_file.split('/')[:-1])
 
     gaussian = GaussianCalculation(calc)
+    calc.input_file = gaussian.input_file
+    calc.save()
 
     with open(os.path.join(local_folder, 'calc.com'), 'w') as out:
         out.write(gaussian.input_file)
