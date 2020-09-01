@@ -2039,18 +2039,54 @@ def gen_fingerprint(structure):
     return inchi
 
 def analyse_opt(calc_id):
+    funcs = {
+                "Gaussian": analyse_opt_Gaussian,
+                "ORCA": analyse_opt_ORCA,
+                "xtb": analyse_opt_xtb,
+                }
     calc = Calculation.objects.get(pk=calc_id)
 
     software = calc.parameters.software
 
-    if software == "Gaussian":
-        return analyse_opt_Gaussian(calc)
-    elif software == "ORCA":
-        return analyse_opt_ORCA(calc)
-    elif software == "xtb":
-        return analyse_opt_xtb(calc)
-    else:
-        return None
+    return funcs[software](calc)
+
+def analyse_opt_ORCA(calc):
+    prepath = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+
+    RMSDs = [0]
+
+    with open(os.path.join(prepath, "calc.out")) as f:
+        lines = f.readlines()
+    ind = 0
+    flag = False
+    while not flag:
+        while lines[ind].find("RMS step") == -1:
+            ind += 1
+            if ind > len(lines) - 2:
+                flag = True
+                break
+        if not flag:
+            rms = float(lines[ind].split()[2])
+            RMSDs.append(rms)
+            ind += 1
+
+    with open(os.path.join(prepath, "calc_trj.xyz")) as f:
+        lines = f.readlines()
+
+    num = int(lines[0])
+    nstructs = int(len(lines)/(num+2))
+
+    #assert nstructs == len(RMSDs)
+
+    for i in range(1, nstructs):
+        xyz = ''.join(lines[(num+2)*i:(num+2)*(i+1)])
+        try:
+            f = calc.calculationframe_set.get(number=i+1)
+        except CalculationFrame.DoesNotExist:
+            f = CalculationFrame.objects.create(number=i+1, xyz_structure=xyz, parent_calculation=calc, RMSD=RMSDs[i])
+        else:
+            f.xyz_structure = xyz
+        f.save()
 
 def analyse_opt_xtb(calc):
     if calc.status in [2, 3]:
