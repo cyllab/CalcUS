@@ -172,6 +172,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if 'in_file' in params.keys():
             upload_input.send_keys("{}/tests/{}".format(dir_path, params['in_file']))
 
+        if 'in_files' in params.keys():
+            for f in params['in_files']:
+                upload_input.send_keys("{}/tests/{}".format(dir_path, f))
+
         if 'constraints' in params.keys():
             assert params['type'] == 'Constrained Optimisation'
 

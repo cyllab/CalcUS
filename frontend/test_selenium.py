@@ -2735,4 +2735,22 @@ class MiscCalculationTests(CalcusLiveServer):
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
 
+    def test_multiple_files(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_files': ['CH4.mol', 'H2.mol2', 'H2.sdf', 'ethanol.xyz'],
+                'software': 'xtb',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.assertEqual(self.get_number_calc_orders(), 3)
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+
 
