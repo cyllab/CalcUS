@@ -384,6 +384,17 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         return False
 
+    def is_on_page_calculation(self):
+        ind = 0
+        while ind < 3:
+            url = self.get_split_url()
+            if url[0] == 'calculation' and url[1] != '':
+                return True
+            time.sleep(1)
+            ind += 1
+
+        return False
+
     def is_on_page_profile(self):
         ind = 0
         while ind < 3:
@@ -696,6 +707,16 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         )
 
         button.send_keys(Keys.RETURN)
+
+    def launch_frame_next_step(self):
+        assert self.is_on_page_calculation()
+
+        button = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.ID, "launch_from_frame"))
+        )
+
+        button.send_keys(Keys.RETURN)
+
 
     def delete_project(self, name):
         assert self.is_on_page_projects()

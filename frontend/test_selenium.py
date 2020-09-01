@@ -2630,6 +2630,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
+
 class MiscCalculationTests(CalcusLiveServer):
 
     def setUp(self):
@@ -2696,4 +2697,42 @@ class MiscCalculationTests(CalcusLiveServer):
 
         input_file = self.driver.find_element_by_css_selector(".textarea")
         assert len(input_file.text) > 10
+
+    def test_sp_from_frame(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.details_latest_order()
+        self.details_first_calc()
+
+        self.launch_frame_next_step()
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-TZVP',
+                }
+
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(30)
+        self.assertTrue(self.latest_calc_successful())
+
 
