@@ -2081,9 +2081,9 @@ def analyse_opt_ORCA(calc):
     for i in range(1, nstructs):
         xyz = ''.join(lines[(num+2)*i:(num+2)*(i+1)])
         try:
-            f = calc.calculationframe_set.get(number=i+1)
+            f = calc.calculationframe_set.get(number=i)
         except CalculationFrame.DoesNotExist:
-            f = CalculationFrame.objects.create(number=i+1, xyz_structure=xyz, parent_calculation=calc, RMSD=RMSDs[i])
+            f = CalculationFrame.objects.create(number=i, xyz_structure=xyz, parent_calculation=calc, RMSD=RMSDs[i])
         else:
             f.xyz_structure = xyz
         f.save()

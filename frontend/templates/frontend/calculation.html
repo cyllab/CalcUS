@@ -16,25 +16,6 @@
 	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
 	<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
 	<script>
-		/*
-		function del_ensemble() {
-			var res = confirm("Delete the ensemble?");	
-			if (res) {
-				$.ajax({
-					method: "POST",	 	 
-					url: "/delete_ensemble/",
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					data: {'id': {{ ensemble.id }}},
-					success: function() {
-						window.location = "/molecule/" + {{ ensemble.parent_molecule.id }}
-					}
-
-				});
-
-			}
-		}*/
 		function launch_from_selected() {
 			frame_num = document.getElementById("opt_scroll").value
 			window.location.href = "/launch/calc/{{ calc.id }}/" + frame_num;
@@ -117,6 +98,9 @@
 									ylabel: "RMS Displacement",
 									rangeSelectorPlotStrokeColor: "#BABABA",
 						 			highlightCircleSize:  5, 
+									pointClickCallback: function(e, pt) {
+									    set_frame(this.getValue(pt.idx, 0));
+									},
 								}
 
 						);
@@ -126,6 +110,11 @@
 			}
 			function update_frame() {
 				frame_num = document.getElementById("opt_scroll").value;
+				set_frame(frame_num);
+			}
+			function set_frame(frame_num) {
+				frame_scroll = document.getElementById("opt_scroll");
+				frame_scroll.value = frame_num;
 				frame_label = document.getElementById("frame_label");
 				opt_viewer.setFrame(parseInt(frame_num)-1);
 				opt_viewer.render();
@@ -159,9 +148,7 @@
 	</div>
 	<div>
 		<label class="label">Input File</label>
-		<textarea class="textarea" style="height: 300px;" readonly>
-			{{ calc.input_file }}
-		</textarea>
+		<textarea class="textarea" style="height: 300px;" readonly>{{ calc.input_file }}</textarea>
 		<center id="buttons_center">
 			<button class="button" onclick="load_logs()" id="load_logs_button">View Logs</button>
 			<a class="button" href="/download_log/{{ calc.id }}">Download Logs</a>
