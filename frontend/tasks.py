@@ -2062,6 +2062,12 @@ def analyse_opt_ORCA(calc):
 
     RMSDs = [0]
 
+    if not os.file.isfile(os.path.join(prepath, "calc.out")):
+        return
+
+    if not os.file.isfile(os.path.join(prepath, "calc_trj.xyz")):
+        return
+
     with open(os.path.join(prepath, "calc.out")) as f:
         lines = f.readlines()
     ind = 0
@@ -2100,6 +2106,10 @@ def analyse_opt_xtb(calc):
         path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'xtbopt.out')
     else:
         path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'xtbopt.log')
+
+    if not os.path.isfile(path):
+        return
+
     with open(path) as f:
         lines = f.readlines()
 
@@ -2128,6 +2138,9 @@ def analyse_opt_Gaussian(calc):
         calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')
     else:
         return None
+
+    if not os.path.isfile(calc_path):
+        return
 
     with open(calc_path) as f:
         lines = f.readlines()
@@ -2176,6 +2189,22 @@ def analyse_opt_Gaussian(calc):
             calc.save()
             return
     calc.save()
+
+def verify_charge_mult(xyz, charge, mult):
+    electrons = 0
+    for line in xyz.split('\n')[2:]:
+        if line.strip() == "":
+            continue
+        el = line.split()[0]
+        electrons += ATOMIC_NUMBER[el]
+
+    electrons -= self.calc.parameters.charge
+    odd_e = electrons % 2
+    odd_m = multiplicity % 2
+
+    if odd_e == odd_m:
+        return -1
+    return 0
 
 
 SPECIAL_FUNCTIONALS = ['HF-3c', 'PBEh-3c']
@@ -2412,6 +2441,10 @@ def run_calc(calc_id):
     if calc.status == 3:#Already revoked:
         return
 
+    ret = verify_charge_mult(calc.structure.xyz_structure, calc.charge, calc.multiplicity)
+    if ret != 0:
+        calc.error_message = "Impossible charge/multiplicity"
+        return
     if calc.status == 0:
         os.mkdir(res_dir)
         os.mkdir(workdir)
