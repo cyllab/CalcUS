@@ -2268,14 +2268,11 @@ def dispatcher(drawing, order_id):
         else:
             calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')
 
-        multi_xyz, RMSD = analyse_opt(calc_path)
-        s_xyz = multi_xyz.split('\n')
-        natoms = int(s_xyz[0])
-        xyz = clean_xyz('\n'.join(s_xyz[(fid-1)*(natoms+2):fid*(natoms+2)]))
         molecule = calc.result_ensemble.parent_molecule
-        ensemble = Ensemble.objects.create(parent_molecule=molecule, origin=calc.result_ensemble, name="Extracted frame {}".format(fid))
-        s = Structure.objects.create(parent_ensemble=ensemble, xyz_structure=xyz, number=1, degeneracy=1)
-        ensemble.save()
+        e= Ensemble.objects.create(parent_molecule=molecule, origin=calc.result_ensemble, name="Extracted frame {}".format(fid))
+        f = calc.calculationframe_set.get(number=fid)
+        s = Structure.objects.create(parent_ensemble=e, xyz_structure=f.xyz_structure, number=1, degeneracy=1)
+        e.save()
         s.save()
         input_structures = [s]
     else:
