@@ -1361,7 +1361,6 @@ def conformer_table_post(request):
         properties = []
         energies = []
         for s in e.structure_set.all():
-            print(s)
             try:
                 prop = s.properties.get(parameters=p)
             except Property.DoesNotExist:
@@ -1447,7 +1446,6 @@ def get_calc_data(request, pk):
     multi_xyz = ""
     RMSD = "Frame,RMSD\n"
     for f in calc.calculationframe_set.all():
-        print(f.number, f.RMSD)
         multi_xyz += f.xyz_structure
         RMSD += "{},{}\n".format(f.number, f.RMSD)
 
@@ -1765,7 +1763,6 @@ def download_project_logs(request, pk):
                         pass
                     else:
                         if prop.freq != 0:
-                            print(prop.freq)
                             try:
                                 copyfile(os.path.join(CALCUS_RESULTS_HOME, str(prop.freq), "calc.out"), os.path.join(p_dir, "{}.log".format(prop.freq)))
                             except FileNotFoundError:
@@ -1832,7 +1829,6 @@ def gen_3D(request):
         system("babel -imol /tmp/{}.mol -oxyz /tmp/{}.xyz -h --gen3D".format(t, t), force_local=True)
         with open("/tmp/{}.xyz".format(t)) as f:
             lines = f.readlines()
-        print(lines)
         if ''.join(lines).strip() == '':
             return HttpResponse(status=404)
 

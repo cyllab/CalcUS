@@ -564,6 +564,17 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         link = calculations[0].find_element_by_class_name("fa-list")
         link.click()
 
+    def details_first_calc(self):
+        assert self.is_on_page_order_details()
+
+        calcs = self.driver.find_elements_by_css_selector("tbody > tr")
+        first_calc = calcs[0]
+        buttons = first_calc.find_elements_by_css_selector(".button")
+        details = buttons[0]
+        assert details.text != "Kill"
+        details.click()
+
+
     def cancel_all_calc(self):
         assert self.is_on_page_order_details()
 

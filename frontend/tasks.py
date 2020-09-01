@@ -14,7 +14,6 @@ import os
 import numpy as np
 import decimal
 import math
-from datetime import datetime
 from time import time, sleep
 
 import subprocess
@@ -220,7 +219,8 @@ def wait_until_logfile(remote_dir, conn, lock):
     print("Failed to find a job log")
     return -1
 
-def wait_until_done(job_id, conn, lock):
+def wait_until_done(calc, conn, lock):
+    job_id = calc.remote_id
     print("Waiting for job {} to finish".format(job_id))
     DELAY = [5, 10, 15, 20, 60, 200, 400]
     ind = 0
@@ -243,6 +243,12 @@ def wait_until_done(job_id, conn, lock):
                 if _output != None and len(_output) < 2:
                     print("Job done")
                     return 0
+                else:
+                    status = _output[1].split()[4]
+                    if status == "R" and calc.status == 0:
+                        calc.date_started = timezone.now()
+                        calc.status = 1
+                        calc.save()
 
         if pid in kill_sig:
             direct_command("scancel {}".format(job_id), conn, lock)
@@ -263,8 +269,8 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         remote_dir = remote_dirs[pid]
 
         if calc.status == 0:
-            calc.status = 1
-            calc.save()
+            #calc.status = 1
+            #calc.save()
 
             if log_file != "":
                 output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{} | tee {}' >> submit_{}.sh; sbatch submit_{}.sh | tee calcus".format(remote_dir, conn[0].cluster_username, software, command, log_file, software, software), conn, lock)
@@ -291,14 +297,14 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                             else:
                                 calc.remote_id = int(job_id)
                                 calc.save()
-                                ret = wait_until_done(job_id, conn, lock)
+                                ret = wait_until_done(calc, conn, lock)
                                 return ret
                         else:
                             job_id = output[-2].replace('Submitted batch job', '').strip()
 
                             calc.remote_id = int(job_id)
                             calc.save()
-                            ret = wait_until_done(job_id, conn, lock)
+                            ret = wait_until_done(calc, conn, lock)
                             return ret
                     else:
                         return output
@@ -313,17 +319,18 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     job_id = output[-2].replace('Submitted batch job', '').strip()
                     calc.remote_id = int(job_id)
                     calc.save()
-                    ret = wait_until_done(job_id, conn, lock)
+                    ret = wait_until_done(calc, conn, lock)
                     return ret
                 else:
                     return 1
         else:
-            ret = wait_until_done(calc.remote_id, conn, lock)
+            ret = wait_until_done(calc, conn, lock)
             return ret
-    else:
+    else:#Local
         if calc_id != -1:
             calc = Calculation.objects.get(pk=calc_id)
             calc.status = 1
+            calc.date_started = timezone.now()
             calc.save()
             res = AbortableAsyncResult(calc.task_id)
 
@@ -2101,9 +2108,17 @@ def analyse_opt_xtb(calc):
     nn = int(len(lines)/(natoms+2))
     RMSD = "Frame,RMS Displacement\n"
     for n in range(nn):
+        xyz = ''.join(lines[(natoms+2)*n:(natoms+2)*(n+1)])
         rms = lines[n*(natoms+2)+1].split()[3]
-        RMSD += "{},{}\n".format(n+1, rms)
-    return xyz, RMSD
+        try:
+            f = calc.calculationframe_set.get(number=n+1)
+        except CalculationFrame.DoesNotExist:
+            f = CalculationFrame.objects.create(parent_calculation=calc, number=n+1, RMSD=rms, xyz_structure=xyz)
+        else:
+            f.xyz_structure = xyz
+
+        f.save()
+    return
 
 
 def analyse_opt_Gaussian(calc):
@@ -2336,7 +2351,7 @@ def dispatcher(drawing, order_id):
         e.save()
 
         for s in input_structures:
-            c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), step=step, parameters=order.parameters, result_ensemble=e, constraints=order.constraints)
+            c = Calculation.objects.create(structure=s, order=order, date_submitted=timezone.now(), step=step, parameters=order.parameters, result_ensemble=e, constraints=order.constraints)
             c.save()
             if local:
                 calculations.append(c)
@@ -2360,7 +2375,7 @@ def dispatcher(drawing, order_id):
             order.result_ensemble = e
             order.save()
         for s in input_structures:
-            c = Calculation.objects.create(structure=s, order=order, date=datetime.now(), parameters=order.parameters, step=step, constraints=order.constraints)
+            c = Calculation.objects.create(structure=s, order=order, date_submitted=timezone.now(), parameters=order.parameters, step=step, constraints=order.constraints)
             c.save()
             if local:
                 calculations.append(c)
@@ -2416,21 +2431,22 @@ def run_calc(calc_id):
 
         in_file = os.path.join(remote_dir, "in.xyz")
 
-    ti = time()
     try:
         ret = f(in_file, calc)
     except:
         ret = 1
         traceback.print_exc()
 
+    calc = Calculation.objects.get(pk=calc_id)
+    calc.date_finished = timezone.now()
     if ret == -2:
         calc.status = 3
         calc.save()
         print("Job {} cancelled".format(calc.id))
         return
 
-    tf = time()
-    calc.execution_time = int((tf-ti)*int(PAL))################
+    if calc.local:
+        calc.execution_time = int((calc.date_finished-calc.date_started).seconds*int(calc.pal))
 
     if ret != 0:
         calc.status = 3

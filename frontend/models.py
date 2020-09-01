@@ -604,7 +604,8 @@ class Calculation(models.Model):
     error_message = models.CharField(max_length=400, default="")
     current_status = models.CharField(max_length=400, default="")
 
-    date = models.DateTimeField('date', null=True, blank=True)
+    date_submitted = models.DateTimeField('date', null=True, blank=True)
+    date_started = models.DateTimeField('date', null=True, blank=True)
     date_finished = models.DateTimeField('date', null=True, blank=True)
 
     execution_time = models.PositiveIntegerField(default=0)
