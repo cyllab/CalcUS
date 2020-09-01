@@ -1353,7 +1353,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'type': 'UV-Vis Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'CH4.mol',
+                'in_file': 'benzene.mol',
                 }
 
         self.lget("/launch/")

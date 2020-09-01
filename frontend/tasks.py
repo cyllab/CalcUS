@@ -1521,8 +1521,15 @@ def xtb_stda(in_file, calc):
         solvent_add = ''
 
     os.chdir(local_folder)
-    ret = system("xtb4stda {} -chrg {} {} && stda -xtb -e 12".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id)
+    ret1 = system("xtb4stda {} -chrg {} {}".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id)
 
+    if ret1 != 0:
+        return ret1
+
+    ret2 = system("stda -xtb -e 12".format(in_file, calc.parameters.charge, solvent_add), 'calc2.out', calc_id=calc.id)
+
+    if ret2 != 0:
+        return ret2
 
     if not local:
         pid = int(threading.get_ident())
@@ -1536,9 +1543,6 @@ def xtb_stda(in_file, calc):
 
         if a == -1 or b == -1 or c == -1:
             return -1
-
-    if ret != 0:
-        return ret
 
     f_x = np.arange(120.0, 1200.0, 1.0)
 

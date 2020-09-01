@@ -9,6 +9,9 @@ def get_molecule_summary(molecules):
     completed = {}
     queued = {}
     running = {}
+    if len(molecules) == 0:
+        return None
+
     for mol in molecules:
         num[mol.id] = 0
         completed[mol.id] = 0
