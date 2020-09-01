@@ -2198,9 +2198,9 @@ def verify_charge_mult(xyz, charge, mult):
         el = line.split()[0]
         electrons += ATOMIC_NUMBER[el]
 
-    electrons -= self.calc.parameters.charge
+    electrons -= charge
     odd_e = electrons % 2
-    odd_m = multiplicity % 2
+    odd_m = mult % 2
 
     if odd_e == odd_m:
         return -1
@@ -2441,9 +2441,11 @@ def run_calc(calc_id):
     if calc.status == 3:#Already revoked:
         return
 
-    ret = verify_charge_mult(calc.structure.xyz_structure, calc.charge, calc.multiplicity)
+    ret = verify_charge_mult(calc.structure.xyz_structure, calc.parameters.charge, calc.parameters.multiplicity)
     if ret != 0:
         calc.error_message = "Impossible charge/multiplicity"
+        calc.status = 3
+        calc.save()
         return
     if calc.status == 0:
         os.mkdir(res_dir)
