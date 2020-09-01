@@ -31,6 +31,13 @@ class GaussianCalculation:
     pal = 0
     appendix = []
 
+    SMD18_APPENDIX = """modifysph
+
+    Br 2.60
+
+    I 2.74
+    """
+
     TEMPLATE = """%chk=in.chk
     %nproc={}
     %mem={}MB
@@ -167,6 +174,9 @@ class GaussianCalculation:
         if self.calc.parameters.solvent != "Vacuum":
             if self.calc.parameters.solvation_model == "SMD":
                 self.command_line += "SCRF(SMD, Solvent={}) ".format(self.calc.parameters.solvent)
+            elif self.calc.parameters.solvation_model == "SMD18":
+                self.command_line += "SCRF(SMD, Solvent={}, Read) ".format(self.calc.parameters.solvent)
+                self.appendix.append(self.SMD18_APPENDIX)
             elif self.calc.parameters.solvation_model == "PCM":
                 self.command_line += "SCRF(PCM, Solvent={}, Read) ".format(self.calc.parameters.solvent)
                 self.appendix.append("Radii=Bondi\n")
@@ -174,7 +184,7 @@ class GaussianCalculation:
                 self.command_line += "SCRF(CPCM, Solvent={}, Read) ".format(self.calc.parameters.solvent)
                 self.appendix.append("Radii=Bondi\n")
             else:
-                raise Exception("Invalid solvation method for ORCA")
+                raise Exception("Invalid solvation method for Gaussian")
 
     def create_input_file(self):
         if self.calc.local:

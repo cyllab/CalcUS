@@ -188,6 +188,39 @@ class GaussianTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
+    def test_sp_HF_SMD18(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'I.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'HF',
+                'basis_set': '3-21G',
+                'charge': '-1',
+                'solvent': 'Chloroform',
+                'solvation_model': 'SMD18',
+                }
+
+        calc = gen_calc(params)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p sp HF/3-21G SCRF(SMD, Solvent=Chloroform, Read)
+
+        CalcUS
+
+        -1 1
+        I 0.0 0.0 0.0
+
+        modifysph
+
+        Br 2.60
+
+        I 2.74
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
     def test_sp_HF_PCM(self):
         params = {
                 'type': 'Single-Point Energy',
