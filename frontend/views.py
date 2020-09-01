@@ -27,7 +27,7 @@ from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe
 from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc
 from .decorators import superuser_required
-from .tasks import system, analyse_opt
+from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint
 from .constants import *
 
 from shutil import copyfile, make_archive, rmtree
@@ -203,7 +203,7 @@ def project_details(request, username, proj):
         try:
             project = target_profile.project_set.get(name=target_project)
         except Project.DoesNotExist:
-                return HttpResponseRedirect("/home/")
+            return HttpResponseRedirect("/home/")
         if can_view_project(project, request.user.profile):
             return render(request, 'frontend/project_details.html', {
             'molecules': project.molecule_set.all().order_by(Lower('name')),
@@ -734,11 +734,11 @@ def submit_calculation(request):
         if not profile.is_PI and profile.group == None:
             return error(request, "You have no computing resource")
 
-    obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
-
+    orders = []
     drawing = True
 
     if 'starting_ensemble' in request.POST.keys():
+        obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
         drawing = False
         start_id = int(clean(request.POST['starting_ensemble']))
         try:
@@ -785,8 +785,10 @@ def submit_calculation(request):
 
             else:
                 return error(request, "Invalid filter type")
+        orders.append(obj)
 
     elif 'starting_struct' in request.POST.keys():
+        obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
         drawing = False
         start_id = int(clean(request.POST['starting_struct']))
         try:
@@ -796,7 +798,9 @@ def submit_calculation(request):
         if not can_view_structure(start_s, profile):
             return error(request, "You do not have permission to access the starting calculation")
         obj.structure = start_s
+        orders.append(obj)
     elif 'starting_calc' in request.POST.keys():
+        obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
         if not 'starting_frame' in request.POST.keys():
             return error(request, "Missing starting frame number")
         c_id = int(clean(request.POST['starting_calc']))
@@ -809,36 +813,67 @@ def submit_calculation(request):
             return error(request, "You do not have permission to access the starting calculation")
         obj.start_calc = start_c
         obj.start_calc_frame = f_id
+        orders.append(obj)
     else:
-        if len(request.FILES) == 1:
-            e = Ensemble.objects.create(name="File Upload")
-            obj.ensemble = e
+        fingerprints = {}
+        unique_fingerprints = []
+        in_structs = []
+        names = {}
+        if len(request.FILES) > 0:
+            for ind, ff in enumerate(request.FILES.getlist("file_structure")):
+                s = Structure.objects.create()
 
-            s = Structure.objects.create(parent_ensemble=e, number=1)
+                _params = Parameters.objects.create(software="Unknown", method="Unknown", basis_set="", solvation_model="", charge=params.charge, multiplicity=1)
+                p = Property.objects.create(parent_structure=s, parameters=_params, geom=True)
+                p.save()
+                _params.save()
 
-            params = Parameters.objects.create(software="Unknown", method="Unknown", basis_set="", solvation_model="", charge=params.charge, multiplicity="1")
-            p = Property.objects.create(parent_structure=s, parameters=params, geom=True)
-            p.save()
-            params.save()
+                drawing = False
+                in_file = clean(ff.read().decode('utf-8'))
+                filename, ext = ff.name.split('.')
+                names[s.id] = filename
 
-            drawing = False
-            in_file = clean(request.FILES['file_structure'].read().decode('utf-8'))
-            filename, ext = request.FILES['file_structure'].name.split('.')
+                if ext == 'mol':
+                    s.mol_structure = in_file
+                    generate_xyz_structure(False, s)
+                elif ext == 'xyz':
+                    s.xyz_structure = in_file
+                elif ext == 'sdf':
+                    s.sdf_structure = in_file
+                    generate_xyz_structure(False, s)
+                elif ext == 'mol2':
+                    s.mol2_structure = in_file
+                    generate_xyz_structure(False, s)
+                else:
+                    return error(request, "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf)")
+                s.save()
+                fing = gen_fingerprint(s)
 
-            if ext == 'mol':
-                s.mol_structure = in_file
-            elif ext == 'xyz':
-                s.xyz_structure = in_file
-            elif ext == 'sdf':
-                s.sdf_structure = in_file
-            elif ext == 'mol2':
-                s.mol2_structure = in_file
-            else:
-                return error(request, "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf)")
-            e.save()
-            s.save()
+                if fing in fingerprints.keys():
+                    fingerprints[fing].append(s.id)
+                else:
+                    fingerprints[fing] = [s.id]
+
+                if fing not in unique_fingerprints:
+                    unique_fingerprints.append(fing)
+
+            for fing in unique_fingerprints:
+                tmpname = names[fingerprints[fing][0]]
+                obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
+                mol = Molecule.objects.create(name=tmpname, inchi=fing, project=project_obj)
+                mol.save()
+                e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+                for s_id in fingerprints[fing]:
+                    s = Structure.objects.get(pk=s_id)
+                    s.parent_ensemble = e
+                    s.save()
+                e.save()
+                obj.ensemble = e
+                obj.save()
+                orders.append(obj)
         else:
             if 'structureB' in request.POST.keys():
+                obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
                 drawing = True
                 e = Ensemble.objects.create(name="Drawn Structure")
                 obj.ensemble = e
@@ -851,6 +886,7 @@ def submit_calculation(request):
 
                 mol = clean(request.POST['structureB'])
                 s.mol_structure = mol
+                orders.append(obj)
             else:
                 return error(request, "No input structure")
 
@@ -886,16 +922,19 @@ def submit_calculation(request):
                 else:
                     return error(request, "Invalid constrained optimisation")
 
-    obj.constraints = constraints
+    for o in orders:
+        o.constraints = constraints
 
-    if ressource != "Local":
-        obj.resource = access
+        if ressource != "Local":
+            o.resource = access
 
-    obj.save()
+        o.save()
+
     profile.save()
 
     if not 'test' in request.POST.keys():
-        dispatcher.delay(drawing, obj.id)
+        for o in orders:
+            dispatcher.delay(drawing, o.id)
 
     return redirect("/calculations/")
 

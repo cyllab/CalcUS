@@ -611,6 +611,7 @@ class Calculation(models.Model):
     execution_time = models.PositiveIntegerField(default=0)
 
     status = models.PositiveIntegerField(default=0)
+    error_message = models.CharField(max_length=400, default="", blank=True, null=True)
 
     structure = models.ForeignKey(Structure, on_delete=models.SET_NULL, null=True)
     step = models.ForeignKey(BasicStep, on_delete=models.SET_NULL, null=True)

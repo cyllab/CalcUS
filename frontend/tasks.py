@@ -2277,7 +2277,8 @@ def dispatcher(drawing, order_id):
             input_structures = [structure]
     elif order.ensemble != None:
         for s in ensemble.structure_set.all():
-            generate_xyz_structure(drawing, s)
+            if s.xyz_structure == "":
+                generate_xyz_structure(drawing, s)
 
         ensemble.save()
 
@@ -2289,7 +2290,8 @@ def dispatcher(drawing, order_id):
                 if fingerprint == "":
                     fingerprint = fing
                 else:
-                    assert fingerprint == fing
+                    if fingerprint != fing:#####
+                        pass
             try:
                 molecule = Molecule.objects.get(inchi=fingerprint, project=order.project)
             except Molecule.DoesNotExist:
@@ -2338,7 +2340,6 @@ def dispatcher(drawing, order_id):
     calculations = []
 
     input_structures = filter(order, input_structures)
-
     if step.creates_ensemble:
         if order.name.strip() == "" or created_molecule:
             e = Ensemble.objects.create(name="{} Result".format(order.step.name), origin=ensemble)
@@ -2441,6 +2442,7 @@ def run_calc(calc_id):
     calc.date_finished = timezone.now()
     if ret == -2:
         calc.status = 3
+        calc.error_message = "Job cancelled"
         calc.save()
         print("Job {} cancelled".format(calc.id))
         return
@@ -2450,6 +2452,7 @@ def run_calc(calc_id):
 
     if ret != 0:
         calc.status = 3
+        calc.error_message = "Incorrect termination"#TODO: error analysis
         calc.save()
     else:
         calc.status = 2
@@ -2547,6 +2550,7 @@ def kill_calc(calc):
             else:
                 revoke(calc.task_id)
                 calc.status = 3
+                calc.error_message = "Job cancelled"
                 calc.save()
         else:
             print("Cannot cancel calculation without task id")
@@ -2554,6 +2558,7 @@ def kill_calc(calc):
         cmd = ClusterCommand.objects.create(issuer=calc.order.author)
         cmd.save()
         calc.status = 3
+        calc.error_message = "Job cancelled"
         calc.save()
 
         with open(os.path.join(CALCUS_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
