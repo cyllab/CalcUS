@@ -132,7 +132,6 @@ def get_available_elements(request):
         return HttpResponse(status=204)
 
     md = basis_set_exchange.get_metadata()
-    print(md.keys())
     if bs not in md.keys():
         return HttpResponse(status=404)
 

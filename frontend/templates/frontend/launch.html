@@ -868,11 +868,11 @@
 								<label class="label">Custom basis sets</label>
 								<div class="control">
 									<input class="input" name="calc_custom_bs" id="calc_custom_bs" type="text" placeholder="" >
-								</div>
 								<button class="button is-info" id="pick_bs_button" type="button">Pick custom basis sets</button>
+								</div>
 							</div>
 
-							<div class="modal pick_bs_div ">
+							<div class="modal pick_bs_div" id="pick_bs_div">
 								<div class="modal-card">
 									<header class="modal-card-head">
 										<p class="modal-card-title">Specific basis sets</p>
@@ -1095,17 +1095,30 @@
 	let modal = document.querySelector(".pick_bs_div")
 	let closeBtn = document.querySelector(".close-btn")
 	modalBtn.onclick = function(){
-		$("#custom_bs_body").load("/periodictable/");
+		div = $("#custom_bs_body");
+		if (div.html().replace(/^\s+|\s+$/g, '') == ""){
+			$("#custom_bs_body").load("/periodictable/");
+		}
   		modal.style.display = "block"
 	}
 	closeBtn.onclick = function(){
   		modal.style.display = "none"
+		print_output();
 	}
 	window.onclick = function(e){
   		if(e.target == modal){
     			modal.style.display = "none"
+		print_output();
   		}
+	}		
+	function print_output() {
+		output = document.getElementById("calc_custom_bs");
+		tmp_output = document.getElementById("custom_bs");
+
+		output.value = tmp_output.value;
 	}
+
+
 	</script>
 
 {% endblock content %}
