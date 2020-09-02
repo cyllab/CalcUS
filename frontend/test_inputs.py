@@ -932,6 +932,39 @@ class OrcaTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, orca.input_file))
 
+    def test_sp_HF_SMD18(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'I.xyz',
+                'software': 'ORCA',
+                'theory_level': 'HF',
+                'basis_set': '3-21G',
+                'charge': '-1',
+                'solvent': 'Chloroform',
+                'solvation_model': 'SMD18',
+                }
+
+        calc = gen_calc(params)
+        orca = OrcaCalculation(calc)
+
+        REF = """
+        !SP HF 3-21G
+        *xyz -1 1
+        I 0.0 0.0 0.0
+        *
+        %pal
+        nprocs 1
+        end
+        %cpcm
+        smd true
+        SMDsolvent "Chloroform"
+        radius[I] 2.74
+        radius[Br] 2.60
+        end
+        """
+
+        self.assertTrue(self.is_equivalent(REF, orca.input_file))
+
 
     def test_sp_HF_CPCM(self):
         params = {

@@ -109,8 +109,6 @@ class Command(BaseCommand):
             self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Creating the Molecular Orbitals", error_message="Failed to create the Molecular Orbitals", avail_ORCA=True)
 
-
-
         ###Procedure creations
 
         ###Template:

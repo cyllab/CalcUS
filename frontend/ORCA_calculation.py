@@ -219,6 +219,15 @@ class OrcaCalculation:
                 SMDsolvent "{}"
                 end'''.format(self.calc.parameters.solvent)
                 self.blocks.append(smd_block)
+            elif self.calc.parameters.solvation_model == "SMD18":
+                smd_block = '''%cpcm
+                smd true
+                SMDsolvent "{}"
+                radius[I] 2.74
+                radius[Br] 2.60
+                end'''.format(self.calc.parameters.solvent)
+                self.blocks.append(smd_block)
+
             elif self.calc.parameters.solvation_model == "CPCM":
                 self.command_line += "CPCM({}) ".format(self.calc.parameters.solvent)
             else:
