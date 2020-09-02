@@ -327,15 +327,20 @@ class Ensemble(models.Model):
 
         for e, degen in data:
             if e != '':
-                s += degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
+                if degen == 0:
+                    s += np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
+                else:
+                    s += degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
 
         weights = []
         for e, degen in data:
             if e == '':
                 weights.append('')
                 continue
-            assert degen != 0
-            w = degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+            if degen == 0:
+                w = np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+            else:
+                w = degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
             weights.append(w)
         return weights
 
@@ -434,8 +439,8 @@ class Structure(models.Model):
     xyz_structure = models.CharField(default="", max_length=5000000)
     sdf_structure = models.CharField(default="", max_length=5000000)
 
-    number = models.PositiveIntegerField(default=0)
-    degeneracy = models.PositiveIntegerField(default=0)
+    number = models.PositiveIntegerField(default=1)
+    degeneracy = models.PositiveIntegerField(default=1)
 
     def __repr__(self):
         return self.id
