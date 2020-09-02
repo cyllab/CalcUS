@@ -11,6 +11,47 @@
 	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
 
+	<style>
+	.pick_bs_div {
+		display: none;
+  		position: fixed; 
+  		padding-top: 50px;
+  		left: 0; 
+  		top: 0;
+  		width: 100%;
+  		height: 100%; 
+  		background-color: rgb(0, 0, 0);
+  		background-color: rgba(0, 0, 0, 0.5);
+	}
+	.modal-content {
+  		position: relative; 
+  		background-color: white;
+  		padding: 20px; 
+  		margin: auto; 
+  		width: 75%;  
+  		-webkit-animation-name: animatetop;
+  		-webkit-animation-duration: 0.4s;
+  		animation-name: animatetop;
+  		animation-duration: 0.4s
+	}	
+	.close-btn {
+	  float: right; 
+	  color: lightgray; 
+	  font-size: 24px;  
+	  font-weight: bold;
+	}
+	  .close-btn:hover {
+	  color: darkgray;
+	}
+	  @-webkit-keyframes animatetop {
+	  from {top:-300px; opacity:0} 
+	  to {top:0; opacity:1}
+	}
+	  @keyframes animatetop {
+	  from {top:-300px; opacity:0}
+	  to {top:0; opacity:1}
+	}
+	</style>
 	<script>
 	(function(ChemDoodle) {
 		ChemDoodle.relabel = function(molecule){
@@ -822,6 +863,29 @@
 								</div>
 							</div>
 						</div>
+						<div class="method_specific avail_DFT avail_RI-MP2 avail_HF">
+							<div class="field">
+								<label class="label">Custom basis sets</label>
+								<div class="control">
+									<input class="input" name="calc_custom_bs" id="calc_custom_bs" type="text" placeholder="" >
+								</div>
+								<button class="button is-info" id="pick_bs_button" type="button">Pick custom basis sets</button>
+							</div>
+
+							<div class="modal pick_bs_div ">
+								<div class="modal-card">
+									<header class="modal-card-head">
+										<p class="modal-card-title">Specific basis sets</p>
+										<button type="button" class="close-btn modal-close is-large" aria-label="close"></button>
+									</header>
+									<section class="modal-card-body" id="custom_bs_body">
+									</section>
+									<footer class="model-card-foot">
+										footer
+									</footer>
+								</div>
+							</div>
+						</div>
 
 					</details>
 				</div>
@@ -1026,4 +1090,22 @@
 
 	});
 	</script>
+	<script>
+	let modalBtn = document.getElementById("pick_bs_button")
+	let modal = document.querySelector(".pick_bs_div")
+	let closeBtn = document.querySelector(".close-btn")
+	modalBtn.onclick = function(){
+		$("#custom_bs_body").load("/periodictable/");
+  		modal.style.display = "block"
+	}
+	closeBtn.onclick = function(){
+  		modal.style.display = "none"
+	}
+	window.onclick = function(e){
+  		if(e.target == modal){
+    			modal.style.display = "none"
+  		}
+	}
+	</script>
+
 {% endblock content %}

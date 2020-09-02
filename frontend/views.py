@@ -7,6 +7,7 @@ import math
 import time
 import zipfile
 from io import BytesIO
+import basis_set_exchange
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -103,6 +104,42 @@ class IndexView(generic.ListView):
 
 def home(request):
     return render(request, 'frontend/home.html')
+
+@login_required
+def periodictable(request):
+    return render(request, 'frontend/periodictable.html')
+
+@login_required
+def get_available_bs(request):
+    if 'elements' in request.POST.keys():
+        raw_el = clean(request.POST['elements'])
+        elements = [i.strip() for i in raw_el.split(' ') if i.strip() != '']
+    else:
+        elements = None
+
+    basis_sets = basis_set_exchange.filter_basis_sets(elements=elements)
+    response = ""
+    for k in basis_sets.keys():
+        name = basis_sets[k]['display_name']
+        response += """<option value="{}">{}</option>\n""".format(k, name)
+    return HttpResponse(response)
+
+@login_required
+def get_available_elements(request):
+    if 'bs' in request.POST.keys():
+        bs = clean(request.POST['bs'])
+    else:
+        return HttpResponse(status=204)
+
+    md = basis_set_exchange.get_metadata()
+    print(md.keys())
+    if bs not in md.keys():
+        return HttpResponse(status=404)
+
+    version = md[bs]['latest_version']
+    elements = md[bs]['versions'][version]['elements']
+    response = ' '.join(elements)
+    return HttpResponse(response)
 
 @login_required
 def calculations(request):
