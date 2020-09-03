@@ -176,7 +176,8 @@ class GaussianCalculation:
     def parse_custom_basis_set(self):
         custom_basis_set = self.calc.parameters.custom_basis_sets
         entries = [i.strip() for i in custom_basis_set.split(';') if i.strip() != ""]
-        to_append = []
+        to_append_gen = []
+        to_append_ecp = []
 
         ecp = False
         custom_atoms = []
@@ -197,7 +198,18 @@ class GaussianCalculation:
             bs = basis_set_exchange.get_basis(bs_keyword, fmt='gaussian94', elements=[el_num], header=False)
             if bs.find('-ECP') != -1:
                 ecp = True
-            to_append.append(bs)
+                sbs = bs.split('\n')
+                ecp_ind = -1
+                for ind, line in enumerate(sbs):
+                    if sbs[ind].find("-ECP") != -1:
+                        ecp_ind = ind
+                        break
+                bs_gen = '\n'.join(sbs[:ecp_ind-2]) + '\n'
+                bs_ecp = '\n'.join(sbs[ecp_ind-2:]) + '\n'
+                to_append_gen.append(bs_gen)
+                to_append_ecp.append(bs_ecp)
+            else:
+                to_append_gen.append(bs)
 
         if ecp:
             gen_keyword = "GenECP"
@@ -219,7 +231,8 @@ class GaussianCalculation:
             custom_bs += self.calc.parameters.basis_set + '\n'
             custom_bs += '****\n'
 
-        custom_bs += ''.join(to_append)
+        custom_bs += ''.join(to_append_gen)
+        custom_bs += ''.join(to_append_ecp)
 
         return gen_keyword, custom_bs
 
