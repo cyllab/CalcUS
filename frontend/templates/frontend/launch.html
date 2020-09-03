@@ -265,9 +265,11 @@
 				hf3c = document.getElementById("hf3c").checked;
 				if (hf3c == true) {
 					document.getElementById("calc_basis_set_field").style.display = "none";
+					document.getElementById("custom_bs_field").style.display = "none";
 				}
 				else {
 					document.getElementById("calc_basis_set_field").style.display = "block";
+					document.getElementById("custom_bs_field").style.display = "block";
 				}
 			}
 			else if(choice.value == "DFT") {
@@ -275,10 +277,12 @@
 				if (pbeh3c == true) {
 					document.getElementById("calc_basis_set_field").style.display = "none";
 					document.getElementById("calc_functional_field").style.display = "none";
+					document.getElementById("custom_bs_field").style.display = "none";
 				}
 				else {
 					document.getElementById("calc_basis_set_field").style.display = "block";
 					document.getElementById("calc_functional_field").style.display = "block";
+					document.getElementById("custom_bs_field").style.display = "block";
 				}
 			}
 
@@ -864,7 +868,7 @@
 							</div>
 						</div>
 						<div class="method_specific avail_DFT avail_RI-MP2 avail_HF">
-							<div class="field">
+							<div class="field" id="custom_bs_field">
 								<label class="label">Custom basis sets</label>
 								<div class="control">
 									<input class="input" name="calc_custom_bs" id="calc_custom_bs" type="text" placeholder="" >
