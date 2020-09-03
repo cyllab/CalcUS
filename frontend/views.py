@@ -571,6 +571,11 @@ def parse_parameters(request, name_required=True):
     else:
         df = ''
 
+    if 'calc_custom_bs' in request.POST.keys():
+        bs = clean(request.POST['calc_custom_bs'])
+    else:
+        bs = ''
+
     if software == 'ORCA' or software == 'Gaussian':
         if 'calc_theory_level' in request.POST.keys():
             theory = clean(request.POST['calc_theory_level'])
@@ -702,7 +707,7 @@ def parse_parameters(request, name_required=True):
         else:
             project_obj = project_set[0]
 
-    params = Parameters.objects.create(charge=charge, multiplicity=mult, solvent=solvent, method=functional, basis_set=basis_set, misc=misc, software=software, theory_level=theory, solvation_model=solvation_model, density_fitting=df)
+    params = Parameters.objects.create(charge=charge, multiplicity=mult, solvent=solvent, method=functional, basis_set=basis_set, misc=misc, software=software, theory_level=theory, solvation_model=solvation_model, density_fitting=df, custom_basis_sets=bs)
     params.save()
 
     return params, project_obj, name, step

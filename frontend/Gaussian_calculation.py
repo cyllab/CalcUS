@@ -3,6 +3,7 @@ import periodictable
 from .constants import *
 from .calculation_helper import *
 from .libxyz import *
+import basis_set_exchange
 
 ATOMIC_NUMBER = {}
 ATOMIC_SYMBOL = {}
@@ -148,6 +149,7 @@ class GaussianCalculation:
 
         method = get_method(self.calc.parameters.method, "Gaussian")
         basis_set = get_basis_set(self.calc.parameters.basis_set, "Gaussian")
+        custom_basis_set = self.calc.parameters.custom_basis_sets
 
         if method == "":
             if self.calc.parameters.theory_level == "HF":
@@ -156,15 +158,70 @@ class GaussianCalculation:
                 raise Exception("No method")
 
         if basis_set != "":
-            if self.calc.parameters.density_fitting != '':
-                self.command_line += "{}/{}/{} ".format(method, basis_set, self.calc.parameters.density_fitting)
+            if custom_basis_set == "":
+                if self.calc.parameters.density_fitting != '':
+                    self.command_line += "{}/{}/{} ".format(method, basis_set, self.calc.parameters.density_fitting)
+                else:
+                    self.command_line += "{}/{} ".format(method, basis_set)
             else:
-                self.command_line += "{}/{} ".format(method, basis_set)
+                gen_keyword, to_append = self.parse_custom_basis_set()
+                self.appendix.append(to_append)
+                self.command_line += "{}/{} ".format(method, gen_keyword)
         else:
             self.command_line += "{} ".format(method)
 
         if self.calc.parameters.misc.strip() != '':
             self.command_line += "{} ".format(self.calc.parameters.misc.strip())
+
+    def parse_custom_basis_set(self):
+        custom_basis_set = self.calc.parameters.custom_basis_sets
+        entries = [i.strip() for i in custom_basis_set.split(';') if i.strip() != ""]
+        to_append = []
+
+        ecp = False
+        custom_atoms = []
+        for entry in entries:
+            sentry = entry.split('=')
+
+            if len(sentry) != 2:
+                raise Exception("Invalid custom basis set string")
+
+            el, bs_keyword = sentry
+            custom_atoms.append(el)
+
+            try:
+                el_num = ATOMIC_NUMBER[el]
+            except KeyError:
+                raise Exception("Invalid atom in custom basis set string")
+
+            bs = basis_set_exchange.get_basis(bs_keyword, fmt='gaussian94', elements=[el_num], header=False)
+            if bs.find('-ECP') != -1:
+                ecp = True
+            to_append.append(bs)
+
+        if ecp:
+            gen_keyword = "GenECP"
+        else:
+            gen_keyword = "Gen"
+
+        unique_atoms = []
+        for line in self.calc.structure.xyz_structure.split('\n')[2:]:
+            if line.strip() == "":
+                continue
+            a, *_ = line.split()
+            if a not in unique_atoms and a not in custom_atoms:
+                unique_atoms.append(a)
+
+        custom_bs = ""
+
+        if len(unique_atoms) > 0:
+            custom_bs += ' '.join(unique_atoms) + ' 0\n'
+            custom_bs += self.calc.parameters.basis_set + '\n'
+            custom_bs += '****\n'
+
+        custom_bs += ''.join(to_append)
+
+        return gen_keyword, custom_bs
 
     def handle_xyz(self):
         lines = [i + '\n' for i in clean_xyz(self.calc.structure.xyz_structure).split('\n')[2:] if i != '' ]

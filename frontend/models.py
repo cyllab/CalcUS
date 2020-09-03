@@ -468,6 +468,7 @@ class Parameters(models.Model):
     method = models.CharField(max_length=100, default='GFN2-xTB')
     misc = models.CharField(max_length=1000, default='')
     density_fitting = models.CharField(max_length=1000, default='')
+    custom_basis_sets = models.CharField(max_length=1000, default='')
 
     def __repr__(self):
         return "{} - {} ({})".format(self.software, self.method, self.solvent)

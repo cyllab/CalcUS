@@ -223,8 +223,8 @@ class OrcaCalculation:
                 smd_block = '''%cpcm
                 smd true
                 SMDsolvent "{}"
-                radius[I] 2.74
-                radius[Br] 2.60
+                radius[53] 2.74
+                radius[35] 2.60
                 end'''.format(self.calc.parameters.solvent)
                 self.blocks.append(smd_block)
 
