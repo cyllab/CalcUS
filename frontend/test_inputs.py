@@ -2171,6 +2171,7 @@ class OrcaTests(TestCase):
            3      4.82376700    -0.24371300 2
            4      4.88431500    -0.32080400 2
         end
+
         end
         %pal
         nprocs 8

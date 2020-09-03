@@ -222,7 +222,7 @@ class OrcaCalculation:
                 clean_bs = '\n'.join(sbs[3:]) + '\n'
                 clean_bs = clean_bs.replace("$END", 'end')
                 custom_bs += "newgto {}\n".format(el)
-                custom_bs += clean_bs[:-1]
+                custom_bs += clean_bs
 
             else:
                 clean_bs = '\n'.join(sbs[3:-1]) + '\n'
