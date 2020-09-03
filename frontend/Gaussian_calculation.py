@@ -35,7 +35,6 @@ class GaussianCalculation:
     SMD18_APPENDIX = """modifysph
 
     Br 2.60
-
     I 2.74
     """
 

@@ -222,7 +222,6 @@ class GaussianTests(TestCase):
         modifysph
 
         Br 2.60
-
         I 2.74
 
         """

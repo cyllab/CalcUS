@@ -57,26 +57,29 @@
 							{% if shifts %}
 							<div class="columns">
 								<div class="column">
-									<table class="table">
-										<thead>
-											<tr>
-												<th>Atom number</th>
-												<th>Atom type</th>
-												<th>Calculated Shift</th>
-												<th>Predicted Shift</th>
-											</tr>
-										</thead>
-										<tbody>
-											{% for shift in shifts %}
+										<table class="table">
+											<thead>
 												<tr>
-													<td>{{ shift.0 }}</td>
-													<td>{{ shift.1 }}</td>
-													<td>{{ shift.2|floatformat:-3 }}</td>
-													<td>{{ shift.3|floatformat:-3 }}</td>
+													<th>Atom number</th>
+													<th>Atom type</th>
+													<th>Calculated Shift</th>
+													<th>Predicted Shift</th>
 												</tr>
-											{% endfor %}
-										</tbody>
-									</table>
+											</thead>
+											<tbody>
+												{% for shift in shifts %}
+													<tr>
+														<td>{{ shift.0 }}</td>
+														<td>{{ shift.1 }}</td>
+														<td>{{ shift.2|floatformat:-3 }}</td>
+														<td>{{ shift.3|floatformat:-3 }}</td>
+													</tr>
+												{% endfor %}
+											</tbody>
+										</table>
+									<center>
+										<a class="button is-info" href="/nmr_analysis/{{ ensemble.id }}/{{ parameters.id }}">Advanced analysis</a>
+									</center>
 								</div>
 								<div class="column">
 									<center>

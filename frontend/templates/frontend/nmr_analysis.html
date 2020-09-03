@@ -1,0 +1,151 @@
+{% extends 'frontend/base.html' %}
+
+{% load i18n bulma_tags %}
+
+{% load static %}
+{% load details_tags %}
+
+{% block extrahead %}
+	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
+	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+
+	<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
+	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
+	<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
+
+{% endblock %}
+
+{% block content %}
+
+{% csrf_token %}
+
+<div class="container">
+	<nav class="breadcrumb" aria-label="breadcrumbs">
+	 	<ul>
+			<li><a href="/projects/">Projects</a></li>
+			<li><a href="/projects/{{ ensemble.parent_molecule.project.author }}">{{ ensemble.parent_molecule.project.author }}</a></li>
+			<li><a href="/projects/{{ ensemble.parent_molecule.project.author }}/{{ ensemble.parent_molecule.project }}">{{ ensemble.parent_molecule.project }}</a></li>
+			<li><a href="/molecule/{{ ensemble.parent_molecule.id }}">{{ ensemble.parent_molecule.name }}</a></li>
+			<li><a href="/ensemble/{{ ensemble.id }}">{{ ensemble.name }}</a></li>
+			<li class="is-active"><a aria-current="page" href="#">NMR Analysis</a></li>
+	    	</ul>
+	</nav>
+
+	<div>
+		<div class="columns">
+			<div class="column">
+				<center>
+				<div style="width: 600px;">
+					<div id="viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
+				</div>
+				<button class="button" onclick="add_equivalent_atoms()">Add equivalent atoms</button>
+				<button class="button" onclick="get_shifts()">Get shifts</button> <br />
+				<input type="text" style="width: 100%;" id="eq_atoms_text"></input>
+				</center>
+
+			</div>
+			<div class="column">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Atom number</th>
+							<th>Atom type</th>
+							<th>Calculated Shift</th>
+							<th>Predicted Shift</th>
+						</tr>
+					</thead>
+					<tbody id="shifts_body">
+
+					</tbody>
+				</table>
+
+			</div>
+		</div>
+
+		<script>
+
+			var viewer = $3Dmol.createViewer("viewer_div");
+			var num_opt_steps = "1";
+			var selected = [];
+
+			viewer.setBackgroundColor(0xffffff);
+
+			function add_equivalent_atoms() {
+				s = "";
+				for (i=0; i < selected.length; i++) {
+					s += selected[i] + " ";
+				}
+				s += ";";
+				out = document.getElementById("eq_atoms_text");
+				out.value = out.value + s;
+				selected = [];
+				viewer.setStyle({}, {stick:{}});
+				viewer.render();
+			}
+
+			function get_structure() {
+				$.ajax({
+					method: "POST",	 	 
+					url: "/get_structure/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					data: {
+						'id': {{ ensemble.id }},
+						'num': 1,
+					},
+					success: function(data, textStatus, xhr) {
+						viewer.addModel(data, "xyz");
+						viewer.setStyle({}, {stick:{}});
+						viewer.setClickable({}, true, atom_clicked);
+						viewer.addPropertyLabels('serial', {}, {showBackground: false, 'fontColor': {'color': '#00000000'}, 'fontSize': 20});
+						viewer.zoomTo();
+						viewer.render();
+					}
+				});
+			}
+
+			function atom_clicked(atom, viewer, event, container) {
+				if(selected.includes(atom.serial)) {
+					viewer.setStyle({'serial': atom.serial}, {'stick': {}});
+					selected.splice(selected.indexOf(atom.serial), 1);
+				}
+				else {
+					viewer.setStyle({'serial': atom.serial}, {'stick': {'color': '#FFFF00'}});
+					selected.push(atom.serial);
+				}
+				viewer.render();
+
+			}
+
+			function get_shifts() {
+				eq_str = document.getElementById("eq_atoms_text").value;
+				$.ajax({
+					method: "POST",	 	 
+					url: "/get_shifts/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					data: {
+						'id': {{ ensemble.id }},
+						'pid': {{ parameters.id }},
+						'eq_str': eq_str,
+					},
+					success: function(data, textStatus, xhr) {
+						$("#shifts_body").html(data);
+					}
+				});
+
+			}
+
+			$(document).ready(function(){
+				get_structure();
+			});
+		</script>
+	</div>
+</div>
+
+{% endblock content %}

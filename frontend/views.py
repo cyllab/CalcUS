@@ -294,6 +294,109 @@ def ensemble(request, pk):
         'ensemble': e})
 
 @login_required
+def nmr_analysis(request, pk, pid):
+    try:
+        e = Ensemble.objects.get(pk=pk)
+    except Ensemble.DoesNotExist:
+        return redirect('/home/')
+
+    if not can_view_ensemble(e, request.user.profile):
+        return redirect('/home/')
+
+    try:
+        param = Parameters.objects.get(pk=pid)
+    except Parameters.DoesNotExist:
+        return redirect('/home/')
+
+    if not can_view_parameters(param, request.user.profile):
+        return redirect('/home/')
+
+    return render(request, 'frontend/nmr_analysis.html', {'profile': request.user.profile,
+        'ensemble': e, 'parameters': param})
+
+@login_required
+def get_shifts(request):
+    if 'id' not in request.POST.keys():
+        return HttpResponse(status=404)
+
+    if 'pid' not in request.POST.keys():
+        return HttpResponse(status=404)
+
+    if 'eq_str' not in request.POST.keys():
+        return HttpResponse(status=404)
+
+    id = clean(request.POST['id'])
+    pid = clean(request.POST['pid'])
+    eq_str = clean(request.POST['eq_str'])
+
+    try:
+        e = Ensemble.objects.get(pk=id)
+    except Ensemble.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if not can_view_ensemble(e, request.user.profile):
+        return HttpResponse(status=403)
+
+    try:
+        param = Parameters.objects.get(pk=pid)
+    except Parameters.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if not can_view_parameters(param, request.user.profile):
+        return HttpResponse(status=403)
+
+    structures = e.structure_set.all()
+    shifts = {}
+    s_ids = []
+    for s in structures:
+        try:
+            p = s.properties.get(parameters=param)
+        except Property.DoesNotExist:
+            continue
+
+        if p.simple_nmr == '':
+            continue
+
+        for ind, shift in enumerate(p.simple_nmr.split('\n')):
+            if shift.strip() == '':
+                continue
+
+            ss = shift.strip().split()
+            pk = int(ss[0])-1
+            w = e.weight(s, param)
+            if w == '':
+                print("No weight nmr")
+                return ''
+            if ss[0] not in shifts.keys():
+                shifts[pk] = [ss[1], 0.]
+
+            shifts[pk][1] += w*float(ss[2])
+    print(shifts)
+    eq_split = eq_str.split(';')
+    for group in eq_split:
+        if group.strip() == "":
+            continue
+        nums = [int(i.strip()) for i in group.split() if i.strip() != '']
+        lnums = len(nums)
+        eq_shift = sum([shifts[i][1] for i in nums])/lnums
+        for num in nums:
+            shifts[num][1] = eq_shift
+    CELL = """
+    <tr>
+            <td>{}</td>
+            <td>{}</td>
+            <td>{:.3f}</td>
+            <td>{:.3f}</td>
+    </tr>"""
+
+    response = ""
+    for shift in shifts.keys():
+        response += CELL.format(shift, *shifts[shift], 0)
+
+    return HttpResponse(response)
+
+
+@login_required
 def link_order(request, pk):
     try:
         o = CalculationOrder.objects.get(pk=pk)
