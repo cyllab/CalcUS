@@ -2,6 +2,7 @@ import os
 import periodictable
 from .constants import *
 from .calculation_helper import *
+import basis_set_exchange
 
 ATOMIC_NUMBER = {}
 ATOMIC_SYMBOL = {}
@@ -56,9 +57,8 @@ class OrcaCalculation:
         self.block_lines = ""
         self.input_file = ""
 
-
-
         self.handle_command()
+        self.handle_custom_basis_sets()
         self.handle_xyz()
 
         self.handle_pal()
@@ -191,6 +191,46 @@ class OrcaCalculation:
 
         if self.calc.parameters.misc.strip() != "":
             self.command_line += "{} ".format(self.calc.parameters.misc.strip())
+
+    def handle_custom_basis_sets(self):
+        if self.calc.parameters.custom_basis_sets == "":
+            return
+
+        entries = [i.strip() for i in self.calc.parameters.custom_basis_sets.split(';') if i.strip() != ""]
+
+        BS_TEMPLATE = """%basis
+        {}
+        end"""
+
+        custom_bs = ""
+        for entry in entries:
+            sentry = entry.split('=')
+
+            if len(sentry) != 2:
+                raise Exception("Invalid custom basis set string")
+
+            el, bs_keyword = sentry
+
+            try:
+                el_num = ATOMIC_NUMBER[el]
+            except KeyError:
+                raise Exception("Invalid atom in custom basis set string")
+
+            bs = basis_set_exchange.get_basis(bs_keyword, fmt='ORCA', elements=[el_num], header=False)
+            sbs = bs.split('\n')
+            if bs.find("ECP") != -1:
+                clean_bs = '\n'.join(sbs[3:]) + '\n'
+                clean_bs = clean_bs.replace("$END", 'end')
+                custom_bs += "newgto {}\n".format(el)
+                custom_bs += clean_bs[:-1]
+
+            else:
+                clean_bs = '\n'.join(sbs[3:-1]) + '\n'
+                custom_bs += "newgto {}\n".format(el)
+                custom_bs += clean_bs
+                custom_bs += "end"
+
+        self.blocks.append(BS_TEMPLATE.format(custom_bs))
 
     def handle_xyz(self):
         lines = [i + '\n' for i in clean_xyz(self.calc.structure.xyz_structure).split('\n')[2:] if i != '' ]
