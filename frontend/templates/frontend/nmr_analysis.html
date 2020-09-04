@@ -46,7 +46,6 @@
 	}
 	function remove_scaling(id) {
 		$("#columns_" + id).remove();
-		scaling_num -= 1;
 	}
 	</script>
 {% endblock %}
@@ -188,10 +187,14 @@
 				eq_str = document.getElementById("eq_atoms_text").value;
 				scaling_factors = "";
 				for (i=1; i < scaling_num+1; i++) {
-					el = document.getElementById("element_" + i).value;
-					m = document.getElementById("slope_" + i).value;
-					b = document.getElementById("intercept_" + i).value;
-					scaling_factors += el + ',' + m + ',' + b + ';';
+					try {
+						el = document.getElementById("element_" + i).value;
+						m = document.getElementById("slope_" + i).value;
+						b = document.getElementById("intercept_" + i).value;
+						scaling_factors += el + ',' + m + ',' + b + ';';
+					}
+					catch (err) {
+					}
 				}
 				$.ajax({
 					method: "POST",	 	 
