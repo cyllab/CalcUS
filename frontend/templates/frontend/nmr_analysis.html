@@ -16,6 +16,39 @@
 	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
 	<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
 
+	<script>
+	String.prototype.format = function() {
+  		a = this;
+		for (i=0; i < 30; i++) {
+    			a = a.replace("{}", arguments[0])
+		}
+  		return a
+	}
+
+	let scaling_num = 1;
+
+	function add_scaling() {
+		scaling_num += 1;
+		$("#scaling_div").append(`<div class="columns" id="columns_{}">
+			<div class="column is-2">
+				<input class="input" type="text" id="element_{}">
+			</div>
+			<div class="column">
+				<input class="input" type="text" id="slope_{}">
+			</div>
+			<div class="column">
+				<input class="input" type="text" id="intercept_{}">
+			</div>
+			<div class="column">
+				<button type="button" class="button is-danger" onclick="remove_scaling({});">-</button>
+			</div>
+		</div>`.format(scaling_num));
+	}
+	function remove_scaling(id) {
+		$("#columns_" + id).remove();
+		scaling_num -= 1;
+	}
+	</script>
 {% endblock %}
 
 {% block content %}
@@ -36,18 +69,17 @@
 
 	<div>
 		<div class="columns">
-			<div class="column">
+			<div class="column has-text-centered">
 				<center>
 				<div style="width: 600px;">
 					<div id="viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
 				</div>
-				<button class="button" onclick="add_equivalent_atoms()">Add equivalent atoms</button>
-				<button class="button" onclick="get_shifts()">Get shifts</button> <br />
-				<input type="text" style="width: 100%;" id="eq_atoms_text"></input>
 				</center>
+				<button class="button" onclick="add_equivalent_atoms()">Add equivalent atoms</button>
+				<input class="input" type="text" style="width: 100%;" id="eq_atoms_text"></input>
 
 			</div>
-			<div class="column">
+			<div class="column has-text-centered">
 				<table class="table">
 					<thead>
 						<tr>
@@ -61,14 +93,45 @@
 
 					</tbody>
 				</table>
+				<div id="scaling_div">
+					<div class="columns">
+						<div class="column is-2">
+							<label class="label">Element</label>
+						</div>
+						<div class="column">
+							<label class="label">Scaling slope</label>
+						</div>
+						<div class="column">
+							<label class="label">Scaling intercept</label>
+						</div>
+						<div class="column">
+						</div>
 
+					</div>
+					<div class="columns">
+						<div class="column is-2">
+							<input class="input" type="text" id="element_1">
+						</div>
+						<div class="column">
+							<input class="input" type="text" id="slope_1">
+						</div>
+						<div class="column">
+							<input class="input" type="text" id="intercept_1">
+						</div>
+						<div class="column">
+							<button type="button" class="button is-primary" onclick="add_scaling();">+</button>
+						</div>
+
+					</div>
+				</div>
+				<br />
+				<button class="button is-info" onclick="get_shifts()">Get shifts</button>
 			</div>
 		</div>
 
 		<script>
 
 			var viewer = $3Dmol.createViewer("viewer_div");
-			var num_opt_steps = "1";
 			var selected = [];
 
 			viewer.setBackgroundColor(0xffffff);
@@ -123,6 +186,13 @@
 
 			function get_shifts() {
 				eq_str = document.getElementById("eq_atoms_text").value;
+				scaling_factors = "";
+				for (i=1; i < scaling_num+1; i++) {
+					el = document.getElementById("element_" + i).value;
+					m = document.getElementById("slope_" + i).value;
+					b = document.getElementById("intercept_" + i).value;
+					scaling_factors += el + ',' + m + ',' + b + ';';
+				}
 				$.ajax({
 					method: "POST",	 	 
 					url: "/get_shifts/",
@@ -133,6 +203,7 @@
 						'id': {{ ensemble.id }},
 						'pid': {{ parameters.id }},
 						'eq_str': eq_str,
+						'scaling_factors': scaling_factors,
 					},
 					success: function(data, textStatus, xhr) {
 						$("#shifts_body").html(data);

@@ -345,6 +345,24 @@ def get_shifts(request):
     if not can_view_parameters(param, request.user.profile):
         return HttpResponse(status=403)
 
+    scaling_factors = {}
+    print(request.POST.keys())
+    if 'scaling_factors' in request.POST.keys():
+        scaling_str = clean(request.POST['scaling_factors'])
+        for entry in scaling_str.split(';'):
+            if entry.strip() == '':
+                continue
+
+            el, m, b = entry.split(',')
+            el = clean(el)
+            try:
+                m = float(m)
+                b = float(b)
+            except ValueError:
+                continue
+            if el not in scaling_factors.keys():
+                scaling_factors[el] = [m, b]
+
     structures = e.structure_set.all()
     shifts = {}
     s_ids = []
@@ -368,10 +386,10 @@ def get_shifts(request):
                 print("No weight nmr")
                 return ''
             if ss[0] not in shifts.keys():
-                shifts[pk] = [ss[1], 0.]
+                shifts[pk] = [ss[1], 0., '-']
 
             shifts[pk][1] += w*float(ss[2])
-    print(shifts)
+
     eq_split = eq_str.split(';')
     for group in eq_split:
         if group.strip() == "":
@@ -381,17 +399,25 @@ def get_shifts(request):
         eq_shift = sum([shifts[i][1] for i in nums])/lnums
         for num in nums:
             shifts[num][1] = eq_shift
+
+    if len(scaling_factors.keys()) > 0:
+        for shift in shifts.keys():
+            el = shifts[shift][0]
+            if el in scaling_factors.keys():
+                slope, intercept = scaling_factors[el]
+                s = shifts[shift][1]
+                shifts[shift][2] = "{:.3f}".format((s-intercept)/slope)
     CELL = """
     <tr>
             <td>{}</td>
             <td>{}</td>
             <td>{:.3f}</td>
-            <td>{:.3f}</td>
+            <td>{}</td>
     </tr>"""
 
     response = ""
     for shift in shifts.keys():
-        response += CELL.format(shift, *shifts[shift], 0)
+        response += CELL.format(shift, *shifts[shift])
 
     return HttpResponse(response)
 
