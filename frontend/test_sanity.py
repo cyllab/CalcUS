@@ -147,6 +147,7 @@ class GaussianTests(TestCase):
         E = self.run_calc(gaussian)
         self.assertFalse(self.known_energy(E, params))
 
+        E = self.run_calc(gaussian)
         self.assertTrue(self.known_energy(E, params))
 
     def test_sp_SE2(self):
@@ -400,6 +401,73 @@ class GaussianTests(TestCase):
                 'charge': '+1',
                 'basis_set': 'STO-3G',
                 'custom_basis_sets': 'I=Def2-TZVPD;H=Def2-TZVP;',
+                }
+
+        calc = gen_calc(params)
+        gaussian = GaussianCalculation(calc)
+
+        E = self.run_calc(gaussian)
+        self.assertFalse(self.known_energy(E, params))
+
+    def test_multiple_genecp_bs1(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'TeI2.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'HF',
+                'charge': '0',
+                'basis_set': 'STO-3G',
+                }
+
+        calc = gen_calc(params)
+        gaussian = GaussianCalculation(calc)
+
+        E = self.run_calc(gaussian)
+        self.assertFalse(self.known_energy(E, params))
+
+    def test_multiple_genecp_bs2(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'TeI2.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'HF',
+                'charge': '0',
+                'basis_set': 'STO-3G',
+                'custom_basis_sets': 'I=Def2-TZVPD;',
+                }
+
+        calc = gen_calc(params)
+        gaussian = GaussianCalculation(calc)
+
+        E = self.run_calc(gaussian)
+        self.assertFalse(self.known_energy(E, params))
+
+    def test_multiple_genecp_bs3(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'TeI2.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'HF',
+                'charge': '0',
+                'basis_set': 'STO-3G',
+                'custom_basis_sets': 'Te=Def2-TZVPD;',
+                }
+
+        calc = gen_calc(params)
+        gaussian = GaussianCalculation(calc)
+
+        E = self.run_calc(gaussian)
+        self.assertFalse(self.known_energy(E, params))
+
+    def test_multiple_genecp_bs4(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'TeI2.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'HF',
+                'charge': '0',
+                'basis_set': 'STO-3G',
+                'custom_basis_sets': 'Te=Def2-TZVPD;I=Def2-TZVPP;',
                 }
 
         calc = gen_calc(params)
@@ -662,6 +730,73 @@ class OrcaTests(TestCase):
                 'charge': '+1',
                 'basis_set': 'STO-3G',
                 'custom_basis_sets': 'I=Def2-TZVPD;H=Def2-TZVP;',
+                }
+
+        calc = gen_calc(params)
+        orca = OrcaCalculation(calc)
+
+        E = self.run_calc(orca)
+        self.assertFalse(self.known_energy(E, params))
+
+    def test_multiple_genecp_bs1(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'TeI2.xyz',
+                'software': 'ORCA',
+                'theory_level': 'HF',
+                'charge': '0',
+                'basis_set': 'STO-3G',
+                }
+
+        calc = gen_calc(params)
+        orca = OrcaCalculation(calc)
+
+        E = self.run_calc(orca)
+        self.assertFalse(self.known_energy(E, params))
+
+    def test_multiple_genecp_bs2(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'TeI2.xyz',
+                'software': 'ORCA',
+                'theory_level': 'HF',
+                'charge': '0',
+                'basis_set': 'STO-3G',
+                'custom_basis_sets': 'I=Def2-TZVPD;',
+                }
+
+        calc = gen_calc(params)
+        orca = OrcaCalculation(calc)
+
+        E = self.run_calc(orca)
+        self.assertFalse(self.known_energy(E, params))
+
+    def test_multiple_genecp_bs3(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'TeI2.xyz',
+                'software': 'ORCA',
+                'theory_level': 'HF',
+                'charge': '0',
+                'basis_set': 'STO-3G',
+                'custom_basis_sets': 'Te=Def2-TZVPD;',
+                }
+
+        calc = gen_calc(params)
+        orca = OrcaCalculation(calc)
+
+        E = self.run_calc(orca)
+        self.assertFalse(self.known_energy(E, params))
+
+    def test_multiple_genecp_bs4(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'TeI2.xyz',
+                'software': 'ORCA',
+                'theory_level': 'HF',
+                'charge': '0',
+                'basis_set': 'STO-3G',
+                'custom_basis_sets': 'Te=Def2-TZVPD;I=Def2-TZVPP;',
                 }
 
         calc = gen_calc(params)
