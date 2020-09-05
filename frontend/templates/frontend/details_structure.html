@@ -63,7 +63,7 @@
 					vib_viewer.addModel(data, "xyz");
 					vib_viewer.vibrate(10, amplitude, true, null);
 					vib_viewer.animate({'loop': 'backAndForth'});
-					vib_viewer.setStyle({}, {stick:{}});
+					vib_viewer.setStyle({}, {stick:{}, sphere: {radius: 0.5}});
 					vib_viewer.zoomTo();
 					vib_viewer.render();
 				}
@@ -188,7 +188,7 @@
 				},
 				success: function(data, textStatus, xhr) {
 					mo_viewer.addModel(data, "xyz");
-					mo_viewer.setStyle({}, {stick:{}});
+					mo_viewer.setStyle({}, {stick:{}, sphere: {radius: 0.5}});
 					mo_viewer.zoomTo();
 					mo_viewer.render();
 				}

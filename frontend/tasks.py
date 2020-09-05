@@ -2099,6 +2099,7 @@ def analyse_opt_ORCA(calc):
             f = CalculationFrame.objects.create(number=i, xyz_structure=xyz, parent_calculation=calc, RMSD=RMSDs[i])
         else:
             f.xyz_structure = xyz
+            f.RMSD = RMSDs[i]
         f.save()
 
 def analyse_opt_xtb(calc):

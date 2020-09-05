@@ -679,7 +679,7 @@ def parse_parameters(request, name_required=True):
     if solvent != "Vacuum":
         if 'calc_solvation_model' in request.POST.keys():
             solvation_model = clean(request.POST['calc_solvation_model'])
-            if solvation_model not in ['SMD', 'PCM', 'CPCM', 'GBSA']:
+            if solvation_model not in ['SMD', 'SMD18', 'PCM', 'CPCM', 'GBSA']:
                 return "Invalid solvation model"
         else:
             return "No solvation model"
@@ -970,6 +970,7 @@ def submit_calculation(request):
         obj.structure = start_s
         orders.append(obj)
     elif 'starting_calc' in request.POST.keys():
+        print("Starting calc")
         obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
         if not 'starting_frame' in request.POST.keys():
             return error(request, "Missing starting frame number")

@@ -83,7 +83,7 @@
 						xyz = sp[0];
 						rmsd = sp[1];
 						opt_viewer.addModelsAsFrames(xyz, "xyz");
-						opt_viewer.setStyle({}, {stick:{}});
+						opt_viewer.setStyle({}, {stick:{}, sphere: {radius: 0.5}});
 						opt_viewer.zoomTo();
 						opt_viewer.render();
 						num_opt_steps = opt_viewer.getNumFrames();

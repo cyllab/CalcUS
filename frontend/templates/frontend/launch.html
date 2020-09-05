@@ -987,6 +987,7 @@
 				.attr('name', "starting_calc")
 				.attr('value', {{ calc.id }})
 				.appendTo(this);
+			$('<input />').attr('type', 'hidden')
 				.attr('name', "starting_frame")
 				.attr('value', {{ frame_id }})
 				.appendTo(this);
