@@ -760,7 +760,7 @@ def xtb_scan(in_file, calc):
 
         with open(os.path.join(local_folder, 'xtbopt.xyz')) as f:
             lines = f.readlines()
-            r = Structure.objects.create(number=1)
+            r = Structure.objects.create(number=calc.structure.number)
             r.xyz_structure = clean_xyz(''.join(lines))
 
         with open(os.path.join(local_folder, "calc.out")) as f:
@@ -1368,7 +1368,7 @@ def orca_scan(in_file, calc):
     else:
         with open(os.path.join(local_folder, 'calc.xyz')) as f:
             lines = f.readlines()
-            r = Structure.objects.create(number=1)
+            r = Structure.objects.create(number=calc.structure.number)
             r.xyz_structure = clean_xyz(''.join([i.strip() + '\n' for i in lines]))
 
         with open(os.path.join(local_folder, "calc.out")) as f:
@@ -2356,10 +2356,10 @@ def dispatcher(drawing, order_id):
             calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')
 
         molecule = calc.result_ensemble.parent_molecule
-        e= Ensemble.objects.create(parent_molecule=molecule, origin=calc.result_ensemble, name="Extracted frame {}".format(fid))
+        ensemble = Ensemble.objects.create(parent_molecule=molecule, origin=calc.result_ensemble, name="Extracted frame {}".format(fid))
         f = calc.calculationframe_set.get(number=fid)
-        s = Structure.objects.create(parent_ensemble=e, xyz_structure=f.xyz_structure, number=1, degeneracy=1)
-        e.save()
+        s = Structure.objects.create(parent_ensemble=ensemble, xyz_structure=f.xyz_structure, number=order.start_calc.structure.number, degeneracy=1)
+        ensemble.save()
         s.save()
         input_structures = [s]
     else:

@@ -178,8 +178,7 @@ class GaussianCalculation:
         to_append_gen = []
         to_append_ecp = []
 
-        ecp = False
-        custom_atoms = []
+        custom_atoms_requested = []
         for entry in entries:
             sentry = entry.split('=')
 
@@ -187,8 +186,31 @@ class GaussianCalculation:
                 raise Exception("Invalid custom basis set string")
 
             el, bs_keyword = sentry
-            custom_atoms.append(el)
+            custom_atoms_requested.append(el)
 
+
+        unique_atoms = []
+        normal_atoms = []
+        for line in self.calc.structure.xyz_structure.split('\n')[2:]:
+            if line.strip() == "":
+                continue
+            a, *_ = line.split()
+            if a not in unique_atoms:
+                unique_atoms.append(a)
+                if a not in normal_atoms and a not in custom_atoms_requested:
+                    normal_atoms.append(a)
+
+        custom_atoms = []
+        ecp = False
+        for entry in entries:
+            sentry = entry.split('=')
+
+            el, bs_keyword = sentry
+
+            if el not in unique_atoms:
+                continue
+
+            custom_atoms.append(el)
             try:
                 el_num = ATOMIC_NUMBER[el]
             except KeyError:
@@ -210,30 +232,26 @@ class GaussianCalculation:
             else:
                 to_append_gen.append(bs)
 
-        if ecp:
-            gen_keyword = "GenECP"
+        if len(custom_atoms) > 0:
+            if ecp:
+                gen_keyword = "GenECP"
+            else:
+                gen_keyword = "Gen"
+
+
+            custom_bs = ""
+
+            if len(normal_atoms) > 0:
+                custom_bs += ' '.join(normal_atoms) + ' 0\n'
+                custom_bs += self.calc.parameters.basis_set + '\n'
+                custom_bs += '****\n'
+
+            custom_bs += ''.join(to_append_gen)
+            custom_bs += ''.join(to_append_ecp)
+
+            return gen_keyword, custom_bs
         else:
-            gen_keyword = "Gen"
-
-        unique_atoms = []
-        for line in self.calc.structure.xyz_structure.split('\n')[2:]:
-            if line.strip() == "":
-                continue
-            a, *_ = line.split()
-            if a not in unique_atoms and a not in custom_atoms:
-                unique_atoms.append(a)
-
-        custom_bs = ""
-
-        if len(unique_atoms) > 0:
-            custom_bs += ' '.join(unique_atoms) + ' 0\n'
-            custom_bs += self.calc.parameters.basis_set + '\n'
-            custom_bs += '****\n'
-
-        custom_bs += ''.join(to_append_gen)
-        custom_bs += ''.join(to_append_ecp)
-
-        return gen_keyword, custom_bs
+            return self.calc.parameters.basis_set, ''
 
     def handle_xyz(self):
         lines = [i + '\n' for i in clean_xyz(self.calc.structure.xyz_structure).split('\n')[2:] if i != '' ]

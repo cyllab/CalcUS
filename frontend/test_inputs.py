@@ -917,6 +917,41 @@ class GaussianTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
+    def test_irrelevant_gen_bs(self):
+        params = {
+                'type': 'Geometrical Optimisation',
+                'in_file': 'ethanol.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'charge': '0',
+                'method': 'B3LYP',
+                'basis_set': '6-31+G(d,p)',
+                'custom_basis_sets': 'Cl=Def2-TZVPD;',
+                }
+
+        calc = gen_calc(params)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt B3LYP/6-31+G(d,p)
+
+        CalcUS
+
+        0 1
+        C         -1.31970       -0.64380        0.00000
+        H         -0.96310       -1.65260        0.00000
+        H         -0.96310       -0.13940       -0.87370
+        H         -2.38970       -0.64380        0.00000
+        C         -0.80640        0.08220        1.25740
+        H         -1.16150        1.09160        1.25640
+        H         -1.16470       -0.42110        2.13110
+        O          0.62360        0.07990        1.25870
+        H          0.94410        0.53240        2.04240
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
     def test_genecp_bs(self):
         params = {
                 'type': 'Geometrical Optimisation',
@@ -1935,6 +1970,33 @@ class OrcaTests(TestCase):
                 'charge': '-1',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
+                }
+
+        calc = gen_calc(params)
+        orca = OrcaCalculation(calc)
+
+        REF = """
+        !NMR B3LYP 6-31+G(d,p)
+        *xyz -1 1
+        Cl 0.0 0.0 0.0
+        *
+        %pal
+        nprocs 8
+        end
+        """
+
+        self.assertTrue(self.is_equivalent(REF, orca.input_file))
+
+    def test_irrelevant_gen_bs(self):
+        params = {
+                'type': 'NMR Prediction',
+                'in_file': 'Cl.xyz',
+                'software': 'ORCA',
+                'theory_level': 'DFT',
+                'charge': '-1',
+                'method': 'B3LYP',
+                'basis_set': '6-31+G(d,p)',
+                'custom_basis_sets': 'N=Def2-SVP;',
                 }
 
         calc = gen_calc(params)

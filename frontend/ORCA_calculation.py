@@ -198,6 +198,14 @@ class OrcaCalculation:
 
         entries = [i.strip() for i in self.calc.parameters.custom_basis_sets.split(';') if i.strip() != ""]
 
+        unique_atoms = []
+        for line in self.calc.structure.xyz_structure.split('\n')[2:]:
+            if line.strip() == "":
+                continue
+            a, *_ = line.split()
+            if a not in unique_atoms:
+                unique_atoms.append(a)
+
         BS_TEMPLATE = """%basis
         {}
         end"""
@@ -210,6 +218,9 @@ class OrcaCalculation:
                 raise Exception("Invalid custom basis set string")
 
             el, bs_keyword = sentry
+
+            if el not in unique_atoms:
+                continue
 
             try:
                 el_num = ATOMIC_NUMBER[el]
@@ -230,7 +241,8 @@ class OrcaCalculation:
                 custom_bs += clean_bs
                 custom_bs += "end"
 
-        self.blocks.append(BS_TEMPLATE.format(custom_bs))
+        if custom_bs != "":
+            self.blocks.append(BS_TEMPLATE.format(custom_bs))
 
     def handle_xyz(self):
         lines = [i + '\n' for i in clean_xyz(self.calc.structure.xyz_structure).split('\n')[2:] if i != '' ]
