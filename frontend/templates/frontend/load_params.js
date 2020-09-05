@@ -42,3 +42,5 @@ misc.value = "{{ params.misc }}";
 df = document.getElementById("calc_df");
 df.value = "{{ params.density_fitting }}";
 
+bs = document.getElementById("calc_custom_bs");
+bs.value = "{{ params.custom_basis_sets }}";

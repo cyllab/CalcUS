@@ -20,6 +20,78 @@
 			frame_num = document.getElementById("opt_scroll").value
 			window.location.href = "/launch/calc/{{ calc.id }}/" + frame_num;
 		}
+		function get_opt_structs() {
+			$.ajax({
+				method: "POST",	 	 
+				url: "/get_calc_data/" + {{ calc.id }},
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				success: function(data, textStatus, xhr) {
+					sp = data.split(";");
+					xyz = sp[0];
+					rmsd = sp[1];
+					opt_viewer.addModelsAsFrames(xyz, "xyz");
+					opt_viewer.setStyle({}, {stick:{}, sphere: {radius: 0.5}});
+					opt_viewer.zoomTo();
+					opt_viewer.render();
+					num_opt_steps = opt_viewer.getNumFrames();
+					scroll = document.getElementById("opt_scroll");
+					scroll.max = num_opt_steps;
+					rmsd_graph = new Dygraph(
+						document.getElementById("rmsd_graph"),
+							rmsd, 
+							{
+								strokeWidth: 2,	
+								xlabel: "Frame",
+								ylabel: "RMS Displacement",
+								rangeSelectorPlotStrokeColor: "#BABABA",
+								highlightCircleSize:  5, 
+								pointClickCallback: function(e, pt) {
+								    set_frame(this.getValue(pt.idx, 0));
+								},
+							}
+
+					);
+					rmsd_graph.setSelection(0);
+				}
+			});
+		}
+		function update_frame() {
+			frame_num = document.getElementById("opt_scroll").value;
+			set_frame(frame_num);
+		}
+		function set_frame(frame_num) {
+			frame_scroll = document.getElementById("opt_scroll");
+			frame_scroll.value = frame_num;
+			frame_label = document.getElementById("frame_label");
+			opt_viewer.setFrame(parseInt(frame_num)-1);
+			opt_viewer.render();
+			frame_label.textContent = "Frame " + frame_num;
+			rmsd_graph.setSelection(parseInt(frame_num)-1);
+		}
+
+		function load_logs() {
+			$("#load_logs_button").addClass("is-loading");
+			$.ajax({
+				data: {
+					csrfmiddlewaretoken: ('{{csrf_token}}'),
+				},
+				method: "POST",
+				url: '/log/' + {{ calc.id }},
+				success: function (data) {
+					$("#log_div").html(data);
+					$("#load_logs_button").removeClass("is-loading");
+					$("#load_logs_button").addClass("is-success");
+				},
+			    });
+
+		}
+
+		$(document).ready(function(){
+			get_opt_structs();
+		});
+
 	</script>
 	<style>
 		.hscroll {
@@ -45,6 +117,7 @@
 	  	</ul>
 	</nav>
 
+	{% if calc.step.creates_ensemble %}
 	<div>
 		<div class="columns is-vcentered is-desktop">
 			<div class="column">
@@ -65,87 +138,10 @@
 			</div>
 		<div>
 
-		<script>
-
-			var opt_viewer = $3Dmol.createViewer("opt_viewer_div");
-			var num_opt_steps = "1";
-
-			opt_viewer.setBackgroundColor(0xffffff);
-			function get_opt_structs() {
-				$.ajax({
-					method: "POST",	 	 
-					url: "/get_calc_data/" + {{ calc.id }},
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					success: function(data, textStatus, xhr) {
-						sp = data.split(";");
-						xyz = sp[0];
-						rmsd = sp[1];
-						opt_viewer.addModelsAsFrames(xyz, "xyz");
-						opt_viewer.setStyle({}, {stick:{}, sphere: {radius: 0.5}});
-						opt_viewer.zoomTo();
-						opt_viewer.render();
-						num_opt_steps = opt_viewer.getNumFrames();
-						scroll = document.getElementById("opt_scroll");
-						scroll.max = num_opt_steps;
-						rmsd_graph = new Dygraph(
-							document.getElementById("rmsd_graph"),
-								rmsd, 
-								{
-									strokeWidth: 2,	
-									xlabel: "Frame",
-									ylabel: "RMS Displacement",
-									rangeSelectorPlotStrokeColor: "#BABABA",
-						 			highlightCircleSize:  5, 
-									pointClickCallback: function(e, pt) {
-									    set_frame(this.getValue(pt.idx, 0));
-									},
-								}
-
-						);
-						rmsd_graph.setSelection(0);
-					}
-				});
-			}
-			function update_frame() {
-				frame_num = document.getElementById("opt_scroll").value;
-				set_frame(frame_num);
-			}
-			function set_frame(frame_num) {
-				frame_scroll = document.getElementById("opt_scroll");
-				frame_scroll.value = frame_num;
-				frame_label = document.getElementById("frame_label");
-				opt_viewer.setFrame(parseInt(frame_num)-1);
-				opt_viewer.render();
-				frame_label.textContent = "Frame " + frame_num;
-				rmsd_graph.setSelection(parseInt(frame_num)-1);
-			}
-
-			function load_logs() {
-				$("#load_logs_button").addClass("is-loading");
-				$.ajax({
-					data: {
-						csrfmiddlewaretoken: ('{{csrf_token}}'),
-					},
-					method: "POST",
-					url: '/log/' + {{ calc.id }},
-					success: function (data) {
-						$("#log_div").html(data);
-						$("#load_logs_button").removeClass("is-loading");
-						$("#load_logs_button").addClass("is-success");
-					},
-				    });
-
-			}
-
-			$(document).ready(function(){
-				get_opt_structs();
-			});
-		</script>
 		</div>
 
 	</div>
+	{% endif %}
 	<div>
 		<label class="label">Input File</label>
 		<textarea class="textarea" style="height: 300px;" readonly>{{ calc.input_file }}</textarea>
@@ -156,6 +152,14 @@
 		<div id="log_div">
 		</div>
 	</div>
+	<script>
+
+		var opt_viewer = $3Dmol.createViewer("opt_viewer_div");
+		var num_opt_steps = "1";
+
+		opt_viewer.setBackgroundColor(0xffffff);
+	</script>
+
 </div>
 
 {% endblock content %}
