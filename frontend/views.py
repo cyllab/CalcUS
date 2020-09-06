@@ -6,6 +6,7 @@ import bleach
 import math
 import time
 import zipfile
+from os.path import basename
 from io import BytesIO
 import basis_set_exchange
 
@@ -2357,7 +2358,7 @@ def download_log(request, pk):
     mem = BytesIO()
     with zipfile.ZipFile(mem, 'w', zipfile.ZIP_DEFLATED) as zip:
         for f in logs:
-            zip.write(f)
+            zip.write(f, "{}_".format(calc.id) + basename(f))
 
     response = HttpResponse(mem.getvalue(), content_type='application/zip')
     response['Content-Disposition'] = 'attachment; filename="calc_{}.zip"'.format(calc.id)
