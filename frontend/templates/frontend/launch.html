@@ -472,7 +472,7 @@
 			$("#presets").load("/presets/");
 		}
 
-		{% if ensemble %}
+		{% if ensemble or structure %}
 		let ensemble = true;
 		{% else %}
 		let ensemble = false;
