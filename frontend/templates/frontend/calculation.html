@@ -20,10 +20,10 @@
 			frame_num = document.getElementById("opt_scroll").value
 			window.location.href = "/launch/calc/{{ calc.id }}/" + frame_num;
 		}
-		function get_opt_structs() {
+		function get_opt_structs(url) {
 			$.ajax({
 				method: "POST",	 	 
-				url: "/get_calc_data/" + {{ calc.id }},
+				url: url + {{ calc.id }},
 				headers: {
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
@@ -54,6 +54,12 @@
 
 					);
 					rmsd_graph.setSelection(0);
+					
+					ring = document.getElementById("lds-ring");
+					ring.style.display = "none";
+
+					div = document.getElementById("opt_slider");
+					div.style.display = "block";
 				}
 			});
 		}
@@ -87,9 +93,27 @@
 			    });
 
 		}
+		function show_load_logs_button() {
+			btn = document.getElementById("load_remote_log_button");
+			btn.style.display = "block";  
+		}
+
+		function load_remote_log() {
+			ring = document.getElementById("lds-ring");
+			ring.style.display = "block";
+			get_opt_structs("/get_calc_data_remote/");
+
+		}
 
 		$(document).ready(function(){
-			get_opt_structs();
+			if( 'True' == '{{ calc.local }}' || 2 == {{ calc.status }} || 3 == {{ calc.status }}) {
+				ring = document.getElementById("lds-ring");
+				ring.style.display = "block";
+				get_opt_structs("/get_calc_data/");
+			}
+			else {
+				show_load_logs_button();
+			}
 		});
 
 	</script>
@@ -99,6 +123,41 @@
 		}
 		#buttons_center {
 			margin: 20px;
+		}
+		.lds-ring {
+		  display: inline-block;
+		  position: relative;
+		  width: 80px;
+		  height: 80px;
+		}
+		.lds-ring div {
+		  box-sizing: border-box;
+		  display: block;
+		  position: absolute;
+		  width: 64px;
+		  height: 64px;
+		  margin: 8px;
+		  border: 8px solid #fff;
+		  border-radius: 50%;
+		  animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+		  border-color: #aaa transparent transparent transparent;
+		}
+		.lds-ring div:nth-child(1) {
+		  animation-delay: -0.45s;
+		}
+		.lds-ring div:nth-child(2) {
+		  animation-delay: -0.3s;
+		}
+		.lds-ring div:nth-child(3) {
+		  animation-delay: -0.15s;
+		}
+		@keyframes lds-ring {
+		  0% {
+		    transform: rotate(0deg);
+		  }
+		  100% {
+		    transform: rotate(360deg);
+		  }
 		}
 	</style>
 
@@ -118,12 +177,16 @@
 	</nav>
 
 	{% if calc.step.creates_ensemble %}
-	<div>
+	<center>
+		<div class="lds-ring" id="lds-ring" style="display: none;"><div></div><div></div><div></div><div></div></div>
+	</center>
+
+	<div id="opt_div">
 		<div class="columns is-vcentered is-desktop">
 			<div class="column">
 				<div style="width: 400px;">
 					<div id="opt_viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
-					<div class="slidecontainer">
+					<div class="slidecontainer" id="opt_slider" style="display: none;">
 						<center>
 						<input type="range" min="1" max="1" value="1" class="slider" id="opt_scroll" onchange="update_frame();" style="width: 100%;">
 						<label class="label" id="frame_label">Frame 1</label>
@@ -141,6 +204,9 @@
 		</div>
 
 	</div>
+	<center>
+		<button class="button is-info" id="load_remote_log_button" onclick="load_remote_log();" style="display: none;">Load remote log</button>
+	</center>
 	{% endif %}
 	<div>
 		<label class="label">Input File</label>

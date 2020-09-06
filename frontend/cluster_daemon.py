@@ -218,6 +218,28 @@ class ClusterDaemon:
                     tasks.kill_sig.append(pid)
                 else:
                     self.cancelled.append(calc_id)
+            elif cmd == "load_log":
+                if int(calc_id) in self.calculations:
+                    try:
+                        calc = Calculation.objects.get(pk=calc_id)
+                    except Calculation.DoesNotExist:
+                        print("Cannot load log: invalid calculation")
+
+                    try:
+                        access = ClusterAccess.objects.get(pk=access_id)
+                    except ClusterAccess.DoesNotExist:
+                        print("Cannot load log: invalid access object")
+
+                    try:
+                        remote_conn = self.connections[int(access_id)]
+                    except KeyError:
+                        print("Cannot load log: invalid access")
+
+                    tasks.sftp_get("/scratch/{}/calcus/{}/calc.log".format(access.cluster_username, calc.id), os.path.join(CALCUS_SCR_HOME, calc_id, "calc.log"), remote_conn, self.locks[int(access_id)])
+
+                else:
+                    print("Cannot load log: unknown calculation")
+                    return
             else:
                 print("Unknown command: {} (command id {})".format(cmd, c.id))
                 return

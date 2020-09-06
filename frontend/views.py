@@ -34,6 +34,8 @@ from .constants import *
 from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
 
+from throttle.decorators import throttle
+
 try:
     is_test = os.environ['CALCUS_TEST']
 except:
@@ -1650,6 +1652,55 @@ def get_calc_data(request, pk):
 
     if calc.status == 0:
         return HttpResponse(status=204)
+
+    analyse_opt(calc.id)###
+
+    multi_xyz = ""
+    RMSD = "Frame,RMSD\n"
+    for f in calc.calculationframe_set.all():
+        multi_xyz += f.xyz_structure
+        RMSD += "{},{}\n".format(f.number, f.RMSD)
+
+    return HttpResponse(multi_xyz + ';' + RMSD)
+
+@login_required
+@throttle(zone='load_remote_log')
+def get_calc_data_remote(request, pk):
+    try:
+        calc = Calculation.objects.get(pk=pk)
+    except Calculation.DoesNotExist:
+        return HttpResponse(status=403)
+
+    profile = request.user.profile
+
+    if calc.order.author != profile:
+        return HttpResponse(status=403)
+
+    if calc.status == 0:
+        return HttpResponse(status=204)
+
+    if calc.parameters.software == "Gaussian":
+        try:
+            os.remove(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"))
+        except OSError:
+            pass
+
+        cmd = ClusterCommand.objects.create(issuer=profile)
+
+        with open(os.path.join(CALCUS_CLUSTER_HOME, "todo", str(cmd.id)), 'w') as out:
+            out.write("load_log\n{}\n{}\n".format(calc.id, calc.order.resource.id))
+
+        ind = 0
+        while not os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")) and ind < 60:
+            print("Waiting for log")
+            time.sleep(1)
+            ind += 1
+
+        if not os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")):
+            return HttpResponse(status=404)
+    else:
+        print("Not implemented")
+        return HttpResponse(status=403)
 
     analyse_opt(calc.id)###
 
