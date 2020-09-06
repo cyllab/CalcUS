@@ -1693,11 +1693,10 @@ def gaussian_freq(in_file, calc):
     if ret != 0:
         return ret
 
-    lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:] if i.strip() != '']
 
     with open("{}/calc.log".format(local_folder)) as f:
         outlines = f.readlines()
-        ind = len(lines)-1
+        ind = len(outlines)-1
 
     while outlines[ind].find('Zero-point correction') == -1:
         ind -= 1
@@ -1717,80 +1716,74 @@ def gaussian_freq(in_file, calc):
     prop.freq = calc.id
     prop.save()
 
+    while outlines[ind].find("Standard orientation:") == -1:
+        ind -= 1
+    ind += 5
 
-    if len(lines) > 1:
-        raw_lines = calc.structure.xyz_structure.split('\n')
-        xyz_lines = []
-        for line in raw_lines:
-            if line.strip() != '':
-                xyz_lines.append(line)
+    struct = []
+    while outlines[ind].find("-----------") == -1:
+        _, n, _, x, y, z = outlines[ind].split()
+        a = ATOMIC_SYMBOL[int(n)]
+        struct.append([a, float(x), float(y), float(z)])
+        ind += 1
+    num_atoms = len(struct)
 
-        num_atoms = int(xyz_lines[0].strip())
-        xyz_lines = xyz_lines[2:]
-        struct = []
+    while outlines[ind].find("and normal coordinates:") == -1:
+        ind += 1
+    ind += 3
 
-        for line in xyz_lines:
-            if line.strip() != '':
-                a, x, y, z = line.strip().split()
-                struct.append([a, float(x), float(y), float(z)])
+    vibs = []
+    wavenumbers = []
+    intensities = []
+    while ind < len(outlines) - 1:
+        vib = []
+        intensity = []
+        sline = outlines[ind].split()
+        num_vibs = int((len(sline)-2))
 
-        ind = 0
-        while outlines[ind].find("and normal coordinates:") == -1:
+        for i in range(num_vibs):
+            wavenumbers.append(float(sline[2+i]))
+            intensities.append(float(outlines[ind+3].split()[3+i]))
+            vib.append([])
+
+        while outlines[ind].find("Atom  AN") == -1:
             ind += 1
-        ind += 3
 
-        vibs = []
-        wavenumbers = []
-        intensities = []
-        while ind < len(outlines) - 1:
-            vib = []
-            intensity = []
+        ind += 1
+
+        while ind < len(outlines) and len(outlines[ind].split()) > 3:
             sline = outlines[ind].split()
-            num_vibs = int((len(sline)-2))
-
+            n = sline[0].strip()
+            Z = sline[1].strip()
             for i in range(num_vibs):
-                wavenumbers.append(float(sline[2+i]))
-                intensities.append(float(outlines[ind+3].split()[3+i]))
-                vib.append([])
-
-            while outlines[ind].find("Atom  AN") == -1:
-                ind += 1
-
+                x, y, z = sline[2+3*i:5+3*i]
+                vib[i].append([x, y, z])
+            ind += 1
+        for i in range(num_vibs):
+            vibs.append(vib[i])
+        while ind < len(outlines)-1 and outlines[ind].find("Frequencies --") == -1:
             ind += 1
 
-            while ind < len(outlines) and len(outlines[ind].split()) > 3:
-                sline = outlines[ind].split()
-                n = sline[0].strip()
-                Z = sline[1].strip()
-                for i in range(num_vibs):
-                    x, y, z = sline[2+3*i:5+3*i]
-                    vib[i].append([x, y, z])
-                ind += 1
-            for i in range(num_vibs):
-                vibs.append(vib[i])
-            while ind < len(outlines)-1 and outlines[ind].find("Frequencies --") == -1:
-                ind += 1
+    for ind in range(len(vibs)):
+        with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
+            out.write("{}\n".format(num_atoms))
+            #assert len(struct) == num_atoms
+            out.write("CalcUS\n")
+            for ind2, (a, x, y, z) in enumerate(struct):
+                out.write("{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(a, x, y, z, *vibs[ind][ind2]))
 
-        for ind in range(len(vibs)):
-            with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)), 'w') as out:
-                out.write("{}\n".format(num_atoms))
-                #assert len(struct) == num_atoms
-                out.write("CalcUS\n")
-                for ind2, (a, x, y, z) in enumerate(struct):
-                    out.write("{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(a, x, y, z, *vibs[ind][ind2]))
+    with open("{}/orcaspectrum".format(os.path.join(CALCUS_RESULTS_HOME, str(calc.id))), 'w') as out:
+        for vib in wavenumbers:
+            out.write("{:.1f}\n".format(vib))
 
-        with open("{}/orcaspectrum".format(os.path.join(CALCUS_RESULTS_HOME, str(calc.id))), 'w') as out:
-            for vib in wavenumbers:
-                out.write("{:.1f}\n".format(vib))
+    x = np.arange(500, 4000, 1)#Wave number in cm^-1
+    spectrum = plot_vibs(x, zip(wavenumbers, intensities))
 
-        x = np.arange(500, 4000, 1)#Wave number in cm^-1
-        spectrum = plot_vibs(x, zip(wavenumbers, intensities))
-
-        with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "IR.csv"), 'w') as out:
-            out.write("Wavenumber,Intensity\n")
-            intensities = 1000*np.array(intensities)/max(intensities)
-            for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
-                out.write("-{:.1f},{:.5f}\n".format(_x, i))
+    with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "IR.csv"), 'w') as out:
+        out.write("Wavenumber,Intensity\n")
+        intensities = 1000*np.array(intensities)/max(intensities)
+        for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
+            out.write("-{:.1f},{:.5f}\n".format(_x, i))
 
     return 0
 

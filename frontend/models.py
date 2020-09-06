@@ -100,7 +100,6 @@ class Project(models.Model):
     def __repr__(self):
         return self.name
 
-
 class ClusterAccess(models.Model):
     private_key_path = models.CharField(max_length=100)
     public_key_path = models.CharField(max_length=100)
