@@ -208,7 +208,7 @@ class ClusterDaemon:
                     return
                 pid = threading.get_ident()
                 tasks.connections[pid] = self.connections
-                self.calculations[calc_id] = pid
+                self.calculations[int(calc_id)] = pid
                 retval = self.job(calc_id, access_id)
                 del self.calculations[calc_id]
                 del tasks.connections[pid]
