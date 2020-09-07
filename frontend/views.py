@@ -2672,7 +2672,7 @@ def get_csv(proj, profile):
                 if w_f_e != '' and w_f_e != '-' and w_f_e != 0:
                     w_f_e *= CONVERSION
                 csv += "\n,,Ensemble Average,{},,,{}\n".format(w_e, w_f_e)
-                p_name = params.__repr__()
+                p_name = params.long_name
                 if p_name in summary.keys():
                     if mol.id in summary[p_name].keys():
                         summary[p_name][mol.id][e.id] = [w_e, w_f_e]

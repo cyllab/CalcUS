@@ -1716,17 +1716,35 @@ def gaussian_freq(in_file, calc):
     prop.freq = calc.id
     prop.save()
 
-    while outlines[ind].find("Standard orientation:") == -1:
-        ind -= 1
-    ind += 5
+    try:
+        while outlines[ind].find("Standard orientation:") == -1:
+            ind -= 1
+        ind += 5
 
-    struct = []
-    while outlines[ind].find("-----------") == -1:
-        _, n, _, x, y, z = outlines[ind].split()
-        a = ATOMIC_SYMBOL[int(n)]
-        struct.append([a, float(x), float(y), float(z)])
-        ind += 1
-    num_atoms = len(struct)
+    except IndexError:#"Standard orientation" is not in all Gaussian output files, apparently
+        ind = 0
+
+        raw_lines = calc.structure.xyz_structure.split('\n')
+        xyz_lines = []
+        for line in raw_lines:
+            if line.strip() != '':
+                xyz_lines.append(line)
+
+        num_atoms = int(xyz_lines[0].strip())
+        xyz_lines = xyz_lines[2:]
+        struct = []
+        for line in xyz_lines:
+            if line.strip() != '':
+                a, x, y, z = line.strip().split()
+                struct.append([a, float(x), float(y), float(z)])
+    else:
+        struct = []
+        while outlines[ind].find("-----------") == -1:
+            _, n, _, x, y, z = outlines[ind].split()
+            a = ATOMIC_SYMBOL[int(n)]
+            struct.append([a, float(x), float(y), float(z)])
+            ind += 1
+        num_atoms = len(struct)
 
     while outlines[ind].find("and normal coordinates:") == -1:
         ind += 1

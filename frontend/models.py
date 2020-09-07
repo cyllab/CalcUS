@@ -185,12 +185,19 @@ class Ensemble(models.Model):
 
     @property
     def unique_parameters(self):
+        def _in(a, l):
+            for i in l:
+                if a == i:
+                    return True
+            return False
+
         unique = []
         structs = self.structure_set.all()
         for s in structs:
             for p in s.properties.all():
-                if p.parameters not in unique:
+                if not _in(p.parameters, unique):
                     unique.append(p.parameters)
+
         return unique
 
     @property
@@ -471,6 +478,17 @@ class Parameters(models.Model):
 
     def __repr__(self):
         return "{} - {} ({})".format(self.software, self.method, self.solvent)
+
+    @property
+    def long_name(self):
+        name = "{} - ".format(self.software)
+        if self.theory_level == "DFT" or self.theory_level == "RI-MP2" or self.theory_level == "HF":
+            name += "{}/{} ".format(self.method, self.basis_set)
+        else:
+            name += "{} ".format(self.method)
+        if self.solvent.lower() != 'vacuum':
+            name += "({}; {})".format(self.solvation_model, self.solvent)
+        return name
 
     def __str__(self):
         return self.__repr__()
