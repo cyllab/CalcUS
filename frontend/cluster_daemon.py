@@ -239,6 +239,8 @@ class ClusterDaemon:
 
                 else:
                     print("Cannot load log: unknown calculation")
+                    print("Known calculations:")
+                    print(self.calculations)
                     return
             else:
                 print("Unknown command: {} (command id {})".format(cmd, c.id))

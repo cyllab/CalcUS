@@ -21,6 +21,8 @@
 			window.location.href = "/launch/calc/{{ calc.id }}/" + frame_num;
 		}
 		function get_opt_structs(url) {
+			label = document.getElementById("throttle_label");
+			label.style.display = "none";
 			$.ajax({
 				method: "POST",	 	 
 				url: url + {{ calc.id }},
@@ -28,6 +30,15 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 				success: function(data, textStatus, xhr) {
+					ring = document.getElementById("lds-ring");
+					ring.style.display = "none";
+
+					if (data.includes("You do not have the permission to access this page")) {
+						label = document.getElementById("throttle_label");
+						label.style.display = "block";
+						return;
+					}
+					{% if calc.step.creates_ensemble %}
 					sp = data.split(";");
 					xyz = sp[0];
 					rmsd = sp[1];
@@ -51,16 +62,15 @@
 								    set_frame(this.getValue(pt.idx, 0));
 								},
 							}
-
 					);
 					rmsd_graph.setSelection(0);
-					
-					ring = document.getElementById("lds-ring");
-					ring.style.display = "none";
 
 					div = document.getElementById("opt_slider");
 					div.style.display = "block";
-				}
+
+					{% endif %}	
+
+				},
 			});
 		}
 		function update_frame() {
@@ -176,11 +186,11 @@
 	  	</ul>
 	</nav>
 
-	{% if calc.step.creates_ensemble %}
 	<center>
 		<div class="lds-ring" id="lds-ring" style="display: none;"><div></div><div></div><div></div><div></div></div>
 	</center>
 
+	{% if calc.step.creates_ensemble %}
 	<div id="opt_div">
 		<div class="columns is-vcentered is-desktop">
 			<div class="column">
@@ -204,10 +214,11 @@
 		</div>
 
 	</div>
+	{% endif %}
 	<center>
 		<button class="button is-info" id="load_remote_log_button" onclick="load_remote_log();" style="display: none;">Load remote log</button>
+		<label class="label" style="display: none; color: red" id="throttle_label">Request throttled; try again in one minute</label>
 	</center>
-	{% endif %}
 	<div>
 		<label class="label">Input File</label>
 		<textarea class="textarea" style="height: 300px;" readonly>{{ calc.input_file }}</textarea>
@@ -218,13 +229,14 @@
 		<div id="log_div">
 		</div>
 	</div>
+	{% if calc.step.creates_ensemble %}
 	<script>
-
 		var opt_viewer = $3Dmol.createViewer("opt_viewer_div");
 		var num_opt_steps = "1";
 
 		opt_viewer.setBackgroundColor(0xffffff);
 	</script>
+	{% endif %}
 
 </div>
 

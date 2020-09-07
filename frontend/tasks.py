@@ -2542,6 +2542,10 @@ def _del_molecule(id):
         _del_ensemble(e.id)
     mol.delete()
 
+def check_empty_order(order):
+    if order.calculation_set.count() == 0:
+        order.delete()
+
 def _del_ensemble(id):
     try:
         e = Ensemble.objects.get(pk=id)
@@ -2563,6 +2567,7 @@ def _del_ensemble(id):
             rmtree(os.path.join(CALCUS_RESULTS_HOME, str(c.id)))
         except OSError:
             pass
+        check_empty_order(c.order)
     e.delete()
 
 def _del_structure(s):
