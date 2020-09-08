@@ -42,13 +42,14 @@
 		<style>
 			.container {
 				width: 90%;
+				flex: 1;
 			}
 
 			#content_container {
 				margin-bottom: 30px;
 			}
 			nav {
-				margin-bottom: 50px;
+				margin-bottom: 20px;
 			}
 			a {
 				color: inherit;
@@ -90,10 +91,19 @@
 				opacity: 0.5;
 			}
 
-		</style>
+			.flex-container {
+  				display: flex;
+  				min-height: 100vh;
+  				flex-direction: column;
+			}
+			.footer {
+
+			}
+			</style>
 	</head>
 
 	<body>
+	<div class="flex-container">
 		<nav class="navbar is-success" role="navigation" aria-label="main navigation">
  			<div class="navbar-brand">
 				<a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="calcusnavbar" onclick="document.querySelector('.navbar-menu').classList.toggle('is-active');">
@@ -167,19 +177,14 @@
 				</div>
 			</div>
 		</nav>
+		<div class="container" id="content_container">
+			{% block content %}
 
-<div class="container" id="content_container">
-
-{% block content %}
-
-{% endblock %}
-
-</div>
-
-<section class="footer is-success has-text-centered" style="clear: both;">  
-	<div class="container">
-		<img width="30%" src="{% static 'frontend/calcus.png' %}" />
+			{% endblock %}
+		</div>
+		<section class="footer is-success has-text-centered" style="clear: both;">  
+				<img width="30%" src="{% static 'frontend/calcus.png' %}" />
+		</section>
 	</div>
-</section>
 </body>
 </html>
