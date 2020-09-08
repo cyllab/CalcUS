@@ -9,6 +9,7 @@ import zipfile
 from os.path import basename
 from io import BytesIO
 import basis_set_exchange
+import numpy as np
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -36,6 +37,8 @@ from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
 
 from throttle.decorators import throttle
+
+import nmrglue as ng
 
 try:
     is_test = os.environ['CALCUS_TEST']
@@ -317,16 +320,15 @@ def nmr_analysis(request, pk, pid):
     return render(request, 'frontend/nmr_analysis.html', {'profile': request.user.profile,
         'ensemble': e, 'parameters': param})
 
-@login_required
-def get_shifts(request):
+def _get_shifts(request):
     if 'id' not in request.POST.keys():
-        return HttpResponse(status=404)
+        return ''
 
     if 'pid' not in request.POST.keys():
-        return HttpResponse(status=404)
+        return ''
 
     if 'eq_str' not in request.POST.keys():
-        return HttpResponse(status=404)
+        return ''
 
     id = clean(request.POST['id'])
     pid = clean(request.POST['pid'])
@@ -335,21 +337,20 @@ def get_shifts(request):
     try:
         e = Ensemble.objects.get(pk=id)
     except Ensemble.DoesNotExist:
-        return HttpResponse(status=404)
+        return ''
 
     if not can_view_ensemble(e, request.user.profile):
-        return HttpResponse(status=403)
+        return ''
 
     try:
         param = Parameters.objects.get(pk=pid)
     except Parameters.DoesNotExist:
-        return HttpResponse(status=404)
+        return ''
 
     if not can_view_parameters(param, request.user.profile):
-        return HttpResponse(status=403)
+        return ''
 
     scaling_factors = {}
-    print(request.POST.keys())
     if 'scaling_factors' in request.POST.keys():
         scaling_str = clean(request.POST['scaling_factors'])
         for entry in scaling_str.split(';'):
@@ -378,6 +379,16 @@ def get_shifts(request):
         if p.simple_nmr == '':
             continue
 
+        weighted_shifts = e.weighted_nmr_shifts(param)
+        for entry in weighted_shifts:
+            num = int(entry[0])-1
+            el = entry[1]
+            shift = float(entry[2])
+            shifts[num] = [el, shift, '-']
+
+
+        print(weighted_shifts)
+        '''
         for ind, shift in enumerate(p.simple_nmr.split('\n')):
             if shift.strip() == '':
                 continue
@@ -392,6 +403,7 @@ def get_shifts(request):
                 shifts[pk] = [ss[1], 0., '-']
 
             shifts[pk][1] += w*float(ss[2])
+        '''
 
     eq_split = eq_str.split(';')
     for group in eq_split:
@@ -410,6 +422,16 @@ def get_shifts(request):
                 slope, intercept = scaling_factors[el]
                 s = shifts[shift][1]
                 shifts[shift][2] = "{:.3f}".format((s-intercept)/slope)
+    return shifts
+
+@login_required
+def get_shifts(request):
+
+    shifts = _get_shifts(request)
+
+    if shifts == '':
+        return HttpResponse(status=404)
+
     CELL = """
     <tr>
             <td>{}</td>
@@ -424,6 +446,73 @@ def get_shifts(request):
 
     return HttpResponse(response)
 
+@login_required
+def get_exp_spectrum(request):
+    t = time.time()
+    d = "/tmp/nmr_{}".format(t)
+    os.mkdir(d)
+    for ind, f in enumerate(request.FILES.getlist("file")):
+        in_file = f.read()#not cleaned
+        with open(os.path.join(d, f.name), 'wb') as out:
+            out.write(in_file)
+
+    dic, fid = ng.fileio.bruker.read(d)
+
+    zero_fill_size = 32768
+    fid = ng.bruker.remove_digital_filter(dic, fid)
+    fid = ng.proc_base.zf_size(fid, zero_fill_size) # <2>
+    fid = ng.proc_base.rev(fid) # <3>
+    fid = ng.proc_base.fft(fid)
+    fid = ng.proc_autophase.autops(fid, 'acme')
+
+    offset = (float(dic['acqus']['SW']) / 2.) - (float(dic['acqus']['O1']) / float(dic['acqus']['BF1']))
+    start = float(dic['acqus']['SW']) - offset
+    end = -offset
+    step = float(dic['acqus']['SW']) / zero_fill_size
+
+    ppms = np.arange(start, end, -step)[:zero_fill_size]
+
+    fid = ng.proc_base.mult(fid, c=1./max(fid))
+    def plotspectra(ppms, data, start=None, stop=None):
+        if start: # <1>
+            dx = abs(ppms - start)
+            ixs = list(dx).index(min(dx))
+            ppms = ppms[ixs:]
+            data = data[:,ixs:]
+        if stop:
+            dx = abs(ppms - stop)
+            ixs = list(dx).index(min(dx))
+            ppms = ppms[:ixs]
+            data = data[:,:ixs]
+
+        return ppms, data
+
+    ppms, fid = plotspectra(ppms, np.array([fid]), start=10, stop=0)
+    shifts = _get_shifts(request)
+    if shifts == '':
+        response = "PPM,Signal\n"
+        for x, y in zip(ppms[0::10], fid[0,0::10]):
+            response += "{},{}\n".format(-x, np.real(y))
+
+        return HttpResponse(response)
+    else:
+        sigma = 0.001
+        def plot_peaks(_x, PP):
+            val = 0
+            for w in PP:
+                dd = list(abs(ppms - w))
+                T = fid[0,dd.index(min(dd))]
+                val += np.exp(-(_x-w)**2/sigma)
+            val = val/max(val)
+            return val
+        _ppms = ppms[0::10]
+        _fid = fid[0,0::10]/max(fid[0,0::10])
+        l_shifts = [float(shifts[i][2]) for i in shifts if shifts[i][0] == 'H']
+        pred = plot_peaks(_ppms, l_shifts)
+        response = "PPM,Signal,Prediction\n"
+        for x, y, z in zip(_ppms, _fid, pred):
+            response += "{:.3f},{:.3f},{:.3f}\n".format(-x, np.real(y), z)
+        return HttpResponse(response)
 
 @login_required
 def link_order(request, pk):
