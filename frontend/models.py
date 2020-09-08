@@ -6,6 +6,7 @@ from django.dispatch import receiver
 from django import template
 import random, string
 import numpy as np
+import os
 
 from .constants import *
 
@@ -631,8 +632,6 @@ class Calculation(models.Model):
     date_started = models.DateTimeField('date', null=True, blank=True)
     date_finished = models.DateTimeField('date', null=True, blank=True)
 
-    execution_time = models.PositiveIntegerField(default=0)
-
     status = models.PositiveIntegerField(default=0)
     error_message = models.CharField(max_length=400, default="", blank=True, null=True)
 
@@ -649,9 +648,6 @@ class Calculation(models.Model):
 
     local = models.BooleanField(default=True)
 
-    pal = models.PositiveIntegerField(default=8)
-    memory = models.PositiveIntegerField(default=15000)
-
     task_id = models.CharField(max_length=100, default="")
 
     remote_id = models.PositiveIntegerField(default=0)
@@ -660,14 +656,17 @@ class Calculation(models.Model):
         return self.step.name
 
     @property
-    def runtime(self):
-        if self.status == 2 or self.status == 3:
-            try:
-                return (self.date_finished - self.date)
-            except TypeError:
-                return ''
+    def execution_time(self):
+        if self.date_started is not None and self.date_finished is not None:
+            print("YAY")
+            if self.local:
+                pal = os.getenv("OMP_NUM_THREADS")[0]
+            else:
+                pal = self.order.resource.pal
+            return int((self.date_finished-self.date_started).seconds*int(pal))
+
         else:
-            return ''
+            return '-'
 
     @property
     def has_freq(self):

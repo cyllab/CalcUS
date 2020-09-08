@@ -2512,9 +2512,6 @@ def run_calc(calc_id):
         print("Job {} cancelled".format(calc.id))
         return
 
-    if calc.local:
-        calc.execution_time = int((calc.date_finished-calc.date_started).seconds*int(calc.pal))
-
     if ret != 0:
         calc.status = 3
         calc.error_message = "Incorrect termination"#TODO: error analysis
