@@ -2652,6 +2652,8 @@ def get_csv(proj, profile):
         for e in mol.ensemble_set.all():
             csv += "\n,{}\n".format(e.name)
             for params in e.unique_parameters:
+                if params.software == "Unknown" or params.software == "Open Babel":
+                    continue
                 rel_energies = e.relative_energies(params)
                 rel_energies = [float(i)*CONVERSION if i != '' else '' for i in rel_energies]
                 weights = e.weights(params)
