@@ -93,7 +93,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		CalcUS can also use external computing resources. The process of launching calculations is exactly the same as for local calculations, except that the external computing resource must be selected in the "Resource" field. Once the calculations are done, the results will be parsed from the remote server, analysed and added to your project. Local calculations can also be used as starting points for calculations on other resources, as every calculation is independant of the resource used.
 
 	<h5 class="title is-5">Setup</h5>
-		Before launching calculations, you will need to configure the resource a bit. Firstly, create a folder named "calcus" in your remote home on the cluster via SSH (the full path should be <code>/home/&lt;username&gt;/calcus</code>). Make sure you the following programs in that folder:
+	<p>
+		Before launching calculations, you will need to configure the resource a bit. Firstly, create a folder named "calcus" in your remote home on the cluster via SSH (the full path should be <code>/home/&lt;username&gt;/calcus</code>). 
+
+		If you plan to run xtb calculations, make sure you the following programs in that folder:
+	</p>
 		<ul>
 			<li><a href="https://github.com/grimme-lab/xtb/releases">xtb</a></li>
 			<li><a href="https://github.com/grimme-lab/crest/releases">crest</a></li>
@@ -108,9 +112,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 		Make sure that every file is executable. If they are not, you can make them executable by executing the command <code>chmod 700 *</code> in the calcus folder. Then, add <code>/home/&lt;username&gt;/calcus</code> to your path variable, in your <code>.bashrc</code> file. This will ensure that CalcUS will be able to find and use these programs. You will also need the parameter files for xtb and xtb4stda (named <code>.param_...</code>). You will find them in the Github repositories (<a href="https://github.com/grimme-lab/xtb4stda">here</a> and <a href="https://github.com/grimme-lab/xtb">here</a>); they can be simply dropped in your home directory.
 
-		If you do not intend to use these programs on the remote resource, you can simply create empty files (ex. by using <code>touch &lt;file&gt;</code>).
-
-		Secondly, you will need to supply sample submission scripts. As of right now, only the SLURM cluster manager is supported. You need to provide one submission script per software, named <code>submit_&lt;software&gt;.sh</code> (be careful of the capitalization in the software name) and located in your calcus folder. For xtb and other related programs, the script might look like this:
+		Then, for any software, you will need to supply sample submission scripts. As of right now, only the SLURM cluster manager is supported. You need to provide one submission script per software, named <code>submit_&lt;software&gt;.sh</code> (be careful of the capitalization in the software name) and located in your calcus folder. For xtb and other related programs, the script might look like this:
 
 	</p>
 
@@ -167,7 +169,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 	<h3 class="title is-3">Detailed Documentation</h3>
 	<h4 class="title is-4">Basis Sets</h4>
-
+	These basis sets are integrated by default. Basis sets not integrated in the software can be used using the custom basis set manager on the launch page.
 	<details>
   		<summary>View all basis sets</summary>
 		<table class="table">
@@ -1813,6 +1815,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		</details>
 
 	<h4 class="title is-4">DFT Functionals</h4>
+	The following functionals are implemented in the available softwares.
 	<details>
   		<summary>View all DFT functionals</summary>
 

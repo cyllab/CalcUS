@@ -87,12 +87,14 @@ class ClusterDaemon:
         if "calcus" not in ls_home:
             return 4
 
+        '''
         ls_calcus = tasks.direct_command("ls ~/calcus", conn, lock)
         for bin in GRIMME_SUITE:
             if bin not in ls_calcus:
                 return 4
 
         _ = tasks.direct_command("mkdir -p ~/calcus/jobs/done", conn, lock)
+        '''
         return 0
 
     def system(self, command):
@@ -208,7 +210,7 @@ class ClusterDaemon:
                     return
                 pid = threading.get_ident()
                 tasks.connections[pid] = self.connections
-                self.calculations[int(calc_id)] = pid
+                self.calculations[calc_id] = pid
                 retval = self.job(calc_id, access_id)
                 del self.calculations[calc_id]
                 del tasks.connections[pid]
