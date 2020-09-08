@@ -2202,6 +2202,24 @@ def analyse_opt_Gaussian(calc):
             return
     calc.save()
 
+def get_Gaussian_xyz(text):
+    lines = text.split('\n')
+    ind = len(lines) -1
+    while lines[ind].find("Coordinates (Angstroms)") == -1:
+        ind -= 1
+
+    ind += 3
+    s = []
+    while lines[ind].find("----------") == -1:
+        if lines[ind].strip() != '':
+            _, n, _, x, y, z = lines[ind].split()
+            s.append((ATOMIC_SYMBOL[int(n)], x, y, z))
+        ind += 1
+    xyz = "{}\n\n".format(len(s))
+    for l in s:
+        xyz += "{} {} {} {}\n".format(*l)
+    return clean_xyz(xyz)
+
 def verify_charge_mult(xyz, charge, mult):
     electrons = 0
     for line in xyz.split('\n')[2:]:

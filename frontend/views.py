@@ -30,7 +30,7 @@ from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe
 from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc
 from .decorators import superuser_required
-from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint
+from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint, get_Gaussian_xyz
 from .constants import *
 
 from shutil import copyfile, make_archive, rmtree
@@ -385,25 +385,6 @@ def _get_shifts(request):
             el = entry[1]
             shift = float(entry[2])
             shifts[num] = [el, shift, '-']
-
-
-        print(weighted_shifts)
-        '''
-        for ind, shift in enumerate(p.simple_nmr.split('\n')):
-            if shift.strip() == '':
-                continue
-
-            ss = shift.strip().split()
-            pk = int(ss[0])-1
-            w = e.weight(s, param)
-            if w == '':
-                print("No weight nmr")
-                return ''
-            if ss[0] not in shifts.keys():
-                shifts[pk] = [ss[1], 0., '-']
-
-            shifts[pk][1] += w*float(ss[2])
-        '''
 
     eq_split = eq_str.split(';')
     for group in eq_split:
@@ -1107,6 +1088,8 @@ def submit_calculation(request):
                 elif ext == 'mol2':
                     s.mol2_structure = in_file
                     generate_xyz_structure(False, s)
+                elif ext == 'log':
+                    s.xyz_structure = get_Gaussian_xyz(in_file)
                 else:
                     return error(request, "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf)")
                 s.save()
