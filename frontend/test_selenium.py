@@ -2665,14 +2665,14 @@ class MiscCalculationTests(CalcusLiveServer):
             self.driver.refresh()
             s = self.get_calculation_statuses()
             self.assertEqual(len(s), 1)
-            if s[0] == "Error":
+            if s[0] == "Error - Job cancelled":
                 break
 
             time.sleep(1)
             ind += 1
 
         s = self.get_calculation_statuses()
-        self.assertEqual(s[0], "Error")
+        self.assertEqual(s[0], "Error - Job cancelled")
 
     def test_input_file_present(self):
         params = {
@@ -2752,5 +2752,32 @@ class MiscCalculationTests(CalcusLiveServer):
         self.assertEqual(self.get_number_calc_orders(), 3)
         self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
+
+class ComplexCalculationTests(CalcusLiveServer):
+
+    def setUp(self):
+        super().setUp()
+
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g.save()
+        self.profile.is_PI = True
+        self.profile.save()
+
+        self.login(self.username, self.password)
+
+
+    def test_cancel_calc(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'H2.sdf',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.wait_latest_calc_done()
 
 

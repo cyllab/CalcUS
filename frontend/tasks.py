@@ -1750,6 +1750,9 @@ def gaussian_freq(in_file, calc):
         ind += 1
     ind += 3
 
+    if outlines[ind].find("Thermochemistry") != -1:#No vibration
+        return 0
+
     vibs = []
     wavenumbers = []
     intensities = []
@@ -2432,7 +2435,7 @@ def dispatcher(drawing, order_id):
 
     else:
         if mode == 'c':
-            order.result_ensemble = e
+            order.result_ensemble = ensemble
             order.save()
         for s in input_structures:
             c = Calculation.objects.create(structure=s, order=order, date_submitted=timezone.now(), parameters=order.parameters, step=step, constraints=order.constraints)

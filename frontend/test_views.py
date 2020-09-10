@@ -23,6 +23,7 @@ class LaunchTests(TestCase):
                 'calc_name': ['Test'],
                 'calc_solvent': ['Vacuum'],
                 'calc_charge': ['0'],
+                'calc_multiplicity': ['1'],
                 'calc_project': ['New Project'],
                 'new_project_name': ['Test'],
                 'calc_software': ['xtb'],

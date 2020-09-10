@@ -658,7 +658,6 @@ class Calculation(models.Model):
     @property
     def execution_time(self):
         if self.date_started is not None and self.date_finished is not None:
-            print("YAY")
             if self.local:
                 pal = os.getenv("OMP_NUM_THREADS")[0]
             else:

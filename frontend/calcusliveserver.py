@@ -644,7 +644,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.assertTrue(table.text.find("Accept") != -1)
         self.assertTrue(table.text.find("Deny") != -1)
 
-        accept_button = self.driver.find_element_by_xpath('/html/body/div/div/table/tbody/tr[1]/td[1]/button')
+        accept_button = self.driver.find_element_by_css_selector('#requests_table > table > tbody > tr > td:nth-child(1) > button')
         accept_button.send_keys(Keys.RETURN)
 
     def wait_latest_calc_done(self, timeout):
