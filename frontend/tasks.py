@@ -48,15 +48,6 @@ except:
 import traceback
 import periodictable
 
-ATOMIC_NUMBER = {}
-ATOMIC_SYMBOL = {}
-LOWERCASE_ATOMIC_SYMBOLS = {}
-
-for el in periodictable.elements:
-    ATOMIC_NUMBER[el.symbol] = el.number
-    ATOMIC_SYMBOL[el.number] = el.symbol
-    LOWERCASE_ATOMIC_SYMBOLS[el.symbol.lower()] = el.symbol
-
 if is_test:
     CALCUS_SCR_HOME = os.environ['CALCUS_TEST_SCR_HOME']
     CALCUS_RESULTS_HOME = os.environ['CALCUS_TEST_RESULTS_HOME']
@@ -2076,10 +2067,10 @@ def analyse_opt_ORCA(calc):
 
     RMSDs = [0]
 
-    if not os.file.isfile(os.path.join(prepath, "calc.out")):
+    if not os.path.isfile(os.path.join(prepath, "calc.out")):
         return
 
-    if not os.file.isfile(os.path.join(prepath, "calc_trj.xyz")):
+    if not os.path.isfile(os.path.join(prepath, "calc_trj.xyz")):
         return
 
     with open(os.path.join(prepath, "calc.out")) as f:
@@ -2559,6 +2550,9 @@ def _del_molecule(id):
     for e in mol.ensemble_set.all():
         _del_ensemble(e.id)
     mol.delete()
+    sleep(1)
+    for o in mol.project.calculationorder_set.all():
+        check_empty_order(o)
 
 def check_empty_order(order):
     if order.calculation_set.count() == 0:

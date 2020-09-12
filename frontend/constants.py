@@ -1,4 +1,15 @@
 import decimal
+import periodictable
+
+ATOMIC_NUMBER = {}
+ATOMIC_SYMBOL = {}
+LOWERCASE_ATOMIC_SYMBOLS = {}
+
+for el in periodictable.elements:
+    ATOMIC_NUMBER[el.symbol] = el.number
+    ATOMIC_SYMBOL[el.number] = el.symbol
+    LOWERCASE_ATOMIC_SYMBOLS[el.symbol.lower()] = el.symbol
+
 
 decimal.getcontext().prec = 50
 

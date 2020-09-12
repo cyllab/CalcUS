@@ -640,7 +640,7 @@ class Calculation(models.Model):
     order = models.ForeignKey(CalculationOrder, on_delete=models.CASCADE)
 
     parameters = models.ForeignKey(Parameters, on_delete=models.SET_NULL, null=True)
-    result_ensemble = models.ForeignKey(Ensemble, on_delete=models.SET_NULL, blank=True, null=True)
+    result_ensemble = models.ForeignKey(Ensemble, on_delete=models.CASCADE, blank=True, null=True)
 
     constraints = models.CharField(max_length=400, default="", blank=True, null=True)
 

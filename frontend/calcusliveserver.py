@@ -744,8 +744,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 return
 
     def get_molecules(self):
-        molecule_div = self.driver.find_element_by_css_selector(".grid")
-        molecules = molecule_div.find_elements_by_css_selector(".box")
+        molecules = self.driver.find_elements_by_css_selector(".grid > .box")
         return molecules
 
     def get_name_molecules(self):

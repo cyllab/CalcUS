@@ -2766,9 +2766,9 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.login(self.username, self.password)
 
 
-    def test_cancel_calc(self):
+    def test_selective_delete(self):
         params = {
-                'calc_name': 'test',
+                'calc_name': 'H2',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2778,6 +2778,81 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.lget("/launch/")
         self.calc_input_params(params)
         self.calc_launch()
-        self.wait_latest_calc_done()
+        self.wait_latest_calc_done(10)
+        self.click_latest_calc()
+        self.launch_ensemble_next_step()
 
+        params = {
+                'type': 'Frequency Calculation',
+                'project': 'SeleniumProject',
+                }
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.wait_latest_calc_done(10)
+
+        self.lget("/launch/")
+        params = {
+                'calc_name': 'Ethanol',
+                'type': 'Geometrical Optimisation',
+                'project': 'SeleniumProject',
+                'in_file': 'ethanol.xyz',
+                }
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.wait_latest_calc_done(30)
+        self.assertEqual(self.get_number_calc_orders(), 3)
+
+        self.lget("/projects/")
+        self.click_project("SeleniumProject")
+        self.delete_molecule("ethanol")
+        self.lget("/calculations/")
+        ind = 0
+        while ind < 5:
+            if self.get_number_calc_orders() == 2:
+                break
+            ind += 1
+            time.sleep(1)
+            self.lget("/calculations/")
+        self.assertEqual(self.get_number_calc_orders(), 2)
+
+        self.lget("/projects/")
+        self.assertEqual(self.get_number_projects(), 1)
+        self.click_project("SeleniumProject")
+        self.assertEqual(self.get_number_molecules(), 1)
+        self.click_molecule("H2")
+        self.assertEqual(self.get_number_ensembles(), 2)
+
+        self.lget("/launch/")
+        params = {
+                'calc_name': 'Methane',
+                'type': 'Geometrical Optimisation',
+                'project': 'SeleniumProject',
+                'in_file': 'CH4.xyz',
+                }
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.wait_latest_calc_done(30)
+        self.assertEqual(self.get_number_calc_orders(), 3)
+
+        self.lget("/launch/")
+        params = {
+                'calc_name': 'Ammonia',
+                'type': 'Geometrical Optimisation',
+                'project': 'SeleniumProject',
+                'in_file': 'NH3.mol',
+                }
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.wait_latest_calc_done(30)
+        self.assertEqual(self.get_number_calc_orders(), 4)
+
+        self.lget("/projects/")
+        self.click_project("SeleniumProject")
+        self.click_molecule("NH3")
+        self.delete_ensemble("Ammonia")
+        self.delete_ensemble("Uploaded File")#Should not delete molecule
+
+        self.lget("/calculations/")
+
+        self.assertEqual(self.get_number_calc_orders(), 3)
 

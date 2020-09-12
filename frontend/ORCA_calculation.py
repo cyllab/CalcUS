@@ -4,10 +4,6 @@ from .constants import *
 from .calculation_helper import *
 import basis_set_exchange
 
-ATOMIC_NUMBER = {}
-ATOMIC_SYMBOL = {}
-LOWERCASE_ATOMIC_SYMBOLS = {}
-
 L_PAL = os.environ['OMP_NUM_THREADS'][0]
 L_STACKSIZE = os.environ['OMP_STACKSIZE']
 if L_STACKSIZE.find("G") != -1:
@@ -16,12 +12,6 @@ elif L_STACKSIZE.find("MB") != -1:
     L_STACKSIZE = int(L_STACKSIZE.replace('MB', ''))
 
 L_MEM = int(L_PAL)*L_STACKSIZE
-
-for el in periodictable.elements:
-    ATOMIC_NUMBER[el.symbol] = el.number
-    ATOMIC_SYMBOL[el.number] = el.symbol
-    LOWERCASE_ATOMIC_SYMBOLS[el.symbol.lower()] = el.symbol
-
 
 class OrcaCalculation:
 
