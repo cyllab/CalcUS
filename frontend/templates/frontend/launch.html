@@ -4,13 +4,12 @@
 
 {% load static %}
 
-{% block extrahead %}
-	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
-	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
-	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
-	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
-	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+{% load compress %}
 
+{% block extrahead %}
+	{% compress css %}
+	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
+	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
 	<style>
 	.pick_bs_div {
 		display: none;
@@ -52,6 +51,15 @@
 	  to {top:0; opacity:1}
 	}
 	</style>
+	{% endcompress %}
+
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+	{% compress js %}
+	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
+	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+	{% endcompress %}
+
 	<script>
 	(function(ChemDoodle) {
 		ChemDoodle.relabel = function(molecule){
@@ -421,6 +429,7 @@
 				url: "/set_project_default/",
 				success: function (response) { 
 					$("#preset_msg").html(response);
+					refresh_presets();
 				}
 			});
 		}

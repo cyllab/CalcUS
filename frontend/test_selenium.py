@@ -861,6 +861,31 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(software.get_attribute('value'), params1['software'])
         self.assertEqual(misc.get_attribute('value'), "")
 
+    def test_project_preset_independance(self):
+        proj = Project.objects.create(name="My Project", author=self.profile)
+        proj.save()
+
+        params1 = {
+                'software': 'Gaussian',
+                'type': 'Frequency Calculation',
+                'charge': '+1',
+                'solvent': 'Chloroform',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'solvation_model': 'CPCM',
+                'project': 'My Project',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params1)
+        self.set_project_preset()
+        self.delete_preset("My Project Default")
+        self.lget("/projects/")
+        self.assertEqual(self.get_number_projects(), 1)
+
+
     def test_num_calcs(self):
         self.setup_test_group()
         self.lget("/projects/")
@@ -2913,7 +2938,29 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.assertEqual(self.get_number_calc_orders(), 3)
 
         self.lget("/projects/")
+        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
+        self.assertEqual(n_mol, 2)
+        self.assertEqual(n_calc, 3)
+        self.assertEqual(n_queued, 0)
+        self.assertEqual(n_running, 0)
+        self.assertEqual(n_completed, 3)
+
         self.click_project("SeleniumProject")
+
+        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("H2")
+        self.assertEqual(n_e, 2)
+        self.assertEqual(n_calc, 2)
+        self.assertEqual(n_queued, 0)
+        self.assertEqual(n_running, 0)
+        self.assertEqual(n_completed, 2)
+        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("ethanol")
+        self.assertEqual(n_e, 2)
+        self.assertEqual(n_calc, 1)
+        self.assertEqual(n_queued, 0)
+        self.assertEqual(n_running, 0)
+        self.assertEqual(n_completed, 1)
+
+
         self.delete_molecule("ethanol")
         self.lget("/calculations/")
         ind = 0
@@ -2927,8 +2974,22 @@ class ComplexCalculationTests(CalcusLiveServer):
 
         self.lget("/projects/")
         self.assertEqual(self.get_number_projects(), 1)
+        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
+        self.assertEqual(n_mol, 1)
+        self.assertEqual(n_calc, 2)
+        self.assertEqual(n_queued, 0)
+        self.assertEqual(n_running, 0)
+        self.assertEqual(n_completed, 2)
+
         self.click_project("SeleniumProject")
         self.assertEqual(self.get_number_molecules(), 1)
+        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("H2")
+        self.assertEqual(n_e, 2)
+        self.assertEqual(n_calc, 2)
+        self.assertEqual(n_queued, 0)
+        self.assertEqual(n_running, 0)
+        self.assertEqual(n_completed, 2)
+
         self.click_molecule("H2")
         self.assertEqual(self.get_number_ensembles(), 2)
 
@@ -2957,10 +3018,17 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.assertEqual(self.get_number_calc_orders(), 4)
 
         self.lget("/projects/")
+        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
+        self.assertEqual(n_mol, 3)
+        self.assertEqual(n_calc, 4)
+        self.assertEqual(n_queued, 0)
+        self.assertEqual(n_running, 0)
+        self.assertEqual(n_completed, 4)
+
         self.click_project("SeleniumProject")
         self.click_molecule("NH3")
         self.delete_ensemble("Ammonia")
-        self.delete_ensemble("Uploaded File")#Should not delete molecule
+        self.delete_ensemble("File Upload")#Should not delete molecule
 
         self.lget("/calculations/")
 
