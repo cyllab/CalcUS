@@ -157,8 +157,7 @@
 						</p>
 						<a href="/projects/{{ proj.author }}/{{ proj.name }}">
 							<strong><p id="proj_name_{{ proj.id }}">{{ proj.name }}</p></strong>
-							{% get_project_summary proj as proj_summary %}
-							<p>{{ proj.molecule_set.count }} Molecule(s) &nbsp; ({{ proj_summary.0 }} Calculation(s): &nbsp; {{ proj_summary.1 }} Queued; &nbsp; {{ proj_summary.2 }} Running; &nbsp;{{ proj_summary.3 }} Completed) </p>
+							<p>{{ proj.molecule_set.count }} Molecule(s) &nbsp; ({{ proj.num_calc }} Calculation(s): &nbsp; {{ proj.num_calc_queued }} Queued; &nbsp; {{ proj.num_calc_running }} Running; &nbsp;{{ proj.num_calc_completed }} Completed) </p>
 						</a>
 					</div>
 

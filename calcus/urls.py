@@ -14,3 +14,11 @@ handler400 = 'frontend.views.handler400'
 handler403 = 'frontend.views.handler403'
 handler500 = 'frontend.views.handler500'
 
+from django.conf import settings
+from django.urls import include, path
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns

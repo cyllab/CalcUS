@@ -463,6 +463,20 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         num = len(projects)
         return num
 
+    def get_number_calcs_in_project(self, name):
+        projects = self.get_projects()
+        proj = None
+        for _proj in projects:
+            proj_name = _proj.find_element_by_css_selector("a > strong > p").text
+            if proj_name == name:
+                proj = _proj
+                break
+
+        assert proj is not None
+
+        sline = proj.find_element_by_css_selector("a > p").text.split()
+        return int(sline[0]), int(sline[2].replace('(', '')), int(sline[4]), int(sline[6]), int(sline[8])
+
     def rename_project(self, proj, name):
         rename_icon = proj.find_element_by_class_name("fa-edit")
         rename_icon.click()
@@ -489,8 +503,17 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def create_empty_project(self):
         assert self.is_on_page_projects()
+        num_before = self.get_number_projects()
+
         create_proj_box = self.driver.find_element_by_css_selector(".container > div > center > a")
         create_proj_box.click()
+        ind = 0
+        while ind < 5:
+            num_projects = self.get_number_projects()
+            if num_projects == num_before + 1:
+                return
+            time.sleep(1)
+        raise Exception("Could not create empty project")
 
     def create_molecule_in_project(self):
         assert self.is_on_page_user_project()
@@ -529,6 +552,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 #link.click()
                 mol.click()
                 return
+        raise Exception("Could not click on molecule")
 
     def get_number_ensembles(self):
         assert self.is_on_page_molecule()
@@ -847,6 +871,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 alert.accept()
                 self.driver.switch_to_default_content()
                 return
+        raise Exception("Could not delete ensemble")
 
     def setup_test_group(self):
         self.lget('/profile/')

@@ -861,6 +861,61 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(software.get_attribute('value'), params1['software'])
         self.assertEqual(misc.get_attribute('value'), "")
 
+    def test_num_calcs(self):
+        self.setup_test_group()
+        self.lget("/projects/")
+        self.create_empty_project()
+
+        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("My Project")
+
+        self.assertEqual(n_mol, 0)
+        self.assertEqual(n_calc, 0)
+        self.assertEqual(n_queued, 0)
+        self.assertEqual(n_running, 0)
+        self.assertEqual(n_completed, 0)
+
+        self.lget("/launch/")
+        params = {
+                'calc_name': 'Ammonia',
+                'type': 'Geometrical Optimisation',
+                'project': 'My Project',
+                'in_file': 'NH3.mol',
+                }
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.wait_latest_calc_done(30)
+
+        self.lget("/projects/")
+        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("My Project")
+        self.assertEqual(n_mol, 1)
+        self.assertEqual(n_calc, 1)
+        self.assertEqual(n_queued, 0)
+        self.assertEqual(n_running, 0)
+        self.assertEqual(n_completed, 1)
+
+        self.click_project("My Project")
+        self.click_molecule("NH3")
+        self.delete_ensemble("Ammonia")
+        self.lget("/projects/")
+
+        ind = 0
+        while ind < 5:
+            n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("My Project")
+            if n_calc == 0:
+                break
+            time.sleep(1)
+            ind += 1
+            self.lget("/projects/")
+
+        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("My Project")
+        self.assertEqual(n_mol, 1)
+        self.assertEqual(n_calc, 0)
+        self.assertEqual(n_queued, 0)
+        self.assertEqual(n_running, 0)
+        self.assertEqual(n_completed, 0)
+
+
+
 
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):

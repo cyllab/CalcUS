@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.signals import pre_save
 from django.utils import timezone
 from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save
@@ -94,6 +95,11 @@ class Project(models.Model):
     private = models.PositiveIntegerField(default=0)
 
     preset = models.ForeignKey('Preset', on_delete=models.SET_NULL, blank=True, null=True)
+
+    num_calc = models.PositiveIntegerField(default=0)
+    num_calc_queued = models.PositiveIntegerField(default=0)
+    num_calc_running = models.PositiveIntegerField(default=0)
+    num_calc_completed = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.name
@@ -654,6 +660,27 @@ class Calculation(models.Model):
 
     def __str__(self):
         return self.step.name
+
+    def save(self, *args, **kwargs):
+        old = Calculation.objects.filter(pk=self.pk).first()
+        if old:
+            if self.status != old.status:
+                if old.status == 0:
+                    self.order.project.num_calc_queued -= 1
+                elif old.status == 1:
+                    self.order.project.num_calc_running -= 1
+                elif old.status == 2 or old.status == 3:
+                    self.order.project.num_calc_completed -= 1
+
+                if self.status == 0:
+                    self.order.project.num_calc_queued += 1
+                elif self.status == 1:
+                    self.order.project.num_calc_running += 1
+                elif self.status == 2 or self.status == 3:
+                    self.order.project.num_calc_completed += 1
+
+                self.order.project.save()
+        super(Calculation, self).save(*args, **kwargs)
 
     @property
     def execution_time(self):

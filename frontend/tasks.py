@@ -2447,6 +2447,9 @@ def dispatcher(drawing, order_id):
                     out.write("{}\n".format(c.id))
                     out.write("{}\n".format(order.resource.id))
 
+    order.project.num_calc += len(calculations)
+    order.project.num_calc_queued += len(calculations)
+    order.project.save()
     for task, c in zip(group_order, calculations):
         res = task.apply_async()
         c.task_id = res
@@ -2541,6 +2544,8 @@ def del_ensemble(ensemble_id):
 
 def _del_project(id):
     proj = Project.objects.get(pk=id)
+    proj.author = None
+    proj.save()
     for m in proj.molecule_set.all():
         _del_molecule(m.id)
     proj.delete()
@@ -2570,6 +2575,18 @@ def _del_ensemble(id):
     for c in e.calculation_set.all():
         if c.status == 1 or c.status == 2:
             kill_calc(c)
+
+        c.order.project.num_calc -= 1
+
+        if c.status == 0:
+            c.order.project.num_calc_queued -= 1
+        elif c.status == 1:
+            c.order.project.num_calc_running -= 1
+        elif c.status == 2 or c.status == 3:
+            c.order.project.num_calc_completed -= 1
+
+        c.order.project.save()
+
         c.delete()
         try:
             rmtree(os.path.join(CALCUS_SCR_HOME, str(c.id)))
@@ -2587,6 +2604,18 @@ def _del_structure(s):
     for c in calcs:
         if c.status == 1 or c.status == 2:
             kill_calc(c)
+
+        c.order.project.num_calc -= 1
+
+        if c.status == 0:
+            c.order.project.num_calc_queued -= 1
+        elif c.status == 1:
+            c.order.project.num_calc_running -= 1
+        elif self.status == 2 or c.status == 3:
+            c.order.project.num_calc_completed -= 1
+
+        c.order.project.save()
+
         c.delete()
         try:
             rmtree(os.path.join(CALCUS_SCR_HOME, str(c.id)))
