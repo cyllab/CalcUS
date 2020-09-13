@@ -2,6 +2,8 @@ from __future__ import absolute_import, unicode_literals
 
 from calcus.celery import app
 import string
+import signal
+import psutil
 
 from celery.signals import task_prerun, task_postrun
 from .models import Calculation, Structure
@@ -350,8 +352,14 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     return t.returncode
 
                 if calc_id != -1 and res.is_aborted() == True:
+
+                    parent = psutil.Process(t.pid)
+                    children = parent.children(recursive=True)
+                    for process in children:
+                        process.send_signal(signal.SIGTERM)
+
+                    #t.kill()
                     t.terminate()
-                    t.kill()
                     t.wait()
                     return -1
 
@@ -2447,9 +2455,6 @@ def dispatcher(drawing, order_id):
                     out.write("{}\n".format(c.id))
                     out.write("{}\n".format(order.resource.id))
 
-    order.project.num_calc += len(calculations)
-    order.project.num_calc_queued += len(calculations)
-    order.project.save()
     for task, c in zip(group_order, calculations):
         res = task.apply_async()
         c.task_id = res
@@ -2576,17 +2581,6 @@ def _del_ensemble(id):
         if c.status == 1 or c.status == 2:
             kill_calc(c)
 
-        c.order.project.num_calc -= 1
-
-        if c.status == 0:
-            c.order.project.num_calc_queued -= 1
-        elif c.status == 1:
-            c.order.project.num_calc_running -= 1
-        elif c.status == 2 or c.status == 3:
-            c.order.project.num_calc_completed -= 1
-
-        c.order.project.save()
-
         c.delete()
         try:
             rmtree(os.path.join(CALCUS_SCR_HOME, str(c.id)))
@@ -2604,17 +2598,6 @@ def _del_structure(s):
     for c in calcs:
         if c.status == 1 or c.status == 2:
             kill_calc(c)
-
-        c.order.project.num_calc -= 1
-
-        if c.status == 0:
-            c.order.project.num_calc_queued -= 1
-        elif c.status == 1:
-            c.order.project.num_calc_running -= 1
-        elif self.status == 2 or c.status == 3:
-            c.order.project.num_calc_completed -= 1
-
-        c.order.project.save()
 
         c.delete()
         try:

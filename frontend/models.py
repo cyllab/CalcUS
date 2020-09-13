@@ -510,6 +510,11 @@ class Molecule(models.Model):
     inchi = models.CharField(max_length=1000)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
 
+    num_calc = models.PositiveIntegerField(default=0)
+    num_calc_queued = models.PositiveIntegerField(default=0)
+    num_calc_running = models.PositiveIntegerField(default=0)
+    num_calc_completed = models.PositiveIntegerField(default=0)
+
     @property
     def count_vis(self):
         return len(self.ensemble_set.filter(hidden=False))
@@ -661,27 +666,73 @@ class Calculation(models.Model):
     def __str__(self):
         return self.step.name
 
+    def get_mol(self):
+        if self.result_ensemble is not None:
+            return self.result_ensemble.parent_molecule
+        elif self.structure is not None:
+            return self.structure.parent_ensemble.parent_molecule
+        else:
+            print("Could not find molecule to update!")
+
     def save(self, *args, **kwargs):
-        old = Calculation.objects.filter(pk=self.pk).first()
-        if old:
-            if self.status != old.status:
-                if old.status == 0:
-                    self.order.project.num_calc_queued -= 1
-                elif old.status == 1:
-                    self.order.project.num_calc_running -= 1
-                elif old.status == 2 or old.status == 3:
-                    self.order.project.num_calc_completed -= 1
+        if not self.pk:
+            mol = self.get_mol()
+            self.order.project.num_calc += 1
+            self.order.project.num_calc_queued += 1
+            self.order.project.save()
+            mol.num_calc += 1
+            mol.num_calc_queued += 1
+            mol.save()
+        else:
+            old = Calculation.objects.filter(pk=self.pk).first()
+            if old:
+                if self.status != old.status:
+                    mol = self.get_mol()
 
-                if self.status == 0:
-                    self.order.project.num_calc_queued += 1
-                elif self.status == 1:
-                    self.order.project.num_calc_running += 1
-                elif self.status == 2 or self.status == 3:
-                    self.order.project.num_calc_completed += 1
+                    if old.status == 0:
+                        self.order.project.num_calc_queued -= 1
+                        mol.num_calc_queued -= 1
+                    elif old.status == 1:
+                        self.order.project.num_calc_running -= 1
+                        mol.num_calc_running -= 1
+                    elif old.status == 2 or old.status == 3:
+                        self.order.project.num_calc_completed -= 1
+                        mol.num_calc_completed -= 1
 
-                self.order.project.save()
+                    if self.status == 0:
+                        self.order.project.num_calc_queued += 1
+                        mol.num_calc_queued += 1
+                    elif self.status == 1:
+                        self.order.project.num_calc_running += 1
+                        mol.num_calc_running += 1
+                    elif self.status == 2 or self.status == 3:
+                        self.order.project.num_calc_completed += 1
+                        mol.num_calc_completed += 1
+
+                    self.order.project.save()
+                    mol.save()
         super(Calculation, self).save(*args, **kwargs)
 
+
+    def delete(self, *args, **kwargs):
+        mol = self.get_mol()
+        self.order.project.num_calc -= 1
+        mol.num_calc -= 1
+        if self.status == 0:
+            self.order.project.num_calc_queued -= 1
+            mol.num_calc_queued -= 1
+        elif self.status == 1:
+            self.order.project.num_calc_running -= 1
+            mol.num_calc_running -= 1
+        elif self.status in [2, 3]:
+            self.order.project.num_calc_completed -= 1
+            mol.num_calc_completed -= 1
+        else:
+            raise Exception("Unknown calculation status")
+        self.order.project.save()
+        mol.save()
+
+        super(Calculation, self).delete(*args, **kwargs)
     @property
     def execution_time(self):
         if self.date_started is not None and self.date_finished is not None:

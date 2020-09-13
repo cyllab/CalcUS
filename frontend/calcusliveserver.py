@@ -477,6 +477,20 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         sline = proj.find_element_by_css_selector("a > p").text.split()
         return int(sline[0]), int(sline[2].replace('(', '')), int(sline[4]), int(sline[6]), int(sline[8])
 
+    def get_number_calcs_in_molecule(self, name):
+        molecules = self.get_molecules()
+        mol = None
+        for _mol in molecules:
+            mol_name = _mol.find_element_by_css_selector("a > strong > p").text
+            if mol_name == name:
+                mol = _mol
+                break
+
+        assert mol is not None
+
+        sline = mol.find_element_by_css_selector("a > p").text.split()
+        return int(sline[0]), int(sline[2].replace('(', '')), int(sline[4]), int(sline[6]), int(sline[8])
+
     def rename_project(self, proj, name):
         rename_icon = proj.find_element_by_class_name("fa-edit")
         rename_icon.click()
@@ -685,6 +699,23 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             time.sleep(2)
             ind += 2
             self.driver.refresh()
+        raise Exception("Calculation did not finish")
+
+    def wait_latest_calc_running(self, timeout):
+        assert self.is_on_page_calculations()
+        assert self.get_number_calc_orders() > 0
+
+        ind = 0
+        while ind < timeout:
+            calculations = self.get_calc_orders()
+
+            header = calculations[0].find_element_by_class_name("message-header")
+            if "has-background-warning" in header.get_attribute("class"):
+                    return
+            time.sleep(1)
+            ind += 1
+            self.driver.refresh()
+        raise Exception("Calculation did not run")
 
     def latest_calc_successful(self):
         assert self.is_on_page_calculations()

@@ -894,6 +894,14 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(n_completed, 1)
 
         self.click_project("My Project")
+
+        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("NH3")
+        self.assertEqual(n_e, 2)
+        self.assertEqual(n_calc, 1)
+        self.assertEqual(n_queued, 0)
+        self.assertEqual(n_running, 0)
+        self.assertEqual(n_completed, 1)
+
         self.click_molecule("NH3")
         self.delete_ensemble("Ammonia")
         self.lget("/projects/")
@@ -914,8 +922,55 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(n_running, 0)
         self.assertEqual(n_completed, 0)
 
+        self.click_project("My Project")
+        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("NH3")
+        self.assertEqual(n_e, 1)
+        self.assertEqual(n_calc, 0)
+        self.assertEqual(n_queued, 0)
+        self.assertEqual(n_running, 0)
+        self.assertEqual(n_completed, 0)
 
+    def test_num_calcs_cancel(self):
+        self.setup_test_group()
+        self.lget("/projects/")
+        self.create_empty_project()
 
+        self.lget("/launch/")
+        params = {
+                'calc_name': 'Ph2I_cation',
+                'type': 'Geometrical Optimisation',
+                'project': 'My Project',
+                'in_file': 'Ph2I_cation.mol',
+                'charge': '+1',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2QZVP',
+                }
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.wait_latest_calc_running(10)
+
+        self.lget("/projects/")
+        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("My Project")
+        self.assertEqual(n_mol, 1)
+        self.assertEqual(n_calc, 1)
+        self.assertEqual(n_queued, 0)
+        self.assertEqual(n_running, 1)
+        self.assertEqual(n_completed, 0)
+
+        self.lget("/calculations/")
+
+        self.details_latest_order()
+        self.cancel_all_calc()
+
+        self.lget("/projects/")
+        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("My Project")
+        self.assertEqual(n_mol, 1)
+        self.assertEqual(n_calc, 1)
+        self.assertEqual(n_queued, 0)
+        self.assertEqual(n_running, 0)
+        self.assertEqual(n_completed, 1)
 
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):
