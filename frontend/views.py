@@ -2251,6 +2251,40 @@ def toggle_private(request):
         return HttpResponse(status=403)
 
 @login_required
+def toggle_flag(request):
+    if request.method == 'POST':
+        id = int(clean(request.POST['id']))
+
+        try:
+            e = Ensemble.objects.get(pk=id)
+        except Ensemble.DoesNotExist:
+            return HttpResponse(status=403)
+
+        profile = request.user.profile
+
+        if e.parent_molecule.project.author != profile:
+            return HttpResponse(status=403)
+
+        if 'val' in request.POST.keys():
+            try:
+                val = int(clean(request.POST['val']))
+            except ValueError:
+                return HttpResponse(status=403)
+        else:
+            return HttpResponse(status=403)
+
+        if val not in [0, 1]:
+            return HttpResponse(status=403)
+
+        e.flagged = val
+        e.save()
+
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=403)
+
+
+@login_required
 def rename_ensemble(request):
     if request.method == 'POST':
         id = int(clean(request.POST['id']))
@@ -2719,9 +2753,11 @@ def get_csv(proj, profile):
 
     summary = {}
     csv = "Molecule,Ensemble,Structure\n"
-    for mol in sorted(proj.molecule_set.all(), key=lambda l: l.name):
+    molecules = list(proj.molecule_set.all())
+    for mol in sorted(molecules, key=lambda l: l.name):
         csv += "\n\n{}\n".format(mol.name)
-        for e in mol.ensemble_set.all():
+        ensembles = list(mol.ensemble_set.all())
+        for e in ensembles:
             csv += "\n,{}\n".format(e.name)
             for params in e.unique_parameters:
                 if params.software == "Unknown" or params.software == "Open Babel":
@@ -2737,7 +2773,7 @@ def get_csv(proj, profile):
                     except Property.DoesNotExist:
                         pass
                     else:
-                        csv += ",,{},{},{},{},{}\n".format(s.number, prop.energy*CONVERSION, rel_energies[ind], weights[ind], prop.free_energy*CONVERSION)
+                        csv += ",,{},{},{},{:.3f},{}\n".format(s.number, prop.energy*CONVERSION, rel_energies[ind], weights[ind], prop.free_energy*CONVERSION)
 
                 w_e = e.weighted_energy(params)
                 if w_e != '' and w_e != '-' and w_e != 0:
@@ -2766,6 +2802,22 @@ def get_csv(proj, profile):
             for e in summary[method][mol].keys():
                 e_obj = Ensemble.objects.get(pk=e)
                 csv += ",,{},{},{}\n".format(e_obj.name, summary[method][mol][e][0], summary[method][mol][e][1])
+
+    csv += "\n\n\nFlagged\n"
+    csv += "Method,Molecule,Ensemble,Average Energy ({}),Average Free Energy ({})\n".format(units, units)
+
+    for method in summary.keys():
+        csv += "{}\n".format(method)
+        for mol in summary[method].keys():
+            mol_obj = Molecule.objects.get(pk=mol)
+            csv += ",{}\n".format(mol_obj.name)
+            for e in summary[method][mol].keys():
+                e_obj = Ensemble.objects.get(pk=e)
+                if not e_obj.flagged:
+                    continue
+                csv += ",,{},{},{}\n".format(e_obj.name, summary[method][mol][e][0], summary[method][mol][e][1])
+
+
     return csv
 
 @login_required
@@ -2931,7 +2983,11 @@ def ensemble_map(request, pk):
                 }}"""
     nodes = ""
     for e in mol.ensemble_set.all():
-        nodes += """{{ "data": {{"id": "{}", "name": "{}", "href": "/ensemble/{}", "color": "{}"}} }},""".format(e.id, e.name, e.id, e.get_node_color)
+        if e.flagged:
+            border_text = """, "bcolor": "black", "bwidth": 2"""
+        else:
+            border_text = ""
+        nodes += """{{ "data": {{"id": "{}", "name": "{}", "href": "/ensemble/{}", "color": "{}"{}}} }},""".format(e.id, e.name, e.id, e.get_node_color, border_text)
     nodes = nodes[:-1]
 
     edges = ""

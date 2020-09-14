@@ -292,7 +292,45 @@
 
 			}
 		}
+		function flag() {
+			icon = document.getElementById("icon_flag");
+			if(icon.style.color == "silver") {
+				$.ajax({
+					method: "POST",	 	 
+					url: "/toggle_flag/",
+					data: {
+						'id': {{ ensemble.id }},
+						'val': 0,
+					},
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					success: function() {
+						icon.style.color = "";
+					}
 
+				});
+			}
+			else {
+				$.ajax({
+					method: "POST",	 	 
+					url: "/toggle_flag/",
+					data: {
+						'id': {{ ensemble.id }},
+						'val': 1,
+					},
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					success: function() {
+						icon.style.color = "silver";
+					}
+
+				});
+
+			}
+
+		}
 	</script>
 	<style>
 		.hscroll {
@@ -322,6 +360,7 @@
 		<div class="box is-rounded" id="ensemble_title" style="background-color: {{ ensemble.get_node_color }};">
 				<p class="title is-3" style="display: inline;" id="ensemble_name">{{ ensemble.name }}</p>
 				<p style="float: right;">
+				<a onclick="flag()"><i class="fas fa-flag" id="icon_flag" title="Flag" {% if ensemble.flagged %}style="color: silver;" {% endif %}></i></a>
 				{% if ensemble.origin %}<a href="/ensemble/{{ ensemble.origin.id }}"><i class="fas fa-level-up-alt" title="Go to parent ensemble"></i></a>{% endif %}
 				<a onclick="edit_title();"><i class="fas fa-edit" id="icon_rename" title="Rename"></i></a>
 				<a onclick="del_ensemble();"><i class="fas fa-trash-alt" title="Delete"></i></a>

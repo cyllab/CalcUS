@@ -20,6 +20,7 @@ urlpatterns = [
     path('restart_calc/', views.restart_calc, name='restart_calc'),
     path('refetch_calc/', views.refetch_calc, name='refetch_calc'),
     path('toggle_private/', views.toggle_private, name='toggle_private'),
+    path('toggle_flag/', views.toggle_flag, name='toggle_flag'),
 
     path('projects/', views.projects, name='projects'),
     path('projects/<str:username>', views.projects_username, name='projects_username'),

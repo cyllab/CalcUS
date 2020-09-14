@@ -1,5 +1,6 @@
 {% for e in molecule.ensemble_set.all %}
 	<tr>
+		<td >{% if e.flagged %} <i class="fas fa-flag" id="icon_flag" style="color: silver;">{% endif %}</td>
 		<td id="e_name_{{ e.id }}"><a href="/ensemble/{{ e.id }}">{{ e.name }}</a></td>
 		<td>
 			{% for p in e.unique_parameters %}

@@ -10,7 +10,6 @@
 
 	<script src="https://unpkg.com/masonry-layout@4.2.0/dist/masonry.pkgd.min.js"></script>
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
-	<script type="text/javascript" src="{% static 'frontend/jquery.connections.js' %}"></script>
 
 
 	<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
@@ -68,6 +67,8 @@
 								'font-size': '10px',
 								'width': 'label',
 								'padding': '5px',
+								'border-width': 'data(bwidth)',
+								'border-color': 'data(bcolor)',
 							}
 						},
 
@@ -240,6 +241,7 @@
 					<table class="table">
 						<thead>
 							<tr>
+								<th></th>
 								<th>Ensemble</th>
 								<th>Unique methods</th>
 								<th>Unique calculations</th>
