@@ -1,0 +1,48 @@
+{% extends 'frontend/base.html' %}
+
+{% load static %}
+
+
+{% block content %}
+	<form action="/download_project/" method="post" id="calcform" enctype="multipart/form-data">
+		{% csrf_token %}
+		<input type="hidden" name="id" value="{{ proj.id }}">
+		<div class="field">
+			<label class="label">Data</label>
+			<div class="control" >
+				<div class="select">
+					<select name="data">
+						<option value="summary">Thermodynamic Summary</option>
+						<option value="log">Log files</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="field">
+			<label class="label">Scope</label>
+			<div class="control" >
+				<div class="select">
+					<select name="scope">
+						<option value="all">All</option>
+						<option value="flagged">Flagged</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="field">
+			<label class="label">Details</label>
+			<div class="control" >
+				<div class="select">
+					<select name="details">
+						<option value="full">Full</option>
+						<option value="summary">Summary</option>
+					</select>
+				</div>
+			</div>
+		</div>
+
+		<button class="button is-primary">Download</button>
+	</form>
+
+{% endblock %}
+

@@ -43,6 +43,8 @@ urlpatterns = [
 
     path('create_project/', views.create_project, name='create_project'),
 
+    path('download_project/', views.download_project_post, name='download_project_post'),
+    path('download_project/<int:pk>', views.download_project, name='download_project'),
     path('download_project_logs/<int:pk>', views.download_project_logs, name='download_project_logs'),
     path('download_project_csv/<int:project_id>', views.download_project_csv, name='download_project_csv'),
 

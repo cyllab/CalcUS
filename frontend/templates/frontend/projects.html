@@ -149,7 +149,7 @@
 						<p style="float: right;">
 							<a onclick="toggle_private({{ proj.id }});"><i class="fas fa-user-shield" id="private_icon_{{ proj.id }}" title="Toggle private" {% if proj.private %}style="color: silver;"{% endif %}></i></a>
 							<a href="/analyse/{{ proj.id }}"><i class="fas fa-table" title="Go to spreadsheet"></i></a>
-							<a href="/download_project_csv/{{ proj.id }}"><i class="fas fa-download" title="Download spreadsheet"></i></a>
+							<a href="/download_project/{{ proj.id }}"><i class="fas fa-download" title="Download Project"></i></a>
 							{% if proj.author == profile %}
 							<a onclick="edit_field({{ proj.id }});"><i class="fas fa-edit" title="Rename" id="icon_{{ proj.id}}"></i></a>
 							<a onclick="del({{ proj.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>

@@ -2067,44 +2067,7 @@ def next_step(request, pk):
             'calculation': calc,
         })
 
-@login_required
-def download_project_logs(request, pk):
-    try:
-        proj = Project.objects.get(pk=pk)
-    except Project.DoesNotExist:
-        return HttpResponse(status=403)
 
-    profile = request.user.profile
-
-    if not profile_intersection(proj.author, profile):
-        return HttpResponse(status=403)
-
-    tmp_dir = "/tmp/{}_{}_{}".format(profile.username, proj.author.username, time.time())
-    os.mkdir(tmp_dir)
-
-    for mol in sorted(proj.molecule_set.all(), key=lambda l: l.name):
-        for e in mol.ensemble_set.all():
-            for params in e.unique_parameters:
-                p_dir = os.path.join(tmp_dir, params.__repr__())
-                try:
-                    os.mkdir(p_dir)
-                except FileExistsError:
-                    pass
-                for ind, s in enumerate(e.structure_set.all()):
-                    try:
-                        prop = s.properties.get(parameters=params)
-                    except Property.DoesNotExist:
-                        pass
-                    else:
-                        if prop.freq != 0:
-                            try:
-                                copyfile(os.path.join(CALCUS_RESULTS_HOME, str(prop.freq), "calc.out"), os.path.join(p_dir, "{}.log".format(prop.freq)))
-                            except FileNotFoundError:
-                                try:
-                                    copyfile(os.path.join(CALCUS_RESULTS_HOME, str(prop.freq), "freq.out"), os.path.join(p_dir, "{}.log".format(prop.freq)))
-                                except FileNotFoundError:
-                                    print("Not found: {} - {}".format(prop.freq, params.__repr__()))
-    ###to finish
 @login_required
 def download_structures(request, ee):
     try:
@@ -2547,7 +2510,6 @@ def update_preferences(request):
             return HttpResponse(status=204)
 
         units = clean(request.POST['pref_units'])
-        print(units)
         try:
             unit_code = profile.INV_UNITS[units]
         except KeyError:
@@ -2740,100 +2702,124 @@ def load_params_structure(request, pk):
             'params': params,
         })
 
-def get_csv(proj, profile):
+class CsvParameters:
+    def __init__(self):
+        self.molecules = {}
+
+class CsvMolecule:
+    def __init__(self):
+        self.ensembles = {}
+        self.name = ""
+
+class CsvEnsemble:
+    def __init__(self):
+        self.name = ""
+        self.data = None
+
+def get_csv(proj, profile, scope="all", details="full"):
     pref_units = profile.pref_units
     units = profile.pref_units_name
 
     if pref_units == 0:
         CONVERSION = HARTREE_FVAL
+        structure_str = ",,,{},{},{:.1f},{:.1f},{:.3f},{:.1f}\n"
+        ensemble_str = "{:.1f}"
     elif pref_units == 1:
         CONVERSION = HARTREE_TO_KCAL_F
+        structure_str = ",,,{},{},{:.2f},{:.2f},{:.3f},{:.2f}\n"
+        ensemble_str = "{:.2f}"
     elif pref_units == 2:
         CONVERSION = 1
+        structure_str = ",,,{},{},{:.7f},{:.7f},{:.3f},{:.7f}\n"
+        ensemble_str = "{:.7f}"
 
     summary = {}
-    csv = "Molecule,Ensemble,Structure\n"
+    csv = ""
+
     molecules = list(proj.molecule_set.all())
-    for mol in sorted(molecules, key=lambda l: l.name):
-        csv += "\n\n{}\n".format(mol.name)
-        ensembles = list(mol.ensemble_set.all())
+    for mol in molecules:
+        ensembles = mol.ensemble_set.all()
         for e in ensembles:
-            csv += "\n,{}\n".format(e.name)
-            for params in e.unique_parameters:
-                if params.software == "Unknown" or params.software == "Open Babel":
+            if scope == "flagged":
+                if not e.flagged:
                     continue
-                rel_energies = e.relative_energies(params)
-                rel_energies = [float(i)*CONVERSION if i != '' else '' for i in rel_energies]
-                weights = e.weights(params)
-                csv += ",,{}\n".format(params)
-                csv += ",,Number,Energy ({}),Relative Energy ({}), Boltzmann Weight,Free energy ({})\n".format(units, units, units)
-                for ind, s in enumerate(e.structure_set.all()):
-                    try:
-                        prop = s.properties.get(parameters=params)
-                    except Property.DoesNotExist:
-                        pass
-                    else:
-                        csv += ",,{},{},{},{:.3f},{}\n".format(s.number, prop.energy*CONVERSION, rel_energies[ind], weights[ind], prop.free_energy*CONVERSION)
 
-                w_e = e.weighted_energy(params)
-                if w_e != '' and w_e != '-' and w_e != 0:
-                    w_e *= CONVERSION
-                w_f_e = e.weighted_free_energy(params)
-                if w_f_e != '' and w_f_e != '-' and w_f_e != 0:
-                    w_f_e *= CONVERSION
-                csv += "\n,,Ensemble Average,{},,,{}\n".format(w_e, w_f_e)
-                p_name = params.long_name
+            if details == "full":
+                summ = e.ensemble_summary
+            else:
+                summ = e.ensemble_short_summary
+
+            for p_name in summ.keys():
                 if p_name in summary.keys():
-                    if mol.id in summary[p_name].keys():
-                        summary[p_name][mol.id][e.id] = [w_e, w_f_e]
+                    csv_p = summary[p_name]
+                    if mol.id in csv_p.molecules.keys():
+                        csv_mol = csv_p.molecules[mol.id]
+
+                        csv_e = CsvEnsemble()
+                        csv_e.name = e.name
+                        csv_e.data = summ[p_name]
+                        csv_mol.ensembles[e.id] = csv_e
+
                     else:
-                        summary[p_name][mol.id] = {e.id: [w_e, w_f_e]}
+                        csv_mol = CsvMolecule()
+                        csv_mol.name = mol.name
+                        csv_p.molecules[mol.id] = csv_mol
+
+                        csv_e = CsvEnsemble()
+                        csv_e.name = e.name
+                        csv_e.data = summ[p_name]
+                        csv_mol.ensembles[e.id] = csv_e
                 else:
-                    summary[p_name] = {}
-                    summary[p_name][mol.id] = {e.id: [w_e, w_f_e]}
+                    csv_p = CsvParameters()
 
-    csv += "\n\n\nSummary\n"
-    csv += "Method,Molecule,Ensemble,Average Energy ({}),Average Free Energy ({})\n".format(units, units)
-    for method in summary.keys():
-        csv += "{}\n".format(method)
-        for mol in summary[method].keys():
-            mol_obj = Molecule.objects.get(pk=mol)
-            csv += ",{}\n".format(mol_obj.name)
-            for e in summary[method][mol].keys():
-                e_obj = Ensemble.objects.get(pk=e)
-                csv += ",,{},{},{}\n".format(e_obj.name, summary[method][mol][e][0], summary[method][mol][e][1])
+                    csv_mol = CsvMolecule()
+                    csv_mol.name = mol.name
 
-    csv += "\n\n\nFlagged\n"
-    csv += "Method,Molecule,Ensemble,Average Energy ({}),Average Free Energy ({})\n".format(units, units)
+                    csv_e = CsvEnsemble()
+                    csv_e.name = e.name
+                    csv_e.data = summ[p_name]
 
-    for method in summary.keys():
-        csv += "{}\n".format(method)
-        for mol in summary[method].keys():
-            mol_obj = Molecule.objects.get(pk=mol)
-            csv += ",{}\n".format(mol_obj.name)
-            for e in summary[method][mol].keys():
-                e_obj = Ensemble.objects.get(pk=e)
-                if not e_obj.flagged:
-                    continue
-                csv += ",,{},{},{}\n".format(e_obj.name, summary[method][mol][e][0], summary[method][mol][e][1])
+                    csv_mol.ensembles[e.id] = csv_e
 
+                    csv_p.molecules[mol.id] = csv_mol
+                    summary[p_name] = csv_p
+
+    if details == 'full':
+        csv += "Parameters,Molecule,Ensemble,Structure\n"
+        for p_name in summary.keys():
+            p = summary[p_name]
+            csv += "{},\n".format(p_name)
+            for mol in p.molecules.values():
+                csv += ",{},\n".format(mol.name)
+                csv += ",,,Number,Degeneracy,Energy,Relative Energy,Weight,Free Energy,\n"
+                for e in mol.ensembles.values():
+                    csv += ",,{},\n".format(e.name)
+                    nums, degens, energies, free_energies, rel_energies, weights, w_e, w_f_e = e.data
+                    for n, d, en, f_en, r_el, w in zip(nums, degens, energies, free_energies, rel_energies, weights):
+                        csv += structure_str.format(n, d, en*CONVERSION, r_el*CONVERSION, w, f_en*CONVERSION)
+    csv += "\n\n"
+    csv += "SUMMARY\n"
+    csv += "Method,Molecule,Ensemble,Weighted Energy,Weighted Free Energy,\n"
+    for p_name in summary.keys():
+        p = summary[p_name]
+        csv += "{},\n".format(p_name)
+        for mol in p.molecules.values():
+            csv += ",{},\n".format(mol.name)
+            for e in mol.ensembles.values():
+                if details == "full":
+                    w_e = ensemble_str.format(e.data[6]*CONVERSION)
+                    w_f_e = ensemble_str.format(e.data[7]*CONVERSION)
+                else:
+                    w_e = ensemble_str.format(e.data[0]*CONVERSION)
+                    w_f_e = ensemble_str.format(e.data[1]*CONVERSION)
+
+                csv += ",,{},{},{}\n".format(e.name, w_e, w_f_e)
 
     return csv
 
-@login_required
-def download_project_csv(request, project_id):
+def download_project_csv(proj, profile, scope, details):
 
-    profile = request.user.profile
-
-    try:
-        proj = Project.objects.get(pk=project_id)
-    except Project.DoesNotExist:
-        return HttpResponse(status=403)
-
-    if not can_view_project(proj, profile):
-        return HttpResponse(status=403)
-
-    csv = get_csv(proj, profile)
+    csv = get_csv(proj, profile, scope, details)
 
     proj_name = proj.name.replace(' ', '_')
     response = HttpResponse(csv, content_type='text/csv')
@@ -2869,6 +2855,98 @@ def cancel_calc(request):
             cancel.delay(calc.id)
 
     return HttpResponse(status=200)
+
+def download_project_logs(proj, profile, scope):####
+
+    tmp_dir = "/tmp/{}_{}_{}".format(profile.username, proj.author.username, time.time())
+    os.mkdir(tmp_dir)
+
+    for mol in sorted(proj.molecule_set.all(), key=lambda l: l.name):
+        for e in mol.ensemble_set.all():
+            if not e.flagged:
+                continue
+            for params in e.unique_parameters:
+                p_dir = os.path.join(tmp_dir, params.__repr__())
+                try:
+                    os.mkdir(p_dir)
+                except FileExistsError:
+                    pass
+                for ind, s in enumerate(e.structure_set.all()):
+                    try:
+                        prop = s.properties.get(parameters=params)
+                    except Property.DoesNotExist:
+                        pass
+                    else:
+                        if prop.freq != 0:
+                            try:
+                                copyfile(os.path.join(CALCUS_RESULTS_HOME, str(prop.freq), "calc.out"), os.path.join(p_dir, "{}.log".format(prop.freq)))
+                            except FileNotFoundError:
+                                try:
+                                    copyfile(os.path.join(CALCUS_RESULTS_HOME, str(prop.freq), "freq.out"), os.path.join(p_dir, "{}.log".format(prop.freq)))
+                                except FileNotFoundError:
+                                    print("Not found: {} - {}".format(prop.freq, params.__repr__()))
+    ###to finish
+
+@login_required
+def download_project_post(request):
+    if 'id' in request.POST.keys():
+        try:
+            id = int(clean(request.POST['id']))
+        except ValueError:
+            return error(request, "Invalid project")
+    else:
+        return HttpResponse(status=403)
+
+    if 'data' in request.POST.keys():
+        data = clean(request.POST['data'])
+        if data not in ['summary', 'log']:
+            return error(request, "Invalid data type requested")
+    else:
+        return error(request, "No data type requested")
+
+    if 'scope' in request.POST.keys():
+        scope = clean(request.POST['scope'])
+        if scope not in ['all', 'flagged']:
+            return error(request, "Invalid scope")
+    else:
+        return error(request, "No scope given")
+
+    if 'details' in request.POST.keys():
+        details = clean(request.POST['details'])
+        if details not in ['full', 'summary']:
+            return error(request, "Invalid details level")
+    else:
+        return error(request, "No details level given")
+
+    try:
+        proj = Project.objects.get(pk=id)
+    except Project.DoesNotExist:
+        return error(request, "Invalid project")
+
+    profile = request.user.profile
+
+    if not profile_intersection(proj.author, profile):
+        return HttpResponseRedirect("/home/")
+
+    if data == 'summary':
+        return download_project_csv(proj, profile, scope, details)
+    elif data == 'logs':
+        return download_project_logs(proj, profile, scope)
+
+@login_required
+def download_project(request, pk):
+    try:
+        proj = Project.objects.get(pk=pk)
+    except Project.DoesNotExist:
+        return HttpResponse(status=403)
+
+    profile = request.user.profile
+
+    if not profile_intersection(proj.author, profile):
+        return HttpResponseRedirect("/home/")
+
+    return render(request, 'frontend/download_project.html', {'proj': proj})
+
 
 @login_required
 def restart_calc(request):

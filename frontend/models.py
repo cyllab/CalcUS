@@ -229,6 +229,155 @@ class Ensemble(models.Model):
                 return True
         return False
 
+    def boltzmann_weighing_full(self, values, degeneracies):
+
+        if len(values) == 1:
+            return [[0.0], [1.0], values[0]]
+
+        en_0 = decimal.Decimal(min(values))
+        data = zip([decimal.Decimal(i) - en_0 for i in values], degeneracies)
+        relative_energies = [i - float(en_0) for i in values]
+
+        weights = []
+
+        s = decimal.Decimal(0)
+
+        for e, n in data:
+            s += n*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
+
+        w_energy = decimal.Decimal(0)
+
+        data = zip([decimal.Decimal(i) - en_0 for i in values], degeneracies)
+        for e, n in data:
+            w_energy += n*(e+decimal.Decimal(en_0))*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+            weights.append(n*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s)
+
+        #TODO: OPTIMIZE
+
+        return [relative_energies, weights, float(w_energy)]
+
+    def boltzmann_weighing_lite(self, values, degeneracies):
+
+        if len(values) == 1:
+            return values[0]
+
+        en_0 = decimal.Decimal(min(values))
+        data = zip([decimal.Decimal(i) - en_0 for i in values], degeneracies)
+
+        s = decimal.Decimal(0)
+
+        for e, n in data:
+            s += n*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
+
+        w_energy = decimal.Decimal(0)
+
+        data = zip([decimal.Decimal(i) - en_0 for i in values], degeneracies)
+        for e, n in data:
+            w_energy += n*(e+decimal.Decimal(en_0))*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+
+        #TODO: OPTIMIZE
+
+        return float(w_energy)
+
+    def calc_array_properties(self, in_arr):
+        data = []
+        e_0 = 0
+        f_e_0 = 0
+        if '-' in in_arr[1]:
+            w_e = '-'
+        else:
+            rel_e, weights, w_e = self.boltzmann_weighing_full(in_arr[2], in_arr[1])
+
+        if '-' in in_arr[2]:
+            w_f_e = '-'
+        else:
+            _, _, w_f_e = self.boltzmann_weighing_full(in_arr[3], in_arr[1])
+
+        return [rel_e, weights, w_e, w_f_e]
+
+
+    @property
+    def ensemble_summary(self):
+        '''
+            Returns all the necessary information for the summary
+
+            Data structure:
+            {
+                params.long_name:
+                    [
+                        [numbers],
+                        [degeneracies],
+                        [energies],
+                        [free energies],
+                        [relative energies],
+                        [weights],
+                        weighted_energy,
+                        weighted_free_energy,
+                    ],
+                ...
+            }
+        '''
+
+        ret = {}
+        for s in self.structure_set.all():
+            for prop in s.properties.all():
+                if prop.energy == 0:
+                    continue
+
+                p = prop.parameters
+                p_name = p.long_name
+                if p_name not in ret.keys():
+                    ret[p_name] = [[], [], [], []]
+                ret[p_name][0].append(s.number)
+                ret[p_name][1].append(s.degeneracy)
+                ret[p_name][2].append(prop.energy)
+                ret[p_name][3].append(prop.free_energy)
+
+        for p_name in ret.keys():
+            ret[p_name] += self.calc_array_properties(ret[p_name])
+
+        return ret
+
+    @property
+    def ensemble_short_summary(self):
+        '''
+            Returns ensemble properties
+
+            Data structure:
+            {
+                params.long_name:
+                    [
+                        weighted_energy,
+                        weighted_free_energy,
+                    ],
+                ...
+            }
+        '''
+
+        ret = {}
+
+        arr_e = {}
+        arr_f_e = {}
+        for s in self.structure_set.all():
+            for prop in s.properties.all():
+                if prop.energy == 0:
+                    continue
+
+                p = prop.parameters
+                p_name = p.long_name
+                if p_name not in arr_e.keys():
+                    arr_e[p_name] = [[], []]
+                    arr_f_e[p_name] = [[], []]
+
+                arr_e[p_name][0].append(prop.energy)
+                arr_e[p_name][1].append(s.degeneracy)
+
+                arr_f_e[p_name][0].append(prop.free_energy)
+                arr_f_e[p_name][1].append(s.degeneracy)
+
+        for p_name in arr_e.keys():
+            ret[p_name] = [self.boltzmann_weighing_lite(*arr_e[p_name]), self.boltzmann_weighing_lite(*arr_f_e[p_name])]
+        return ret
 
     def weighted_free_energy(self, params):
         data = []
