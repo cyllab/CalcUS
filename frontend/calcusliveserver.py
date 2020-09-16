@@ -40,10 +40,15 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         chrome_options = Options()
         if HEADLESS is not None and HEADLESS.lower() == "true":
-            chrome_options.add_argument("--headless")
+            from pyvirtualdisplay import Display
+
+            display = Display(visible=0, size=(1424, 768))
+            display.start()
+            #chrome_options.add_argument("--headless")
+            #chrome_options.add_argument("--window-size=1920x1080")
 
         cls.driver = webdriver.Chrome(chrome_options=chrome_options)
-        cls.driver.set_window_size(1424, 768)
+        #cls.driver.set_window_size(1424, 768)
 
         app.loader.import_module('celery.contrib.testing.tasks')
         cls.celery_worker = start_worker(app, perform_ping_check=False)
@@ -275,6 +280,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         )
 
         assert self.is_on_page_ensemble()
+
         conformers = conf_table.find_elements_by_css_selector("tr")
         return len(conformers)
 
