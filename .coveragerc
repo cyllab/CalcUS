@@ -6,4 +6,4 @@ omit =
 	*__init__.py
 	/usr/*
 	/home/raphael/.local/*
-	calcus/
+	calcus/*
