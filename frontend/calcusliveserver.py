@@ -12,6 +12,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.chrome.options import Options
 from shutil import copyfile, rmtree
 
 from celery.contrib.testing.worker import start_worker
@@ -27,6 +28,9 @@ RESULTS_DIR = os.path.join(tests_dir, "results")
 CLUSTER_DIR = os.path.join(tests_dir, "cluster")
 KEYS_DIR = os.path.join(tests_dir, "keys")
 
+HEADLESS = os.getenv("CALCUS_HEADLESS")
+
+
 from calcus.celery import app
 class CalcusLiveServer(StaticLiveServerTestCase):
 
@@ -34,7 +38,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.driver = webdriver.Chrome()
+        chrome_options = Options()
+        if HEADLESS is not None and HEADLESS.lower() == "true":
+            chrome_options.add_argument("--headless")
+
+        cls.driver = webdriver.Chrome(chrome_options=chrome_options)
         cls.driver.set_window_size(1424, 768)
 
         app.loader.import_module('celery.contrib.testing.tasks')
