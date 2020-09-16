@@ -1,6 +1,7 @@
 basis-set-exchange==0.8.12
 bleach==3.1.5
 celery==4.4.7
+coverage==5.3
 cryptography==3.1
 Django==3.1.1
 django-appconf==1.0.4
@@ -15,4 +16,6 @@ numpy==1.19.2
 periodictable==1.5.2
 psutil==5.7.2
 scipy==1.5.2
+selenium==3.141.0
 ssh2-python==0.19.0
+wheel==0.35.1
