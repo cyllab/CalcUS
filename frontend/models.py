@@ -230,7 +230,6 @@ class Ensemble(models.Model):
         return False
 
     def boltzmann_weighing_full(self, values, degeneracies):
-
         if len(values) == 1:
             return [[0.0], [1.0], values[0]]
 
@@ -241,23 +240,20 @@ class Ensemble(models.Model):
         weights = []
 
         s = decimal.Decimal(0)
-
-        for e, n in data:
-            s += n*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
-
         w_energy = decimal.Decimal(0)
 
-        data = zip([decimal.Decimal(i) - en_0 for i in values], degeneracies)
         for e, n in data:
-            w_energy += n*(e+decimal.Decimal(en_0))*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
-            weights.append(n*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s)
+            e_exp = np.exp(-e/(R_CONSTANT_HARTREE*TEMP))
+            s += n*e_exp
+            w_energy += n*(e+decimal.Decimal(en_0))*e_exp
+            weights.append(n*e_exp)
 
-        #TODO: OPTIMIZE
+        w_energy /= s
+        weights = [i/s for i in weights]
 
         return [relative_energies, weights, float(w_energy)]
 
     def boltzmann_weighing_lite(self, values, degeneracies):
-
         if len(values) == 1:
             return values[0]
 
@@ -265,17 +261,14 @@ class Ensemble(models.Model):
         data = zip([decimal.Decimal(i) - en_0 for i in values], degeneracies)
 
         s = decimal.Decimal(0)
-
-        for e, n in data:
-            s += n*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
-
         w_energy = decimal.Decimal(0)
 
-        data = zip([decimal.Decimal(i) - en_0 for i in values], degeneracies)
         for e, n in data:
-            w_energy += n*(e+decimal.Decimal(en_0))*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+            e_exp = np.exp(-e/(R_CONSTANT_HARTREE*TEMP))
+            s += n*e_exp
+            w_energy += n*(e+decimal.Decimal(en_0))*e_exp
 
-        #TODO: OPTIMIZE
+        w_energy /= s
 
         return float(w_energy)
 
@@ -283,15 +276,15 @@ class Ensemble(models.Model):
         data = []
         e_0 = 0
         f_e_0 = 0
-        if '-' in in_arr[1]:
+        if 0 in in_arr[2]:
             w_e = '-'
         else:
             rel_e, weights, w_e = self.boltzmann_weighing_full(in_arr[2], in_arr[1])
 
-        if '-' in in_arr[2]:
+        if 0 in in_arr[3]:
             w_f_e = '-'
         else:
-            _, _, w_f_e = self.boltzmann_weighing_full(in_arr[3], in_arr[1])
+            w_f_e = self.boltzmann_weighing_lite(in_arr[3], in_arr[1])
 
         return [rel_e, weights, w_e, w_f_e]
 
@@ -398,13 +391,12 @@ class Ensemble(models.Model):
 
         s = decimal.Decimal(0)
 
-        for e, degen in data:
-            s += degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
-
         w_energy = decimal.Decimal(0)
 
         for e, degen in data:
-            w_energy += degen*(e+decimal.Decimal(en_0))*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+            s += degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
+            w_energy += degen*(e+decimal.Decimal(en_0))*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
+        w_energy /= s
 
         return float(w_energy)
 
@@ -427,14 +419,13 @@ class Ensemble(models.Model):
             return float(en_0)
 
         s = decimal.Decimal(0)
-
-        for e, degen in data:
-            s += degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
-
         w_energy = decimal.Decimal(0)
 
         for e, degen in data:
-            w_energy += degen*(e+en_0)*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
+            s += degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
+            w_energy += degen*(e+en_0)*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
+
+        w_energy /= s
 
         return float(w_energy)
 

@@ -2358,7 +2358,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		<sh>
 			<codetitle>install_slurm.sh</codetitle>
 			<code class="bash">
-				sudo apt-get install slurm
+				sudo apt-get install slurmd
+				sudo apt-get install slurmctld
 				sudo apt-get install munge
 			</code>
 		</sh>
@@ -2377,7 +2378,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 				SlurmdPidFile=/var/run/slurmd.pid
 				SlurmdSpoolDir=/var/spool/slurmd
 				SlurmUser=slurm
-				StateSaveLocation=/var/spool
+				StateSaveLocation=/var/spool/slurmd
 				SwitchType=switch/none
 				TaskPlugin=task/affinity
 
@@ -2393,7 +2394,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 				PartitionName=test Nodes=<strong>&lt;Hostname&gt;</strong> Default=YES MaxTime=INFINITE State=UP
 			</code>
 		</sh>
-
+		Make sure to give ownership of the directory <code>/var/spool/slurmd</code> to user <code>slurm</code>.
 		<sh>
 			<codetitle>cgroup.conf</codetitle>
 			<code>

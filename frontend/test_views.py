@@ -1,5 +1,8 @@
+import time
+
 from .models import *
 from . import views
+from .constants import *
 from django.core.management import call_command
 from django.test import TestCase, Client
 
@@ -496,4 +499,222 @@ class PermissionTestsPI(TestCase):
         response = self.client.post("/delete_ensemble/", {'id': e.id})
         self.assertEqual(response.status_code, 403)
 
+class AnalysisTests(TestCase):
+    def setUp(self):
+        call_command('init_static_obj')
+        self.username = "Student"
+        self.password = "test1234"
 
+        u = User.objects.create_user(username=self.username, password=self.password)
+        u.profile.is_PI = False
+        u.save()
+
+        self.profile = Profile.objects.get(user__username=self.username)
+
+        u2 = User.objects.create_user(username="PI", password=self.password)
+        u2.profile.is_PI = True
+        u2.save()
+
+        self.PI = Profile.objects.get(user__username="PI")
+
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.PI)
+        self.group.save()
+
+        self.client = Client()
+        self.client.force_login(u)
+
+    def test_boltzmann_weighing_Ha(self):
+        self.profile.pref_units = 2#Hartree
+        self.profile.save()
+
+        proj = Project.objects.create(name="TestProj", author=self.profile)
+        mol = Molecule.objects.create(name="Mol1", project=proj)
+        e = Ensemble.objects.create(name="Confs", parent_molecule=mol)
+
+        structs = [[-16.82945685, 9], [-16.82855278, 36], [-16.82760256, 7], [-16.82760254, 9], [-16.82760156, 2], [-16.82558904, 33], [-16.82495672, 1]]#From CREST (GFN2-xTB)
+        rel_energies = [i[0] + 16.82945685 for i in structs]
+
+        params = Parameters.objects.create(charge=0, multiplicity=1)
+        for ind, _s in enumerate(structs):
+            s = Structure.objects.create(parent_ensemble=e, number=ind+1, degeneracy=structs[ind][1])
+            prop = Property.objects.create(parameters=params, energy=structs[ind][0], parent_structure=s)
+            prop.save()
+            s.save()
+        e.save()
+        proj.save()
+        mol.save()
+        ref_weights = [0.34724, 0.53361, 0.03796, 0.04880, 0.01082, 0.02125, 0.00033]
+
+        response = self.client.post("/download_project/", {'id': proj.id, 'data': 'summary', 'scope': 'all', 'details': 'full'})
+        csv = response.content.decode('utf-8')
+
+        lines = csv.split('\n')
+        ind = 0
+        while lines[ind].find(",,Confs") == -1:
+            ind += 1
+        ind += 1
+
+        while lines[ind].strip() != '':
+            *_, num, degeneracy, energy, rel_energy, weight, free_energy = lines[ind].split(',')
+
+            self.assertTrue(np.isclose(float(energy), structs[int(num)-1][0], atol=0.0001))
+            self.assertTrue(np.isclose(float(weight), ref_weights[int(num)-1], atol=0.001))
+            self.assertTrue(np.isclose(float(rel_energy), rel_energies[int(num)-1], atol=0.0001))
+            self.assertEqual(float(free_energy), 0.0)
+            ind += 1
+
+    def test_boltzmann_weighing_kJ(self):
+        self.profile.pref_units = 0#kJ/mol
+        self.profile.save()
+
+        proj = Project.objects.create(name="TestProj", author=self.profile)
+        mol = Molecule.objects.create(name="Mol1", project=proj)
+        e = Ensemble.objects.create(name="Confs", parent_molecule=mol)
+
+        structs = [[-16.82945685, 9], [-16.82855278, 36], [-16.82760256, 7], [-16.82760254, 9], [-16.82760156, 2], [-16.82558904, 33], [-16.82495672, 1]]#From CREST (GFN2-xTB)
+        rel_energies = [i[0] + 16.82945685 for i in structs]
+
+        params = Parameters.objects.create(charge=0, multiplicity=1)
+        for ind, _s in enumerate(structs):
+            s = Structure.objects.create(parent_ensemble=e, number=ind+1, degeneracy=structs[ind][1])
+            prop = Property.objects.create(parameters=params, energy=structs[ind][0], parent_structure=s)
+            prop.save()
+            s.save()
+        e.save()
+        proj.save()
+        mol.save()
+        ref_weights = [0.34724, 0.53361, 0.03796, 0.04880, 0.01082, 0.02125, 0.00033]
+
+        response = self.client.post("/download_project/", {'id': proj.id, 'data': 'summary', 'scope': 'all', 'details': 'full'})
+        csv = response.content.decode('utf-8')
+
+        lines = csv.split('\n')
+        ind = 0
+        while lines[ind].find(",,Confs") == -1:
+            ind += 1
+        ind += 1
+
+        while lines[ind].strip() != '':
+            *_, num, degeneracy, energy, rel_energy, weight, free_energy = lines[ind].split(',')
+
+            self.assertTrue(np.isclose(float(energy), structs[int(num)-1][0]*HARTREE_FVAL, atol=0.1))
+            self.assertTrue(np.isclose(float(weight), ref_weights[int(num)-1], atol=0.001))
+            self.assertTrue(np.isclose(float(rel_energy), rel_energies[int(num)-1]*HARTREE_FVAL, atol=0.1))
+            self.assertEqual(float(free_energy), 0.0)
+
+            ind += 1
+
+    def test_boltzmann_weighing_kcal(self):
+        self.profile.pref_units = 1#kcal/mol
+        self.profile.save()
+
+        proj = Project.objects.create(name="TestProj", author=self.profile)
+        mol = Molecule.objects.create(name="Mol1", project=proj)
+        e = Ensemble.objects.create(name="Confs", parent_molecule=mol)
+
+        structs = [[-16.82945685, 9], [-16.82855278, 36], [-16.82760256, 7], [-16.82760254, 9], [-16.82760156, 2], [-16.82558904, 33], [-16.82495672, 1]]#From CREST (GFN2-xTB)
+        rel_energies = [i[0] + 16.82945685 for i in structs]
+
+        params = Parameters.objects.create(charge=0, multiplicity=1)
+        for ind, _s in enumerate(structs):
+            s = Structure.objects.create(parent_ensemble=e, number=ind+1, degeneracy=structs[ind][1])
+            prop = Property.objects.create(parameters=params, energy=structs[ind][0], parent_structure=s)
+            prop.save()
+            s.save()
+        e.save()
+        proj.save()
+        mol.save()
+        ref_weights = [0.34724, 0.53361, 0.03796, 0.04880, 0.01082, 0.02125, 0.00033]
+
+        response = self.client.post("/download_project/", {'id': proj.id, 'data': 'summary', 'scope': 'all', 'details': 'full'})
+        csv = response.content.decode('utf-8')
+
+        lines = csv.split('\n')
+        ind = 0
+        while lines[ind].find(",,Confs") == -1:
+            ind += 1
+        ind += 1
+
+        while lines[ind].strip() != '':
+            *_, num, degeneracy, energy, rel_energy, weight, free_energy = lines[ind].split(',')
+
+            self.assertTrue(np.isclose(float(energy), structs[int(num)-1][0]*HARTREE_TO_KCAL_F, atol=0.001))
+            self.assertTrue(np.isclose(float(weight), ref_weights[int(num)-1], atol=0.001))
+            self.assertTrue(np.isclose(float(rel_energy), rel_energies[int(num)-1]*HARTREE_TO_KCAL_F, atol=0.01))
+            self.assertEqual(float(free_energy), 0.0)
+
+            ind += 1
+
+    def test_boltzmann_weighing_missing_structures(self):
+        self.profile.pref_units = 2#Hartree
+        self.profile.save()
+
+        proj = Project.objects.create(name="TestProj", author=self.profile)
+        mol = Molecule.objects.create(name="Mol1", project=proj)
+        e = Ensemble.objects.create(name="Confs", parent_molecule=mol)
+
+        structs = [[-16.82945685, 9], [-16.82855278, 36], [-16.82760256, 7], [-16.82760254, 9], [-16.82760156, 2], [-16.82558904, 33], [-16.82495672, 1]]#From CREST (GFN2-xTB)
+        rel_energies = [i[0] + 16.82945685 for i in structs]
+
+        params = Parameters.objects.create(charge=0, multiplicity=1)
+        for ind, _s in enumerate(structs[:-3]):
+            s = Structure.objects.create(parent_ensemble=e, number=ind+1, degeneracy=structs[ind][1])
+            prop = Property.objects.create(parameters=params, energy=structs[ind][0], parent_structure=s)
+            prop.save()
+            s.save()
+
+        for ind, _s in enumerate(structs[-3:]):
+            s = Structure.objects.create(parent_ensemble=e, number=ind+5, degeneracy=structs[ind][1])
+            s.save()
+
+        e.save()
+        proj.save()
+        mol.save()
+        ref_weights = [0.359, 0.551, 0.039, 0.050]#Generated by working code
+
+        response = self.client.post("/download_project/", {'id': proj.id, 'data': 'summary', 'scope': 'all', 'details': 'full'})
+        csv = response.content.decode('utf-8')
+
+        lines = csv.split('\n')
+        ind = 0
+        while lines[ind].find(",,Confs") == -1:
+            ind += 1
+        ind += 1
+
+        while lines[ind].strip() != '':
+            *_, num, degeneracy, energy, rel_energy, weight, free_energy = lines[ind].split(',')
+            self.assertTrue(np.isclose(float(energy), structs[int(num)-1][0], atol=0.0001))
+            self.assertTrue(np.isclose(float(weight), ref_weights[int(num)-1], atol=0.001))
+            self.assertTrue(np.isclose(float(rel_energy), rel_energies[int(num)-1], atol=0.0001))
+            self.assertEqual(float(free_energy), 0.0)
+            ind += 1
+
+    def test_summary(self):
+        self.profile.pref_units = 2
+        self.profile.save()
+
+        proj = Project.objects.create(name="TestProj", author=self.profile)
+        mol = Molecule.objects.create(name="Mol1", project=proj)
+        e = Ensemble.objects.create(name="Confs", parent_molecule=mol)
+
+        structs = [[-16.82945685, 9], [-16.82855278, 36], [-16.82760256, 7], [-16.82760254, 9], [-16.82760156, 2], [-16.82558904, 33], [-16.82495672, 1]]#From CREST (GFN2-xTB)
+        ref_w_e = -16.82871
+
+        params = Parameters.objects.create(charge=0, multiplicity=1)
+        for ind, _s in enumerate(structs):
+            s = Structure.objects.create(parent_ensemble=e, number=ind+1, degeneracy=structs[ind][1])
+            prop = Property.objects.create(parameters=params, energy=structs[ind][0], parent_structure=s)
+            prop.save()
+            s.save()
+
+        response = self.client.post("/download_project/", {'id': proj.id, 'data': 'summary', 'scope': 'all', 'details': 'summary'})
+
+        csv = response.content.decode('utf-8')
+
+        lines = csv.split('\n')
+        ind = 0
+        while lines[ind].find(",,Confs") == -1:
+            ind += 1
+
+        *_, w_e, w_f_e = lines[ind].split(',')
+        self.assertTrue(np.isclose(float(w_e), ref_w_e, atol=0.0001))

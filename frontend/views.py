@@ -2807,11 +2807,17 @@ def get_csv(proj, profile, scope="all", details="full"):
             csv += ",{},\n".format(mol.name)
             for e in mol.ensembles.values():
                 if details == "full":
-                    w_e = ensemble_str.format(e.data[6]*CONVERSION)
-                    w_f_e = ensemble_str.format(e.data[7]*CONVERSION)
+                    arr_ind = 6
                 else:
-                    w_e = ensemble_str.format(e.data[0]*CONVERSION)
-                    w_f_e = ensemble_str.format(e.data[1]*CONVERSION)
+                    arr_ind = 0
+
+                _w_e = e.data[arr_ind]
+                if _w_e != '-':
+                    w_e = ensemble_str.format(_w_e*CONVERSION)
+
+                _w_f_e = e.data[arr_ind+1]
+                if _w_f_e != '-':
+                    w_f_e = ensemble_str.format(_w_f_e*CONVERSION)
 
                 csv += ",,{},{},{}\n".format(e.name, w_e, w_f_e)
 
