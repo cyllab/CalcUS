@@ -42,13 +42,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if HEADLESS is not None and HEADLESS.lower() == "true":
             from pyvirtualdisplay import Display
 
-            display = Display(visible=0, size=(1424, 768))
+            display = Display(visible=0, size=(1920, 1080))
             display.start()
-            #chrome_options.add_argument("--headless")
-            #chrome_options.add_argument("--window-size=1920x1080")
 
         cls.driver = webdriver.Chrome(chrome_options=chrome_options)
-        #cls.driver.set_window_size(1424, 768)
+        cls.driver.set_window_size(1920, 1080)
 
         app.loader.import_module('celery.contrib.testing.tasks')
         cls.celery_worker = start_worker(app, perform_ping_check=False)
@@ -312,15 +310,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.group_panel_present()
 
         panel = self.get_group_panel()
-
         panel.click()
         users = panel.find_elements_by_css_selector(".navbar-dropdown > .navbar-item")
-
         for u in users:
             username = u.text
             if username == name:
                 u.click()
                 return
+        raise Exception("No such user")
     def is_user(self, username):
         try:
             u = Profile.objects.get(user__username=username)
@@ -564,9 +561,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         molecules = self.get_molecules()
         num = len(molecules)
 
-        molecules_div = self.driver.find_element_by_css_selector(".grid")
-        if num == 0:
-            assert molecules_div.text.find('No molecule') != -1
         return num
 
     def click_molecule(self, name):
@@ -596,7 +590,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         ensembles = table_body.find_elements_by_css_selector("tr")
 
         for e in ensembles:
-            e_link = e.find_element_by_css_selector("td:first-child > a")
+            e_link = e.find_element_by_css_selector("td:nth-child(2) > a")
             e_name = e_link.text
             if e_name == name:
                 e_link.click()
@@ -813,6 +807,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 return
 
     def get_molecules(self):
+        assert self.is_on_page_user_project()
         molecules = self.driver.find_elements_by_css_selector(".grid > .box")
         return molecules
 
@@ -869,13 +864,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def get_ensemble_rows(self):
         assert self.is_on_page_molecule()
-        table_body = self.driver.find_element_by_css_selector(".table > tbody")
+        table_body = self.driver.find_element_by_css_selector("#ensemble_table_body")
         ensemble_rows = table_body.find_elements_by_css_selector("tr")
         return ensemble_rows
 
     def get_name_ensembles(self):
         ensemble_rows = self.get_ensemble_rows()
-        names = [e.find_element_by_css_selector("td:first-child > a").text for e in ensemble_rows]
+        names = [e.find_element_by_css_selector("td:nth-child(2) > a").text for e in ensemble_rows]
 
         return names
 
@@ -907,7 +902,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         ensembles_rows = self.get_ensemble_rows()
 
         for e in ensembles_rows:
-            e_name = e.find_element_by_css_selector("td:first-child > a").text
+            e_name = e.find_element_by_css_selector("td:nth-child(2) > a").text
             if e_name == name:
                 trash = e.find_element_by_css_selector("i.fa-trash-alt")
                 trash.click()

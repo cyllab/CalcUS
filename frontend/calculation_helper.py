@@ -16,14 +16,12 @@ def get_abs_basis_set(basis_set):
 def get_method(method, software):
     abs_method = get_abs_method(method)
     if abs_method == -1:
-        print("Method not found: {}".format(method))
         return method
     return SOFTWARE_METHODS[software][abs_method]
 
 def get_basis_set(basis_set, software):
     abs_basis_set = get_abs_basis_set(basis_set)
     if abs_basis_set == -1:
-        print("Basis set not found: {}".format(basis_set))
         return basis_set
     return SOFTWARE_BASIS_SETS[software][abs_basis_set]
 

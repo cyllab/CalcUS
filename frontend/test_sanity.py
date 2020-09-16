@@ -67,9 +67,12 @@ def gen_calc(params):
         lines = f.readlines()
         xyz_structure = ''.join(lines)
 
-    s = Structure.objects.create(xyz_structure=xyz_structure)
+    mol = Molecule.objects.create()
+    e = Ensemble.objects.create(parent_molecule=mol)
+    s = Structure.objects.create(xyz_structure=xyz_structure, parent_ensemble=e)
 
-    dummy = CalculationOrder.objects.create()
+    proj = Project.objects.create()
+    dummy = CalculationOrder.objects.create(project=proj)
     calc = Calculation.objects.create(structure=s, step=step, parameters=p, order=dummy)
 
     if 'constraints' in params.keys():

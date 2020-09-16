@@ -523,7 +523,7 @@ class InterfaceTests(CalcusLiveServer):
         proj = Project.objects.create(name="Test project", author=self.profile)
         self.lget("/projects/")
         self.click_project("Test project")
-        self.assertEqual(self.get_number_molecules(), 1)
+        self.assertEqual(self.get_number_molecules(), 0)
 
     def test_molecule_appears(self):
         proj = Project.objects.create(name="Test project", author=self.profile)
@@ -531,7 +531,7 @@ class InterfaceTests(CalcusLiveServer):
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
         self.click_project("Test project")
         self.assertTrue(self.is_on_page_user_project())
-        self.assertEqual(self.get_number_molecules(), 2)
+        self.assertEqual(self.get_number_molecules(), 1)
 
     def test_molecule_empty(self):
         proj = Project.objects.create(name="Test project", author=self.profile)
@@ -686,7 +686,7 @@ class InterfaceTests(CalcusLiveServer):
         self.lget("/projects/")
         self.click_project("Test project")
 
-        self.assertEqual(self.get_number_molecules(), 2)
+        self.assertEqual(self.get_number_molecules(), 1)
         self.assertEqual(self.get_name_molecules()[0], "My Molecule")
 
     def test_rename_molecule2(self):
@@ -704,7 +704,7 @@ class InterfaceTests(CalcusLiveServer):
         self.lget("/projects/")
         self.click_project("Test project")
 
-        self.assertEqual(self.get_number_molecules(), 2)
+        self.assertEqual(self.get_number_molecules(), 1)
         self.assertEqual(self.get_name_molecules()[0], "My Molecule")
 
     def test_rename_ensemble(self):
