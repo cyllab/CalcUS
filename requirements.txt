@@ -14,6 +14,7 @@ django-throttle-requests==0.5.9
 nmrglue==0.7
 numpy==1.19.2
 periodictable==1.5.2
+pexpect==4.8.0
 psutil==5.7.2
 pyvirtualdisplay==1.3.2
 scipy==1.5.2

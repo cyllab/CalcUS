@@ -91,6 +91,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         u.save()
         self.login(self.username, self.password)
         self.profile = Profile.objects.get(user__username=self.username)
+        time.sleep(0.1)#Reduces glitches (I think?)
 
     def tearDown(self):
         pass

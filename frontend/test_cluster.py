@@ -92,6 +92,8 @@ class ClusterTests(CalcusLiveServer):
         child.expect ('Password:')
         child.sendline('clustertest')
         child.expect('\$')
+        child.sendline('mkdir -p /home/calcus/.ssh/')
+        child.expect('\$')
         child.sendline("echo '{} {}@CalcUS' > /home/calcus/.ssh/authorized_keys".format(public_key.decode('utf-8'), self.username))
 
     def wait_command_done(self, cmd_id, timeout):
@@ -179,6 +181,7 @@ class ClusterTests(CalcusLiveServer):
                     break
             except:
                 pass
+            ind += 1
 
     def test_delete_access(self):
         self.setup_cluster()

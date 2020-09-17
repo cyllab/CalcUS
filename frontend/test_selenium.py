@@ -228,6 +228,7 @@ class InterfaceTests(CalcusLiveServer):
 
         self.lget("/profile/")
         self.add_user_to_group("Student")
+        time.sleep(0.1)#Database delay
 
         self.lget("/profile/")
         self.driver.implicitly_wait(5)
