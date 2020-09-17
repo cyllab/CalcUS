@@ -216,7 +216,7 @@ def create_project(request):
 <div class="box has-background-danger" id="proj_box_{}">
         <p style="float: right;">
                         <a href="/analyse/{}"><i class="fas fa-table"></i></a>
-                        <a href="/download_project_csv/{}"><i class="fas fa-download"></i></a>
+                        <a href="/download_project/{}"><i class="fas fa-download"></i></a>
                         <a onclick="edit_field({});"><i class="fas fa-edit" id="icon_{}"></i></a>
                         <a onclick="del({});"><i class="fas fa-trash-alt"></i></a>
         </p>

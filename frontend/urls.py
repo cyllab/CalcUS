@@ -45,8 +45,6 @@ urlpatterns = [
 
     path('download_project/', views.download_project_post, name='download_project_post'),
     path('download_project/<int:pk>', views.download_project, name='download_project'),
-    path('download_project_logs/<int:pk>', views.download_project_logs, name='download_project_logs'),
-    path('download_project_csv/<int:project_id>', views.download_project_csv, name='download_project_csv'),
 
     path('nmr_analysis/<int:pk>/<int:pid>', views.nmr_analysis, name='nmr_analysis'),
     path('get_shifts/', views.get_shifts, name='get_shifts'),
@@ -110,8 +108,6 @@ urlpatterns = [
     path('load_preset/<int:pk>', views.load_preset, name='load_preset'),
     path('delete_preset/<int:pk>', views.delete_preset, name='delete_preset'),
     path('presets/', views.launch_presets, name='presets'),
-    #path('software/<str:software>', views.launch_software, name='launch_software'),
-    #path('get_theory_details/', views.get_theory_details, name='get_theory_details'),
 
     path('get_cube/', views.get_cube, name='get_cube'),
     path('details/<int:pk>', views.details, name='details'),
