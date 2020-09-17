@@ -26,3 +26,12 @@ def get_ensemble_weighted_free_energy(param, ensemble):
     ret = ensemble.weighted_free_energy(param)
     return ret
 
+@register.simple_tag
+def get_simple_nmr_shifts_structure(prop):
+    nmr = prop.simple_nmr
+    if nmr == '':
+        return ''
+    ret = []
+    for shift in nmr.split('\n'):
+        ret.append(shift.split())
+    return ret

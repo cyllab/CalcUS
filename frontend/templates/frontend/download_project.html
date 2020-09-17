@@ -1,7 +1,27 @@
 {% extends 'frontend/base.html' %}
 
 {% load static %}
+{% block extrahead %}
+	<script>
+		function refresh_availabilities() {
+			choice = document.getElementById("data");
 
+			full_options = document.querySelectorAll(".data_specific");
+
+			full_options.forEach(element => {
+  				element.style.display = 'none';
+			});
+
+			options = document.querySelectorAll('.avail_' + choice.value);
+			options.forEach(element => {
+  				element.style.display = 'block';
+			});
+		}
+		document.addEventListener("DOMContentLoaded", function(event) { 
+			refresh_availabilities();
+		});
+	</script>
+{% endblock %}
 
 {% block content %}
 	<form action="/download_project/" method="post" id="calcform" enctype="multipart/form-data">
@@ -11,9 +31,9 @@
 			<label class="label">Data</label>
 			<div class="control" >
 				<div class="select">
-					<select name="data">
+					<select name="data" id="data" onchange="refresh_availabilities();">
 						<option value="summary">Thermodynamic Summary</option>
-						<option value="log">Log files</option>
+						<option value="logs">Log files</option>
 					</select>
 				</div>
 			</div>
@@ -23,19 +43,30 @@
 			<div class="control" >
 				<div class="select">
 					<select name="scope">
-						<option value="all">All</option>
-						<option value="flagged">Flagged</option>
+						<option value="all">All Ensembles</option>
+						<option value="flagged">Flagged Ensembles</option>
 					</select>
 				</div>
 			</div>
 		</div>
-		<div class="field">
+		<div class="field data_specific avail_summary">
 			<label class="label">Details</label>
 			<div class="control" >
 				<div class="select">
 					<select name="details">
 						<option value="full">Full</option>
 						<option value="summary">Summary</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="field data_specific avail_logs">
+			<label class="label">Filter</label>
+			<div class="control" >
+				<div class="select">
+					<select name="details">
+						<option value="full">All calculations</option>
+						<option value="freq">Only frequency calculations</option>
 					</select>
 				</div>
 			</div>

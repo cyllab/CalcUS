@@ -2862,36 +2862,52 @@ def cancel_calc(request):
 
     return HttpResponse(status=200)
 
-def download_project_logs(proj, profile, scope):####
+def download_project_logs(proj, profile, scope, details):
 
     tmp_dir = "/tmp/{}_{}_{}".format(profile.username, proj.author.username, time.time())
     os.mkdir(tmp_dir)
-
     for mol in sorted(proj.molecule_set.all(), key=lambda l: l.name):
         for e in mol.ensemble_set.all():
-            if not e.flagged:
+            if scope == 'flagged' and not e.flagged:
                 continue
-            for params in e.unique_parameters:
-                p_dir = os.path.join(tmp_dir, params.__repr__())
-                try:
-                    os.mkdir(p_dir)
-                except FileExistsError:
-                    pass
-                for ind, s in enumerate(e.structure_set.all()):
+            e_dir = os.path.join(tmp_dir, str(e.id) + '_' + e.name.replace(' ', '_'))
+            try:
+                os.mkdir(e_dir)
+            except FileExistsError:
+                pass
+            for ind, s in enumerate(e.structure_set.all()):
+                for calc in s.calculation_set.all():
+                    if calc.status == 0:
+                        continue
+                    if details == "freq":
+                        if calc.step.name != "Frequency Calculation":
+                            continue
+                        log_name = e.name + '_' + calc.parameters.file_name + '_conf{}'.format(s.number)
+                    elif details == "full":
+                        log_name = e.name + '_' + calc.step.name + '_' + calc.parameters.file_name + '_conf{}'.format(s.number)
+
+                    log_name = log_name.replace(' ', '_')
                     try:
-                        prop = s.properties.get(parameters=params)
-                    except Property.DoesNotExist:
-                        pass
-                    else:
-                        if prop.freq != 0:
-                            try:
-                                copyfile(os.path.join(CALCUS_RESULTS_HOME, str(prop.freq), "calc.out"), os.path.join(p_dir, "{}.log".format(prop.freq)))
-                            except FileNotFoundError:
-                                try:
-                                    copyfile(os.path.join(CALCUS_RESULTS_HOME, str(prop.freq), "freq.out"), os.path.join(p_dir, "{}.log".format(prop.freq)))
-                                except FileNotFoundError:
-                                    print("Not found: {} - {}".format(prop.freq, params.__repr__()))
-    ###to finish
+                        copyfile(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "calc.out"), os.path.join(e_dir, log_name + '.log'))
+                    except FileNotFoundError:
+                        print("Calculation not found: {}".format(calc.id))
+                    if calc.parameters.software == 'xtb':#xtb logs don't contain the structure
+                        with open(os.path.join(e_dir, log_name + '.xyz'), 'w') as out:
+                            out.write(s.xyz_structure)
+
+    for d in glob.glob("{}/*/".format(tmp_dir)):
+        if len(os.listdir(d)) == 0:
+            os.rmdir(d)
+
+    mem = BytesIO()
+    with zipfile.ZipFile(mem, 'w', zipfile.ZIP_DEFLATED) as zip:
+        for d in glob.glob("{}/*/".format(tmp_dir)):
+            for f in glob.glob("{}*".format(d)):
+                zip.write(f, os.path.join(proj.name.replace(' ', '_'), *f.split('/')[3:]))
+
+    response = HttpResponse(mem.getvalue(), content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename="{}_logs.zip"'.format(proj.name.replace(' ', '_'))
+    return response
 
 @login_required
 def download_project_post(request):
@@ -2905,7 +2921,7 @@ def download_project_post(request):
 
     if 'data' in request.POST.keys():
         data = clean(request.POST['data'])
-        if data not in ['summary', 'log']:
+        if data not in ['summary', 'logs']:
             return error(request, "Invalid data type requested")
     else:
         return error(request, "No data type requested")
@@ -2919,7 +2935,9 @@ def download_project_post(request):
 
     if 'details' in request.POST.keys():
         details = clean(request.POST['details'])
-        if details not in ['full', 'summary']:
+        if data == 'summary' and details not in ['full', 'summary']:
+            return error(request, "Invalid details level")
+        if data == 'logs' and details not in ['full', 'freq']:
             return error(request, "Invalid details level")
     else:
         return error(request, "No details level given")
@@ -2937,7 +2955,7 @@ def download_project_post(request):
     if data == 'summary':
         return download_project_csv(proj, profile, scope, details)
     elif data == 'logs':
-        return download_project_logs(proj, profile, scope)
+        return download_project_logs(proj, profile, scope, details)
 
 @login_required
 def download_project(request, pk):

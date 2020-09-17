@@ -2338,19 +2338,19 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	<h3 class="title is-3">Server Admin Guide</h3>
 	<h4 class="title is-4">Minimal Setup</h4>
 	<p>
-		
+			
 	</p>
 	<h3 class="title is-3">Developer Guide</h3>
 	<h4 class="title is-4">Contributing</h4>
 	<h4 class="title is-4">Selenium Tests</h4>
 	<p>
-		Before running any test, set the environment variable <code>CALCUS_TEST</code> to <code>True</code>. This variable is parsed by different parts of the program to ensure proper function while testing.
+		Before running any test, set the environment variable <code>CALCUS_TEST</code> to <code>True</code>. This variable is parsed by different parts of the program to ensure proper function while testing. The variable <code>CALCUS_HEADLESS</code> can also be set to <code>True</code> to run the code in headless mode.
 	</p>
 	<h4 class="title is-4">Cluster Tests</h4>
 	<p>
 		To test the cluster functionalities, you will need to configure a minimal environment mimicking the remote resource. This is most easily done by having another user account with on your local machine with a completely separate environment.
 
-		You will need to create a new user named <em>calcus</em> to act as "remote" user. Make sure that this user can run the relevant software and does not have permission to directly access to your main account's files.
+		You will need to create a new user named <em>calcus</em> to act as "remote" user. Make sure that this user can run the relevant software and does not have permission to directly access to your main account's files. Create the empty directory <code>/home/calcus/.ssh</code>.
 
 		Then, setup <code>/home/calcus/calcus</code> as detailed in the <a href="#Remote_Calculations">Remote Calculations</a> section of the user manual. 
 

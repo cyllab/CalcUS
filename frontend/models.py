@@ -629,6 +629,17 @@ class Parameters(models.Model):
         return "{} - {} ({})".format(self.software, self.method, self.solvent)
 
     @property
+    def file_name(self):
+        name = "{}_".format(self.software)
+        if self.theory_level == "DFT" or self.theory_level == "RI-MP2" or self.theory_level == "HF":
+            name += "{}_{}".format(self.method, self.basis_set)
+        else:
+            name += "{}".format(self.method)
+        if self.solvent.lower() != 'vacuum':
+            name += "_{}_{}".format(self.solvation_model, self.solvent)
+        return name
+
+    @property
     def long_name(self):
         name = "{} - ".format(self.software)
         if self.theory_level == "DFT" or self.theory_level == "RI-MP2" or self.theory_level == "HF":
