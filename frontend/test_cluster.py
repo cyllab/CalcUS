@@ -41,6 +41,15 @@ for s in glob.glob("{}/selenium_screenshots/*.png".format(dir_path)):
     os.remove(s)
 
 class ClusterTests(CalcusLiveServer):
+    @classmethod
+    def setUpClass(cls):
+        child = pexpect.spawn('su - calcus')
+        child.expect ('Password:')
+        child.sendline('clustertest')
+        child.expect('\$')
+        child.sendline("rm -r /home/calcus/scratch")
+        super().setUpClass()
+
     def setUp(self):
         super().setUp()
         self.server_pid = None
@@ -174,14 +183,14 @@ class ClusterTests(CalcusLiveServer):
     def test_delete_access(self):
         self.setup_cluster()
         keys = glob.glob("{}/*".format(KEYS_DIR))
-        self.assertEqual(len(keys), 2)
+        initial_keys = len(keys)
 
         delete_access = self.driver.find_element_by_css_selector("a.button:nth-child(3)")
         delete_access.click()
 
         time.sleep(10)
         keys = glob.glob("{}/*".format(KEYS_DIR))
-        self.assertEqual(len(keys), 0)
+        self.assertEqual(len(keys), initial_keys-2)
 
     def test_cluster_settings(self):
         self.lget("/profile")
@@ -339,7 +348,7 @@ class ClusterTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(30)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 20)
@@ -359,7 +368,7 @@ class ClusterTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(30)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
@@ -378,7 +387,7 @@ class ClusterTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(30)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
 
@@ -442,7 +451,7 @@ class ClusterTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(30)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
@@ -464,7 +473,7 @@ class ClusterTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(30)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
@@ -534,7 +543,7 @@ class ClusterTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(30)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 10)
@@ -557,7 +566,7 @@ class ClusterTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(30)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
@@ -628,7 +637,7 @@ class ClusterTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(30)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
@@ -650,7 +659,7 @@ class ClusterTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(30)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
@@ -720,7 +729,7 @@ class ClusterTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(30)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 11)
@@ -743,7 +752,7 @@ class ClusterTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(30)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
@@ -770,11 +779,11 @@ class ClusterTests(CalcusLiveServer):
             self.driver.refresh()
             s = self.get_calculation_statuses()
             self.assertEqual(len(s), 1)
-            if s[0] == "Error":
+            if s[0] == "Error - Job cancelled":
                 break
 
             time.sleep(1)
             ind += 1
 
         s = self.get_calculation_statuses()
-        self.assertEqual(s[0], "Error")
+        self.assertEqual(s[0], "Error - Job cancelled")
