@@ -498,49 +498,12 @@ def xtb_mep(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    ###Temporary
-    MEP_INPUT = """!xtb NEB PAL8
-%neb
-NEB_End_XYZFile "struct2.xyz"
-Nimages 10
-end
-*xyzfile 0 1 struct1.xyz
-"""
-    os.chdir(local_folder)
-    with open(os.path.join(local_folder, 'struct1.xyz'), 'w') as out:
-        out.write(calc.structure.xyz_structure)
     with open(os.path.join(local_folder, 'struct2.xyz'), 'w') as out:
         out.write(calc.aux_structure.xyz_structure)
-    with open(os.path.join(local_folder, 'calc.inp'), 'w') as out:
-        out.write(MEP_INPUT)
-
-    ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-
-        a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        b = sftp_get("{}/calc_MEP_trj.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbopt.xyz"), conn, lock)
-
-        if a == -1 or b == -1:
-            return -1
-
-        sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
+    ret = launch_orca_calc(in_file, calc, ['calc.out', 'calc_MEP_trj.xyz'])
 
     if ret != 0:
         return ret
-
-    if not os.path.isfile("{}/calc_MEP_trj.xyz".format(local_folder)):
-        return 1
-
-    if not os.path.isfile("{}/calc.out".format(local_folder)):
-        return 1
-
-    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
-        return 1
 
     with open("{}/calc_MEP_trj.xyz".format(local_folder)) as f:
         lines = f.readlines()
@@ -635,67 +598,15 @@ def xtb_ts(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    folder = '/'.join(in_file.split('/')[:-1])
-
-    ORCA_TEMPLATE = """!xtb OPTTS
-    %pal
-    nprocs {}
-    end
-    {}
-    *xyz {} {}
-    {}
-    *"""
-
-    if calc.parameters.solvent == "Vacuum":
-        solvent_add = ""
-    else:
-        solvent_add = '''%cpcm
-        smd true
-        SMDsolvent "{}"
-        end'''.format(calc.parameters.solvent)
-
-    lines = [i + '\n' for i in calc.structure.xyz_structure.split('\n')[2:]]
-
-    with open(os.path.join(local_folder, 'calc.inp'), 'w') as out:
-        out.write(ORCA_TEMPLATE.format(PAL, solvent_add, calc.parameters.charge, calc.parameters.multiplicity, ''.join(lines)))
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-
-        sftp_put(os.path.join(local_folder, 'calc.inp'), os.path.join(folder, 'calc.inp'), conn, lock)
-        ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
-
-    else:
-        os.chdir(local_folder)
-        ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
-
-    if not local:
-        a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        b = sftp_get("{}/calc.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.xyz"), conn, lock)
-
-        if a == -1 or b == -1:
-            return -1
-
-        sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
+    ret = launch_orca_calc(in_file, calc, ['calc.out', 'calc.xyz'])
 
     if ret != 0:
         return ret
 
-    if not os.path.isfile("{}/calc.xyz".format(local_folder)):
-        return 1
-
-    if not os.path.isfile("{}/calc.out".format(local_folder)):
-        return 1
-
-    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
-        return 1
-
-    with open(os.path.join(folder, "calc.xyz")) as f:
+    with open(os.path.join(local_folder, "calc.xyz")) as f:
         lines = f.readlines()
 
-    with open(os.path.join(folder, "calc.out")) as f:
+    with open(os.path.join(local_folder, "calc.out")) as f:
         olines= f.readlines()
         ind = len(olines)-1
         while olines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
@@ -817,7 +728,6 @@ def xtb_scan(in_file, calc):
                 sline = lines[inds[metaind]+1].strip().split()
                 en_index = sline.index('energy:')
                 E = float(sline[en_index+1])
-                #E = float(lines[inds[metaind]+1].split()[2])
                 struct = ''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]]])
 
                 r = Structure.objects.create(number=metaind+1, degeneracy=1)
@@ -831,10 +741,6 @@ def xtb_scan(in_file, calc):
                     min_E = E
 
                 calc.result_ensemble.structure_set.add(r)
-            #for s in calc.result_ensemble.structure_set.all():
-            #    s.properties.get(parameters=calc.parameters).rel_energy = (s.properties.get(parameters=calc.parameters).energy - min_E)*float(HARTREE_VAL)
-            #    s.properties.get(parameters=calc.parameters).save()
-
     else:
         if not os.path.isfile("{}/xtbopt.xyz".format(local_folder)):
             return 1
@@ -1150,6 +1056,10 @@ def launch_orca_calc(in_file, calc, files):
         for f in files:
             a = sftp_get("{}/{}".format(folder, f), os.path.join(CALCUS_SCR_HOME, str(calc.id), f), conn, lock)
             if a == -1:
+                return -1
+        if calc.parameters.software == 'xtb':
+            a = sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
+            if a != -1:
                 return -1
 
     for f in files:

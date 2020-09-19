@@ -197,11 +197,29 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             mol_select = self.driver.find_element_by_id("aux_mol")
             mol_select.find_element_by_xpath("option[text()='{}']".format(aux_mol)).click()
 
-            e_select = self.driver.find_element_by_id("aux_ensemble")
-            e_select.find_element_by_xpath("option[text()='{}']".format(aux_e)).click()
+            ind = 0
+            while ind < 2:
+                try:
+                    e_select = self.driver.find_element_by_id("aux_ensemble")
+                    e_select.find_element_by_xpath("option[text()='{}']".format(aux_e)).click()
+                except selenium.common.exceptions.NoSuchElementException:
+                    time.sleep(1)
+                    ind += 1
+                else:
+                    break
 
-            s_select = self.driver.find_element_by_id("aux_struct")
-            s_select.find_element_by_xpath("option[text()='{}']".format(aux_s)).click()
+
+            ind = 0
+            while ind < 2:
+                try:
+                    s_select = self.driver.find_element_by_id("aux_struct")
+                    s_select.find_element_by_xpath("option[text()='{}']".format(aux_s)).click()
+                except selenium.common.exceptions.NoSuchElementException:
+                    time.sleep(1)
+                    ind += 1
+                else:
+                    break
+
 
         if 'constraints' in params.keys():
             assert params['type'] == 'Constrained Optimisation'

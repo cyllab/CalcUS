@@ -928,10 +928,10 @@ def parse_parameters(request, name_required=True):
             functional = ""
             basis_set = ""
 
-    if 'calc_misc' in request.POST.keys():
-        misc = clean(request.POST['calc_misc'])
+    if 'calc_additional_command' in request.POST.keys():
+        additional_command = clean(request.POST['calc_additional_command'])
     else:
-        misc = ""
+        additional_command = ""
 
     if len(name) > 100:
         return "The chosen name is too long"
@@ -971,7 +971,7 @@ def parse_parameters(request, name_required=True):
         else:
             project_obj = project_set[0]
 
-    params = Parameters.objects.create(charge=charge, multiplicity=mult, solvent=solvent, method=functional, basis_set=basis_set, misc=misc, software=software, theory_level=theory, solvation_model=solvation_model, density_fitting=df, custom_basis_sets=bs)
+    params = Parameters.objects.create(charge=charge, multiplicity=mult, solvent=solvent, method=functional, basis_set=basis_set, additional_command=additional_command, software=software, theory_level=theory, solvation_model=solvation_model, density_fitting=df, custom_basis_sets=bs)
     params.save()
 
     return params, project_obj, name, step

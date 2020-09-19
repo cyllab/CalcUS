@@ -28,7 +28,7 @@ def gen_calc(params):
     basis_set = ""
     theory_level = ""
     method = ""
-    misc = ""
+    additional_command = ""
     custom_basis_sets = ""
     density_fitting = ""
 
@@ -59,12 +59,12 @@ def gen_calc(params):
     if 'method' in params.keys():
         method = params['method']
 
-    if 'misc' in params.keys():
-        misc = params['misc']
+    if 'additional_command' in params.keys():
+        additional_command = params['additional_command']
 
     software = params['software']
 
-    p = Parameters.objects.create(charge=charge, multiplicity=multiplicity, solvent=solvent, solvation_model=solvation_model, basis_set=basis_set, theory_level=theory_level, method=method, misc=misc, custom_basis_sets=custom_basis_sets, density_fitting=density_fitting)
+    p = Parameters.objects.create(charge=charge, multiplicity=multiplicity, solvent=solvent, solvation_model=solvation_model, basis_set=basis_set, theory_level=theory_level, method=method, additional_command=additional_command, custom_basis_sets=custom_basis_sets, density_fitting=density_fitting)
     with open(os.path.join(TESTS_DIR, params['in_file'])) as f:
         lines = f.readlines()
         xyz_structure = ''.join(lines)
@@ -344,7 +344,7 @@ class GaussianTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
-    def test_sp_DFT_misc(self):
+    def test_sp_DFT_additional_command(self):
         params = {
                 'type': 'Single-Point Energy',
                 'in_file': 'Cl.xyz',
@@ -353,7 +353,7 @@ class GaussianTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2-SVP',
                 'charge': '-1',
-                'misc': 'nosymm 5D',
+                'additional_command': 'nosymm 5D',
                 }
 
         calc = gen_calc(params)
@@ -1515,7 +1515,7 @@ class OrcaTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, orca.input_file))
 
-    def test_sp_DFT_misc(self):
+    def test_sp_DFT_additional_command(self):
         params = {
                 'type': 'Single-Point Energy',
                 'in_file': 'Cl.xyz',
@@ -1524,7 +1524,7 @@ class OrcaTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2-SVP',
                 'charge': '-1',
-                'misc': 'TightSCF',
+                'additional_command': 'TightSCF',
                 }
 
         calc = gen_calc(params)
@@ -1550,7 +1550,7 @@ class OrcaTests(TestCase):
                 'theory_level': 'RI-MP2',
                 'basis_set': 'cc-pVTZ',
                 'charge': '-1',
-                'misc': 'cc-pVTZ/C',
+                'additional_command': 'cc-pVTZ/C',
                 }
 
         calc = gen_calc(params)

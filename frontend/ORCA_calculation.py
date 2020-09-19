@@ -46,6 +46,9 @@ class OrcaCalculation:
         self.xyz_structure = ""
         self.block_lines = ""
         self.input_file = ""
+        self.specifications = {}
+
+        self.handle_specifications()
 
         self.handle_command()
         self.handle_custom_basis_sets()
@@ -55,6 +58,15 @@ class OrcaCalculation:
         self.handle_solvation()
 
         self.create_input_file()
+
+    def handle_specifications(self):
+        if self.calc.parameters.specifications.strip() == '':
+            return
+
+        specs = self.calc.parameters.specifications.split(';')
+        for spec in specs:
+            key, val = spec.split('=')
+            self.specifications[key] = val
 
     def handle_command(self):
         if self.calc.step.name == 'NMR Prediction':
@@ -165,6 +177,18 @@ class OrcaCalculation:
                 self.blocks.append(freeze_block.format(''.join(freeze).strip()))
         elif self.calc.step.name == 'Single-Point Energy':
             self.command_line = "SP "
+        elif self.calc.step.name == 'Minimum Energy Path':
+            assert self.calc.parameters.software == 'xtb'
+            self.command_line = "NEB "
+            neb_block = """%neb
+                        neb_end_xyzfile "struct2.xyz"
+                        nimages {}
+                        end"""
+            if 'nimages' in self.specifications:
+                nimages = self.specifications['nimages']
+            else:
+                nimages = 8
+            self.blocks.append(neb_block.format(nimages))
 
         method = get_method(self.calc.parameters.method, "ORCA")
         basis_set = get_basis_set(self.calc.parameters.basis_set, "ORCA")
@@ -177,10 +201,13 @@ class OrcaCalculation:
             else:
                 raise Exception("No method")
 
-        self.command_line += "{} {} ".format(method, basis_set)
+        if method == "GFN2-xTB":
+            self.command_line += "xtb "
+        else:
+            self.command_line += "{} {} ".format(method, basis_set)
 
-        if self.calc.parameters.misc.strip() != "":
-            self.command_line += "{} ".format(self.calc.parameters.misc.strip())
+        if self.calc.parameters.additional_command.strip() != "":
+            self.command_line += "{} ".format(self.calc.parameters.additional_command.strip())
 
     def handle_custom_basis_sets(self):
         if self.calc.parameters.custom_basis_sets == "":

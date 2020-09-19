@@ -159,8 +159,8 @@ class GaussianCalculation:
         else:
             self.command_line += "{} ".format(method)
 
-        if self.calc.parameters.misc.strip() != '':
-            self.command_line += "{} ".format(self.calc.parameters.misc.strip())
+        if self.calc.parameters.additional_command.strip() != '':
+            self.command_line += "{} ".format(self.calc.parameters.additional_command.strip())
 
     def parse_custom_basis_set(self):
         custom_basis_set = self.calc.parameters.custom_basis_sets

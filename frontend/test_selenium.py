@@ -810,7 +810,7 @@ class InterfaceTests(CalcusLiveServer):
         theory = Select(self.driver.find_element_by_id("calc_theory_level"))
         func = self.driver.find_element_by_id("calc_functional")
         basis_set = self.driver.find_element_by_id("calc_basis_set")
-        misc = self.driver.find_element_by_id("calc_misc")
+        additional_command = self.driver.find_element_by_id("calc_additional_command")
         software = self.driver.find_element_by_id("calc_software")
 
         self.assertEqual(solvent.first_selected_option.text, params1['solvent'])
@@ -819,7 +819,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(func.get_attribute('value'), params1['functional'])
         self.assertEqual(basis_set.get_attribute('value'), params1['basis_set'])
         self.assertEqual(software.get_attribute('value'), params1['software'])
-        self.assertEqual(misc.get_attribute('value'), "")
+        self.assertEqual(additional_command.get_attribute('value'), "")
 
     def test_project_preset(self):
         proj = Project.objects.create(name="My Project", author=self.profile)
@@ -851,7 +851,7 @@ class InterfaceTests(CalcusLiveServer):
         theory = Select(self.driver.find_element_by_id("calc_theory_level"))
         func = self.driver.find_element_by_id("calc_functional")
         basis_set = self.driver.find_element_by_id("calc_basis_set")
-        misc = self.driver.find_element_by_id("calc_misc")
+        additional_command = self.driver.find_element_by_id("calc_additional_command")
         software = self.driver.find_element_by_id("calc_software")
 
         self.assertEqual(solvent.first_selected_option.text, params1['solvent'])
@@ -860,7 +860,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(func.get_attribute('value'), params1['functional'])
         self.assertEqual(basis_set.get_attribute('value'), params1['basis_set'])
         self.assertEqual(software.get_attribute('value'), params1['software'])
-        self.assertEqual(misc.get_attribute('value'), "")
+        self.assertEqual(additional_command.get_attribute('value'), "")
 
     def test_project_preset_independance(self):
         proj = Project.objects.create(name="My Project", author=self.profile)
@@ -1259,8 +1259,8 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(600)
         self.assertTrue(self.latest_calc_successful())
-        #self.click_latest_calc()
-        #self.assertEqual(self.get_number_conformers(), 12)
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 10)
 
     def test_NEB_from_structure(self):
         params = {
@@ -1293,6 +1293,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.wait_latest_calc_done(1200)
+        self.assertTrue(self.latest_calc_successful())
 
     def test_NEB_hybrid(self):
         params = {
@@ -1325,6 +1326,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.wait_latest_calc_done(1200)
+        self.assertTrue(self.latest_calc_successful())
 
 class XtbCalculationTestsStudent(CalcusLiveServer):
     def setUp(self):
@@ -1782,7 +1784,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'software': 'ORCA',
                 'theory': 'RI-MP2',
                 'basis_set': 'cc-pVDZ',
-                'misc': 'cc-pVDZ/C',
+                'additional_command': 'cc-pVDZ/C',
                 }
 
         self.lget("/launch/")
@@ -1891,7 +1893,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'software': 'ORCA',
                 'theory': 'RI-MP2',
                 'basis_set': 'cc-pVDZ',
-                'misc': 'cc-pVDZ/C',
+                'additional_command': 'cc-pVDZ/C',
                 }
 
         self.lget("/launch/")
@@ -1966,7 +1968,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'PW92',
                 'basis_set': 'Def2-SVP',
-                'misc': 'NUMFREQ',
+                'additional_command': 'NUMFREQ',
                 }
 
         self.lget("/launch/")
@@ -1993,7 +1995,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'software': 'ORCA',
                 'theory': 'RI-MP2',
                 'basis_set': 'cc-pVDZ',
-                'misc': 'cc-pVDZ/C NUMFREQ',
+                'additional_command': 'cc-pVDZ/C NUMFREQ',
                 }
 
         self.lget("/launch/")
@@ -2085,7 +2087,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'software': 'ORCA',
                 'theory': 'RI-MP2',
                 'basis_set': 'cc-pVDZ',
-                'misc': 'cc-pVDZ/C',
+                'additional_command': 'cc-pVDZ/C',
                 }
 
         self.lget("/launch/")
@@ -2289,7 +2291,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'misc': 'Def2/JK',
+                'additional_command': 'Def2/JK',
                 }
 
         self.lget("/launch/")

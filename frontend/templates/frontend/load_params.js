@@ -37,8 +37,8 @@ if ("{{ params.program }}" != "Unknown") {
 	{% endif %}
 
 
-	misc = document.getElementById("calc_misc");
-	misc.value = "{{ params.misc }}";
+	additional_command = document.getElementById("calc_additional_command");
+	additional_command.value = "{{ params.additional_command }}";
 
 	df = document.getElementById("calc_df");
 	df.value = "{{ params.density_fitting }}";

@@ -26,7 +26,7 @@ def gen_calc(params):
     basis_set = ""
     theory_level = ""
     method = ""
-    misc = ""
+    additional_command = ""
     custom_basis_sets = ""
     density_fitting = ""
 
@@ -57,12 +57,12 @@ def gen_calc(params):
     if 'method' in params.keys():
         method = params['method']
 
-    if 'misc' in params.keys():
-        misc = params['misc']
+    if 'additional_command' in params.keys():
+        additional_command = params['additional_command']
 
     software = params['software']
 
-    p = Parameters.objects.create(charge=charge, multiplicity=multiplicity, solvent=solvent, solvation_model=solvation_model, basis_set=basis_set, theory_level=theory_level, method=method, misc=misc, custom_basis_sets=custom_basis_sets, density_fitting=density_fitting)
+    p = Parameters.objects.create(charge=charge, multiplicity=multiplicity, solvent=solvent, solvation_model=solvation_model, basis_set=basis_set, theory_level=theory_level, method=method, additional_command=additional_command, custom_basis_sets=custom_basis_sets, density_fitting=density_fitting)
     with open(os.path.join(TESTS_DIR, params['in_file'])) as f:
         lines = f.readlines()
         xyz_structure = ''.join(lines)
@@ -291,7 +291,7 @@ class GaussianTests(TestCase):
         E = self.run_calc(gaussian)
         self.assertFalse(self.known_energy(E, params))
 
-    def test_sp_DFT_misc(self):
+    def test_sp_DFT_additional_command(self):
         params = {
                 'type': 'Single-Point Energy',
                 'in_file': 'Cl.xyz',
@@ -300,7 +300,7 @@ class GaussianTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2SVP',
                 'charge': '-1',
-                'misc': 'nosymm 5D',
+                'additional_command': 'nosymm 5D',
                 }
 
         calc = gen_calc(params)
@@ -309,7 +309,7 @@ class GaussianTests(TestCase):
         E = self.run_calc(gaussian)
         self.assertFalse(self.known_energy(E, params))
 
-    def test_sp_DFT_misc2(self):
+    def test_sp_DFT_additional_command2(self):
         params = {
                 'type': 'Single-Point Energy',
                 'in_file': 'Cl.xyz',
@@ -318,7 +318,7 @@ class GaussianTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2SVP',
                 'charge': '-1',
-                'misc': 'nosymm 6D',
+                'additional_command': 'nosymm 6D',
                 }
 
         calc = gen_calc(params)
