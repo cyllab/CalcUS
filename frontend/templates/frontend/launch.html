@@ -143,6 +143,9 @@
 				constraint_div.style.display = "block";	
 				editor.styles.atoms_displayLabels_3D = true;
 			}
+			else if(choice.value == "Minimum Energy Path") {
+				refresh_aux_mol();
+			}
 			else {
 				constraint_div.style.display = "none";	
 				editor.styles.atoms_displayLabels_3D = false;
@@ -239,6 +242,11 @@
 				if(project_presets[choice.value] != -1) {
 					load_preset(project_presets[choice.value]);
 				}
+				type = document.getElementById("calc_type");
+				if(type.value == "Minimum Energy Path") {
+					refresh_aux_mol();
+				}
+
 			}
 		}
 
@@ -303,7 +311,7 @@
   				element.style.display = 'none';
 			});
 
-			options = document.querySelectorAll('.avail_' + choice.value.replace(' ', '_'));
+			options = document.querySelectorAll('.avail_' + choice.value.replace(/ /g, '_'));
 			options.forEach(element => {
   				element.style.display = 'block';
 			});
@@ -481,6 +489,60 @@
 		function refresh_presets() {
 			$("#presets").load("/presets/");
 		}
+		function refresh_aux_mol() {
+			proj = document.getElementById("calc_project");
+			$.ajax({
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				type: "POST", 
+				data: {
+					'proj': proj.value,
+				},
+				url: "/aux_molecule/",
+				success: function (response) { 
+					$("#aux_mol").html(response);
+					refresh_aux_ensemble();	
+				}
+			});
+		}
+		function refresh_aux_ensemble() {
+			aux_mol = document.getElementById("aux_mol");
+			$.ajax({
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				type: "POST", 
+				data: {
+					'mol_id': aux_mol.value,
+				},
+				url: "/aux_ensemble/",
+				success: function (response) { 
+					$("#aux_ensemble").html(response);
+					refresh_aux_structure();	
+				}
+			});
+		}
+		function refresh_aux_structure() {
+			aux_mol = document.getElementById("aux_ensemble");
+			$.ajax({
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				type: "POST", 
+				data: {
+					'e_id': aux_ensemble.value,
+				},
+				url: "/aux_structure/",
+				success: function (response) { 
+					$("#aux_struct").html(response);
+				}
+			});
+			
+		}
 
 		{% if ensemble or structure %}
 		let ensemble = true;
@@ -564,6 +626,12 @@
 					<label class="label">Draw a structure or choose a file</label>
 					<div class="control">
 						<input type="file" name="file_structure" id="file_structure" multiple="multiple" onchange="add_file_name()">
+					</div>
+				</div>
+				<div class="field type_specific avail_Minimum_Energy_Path">
+					<label class="label">Upload auxiliary structure</label>
+					<div class="control">
+						<input type="file" name="aux_file_structure" id="aux_file_structure">
 					</div>
 				</div>
 
@@ -708,6 +776,37 @@
 						</div>
 					</div>
 				</div>
+				<div class="type_specific avail_Minimum_Energy_Path" id="aux_structure_div">
+					<div class="field">
+						<label class="label">Existing auxiliary structure</label>
+						<div class="control" id="aux_structure">
+							<div class="columns">
+								<div class="column">
+									<label class="label">Molecule</label>
+									<div class="select" id="aux_mol_select">
+										<select name="aux_mol" id="aux_mol" onchange="refresh_aux_ensemble();">
+										</select>
+									</div>
+								</div>
+								<div class="column">
+									<label class="label">Ensemble</label>
+									<div class="select">
+										<select name="aux_ensemble" id="aux_ensemble" onchange="refresh_aux_structure();">
+										</select>
+									</div>
+								</div>
+								<div class="column">
+									<label class="label">Structure</label>
+									<div class="select">
+										<select name="aux_struct" id="aux_struct">
+										</select>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
 				<div style="display: none;" id="constraint_div">
 					<div class="field">
 						<label class="label">Constraints and scan coordinates</label>

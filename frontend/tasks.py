@@ -493,6 +493,88 @@ def xtb_opt(in_file, calc):
     prop.save()
     return 0
 
+def xtb_mep(in_file, calc):
+    folder = '/'.join(in_file.split('/')[:-1])
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
+
+    ###Temporary
+    MEP_INPUT = """!xtb NEB PAL8
+%neb
+NEB_End_XYZFile "struct2.xyz"
+Nimages 10
+end
+*xyzfile 0 1 struct1.xyz
+"""
+    os.chdir(local_folder)
+    with open(os.path.join(local_folder, 'struct1.xyz'), 'w') as out:
+        out.write(calc.structure.xyz_structure)
+    with open(os.path.join(local_folder, 'struct2.xyz'), 'w') as out:
+        out.write(calc.aux_structure.xyz_structure)
+    with open(os.path.join(local_folder, 'calc.inp'), 'w') as out:
+        out.write(MEP_INPUT)
+
+    ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
+
+    if not local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+
+        a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
+        b = sftp_get("{}/calc_MEP_trj.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbopt.xyz"), conn, lock)
+
+        if a == -1 or b == -1:
+            return -1
+
+        sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
+
+    if ret != 0:
+        return ret
+
+    if not os.path.isfile("{}/calc_MEP_trj.xyz".format(local_folder)):
+        return 1
+
+    if not os.path.isfile("{}/calc.out".format(local_folder)):
+        return 1
+
+    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
+        return 1
+
+    with open("{}/calc_MEP_trj.xyz".format(local_folder)) as f:
+        lines = f.readlines()
+
+    num_atoms = lines[0]
+    inds = []
+    ind = 0
+    while ind < len(lines)-1:
+        if lines[ind] == num_atoms:
+            inds.append(ind)
+        ind += 1
+    inds.append(len(lines))
+
+    min_E = 0
+    for metaind, mol in enumerate(inds[:-1]):
+        sline = lines[inds[metaind]+1].strip().split()
+        E = float(sline[-1])
+        #E = float(lines[inds[metaind]+1].split()[2])
+        struct = ''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]]])
+
+        r = Structure.objects.create(number=metaind+1, degeneracy=1)
+        prop = get_or_create(calc.parameters, r)
+        prop.energy = E
+        prop.geom = True
+        prop.save()
+        r.xyz_structure = clean_xyz(struct)
+        r.save()
+        if E < min_E:
+            min_E = E
+
+        calc.result_ensemble.structure_set.add(r)
+
+    return 0
+
 def xtb_sp(in_file, calc):
     folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
@@ -749,9 +831,9 @@ def xtb_scan(in_file, calc):
                     min_E = E
 
                 calc.result_ensemble.structure_set.add(r)
-            for s in calc.result_ensemble.structure_set.all():
-                s.properties.get(parameters=calc.parameters).rel_energy = (s.properties.get(parameters=calc.parameters).energy - min_E)*float(HARTREE_VAL)
-                s.properties.get(parameters=calc.parameters).save()
+            #for s in calc.result_ensemble.structure_set.all():
+            #    s.properties.get(parameters=calc.parameters).rel_energy = (s.properties.get(parameters=calc.parameters).energy - min_E)*float(HARTREE_VAL)
+            #    s.properties.get(parameters=calc.parameters).save()
 
     else:
         if not os.path.isfile("{}/xtbopt.xyz".format(local_folder)):
@@ -2253,6 +2335,7 @@ BASICSTEP_TABLE = {
                 #'Enso': enso,
                 #'Anmr': anmr,
                 'Single-Point Energy': xtb_sp,
+                'Minimum Energy Path': xtb_mep,
             },
         'ORCA':
             {
@@ -2410,7 +2493,7 @@ def dispatcher(drawing, order_id):
         e.save()
 
         for s in input_structures:
-            c = Calculation.objects.create(structure=s, order=order, date_submitted=timezone.now(), step=step, parameters=order.parameters, result_ensemble=e, constraints=order.constraints)
+            c = Calculation.objects.create(structure=s, order=order, date_submitted=timezone.now(), step=step, parameters=order.parameters, result_ensemble=e, constraints=order.constraints, aux_structure=order.aux_structure)
             c.save()
             if local:
                 calculations.append(c)
@@ -2434,7 +2517,7 @@ def dispatcher(drawing, order_id):
             order.result_ensemble = ensemble
             order.save()
         for s in input_structures:
-            c = Calculation.objects.create(structure=s, order=order, date_submitted=timezone.now(), parameters=order.parameters, step=step, constraints=order.constraints)
+            c = Calculation.objects.create(structure=s, order=order, date_submitted=timezone.now(), parameters=order.parameters, step=step, constraints=order.constraints, aux_structure=order.aux_structure)
             c.save()
             if local:
                 calculations.append(c)
@@ -2476,6 +2559,7 @@ def run_calc(calc_id):
         calc.status = 3
         calc.save()
         return
+
     if calc.status == 0:
         os.mkdir(res_dir)
         os.mkdir(workdir)

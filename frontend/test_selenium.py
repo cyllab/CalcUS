@@ -1242,6 +1242,90 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
 
+    def test_NEB_from_file(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Minimum Energy Path',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'xtb',
+                'in_file': 'elimination_substrate.xyz',
+                'aux_file': 'elimination_product.xyz',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(600)
+        self.assertTrue(self.latest_calc_successful())
+        #self.click_latest_calc()
+        #self.assertEqual(self.get_number_conformers(), 12)
+
+    def test_NEB_from_structure(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Distance', [1, 4], [1.1, 3.5, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'xtb',
+                'in_file': 'elimination_substrate.xyz',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(60)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.launch_structure_next_step()
+
+        params = {
+                'calc_name': 'test',
+                'type': 'Minimum Energy Path',
+                'project': 'SeleniumProject',
+                'software': 'xtb',
+                'aux_structure': ['elimination_substrate', 'test', 4],
+                }
+
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.wait_latest_calc_done(1200)
+
+    def test_NEB_hybrid(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Distance', [1, 4], [1.1, 3.5, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'xtb',
+                'in_file': 'elimination_substrate.xyz',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(60)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/launch/")
+        params = {
+                'calc_name': 'test',
+                'type': 'Minimum Energy Path',
+                'project': 'SeleniumProject',
+                'software': 'xtb',
+                'aux_structure': ['elimination_substrate', 'test', 4],
+                'in_file': 'elimination_substrate.xyz',
+                }
+
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.wait_latest_calc_done(1200)
+
 class XtbCalculationTestsStudent(CalcusLiveServer):
     def setUp(self):
         super().setUp()

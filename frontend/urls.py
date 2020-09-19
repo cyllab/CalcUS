@@ -32,6 +32,10 @@ urlpatterns = [
     path('get_available_bs/', views.get_available_bs, name='get_available_bs'),
     path('get_available_elements/', views.get_available_elements, name='get_available_elements'),
 
+    path('aux_molecule/', views.aux_molecule, name='aux_molecule'),
+    path('aux_ensemble/', views.aux_ensemble, name='aux_ensemble'),
+    path('aux_structure/', views.aux_structure, name='aux_structure'),
+
     path('please_register/', views.please_register, name='please_register'),
     path('register/', views.RegisterView.as_view(), name='register'),
     path('profile/', views.profile, name='profile'),

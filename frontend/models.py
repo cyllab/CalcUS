@@ -677,6 +677,7 @@ class CalculationOrder(models.Model):
     name = models.CharField(max_length=100)
 
     structure = models.ForeignKey(Structure, on_delete=models.SET_NULL, blank=True, null=True)
+    aux_structure = models.ForeignKey(Structure, on_delete=models.SET_NULL, blank=True, null=True, related_name='aux_of_order')
     ensemble = models.ForeignKey(Ensemble, on_delete=models.SET_NULL, blank=True, null=True)
     start_calc = models.ForeignKey('Calculation', on_delete=models.SET_NULL, blank=True, null=True)
     start_calc_frame = models.PositiveIntegerField(default=0)
@@ -800,6 +801,8 @@ class Calculation(models.Model):
     error_message = models.CharField(max_length=400, default="", blank=True, null=True)
 
     structure = models.ForeignKey(Structure, on_delete=models.SET_NULL, null=True)
+    aux_structure = models.ForeignKey(Structure, on_delete=models.SET_NULL, null=True, related_name='aux_of_calc')
+
     step = models.ForeignKey(BasicStep, on_delete=models.SET_NULL, null=True)
     order = models.ForeignKey(CalculationOrder, on_delete=models.CASCADE)
 

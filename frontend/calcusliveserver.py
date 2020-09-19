@@ -188,6 +188,21 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             for f in params['in_files']:
                 upload_input.send_keys("{}/tests/{}".format(dir_path, f))
 
+        if 'aux_file' in params.keys():
+            aux_upload = self.driver.find_element_by_name('aux_file_structure')
+            aux_upload.send_keys("{}/tests/{}".format(dir_path, params['aux_file']))
+
+        if 'aux_structure' in params.keys():
+            aux_mol, aux_e, aux_s = params['aux_structure']
+            mol_select = self.driver.find_element_by_id("aux_mol")
+            mol_select.find_element_by_xpath("option[text()='{}']".format(aux_mol)).click()
+
+            e_select = self.driver.find_element_by_id("aux_ensemble")
+            e_select.find_element_by_xpath("option[text()='{}']".format(aux_e)).click()
+
+            s_select = self.driver.find_element_by_id("aux_struct")
+            s_select.find_element_by_xpath("option[text()='{}']".format(aux_s)).click()
+
         if 'constraints' in params.keys():
             assert params['type'] == 'Constrained Optimisation'
 

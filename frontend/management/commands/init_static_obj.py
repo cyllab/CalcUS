@@ -109,6 +109,11 @@ class Command(BaseCommand):
             self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Creating the Molecular Orbitals", error_message="Failed to create the Molecular Orbitals", avail_ORCA=True)
 
+        name = "Minimum Energy Path"
+        if self.is_absent(BasicStep, name):
+            self.print("Adding BasicStep: {}".format(name))
+            a = BasicStep.objects.create(name=name, desc="Finding the minimum energy path", creates_ensemble=True, error_message="Failed to converge the minimum energy path", avail_xtb=True)
+
         ###Procedure creations
 
         ###Template:

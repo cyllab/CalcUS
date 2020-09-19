@@ -147,6 +147,70 @@ def get_available_elements(request):
     return HttpResponse(response)
 
 @login_required
+def aux_molecule(request):
+    if 'proj' not in request.POST.keys():
+        return HttpResponse(status=404)
+
+    project = clean(request.POST['proj'])
+
+    if project.strip() == '' or project == 'New Project':
+        return HttpResponse(status=204)
+
+    try:
+        project_set = request.user.profile.project_set.filter(name=project)
+    except Profile.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if len(project_set) != 1:
+        print("More than one project with the same name found!")
+        return HttpResponse(status=404)
+    else:
+        project_obj = project_set[0]
+
+    return render(request, 'frontend/dynamic/aux_molecule.html', {'molecules': project_obj.molecule_set.all()})
+
+@login_required
+def aux_ensemble(request):
+    if 'mol_id' not in request.POST.keys():
+        return HttpResponse(status=404)
+
+    _id = clean(request.POST['mol_id'])
+    if _id.strip() == '':
+        return HttpResponse(status=204)
+    id = int(_id)
+
+    try:
+        mol = Molecule.objects.get(pk=id)
+    except Molecule.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if not can_view_molecule(mol, request.user.profile):
+        return HttpResponse(status=404)
+
+    return render(request, 'frontend/dynamic/aux_ensembles.html', {'ensembles': mol.ensemble_set.all()})
+
+@login_required
+def aux_structure(request):
+    if 'e_id' not in request.POST.keys():
+        return HttpResponse(status=404)
+
+    _id = clean(request.POST['e_id'])
+    if _id.strip() == '':
+        return HttpResponse(status=204)
+    id = int(_id)
+
+    try:
+        e = Ensemble.objects.get(pk=id)
+    except Ensemble.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if not can_view_ensemble(e, request.user.profile):
+        return HttpResponse(status=404)
+
+    return render(request, 'frontend/dynamic/aux_structures.html', {'structures': e.structure_set.all()})
+
+
+@login_required
 def calculations(request):
     return render(request, 'frontend/calculations.html', {
             'profile': request.user.profile,
@@ -696,7 +760,6 @@ def error(request, msg):
         })
 
 def parse_parameters(request, name_required=True):
-
     profile = request.user.profile
 
     if name_required:
@@ -895,7 +958,6 @@ def parse_parameters(request, name_required=True):
         except Project.DoesNotExist:
             project_obj = Project.objects.create(name=new_project_name, author=profile)
             profile.project_set.add(project_obj)
-            pass
         else:
             print("Project with that name already exists")
     else:
@@ -946,6 +1008,36 @@ def set_project_default(request):
     project_obj.save()
 
     return HttpResponse("Default parameters updated")
+
+def handle_file_upload(ff, params):
+    s = Structure.objects.create()
+
+    _params = Parameters.objects.create(software="Unknown", method="Unknown", basis_set="", solvation_model="", charge=params.charge, multiplicity=1)
+    p = Property.objects.create(parent_structure=s, parameters=_params, geom=True)
+    p.save()
+    _params.save()
+
+    drawing = False
+    in_file = clean(ff.read().decode('utf-8'))
+    filename, ext = ff.name.split('.')
+
+    if ext == 'mol':
+        s.mol_structure = in_file
+        generate_xyz_structure(False, s)
+    elif ext == 'xyz':
+        s.xyz_structure = in_file
+    elif ext == 'sdf':
+        s.sdf_structure = in_file
+        generate_xyz_structure(False, s)
+    elif ext == 'mol2':
+        s.mol2_structure = in_file
+        generate_xyz_structure(False, s)
+    elif ext == 'log':
+        s.xyz_structure = get_Gaussian_xyz(in_file)
+    else:
+        return error(request, "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf)")
+    s.save()
+    return s, filename
 
 @login_required
 def submit_calculation(request):
@@ -1065,34 +1157,11 @@ def submit_calculation(request):
         names = {}
         if len(request.FILES) > 0:
             for ind, ff in enumerate(request.FILES.getlist("file_structure")):
-                s = Structure.objects.create()
-
-                _params = Parameters.objects.create(software="Unknown", method="Unknown", basis_set="", solvation_model="", charge=params.charge, multiplicity=1)
-                p = Property.objects.create(parent_structure=s, parameters=_params, geom=True)
-                p.save()
-                _params.save()
-
-                drawing = False
-                in_file = clean(ff.read().decode('utf-8'))
-                filename, ext = ff.name.split('.')
+                ss = handle_file_upload(ff, params)
+                if isinstance(ss, HttpResponse):
+                    return ss
+                s, filename = ss
                 names[s.id] = filename
-
-                if ext == 'mol':
-                    s.mol_structure = in_file
-                    generate_xyz_structure(False, s)
-                elif ext == 'xyz':
-                    s.xyz_structure = in_file
-                elif ext == 'sdf':
-                    s.sdf_structure = in_file
-                    generate_xyz_structure(False, s)
-                elif ext == 'mol2':
-                    s.mol2_structure = in_file
-                    generate_xyz_structure(False, s)
-                elif ext == 'log':
-                    s.xyz_structure = get_Gaussian_xyz(in_file)
-                else:
-                    return error(request, "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf)")
-                s.save()
                 fing = gen_fingerprint(s)
 
                 if fing in fingerprints.keys():
@@ -1139,6 +1208,28 @@ def submit_calculation(request):
         e.save()
         s.save()
 
+    if step.name == "Minimum Energy Path":
+        if len(orders) != 1:
+            return error(request, 'Only one initial structure can be used')
+
+        if len(request.FILES.getlist("aux_file_structure")) == 1:
+            _aux_struct = handle_file_upload(request.FILES.getlist("aux_file_structure")[0], params)
+            if isinstance(_aux_struct, HttpResponse):
+                return _aux_struct
+            aux_struct = _aux_struct[0]
+        else:
+            if 'aux_struct' not in request.POST.keys():
+                return error(request, 'No valid auxiliary structure')
+            try:
+                aux_struct = Structure.objects.get(pk=int(clean(request.POST['aux_struct'])))
+            except Structure.DoesNotExist:
+                return error(request, 'No valid auxiliary structure')
+            if not can_view_structure(aux_struct, profile):
+                return error(request, 'No valid auxiliary structure')
+
+        aux_struct.save()
+        orders[0].aux_structure = aux_struct
+
     TYPE_LENGTH = {'Distance' : 2, 'Angle' : 3, 'Dihedral' : 4}
     constraints = ""
     if step.name == "Constrained Optimisation" and 'constraint_num' in request.POST.keys():
@@ -1167,7 +1258,7 @@ def submit_calculation(request):
                     constraints += "{}_{}_{}_{}-{};".format(mode, begin, end, steps, ids)
                 else:
                     return error(request, "Invalid constrained optimisation")
-
+    obj.save()
     for o in orders:
         o.constraints = constraints
 
