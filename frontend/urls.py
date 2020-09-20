@@ -29,6 +29,7 @@ urlpatterns = [
     path('project_list/', views.project_list, name='project_list'),
 
     path('periodictable/', views.periodictable, name='periodictable'),
+    path('specifications/', views.specifications, name='specifications'),
     path('get_available_bs/', views.get_available_bs, name='get_available_bs'),
     path('get_available_elements/', views.get_available_elements, name='get_available_elements'),
 

@@ -53,6 +53,43 @@ NMR_REGRESSIONS = {
         },
 }
 
+#Structure:
+#   {
+#       step_name: {
+#           spec_name: [num_params, [software1, software2]]
+#       }
+#   }
+
+SPECIFICATIONS = {
+        'General': {
+            'SCF=XQC': [0, ["Gaussian"]],
+            'SCF=YQC': [0, ["Gaussian"]],
+            'SCF=Tight': [0, ["Gaussian"]],
+            },
+        'Geometrical Optimisation': {
+                'MaxStep': [1, ["Gaussian"]],
+                'MaxCycles': [1, ["Gaussian"]],
+                'CalcFC': [0, ["Gaussian"]],
+                'CalcAll': [0, ["Gaussian"]],
+                'RecalcFC': [1, ["Gaussian"]],
+                'Loose': [0, ["Gaussian"]],
+                'Tight': [0, ["Gaussian"]],
+                'VeryTight': [0, ["Gaussian"]],
+            },
+        'Constrained Optimisation': {
+                'MaxStep': [1, ["Gaussian"]],
+                'MaxCycles': [1, ["Gaussian"]],
+                'CalcFC': [0, ["Gaussian"]],
+                'CalcAll': [0, ["Gaussian"]],
+                'RecalcFC': [1, ["Gaussian"]],
+                'Loose': [0, ["Gaussian"]],
+                'Tight': [0, ["Gaussian"]],
+                'VeryTight': [0, ["Gaussian"]],
+            },
+        'Frequency Calculation': {
+                'NoRaman': [0, ["Gaussian"]],
+            },
+}
 
 SYN_METHODS = {
         'hfs': [],

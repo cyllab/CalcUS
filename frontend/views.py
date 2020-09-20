@@ -116,6 +116,10 @@ def periodictable(request):
     return render(request, 'frontend/periodictable.html')
 
 @login_required
+def specifications(request):
+    return render(request, 'frontend/dynamic/specifications.html')
+
+@login_required
 def get_available_bs(request):
     if 'elements' in request.POST.keys():
         raw_el = clean(request.POST['elements'])
@@ -951,6 +955,37 @@ def parse_parameters(request, name_required=True):
     if step.name not in BASICSTEP_TABLE[software].keys():
         return "Invalid calculation type"
 
+    if 'calc_specifications' in request.POST.keys():
+        specifications = clean(request.POST['calc_specifications'])
+        def get_spec(spec, spec2):
+            if spec in SPECIFICATIONS['General'].keys():
+                return SPECIFICATIONS['General'][spec]
+            elif spec in SPECIFICATIONS[step.name].keys():
+                return SPECIFICATIONS[step.name][spec]
+            elif spec2 in SPECIFICATIONS['General'].keys():
+                return SPECIFICATIONS['General'][spec2]
+            elif spec2 in SPECIFICATIONS[step.name].keys():
+                return SPECIFICATIONS[step.name][spec2]
+            else:
+                return False
+
+        def valid():
+            for spec in specifications.split(';'):
+                if spec.strip() == '':
+                    continue
+                spec2 = spec.split('=')[0]
+                ss = get_spec(spec, spec2)
+                if ss == False:
+                    return False
+                if software not in ss[1]:
+                    return False
+            return True
+
+        if not valid():
+            return "Invalid specifications"
+    else:
+        specifications = ""
+
     if project == "New Project":
         new_project_name = clean(request.POST['new_project_name'])
         try:
@@ -967,11 +1002,11 @@ def parse_parameters(request, name_required=True):
             return "No such project"
 
         if len(project_set) != 1:
-            print("More than one project with the same name found!")
+            return "More than one project with the same name found!"
         else:
             project_obj = project_set[0]
 
-    params = Parameters.objects.create(charge=charge, multiplicity=mult, solvent=solvent, method=functional, basis_set=basis_set, additional_command=additional_command, software=software, theory_level=theory, solvation_model=solvation_model, density_fitting=df, custom_basis_sets=bs)
+    params = Parameters.objects.create(charge=charge, multiplicity=mult, solvent=solvent, method=functional, basis_set=basis_set, additional_command=additional_command, software=software, theory_level=theory, solvation_model=solvation_model, density_fitting=df, custom_basis_sets=bs, specifications=specifications)
     params.save()
 
     return params, project_obj, name, step

@@ -55,6 +55,8 @@ class GaussianCalculation:
 
     def __init__(self, calc):
         self.calc = calc
+        print("SPECIFICATIONS")
+        print(calc.parameters.specifications)
         self.has_scan = False
         self.pal = 0
         self.appendix = []

@@ -23,6 +23,17 @@
   		background-color: rgb(0, 0, 0);
   		background-color: rgba(0, 0, 0, 0.5);
 	}
+	.pick_specifications_div {
+		display: none;
+  		position: fixed; 
+  		padding-top: 50px;
+  		left: 0; 
+  		top: 0;
+  		width: 100%;
+  		height: 100%; 
+  		background-color: rgb(0, 0, 0);
+  		background-color: rgba(0, 0, 0, 0.5);
+	}
 	.modal-content {
   		position: relative; 
   		background-color: white;
@@ -38,13 +49,13 @@
 		margin-top: 5px;
 		margin-bottom: 5px;
 	}
-	.close-btn {
+	.close_btn {
 	  float: right; 
 	  color: lightgray; 
 	  font-size: 24px;  
 	  font-weight: bold;
 	}
-	  .close-btn:hover {
+	  .close_btn:hover {
 	  color: darkgray;
 	}
 	  @-webkit-keyframes animatetop {
@@ -942,14 +953,6 @@
 								</div>
 							</div>
 						</div>
-						<div class="column">
-							<div class="field">
-								<label class="label">Additional keyword</label>
-								<div class="control">
-									<input class="input" name="calc_additional_command" id="calc_additional_command" type="text" placeholder="" >
-								</div>
-							</div>
-						</div>
 
 					</div>
 				</div>
@@ -958,6 +961,34 @@
 					<details class="box">
 						<summary>Advanced Options</summary>
 						<br />
+						<div>
+							<div class="field" id="custom_bs_field">
+								<label class="label">Specifications</label>
+								<div class="control">
+									<input class="input" name="calc_specifications" id="calc_specifications" type="text" placeholder="" >
+								<button class="button is-info" id="pick_specifications_button" type="button">Pick specifications</button>
+								</div>
+							</div>
+
+							<div class="modal pick_specifications_div" id="pick_specifications_div">
+								<div class="modal-card">
+									<header class="modal-card-head">
+										<p class="modal-card-title">Specifications</p>
+										<button type="button" class="close_btn close_specs modal-close is-large" aria-label="close"></button>
+									</header>
+									<section class="modal-card-body" id="specifications_body">
+									</section>
+								</div>
+							</div>
+						</div>
+
+						<div class="field">
+							<label class="label">Manual keyword</label>
+							<div class="control">
+								<input class="input" name="calc_additional_command" id="calc_additional_command" type="text" placeholder="" >
+							</div>
+						</div>
+
 						<div class="method_specific avail_DFT">
 							<div class="field software_specific avail_Gaussian">
 								<label class="label">Density Fitting</label>
@@ -993,7 +1024,7 @@
 								<div class="modal-card">
 									<header class="modal-card-head">
 										<p class="modal-card-title">Specific basis sets</p>
-										<button type="button" class="close-btn modal-close is-large" aria-label="close"></button>
+										<button type="button" class="close_btn close_bs modal-close is-large" aria-label="close"></button>
 									</header>
 									<section class="modal-card-body" id="custom_bs_body">
 									</section>
@@ -1206,33 +1237,60 @@
 	});
 	</script>
 	<script>
-	let modalBtn = document.getElementById("pick_bs_button")
-	let modal = document.querySelector(".pick_bs_div")
-	let closeBtn = document.querySelector(".close-btn")
-	modalBtn.onclick = function(){
+	let modalBtnBs = document.getElementById("pick_bs_button")
+	let modalBs = document.querySelector(".pick_bs_div")
+	let closeBtnBs = document.querySelector(".close_bs")
+	modalBtnBs.onclick = function(){
 		div = $("#custom_bs_body");
 		if (div.html().replace(/^\s+|\s+$/g, '') == ""){
 			$("#custom_bs_body").load("/periodictable/");
 		}
-  		modal.style.display = "block"
+  		modalBs.style.display = "block";
 	}
-	closeBtn.onclick = function(){
-  		modal.style.display = "none"
-		print_output();
+	closeBtnBs.onclick = function(){
+  		modalBs.style.display = "none";
+		print_output_bs();
 	}
-	window.onclick = function(e){
-  		if(e.target == modal){
-    			modal.style.display = "none"
-		print_output();
-  		}
-	}		
-	function print_output() {
+	function print_output_bs() {
 		output = document.getElementById("calc_custom_bs");
 		tmp_output = document.getElementById("custom_bs");
 
 		output.value = tmp_output.value;
 	}
 
+	let modalBtnSpec = document.getElementById("pick_specifications_button")
+	let modalSpec = document.querySelector(".pick_specifications_div")
+	let closeBtnSpec = document.querySelector(".close_specs")
+	modalBtnSpec.onclick = function(){
+		div = $("#specifications_body");
+		if (div.html().replace(/^\s+|\s+$/g, '') == ""){
+			$("#specifications_body").load("/specifications/");
+		}
+  		modalSpec.style.display = "block";
+	}
+	closeBtnSpec.onclick = function(){
+  		modalSpec.style.display = "none";
+		print_output_specs();
+	}
+
+	function print_output_specs() {
+		output = document.getElementById("calc_specifications");
+		tmp_output = document.getElementById("specifications");
+
+		output.value = tmp_output.value;
+	}
+
+	window.onclick = function(e){
+  		if(e.target == modalBs){
+    			modalBs.style.display = "none";
+			print_output_bs();
+  		}
+		else if (e.target == modalSpec){
+    			modalSpec.style.display = "none";
+			print_output_specs();
+  		}
+
+	}		
 
 	</script>
 
