@@ -6,7 +6,7 @@
 			inp = document.getElementById("spec_value");
 			output = document.getElementById("specifications");
 			if(inp.style.display == "block") {
-				output.value += val + '=' + inp.value + ';';
+				output.value += val.replace('=','=' + inp.value) + ';';
 			}
 			else {
 				output.value += val + ';';
@@ -28,33 +28,31 @@
 		refresh_specification();
 	</script>
 <div>
-	<center>
-	<div class="select">
-		<select id="specifications_select" onchange="refresh_specification()">
-			<option value="SCF=XQC" class="software_specific avail_Gaussian ">SCF=XQC</option>
-			<option value="SCF=YQC" class="software_specific avail_Gaussian ">SCF=YQC</option>
-			<option value="SCF=Tight" class="software_specific avail_Gaussian ">SCF=Tight</option>
-			<option value="MaxStep" class="software_specific type_specific avail_Gaussian avail_Geometrical_Optimisation has_value">MaxStep</option>
-			<option value="MaxCycles" class="software_specific type_specific avail_Gaussian avail_Geometrical_Optimisation has_value">MaxCycles</option>
-			<option value="CalcFC" class="software_specific type_specific avail_Gaussian avail_Geometrical_Optimisation ">CalcFC</option>
-			<option value="CalcAll" class="software_specific type_specific avail_Gaussian avail_Geometrical_Optimisation ">CalcAll</option>
-			<option value="RecalcFC" class="software_specific type_specific avail_Gaussian avail_Geometrical_Optimisation has_value">RecalcFC</option>
-			<option value="Loose" class="software_specific type_specific avail_Gaussian avail_Geometrical_Optimisation ">Loose</option>
-			<option value="Tight" class="software_specific type_specific avail_Gaussian avail_Geometrical_Optimisation ">Tight</option>
-			<option value="VeryTight" class="software_specific type_specific avail_Gaussian avail_Geometrical_Optimisation ">VeryTight</option>
-			<option value="MaxStep" class="software_specific type_specific avail_Gaussian avail_Constrained_Optimisation has_value">MaxStep</option>
-			<option value="MaxCycles" class="software_specific type_specific avail_Gaussian avail_Constrained_Optimisation has_value">MaxCycles</option>
-			<option value="CalcFC" class="software_specific type_specific avail_Gaussian avail_Constrained_Optimisation ">CalcFC</option>
-			<option value="CalcAll" class="software_specific type_specific avail_Gaussian avail_Constrained_Optimisation ">CalcAll</option>
-			<option value="RecalcFC" class="software_specific type_specific avail_Gaussian avail_Constrained_Optimisation has_value">RecalcFC</option>
-			<option value="Loose" class="software_specific type_specific avail_Gaussian avail_Constrained_Optimisation ">Loose</option>
-			<option value="Tight" class="software_specific type_specific avail_Gaussian avail_Constrained_Optimisation ">Tight</option>
-			<option value="VeryTight" class="software_specific type_specific avail_Gaussian avail_Constrained_Optimisation ">VeryTight</option>
-			<option value="NoRaman" class="software_specific type_specific avail_Gaussian avail_Frequency_Calculation ">NoRaman</option>
-		</select>
+	<div class="columns">
+		<div class="column is-narrow">
+			<div class="select">
+				<select id="specifications_select" onchange="refresh_specification()">
+
+<option value="SCF(XQC)" class="software_specific avail_Gaussian ">SCF(XQC)</option>
+<option value="SCF(YQC)" class="software_specific avail_Gaussian ">SCF(YQC)</option>
+<option value="SCF(Tight)" class="software_specific avail_Gaussian ">SCF(Tight)</option>
+<option value="opt(MaxStep=)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation has_value">opt(MaxStep=...)</option>
+<option value="opt(MaxCycles=)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation has_value">opt(MaxCycles=...)</option>
+<option value="opt(CalcFC)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation ">opt(CalcFC)</option>
+<option value="opt(CalcAll)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation ">opt(CalcAll)</option>
+<option value="opt(RecalcFC=)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation has_value">opt(RecalcFC=...)</option>
+<option value="opt(Loose)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation ">opt(Loose)</option>
+<option value="opt(Tight)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation ">opt(Tight)</option>
+<option value="opt(VeryTight)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation ">opt(VeryTight)</option>
+<option value="freq(NoRaman)" class="software_specific avail_Gaussian type_specific avail_Frequency_Calculation ">freq(NoRaman)</option>				
+				</select>
+			</div>
+		</div>
+		<div class="column">
+			<input class="input" id="spec_value" type="text" placeholder="">
+		</div>
 	</div>
-	<input class="input" id="spec_value" type="text" placeholder="">
-	<br />
+	<center>
 		<button class="button is-info" type="button" onclick="add_spec()">Add specification</button>
 		<input class="input" id="specifications" type="text" placeholder="">
 	</center>

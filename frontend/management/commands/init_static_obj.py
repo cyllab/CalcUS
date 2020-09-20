@@ -78,7 +78,7 @@ class Command(BaseCommand):
         name = "UV-Vis Calculation"
         if self.is_absent(BasicStep, name):
             self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Calculating UV-Vis spectrum", error_message="Failed to calculate the UV-Vis spectrum", avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
+            a = BasicStep.objects.create(name=name, desc="Calculating UV-Vis spectrum", error_message="Failed to calculate the UV-Vis spectrum", avail_xtb=True)
 
         name = "NMR Prediction"
         if self.is_absent(BasicStep, name):

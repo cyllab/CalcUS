@@ -957,27 +957,18 @@ def parse_parameters(request, name_required=True):
 
     if 'calc_specifications' in request.POST.keys():
         specifications = clean(request.POST['calc_specifications'])
-        def get_spec(spec, spec2):
-            if spec in SPECIFICATIONS['General'].keys():
-                return SPECIFICATIONS['General'][spec]
-            elif spec in SPECIFICATIONS[step.name].keys():
-                return SPECIFICATIONS[step.name][spec]
-            elif spec2 in SPECIFICATIONS['General'].keys():
-                return SPECIFICATIONS['General'][spec2]
-            elif spec2 in SPECIFICATIONS[step.name].keys():
-                return SPECIFICATIONS[step.name][spec2]
-            else:
-                return False
 
         def valid():
             for spec in specifications.split(';'):
                 if spec.strip() == '':
                     continue
-                spec2 = spec.split('=')[0]
-                ss = get_spec(spec, spec2)
-                if ss == False:
+                key, option = spec.split('(')
+                option = option.replace(')', '')
+                if key not in SPECIFICATIONS[software].keys():
                     return False
-                if software not in ss[1]:
+                if option.find('=') != -1:
+                    option, val = option.split('=')
+                if option not in SPECIFICATIONS[software][key].keys():
                     return False
             return True
 

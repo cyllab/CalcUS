@@ -16,12 +16,6 @@ L_MEM = int(L_PAL)*L_STACKSIZE
 
 class GaussianCalculation:
 
-    calc = None
-
-    has_scan = False
-    pal = 0
-    appendix = []
-
     SMD18_APPENDIX = """modifysph
 
     Br 2.60
@@ -31,7 +25,7 @@ class GaussianCalculation:
     TEMPLATE = """%chk=in.chk
     %nproc={}
     %mem={}MB
-    #p {}
+    #p {}{}
 
     CalcUS
 
@@ -39,31 +33,37 @@ class GaussianCalculation:
     {}
     {}
     """
+
+    KEYWORDS = {
+                'Geometrical Optimisation': 'opt',
+                'Constrained Optimisation': 'opt',
+                'TS Optimisation': 'opt',
+                'Frequency Calculation': 'freq',
+                'NMR Prediction': 'nmr',
+                'Single-Point Energy': 'sp',
+            }
+
     #Number of processors
     #Amount of memory
     #Command line
+    #Additional commands
     #Charge
     #Multiplicity
     #XYZ structure
     #Appendix
 
-    command_line = ""
-    xyz_structure = ""
-
-    input_file = ""
-
-
     def __init__(self, calc):
         self.calc = calc
-        print("SPECIFICATIONS")
-        print(calc.parameters.specifications)
         self.has_scan = False
         self.pal = 0
         self.appendix = []
         self.command_line = ""
+        self.additional_commands = ""
+        self.command_specifications = []
         self.xyz_structure = ""
         self.input_file = ""
 
+        self.handle_specifications()
         self.handle_command()
         self.handle_xyz()
 
@@ -71,17 +71,56 @@ class GaussianCalculation:
 
         self.create_input_file()
 
+    def handle_specifications(self):
+        specs = {}
+        def add_spec(key, option, val):
+            if val == "":
+                option_val = option
+            else:
+                option_val = "{}={}".format(option, val)
+            if key in specs.keys():
+                specs[key].append(option_val)
+            else:
+                specs[key] = [option_val]
+        for spec in self.calc.parameters.specifications.split(';'):
+            if spec.strip() == '':
+                continue
+            key, option = spec.split('(')
+            option = option.replace(')', '')
+            val = ""
+            if option.find('=') != -1:
+                option, val = option.split('=')
+            if option not in SPECIFICATIONS[self.calc.parameters.software][key].keys():
+                raise Exception("Unknown specification")
+            if key in self.KEYWORDS.values():
+                if key != self.KEYWORDS[self.calc.step.name]:
+                    raise Exception("Invalid specification for the requested step")
+                if val == '':
+                    self.command_specifications.append(option)
+                else:
+                    self.command_specifications.append("{}={}".format(option, val))
+            else:
+                add_spec(key, option, val)
+
+        for spec in specs.keys():
+            specs_str = ','.join(specs[spec])
+            self.additional_commands += '{}({}) '.format(spec, specs_str)
+
     def handle_command(self):
+        cmd = ""
+        base_specs = []
         if self.calc.step.name == 'NMR Prediction':
-            self.command_line = "nmr "
+            cmd = "nmr"
         elif self.calc.step.name == 'Geometrical Optimisation':
-            self.command_line = "opt "
+            cmd = "opt"
         elif self.calc.step.name == 'TS Optimisation':
-            self.command_line = "opt(ts, NoEigenTest, CalcFC) "
+            cmd = "opt"
+            base_specs = ['ts', 'NoEigenTest', 'CalcFC']
         elif self.calc.step.name == 'Frequency Calculation':
-            self.command_line = "freq "
+            cmd = "freq"
         elif self.calc.step.name == 'Constrained Optimisation':
-            self.command_line = "opt(modredundant) "
+            cmd = "opt"
+            base_specs = ['modredundant']
             lines = [i + '\n' for i in clean_xyz(self.calc.structure.xyz_structure).split('\n')[2:]]
 
             xyz = []
@@ -99,19 +138,19 @@ class GaussianCalculation:
 
             scmd = self.calc.constraints.split(';')
 
-            for cmd in scmd:
-                if cmd.strip() == '':
+            for c in scmd:
+                if c.strip() == '':
                     continue
-                _cmd, ids = cmd.split('-')
-                _cmd = _cmd.split('_')
+                _c, ids = c.split('-')
+                _c= _c.split('_')
                 ids = ids.split('_')
                 ids = [int(i) if i.strip() != '' else -1 for i in ids]
                 type = len(ids)
 
-                if _cmd[0] == "Scan":
+                if _c[0] == "Scan":
                     has_scan = True
-                    end = float(_cmd[2])
-                    num_steps = int(float(_cmd[3]))
+                    end = float(_c[2])
+                    num_steps = int(float(_c[3]))
 
                     if type == 2:
                         start = get_distance(xyz, *ids)
@@ -136,8 +175,15 @@ class GaussianCalculation:
             self.has_scan = has_scan
             self.appendix.append(gaussian_constraints)
         elif self.calc.step.name == 'Single-Point Energy':
-            self.command_line = "sp "
+            cmd = "sp"
 
+        full_specs = base_specs + self.command_specifications
+        if len(full_specs) == 0:
+            cmd_specifications_str = ""
+        else:
+            cmd_specifications_str = "({})".format(', '.join(full_specs))
+
+        self.command_line += "{}{} ".format(cmd, cmd_specifications_str)
         method = get_method(self.calc.parameters.method, "Gaussian")
         basis_set = get_basis_set(self.calc.parameters.basis_set, "Gaussian")
         custom_basis_set = self.calc.parameters.custom_basis_sets
@@ -161,8 +207,7 @@ class GaussianCalculation:
         else:
             self.command_line += "{} ".format(method)
 
-        if self.calc.parameters.additional_command.strip() != '':
-            self.command_line += "{} ".format(self.calc.parameters.additional_command.strip())
+        self.additional_commands += self.calc.parameters.additional_command.strip()
 
     def parse_custom_basis_set(self):
         custom_basis_set = self.calc.parameters.custom_basis_sets
@@ -274,6 +319,6 @@ class GaussianCalculation:
             PAL = r.pal
             MEM = r.memory
 
-        raw = self.TEMPLATE.format(PAL, MEM, self.command_line, self.calc.parameters.charge, self.calc.parameters.multiplicity, self.xyz_structure, '\n'.join(self.appendix))
+        raw = self.TEMPLATE.format(PAL, MEM, self.command_line, self.additional_commands, self.calc.parameters.charge, self.calc.parameters.multiplicity, self.xyz_structure, '\n'.join(self.appendix))
         self.input_file = '\n'.join([i.strip() for i in raw.split('\n')]).replace('\n\n\n', '\n\n')
 

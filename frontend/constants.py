@@ -61,34 +61,26 @@ NMR_REGRESSIONS = {
 #   }
 
 SPECIFICATIONS = {
-        'General': {
-            'SCF=XQC': [0, ["Gaussian"]],
-            'SCF=YQC': [0, ["Gaussian"]],
-            'SCF=Tight': [0, ["Gaussian"]],
-            },
-        'Geometrical Optimisation': {
-                'MaxStep': [1, ["Gaussian"]],
-                'MaxCycles': [1, ["Gaussian"]],
-                'CalcFC': [0, ["Gaussian"]],
-                'CalcAll': [0, ["Gaussian"]],
-                'RecalcFC': [1, ["Gaussian"]],
-                'Loose': [0, ["Gaussian"]],
-                'Tight': [0, ["Gaussian"]],
-                'VeryTight': [0, ["Gaussian"]],
-            },
-        'Constrained Optimisation': {
-                'MaxStep': [1, ["Gaussian"]],
-                'MaxCycles': [1, ["Gaussian"]],
-                'CalcFC': [0, ["Gaussian"]],
-                'CalcAll': [0, ["Gaussian"]],
-                'RecalcFC': [1, ["Gaussian"]],
-                'Loose': [0, ["Gaussian"]],
-                'Tight': [0, ["Gaussian"]],
-                'VeryTight': [0, ["Gaussian"]],
-            },
-        'Frequency Calculation': {
-                'NoRaman': [0, ["Gaussian"]],
-            },
+    'Gaussian': {
+        'SCF': {
+            'XQC': 0,
+            'YQC': 0,
+            'Tight': 0,
+        },
+        'opt': {
+            'MaxStep': 1,
+            'MaxCycles': 1,
+            'CalcFC': 0,
+            'CalcAll': 0,
+            'RecalcFC': 1,
+            'Loose': 0,
+            'Tight': 0,
+            'VeryTight': 0,
+        },
+        'freq': {
+            'NoRaman': 0,
+        },
+    },
 }
 
 SYN_METHODS = {

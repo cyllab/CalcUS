@@ -31,6 +31,7 @@ def gen_calc(params):
     additional_command = ""
     custom_basis_sets = ""
     density_fitting = ""
+    specifications = ""
 
     if 'charge' in params.keys():
         charge = int(params['charge'])
@@ -62,9 +63,12 @@ def gen_calc(params):
     if 'additional_command' in params.keys():
         additional_command = params['additional_command']
 
+    if 'specifications' in params.keys():
+        specifications = params['specifications']
+
     software = params['software']
 
-    p = Parameters.objects.create(charge=charge, multiplicity=multiplicity, solvent=solvent, solvation_model=solvation_model, basis_set=basis_set, theory_level=theory_level, method=method, additional_command=additional_command, custom_basis_sets=custom_basis_sets, density_fitting=density_fitting)
+    p = Parameters.objects.create(charge=charge, multiplicity=multiplicity, solvent=solvent, solvation_model=solvation_model, basis_set=basis_set, theory_level=theory_level, method=method, additional_command=additional_command, custom_basis_sets=custom_basis_sets, density_fitting=density_fitting, specifications=specifications, software=software)
     with open(os.path.join(TESTS_DIR, params['in_file'])) as f:
         lines = f.readlines()
         xyz_structure = ''.join(lines)
@@ -1294,6 +1298,169 @@ class GaussianTests(TestCase):
         2     19.34926000            28.46819100
         2      4.82376700             0.24371300
         2      4.88431500             0.32080400
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_global_specification(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'SCF(Tight);',
+                }
+
+        calc = gen_calc(params)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p sp M062X/Def2SVP SCF(Tight)
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_multiple_global_specification(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'SCF(Tight);SCF(XQC);',
+                }
+
+        calc = gen_calc(params)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p sp M062X/Def2SVP SCF(Tight,XQC)
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_cmd_specification(self):
+        params = {
+                'type': 'Geometrical Optimisation',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'opt(MaxStep=5);',
+                }
+
+        calc = gen_calc(params)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt(MaxStep=5) M062X/Def2SVP
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_multiple_cmd_specifications(self):
+        params = {
+                'type': 'Geometrical Optimisation',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'opt(MaxStep=5);opt(Tight);',
+                }
+
+        calc = gen_calc(params)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt(MaxStep=5, Tight) M062X/Def2SVP
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_both_specifications(self):
+        params = {
+                'type': 'Geometrical Optimisation',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'opt(MaxStep=5);SCF(Tight);',
+                }
+
+        calc = gen_calc(params)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt(MaxStep=5) M062X/Def2SVP SCF(Tight)
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_specifications_and_additional_commands(self):
+        params = {
+                'type': 'Geometrical Optimisation',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'opt(MaxStep=5);opt(Tight);',
+                'additional_command': 'nosymm 5D',
+                }
+
+        calc = gen_calc(params)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt(MaxStep=5, Tight) M062X/Def2SVP nosymm 5D
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
 
         """
 
