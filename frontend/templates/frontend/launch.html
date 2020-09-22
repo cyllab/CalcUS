@@ -442,6 +442,19 @@
 			}
 		}
 
+		function preview_upload() {
+  			file_list = this.files;
+			if(file_list.length == 1 && file_list[0].type == "chemical/x-xyz") {
+				var reader = new FileReader();
+				reader.readAsText(file_list[0], "UTF-8");
+				reader.onload = function(e) {
+					let mol_read = ChemDoodle.readXYZ(e.target.result);
+					ChemDoodle.relabel(mol_read);
+					editor.loadMolecule(mol_read);	
+				}
+			}
+		}
+
 		function set_project_default() {
 			$.ajax({
 				data: $("#calcform").serialize(), 
@@ -558,7 +571,6 @@
 			});
 			
 		}
-
 		{% if ensemble or structure %}
 		let ensemble = true;
 		{% else %}
@@ -640,7 +652,7 @@
 				<div class="field">
 					<label class="label">Draw a structure or choose a file</label>
 					<div class="control">
-						<input type="file" name="file_structure" id="file_structure" multiple="multiple" onchange="add_file_name()">
+						<input type="file" name="file_structure" id="file_structure" multiple="multiple" onchange="add_file_name();">
 					</div>
 				</div>
 				<div class="field type_specific avail_Minimum_Energy_Path">
@@ -1291,6 +1303,9 @@
   		}
 
 	}		
+
+	const inputElement = document.getElementById("file_structure");
+	inputElement.addEventListener("change", preview_upload, false);
 
 	</script>
 
