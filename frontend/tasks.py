@@ -1608,10 +1608,44 @@ def launch_gaussian_calc(in_file, calc, files):
         if not os.path.isfile("{}/{}".format(local_folder, f)):
             return -1
 
+    parse_default_gaussian_charges(calc)
     if ret != 0:
         return ret
 
     return 0
+
+def parse_default_gaussian_charges(calc):
+    prop = get_or_create(calc.parameters, calc.structure)
+
+    with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')) as f:
+        lines = f.readlines()
+    ind = len(lines)-1
+    while lines[ind].find("Mulliken charges:") == -1:
+        ind -= 1
+    ind += 2
+    charges = []
+    while lines[ind].find("Sum of Mulliken charges") == -1:
+        n, a, chrg = lines[ind].split()
+        charges.append("{:.2f}".format(float(chrg)))
+        ind += 1
+
+    prop.charges += "Mulliken:{};".format(','.join(charges))
+
+    try:
+        while lines[ind].find("APT charges:") == -1:
+            ind += 1
+    except IndexError:
+        pass
+    else:
+        ind += 2
+        charges = []
+        while lines[ind].find("Sum of APT charges") == -1:
+            n, a, chrg = lines[ind].split()
+            charges.append("{:.2f}".format(float(chrg)))
+            ind += 1
+        prop.charges += "APT:{};".format(','.join(charges))
+
+    prop.save()
 
 def gaussian_sp(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))

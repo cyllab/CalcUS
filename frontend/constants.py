@@ -67,6 +67,9 @@ SPECIFICATIONS = {
             'YQC': 0,
             'Tight': 0,
         },
+        'pop': {
+            'nbo': 0,
+        },
         'opt': {
             'MaxStep': 1,
             'MaxCycles': 1,

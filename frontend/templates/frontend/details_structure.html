@@ -1,5 +1,65 @@
 {% load details_tags %}
 
+<span class="tag is-danger is-large">Partial Charges</span>
+<div class="columns box is-desktop" id="charges_structure_details">
+	<div>
+		<div id="charges_viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
+		<div id="charges_buttons_div"><button class="button is-info" onclick="get_charges_struct(); this.remove();">Load partial charges</button></div>
+	</div>
+	<script>
+		var charges = {};
+	   	var charges_viewer = $3Dmol.createViewer("charges_viewer_div");
+	    	charges_viewer.setBackgroundColor(0xffffff);
+		function get_charges_struct() {
+			$.ajax({
+				method: "POST",	 	 
+				url: "/get_structure/",
+				data: {'id': {{ ensemble.id }}, 'num': {{ structure.number }} },
+
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				success: function(data, textStatus, xhr) {
+					charges_viewer.addModel(data, "xyz");
+					charges_viewer.setStyle({}, {stick:{}, sphere: {radius: 0.5}});
+					charges_viewer.zoomTo();
+					charges_viewer.render();
+					unpack_charges("{{ property.charges}}");
+				}
+			});
+		}
+		function unpack_charges(str) {
+			if(str.length == 0) {
+				return
+			}
+			scharges = str.split(';')
+			for(ind_charge = 0; ind_charge < scharges.length; ind_charge++) {
+				arr_charges = [];
+				if(scharges[ind_charge].length == 0) {
+					continue
+				}
+				data = scharges[ind_charge].split(':');
+				name = data[0];
+				all_charges = data[1].split(',');
+				for(ind = 0; ind < all_charges.length; ind++) {
+					arr_charges.push(all_charges[ind]);
+				}
+				charges[name] = arr_charges;
+				$("#charges_buttons_div").append("<button class=\"button\" onclick=\"plot_charges('" + name + "')\">" + name + "</button>");
+			}
+			plot_charges("Mulliken");
+		}
+		function plot_charges(name) {
+			charges_viewer.removeAllLabels();
+			all_charges = charges[name];
+			for(ind = 0; ind < all_charges.length; ind++) {
+				charges_viewer.addLabel(all_charges[ind], {}, {'serial': ind});
+			}
+
+		}
+	</script>
+</div>
+
 {% if property.freq != 0 %}
 	<span class="tag is-danger is-large">Frequencies</span>
 	<div class="columns box is-desktop is-centered" id="frequency_structure_details" >

@@ -282,8 +282,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if 'basis_set' in params.keys():
             self.driver.find_element_by_id("calc_basis_set").send_keys(params['basis_set'])
 
-        if 'misc' in params.keys():
-            self.driver.find_element_by_id("calc_misc").send_keys(params['misc'])
+        if 'additional_command' in params.keys():
+            self.driver.find_element_by_css_selector("summary").click()
+            self.driver.find_element_by_id("calc_additional_command").send_keys(params['additional_command'])
 
     def calc_launch(self):
         submit = self.driver.find_element_by_id('submit_button')

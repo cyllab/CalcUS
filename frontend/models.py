@@ -573,8 +573,8 @@ class Property(models.Model):
     energy = models.FloatField(default=0)
     free_energy = models.FloatField(default=0)
 
-    rel_energy = models.FloatField(default=0)
-    boltzmann_weight = models.FloatField(default=1.)
+    rel_energy = models.FloatField(default=0)#TO DELETE
+    boltzmann_weight = models.FloatField(default=1.)#TO DELETE
     homo_lumo_gap = models.FloatField(default=0)
 
     uvvis = models.PositiveIntegerField(default=0)
@@ -583,6 +583,7 @@ class Property(models.Model):
     freq = models.PositiveIntegerField(default=0)
 
     simple_nmr = models.CharField(default="", max_length=100000)
+    charges = models.CharField(default="", max_length=100000)
 
     geom = models.BooleanField(default=False)
 
