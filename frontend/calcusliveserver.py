@@ -285,6 +285,22 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if 'additional_command' in params.keys():
             self.driver.find_element_by_css_selector("summary").click()
             self.driver.find_element_by_id("calc_additional_command").send_keys(params['additional_command'])
+            self.driver.find_element_by_css_selector("summary").click()
+
+        if 'specifications' in params.keys():
+            self.driver.find_element_by_css_selector("summary").click()
+
+            self.driver.find_element_by_id("pick_specifications_button").click()
+
+            add_btn = self.driver.find_element_by_id("add_spec_button")
+            for spec in params['specifications']:
+                self.driver.find_element_by_xpath("//*[@id='specifications_select']/option[text()='{}']".format(spec)).click()
+                add_btn.click()
+
+            close_btn = self.driver.find_element_by_css_selector(".close_specs")
+            close_btn.click()
+
+            self.driver.find_element_by_css_selector("summary").click()
 
     def calc_launch(self):
         submit = self.driver.find_element_by_id('submit_button')

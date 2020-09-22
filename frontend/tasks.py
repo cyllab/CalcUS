@@ -1616,8 +1616,14 @@ def launch_gaussian_calc(in_file, calc, files):
         key, option = spec.split('(')
         option = option.replace(')', '')
         if key == 'pop':
-            if option == 'nbo':
-                parse_NBO_gaussian_charges(calc)
+            if option == 'nbo' or option == 'npa':
+                parse_NPA_gaussian_charges(calc)
+            elif option == 'hirshfeld':
+                parse_Hirshfeld_gaussian_charges(calc)
+            elif option == 'esp':
+                parse_ESP_gaussian_charges(calc)
+            elif option == 'hly':
+                parse_HLY_gaussian_charges(calc)
 
     if ret != 0:
         return ret
@@ -1657,7 +1663,48 @@ def parse_default_gaussian_charges(calc):
 
     prop.save()
 
-def parse_NBO_gaussian_charges(calc):
+def parse_ESP_gaussian_charges(calc):
+    prop = get_or_create(calc.parameters, calc.structure)
+
+    with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')) as f:
+        lines = f.readlines()
+    ind = len(lines)-1
+    while lines[ind].find("ESP charges:") == -1:
+        ind -= 1
+    ind += 2
+    charges = []
+    while lines[ind].find("Sum of ESP charges") == -1:
+        a, n, chrg, *_ = lines[ind].split()
+        charges.append("{:.2f}".format(float(chrg)))
+        ind += 1
+
+    prop.charges += "ESP:{};".format(','.join(charges))
+    prop.save()
+
+def parse_HLY_gaussian_charges(calc):
+    prop = get_or_create(calc.parameters, calc.structure)
+
+    with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')) as f:
+        lines = f.readlines()
+    ind = len(lines)-1
+    while lines[ind].find("Generate Potential Derived Charges using the Hu-Lu-Yang model:") == -1:
+        ind -= 1
+
+    while lines[ind].find("ESP charges:") == -1:
+        ind += 1
+
+    ind += 2
+    charges = []
+    while lines[ind].find("Sum of ESP charges") == -1:
+        a, n, chrg, *_ = lines[ind].split()
+        charges.append("{:.2f}".format(float(chrg)))
+        ind += 1
+
+    prop.charges += "HLY:{};".format(','.join(charges))
+    prop.save()
+
+
+def parse_NPA_gaussian_charges(calc):
     prop = get_or_create(calc.parameters, calc.structure)
 
     with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')) as f:
@@ -1674,6 +1721,28 @@ def parse_NBO_gaussian_charges(calc):
 
     prop.charges += "NBO:{};".format(','.join(charges))
     prop.save()
+
+def parse_Hirshfeld_gaussian_charges(calc):
+    prop = get_or_create(calc.parameters, calc.structure)
+
+    with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')) as f:
+        lines = f.readlines()
+    ind = len(lines)-1
+    while lines[ind].find("Hirshfeld charges, spin densities, dipoles, and CM5 charges") == -1:
+        ind -= 1
+    ind += 2
+    charges_hirshfeld = []
+    charges_CM5 = []
+    while lines[ind].find("Tot") == -1:
+        a, n, hirshfeld, _, _, _, _, CM5 = lines[ind].split()
+        charges_hirshfeld.append("{:.2f}".format(float(hirshfeld)))
+        charges_CM5.append("{:.2f}".format(float(CM5)))
+        ind += 1
+
+    prop.charges += "Hirshfeld:{};".format(','.join(charges_hirshfeld))
+    prop.charges += "CM5:{};".format(','.join(charges_CM5))
+    prop.save()
+
 
 def gaussian_sp(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))

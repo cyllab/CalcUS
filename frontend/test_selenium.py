@@ -998,6 +998,34 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(n_running, 0)
         self.assertEqual(n_completed, 1)
 
+    def test_add_specification(self):
+        self.lget('/launch/')
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                }
+        self.calc_input_params(params)
+
+        self.driver.find_element_by_css_selector("summary").click()
+        self.driver.find_element_by_id("pick_specifications_button").click()
+
+        self.driver.find_element_by_xpath("//*[@id='specifications_select']/option[text()='opt(Tight)']").click()
+        add_btn = self.driver.find_element_by_id("add_spec_button")
+        add_btn.click()
+
+        box_specs = self.driver.find_element_by_id("specifications")
+        self.assertEqual(box_specs.get_attribute("value"), "opt(Tight);")
+
+        close_btn = self.driver.find_element_by_css_selector(".close_specs")
+        close_btn.click()
+
+        form_specs = self.driver.find_element_by_id("calc_specifications")
+        self.assertEqual(form_specs.get_attribute("value"), "opt(Tight);")
+
+
+
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):
         params = {
@@ -1052,6 +1080,7 @@ class UserPermissionsTests(CalcusLiveServer):
         self.calc_launch()
         self.lget("/calculations")
         self.assertEqual(self.get_number_calc_orders(), 1)
+
 
 
 class XtbCalculationTestsPI(CalcusLiveServer):
@@ -1652,6 +1681,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
+
 
 class OrcaCalculationTestsPI(CalcusLiveServer):
 
@@ -2852,6 +2882,126 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_DFT_pop(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'specifications': ['pop(NBO)']
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+
+        prop = Property.objects.latest('id')
+        self.assertIn("NBO:", prop.charges)
+
+    def test_DFT_not_pop(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+
+        prop = Property.objects.latest('id')
+        self.assertNotIn("NBO:", prop.charges)
+
+    def test_DFT_multiple_pop(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'specifications': ['pop(NBO)', 'pop(Hirshfeld)']
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+
+        prop = Property.objects.latest('id')
+        self.assertIn("NBO:", prop.charges)
+        self.assertIn("Hirshfeld:", prop.charges)
+        self.assertIn("CM5:", prop.charges)
+
+    def test_DFT_pop_ESP(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'specifications': ['pop(ESP)']
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+
+        prop = Property.objects.latest('id')
+        self.assertIn("ESP:", prop.charges)
+
+    def test_DFT_pop_HLY(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'specifications': ['pop(HLY)']
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+
+        prop = Property.objects.latest('id')
+        self.assertIn("HLY:", prop.charges)
 
 class MiscCalculationTests(CalcusLiveServer):
 
