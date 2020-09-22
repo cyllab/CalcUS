@@ -68,7 +68,13 @@ SPECIFICATIONS = {
             'Tight': 0,
         },
         'pop': {
-            'nbo': 0,
+            'NBO': 0,
+            'NPA': 0,
+            'Hirshfeld': 0,
+            'MK': 0,
+            'MKUFF': 0,
+            'HLY': 0,
+            'HLYGAt': 0,
         },
         'opt': {
             'MaxStep': 1,

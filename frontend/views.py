@@ -956,7 +956,7 @@ def parse_parameters(request, name_required=True):
         return "Invalid calculation type"
 
     if 'calc_specifications' in request.POST.keys():
-        specifications = clean(request.POST['calc_specifications'])
+        specifications = clean(request.POST['calc_specifications']).lower()
 
         def valid():
             for spec in specifications.split(';'):
@@ -964,11 +964,11 @@ def parse_parameters(request, name_required=True):
                     continue
                 key, option = spec.split('(')
                 option = option.replace(')', '')
-                if key not in SPECIFICATIONS[software].keys():
+                if key not in [i.lower() for i in SPECIFICATIONS[software].keys()]:
                     return False
                 if option.find('=') != -1:
                     option, val = option.split('=')
-                if option not in SPECIFICATIONS[software][key].keys():
+                if option not in [i.lower() for i in SPECIFICATIONS[software][key].keys()]:
                     return False
             return True
 

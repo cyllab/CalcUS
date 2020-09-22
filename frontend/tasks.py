@@ -1609,6 +1609,16 @@ def launch_gaussian_calc(in_file, calc, files):
             return -1
 
     parse_default_gaussian_charges(calc)
+
+    for spec in calc.parameters.specifications.split(';'):
+        if spec.strip() == '':
+            continue
+        key, option = spec.split('(')
+        option = option.replace(')', '')
+        if key == 'pop':
+            if option == 'nbo':
+                parse_NBO_gaussian_charges(calc)
+
     if ret != 0:
         return ret
 
@@ -1645,6 +1655,24 @@ def parse_default_gaussian_charges(calc):
             ind += 1
         prop.charges += "APT:{};".format(','.join(charges))
 
+    prop.save()
+
+def parse_NBO_gaussian_charges(calc):
+    prop = get_or_create(calc.parameters, calc.structure)
+
+    with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')) as f:
+        lines = f.readlines()
+    ind = len(lines)-1
+    while lines[ind].find("Summary of Natural Population Analysis:") == -1:
+        ind -= 1
+    ind += 6
+    charges = []
+    while lines[ind].find("===========") == -1:
+        a, n, chrg, *_ = lines[ind].split()
+        charges.append("{:.2f}".format(float(chrg)))
+        ind += 1
+
+    prop.charges += "NBO:{};".format(','.join(charges))
     prop.save()
 
 def gaussian_sp(in_file, calc):
