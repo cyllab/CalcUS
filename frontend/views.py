@@ -59,7 +59,7 @@ else:
 KEY_SIZE = 32
 
 class IndexView(generic.ListView):
-    template_name = 'frontend/list.html'
+    template_name = 'frontend/dynamic/list.html'
     context_object_name = 'latest_frontend'
     paginate_by = '20'
 
@@ -113,7 +113,7 @@ def home(request):
 
 @login_required
 def periodictable(request):
-    return render(request, 'frontend/periodictable.html')
+    return render(request, 'frontend/dynamic/periodictable.html')
 
 @login_required
 def specifications(request):
@@ -266,9 +266,9 @@ def get_projects(request):
             return HttpResponse(status=404)
 
         if profile == target_profile:
-            return render(request, 'frontend/project_list.html', {'projects' : target_profile.project_set.all()})
+            return render(request, 'frontend/dynamic/project_list.html', {'projects' : target_profile.project_set.all()})
         elif profile_intersection(profile, target_profile):
-            return render(request, 'frontend/project_list.html', {'projects' : target_profile.project_set.filter(private=0)})
+            return render(request, 'frontend/dynamic/project_list.html', {'projects' : target_profile.project_set.filter(private=0)})
         else:
             return HttpResponse(status=404)
     else:
@@ -351,7 +351,7 @@ def ensemble_table_body(request, pk):
     if not can_view_molecule(mol, request.user.profile):
         return redirect('/home/')
 
-    return render(request, 'frontend/ensemble_table_body.html', {'profile': request.user.profile,
+    return render(request, 'frontend/dynamic/ensemble_table_body.html', {'profile': request.user.profile,
         'molecule': mol})
 
 @login_required
@@ -613,10 +613,10 @@ def details_ensemble(request):
 
         if e.has_nmr(p):
             shifts = e.weighted_nmr_shifts(p)
-            return render(request, 'frontend/details_ensemble.html', {'profile': request.user.profile,
+            return render(request, 'frontend/dynamic/details_ensemble.html', {'profile': request.user.profile,
                 'ensemble': e, 'parameters': p, 'shifts': shifts})
         else:
-            return render(request, 'frontend/details_ensemble.html', {'profile': request.user.profile,
+            return render(request, 'frontend/dynamic/details_ensemble.html', {'profile': request.user.profile,
                 'ensemble': e, 'parameters': p})
 
     return HttpResponse(status=403)
@@ -654,7 +654,7 @@ def details_structure(request):
         except Property.DoesNotExist:
             return HttpResponse(status=404)
 
-        return render(request, 'frontend/details_structure.html', {'profile': request.user.profile,
+        return render(request, 'frontend/dynamic/details_structure.html', {'profile': request.user.profile,
             'structure': s, 'property': prop, 'ensemble': e})
 
     return HttpResponse(status=403)
@@ -1372,7 +1372,7 @@ def project_list(request):
         if not profile_intersection(profile, target_profile):
             return HttpResponse(status=403)
 
-        return render(request, 'frontend/project_list.html', {
+        return render(request, 'frontend/dynamic/project_list.html', {
                 'profile': request.user.profile,
                 'target_profile': target_profile,
             })
@@ -1582,7 +1582,7 @@ def get_pi_requests_table(request):
 
     reqs = PIRequest.objects.all()
 
-    return render(request, 'frontend/pi_requests_table.html', {
+    return render(request, 'frontend/dynamic/pi_requests_table.html', {
         'profile': request.user.profile,
         'reqs': reqs,
         })
@@ -1675,7 +1675,7 @@ def remove_user(request):
 
 @login_required
 def profile_groups(request):
-    return render(request, 'frontend/profile_groups.html', {
+    return render(request, 'frontend/dynamic/profile_groups.html', {
         'profile': request.user.profile,
         })
 
@@ -1733,7 +1733,7 @@ def conformer_table(request, pk):
     if e.parent_molecule.project.author != profile and not profile_intersection(profile, e.parent_molecule.project.author):
         return HttpResponse(status=403)
 
-    return render(request, 'frontend/conformer_table.html', {
+    return render(request, 'frontend/dynamic/conformer_table.html', {
             'profile': request.user.profile,
             'ensemble': e,
         })
@@ -1782,7 +1782,7 @@ def conformer_table_post(request):
         weights = e.weights(p)
         data = zip(e.structure_set.all(), energies, rel_energies, weights)
         data = sorted(data, key=lambda i: i[0].number)
-        return render(request, 'frontend/conformer_table.html', {
+        return render(request, 'frontend/dynamic/conformer_table.html', {
                 'profile': request.user.profile,
                 'data': data,
             })
@@ -2093,7 +2093,7 @@ def vib_table(request, pk):
                 [vibs[3*ind+2] if 3*ind+2 < len(vibs) else '', 3*ind+2]
                     ])
 
-        return render(request, 'frontend/vib_table.html', {
+        return render(request, 'frontend/dynamic/vib_table.html', {
                     'profile': request.user.profile,
                     'vibs': formatted_vibs
                 })
@@ -2114,7 +2114,7 @@ def vib_table(request, pk):
                 [vibs[3*ind+2] if 3*ind+2 < len(vibs) else '', 3*ind+2]
                     ])
 
-        return render(request, 'frontend/vib_table.html', {
+        return render(request, 'frontend/dynamic/vib_table.html', {
                     'profile': request.user.profile,
                     'vibs': formatted_vibs
                 })
@@ -2151,7 +2151,7 @@ def info_table(request, pk):
     if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
-    return render(request, 'frontend/info_table.html', {
+    return render(request, 'frontend/dynamic/info_table.html', {
             'profile': request.user.profile,
             'calculation': calc,
         })
@@ -2166,7 +2166,7 @@ def status(request, pk):
     if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
-    return render(request, 'frontend/status.html', {
+    return render(request, 'frontend/dynamic/status.html', {
             'calculation': calc,
         })
 
@@ -2180,7 +2180,7 @@ def next_step(request, pk):
     if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
         return HttpResponse(status=403)
 
-    return render(request, 'frontend/next_step.html', {
+    return render(request, 'frontend/dynamic/next_step.html', {
             'calculation': calc,
         })
 
@@ -2515,7 +2515,7 @@ def get_details_sections(request, pk):
     if not can_view_calculation(calc, profile):
         return HttpResponse(status=403)
 
-    return render(request, 'frontend/details_sections.html', {
+    return render(request, 'frontend/dynamic/details_sections.html', {
             'calculation': calc
         })
 
@@ -2608,7 +2608,7 @@ def manage_access(request, pk):
 
 @login_required
 def owned_accesses(request):
-    return render(request, 'frontend/owned_accesses.html', {
+    return render(request, 'frontend/dynamic/owned_accesses.html', {
             'profile': request.user.profile,
         })
 
@@ -2765,7 +2765,7 @@ def launch_presets(request):
     profile = request.user.profile
 
     presets = profile.preset_set.all()
-    return render(request, 'frontend/launch_presets.html', { 'presets': presets })
+    return render(request, 'frontend/dynamic/launch_presets.html', { 'presets': presets })
 
 @login_required
 def load_preset(request, pk):
@@ -2779,7 +2779,7 @@ def load_preset(request, pk):
     if not can_view_preset(p, profile):
         return HttpResponse(status=403)
 
-    return render(request, 'frontend/load_params.js', {
+    return render(request, 'frontend/dynamic/load_params.js', {
             'params': p.params,
         })
 
@@ -2797,7 +2797,7 @@ def load_params_ensemble(request, pk):
 
     params = e.structure_set.all()[0].properties.all()[0].parameters
 
-    return render(request, 'frontend/load_params.js', {
+    return render(request, 'frontend/dynamic/load_params.js', {
             'params': params,
         })
 
@@ -2815,7 +2815,7 @@ def load_params_structure(request, pk):
 
     params = s.properties.all()[0].parameters
 
-    return render(request, 'frontend/load_params.js', {
+    return render(request, 'frontend/dynamic/load_params.js', {
             'params': params,
         })
 
