@@ -75,8 +75,6 @@
 					<div id="viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
 				</div>
 				</center>
-				<button class="button" onclick="add_equivalent_atoms()">Add equivalent atoms</button>
-				<input class="input" type="text" style="width: 100%;" id="eq_atoms_text"></input>
 
 			</div>
 			<div class="column has-text-centered">
@@ -146,19 +144,6 @@
 
 			viewer.setBackgroundColor(0xffffff);
 
-			function add_equivalent_atoms() {
-				s = "";
-				for (i=0; i < selected.length; i++) {
-					s += selected[i] + " ";
-				}
-				s += ";";
-				out = document.getElementById("eq_atoms_text");
-				out.value = out.value + s;
-				selected = [];
-				viewer.setStyle({}, {stick:{}, sphere: {radius: 0.5}});
-				viewer.render();
-			}
-
 			function get_structure() {
 				$.ajax({
 					method: "POST",	 	 
@@ -173,7 +158,6 @@
 					success: function(data, textStatus, xhr) {
 						viewer.addModel(data, "xyz");
 						viewer.setStyle({}, {stick:{}, sphere: {radius: 0.5}});
-						viewer.setClickable({}, true, atom_clicked);
 						viewer.addPropertyLabels('serial', {}, {showBackground: false, 'fontColor': {'color': '#00000000'}, 'fontSize': 20});
 						viewer.zoomTo();
 						viewer.render();
@@ -181,18 +165,6 @@
 				});
 			}
 
-			function atom_clicked(atom, viewer, event, container) {
-				if(selected.includes(atom.serial)) {
-					viewer.setStyle({'serial': atom.serial}, {'stick': {}, sphere: {radius: 0.5}});
-					selected.splice(selected.indexOf(atom.serial), 1);
-				}
-				else {
-					viewer.setStyle({'serial': atom.serial}, {'stick': {}, sphere: {'color': '#FFFF00', radius: 0.5}});
-					selected.push(atom.serial);
-				}
-				viewer.render();
-
-			}
 
 			function parse_shifts() {
 				scaling_factors = "";
@@ -210,7 +182,6 @@
 
 			}
 			function get_shifts() {
-				eq_str = document.getElementById("eq_atoms_text").value;
 				scaling_factors = parse_shifts();
 				$.ajax({
 					method: "POST",	 	 
@@ -221,7 +192,6 @@
 					data: {
 						'id': {{ ensemble.id }},
 						'pid': {{ parameters.id }},
-						'eq_str': eq_str,
 						'scaling_factors': scaling_factors,
 					},
 					success: function(data, textStatus, xhr) {
@@ -237,7 +207,6 @@
 
 			function load_exp_spectrum() {
 				scaling_factors = parse_shifts();
-				eq_str = document.getElementById("eq_atoms_text").value;
 				//exp_dir = new FormData($("#fileinfo"));
 				var exp_dir = new FormData();
 				for(i=0; i < $('input[type=file]')[0].files.length; i++) {
@@ -245,7 +214,6 @@
 				}
 				exp_dir.append('id', {{ ensemble.id }});
 				exp_dir.append('pid', {{ parameters.id }});
-				exp_dir.append('eq_str', eq_str);
 				exp_dir.append('scaling_factors', scaling_factors);
 
 				$.ajax({

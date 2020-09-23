@@ -32,6 +32,7 @@ from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTE
 from .decorators import superuser_required
 from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint, get_Gaussian_xyz
 from .constants import *
+from .libxyz import parse_xyz_from_text, equivalent_atoms
 
 from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
@@ -395,12 +396,8 @@ def _get_shifts(request):
     if 'pid' not in request.POST.keys():
         return ''
 
-    if 'eq_str' not in request.POST.keys():
-        return ''
-
     id = clean(request.POST['id'])
     pid = clean(request.POST['pid'])
-    eq_str = clean(request.POST['eq_str'])
 
     try:
         e = Ensemble.objects.get(pk=id)
@@ -454,11 +451,9 @@ def _get_shifts(request):
             shift = float(entry[2])
             shifts[num] = [el, shift, '-']
 
-    eq_split = eq_str.split(';')
-    for group in eq_split:
-        if group.strip() == "":
-            continue
-        nums = [int(i.strip()) for i in group.split() if i.strip() != '']
+    xyz = parse_xyz_from_text(s.xyz_structure)
+    eqs = equivalent_atoms(xyz)
+    for nums in eqs:
         lnums = len(nums)
         eq_shift = sum([shifts[i][1] for i in nums])/lnums
         for num in nums:
@@ -490,7 +485,7 @@ def get_shifts(request):
     </tr>"""
 
     response = ""
-    for shift in shifts.keys():
+    for shift in sorted(shifts.keys(), key=lambda l: shifts[l][2], reverse=True):
         response += CELL.format(shift, *shifts[shift])
 
     return HttpResponse(response)

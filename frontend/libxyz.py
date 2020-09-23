@@ -33,7 +33,18 @@ def get_dihedral(xyz, a, b, c, d):
 
     return np.arctan2(y, x)*180/np.pi
 
-def parse_xyz(f):
+def parse_xyz_from_text(raw_xyz):
+    xyz = []
+
+    for line in raw_xyz.split('\n')[2:]:
+        if line.strip() == '':
+            continue
+        a, x, y, z = line.split()
+        xyz.append([a, np.array([float(x), float(y), float(z)])])
+
+    return xyz
+
+def parse_xyz_from_file(f):
     """ Parses a standard .xyz file into a suitable structure for calculations """
     with open(f) as ff:
         lines = ff.readlines()[2:]
