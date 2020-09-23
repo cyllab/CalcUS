@@ -938,6 +938,35 @@ def crest_generic(in_file, calc, mode):
         ret = system("crest {} --chrg {} {} -rthr 0.5 -ewin 6 {}".format(in_file, calc.parameters.charge, solvent_add, cmd_add), 'calc.out', calc_id=calc.id)
     elif mode == "NMR":#No restriction, as it will be done by enso
         ret = system("crest {} --chrg {} {} -nmr {}".format(in_file, calc.parameters.charge, solvent_add, cmd_add), 'calc.out', calc_id=calc.id)
+    elif mode == "Constrained":
+        num_atoms = len(clean_xyz(calc.structure.xyz_structure.split('\n')))-2
+        constraints = calc.constraints.split(';')[:-1]
+        with open(os.path.join(local_folder, '.constrain'), 'w') as out:
+            out.write("$constrain\n")
+            out.write("force constant=1.0\n")
+            out.write('reference=in.xyz\n')
+            constr_atoms = []
+            for cmd in constraints:
+                _cmd, ids = cmd.split('-')
+                _cmd = _cmd.split('_')
+                ids = ids.split('_')
+                type = len(ids)
+                if type == 2:
+                    out.write("distance: {}, {}, auto\n".format(*ids))
+                elif type == 3:
+                    out.write("angle: {}, {}, {}, auto\n".format(*ids))
+                elif type == 4:
+                    out.write("dihedral: {}, {}, {}, {}, auto\n".format(*ids))
+                constr_atoms += ids
+            out.write("atoms: {}\n".format(','.join([str(i) for i in constr_atoms])))
+            mtd_atoms = list(range(1, num_atoms+1))
+            for a in constr_atoms:
+                mtd_atoms.remove(int(a))
+            out.write("$metadyn\n")
+            out.write("atoms: {}\n".format(','.join([str(i) for i in mtd_atoms])))
+            out.write("$end\n")
+
+        ret = system("crest {} --chrg {} {} -cinp .constrain -rthr 0.5 -ewin 6 {}".format(in_file, calc.parameters.charge, solvent_add, cmd_add), 'calc.out', calc_id=calc.id)
     else:
         print("Invalid crest mode selected!")
         return -1
@@ -1014,7 +1043,6 @@ def crest_generic(in_file, calc, mode):
 
             struct = clean_xyz(''.join([i.strip() + '\n' for i in clean_lines]))
             r = calc.result_ensemble.structure_set.get(number=metaind+1)
-            #assert r.energy == E
             r.xyz_structure = struct
             r.save()
 
@@ -1029,6 +1057,9 @@ def crest(in_file, calc):
 
 def crest_pre_nmr(in_file, calc):
     return crest_generic(in_file, calc, "NMR")
+
+def crest_constrained(in_file, calc):
+    return crest_generic(in_file, calc, "Constrained")
 
 def launch_orca_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
@@ -2377,6 +2408,7 @@ BASICSTEP_TABLE = {
                 #'Anmr': anmr,
                 'Single-Point Energy': xtb_sp,
                 'Minimum Energy Path': xtb_mep,
+                'Constrained Conformational Search': crest_constrained,
             },
         'ORCA':
             {

@@ -114,6 +114,12 @@ class Command(BaseCommand):
             self.print("Adding BasicStep: {}".format(name))
             a = BasicStep.objects.create(name=name, desc="Finding the minimum energy path", creates_ensemble=True, error_message="Failed to converge the minimum energy path", avail_xtb=True)
 
+        name = "Constrained Conformational Search"
+        if self.is_absent(BasicStep, name):
+            self.print("Adding BasicStep: {}".format(name))
+            a = BasicStep.objects.create(name=name, desc="Generating conformers", error_message="Failed to generate conformers", creates_ensemble=True, avail_xtb=True)
+
+
         ###Procedure creations
 
         ###Template:

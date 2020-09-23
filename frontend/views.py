@@ -1256,7 +1256,7 @@ def submit_calculation(request):
 
     TYPE_LENGTH = {'Distance' : 2, 'Angle' : 3, 'Dihedral' : 4}
     constraints = ""
-    if step.name == "Constrained Optimisation" and 'constraint_num' in request.POST.keys():
+    if step.name in ["Constrained Optimisation", "Constrained Conformational Search"] and 'constraint_num' in request.POST.keys():
         for ind in range(1, int(request.POST['constraint_num'])+1):
             try:
                 mode = clean(request.POST['constraint_mode_{}'.format(ind)])

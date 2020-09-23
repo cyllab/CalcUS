@@ -153,16 +153,13 @@
 
 		function calc_selection_changed() {
 			choice = document.getElementById("calc_type");
-			constraint_div = document.getElementById("constraint_div");
-			if(choice.value == "Constrained Optimisation") {
-				constraint_div.style.display = "block";	
+			if(choice.value == "Constrained Optimisation" || choice.value == "Constrained Conformational Search") {
 				editor.styles.atoms_displayLabels_3D = true;
 			}
 			else if(choice.value == "Minimum Energy Path") {
 				refresh_aux_mol();
 			}
 			else {
-				constraint_div.style.display = "none";	
 				editor.styles.atoms_displayLabels_3D = false;
 			}
 			set_visibility_name();
@@ -834,7 +831,7 @@
 					</div>
 				</div>
 
-				<div style="display: none;" id="constraint_div">
+				<div style="display: none;" class="type_specific avail_Constrained_Optimisation avail_Constrained_Conformational_Search" id="constraint_div">
 					<div class="field">
 						<label class="label">Constraints and scan coordinates</label>
 						<div id="constraint_list">
@@ -844,7 +841,7 @@
 										<div class="select">
 											<select name="constraint_mode_1" id="constraint_mode_1" onchange="constraint_mode_changed(1)">
 											<option selected="selected">Freeze</option>
-											<option>Scan</option>
+											<option class="type_specific avail_Constrained_Optimisation">Scan</option>
 											</select>
 										</div>
 									</div>
