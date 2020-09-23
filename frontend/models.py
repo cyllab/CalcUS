@@ -26,6 +26,7 @@ class Profile(models.Model):
     code = models.CharField(max_length=16)
 
     pref_units = models.PositiveIntegerField(default=0)
+    unseen_calculations = models.PositiveIntegerField(default=0)
 
     UNITS = {0: 'kJ/mol', 1: 'kcal/mol', 2: 'Ha'}
 
@@ -702,6 +703,8 @@ class CalculationOrder(models.Model):
 
     def see(self):
         self.last_seen_status = self.status
+        self.author.unseen_calculations -= 1
+        self.author.save()
         self.save()
 
     @property
@@ -716,7 +719,6 @@ class CalculationOrder(models.Model):
             else:
                 return "Unknown"
 
-
     @property
     def molecule_name(self):
         if self.ensemble != None and self.ensemble.parent_molecule != None:
@@ -728,21 +730,9 @@ class CalculationOrder(models.Model):
 
     @property
     def status(self):
-        stat = 0
-        num_queued = 0
-        num_running = 0
-        num_done = 0
-        num_error = 0
-        for calc in self.calculation_set.all():
-            if calc.status == 0:
-                num_queued += 1
-            elif calc.status == 1:
-                num_running += 1
-            elif calc.status == 2:
-                num_done += 1
-            elif calc.status == 3:
-                num_error += 1
+        return self._status(*self.get_all_calcs)
 
+    def _status(self, num_queued, num_running, num_done, num_error):
         if num_queued + num_running + num_done + num_error == 0:
             return 0
 
@@ -772,6 +762,23 @@ class CalculationOrder(models.Model):
     @property
     def get_error(self):
         return len(self.calculation_set.filter(status=3))
+
+    @property
+    def get_all_calcs(self):
+        num_queued = 0
+        num_running = 0
+        num_done = 0
+        num_error = 0
+        for calc in self.calculation_set.all():
+            if calc.status == 0:
+                num_queued += 1
+            elif calc.status == 1:
+                num_running += 1
+            elif calc.status == 2:
+                num_done += 1
+            elif calc.status == 3:
+                num_error += 1
+        return num_queued, num_running, num_done, num_error
 
     @property
     def new_status(self):
@@ -846,29 +853,62 @@ class Calculation(models.Model):
             if old:
                 if self.status != old.status:
                     mol = self.get_mol()
+                    num_calc_queued = 0
+                    num_calc_running = 0
+                    num_calc_done = 0
+                    num_calc_error = 0
 
                     if old.status == 0:
                         self.order.project.num_calc_queued -= 1
                         mol.num_calc_queued -= 1
+                        num_calc_queued -= 1
                     elif old.status == 1:
                         self.order.project.num_calc_running -= 1
                         mol.num_calc_running -= 1
-                    elif old.status == 2 or old.status == 3:
+                        num_calc_running -= 1
+                    elif old.status == 2:
                         self.order.project.num_calc_completed -= 1
                         mol.num_calc_completed -= 1
+                        num_calc_done -= 1
+                    if old.status == 3:
+                        self.order.project.num_calc_completed -= 1
+                        mol.num_calc_completed -= 1
+                        num_calc_error -= 1
 
                     if self.status == 0:
                         self.order.project.num_calc_queued += 1
                         mol.num_calc_queued += 1
+                        num_calc_queued += 1
                     elif self.status == 1:
                         self.order.project.num_calc_running += 1
                         mol.num_calc_running += 1
-                    elif self.status == 2 or self.status == 3:
+                        num_calc_running += 1
+                    elif self.status == 2:
                         self.order.project.num_calc_completed += 1
                         mol.num_calc_completed += 1
+                        num_calc_done += 1
+                    if self.status == 3:
+                        self.order.project.num_calc_completed += 1
+                        mol.num_calc_completed += 1
+                        num_calc_error += 1
 
                     self.order.project.save()
                     mol.save()
+
+                    if not self.order.new_status:#Predict if this status change will change the status of the order
+                        old_status = self.order.status
+                        nums = self.order.get_all_calcs
+
+                        num_calc_queued += nums[0]
+                        num_calc_running += nums[1]
+                        num_calc_done += nums[2]
+                        num_calc_error += nums[3]
+
+                        new_status = self.order._status(num_calc_queued, num_calc_running, num_calc_done, num_calc_error)
+                        if new_status != old_status:
+                            self.order.author.unseen_calculations += 1
+                            self.order.author.save()
+
         super(Calculation, self).save(*args, **kwargs)
 
 
@@ -891,6 +931,7 @@ class Calculation(models.Model):
         mol.save()
 
         super(Calculation, self).delete(*args, **kwargs)
+
     @property
     def execution_time(self):
         if self.date_started is not None and self.date_finished is not None:

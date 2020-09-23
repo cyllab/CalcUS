@@ -6,6 +6,8 @@
  		<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 		<link rel="stylesheet" href="{% static 'bulma/css/style.css' %}" />
 		<script src="https://kit.fontawesome.com/55d0fd4831.js" crossorigin="anonymous"></script>
+		<link rel="stylesheet" href="{% static 'frontend/bulma-badge.min.css' %}">
+
 		{% block extrahead %}
 		{% endblock %}
 		{% if user.is_superuser %}
@@ -125,6 +127,9 @@
 						New Molecule
 					</a>
 					<a class="navbar-item" href="/calculations/">
+						{% if user.profile.unseen_calculations > 0 %}
+							<span id="unseen_calculations_badge" class="badge is-bottom is-warning">{{ user.profile.unseen_calculations }}</span>
+						{% endif %}
 						Calculations
 					</a>
 

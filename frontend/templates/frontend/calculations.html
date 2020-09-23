@@ -39,6 +39,15 @@
 				url: '/see/' + o_id,
 				success: function () {
 					$("#order_" + o_id).removeClass("new");	
+					badge = document.getElementById("unseen_calculations_badge");
+					old_num = badge.textContent;
+					new_num = parseInt(old_num)-1;
+					if (new_num > 0) {
+						badge.textContent = new_num;
+					}
+					else {
+						$("#unseen_calculations_badge").remove();
+					}
 				},
 			    });
 

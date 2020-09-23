@@ -9,6 +9,13 @@ class Command(BaseCommand):
 
 
     def handle(self, *args, **options):
+        for profile in Profile.objects.all():
+            profile.unseen_calculations = 0
+            for o in profile.calculationorder_set.all():
+                if o.new_status:
+                    profile.unseen_calculations += 1
+            profile.save()
+
         for proj in Project.objects.all():
 
             dnum = {}
