@@ -957,7 +957,10 @@ def parse_parameters(request, name_required=True):
             for spec in specifications.split(';'):
                 if spec.strip() == '':
                     continue
-                key, option = spec.split('(')
+                try:
+                    key, option = spec.split('(')
+                except ValueError:
+                    return False
                 option = option.replace(')', '')
                 if key not in [i.lower() for i in SPECIFICATIONS[software].keys()]:
                     return False

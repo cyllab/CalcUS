@@ -78,11 +78,11 @@ class GaussianCalculation:
                 option_val = option
             else:
                 option_val = "{}={}".format(option, val)
-            if key in [i.lower() for i in specs.keys()]:
+            if key in specs.keys():
                 specs[key].append(option_val)
             else:
                 specs[key] = [option_val]
-        for spec in self.calc.parameters.specifications.split(';'):
+        for spec in self.calc.parameters.specifications.lower().split(';'):
             if spec.strip() == '':
                 continue
             key, option = spec.split('(')
@@ -90,7 +90,7 @@ class GaussianCalculation:
             val = ""
             if option.find('=') != -1:
                 option, val = option.split('=')
-            if option not in [i.lower() for i in SPECIFICATIONS[self.calc.parameters.software][key].keys()]:
+            if option not in SPECIFICATIONS[self.calc.parameters.software][key].keys():
                 raise Exception("Unknown specification")
             if key in self.KEYWORDS.values():
                 if key != self.KEYWORDS[self.calc.step.name]:

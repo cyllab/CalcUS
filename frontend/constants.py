@@ -62,31 +62,31 @@ NMR_REGRESSIONS = {
 
 SPECIFICATIONS = {
     'Gaussian': {
-        'SCF': {
-            'XQC': 0,
-            'YQC': 0,
-            'Tight': 0,
+        'scf': {
+            'xqc': 0,
+            'yqc': 0,
+            'tight': 0,
         },
         'pop': {
-            'NBO': 0,
-            'NPA': 0,
-            'Hirshfeld': 0,
-            'ESP': 0,
-            'HLY': 0,
-            'HLYGAt': 0,
+            'nbo': 0,
+            'npa': 0,
+            'hirshfeld': 0,
+            'esp': 0,
+            'hly': 0,
+            'hlygat': 0,
         },
         'opt': {
-            'MaxStep': 1,
-            'MaxCycles': 1,
-            'CalcFC': 0,
-            'CalcAll': 0,
-            'RecalcFC': 1,
-            'Loose': 0,
-            'Tight': 0,
-            'VeryTight': 0,
+            'maxstep': 1,
+            'maxcycles': 1,
+            'calcfc': 0,
+            'calcall': 0,
+            'recalcfc': 1,
+            'loose': 0,
+            'tight': 0,
+            'verytight': 0,
         },
         'freq': {
-            'NoRaman': 0,
+            'noraman': 0,
         },
     },
 }

@@ -229,7 +229,7 @@ class LaunchTests(TestCase):
         params['calc_theory_level'] = 'DFT'
         params['calc_functional'] = 'M06-2X'
         params['calc_basis_set'] = 'Def2-SVP'
-        params['calc_specifications'] = 'SCF=XQC;'
+        params['calc_specifications'] = 'SCF(XQC);'
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertNotContains(response, "Error while submitting your calculation")
 
@@ -239,7 +239,7 @@ class LaunchTests(TestCase):
         params['calc_theory_level'] = 'DFT'
         params['calc_functional'] = 'M06-2X'
         params['calc_basis_set'] = 'Def2-SVP'
-        params['calc_specifications'] = 'SCF=ABC;'
+        params['calc_specifications'] = 'SCF(ABC);'
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 

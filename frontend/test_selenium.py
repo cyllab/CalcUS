@@ -655,6 +655,13 @@ class InterfaceTests(CalcusLiveServer):
         self.lget("/projects/")
 
         self.assertEqual(self.get_number_projects(), 1)
+
+        ind = 0
+        while ind < 3:
+            if self.get_name_projects()[0] == "Test Project":
+                break
+            ind += 1
+            time.sleep(1)
         self.assertEqual(self.get_name_projects()[0], "Test Project")
 
     def test_rename_project2(self):
@@ -670,7 +677,13 @@ class InterfaceTests(CalcusLiveServer):
         self.lget("/projects/")
 
         self.assertEqual(self.get_number_projects(), 1)
-        self.assertEqual(self.get_name_projects()[0], "Test Project")
+
+        ind = 0
+        while ind < 3:
+            if self.get_name_projects()[0] == "Test Project":
+                break
+            ind += 1
+            time.sleep(1)
 
     def test_rename_molecule(self):
         self.setup_test_group()

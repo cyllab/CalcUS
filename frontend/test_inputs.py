@@ -1319,7 +1319,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp M062X/Def2SVP SCF(Tight)
+        #p sp M062X/Def2SVP scf(tight)
 
         CalcUS
 
@@ -1346,7 +1346,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp M062X/Def2SVP SCF(Tight,XQC)
+        #p sp M062X/Def2SVP scf(tight,xqc)
 
         CalcUS
 
@@ -1373,7 +1373,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p opt(MaxStep=5) M062X/Def2SVP
+        #p opt(maxstep=5) M062X/Def2SVP
 
         CalcUS
 
@@ -1400,7 +1400,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p opt(MaxStep=5, Tight) M062X/Def2SVP
+        #p opt(maxstep=5, tight) M062X/Def2SVP
 
         CalcUS
 
@@ -1427,7 +1427,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p opt(MaxStep=5) M062X/Def2SVP SCF(Tight)
+        #p opt(maxstep=5) M062X/Def2SVP scf(tight)
 
         CalcUS
 
@@ -1455,7 +1455,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p opt(MaxStep=5, Tight) M062X/Def2SVP nosymm 5D
+        #p opt(maxstep=5, tight) M062X/Def2SVP nosymm 5D
 
         CalcUS
 
