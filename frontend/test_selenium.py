@@ -1398,6 +1398,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
             ang = get_angle(xyz, 1, 5, 8)
             self.assertTrue(np.isclose(ang, ang0, atol=0.5))
 
+
 class XtbCalculationTestsStudent(CalcusLiveServer):
     def setUp(self):
         super().setUp()
@@ -3311,4 +3312,35 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.lget("/calculations/")
 
         self.assertEqual(self.get_number_calc_orders(), 3)
+
+    def test_advanced_nmr_analysis(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'NMR Prediction',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.sdf',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'additional_command': 'Def2/JK',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(60)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.click_calc_method(2)
+        self.click_advanced_nmr_analysis()
+        self.click_get_shifts()
+
+        shifts = self.get_nmr_shifts()
+        self.assertEqual(shifts[1], shifts[2])
+        self.assertEqual(shifts[1], shifts[3])
+        self.assertNotEqual(shifts[1], shifts[4])
+        self.assertNotEqual(shifts[6], shifts[1])
 

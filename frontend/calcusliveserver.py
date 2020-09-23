@@ -316,12 +316,38 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         tabs = tabs_list.find_elements_by_css_selector("li")
         return len(tabs)
 
+    def wait_for_ajax(self):
+        wait = WebDriverWait(self.driver, 15)
+
+        wait.until(lambda driver: driver.execute_script('return jQuery.active') == 0)
+        wait.until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+
+    def get_nmr_shifts(self):
+        assert self.is_on_page_nmr_analysis()
+        tbody = self.driver.find_element_by_id("shifts_body")
+        lines = tbody.find_elements_by_css_selector("tr")
+        shifts = [line.find_element_by_css_selector("td:nth-child(3)").text for line in lines]
+        return shifts
+
     def click_calc_method(self, num):
         assert self.is_on_page_ensemble()
 
+        self.wait_for_ajax()
         tabs_list = self.driver.find_element_by_css_selector("#tabs")
         tabs = tabs_list.find_elements_by_css_selector("li")
         tabs[num-1].click()
+
+    def click_advanced_nmr_analysis(self):
+        assert self.is_on_page_ensemble()
+
+        button = self.driver.find_element_by_id("advanced_nmr_analysis_button")
+        button.click()
+
+    def click_get_shifts(self):
+        assert self.is_on_page_nmr_analysis()
+
+        button = self.driver.find_element_by_id("get_shifts_button")
+        button.click()
 
     def get_number_conformers(self):
         conf_table = WebDriverWait(self.driver, 5).until(
@@ -511,6 +537,18 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             ind += 1
 
         return False
+
+    def is_on_page_nmr_analysis(self):
+        ind = 0
+        while ind < 3:
+            url = self.get_split_url()
+            if url[0] == 'nmr_analysis' and url[1] != '':
+                return True
+            time.sleep(1)
+            ind += 1
+
+        return False
+
 
     def get_projects(self):
         assert self.is_on_page_projects()
