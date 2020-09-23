@@ -222,7 +222,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
 
         if 'constraints' in params.keys():
-            assert params['type'] == 'Constrained Optimisation'
+            assert params['type'] in ['Constrained Optimisation', 'Constrained Conformational Search']
 
             def handle_constraint(constraint, ind):
                 c_mode = constraint[0]

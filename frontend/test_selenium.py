@@ -20,6 +20,7 @@ from celery.contrib.testing.worker import start_worker
 from calcus.celery import app
 
 from .models import *
+from .libxyz import *
 from django.core.management import call_command
 from .calcusliveserver import CalcusLiveServer
 
@@ -1369,6 +1370,33 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.calc_launch()
         self.wait_latest_calc_done(1200)
         self.assertTrue(self.latest_calc_successful())
+
+    def test_constrained_conf_search(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Conformational Search',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'pentane.mol',
+                'constraints': [['Freeze', 'Angle', [1, 5, 8]]],
+                }
+
+        self.lget("/launch/")
+
+        xyz = parse_xyz_from_file(os.path.join(tests_dir, 'pentane.xyz'))
+        ang0 = get_angle(xyz, 1, 5, 8)
+
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(1200)
+        self.assertTrue(self.latest_calc_successful())
+
+        e = Ensemble.objects.latest('id')
+        for s in e.structure_set.all():
+            s_xyz = parse_xyz_from_text(s.xyz_structure)
+            ang = get_angle(xyz, 1, 5, 8)
+            self.assertTrue(np.isclose(ang, ang0, atol=0.5))
 
 class XtbCalculationTestsStudent(CalcusLiveServer):
     def setUp(self):
