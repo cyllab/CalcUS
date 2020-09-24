@@ -1003,7 +1003,6 @@ def crest_generic(in_file, calc, mode):
         while lines[ind].find("T /K") == -1:
             sline = lines[ind].strip().split()
             if len(sline) == 8:
-                rel_energy = float(sline[1])*4.184
                 energy = float(sline[2])
                 weight = float(sline[4])
                 number = int(sline[5])
@@ -1012,7 +1011,6 @@ def crest_generic(in_file, calc, mode):
                 r = Structure.objects.create(number=number, degeneracy=degeneracy)
                 prop = get_or_create(calc.parameters, r)
                 prop.energy = energy
-                prop.boltzmann_weight = weight
                 prop.geom = True
 
                 r.save()

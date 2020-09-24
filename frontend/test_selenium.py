@@ -1025,18 +1025,18 @@ class InterfaceTests(CalcusLiveServer):
         self.driver.find_element_by_css_selector("summary").click()
         self.driver.find_element_by_id("pick_specifications_button").click()
 
-        self.driver.find_element_by_xpath("//*[@id='specifications_select']/option[text()='opt(Tight)']").click()
+        self.driver.find_element_by_xpath("//*[@id='specifications_select']/option[text()='opt(tight)']").click()
         add_btn = self.driver.find_element_by_id("add_spec_button")
         add_btn.click()
 
         box_specs = self.driver.find_element_by_id("specifications")
-        self.assertEqual(box_specs.get_attribute("value"), "opt(Tight);")
+        self.assertEqual(box_specs.get_attribute("value"), "opt(tight);")
 
         close_btn = self.driver.find_element_by_css_selector(".close_specs")
         close_btn.click()
 
         form_specs = self.driver.find_element_by_id("calc_specifications")
-        self.assertEqual(form_specs.get_attribute("value"), "opt(Tight);")
+        self.assertEqual(form_specs.get_attribute("value"), "opt(tight);")
 
 
 
@@ -2935,7 +2935,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': ['pop(NBO)']
+                'specifications': ['pop(nbo)']
                 }
 
         self.lget("/launch/")
@@ -2982,7 +2982,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': ['pop(NBO)', 'pop(Hirshfeld)']
+                'specifications': ['pop(nbo)', 'pop(hirshfeld)']
                 }
 
         self.lget("/launch/")
@@ -3008,7 +3008,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': ['pop(ESP)']
+                'specifications': ['pop(esp)']
                 }
 
         self.lget("/launch/")
@@ -3032,7 +3032,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': ['pop(HLY)']
+                'specifications': ['pop(hly)']
                 }
 
         self.lget("/launch/")

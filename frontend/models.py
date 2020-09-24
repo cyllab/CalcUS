@@ -574,8 +574,6 @@ class Property(models.Model):
     energy = models.FloatField(default=0)
     free_energy = models.FloatField(default=0)
 
-    rel_energy = models.FloatField(default=0)#TO DELETE
-    boltzmann_weight = models.FloatField(default=1.)#TO DELETE
     homo_lumo_gap = models.FloatField(default=0)
 
     uvvis = models.PositiveIntegerField(default=0)
