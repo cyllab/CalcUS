@@ -3344,3 +3344,7 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.assertNotEqual(shifts[1], shifts[4])
         self.assertNotEqual(shifts[6], shifts[1])
 
+        prop = Property.objects.latest('id')
+        calc_shifts = [float(i.split()[2]) for i in prop.simple_nmr.split('\n') if i.strip() != '']
+        self.assertEqual(shifts[1], "{:.3f}".format(np.mean(calc_shifts[1:4])))
+
