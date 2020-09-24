@@ -309,6 +309,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def get_number_calc_orders(self):
         return len(self.get_calc_orders())
 
+    def get_number_unseen_calcs(self):
+        try:
+            badge = self.driver.find_element_by_id("unseen_calculations_badge")
+        except selenium.common.exceptions.NoSuchElementException:
+            return 0
+        return int(badge.text)
+
     def get_number_calc_methods(self):
         assert self.is_on_page_ensemble()
 
@@ -704,6 +711,16 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         calculations = self.get_calc_orders()
         calculations[0].click()
+
+    def see_latest_calc(self):
+        assert self.is_on_page_calculations()
+        assert self.get_number_calc_orders() > 0
+
+        calculations = self.get_calc_orders()
+        calc = calculations[0]
+        eye = calc.find_element_by_class_name("fa-eye")
+        eye.click()
+        self.wait_for_ajax()
 
     def details_latest_order(self):
         assert self.is_on_page_calculations()

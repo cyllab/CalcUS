@@ -1038,6 +1038,64 @@ class InterfaceTests(CalcusLiveServer):
         form_specs = self.driver.find_element_by_id("calc_specifications")
         self.assertEqual(form_specs.get_attribute("value"), "opt(tight);")
 
+    def test_unseen_calc_badge(self):
+        self.setup_test_group()
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                }
+
+        self.lget("/launch/")
+        self.assertEqual(self.get_number_unseen_calcs(), 0)
+
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.assertEqual(self.get_number_unseen_calcs(), 1)
+
+        self.see_latest_calc()
+        self.assertEqual(self.get_number_unseen_calcs(), 0)
+
+    def test_delete_unseen_calc(self):
+        self.setup_test_group()
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                }
+
+        self.lget("/launch/")
+        self.assertEqual(self.get_number_unseen_calcs(), 0)
+
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.lget("/projects/")
+        self.delete_project("SeleniumProject")
+
+        self.driver.refresh()
+        ind = 0
+        while self.get_number_projects() > 0:
+            time.sleep(1)
+            ind += 1
+            if ind == 3:
+                break
+            self.lget("/home/")
+
+        self.lget("/home/")
+
+        self.assertEqual(self.get_number_unseen_calcs(), 0)
+
 
 
 class UserPermissionsTests(CalcusLiveServer):

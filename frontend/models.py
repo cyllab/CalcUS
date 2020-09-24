@@ -785,6 +785,12 @@ class CalculationOrder(models.Model):
         else:
             return False
 
+    def delete(self, *args, **kwargs):
+        if self.new_status:
+            self.author.unseen_calculations -= 1
+            self.author.save()
+        super(CalculationOrder, self).delete(*args, **kwargs)
+
 class Calculation(models.Model):
 
     CALC_STATUSES = {
@@ -914,17 +920,44 @@ class Calculation(models.Model):
         mol = self.get_mol()
         self.order.project.num_calc -= 1
         mol.num_calc -= 1
+
+        num_calc_queued = 0
+        num_calc_running = 0
+        num_calc_done = 0
+        num_calc_error = 0
+
         if self.status == 0:
             self.order.project.num_calc_queued -= 1
             mol.num_calc_queued -= 1
+            num_calc_queued -= 1
         elif self.status == 1:
             self.order.project.num_calc_running -= 1
             mol.num_calc_running -= 1
-        elif self.status in [2, 3]:
+            num_calc_running -= 1
+        elif self.status == 2:
             self.order.project.num_calc_completed -= 1
             mol.num_calc_completed -= 1
+            num_calc_done -= 1
+        elif self.status == 3:
+            self.order.project.num_calc_completed -= 1
+            mol.num_calc_completed -= 1
+            num_calc_error -= 1
         else:
             raise Exception("Unknown calculation status")
+
+        old_status = self.order.status
+        nums = self.order.get_all_calcs
+
+        num_calc_queued += nums[0]
+        num_calc_running += nums[1]
+        num_calc_done += nums[2]
+        num_calc_error += nums[3]
+
+        new_status = self.order._status(num_calc_queued, num_calc_running, num_calc_done, num_calc_error)
+        if new_status != old_status:
+            self.order.author.unseen_calculations -= 1
+            self.order.author.save()
+
         self.order.project.save()
         mol.save()
 
