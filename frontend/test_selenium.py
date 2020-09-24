@@ -1062,6 +1062,38 @@ class InterfaceTests(CalcusLiveServer):
         self.see_latest_calc()
         self.assertEqual(self.get_number_unseen_calcs(), 0)
 
+    def test_unseen_calc_badge_click(self):
+        self.setup_test_group()
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                }
+
+        self.lget("/launch/")
+        self.assertEqual(self.get_number_unseen_calcs(), 0)
+
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.assertEqual(self.get_number_unseen_calcs(), 1)
+
+        self.click_latest_calc()
+        self.lget("/home")
+        ind = 0
+        while self.get_number_unseen_calcs() != 0:
+            time.sleep(1)
+            self.lget("/home")
+            ind += 1
+            if ind == 3:
+                break
+        self.assertEqual(self.get_number_unseen_calcs(), 0)
+
     def test_delete_unseen_calc(self):
         self.setup_test_group()
         params = {

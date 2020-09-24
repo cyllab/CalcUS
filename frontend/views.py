@@ -571,8 +571,10 @@ def link_order(request, pk):
         return HttpResponseRedirect("/home/")
 
     if profile == o.author:
-        if o.last_seen_status != o.status:
+        if o.new_status:
             o.last_seen_status = o.status
+            o.author.unseen_calculations -= 1
+            o.author.save()
             o.save()
 
     if o.result_ensemble:
