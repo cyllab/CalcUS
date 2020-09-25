@@ -758,6 +758,19 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.get_number_ensembles(), 1)
         self.assertEqual(self.get_name_ensembles()[0], "My Ensemble")
 
+    def test_flag_ensemble(self):
+        proj = Project.objects.create(name="Test project", author=self.profile)
+        mol = Molecule.objects.create(name="Test molecule", project=proj)
+        e = Ensemble.objects.create(name="Test ensemble", parent_molecule=mol)
+        self.lget("/projects/")
+        self.click_project("Test project")
+        self.click_molecule("Test molecule")
+        self.click_ensemble("Test ensemble")
+        self.flag_ensemble()
+
+        self.driver.refresh()
+        self.assertTrue(self.is_ensemble_flagged())
+
     def test_save_preset(self):
         params1 = {
                 'software': 'Gaussian',

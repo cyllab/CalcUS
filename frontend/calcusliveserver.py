@@ -1021,6 +1021,23 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 return
         raise Exception("Could not delete ensemble")
 
+    def flag_ensemble(self):
+        assert self.is_on_page_ensemble()
+
+        button = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.ID, "icon_flag"))
+        )
+        button.click()
+        self.wait_for_ajax()
+
+    def is_ensemble_flagged(self):
+        assert self.is_on_page_ensemble()
+        icon = self.driver.find_element_by_id("icon_flag")
+        if icon.value_of_css_property("color") == "rgba(192, 192, 192, 1)":
+            return True
+        else:
+            return False
+
     def setup_test_group(self):
         self.lget('/profile/')
 
