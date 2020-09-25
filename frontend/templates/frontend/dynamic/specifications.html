@@ -5,8 +5,13 @@
 			val = document.getElementById("specifications_select").value;
 			inp = document.getElementById("spec_value");
 			output = document.getElementById("specifications");
-			if(inp.style.display == "block") {
-				output.value += val.replace('=','=' + inp.value) + ';';
+			if (inp.style.display == "block") {
+				if (val.includes('=')) {
+					output.value += val.replace('=','=' + inp.value) + ';';
+				}
+				else {
+					output.value += val + inp.value + ';';
+				}
 			}
 			else {
 				output.value += val + ';';
@@ -16,7 +21,7 @@
 			inp = document.getElementById("spec_value");
 			select = document.getElementById("specifications_select");
 			option = select.options[select.selectedIndex];
-			if(option.classList.contains("has_value")) {
+			if (option.classList.contains("has_value")) {
 				inp.style.display = "block";
 			}
 			else {
@@ -32,6 +37,8 @@
 		<div class="column is-narrow">
 			<div class="select">
 				<select id="specifications_select" onchange="refresh_specification()">
+					<option></option>
+					
 					<option value="scf(xqc)" class="software_specific avail_Gaussian ">scf(xqc)</option>
 					<option value="scf(yqc)" class="software_specific avail_Gaussian ">scf(yqc)</option>
 					<option value="scf(tight)" class="software_specific avail_Gaussian ">scf(tight)</option>
@@ -41,15 +48,28 @@
 					<option value="pop(esp)" class="software_specific avail_Gaussian ">pop(esp)</option>
 					<option value="pop(hly)" class="software_specific avail_Gaussian ">pop(hly)</option>
 					<option value="pop(hlygat)" class="software_specific avail_Gaussian ">pop(hlygat)</option>
-					<option value="opt(maxstep=)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation has_value">opt(maxstep=...)</option>
-					<option value="opt(maxcycles=)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation has_value">opt(maxcycles=...)</option>
-					<option value="opt(calcfc)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation ">opt(calcfc)</option>
-					<option value="opt(calcall)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation ">opt(calcall)</option>
-					<option value="opt(recalcfc=)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation has_value">opt(recalcfc=...)</option>
-					<option value="opt(loose)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation ">opt(loose)</option>
-					<option value="opt(tight)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation ">opt(tight)</option>
-					<option value="opt(verytight)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation ">opt(verytight)</option>
+					<option value="opt(maxstep=)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation avail_TS_Optimisation has_value">opt(maxstep=...)</option>
+					<option value="opt(maxcycles=)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation avail_TS_Optimisation has_value">opt(maxcycles=...)</option>
+					<option value="opt(calcfc)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation avail_TS_Optimisation ">opt(calcfc)</option>
+					<option value="opt(calcall)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation avail_TS_Optimisation ">opt(calcall)</option>
+					<option value="opt(recalcfc=)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation avail_TS_Optimisation has_value">opt(recalcfc=...)</option>
+					<option value="opt(loose)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation avail_TS_Optimisation ">opt(loose)</option>
+					<option value="opt(tight)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation avail_TS_Optimisation ">opt(tight)</option>
+					<option value="opt(verytight)" class="software_specific avail_Gaussian type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation avail_TS_Optimisation ">opt(verytight)</option>
 					<option value="freq(noraman)" class="software_specific avail_Gaussian type_specific avail_Frequency_Calculation ">freq(noraman)</option>
+					<option value="sloppyscf" class="software_specific avail_ORCA">sloppyscf</option>
+					<option value="loosescf" class="software_specific avail_ORCA">loosescf</option>
+					<option value="normalscf" class="software_specific avail_ORCA">normalscf</option>
+					<option value="strongscf" class="software_specific avail_ORCA">strongscf</option>
+					<option value="tightscf" class="software_specific avail_ORCA">tightscf</option>
+					<option value="verytightscf" class="software_specific avail_ORCA">verytightscf</option>
+					<option value="extremescf" class="software_specific avail_ORCA">extremescf</option>
+					<option value="grid" class="software_specific avail_ORCA has_value">grid...</option>
+					<option value="looseopt" class="software_specific avail_ORCA type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation avail_TS_Optimisation">looseopt</option>
+					<option value="normalopt" class="software_specific avail_ORCA type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation avail_TS_Optimisation">normalopt</option>
+					<option value="tightopt" class="software_specific avail_ORCA type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation avail_TS_Optimisation">tightopt</option>
+					<option value="verytightopt" class="software_specific avail_ORCA type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation avail_TS_Optimisation">verytightopt</option>
+
 				</select>
 
 			</div>

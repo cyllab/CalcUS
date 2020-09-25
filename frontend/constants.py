@@ -89,6 +89,25 @@ SPECIFICATIONS = {
             'noraman': 0,
         },
     },
+    'ORCA': {
+        'general': {
+            'sloppyscf': 0,
+            'loosescf': 0,
+            'normalscf': 0,
+            'strongscf': 0,
+            'tightscf': 0,
+            'verytightscf': 0,
+            'extremescf': 0,
+            'grid': 1,
+        },
+        'opt': {
+            'looseopt': 0,
+            'normalopt': 0,
+            'tightopt': 0,
+            'verytightopt': 0,
+        }
+
+    },
 }
 
 SYN_METHODS = {

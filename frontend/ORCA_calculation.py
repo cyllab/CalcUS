@@ -21,7 +21,7 @@ class OrcaCalculation:
     pal = 0
     blocks = []
 
-    TEMPLATE = """!{}
+    TEMPLATE = """!{} {}
     *xyz {} {}
     {}*
     {}"""
@@ -43,6 +43,7 @@ class OrcaCalculation:
         self.pal = 0
         self.blocks = []
         self.command_line = ""
+        self.additional_commands = ""
         self.xyz_structure = ""
         self.block_lines = ""
         self.input_file = ""
@@ -64,9 +65,7 @@ class OrcaCalculation:
             return
 
         specs = self.calc.parameters.specifications.split(';')
-        for spec in specs:
-            key, val = spec.split('=')
-            self.specifications[key] = val
+        self.additional_commands += " ".join(specs)
 
     def handle_command(self):
         if self.calc.step.name == 'NMR Prediction':
@@ -304,6 +303,6 @@ class OrcaCalculation:
 
     def create_input_file(self):
         self.block_lines = '\n'.join(self.blocks)
-        raw = self.TEMPLATE.format(self.command_line, self.calc.parameters.charge, self.calc.parameters.multiplicity, self.xyz_structure, self.block_lines)
+        raw = self.TEMPLATE.format(self.command_line, self.additional_commands, self.calc.parameters.charge, self.calc.parameters.multiplicity, self.xyz_structure, self.block_lines)
         self.input_file = '\n'.join([i.strip() for i in raw.split('\n')])
 

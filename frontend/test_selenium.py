@@ -2500,6 +2500,52 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_opt_DFT_loose(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'specifications': [['looseopt']],
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(150)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_opt_DFT_grid6(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'ORCA',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'specifications': [['grid...', 6]],
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(150)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 1)
+
 class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def setUp(self):
@@ -3060,7 +3106,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': ['pop(nbo)']
+                'specifications': [['pop(nbo)']]
                 }
 
         self.lget("/launch/")
@@ -3083,7 +3129,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': ['pop(nbo)']
+                'specifications': [['pop(nbo)']]
                 }
 
         self.lget("/launch/")
@@ -3130,7 +3176,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': ['pop(nbo)', 'pop(hirshfeld)']
+                'specifications': [['pop(nbo)'], ['pop(hirshfeld)']]
                 }
 
         self.lget("/launch/")
@@ -3156,7 +3202,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': ['pop(esp)']
+                'specifications': [['pop(esp)']]
                 }
 
         self.lget("/launch/")
@@ -3180,7 +3226,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': ['pop(hly)']
+                'specifications': [['pop(hly)']]
                 }
 
         self.lget("/launch/")
@@ -3192,6 +3238,27 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
         prop = Property.objects.latest('id')
         self.assertIn("HLY:", prop.charges)
+
+    def test_DFT_max_step(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'specifications': [['opt(maxstep=...)', 5]]
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
 
 class MiscCalculationTests(CalcusLiveServer):
 

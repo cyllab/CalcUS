@@ -294,7 +294,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
             add_btn = self.driver.find_element_by_id("add_spec_button")
             for spec in params['specifications']:
-                self.driver.find_element_by_xpath("//*[@id='specifications_select']/option[text()='{}']".format(spec)).click()
+                self.driver.find_element_by_xpath("//*[@id='specifications_select']/option[text()='{}']".format(spec[0])).click()
+                if len(spec) == 2:
+                    self.driver.find_element_by_id("spec_value").send_keys(spec[1])
                 add_btn.click()
 
             close_btn = self.driver.find_element_by_css_selector(".close_specs")

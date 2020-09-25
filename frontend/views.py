@@ -957,18 +957,29 @@ def parse_parameters(request, name_required=True):
 
         def valid():
             for spec in specifications.split(';'):
-                if spec.strip() == '':
-                    continue
-                try:
-                    key, option = spec.split('(')
-                except ValueError:
-                    return False
-                option = option.replace(')', '')
-                if key not in [i.lower() for i in SPECIFICATIONS[software].keys()]:
-                    return False
-                if option.find('=') != -1:
-                    option, val = option.split('=')
-                if option not in [i.lower() for i in SPECIFICATIONS[software][key].keys()]:
+                if software == "Gaussian":
+                    if spec.strip() == '':
+                        continue
+                    try:
+                        key, option = spec.split('(')
+                    except ValueError:
+                        return False
+                    option = option.replace(')', '')
+                    if key not in [i.lower() for i in SPECIFICATIONS[software].keys()]:
+                        return False
+                    if option.find('=') != -1:
+                        option, val = option.split('=')
+                    if option not in [i.lower() for i in SPECIFICATIONS[software][key].keys()]:
+                        return False
+                elif software == 'ORCA':
+                    if spec.strip() == '':
+                        continue
+                    if spec[:-1] == "grid":
+                        continue
+                    if spec not in SPECIFICATIONS['ORCA']['general'] and spec not in SPECIFICATIONS['ORCA']['opt']:#Quick fix, to improve
+                        return False
+
+                else:
                     return False
             return True
 

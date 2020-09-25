@@ -4,11 +4,9 @@
 
 {% load static %}
 
-{% load compress %}
 
 {% block extrahead %}
 	<title>CalcUS - Launch</title>
-	{% compress css %}
 	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
 	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
 	<style>
@@ -67,14 +65,11 @@
 	  to {top:0; opacity:1}
 	}
 	</style>
-	{% endcompress %}
 
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 
-	{% compress js %}
 	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
-	{% endcompress %}
 
 	<script>
 	(function(ChemDoodle) {
@@ -263,31 +258,32 @@
 		}
 
 		function refresh_availabilities() {
-			choice = document.getElementById("calc_software");
+
+			full_options = document.querySelectorAll(".unavailable");
+			full_options.forEach(element => {
+				element.classList.remove("unavailable");
+				element.style.display = 'block';
+			});
 
 			full_options = document.querySelectorAll(".software_specific");
+			choice = document.getElementById("calc_software");
 
 			full_options.forEach(element => {
-  				element.style.display = 'none';
+				if(!element.classList.contains('avail_' + choice.value)) {
+					element.style.display = 'none';
+					element.classList.add("unavailable");
+				}
 			});
-
-			options = document.querySelectorAll('.avail_' + choice.value);
-			options.forEach(element => {
-  				element.style.display = 'block';
-			});
-
 
 			choice = document.getElementById("calc_theory_level");
 
-			full_options = document.querySelectorAll(".method_specific");
+			full_options = document.querySelectorAll(".method_specific:not(unavailable)");
 
 			full_options.forEach(element => {
-  				element.style.display = 'none';
-			});
-
-			options = document.querySelectorAll('.avail_' + choice.value);
-			options.forEach(element => {
-  				element.style.display = 'block';
+				if(!element.classList.contains('avail_' + choice.value)) {
+					element.style.display = 'none';
+					element.classList.add("unavailable");
+				}
 			});
 
 			if(choice.value == "HF"){
@@ -317,16 +313,16 @@
 
 			choice = document.getElementById("calc_type");
 
-			full_options = document.querySelectorAll(".type_specific");
+			full_options = document.querySelectorAll(".type_specific:not(unavailable)");
 
 			full_options.forEach(element => {
-  				element.style.display = 'none';
+				if(!element.classList.contains('avail_' + choice.value.replace(/ /g, '_'))) {
+					element.style.display = 'none';
+					element.classList.add("unavailable");
+				}
+
 			});
 
-			options = document.querySelectorAll('.avail_' + choice.value.replace(/ /g, '_'));
-			options.forEach(element => {
-  				element.style.display = 'block';
-			});
 
 			[].forEach.call(document.getElementById("parameters_column").querySelectorAll('select'), function(sel) {
 
@@ -970,31 +966,36 @@
 					<details class="box">
 						<summary>Advanced Options</summary>
 						<br />
-						<div>
-							<div class="field" id="custom_bs_field">
-								<label class="label">Specifications</label>
-								<div class="control">
-									<input class="input" name="calc_specifications" id="calc_specifications" type="text" placeholder="" >
-								<button class="button is-info" id="pick_specifications_button" type="button">Pick specifications</button>
+						<div class="columns">
+							<div class="column">
+								<div>
+									<div class="field" id="custom_bs_field">
+										<label class="label">Specifications</label>
+										<div class="control">
+											<input class="input" name="calc_specifications" id="calc_specifications" type="text" placeholder="" >
+										<button class="button is-info" id="pick_specifications_button" type="button">Pick specifications</button>
+										</div>
+									</div>
+
+									<div class="modal pick_specifications_div" id="pick_specifications_div">
+										<div class="modal-card">
+											<header class="modal-card-head">
+												<p class="modal-card-title">Specifications</p>
+												<button type="button" class="close_btn close_specs modal-close is-large" aria-label="close"></button>
+											</header>
+											<section class="modal-card-body" id="specifications_body">
+											</section>
+										</div>
+									</div>
 								</div>
 							</div>
-
-							<div class="modal pick_specifications_div" id="pick_specifications_div">
-								<div class="modal-card">
-									<header class="modal-card-head">
-										<p class="modal-card-title">Specifications</p>
-										<button type="button" class="close_btn close_specs modal-close is-large" aria-label="close"></button>
-									</header>
-									<section class="modal-card-body" id="specifications_body">
-									</section>
+							<div class="column">
+								<div class="field">
+									<label class="label">Manual keyword</label>
+									<div class="control">
+										<input class="input" name="calc_additional_command" id="calc_additional_command" type="text" placeholder="" >
+									</div>
 								</div>
-							</div>
-						</div>
-
-						<div class="field">
-							<label class="label">Manual keyword</label>
-							<div class="control">
-								<input class="input" name="calc_additional_command" id="calc_additional_command" type="text" placeholder="" >
 							</div>
 						</div>
 
