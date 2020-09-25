@@ -3034,6 +3034,29 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
+        prop = Property.objects.latest('id')
+        self.assertIn("NBO:", prop.charges)
+
+    def test_DFT_pop_opt(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'specifications': ['pop(nbo)']
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
 
         prop = Property.objects.latest('id')
         self.assertIn("NBO:", prop.charges)

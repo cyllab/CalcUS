@@ -1637,7 +1637,13 @@ def launch_gaussian_calc(in_file, calc, files):
         if not os.path.isfile("{}/{}".format(local_folder, f)):
             return -1
 
-    parse_default_gaussian_charges(calc)
+    if ret != 0:
+        return ret
+
+    return 0
+
+def parse_gaussian_charges(calc, s):
+    parse_default_gaussian_charges(calc, s)
 
     for spec in calc.parameters.specifications.split(';'):
         if spec.strip() == '':
@@ -1646,21 +1652,16 @@ def launch_gaussian_calc(in_file, calc, files):
         option = option.replace(')', '')
         if key == 'pop':
             if option == 'nbo' or option == 'npa':
-                parse_NPA_gaussian_charges(calc)
+                parse_NPA_gaussian_charges(calc, s)
             elif option == 'hirshfeld':
-                parse_Hirshfeld_gaussian_charges(calc)
+                parse_Hirshfeld_gaussian_charges(calc, s)
             elif option == 'esp':
-                parse_ESP_gaussian_charges(calc)
+                parse_ESP_gaussian_charges(calc, s)
             elif option == 'hly':
-                parse_HLY_gaussian_charges(calc)
+                parse_HLY_gaussian_charges(calc, s)
 
-    if ret != 0:
-        return ret
-
-    return 0
-
-def parse_default_gaussian_charges(calc):
-    prop = get_or_create(calc.parameters, calc.structure)
+def parse_default_gaussian_charges(calc, s):
+    prop = get_or_create(calc.parameters, s)
 
     with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')) as f:
         lines = f.readlines()
@@ -1692,8 +1693,8 @@ def parse_default_gaussian_charges(calc):
 
     prop.save()
 
-def parse_ESP_gaussian_charges(calc):
-    prop = get_or_create(calc.parameters, calc.structure)
+def parse_ESP_gaussian_charges(calc, s):
+    prop = get_or_create(calc.parameters, s)
 
     with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')) as f:
         lines = f.readlines()
@@ -1710,8 +1711,8 @@ def parse_ESP_gaussian_charges(calc):
     prop.charges += "ESP:{};".format(','.join(charges))
     prop.save()
 
-def parse_HLY_gaussian_charges(calc):
-    prop = get_or_create(calc.parameters, calc.structure)
+def parse_HLY_gaussian_charges(calc, s):
+    prop = get_or_create(calc.parameters, s)
 
     with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')) as f:
         lines = f.readlines()
@@ -1733,8 +1734,8 @@ def parse_HLY_gaussian_charges(calc):
     prop.save()
 
 
-def parse_NPA_gaussian_charges(calc):
-    prop = get_or_create(calc.parameters, calc.structure)
+def parse_NPA_gaussian_charges(calc, s):
+    prop = get_or_create(calc.parameters, s)
 
     with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')) as f:
         lines = f.readlines()
@@ -1751,8 +1752,8 @@ def parse_NPA_gaussian_charges(calc):
     prop.charges += "NBO:{};".format(','.join(charges))
     prop.save()
 
-def parse_Hirshfeld_gaussian_charges(calc):
-    prop = get_or_create(calc.parameters, calc.structure)
+def parse_Hirshfeld_gaussian_charges(calc, s):
+    prop = get_or_create(calc.parameters, s)
 
     with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')) as f:
         lines = f.readlines()
@@ -1788,6 +1789,8 @@ def gaussian_sp(in_file, calc):
         while lines[ind].find("SCF Done") == -1:
             ind -= 1
         E = float(lines[ind].split()[4])
+
+    parse_gaussian_charges(calc, calc.structure)
 
     prop = get_or_create(calc.parameters, calc.structure)
     prop.energy = E
@@ -1834,6 +1837,7 @@ def gaussian_opt(in_file, calc):
     s.save()
     prop.save()
 
+    parse_gaussian_charges(calc, s)
     return 0
 
 def gaussian_freq(in_file, calc):
@@ -1957,6 +1961,7 @@ def gaussian_freq(in_file, calc):
         for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
             out.write("-{:.1f},{:.5f}\n".format(_x, i))
 
+    parse_gaussian_charges(calc, calc.structure)
     return 0
 
 def gaussian_ts(in_file, calc):
@@ -1997,6 +2002,7 @@ def gaussian_ts(in_file, calc):
     s.save()
     prop.save()
 
+    parse_gaussian_charges(calc, s)
     return 0
 
 def gaussian_scan(in_file, calc):
@@ -2087,6 +2093,8 @@ def gaussian_scan(in_file, calc):
         s.save()
         prop.save()
 
+    #CHARGES
+
     if failed:
         return -1
     else:
@@ -2121,6 +2129,8 @@ def gaussian_nmr(in_file, calc):
     prop.simple_nmr = nmr
     prop.energy = E
     prop.save()
+
+    parse_gaussian_charges(calc, calc.structure)
     return 0
 
 def dist(a, b):
