@@ -983,7 +983,7 @@ def parse_parameters(request, name_required=True):
                     return False
             return True
 
-        if not valid():
+        if specifications.strip() != '' and not valid():
             return "Invalid specifications"
     else:
         specifications = ""
