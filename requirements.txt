@@ -7,7 +7,7 @@ Django==3.1.1
 django-appconf==1.0.4
 django-axes==5.6.0
 django-bulma==0.8.1
-django-compressor==2.4
+django-pipeline==2.0.5
 django-debug-toolbar==2.2
 django-ipware==3.0.1
 django-throttle-requests==0.5.9

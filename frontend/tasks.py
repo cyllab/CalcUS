@@ -2093,7 +2093,7 @@ def gaussian_scan(in_file, calc):
         s.save()
         prop.save()
 
-    #CHARGES
+    parse_gaussian_charges(calc, calc.result_ensemble.structure_set.latest('id'))
 
     if failed:
         return -1

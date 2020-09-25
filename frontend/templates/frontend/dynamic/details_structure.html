@@ -1,5 +1,6 @@
 {% load details_tags %}
 
+{% if property.charges != '' %}
 <span class="tag is-danger is-large">Partial Charges</span>
 <div class="columns box is-desktop" id="charges_structure_details">
 	<div>
@@ -59,7 +60,7 @@
 		}
 	</script>
 </div>
-
+{% endif %}
 {% if property.freq != 0 %}
 	<span class="tag is-danger is-large">Frequencies</span>
 	<div class="columns box is-desktop is-centered" id="frequency_structure_details" >
