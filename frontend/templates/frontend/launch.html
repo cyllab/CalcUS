@@ -446,6 +446,16 @@
 					editor.loadMolecule(mol_read);	
 				}
 			}
+			else if(file_list.length == 1 && file_list[0].type == "chemical/x-mdl-molfile") {
+				var reader = new FileReader();
+				reader.readAsText(file_list[0], "UTF-8");
+				reader.onload = function(e) {
+					let mol_read = ChemDoodle.readMOL(e.target.result, multiplier=1);
+					ChemDoodle.relabel(mol_read);
+					editor.loadMolecule(mol_read);	
+				}
+
+			}
 		}
 
 		function set_project_default() {

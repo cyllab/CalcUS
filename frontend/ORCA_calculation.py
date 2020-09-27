@@ -281,7 +281,7 @@ class OrcaCalculation:
 
     def handle_solvation(self):
         if self.calc.parameters.solvent != "Vacuum":
-            if self.calc.parameters.solvation_model == "SMD":
+            if self.calc.parameters.solvation_model == "SMD" or self.calc.parameters.software == 'xtb':
                 smd_block = '''%cpcm
                 smd true
                 SMDsolvent "{}"
