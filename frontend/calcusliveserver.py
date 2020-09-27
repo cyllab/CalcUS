@@ -607,6 +607,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         text_box.clear()
         text_box.send_keys(name)
         text_box.send_keys(Keys.RETURN)
+        self.wait_for_ajax()
 
     def rename_project2(self, proj, name):
         rename_icon = proj.find_element_by_class_name("fa-edit")
@@ -618,6 +619,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         done_icon = proj.find_element_by_class_name("fa-check")
         done_icon.click()
+        self.wait_for_ajax()
 
     def get_name_projects(self):
         projects = self.get_projects()
@@ -937,6 +939,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         text_box.clear()
         text_box.send_keys(name)
         text_box.send_keys(Keys.RETURN)
+        self.wait_for_ajax()
 
     def rename_molecule2(self, mol, name):
         rename_icon = mol.find_element_by_class_name("fa-edit")
@@ -948,6 +951,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         done_icon = mol.find_element_by_class_name("fa-check")
         done_icon.click()
+        self.wait_for_ajax()
 
     def delete_molecule(self, name):
         assert self.is_on_page_user_project()
@@ -989,6 +993,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         text_box.clear()
         text_box.send_keys(name)
         text_box.send_keys(Keys.RETURN)
+        self.wait_for_ajax()
 
     def rename_ensemble2(self, e, name):
         rename_icon = e.find_element_by_class_name("fa-edit")
@@ -1000,6 +1005,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         done_icon = e.find_element_by_class_name("fa-check")
         done_icon.click()
+        self.wait_for_ajax()
 
     def delete_ensemble(self, name):
         assert self.is_on_page_molecule()
