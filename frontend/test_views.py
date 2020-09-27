@@ -233,6 +233,16 @@ class LaunchTests(TestCase):
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertNotContains(response, "Error while submitting your calculation")
 
+    def test_submit_valid_specifications2(self):
+        params = self.basic_params
+        params['calc_software'] = 'Gaussian'
+        params['calc_theory_level'] = 'DFT'
+        params['calc_functional'] = 'M06-2X'
+        params['calc_basis_set'] = 'Def2-SVP'
+        params['calc_specifications'] = 'nosymm'
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertNotContains(response, "Error while submitting your calculation")
+
     def test_submit_invalid_specifications(self):
         params = self.basic_params
         params['calc_software'] = 'Gaussian'
@@ -242,6 +252,17 @@ class LaunchTests(TestCase):
         params['calc_specifications'] = 'SCF(ABC);'
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_invalid_specifications2(self):
+        params = self.basic_params
+        params['calc_software'] = 'Gaussian'
+        params['calc_theory_level'] = 'DFT'
+        params['calc_functional'] = 'M06-2X'
+        params['calc_basis_set'] = 'Def2-SVP'
+        params['calc_specifications'] = 'unknown;'
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
 
 class PermissionTestsStudent(TestCase):
     def setUp(self):
