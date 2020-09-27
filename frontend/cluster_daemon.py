@@ -210,13 +210,13 @@ class ClusterDaemon:
                     return
                 pid = threading.get_ident()
                 tasks.connections[pid] = self.connections
-                self.calculations[calc_id] = pid
+                self.calculations[int(calc_id)] = pid
                 retval = self.job(calc_id, access_id)
-                del self.calculations[calc_id]
+                del self.calculations[int(calc_id)]
                 del tasks.connections[pid]
             elif cmd == "kill":
                 if calc_id in self.calculations.keys():
-                    pid = self.calculations[calc_id]
+                    pid = self.calculations[int(calc_id)]
                     tasks.kill_sig.append(pid)
                 else:
                     self.cancelled.append(calc_id)
