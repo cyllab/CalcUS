@@ -1,11 +1,13 @@
 *.pyc
 *__pycache__
 *.swp
-labsandbox/settings.py
+calcus/*settings*
 *keys/
 *scr/
 *results/
 *cluster/
+static/CACHE/
 frontend/migrations/
 *.sqlite3
 .*
+*.sh
