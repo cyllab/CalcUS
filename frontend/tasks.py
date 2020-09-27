@@ -2322,8 +2322,12 @@ def analyse_opt_Gaussian(calc):
         lines = f.readlines()
     ind = 0
     s_ind = 0
-    while lines[ind].find("Symbolic Z-matrix:") == -1:
-        ind += 1
+    try:
+        while lines[ind].find("Symbolic Z-matrix:") == -1:
+            ind += 1
+    except IndexError:
+        print("Could not parse Gaussian log for calc {}".format(calc.id))
+        return
     ind += 2
 
     start_ind = ind
