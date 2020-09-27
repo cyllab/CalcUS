@@ -45,4 +45,7 @@ if ("{{ params.program }}" != "Unknown") {
 
 	bs = document.getElementById("calc_custom_bs");
 	bs.value = "{{ params.custom_basis_sets }}";
+
+	specifications = document.getElementById("calc_specifications");
+	specifications.value = "{{ params.specifications }}";
 }

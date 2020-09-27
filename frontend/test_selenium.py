@@ -823,6 +823,7 @@ class InterfaceTests(CalcusLiveServer):
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
                 'solvation_model': 'CPCM',
+                'specifications': [['tightscf']],
                 }
         self.lget("/launch/")
         self.calc_input_params(params1)
@@ -839,6 +840,7 @@ class InterfaceTests(CalcusLiveServer):
         basis_set = self.driver.find_element_by_id("calc_basis_set")
         additional_command = self.driver.find_element_by_id("calc_additional_command")
         software = self.driver.find_element_by_id("calc_software")
+        specifications = self.driver.find_element_by_id("calc_specifications")
 
         self.assertEqual(solvent.first_selected_option.text, params1['solvent'])
         self.assertEqual(charge.first_selected_option.text, params1['charge'])
@@ -847,6 +849,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(basis_set.get_attribute('value'), params1['basis_set'])
         self.assertEqual(software.get_attribute('value'), params1['software'])
         self.assertEqual(additional_command.get_attribute('value'), "")
+        self.assertEqual(specifications.get_attribute('value'), "tightscf;")
 
     def test_project_preset(self):
         proj = Project.objects.create(name="My Project", author=self.profile)
@@ -857,12 +860,12 @@ class InterfaceTests(CalcusLiveServer):
                 'type': 'Frequency Calculation',
                 'charge': '+1',
                 'solvent': 'Chloroform',
-                'software': 'ORCA',
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
                 'solvation_model': 'CPCM',
                 'project': 'My Project',
+                'specifications': [['nosymm']],
                 }
 
         self.lget("/launch/")
@@ -880,6 +883,7 @@ class InterfaceTests(CalcusLiveServer):
         basis_set = self.driver.find_element_by_id("calc_basis_set")
         additional_command = self.driver.find_element_by_id("calc_additional_command")
         software = self.driver.find_element_by_id("calc_software")
+        specifications = self.driver.find_element_by_id("calc_specifications")
 
         self.assertEqual(solvent.first_selected_option.text, params1['solvent'])
         self.assertEqual(charge.first_selected_option.text, params1['charge'])
@@ -888,13 +892,13 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(basis_set.get_attribute('value'), params1['basis_set'])
         self.assertEqual(software.get_attribute('value'), params1['software'])
         self.assertEqual(additional_command.get_attribute('value'), "")
+        self.assertEqual(specifications.get_attribute('value'), "nosymm;")
 
     def test_project_preset_independance(self):
         proj = Project.objects.create(name="My Project", author=self.profile)
         proj.save()
 
         params1 = {
-                'software': 'Gaussian',
                 'type': 'Frequency Calculation',
                 'charge': '+1',
                 'solvent': 'Chloroform',

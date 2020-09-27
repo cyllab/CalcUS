@@ -62,6 +62,11 @@ NMR_REGRESSIONS = {
 
 SPECIFICATIONS = {
     'Gaussian': {
+        'general': {
+            'nosymm': 0,
+            '5D': 0,
+            '6D': 0,
+        },
         'scf': {
             'xqc': 0,
             'yqc': 0,

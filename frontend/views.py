@@ -957,8 +957,10 @@ def parse_parameters(request, name_required=True):
 
         def valid():
             for spec in specifications.split(';'):
+                if spec.strip() == '':
+                    continue
                 if software == "Gaussian":
-                    if spec.strip() == '':
+                    if spec in SPECIFICATIONS['Gaussian']['general'].keys():
                         continue
                     try:
                         key, option = spec.split('(')
@@ -972,8 +974,6 @@ def parse_parameters(request, name_required=True):
                     if option not in [i.lower() for i in SPECIFICATIONS[software][key].keys()]:
                         return False
                 elif software == 'ORCA':
-                    if spec.strip() == '':
-                        continue
                     if spec[:-1] == "grid":
                         continue
                     if spec not in SPECIFICATIONS['ORCA']['general'] and spec not in SPECIFICATIONS['ORCA']['opt']:#Quick fix, to improve

@@ -8,14 +8,19 @@ for k, d in SPECIFICATIONS['Gaussian'].items():
         elif k == 'freq':
             avail_str += ' type_specific avail_Frequency_Calculation'
 
-        if num == 1:
-            option_str = "has_value"
-            _option = "{}({}=...)".format(k, option)
-            _value = "{}({}=)".format(k, option)
-        else:
+        if k == "general":
+            _option = option
+            _value = option
             option_str = ""
-            _option = "{}({})".format(k, option)
-            _value = "{}({})".format(k, option)
+        else:
+            if num == 1:
+                option_str = "has_value"
+                _option = "{}({}=...)".format(k, option)
+                _value = "{}({}=)".format(k, option)
+            else:
+                option_str = ""
+                _option = "{}({})".format(k, option)
+                _value = "{}({})".format(k, option)
 
         print("""<option value="{}" class="{} {}">{}</option>""".format(_value, avail_str, option_str, _option))
 
