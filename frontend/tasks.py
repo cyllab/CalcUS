@@ -1637,6 +1637,11 @@ def launch_gaussian_calc(in_file, calc, files):
         if not os.path.isfile("{}/{}".format(local_folder, f)):
             return -1
 
+    with open(os.path.join(local_folder, 'calc.log')) as f:
+        lines = f.readlines()
+        if lines[-1].find("Normal termination") == -1:
+            return -1
+
     if ret != 0:
         return ret
 
