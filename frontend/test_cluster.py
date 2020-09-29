@@ -857,3 +857,30 @@ class ClusterTests(CalcusLiveServer):
         self.see_latest_calc()
         self.assertEqual(self.get_number_unseen_calcs(), 0)
 
+    def test_cluster_refetch(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Conformational Search',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'pentane.xyz',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.click_latest_calc()
+        num = self.get_number_conformers()
+
+        self.lget("/calculations/")
+        self.details_latest_order()
+        self.refetch_all_calc()
+        time.sleep(5)
+
+        self.lget("/calculations/")
+        self.click_latest_calc()
+        self.assertEqual(num, self.get_number_conformers())
+

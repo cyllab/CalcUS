@@ -766,6 +766,26 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
                     assert b.get_attribute("class").find("has-background-success") != -1
 
+    def refetch_all_calc(self):
+        assert self.is_on_page_order_details()
+
+        calcs = self.driver.find_elements_by_css_selector("tbody > tr")
+        for c in calcs:
+            buttons = c.find_elements_by_css_selector(".button")
+            for b in buttons:
+                if b.text == "Refetch":
+                    b.click()
+
+                    ind = 0
+                    while ind < 3:
+                        c = b.get_attribute("class")
+                        if c.find("has-background-success") != -1:
+                            break
+                        time.sleep(1)
+                        ind += 1
+
+                    assert b.get_attribute("class").find("has-background-success") != -1
+
     def relaunch_all_calc(self):
         assert self.is_on_page_order_details()
 
