@@ -17,7 +17,7 @@ urlpatterns = [
 
     path('answer/', views.answer, name='answer'),
     path('cancel_calc/', views.cancel_calc, name='cancel_calc'),
-    path('restart_calc/', views.restart_calc, name='restart_calc'),
+    path('relaunch_calc/', views.relaunch_calc, name='relaunch_calc'),
     path('refetch_calc/', views.refetch_calc, name='refetch_calc'),
     path('toggle_private/', views.toggle_private, name='toggle_private'),
     path('toggle_flag/', views.toggle_flag, name='toggle_flag'),

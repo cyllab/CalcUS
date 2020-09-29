@@ -3101,7 +3101,7 @@ def download_project(request, pk):
 
 
 @login_required
-def restart_calc(request):
+def relaunch_calc(request):
     if request.method != "POST":
         return HttpResponse(status=403)
 
@@ -3137,6 +3137,9 @@ def restart_calc(request):
         pass
 
     calc.status = 0
+    if calc.order.new_status:
+        calc.order.author.unseen_calculations -= 1
+        calc.order.author.save()
     calc.save()
 
     if calc.local:

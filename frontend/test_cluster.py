@@ -791,6 +791,49 @@ class ClusterTests(CalcusLiveServer):
         s = self.get_calculation_statuses()
         self.assertEqual(s[0], "Error - Job cancelled")
 
+    def test_relaunch_calc(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'Gaussian',
+                'theory': 'HF',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.details_latest_order()
+        self.cancel_all_calc()
+
+        ind = 0
+        while ind < 10:
+            self.driver.refresh()
+            s = self.get_calculation_statuses()
+            self.assertEqual(len(s), 1)
+            if s[0] == "Error - Job cancelled":
+                break
+
+            time.sleep(1)
+            ind += 1
+
+        self.assertEqual(self.get_number_unseen_calcs(), 1)
+        time.sleep(2)
+        self.relaunch_all_calc()
+
+        self.lget("/calculations/")
+
+        self.assertEqual(self.get_number_unseen_calcs(), 0)
+        self.wait_latest_calc_done(300)
+        self.assertEqual(self.get_number_unseen_calcs(), 1)
+        self.assertTrue(self.latest_calc_successful())
+
+
     def test_cluster_unseen_calc(self):
         self.setup_cluster()
         params = {
