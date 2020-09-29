@@ -275,6 +275,21 @@
 				}
 			});
 
+			set_availables();
+
+			choice = document.getElementById("calc_solvation_model");
+
+			full_options = document.querySelectorAll(".solvation_model_specific:not(unavailable)");
+
+			full_options.forEach(element => {
+				if(!element.classList.contains('avail_' + choice.value)) {
+					element.style.display = 'none';
+					element.classList.add("unavailable");
+				}
+			});
+
+			set_availables();
+
 			choice = document.getElementById("calc_theory_level");
 
 			full_options = document.querySelectorAll(".method_specific:not(unavailable)");
@@ -285,6 +300,8 @@
 					element.classList.add("unavailable");
 				}
 			});
+
+			set_availables();
 
 			if(choice.value == "HF"){
 				hf3c = document.getElementById("hf3c").checked;
@@ -311,6 +328,8 @@
 				}
 			}
 
+			set_availables();
+
 			choice = document.getElementById("calc_type");
 
 			full_options = document.querySelectorAll(".type_specific:not(unavailable)");
@@ -324,22 +343,26 @@
 			});
 
 
-			[].forEach.call(document.getElementById("parameters_column").querySelectorAll('select'), function(sel) {
 
+		}
+
+		function set_availables() {
+			[].forEach.call(document.getElementById("parameters_column").querySelectorAll('select'), function(sel) {
 				ind = sel.selectedIndex;
 				if(ind != -1) {
 					opt = sel.options[ind];
-					if(opt.style.display == "none") {
-						for(i=0; i < sel.options.length; i++) {
-							opt = sel.options[i];
-							if(opt.style.display != "none") {
-								sel.selectedIndex = i;
-							}
-						}
+					if(opt.style.display != "none") {
+						return;
 					}
 				}
-			})
 
+				for(i=0; i < sel.options.length; i++) {
+					opt = sel.options[i];
+					if(opt.style.display != "none") {
+						sel.selectedIndex = i;
+					}
+				}
+			});
 		}
 
 		function add_constraint() {
@@ -680,6 +703,38 @@
 
 					<div class="column is-narrow">
 						<div class="field">
+							<label class="label">Charge</label>
+							<div class="control" >
+								<div class="select">
+								  <select name="calc_charge" id="calc_charge">
+								    <option>+2</option>
+								    <option>+1</option>
+								    <option selected="selected">0</option>
+								    <option>-1</option>
+								    <option>-2</option>
+								  </select>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="column is-narrow">
+						<div class="field">
+							<label class="label">Multiplicity</label>
+							<div class="control" >
+								<div class="select">
+								  <select name="calc_multiplicity" id="calc_multiplicity">
+								    <option selected="selected">1</option>
+								    <option>2</option>
+								    <option>3</option>
+								  </select>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="columns">
+					<div class="column is-narrow">
+						<div class="field">
 							<label class="label">Solvent</label>
 							<div class="control" >
 								<div class="select">
@@ -709,10 +764,9 @@
 							<label class="label">Solvation Model</label>
 							<div class="control" >
 								<div class="select" >
-								  <select name="calc_solvation_model" id="calc_solvation_model">
+								  <select name="calc_solvation_model" id="calc_solvation_model" onchange="refresh_availabilities();">
 								    <option class="software_specific avail_xtb">GBSA</option>
 								    <option class="software_specific avail_Gaussian avail_ORCA">SMD</option>
-								    <option class="software_specific avail_Gaussian avail_ORCA">SMD18</option>
 								    <option class="software_specific avail_Gaussian">PCM</option>
 								    <option class="software_specific avail_Gaussian avail_ORCA">CPCM</option>
 								  </select>
@@ -720,38 +774,25 @@
 							</div>
 						</div>
 					</div>
-
 					<div class="column is-narrow">
-						<div class="field">
-							<label class="label">Charge</label>
-							<div class="control" >
+						<div class="field" id="calc_solvation_radii_field">
+							<label class="label">Solvation Radii</label>
+							<div class="control">
 								<div class="select">
-								  <select name="calc_charge" id="calc_charge">
-								    <option>+2</option>
-								    <option>+1</option>
-								    <option selected="selected">0</option>
-								    <option>-1</option>
-								    <option>-2</option>
-								  </select>
+									<select name="calc_solvation_radii">
+										<option class="solvation_model_specific avail_SMD">SMD18</option>
+									    	<option class="solvation_model_specific avail_SMD avail_GBSA">Default</option>
+									    	<option class="solvation_model_specific avail_PCM avail_CPCM">UFF</option>
+									    	<option class="solvation_model_specific avail_PCM avail_CPCM">UA0</option>
+									    	<option class="solvation_model_specific avail_PCM avail_CPCM">UAHF</option>
+									    	<option class="solvation_model_specific avail_PCM avail_CPCM">UAKS</option>
+									    	<option class="solvation_model_specific avail_PCM avail_CPCM">Pauling</option>
+									    	<option class="solvation_model_specific avail_PCM avail_CPCM">Bondi</option>
+									</select>
 								</div>
 							</div>
 						</div>
 					</div>
-					<div class="column is-narrow">
-						<div class="field">
-							<label class="label">Multiplicity</label>
-							<div class="control" >
-								<div class="select">
-								  <select name="calc_multiplicity" id="calc_multiplicity">
-								    <option selected="selected">1</option>
-								    <option>2</option>
-								    <option>3</option>
-								  </select>
-								</div>
-							</div>
-						</div>
-					</div>
-
 				</div>
 				<div class="columns">
 					<div class="column is-narrow">
