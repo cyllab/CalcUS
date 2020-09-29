@@ -864,6 +864,7 @@ class InterfaceTests(CalcusLiveServer):
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
                 'solvation_model': 'CPCM',
+                'solvation_radii': 'Bondi',
                 'project': 'My Project',
                 'specifications': [['nosymm']],
                 }
@@ -877,6 +878,8 @@ class InterfaceTests(CalcusLiveServer):
         self.create_molecule_in_project()
 
         solvent = Select(self.driver.find_element_by_name('calc_solvent'))
+        solvation_model = Select(self.driver.find_element_by_name('calc_solvation_model'))
+        solvation_radii = Select(self.driver.find_element_by_name('calc_solvation_radii'))
         charge = Select(self.driver.find_element_by_name('calc_charge'))
         theory = Select(self.driver.find_element_by_id("calc_theory_level"))
         func = self.driver.find_element_by_id("calc_functional")
@@ -886,6 +889,8 @@ class InterfaceTests(CalcusLiveServer):
         specifications = self.driver.find_element_by_id("calc_specifications")
 
         self.assertEqual(solvent.first_selected_option.text, params1['solvent'])
+        self.assertEqual(solvation_model.first_selected_option.text, params1['solvation_model'])
+        self.assertEqual(solvation_radii.first_selected_option.text, params1['solvation_radii'])
         self.assertEqual(charge.first_selected_option.text, params1['charge'])
         self.assertEqual(theory.first_selected_option.text, params1['theory'])
         self.assertEqual(func.get_attribute('value'), params1['functional'])
@@ -2628,6 +2633,31 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(150)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_sp_DFT_SMD18(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'solvation_method': 'SMD',
+                'solvation_radii': 'SMD18',
+                'solvent': 'Methanol',
                 }
 
         self.lget("/launch/")

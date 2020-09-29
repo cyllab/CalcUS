@@ -25,6 +25,7 @@ def gen_calc(params):
     multiplicity = 1
     solvent = "Vacuum"
     solvation_model = ""
+    solvation_radii = ""
     basis_set = ""
     theory_level = ""
     method = ""
@@ -44,6 +45,14 @@ def gen_calc(params):
 
     if 'solvation_model' in params.keys():
         solvation_model = params['solvation_model']
+        if 'solvation_radii' in params.keys():
+            solvation_radii = params['solvation_radii']
+        else:
+            if solvation_model == "SMD":
+                solvation_radii = "Default"
+            if solvation_model in ["PCM", "CPCM"]:
+                solvation_radii = "UFF"
+
 
     if 'basis_set' in params.keys():
         basis_set = params['basis_set']
@@ -68,7 +77,7 @@ def gen_calc(params):
 
     software = params['software']
 
-    p = Parameters.objects.create(charge=charge, multiplicity=multiplicity, solvent=solvent, solvation_model=solvation_model, basis_set=basis_set, theory_level=theory_level, method=method, additional_command=additional_command, custom_basis_sets=custom_basis_sets, density_fitting=density_fitting, specifications=specifications, software=software)
+    p = Parameters.objects.create(charge=charge, multiplicity=multiplicity, solvent=solvent, solvation_model=solvation_model, solvation_radii=solvation_radii, basis_set=basis_set, theory_level=theory_level, method=method, additional_command=additional_command, custom_basis_sets=custom_basis_sets, density_fitting=density_fitting, specifications=specifications, software=software)
     with open(os.path.join(TESTS_DIR, params['in_file'])) as f:
         lines = f.readlines()
         xyz_structure = ''.join(lines)
@@ -212,7 +221,8 @@ class GaussianTests(TestCase):
                 'basis_set': '3-21G',
                 'charge': '-1',
                 'solvent': 'Chloroform',
-                'solvation_model': 'SMD18',
+                'solvation_model': 'SMD',
+                'solvation_radii': 'SMD18',
                 }
 
         calc = gen_calc(params)
@@ -235,7 +245,7 @@ class GaussianTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
-    def test_sp_HF_PCM(self):
+    def test_sp_HF_PCM_Bondi(self):
         params = {
                 'type': 'Single-Point Energy',
                 'in_file': 'Cl.xyz',
@@ -245,6 +255,7 @@ class GaussianTests(TestCase):
                 'charge': '-1',
                 'solvent': 'Chloroform',
                 'solvation_model': 'PCM',
+                'solvation_radii': 'Bondi',
                 }
 
         calc = gen_calc(params)
@@ -264,7 +275,7 @@ class GaussianTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
-    def test_sp_HF_PCM(self):
+    def test_sp_HF_PCM_UFF(self):
         params = {
                 'type': 'Single-Point Energy',
                 'in_file': 'Cl.xyz',
@@ -274,26 +285,25 @@ class GaussianTests(TestCase):
                 'charge': '-1',
                 'solvent': 'Chloroform',
                 'solvation_model': 'PCM',
+                'solvation_radii': 'UFF',
                 }
 
         calc = gen_calc(params)
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp HF/3-21G SCRF(PCM, Solvent=Chloroform, Read)
+        #p sp HF/3-21G SCRF(PCM, Solvent=Chloroform)
 
         CalcUS
 
         -1 1
         Cl 0.0 0.0 0.0
 
-        Radii=Bondi
-
         """
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
-    def test_sp_HF_CPCM(self):
+    def test_sp_HF_CPCM_Bondi(self):
         params = {
                 'type': 'Single-Point Energy',
                 'in_file': 'Cl.xyz',
@@ -303,6 +313,7 @@ class GaussianTests(TestCase):
                 'charge': '-1',
                 'solvent': 'Chloroform',
                 'solvation_model': 'CPCM',
+                'solvation_radii': 'Bondi',
                 }
 
         calc = gen_calc(params)
@@ -317,6 +328,34 @@ class GaussianTests(TestCase):
         Cl 0.0 0.0 0.0
 
         Radii=Bondi
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_sp_HF_CPCM_UFF(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'HF',
+                'basis_set': '3-21G',
+                'charge': '-1',
+                'solvent': 'Chloroform',
+                'solvation_model': 'CPCM',
+                'solvation_radii': 'UFF',
+                }
+
+        calc = gen_calc(params)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p sp HF/3-21G SCRF(CPCM, Solvent=Chloroform)
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
 
         """
 
@@ -1604,7 +1643,8 @@ class OrcaTests(TestCase):
                 'basis_set': '3-21G',
                 'charge': '-1',
                 'solvent': 'Chloroform',
-                'solvation_model': 'SMD18',
+                'solvation_model': 'SMD',
+                'solvation_radii': 'SMD18',
                 }
 
         calc = gen_calc(params)

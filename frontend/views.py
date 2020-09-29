@@ -816,12 +816,17 @@ def parse_parameters(request, name_required=True):
     if solvent != "Vacuum":
         if 'calc_solvation_model' in request.POST.keys():
             solvation_model = clean(request.POST['calc_solvation_model'])
-            if solvation_model not in ['SMD', 'SMD18', 'PCM', 'CPCM', 'GBSA']:
+            if solvation_model not in ['SMD', 'PCM', 'CPCM', 'GBSA']:
                 return "Invalid solvation model"
+            if 'calc_solvation_radii' in request.POST.keys():
+                solvation_radii = clean(request.POST['calc_solvation_radii'])
+            else:
+                return "No solvation radii"
         else:
             return "No solvation model"
     else:
         solvation_model = ""
+        solvation_radii = ""
 
     if 'calc_software' in request.POST.keys():
         software = clean(request.POST['calc_software'])
@@ -1008,7 +1013,7 @@ def parse_parameters(request, name_required=True):
         else:
             project_obj = project_set[0]
 
-    params = Parameters.objects.create(charge=charge, multiplicity=mult, solvent=solvent, method=functional, basis_set=basis_set, additional_command=additional_command, software=software, theory_level=theory, solvation_model=solvation_model, density_fitting=df, custom_basis_sets=bs, specifications=specifications)
+    params = Parameters.objects.create(charge=charge, multiplicity=mult, solvent=solvent, method=functional, basis_set=basis_set, additional_command=additional_command, software=software, theory_level=theory, solvation_model=solvation_model, solvation_radii=solvation_radii, density_fitting=df, custom_basis_sets=bs, specifications=specifications)
     params.save()
 
     return params, project_obj, name, step

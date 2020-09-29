@@ -297,16 +297,23 @@ class GaussianCalculation:
     def handle_solvation(self):
         if self.calc.parameters.solvent != "Vacuum":
             if self.calc.parameters.solvation_model == "SMD":
-                self.command_line += "SCRF(SMD, Solvent={}) ".format(self.calc.parameters.solvent)
-            elif self.calc.parameters.solvation_model == "SMD18":
-                self.command_line += "SCRF(SMD, Solvent={}, Read) ".format(self.calc.parameters.solvent)
-                self.appendix.append(self.SMD18_APPENDIX)
+                if self.calc.parameters.solvation_radii == "Default":
+                    self.command_line += "SCRF(SMD, Solvent={}) ".format(self.calc.parameters.solvent)
+                else:
+                    self.command_line += "SCRF(SMD, Solvent={}, Read) ".format(self.calc.parameters.solvent)
+                    self.appendix.append(self.SMD18_APPENDIX)
             elif self.calc.parameters.solvation_model == "PCM":
-                self.command_line += "SCRF(PCM, Solvent={}, Read) ".format(self.calc.parameters.solvent)
-                self.appendix.append("Radii=Bondi\n")
+                if self.calc.parameters.solvation_radii in ["UFF", ""]:
+                    self.command_line += "SCRF(PCM, Solvent={}) ".format(self.calc.parameters.solvent)
+                else:
+                    self.command_line += "SCRF(PCM, Solvent={}, Read) ".format(self.calc.parameters.solvent)
+                    self.appendix.append("Radii={}\n".format(self.calc.parameters.solvation_radii))
             elif self.calc.parameters.solvation_model == "CPCM":
-                self.command_line += "SCRF(CPCM, Solvent={}, Read) ".format(self.calc.parameters.solvent)
-                self.appendix.append("Radii=Bondi\n")
+                if self.calc.parameters.solvation_radii in ["UFF", ""]:
+                    self.command_line += "SCRF(CPCM, Solvent={}) ".format(self.calc.parameters.solvent)
+                else:
+                    self.command_line += "SCRF(CPCM, Solvent={}, Read) ".format(self.calc.parameters.solvent)
+                    self.appendix.append("Radii={}\n".format(self.calc.parameters.solvation_radii))
             else:
                 raise Exception("Invalid solvation method for Gaussian")
 
