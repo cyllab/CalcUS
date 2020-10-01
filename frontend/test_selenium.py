@@ -1132,7 +1132,7 @@ class InterfaceTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(10)
+        self.wait_latest_calc_done(100)
         self.assertTrue(self.latest_calc_successful())
         self.lget("/projects/")
         self.delete_project("SeleniumProject")
@@ -1144,11 +1144,12 @@ class InterfaceTests(CalcusLiveServer):
             ind += 1
             if ind == 3:
                 break
-            self.lget("/home/")
+            self.lget("/projects/")
 
-        self.lget("/home/")
+        self.lget("/calculations/")
 
         self.assertEqual(self.get_number_unseen_calcs(), 0)
+        self.assertEqual(self.get_number_calc_orders(), 0)
 
     def test_delete_unseen_calc2(self):
         self.setup_test_group()
@@ -1166,7 +1167,7 @@ class InterfaceTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(10)
+        self.wait_latest_calc_done(100)
         self.assertTrue(self.latest_calc_successful())
         self.lget("/projects/")
         self.click_project("SeleniumProject")
@@ -1181,9 +1182,10 @@ class InterfaceTests(CalcusLiveServer):
                 break
             self.driver.refresh()
 
-        self.lget("/home/")
+        self.lget("/calculations/")
 
         self.assertEqual(self.get_number_unseen_calcs(), 0)
+        self.assertEqual(self.get_number_calc_orders(), 0)
 
 
 

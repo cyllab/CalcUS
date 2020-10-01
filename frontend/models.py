@@ -8,6 +8,7 @@ from django import template
 import random, string
 import numpy as np
 import os
+import hashlib
 
 from .constants import *
 
@@ -319,7 +320,7 @@ class Ensemble(models.Model):
                     continue
 
                 p = prop.parameters
-                p_name = p.long_name
+                p_name = p.md5
                 if p_name not in ret.keys():
                     ret[p_name] = [[], [], [], []]
                 ret[p_name][0].append(s.number)
@@ -660,6 +661,21 @@ class Parameters(models.Model):
         other_values = [(k,v) for k,v in other.__dict__.items() if k != '_state' and k != 'id']
         return values == other_values
 
+    @property
+    def md5(self):
+        values = [(k,v) for k,v in self.__dict__.items() if k != '_state' and k != 'id']
+        params_str = ""
+        for k, v in values:
+            if isinstance(v, int):
+                params_str += "{}={};".format(k, v)
+            elif isinstance(v, str):
+                params_str += "{}={};".format(k, v.lower())
+            else:
+                raise Exception("Unknown value type")
+        hash = hashlib.md5(bytes(params_str, 'UTF-8'))
+        return hash.digest()
+
+
 class Molecule(models.Model):
     name = models.CharField(max_length=100)
     inchi = models.CharField(max_length=1000)
@@ -955,11 +971,17 @@ class Calculation(models.Model):
         num_calc_error += nums[3]
 
         new_status = self.order._status(num_calc_queued, num_calc_running, num_calc_done, num_calc_error)
-        if new_status != old_status:
-            self.order.author.unseen_calculations -= 1
-            self.order.author.save()
 
-        self.order.project.save()
+        if self.order.calculation_set.count() == 1:
+            self.order.delete()
+        else:
+            if new_status != old_status:
+                if not self.order.new_status:
+                    self.order.author.unseen_calculations += 1
+                    self.order.author.save()
+
+            self.order.project.save()
+
         mol.save()
 
         super(Calculation, self).delete(*args, **kwargs)

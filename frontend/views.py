@@ -2847,7 +2847,7 @@ class CsvMolecule:
 class CsvEnsemble:
     def __init__(self):
         self.name = ""
-        self.data = None
+        self.data = []
 
 def get_csv(proj, profile, scope="all", details="full"):
     pref_units = profile.pref_units
@@ -2947,10 +2947,14 @@ def get_csv(proj, profile, scope="all", details="full"):
                 _w_e = e.data[arr_ind]
                 if _w_e != '-':
                     w_e = ensemble_str.format(_w_e*CONVERSION)
+                else:
+                    w_e = _w_e
 
                 _w_f_e = e.data[arr_ind+1]
                 if _w_f_e != '-':
                     w_f_e = ensemble_str.format(_w_f_e*CONVERSION)
+                else:
+                    w_f_e = _w_f_e
 
                 csv += ",,{},{},{}\n".format(e.name, w_e, w_f_e)
 

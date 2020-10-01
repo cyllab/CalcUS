@@ -2734,7 +2734,7 @@ def _del_molecule(id):
     for e in mol.ensemble_set.all():
         _del_ensemble(e.id)
     mol.delete()
-    sleep(1)
+    sleep(0.2)
     for o in mol.project.calculationorder_set.all():
         check_empty_order(o)
 
