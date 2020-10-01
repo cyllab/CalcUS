@@ -1671,8 +1671,11 @@ def parse_default_gaussian_charges(calc, s):
     with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.log')) as f:
         lines = f.readlines()
     ind = len(lines)-1
-    while lines[ind].find("Mulliken charges:") == -1:
-        ind -= 1
+    try:
+        while lines[ind].find("Mulliken charges:") == -1:
+            ind -= 1
+    except IndexError:#Monoatomic systems may not have charges
+        return
     ind += 2
     charges = []
     while lines[ind].find("Sum of Mulliken charges") == -1:
