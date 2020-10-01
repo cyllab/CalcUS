@@ -298,7 +298,7 @@ class Ensemble(models.Model):
 
             Data structure:
             {
-                params.long_name:
+                hash:
                     [
                         [numbers],
                         [degeneracies],
@@ -314,6 +314,7 @@ class Ensemble(models.Model):
         '''
 
         ret = {}
+        hashes = {}
         for s in self.structure_set.all():
             for prop in s.properties.all():
                 if prop.energy == 0:
@@ -321,6 +322,10 @@ class Ensemble(models.Model):
 
                 p = prop.parameters
                 p_name = p.md5
+
+                if p_name not in hashes.keys():
+                    hashes[p_name] = p.long_name
+
                 if p_name not in ret.keys():
                     ret[p_name] = [[], [], [], []]
                 ret[p_name][0].append(s.number)
@@ -331,7 +336,7 @@ class Ensemble(models.Model):
         for p_name in ret.keys():
             ret[p_name] += self.calc_array_properties(ret[p_name])
 
-        return ret
+        return ret, hashes
 
     @property
     def ensemble_short_summary(self):
@@ -340,7 +345,7 @@ class Ensemble(models.Model):
 
             Data structure:
             {
-                params.long_name:
+                hash:
                     [
                         weighted_energy,
                         weighted_free_energy,
@@ -350,6 +355,7 @@ class Ensemble(models.Model):
         '''
 
         ret = {}
+        hashes = {}
 
         arr_e = {}
         arr_f_e = {}
@@ -360,6 +366,10 @@ class Ensemble(models.Model):
 
                 p = prop.parameters
                 p_name = p.long_name
+
+                if p_name not in hashes.keys():
+                    hashes[p_name] = p.long_name
+
                 if p_name not in arr_e.keys():
                     arr_e[p_name] = [[], []]
                     arr_f_e[p_name] = [[], []]
@@ -372,7 +382,7 @@ class Ensemble(models.Model):
 
         for p_name in arr_e.keys():
             ret[p_name] = [self.boltzmann_weighing_lite(*arr_e[p_name]), self.boltzmann_weighing_lite(*arr_f_e[p_name])]
-        return ret
+        return ret, hashes
 
     def weighted_free_energy(self, params):
         data = []

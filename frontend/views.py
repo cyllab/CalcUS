@@ -2867,6 +2867,7 @@ def get_csv(proj, profile, scope="all", details="full"):
         ensemble_str = "{:.7f}"
 
     summary = {}
+    hashes = {}
     csv = ""
 
     molecules = list(proj.molecule_set.all())
@@ -2878,9 +2879,13 @@ def get_csv(proj, profile, scope="all", details="full"):
                     continue
 
             if details == "full":
-                summ = e.ensemble_summary
+                summ, ehashes = e.ensemble_summary
             else:
-                summ = e.ensemble_short_summary
+                summ, ehashes = e.ensemble_short_summary
+
+            for hash, long_name in ehashes.items():
+                if hash not in hashes.keys():
+                    hashes[hash] = long_name
 
             for p_name in summ.keys():
                 if p_name in summary.keys():
@@ -2921,7 +2926,7 @@ def get_csv(proj, profile, scope="all", details="full"):
         csv += "Parameters,Molecule,Ensemble,Structure\n"
         for p_name in summary.keys():
             p = summary[p_name]
-            csv += "{},\n".format(p_name)
+            csv += "{},\n".format(hashes[p_name])
             for mol in p.molecules.values():
                 csv += ",{},\n".format(mol.name)
                 csv += ",,,Number,Degeneracy,Energy,Relative Energy,Weight,Free Energy,\n"
@@ -2935,7 +2940,7 @@ def get_csv(proj, profile, scope="all", details="full"):
     csv += "Method,Molecule,Ensemble,Weighted Energy,Weighted Free Energy,\n"
     for p_name in summary.keys():
         p = summary[p_name]
-        csv += "{},\n".format(p_name)
+        csv += "{},\n".format(hashes[p_name])
         for mol in p.molecules.values():
             csv += ",{},\n".format(mol.name)
             for e in mol.ensembles.values():
