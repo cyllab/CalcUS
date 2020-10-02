@@ -5,6 +5,7 @@ from django.core.management import call_command
 from django.test import TestCase, Client
 from .Gaussian_calculation import GaussianCalculation
 from .ORCA_calculation import OrcaCalculation
+from .gen_calc import gen_calc
 
 TESTS_DIR = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
 
@@ -18,86 +19,12 @@ def blue(msg):
 def green(msg):
     print("{}{} {}".format(GREEN, msg, END))
 
-def gen_calc(params):
-    step = BasicStep.objects.get(name=params['type'])
-
-    charge = 0
-    multiplicity = 1
-    solvent = "Vacuum"
-    solvation_model = ""
-    solvation_radii = ""
-    basis_set = ""
-    theory_level = ""
-    method = ""
-    additional_command = ""
-    custom_basis_sets = ""
-    density_fitting = ""
-    specifications = ""
-
-    if 'charge' in params.keys():
-        charge = int(params['charge'])
-
-    if 'multiplicity' in params.keys():
-        multiplicity = int(params['multiplicity'])
-
-    if 'solvent' in params.keys():
-        solvent = params['solvent']
-
-    if 'solvation_model' in params.keys():
-        solvation_model = params['solvation_model']
-        if 'solvation_radii' in params.keys():
-            solvation_radii = params['solvation_radii']
-        else:
-            if solvation_model == "SMD":
-                solvation_radii = "Default"
-            if solvation_model in ["PCM", "CPCM"]:
-                solvation_radii = "UFF"
-
-
-    if 'basis_set' in params.keys():
-        basis_set = params['basis_set']
-
-    if 'custom_basis_sets' in params.keys():
-        custom_basis_sets = params['custom_basis_sets']
-
-    if 'density_fitting' in params.keys():
-        density_fitting = params['density_fitting']
-
-    if 'theory_level' in params.keys():
-        theory_level = params['theory_level']
-
-    if 'method' in params.keys():
-        method = params['method']
-
-    if 'additional_command' in params.keys():
-        additional_command = params['additional_command']
-
-    if 'specifications' in params.keys():
-        specifications = params['specifications']
-
-    software = params['software']
-
-    p = Parameters.objects.create(charge=charge, multiplicity=multiplicity, solvent=solvent, solvation_model=solvation_model, solvation_radii=solvation_radii, basis_set=basis_set, theory_level=theory_level, method=method, additional_command=additional_command, custom_basis_sets=custom_basis_sets, density_fitting=density_fitting, specifications=specifications, software=software)
-    with open(os.path.join(TESTS_DIR, params['in_file'])) as f:
-        lines = f.readlines()
-        xyz_structure = ''.join(lines)
-
-    mol = Molecule.objects.create()
-    e = Ensemble.objects.create(parent_molecule=mol)
-    s = Structure.objects.create(xyz_structure=xyz_structure, parent_ensemble=e)
-
-    proj = Project.objects.create()
-    dummy = CalculationOrder.objects.create(project=proj)
-    calc = Calculation.objects.create(structure=s, step=step, parameters=p, order=dummy)
-
-    if 'constraints' in params.keys():
-        calc.constraints = params['constraints']
-
-    return calc
 
 class GaussianTests(TestCase):
     def setUp(self):
         call_command('init_static_obj')
+        self.user = User.objects.create(username='User')
+        self.profile = Profile.objects.get(user=self.user)
 
     def is_equivalent(self, ref, res):
         ref_lines = [i.strip() for i in ref.split('\n')]
@@ -145,7 +72,7 @@ class GaussianTests(TestCase):
                 'charge': '-1',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -170,7 +97,7 @@ class GaussianTests(TestCase):
                 'charge': '-1',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -197,7 +124,7 @@ class GaussianTests(TestCase):
                 'solvation_model': 'SMD',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -225,7 +152,7 @@ class GaussianTests(TestCase):
                 'solvation_radii': 'SMD18',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -258,7 +185,7 @@ class GaussianTests(TestCase):
                 'solvation_radii': 'Bondi',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -288,7 +215,7 @@ class GaussianTests(TestCase):
                 'solvation_radii': 'UFF',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -316,7 +243,7 @@ class GaussianTests(TestCase):
                 'solvation_radii': 'Bondi',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -346,7 +273,7 @@ class GaussianTests(TestCase):
                 'solvation_radii': 'UFF',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -372,7 +299,7 @@ class GaussianTests(TestCase):
                 'charge': '-1',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -399,7 +326,7 @@ class GaussianTests(TestCase):
                 'additional_command': 'nosymm 5D',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -424,7 +351,7 @@ class GaussianTests(TestCase):
                 'charge': '-1',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -449,7 +376,7 @@ class GaussianTests(TestCase):
                 'charge': '-1',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -476,7 +403,7 @@ class GaussianTests(TestCase):
                 'basis_set': '6-31+G(d,p)',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -501,7 +428,7 @@ class GaussianTests(TestCase):
                 'charge': '-1',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -526,7 +453,7 @@ class GaussianTests(TestCase):
                 'charge': '-1',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -552,7 +479,7 @@ class GaussianTests(TestCase):
                 'basis_set': '6-31+G(d,p)',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -582,7 +509,7 @@ class GaussianTests(TestCase):
                 'constraints': 'Scan_9_1.4_10-1_2;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -620,7 +547,7 @@ class GaussianTests(TestCase):
                 'constraints': 'Scan_9_90_10-2_1_3;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -658,7 +585,7 @@ class GaussianTests(TestCase):
                 'constraints': 'Scan_9_0_10-4_1_5_8;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -696,7 +623,7 @@ class GaussianTests(TestCase):
                 'constraints': 'Freeze-1_2;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -734,7 +661,7 @@ class GaussianTests(TestCase):
                 'constraints': 'Freeze-2_1_3;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -773,7 +700,7 @@ class GaussianTests(TestCase):
                 'constraints': 'Freeze-4_1_5_8;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -809,7 +736,7 @@ class GaussianTests(TestCase):
                 'basis_set': '6-31+G(d,p)',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -835,7 +762,7 @@ class GaussianTests(TestCase):
                 'basis_set': '6-31+G(d,p)',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -865,7 +792,7 @@ class GaussianTests(TestCase):
                 'density_fitting': 'W06',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -897,7 +824,7 @@ class GaussianTests(TestCase):
                 'custom_basis_sets': 'O=Def2-TZVPD;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -975,7 +902,7 @@ class GaussianTests(TestCase):
                 'custom_basis_sets': 'Cl=Def2-TZVPD;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -1010,7 +937,7 @@ class GaussianTests(TestCase):
                 'custom_basis_sets': 'I=Def2-TZVPD;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -1158,7 +1085,7 @@ class GaussianTests(TestCase):
                 'custom_basis_sets': 'I=Def2-TZVPD;H=Def2-TZVPD;C=Def2-TZVPD;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -1354,7 +1281,7 @@ class GaussianTests(TestCase):
                 'specifications': 'SCF(Tight);',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -1381,7 +1308,7 @@ class GaussianTests(TestCase):
                 'specifications': 'SCF(Tight);SCF(XQC);',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -1408,7 +1335,7 @@ class GaussianTests(TestCase):
                 'specifications': 'opt(MaxStep=5);',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -1435,7 +1362,7 @@ class GaussianTests(TestCase):
                 'specifications': 'opt(MaxStep=5);opt(Tight);',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -1462,7 +1389,7 @@ class GaussianTests(TestCase):
                 'specifications': 'opt(MaxStep=5);SCF(Tight);',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -1490,7 +1417,7 @@ class GaussianTests(TestCase):
                 'additional_command': 'nosymm 5D',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -1505,10 +1432,105 @@ class GaussianTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
+    def test_default_append1(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                }
+
+        user = User.objects.create(username='tmp')
+        profile = Profile.objects.get(user=user)
+        profile.default_gaussian = "Int(UltraFineGrid)"
+        profile.save()
+
+        calc = gen_calc(params, profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p sp M062X/Def2SVP Int(UltraFineGrid)
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_default_append2(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                }
+
+        user = User.objects.create(username='tmp')
+        profile = Profile.objects.get(user=user)
+        profile.default_gaussian = "Int(UltraFineGrid) SCF(Tight)"
+        profile.save()
+
+        calc = gen_calc(params, profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p sp M062X/Def2SVP Int(UltraFineGrid) SCF(Tight)
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_default_append_and_specification(self):
+        params = {
+                'type': 'Geometrical Optimisation',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'opt(MaxStep=5);',
+                }
+
+        user = User.objects.create(username='tmp')
+        profile = Profile.objects.get(user=user)
+        profile.default_gaussian = "Int(UltraFineGrid) SCF(Tight)"
+        profile.save()
+
+        calc = gen_calc(params, profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt(maxstep=5) M062X/Def2SVP Int(UltraFineGrid) SCF(Tight)
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
 class OrcaTests(TestCase):
     def setUp(self):
         call_command('init_static_obj')
-
+        self.user = User.objects.create(username='User')
+        self.profile = Profile.objects.get(user=self.user)
 
     def is_equivalent(self, ref, res):
         ref_lines = [i.strip() for i in ref.split('\n')]
@@ -1563,7 +1585,7 @@ class OrcaTests(TestCase):
                 'charge': '-1',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1588,7 +1610,7 @@ class OrcaTests(TestCase):
                 'charge': '-1',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1615,7 +1637,7 @@ class OrcaTests(TestCase):
                 'solvation_model': 'SMD',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1647,7 +1669,7 @@ class OrcaTests(TestCase):
                 'solvation_radii': 'SMD18',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1681,7 +1703,7 @@ class OrcaTests(TestCase):
                 'solvation_model': 'CPCM',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1707,7 +1729,7 @@ class OrcaTests(TestCase):
                 'charge': '-1',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1734,7 +1756,7 @@ class OrcaTests(TestCase):
                 'additional_command': 'TightSCF',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1760,7 +1782,7 @@ class OrcaTests(TestCase):
                 'additional_command': 'cc-pVTZ/C',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1785,7 +1807,7 @@ class OrcaTests(TestCase):
                 'charge': '-1',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1810,7 +1832,7 @@ class OrcaTests(TestCase):
                 'charge': '-1',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1837,7 +1859,7 @@ class OrcaTests(TestCase):
                 'basis_set': '6-31+G(d,p)',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1862,7 +1884,7 @@ class OrcaTests(TestCase):
                 'charge': '-1',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1887,7 +1909,7 @@ class OrcaTests(TestCase):
                 'charge': '-1',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1913,7 +1935,7 @@ class OrcaTests(TestCase):
                 'basis_set': '6-31+G(d,p)',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1943,7 +1965,7 @@ class OrcaTests(TestCase):
                 'constraints': 'Scan_9_1.4_10-1_2;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -1983,7 +2005,7 @@ class OrcaTests(TestCase):
                 'constraints': 'Scan_9_90_10-2_1_3;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -2023,7 +2045,7 @@ class OrcaTests(TestCase):
                 'constraints': 'Scan_9_0_10-4_1_5_8;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -2063,7 +2085,7 @@ class OrcaTests(TestCase):
                 'constraints': 'Freeze-1_2;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -2103,7 +2125,7 @@ class OrcaTests(TestCase):
                 'constraints': 'Freeze-2_1_3;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -2144,7 +2166,7 @@ class OrcaTests(TestCase):
                 'constraints': 'Freeze-4_1_5_8;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -2182,7 +2204,7 @@ class OrcaTests(TestCase):
                 'basis_set': '6-31+G(d,p)',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -2209,7 +2231,7 @@ class OrcaTests(TestCase):
                 'custom_basis_sets': 'N=Def2-SVP;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -2235,7 +2257,7 @@ class OrcaTests(TestCase):
                 'basis_set': '6-31+G(d,p)',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -2267,7 +2289,7 @@ class OrcaTests(TestCase):
                 'custom_basis_sets': 'N=Def2-SVP;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """
@@ -2319,7 +2341,7 @@ class OrcaTests(TestCase):
                 'custom_basis_sets': 'I=Def2-TZVPD;',
                 }
 
-        calc = gen_calc(params)
+        calc = gen_calc(params, self.profile)
         orca = OrcaCalculation(calc)
 
         REF = """

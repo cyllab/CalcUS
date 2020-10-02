@@ -43,7 +43,7 @@ class OrcaCalculation:
         self.pal = 0
         self.blocks = []
         self.command_line = ""
-        self.additional_commands = ""
+        self.additional_commands = self.calc.order.author.default_orca
         self.xyz_structure = ""
         self.block_lines = ""
         self.input_file = ""

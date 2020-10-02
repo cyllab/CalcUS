@@ -2642,7 +2642,17 @@ def update_preferences(request):
         if 'pref_units' not in request.POST.keys():
             return HttpResponse(status=204)
 
+
+        if 'default_gaussian' in request.POST.keys():
+            default_gaussian = clean(request.POST['default_gaussian']).replace('\n', '')
+            profile.default_gaussian = default_gaussian
+
+        if 'default_orca' in request.POST.keys():
+            default_orca = clean(request.POST['default_orca']).replace('\n', '')
+            profile.default_orca = default_orca
+
         units = clean(request.POST['pref_units'])
+
         try:
             unit_code = profile.INV_UNITS[units]
         except KeyError:

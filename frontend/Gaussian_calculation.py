@@ -58,7 +58,7 @@ class GaussianCalculation:
         self.pal = 0
         self.appendix = []
         self.command_line = ""
-        self.additional_commands = ""
+        self.additional_commands = self.calc.order.author.default_gaussian
         self.command_specifications = []
         self.xyz_structure = ""
         self.input_file = ""

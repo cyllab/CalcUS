@@ -24,6 +24,9 @@ class Profile(models.Model):
 
     member_of = models.ForeignKey('ResearchGroup', on_delete=models.SET_NULL, blank=True, null=True, related_name='members')
 
+    default_gaussian = models.CharField(max_length=1000, default='')
+    default_orca = models.CharField(max_length=1000, default='')
+
     code = models.CharField(max_length=16)
 
     pref_units = models.PositiveIntegerField(default=0)
