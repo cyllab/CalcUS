@@ -138,11 +138,14 @@
 		function solvent_selection_changed() {
 			choice = document.getElementById("calc_solvent");
 			solvation_method = document.getElementById("calc_solvation_model_field");
+			solvation_radii = document.getElementById("calc_solvation_radii_field");
 			if(choice.value == "Vacuum") {
 				solvation_method.style.display = "none";	
+				solvation_radii.style.display = "none";	
 			}
 			else {
 				solvation_method.style.display = "block";	
+				solvation_radii.style.display = "block";	
 			}
 		}
 
@@ -152,6 +155,7 @@
 				editor.styles.atoms_displayLabels_3D = true;
 			}
 			else if(choice.value == "Minimum Energy Path") {
+				editor.styles.atoms_displayLabels_3D = false;
 				refresh_aux_mol();
 			}
 			else {
@@ -1252,8 +1256,9 @@
 				},
 				success: function(data) {
 					eval(data);
-					refresh_availabilities();
 					solvent_selection_changed();
+					refresh_availabilities();
+					refresh_availabilities();//Whatever
 				},
 			});
 
@@ -1274,6 +1279,7 @@
 					eval(data);
 					refresh_availabilities();
 					solvent_selection_changed();
+					refresh_availabilities();//Whatever
 				},
 			});
 
@@ -1352,9 +1358,10 @@
   		}
 
 	}		
-
-	const inputElement = document.getElementById("file_structure");
-	inputElement.addEventListener("change", preview_upload, false);
+	{% if not ensemble and not structure and not calc %}
+		const inputElement = document.getElementById("file_structure");
+		inputElement.addEventListener("change", preview_upload, false);
+	{% endif %}
 
 	</script>
 

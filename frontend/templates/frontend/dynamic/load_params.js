@@ -1,4 +1,4 @@
-if ("{{ params.program }}" != "Unknown") {
+if ("{{ params.program }}" != "Unknown" && "{{ params.program}}" != "Open Babel") {
 	solvent = document.getElementById("calc_solvent");
 	solvent.value = "{{ params.solvent }}";
 
@@ -15,6 +15,9 @@ if ("{{ params.program }}" != "Unknown") {
 	else {
 		charge.value = "{{ params.charge }}";
 	}
+
+	mult = document.getElementById("calc_multiplicity");
+	mult.value = "{{ params.multiplicity }}";
 
 	software = document.getElementById("calc_software");
 	software.value = "{{ params.software }}";
