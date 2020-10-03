@@ -198,8 +198,8 @@ class ClusterDaemon:
             print("Deleting connection {}".format(access_id))
             self.delete_access(access_id)
         else:
-            calc_id = lines[1].strip()
-            access_id = lines[2].strip()
+            calc_id = int(lines[1].strip())
+            access_id = int(lines[2].strip())
 
             if cmd == "launch":
                 if calc_id in self.cancelled:
