@@ -1449,7 +1449,7 @@ def delete_ensemble(request):
         try:
             to_delete = Ensemble.objects.get(pk=ensemble_id)
         except Ensemble.DoesNotExist:
-            return HttpResponse(status=403)
+            return HttpResponse(status=404)
 
         if to_delete.parent_molecule.project.author != request.user.profile:
             return HttpResponse(status=403)

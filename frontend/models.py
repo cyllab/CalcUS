@@ -975,6 +975,8 @@ class Calculation(models.Model):
         else:
             raise Exception("Unknown calculation status")
 
+        self.order.project.save()
+
         old_status = self.order.status
         nums = self.order.get_all_calcs
 
@@ -993,7 +995,7 @@ class Calculation(models.Model):
                     self.order.author.unseen_calculations += 1
                     self.order.author.save()
 
-            self.order.project.save()
+            self.order.author.save()
 
         mol.save()
 

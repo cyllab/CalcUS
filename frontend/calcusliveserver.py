@@ -329,7 +329,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         return len(tabs)
 
     def wait_for_ajax(self):
-        wait = WebDriverWait(self.driver, 15)
+        wait = WebDriverWait(self.driver, 5)
 
         wait.until(lambda driver: driver.execute_script('return jQuery.active') == 0)
         wait.until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
@@ -705,14 +705,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_calculations()
 
         try:
-            no_calc = self.driver.find_element_by_css_selector("#calculations_list > p")
-            if no_calc.text.find("No calculation") != -1:
-                return []
-        except selenium.common.exceptions.NoSuchElementException:
-            pass
-
-        try:
-            calculations_div = WebDriverWait(self.driver, 3).until(
+            calculations_div = WebDriverWait(self.driver, 1).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "#calculations_list > .grid"))
             )
         except selenium.common.exceptions.TimeoutException:
@@ -866,7 +859,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
             header = calculations[0].find_element_by_class_name("message-header")
             if "has-background-success" in header.get_attribute("class") or "has-background-danger" in header.get_attribute("class"):
-                    return
+                return
             time.sleep(2)
             ind += 2
             self.driver.refresh()
