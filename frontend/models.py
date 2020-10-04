@@ -80,9 +80,6 @@ class CompletedExercise(models.Model):
     exercise = models.ForeignKey(Exercise, on_delete=models.SET_NULL, blank=True, null=True)
     completed_by = models.ForeignKey(Profile, on_delete=models.SET_NULL, blank=True, null=True)
 
-class ClusterCommand(models.Model):
-    issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
-
 class ResearchGroup(Group):
     PI = models.ForeignKey(Profile, on_delete=models.SET_NULL, blank=True, null=True, related_name="researchgroup_PI")
 
@@ -122,6 +119,8 @@ class ClusterAccess(models.Model):
 
     pal = models.PositiveIntegerField(default=8)
     memory = models.PositiveIntegerField(default=15000)
+
+    status = models.CharField(max_length=100, default='')
 
     last_connected = models.DateTimeField('date', default=timezone.now())
 

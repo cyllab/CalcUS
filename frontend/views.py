@@ -6,6 +6,7 @@ import bleach
 import math
 import time
 import zipfile
+import pika
 from os.path import basename
 from io import BytesIO
 import basis_set_exchange
@@ -27,7 +28,7 @@ from django.contrib.auth.models import User
 from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
-from .models import Calculation, Profile, Project, ClusterAccess, ClusterCommand, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe
+from .models import Calculation, Profile, Project, ClusterAccess, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe
 from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc
 from .decorators import superuser_required
 from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint, get_Gaussian_xyz
@@ -1499,26 +1500,34 @@ def add_clusteraccess(request):
     else:
         return HttpResponse(status=403)
 
+def send_cluster_command(cmd):
+    conn = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    chan = conn.channel()
+
+    chan.queue_declare(queue='cluster')
+    chan.basic_publish(exchange='', routing_key='cluster', body=cmd)
+    conn.close()
+
 @login_required
 def connect_access(request):
     pk = clean(request.POST['access_id'])
 
-    access = ClusterAccess.objects.get(pk=pk)
+    try:
+        access = ClusterAccess.objects.get(pk=pk)
+    except ClusterAccess.DoesNotExist:
+        return HttpResponse(status=403)
 
     profile = request.user.profile
 
     if access.owner != profile:
         return HttpResponse(status=403)
 
-    cmd = ClusterCommand.objects.create(issuer=profile)
-    cmd.save()
-    profile.save()
+    access.status = "Pending"
+    access.save()
 
-    with open(os.path.join(CALCUS_CLUSTER_HOME, "todo", str(cmd.id)), 'w') as out:
-        out.write("connect\n")
-        out.write("{}\n".format(pk))
+    send_cluster_command("connect\n{}\n".format(pk))
 
-    return HttpResponse(cmd.id)
+    return HttpResponse("")
 
 @login_required
 def disconnect_access(request):
@@ -1531,15 +1540,9 @@ def disconnect_access(request):
     if access.owner != profile:
         return HttpResponse(status=403)
 
-    cmd = ClusterCommand.objects.create(issuer=profile)
-    cmd.save()
-    profile.save()
+    send_cluster_command("disconnect\n{}\n".format(pk))
 
-    with open(os.path.join(CALCUS_CLUSTER_HOME, "todo", str(cmd.id)), 'w') as out:
-        out.write("disconnect\n")
-        out.write("{}\n".format(pk))
-
-    return HttpResponse(cmd.id)
+    return HttpResponse("")
 
 @login_required
 def status_access(request):
@@ -1560,21 +1563,19 @@ def status_access(request):
 
 @login_required
 def get_command_status(request):
-    pk = request.POST['command_id']
+    pk = request.POST['access_id']
 
-    cmd = ClusterCommand.objects.get(pk=pk)
-
-    profile = request.user.profile
-    if cmd not in profile.clustercommand_set.all():
+    try:
+        access = ClusterAccess.objects.get(pk=pk)
+    except ClusterAccess.DoesNotExist:
         return HttpResponse(status=403)
 
-    expected_file = os.path.join(CALCUS_CLUSTER_HOME, "done", str(cmd.id))
-    if not os.path.isfile(expected_file):
-        return HttpResponse("Pending")
-    else:
-        with open(expected_file) as f:
-            lines = f.readlines()
-            return HttpResponse(lines[0].strip())
+    profile = request.user.profile
+
+    if access.owner != profile:
+        return HttpResponse(status=403)
+
+    return HttpResponse(access.status)
 
 @login_required
 def delete_access(request, pk):
@@ -1587,13 +1588,7 @@ def delete_access(request, pk):
 
     access.delete()
 
-    cmd = ClusterCommand.objects.create(issuer=profile)
-    cmd.save()
-    profile.save()
-
-    with open(os.path.join(CALCUS_CLUSTER_HOME, "todo", str(cmd.id)), 'w') as out:
-        out.write("delete_access\n")
-        out.write("{}\n".format(pk))
+    send_cluster_command("delete_access\n{}\n".format(pk))
 
     return HttpResponseRedirect("/profile")
 
@@ -1902,10 +1897,7 @@ def get_calc_data_remote(request, pk):
         except OSError:
             pass
 
-        cmd = ClusterCommand.objects.create(issuer=profile)
-
-        with open(os.path.join(CALCUS_CLUSTER_HOME, "todo", str(cmd.id)), 'w') as out:
-            out.write("load_log\n{}\n{}\n".format(calc.id, calc.order.resource.id))
+        send_cluster_command("load_log\n{}\n{}\n".format(calc.id, calc.order.resource.id))
 
         ind = 0
         while not os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")) and ind < 60:
@@ -3183,12 +3175,7 @@ def relaunch_calc(request):
         calc.task_id = res
         calc.save()
     else:
-        cmd = ClusterCommand.objects.create(issuer=calc.order.author)
-        cmd.save()
-        with open(os.path.join(CALCUS_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
-            out.write("launch\n")
-            out.write("{}\n".format(calc.id))
-            out.write("{}\n".format(calc.order.resource.id))
+        send_cluster_command("launch\n{}\n{}\n".format(calc.id, calc.order.resource_id))
 
     return HttpResponse(status=200)
 
@@ -3222,12 +3209,7 @@ def refetch_calc(request):
     calc.status = 1
     calc.save()
 
-    cmd = ClusterCommand.objects.create(issuer=calc.order.author)
-    cmd.save()
-    with open(os.path.join(CALCUS_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
-        out.write("launch\n")
-        out.write("{}\n".format(calc.id))
-        out.write("{}\n".format(calc.order.resource.id))
+    send_cluster_command("launch\n{}\n{}\n".format(calc.id, calc.order.resource_id))
 
     return HttpResponse(status=200)
 

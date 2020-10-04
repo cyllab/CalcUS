@@ -5,6 +5,7 @@ import time
 import glob
 import subprocess
 import shlex
+import pika
 from shutil import copyfile
 
 import ssh2
@@ -124,9 +125,6 @@ class ClusterDaemon:
             self.log("Could not connect to cluster {} with username {}".format(addr, username))
             return 3
 
-        with open(os.path.join(CALCUS_CLUSTER_HOME, 'connections', str(conn.id)), 'w') as out:
-            out.write("Connected\n{}\n".format(int(time.time())))
-
         sftp = session.sftp_init()
         return [conn, sock, session, sftp]
 
@@ -167,35 +165,15 @@ class ClusterDaemon:
 
         access = ClusterAccess.objects.get(pk=access_id)
         access.last_connected = timezone.now()
+        access.status = "Connected"
         access.save()
 
         profile = access.owner
-
 
         for c in Calculation.objects.filter(local=False,order__resource=access,order__author=profile).exclude(status=3).exclude(status=2):
             t = threading.Thread(target=self.resume_calc, args=(c,))
             t.start()
 
-        '''
-        self.access_test(access)
-        conn, sock, session, sftp = self.connections[conn_name]
-        lock = self.locks[conn_name]
-        output = tasks.direct_command("ls", self.connections[conn_name], lock)
-        if isinstance(output, int):
-            self.log("Detected connection failure with {}".format(conn_name))
-            a = self.setup_connection(conn)
-            if a in [2, 3]:
-                self.log("Failed to reconnect with {}".format(conn_name))
-            else:
-                self.log("Connection established with {}".format(conn_name))
-                self.connections[conn_name] = a
-                for c in Calculation.objects.filter(local=False).exclude(status=3).exclude(status=2):
-                    t = threading.Thread(target=self.resume_calc, args=(c,))
-                    t.start()
-
-        else:
-            self.log("Connection already established for {}".format(conn_name))
-        '''
     def disconnect(self, access_id):
         self.log("Disconnecting cluster access {}".format(access_id))
         if access_id in self.connections.keys():
@@ -214,6 +192,7 @@ class ClusterDaemon:
 
         access = ClusterAccess.objects.get(pk=access_id)
         access.last_connected = timezone.now() - timezone.timedelta(1)
+        access.status = ""
         access.save()
 
         self.log("Disconnected cluster access {}".format(access_id))
@@ -232,12 +211,10 @@ class ClusterDaemon:
         except KeyError:#already deleted when disconnnected from cluster
             pass
 
-    def process_command(self, c):
-        with open(c) as f:
-            lines = f.readlines()
-        os.remove(c)
+    def process_command(self, ch, method, properties, body):
+        lines = body.decode('UTF-8').split('\n')
+
         cmd = lines[0].strip()
-        id = int(c.split('/')[-1])
 
         if cmd == "connect":
             access_id = int(lines[1])
@@ -304,36 +281,14 @@ class ClusterDaemon:
                     self.log(self.calculations)
                     return
             else:
-                self.log("Unknown command: {} (command id {})".format(cmd, c.id))
+                self.log("Unknown command: {}".format(cmd))
                 return
 
-    def __init__(self):
-        '''
-        for conn in ClusterAccess.objects.all():
-            self.log("Trying to add access {}".format(conn.id))
-            c = self.access_test(conn.id)
-            if c not in [0, 1, 2, 3, 4]:
-                self.connections[c[0].id] = c
-                self.locks[c[0].id] = Lock()
-                self.log("Added cluster access {}".format(c[0].id))
-            elif c == 0:
-                pass
-            else:
-                self.log("Error with cluster access: {}".format(CONNECTION_CODE[c]))
-        for c in Calculation.objects.filter(local=False).exclude(status=3).exclude(status=2):
-            t = threading.Thread(target=self.resume_calc, args=(c,))
-            t.start()
-        '''
-
-        ind = 1
-        self.log("Startup complete")
+    def keep_alive(self):
+        ind = 0
+        self.log("Starting the keepalive daemon")
         while True:
-            todo = glob.glob(os.path.join(CALCUS_CLUSTER_HOME, 'todo/*'))
-            for c in todo:
-                t = threading.Thread(target=self.process_command, args=(c,))
-                t.start()
             time.sleep(5)
-
             ind += 1
 
             if ind % 12 == 0:
@@ -352,19 +307,16 @@ class ClusterDaemon:
                     if not success:
                         self.log("Could not keep connection {} alive".format(conn_name))
 
-            if ind % 60 == 0:
-                ind = 1
-                for access_id in self.connections.keys():
-                    access = ClusterAccess.objects.get(pk=access_id)
-                    access.last_connected = timezone.now()
-                    access.save()
-                '''
-                for conn_name in self.connections.keys():
-                    conn, sock, session, sftp = self.connections[conn_name]
-                    with open(os.path.join(CALCUS_CLUSTER_HOME, 'connections', str(conn.id)), 'w') as out:
-                        out.write("Connected\n{}\n".format(int(time.time())))
-                '''
+    def __init__(self):
+        t = threading.Thread(target=self.keep_alive)
+        t.start()
 
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        chan = connection.channel()
+        chan.queue_declare(queue='cluster')
+        chan.basic_consume(queue='cluster', auto_ack=True, on_message_callback=self.process_command)
+        self.log("Starting to listen to cluster commands")
+        chan.start_consuming()
 
 if __name__ == "__main__":
     a = ClusterDaemon()

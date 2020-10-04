@@ -448,6 +448,9 @@ def xtb_opt(in_file, calc):
     os.chdir(local_folder)
     ret = system("xtb {} -o vtight -a 0.05 --chrg {} --uhf {} {} ".format(in_file, calc.parameters.charge, calc.parameters.multiplicity, solvent_add), 'calc.out', calc_id=calc.id)
 
+    if ret != 0:
+        return ret
+
     if not local:
         pid = int(threading.get_ident())
         conn = connections[pid]
@@ -461,9 +464,6 @@ def xtb_opt(in_file, calc):
             return -1
 
         sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
-
-    if ret != 0:
-        return ret
 
     if not os.path.isfile("{}/xtbopt.xyz".format(local_folder)):
         return 1
@@ -555,6 +555,9 @@ def xtb_sp(in_file, calc):
     os.chdir(local_folder)
     ret = system("xtb {} --chrg {} --uhf {} {} ".format(in_file, calc.parameters.charge, calc.parameters.multiplicity, solvent_add), 'calc.out', calc_id=calc.id)
 
+    if ret != 0:
+        return ret
+
     if not local:
         pid = int(threading.get_ident())
         conn = connections[pid]
@@ -566,9 +569,6 @@ def xtb_sp(in_file, calc):
             return -1
 
         sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
-
-    if ret != 0:
-        return ret
 
     if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
         return 1
@@ -686,6 +686,9 @@ def xtb_scan(in_file, calc):
     os.chdir(local_folder)
     ret = system("xtb {} --input scan --chrg {} --uhf {} {} --opt".format(in_file, calc.parameters.charge, calc.parameters.multiplicity, solvent_add), 'calc.out', calc_id=calc.id)
 
+    if ret != 0:
+        return ret
+
     if not local:
         a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
         if has_scan:
@@ -787,6 +790,9 @@ def xtb_freq(in_file, calc):
 
     os.chdir(local_folder)
     ret = system("xtb {} --uhf 1 --chrg {} --uhf {} {} --hess".format(in_file, calc.parameters.charge, calc.parameters.multiplicity, solvent_add), 'calc.out', calc_id=calc.id)
+
+    if ret != 0:
+        return ret
 
     if not local:
         pid = int(threading.get_ident())
@@ -975,6 +981,9 @@ def crest_generic(in_file, calc, mode):
         print("Invalid crest mode selected!")
         return -1
 
+    if ret != 0:
+        return ret
+
     if not local:
         pid = int(threading.get_ident())
         conn = connections[pid]
@@ -985,9 +994,6 @@ def crest_generic(in_file, calc, mode):
         b = sftp_get("{}/crest_conformers.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "crest_conformers.xyz"), conn, lock)
         if a == -1 or b == -1:
             return -1
-
-    if ret != 0:
-        return ret
 
     if not os.path.isfile("{}/calc.out".format(local_folder)):
         return 1

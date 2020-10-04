@@ -16,29 +16,26 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 				data: {'access_id': {{ access.id }}}, 
-				success: function(data)
+				success: function()
 				{
-					let id = data;
 					var my_refresh = setInterval(function() {
+						$.ajax({
+							type: "POST",
+							url: "/get_command_status/",
+							data: {'access_id': {{ access.id }}}, 
+							headers:{
+								"X-CSRFToken": '{{ csrf_token }}',
+							},
 
-					$.ajax({
-						type: "POST",
-						url: "/get_command_status/",
-						data: {'command_id': id}, 
-						headers:{
-							"X-CSRFToken": '{{ csrf_token }}',
-						},
-
-						success: function(data)
-						{
-							$("#test_msg").html(data);
-							if (data != "Pending") {
-								clearInterval(my_refresh);
-								refresh_status();
+							success: function(data)
+							{
+								$("#test_msg").html(data);
+								if (data != "Pending") {
+									clearInterval(my_refresh);
+									refresh_status();
+								}
 							}
-						}
-					});
-		 			 
+						});
 			 		}, 1000);
 
 				}
