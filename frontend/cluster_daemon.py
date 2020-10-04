@@ -166,7 +166,11 @@ class ClusterDaemon:
             self.log("Error with cluster access {}: {}".format(access_id, CONNECTION_CODE[c]))
 
         access = ClusterAccess.objects.get(pk=access_id)
+        access.last_connected = timezone.now()
+        access.save()
+
         profile = access.owner
+
 
         for c in Calculation.objects.filter(local=False,order__resource=access,order__author=profile).exclude(status=3).exclude(status=2):
             t = threading.Thread(target=self.resume_calc, args=(c,))
@@ -207,6 +211,10 @@ class ClusterDaemon:
         for pid in pid_to_remove:
             del tasks.connections[pid]
             del tasks.locks[pid]
+
+        access = ClusterAccess.objects.get(pk=access_id)
+        access.last_connected = timezone.now() - timezone.timedelta(1)
+        access.save()
 
         self.log("Disconnected cluster access {}".format(access_id))
 
@@ -346,10 +354,17 @@ class ClusterDaemon:
 
             if ind % 60 == 0:
                 ind = 1
+                for access_id in self.connections.keys():
+                    access = ClusterAccess.objects.get(pk=access_id)
+                    access.last_connected = timezone.now()
+                    access.save()
+                '''
                 for conn_name in self.connections.keys():
                     conn, sock, session, sftp = self.connections[conn_name]
                     with open(os.path.join(CALCUS_CLUSTER_HOME, 'connections', str(conn.id)), 'w') as out:
                         out.write("Connected\n{}\n".format(int(time.time())))
+                '''
+
 
 if __name__ == "__main__":
     a = ClusterDaemon()

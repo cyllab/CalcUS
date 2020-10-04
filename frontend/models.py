@@ -123,6 +123,9 @@ class ClusterAccess(models.Model):
     pal = models.PositiveIntegerField(default=8)
     memory = models.PositiveIntegerField(default=15000)
 
+    last_connected = models.DateTimeField('date', default=timezone.now())
+
+
 class BasicStep(models.Model):
     name = models.CharField(max_length=100)
     desc = models.CharField(max_length=500, default="")

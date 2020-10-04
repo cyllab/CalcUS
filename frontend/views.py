@@ -1552,21 +1552,11 @@ def status_access(request):
     if access.owner != profile and not profile.user.is_superuser:
         return HttpResponse(status=403)
 
-    path = os.path.join(CALCUS_CLUSTER_HOME, "connections", pk)
-    if os.path.isfile(path):
-        with open(path) as f:
-            lines = f.readlines()
-            if lines[0].strip() == "Connected":
-                t = int(lines[1].strip())
-                dtime = time.time() - t
-                if dtime < 6*60:
-                    return HttpResponse("Connected {} seconds ago".format(int(dtime)))
-                else:
-                    return HttpResponse("Disconnected")
+    dt = timezone.now() - access.last_connected
+    if dt.total_seconds() < 600:
+        return HttpResponse("Connected as of {} seconds ago".format(int(dt.total_seconds())))
     else:
         return HttpResponse("Disconnected")
-
-    return HttpResponse(cmd.id)
 
 @login_required
 def get_command_status(request):
