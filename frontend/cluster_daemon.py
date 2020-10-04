@@ -63,7 +63,7 @@ class ClusterDaemon:
     def log(self, msg):
         print("{} - {}".format(now(), msg))
 
-    def access_test(self, id):
+    def access_test(self, id, password):
         if id in self.connections.keys():
             return 0
 
@@ -72,7 +72,7 @@ class ClusterDaemon:
         except ClusterAccess.DoesNotExist:
             return 1
 
-        a = self.setup_connection(conn)
+        a = self.setup_connection(conn, password)
 
         if a in [2, 3]:
             return a
@@ -102,7 +102,7 @@ class ClusterDaemon:
         with open(os.path.join(CALCUS_CLUSTER_HOME, 'done', str(id)), 'w') as out:
             out.write(msg)
 
-    def setup_connection(self, conn):
+    def setup_connection(self, conn, password):
         addr = conn.cluster_address
         keypath = os.path.join(CALCUS_KEY_HOME, conn.private_key_path)
         username = conn.cluster_username
@@ -120,7 +120,7 @@ class ClusterDaemon:
         session.keepalive_config(True, 60)
 
         try:
-            session.userauth_publickey_fromfile(username, keypath, passphrase="")
+            session.userauth_publickey_fromfile(username, keypath, passphrase=password)
         except ssh2.exceptions.AuthenticationError:
             self.log("Could not connect to cluster {} with username {}".format(addr, username))
             return 3
@@ -149,10 +149,10 @@ class ClusterDaemon:
 
         return tasks.run_calc(calc_id)
 
-    def connect(self, access_id):
+    def connect(self, access_id, password):
         self.log("Connecting ({})".format(access_id))
 
-        c = self.access_test(access_id)
+        c = self.access_test(access_id, password)
 
         if c not in [0, 1, 2, 3, 4]:
             self.connections[access_id] = c
@@ -218,7 +218,8 @@ class ClusterDaemon:
 
         if cmd == "connect":
             access_id = int(lines[1])
-            r = self.connect(access_id)
+            password = lines[2]
+            r = self.connect(access_id, password)
             if r in [1, 2, 3, 4]:
                 self.output(id, "Error: {}".format(CONNECTION_CODE[r]))
             else:

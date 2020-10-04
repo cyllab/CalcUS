@@ -9,13 +9,14 @@
 
 	<script>
 		function connect_access() {
+			password = document.getElementById("ssh_password").value;
 			$.ajax({
 				type: "POST",
 				url: "/connect_access/",
 				headers:{
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
-				data: {'access_id': {{ access.id }}}, 
+				data: {'access_id': {{ access.id }}, 'password': password}, 
 				success: function()
 				{
 					var my_refresh = setInterval(function() {
@@ -82,6 +83,19 @@
 				}});
 		}
 
+		function delete_access() {
+			var res = confirm("Delete access?");	
+			if (res) {
+				$.ajax({
+					method: "GET",
+					url: "/delete_access/{{ access.id }}",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					}
+				});
+			}
+		}
+
 		$(document).ready(function() {
 			refresh_status();
 		});
@@ -122,12 +136,23 @@
 
 	<div class="column">
 		<div class="box">
-			<button class="button is-primary" onclick="connect_access();">Connect to cluster</button>
-			<button class="button is-danger" onclick="disconnect_access();">Disconnect</button>
-			<br />
-			<a class="button is-danger" href="/delete_access/{{ access.id }}">Delete this access</a>
-			<br />
-			<div id="test_msg">
+			<div class="columns">
+				<div class="column is-narrow">
+					<div class="field">
+						<label class="label">Password for Access</label>
+						<div class="control">
+							<input class="input" type="password" id="ssh_password" style="width: 100%;">
+						</div>
+					</div>
+
+					<button class="button is-primary" onclick="connect_access();">Connect to cluster</button>
+					<button class="button is-danger" onclick="disconnect_access();">Disconnect</button>
+					<div id="test_msg">
+					</div>
+				</div>
+				<div class="column">
+					<a class="button is-danger" onclick="delete_access();" >Delete this access</a>
+				</div>
 			</div>
 		</div>
 	</div>

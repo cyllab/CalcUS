@@ -1467,6 +1467,7 @@ def add_clusteraccess(request):
         username = clean(request.POST['cluster_username'])
         pal = int(clean(request.POST['cluster_cores']))
         memory = int(clean(request.POST['cluster_memory']))
+        password = clean(request.POST['cluster_password'])
 
         owner = request.user.profile
 
@@ -1488,7 +1489,7 @@ def add_clusteraccess(request):
 
         public_key = key.public_key().public_bytes(serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH)
 
-        pem = key.private_bytes(encoding=serialization.Encoding.PEM, format=serialization.PrivateFormat.TraditionalOpenSSL, encryption_algorithm=serialization.NoEncryption())
+        pem = key.private_bytes(encoding=serialization.Encoding.PEM, format=serialization.PrivateFormat.TraditionalOpenSSL, encryption_algorithm=serialization.BestAvailableEncryption(bytes(password, 'UTF-8')))
         with open(os.path.join(CALCUS_KEY_HOME, key_private_name), 'wb') as out:
             out.write(pem)
 
@@ -1511,6 +1512,7 @@ def send_cluster_command(cmd):
 @login_required
 def connect_access(request):
     pk = clean(request.POST['access_id'])
+    password = clean(request.POST['password'])
 
     try:
         access = ClusterAccess.objects.get(pk=pk)
@@ -1525,7 +1527,7 @@ def connect_access(request):
     access.status = "Pending"
     access.save()
 
-    send_cluster_command("connect\n{}\n".format(pk))
+    send_cluster_command("connect\n{}\n{}\n".format(pk, password))
 
     return HttpResponse("")
 
