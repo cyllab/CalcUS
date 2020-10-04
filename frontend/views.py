@@ -1500,7 +1500,7 @@ def add_clusteraccess(request):
         return HttpResponse(status=403)
 
 @login_required
-def test_access(request):
+def connect_access(request):
     pk = clean(request.POST['access_id'])
 
     access = ClusterAccess.objects.get(pk=pk)
@@ -1515,7 +1515,28 @@ def test_access(request):
     profile.save()
 
     with open(os.path.join(CALCUS_CLUSTER_HOME, "todo", str(cmd.id)), 'w') as out:
-        out.write("access_test\n")
+        out.write("connect\n")
+        out.write("{}\n".format(pk))
+
+    return HttpResponse(cmd.id)
+
+@login_required
+def disconnect_access(request):
+    pk = clean(request.POST['access_id'])
+
+    access = ClusterAccess.objects.get(pk=pk)
+
+    profile = request.user.profile
+
+    if access.owner != profile:
+        return HttpResponse(status=403)
+
+    cmd = ClusterCommand.objects.create(issuer=profile)
+    cmd.save()
+    profile.save()
+
+    with open(os.path.join(CALCUS_CLUSTER_HOME, "todo", str(cmd.id)), 'w') as out:
+        out.write("disconnect\n")
         out.write("{}\n".format(pk))
 
     return HttpResponse(cmd.id)

@@ -248,6 +248,10 @@ def wait_until_done(calc, conn, lock):
             kill_sig.remove(pid)
             return -2
 
+        if pid not in connections.keys():
+            print("Thread aborted for calculation {}".format(calc.id))
+            return 7
+
 def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
     if REMOTE and not force_local:
         assert calc_id != -1
@@ -1081,6 +1085,9 @@ def launch_orca_calc(in_file, calc, files):
         os.chdir(local_folder)
         ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
 
+    if ret != 0:
+        return ret
+
     if not calc.local:
         for f in files:
             a = sftp_get("{}/{}".format(folder, f), os.path.join(CALCUS_SCR_HOME, str(calc.id), f), conn, lock)
@@ -1095,8 +1102,6 @@ def launch_orca_calc(in_file, calc, files):
         if not os.path.isfile("{}/{}".format(local_folder, f)):
             return -1
 
-    if ret != 0:
-        return ret
 
     return 0
 
@@ -1627,6 +1632,9 @@ def launch_gaussian_calc(in_file, calc, files):
         os.chdir(local_folder)
         ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
 
+    if ret != 0:
+        return ret
+
     if not calc.local:
         for f in files:
             a = sftp_get("{}/{}".format(folder, f), os.path.join(local_folder, f), conn, lock)
@@ -1641,9 +1649,6 @@ def launch_gaussian_calc(in_file, calc, files):
         lines = f.readlines()
         if lines[-1].find("Normal termination") == -1:
             return -1
-
-    if ret != 0:
-        return ret
 
     return 0
 
@@ -1855,7 +1860,6 @@ def gaussian_freq(in_file, calc):
 
     if ret != 0:
         return ret
-
 
     with open("{}/calc.log".format(local_folder)) as f:
         outlines = f.readlines()
@@ -2691,6 +2695,9 @@ def run_calc(calc_id):
     except:
         ret = 1
         traceback.print_exc()
+
+    if ret == 7:#Manually disconnected from cluster
+        return
 
     calc = Calculation.objects.get(pk=calc_id)
     calc.date_finished = timezone.now()

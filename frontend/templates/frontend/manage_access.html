@@ -8,10 +8,10 @@
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 
 	<script>
-		function test_access() {
+		function connect_access() {
 			$.ajax({
 				type: "POST",
-				url: "/test_access/",
+				url: "/connect_access/",
 				headers:{
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
@@ -45,6 +45,22 @@
 			});
 
 		}
+		function disconnect_access() {
+			$.ajax({
+				type: "POST",
+				url: "/disconnect_access/",
+				headers:{
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				data: {'access_id': {{ access.id }}}, 
+				success: function(data)
+				{
+					$("#test_msg").html("Access disconnected");
+				}
+			});
+
+		}
+
 		function refresh_status() {
 			$.ajax({
 				type: "POST",
@@ -109,7 +125,8 @@
 
 	<div class="column">
 		<div class="box">
-			<button class="button is-primary" onclick="test_access();">Test this access</button>
+			<button class="button is-primary" onclick="connect_access();">Connect to cluster</button>
+			<button class="button is-danger" onclick="disconnect_access();">Disconnect</button>
 			<br />
 			<a class="button is-danger" href="/delete_access/{{ access.id }}">Delete this access</a>
 			<br />
