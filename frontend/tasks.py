@@ -2501,8 +2501,14 @@ def run_calc(calc_id):
         return
 
     if calc.status == 0:
-        os.mkdir(res_dir)
-        os.mkdir(workdir)
+        try:
+            os.mkdir(res_dir)
+        except OSError:
+            print("Directory already exists: {}".format(res_dir))
+        try:
+            os.mkdir(workdir)
+        except OSError:
+            print("Directory already exists: {}".format(res_dir))
         in_file = os.path.join(workdir, 'in.xyz')
 
         with open(in_file, 'w') as out:

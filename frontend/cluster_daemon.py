@@ -61,7 +61,7 @@ class ClusterDaemon:
     cancelled = []
 
     def log(self, msg):
-        print("{} - {}".format(now(), msg))
+        print("{} - {}".format(now(), msg), flush=True)
 
     def access_test(self, id, password):
         if id in self.connections.keys():
