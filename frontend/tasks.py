@@ -40,6 +40,7 @@ from ssh2.sftp import LIBSSH2_FXF_CREAT, LIBSSH2_FXF_WRITE, \
 
 from .ORCA_calculation import OrcaCalculation
 from .Gaussian_calculation import GaussianCalculation
+from .xtb_calculation import XtbCalculation
 from .calculation_helper import *
 
 try:
@@ -194,7 +195,11 @@ def sftp_put(src, dst, conn, lock):
     lock.release()
 
 def wait_until_logfile(remote_dir, conn, lock):
-    DELAY = [5, 30, 60, 180, 300, 300, 300, 300]
+    if is_test:
+        DELAY = [5]
+    else:
+        DELAY = [5, 30, 60, 180, 300, 600]
+
     ind = 0
     while ind < len(DELAY):
         output = direct_command("ls {}".format(remote_dir), conn, lock)
@@ -216,7 +221,12 @@ def wait_until_logfile(remote_dir, conn, lock):
 def wait_until_done(calc, conn, lock):
     job_id = calc.remote_id
     print("Waiting for job {} to finish".format(job_id))
-    DELAY = [5, 10, 15, 20, 60, 200, 400]
+
+    if is_test:
+        DELAY = [5]
+    else:
+        DELAY = [5, 20, 30, 60, 120, 240, 600]
+
     ind = 0
 
     pid = int(threading.get_ident())
@@ -436,44 +446,69 @@ def generate_xyz_structure(drawing, structure):
         return 0
 
 
-def xtb_opt(in_file, calc):
-    folder = '/'.join(in_file.split('/')[:-1])
+def launch_xtb_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
+    folder = '/'.join(in_file.split('/')[:-1])
 
-    if calc.parameters.solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
-    else:
-        solvent_add = ''
+    xtb = XtbCalculation(calc)
+    calc.input_file = xtb.command
+    calc.save()
+
+    if xtb.option_file != "":
+        with open(os.path.join(local_folder, "input"), 'w') as out:
+            out.write(xtb.option_file)
 
     os.chdir(local_folder)
-    ret = system("xtb {} -o vtight -a 0.05 --chrg {} --uhf {} {} ".format(in_file, calc.parameters.charge, calc.parameters.multiplicity, solvent_add), 'calc.out', calc_id=calc.id)
 
-    if ret != 0:
-        return ret
-
-    if not local:
+    if not calc.local:
         pid = int(threading.get_ident())
         conn = connections[pid]
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
+        sftp_put("{}/in.xyz".format(local_folder), os.path.join(folder, "in.xyz"), conn, lock)
+        if xtb.option_file != "":
+            sftp_put("{}/input".format(local_folder), os.path.join(folder, "input"), conn, lock)
 
-        a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        b = sftp_get("{}/xtbopt.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbopt.xyz"), conn, lock)
+        ret = system(xtb.command, 'calc.out', software='xtb', calc_id=calc.id)
+    else:
+        os.chdir(local_folder)
+        ret = system(xtb.command, 'calc.out', software='xtb', calc_id=calc.id)
 
-        if a == -1 or b == -1:
+    if ret != 0:
+        return ret
+
+    if not calc.local:
+        for f in files:
+            a = sftp_get("{}/{}".format(folder, f), os.path.join(CALCUS_SCR_HOME, str(calc.id), f), conn, lock)
+            if a == -1:
+                return -1
+        a = sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
+        if a != -1:
             return -1
 
-        sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
+    for f in files:
+        if not os.path.isfile("{}/{}".format(local_folder, f)):
+            return -1
 
-    if not os.path.isfile("{}/xtbopt.xyz".format(local_folder)):
-        return 1
+    '''
+    with open("{}/calc.out".format(local_folder)) as f:
+        lines = f.readlines()
+        for line in lines:
+            if line.find("[WARNING] Runtime exception occurred") != -1:
+                return 1
+    '''
+    #Frequency calculations on unoptimized geometries give an error
 
-    if not os.path.isfile("{}/calc.out".format(local_folder)):
-        return 1
+    return 0
 
-    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
-        return 1
+
+def xtb_opt(in_file, calc):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+
+    ret = launch_xtb_calc(in_file, calc, ['calc.out', 'xtbopt.xyz'])
+
+    if ret != 0:
+        return ret
 
     with open("{}/xtbopt.xyz".format(local_folder)) as f:
         lines = f.readlines()
@@ -505,6 +540,7 @@ def xtb_mep(in_file, calc):
 
     with open(os.path.join(local_folder, 'struct2.xyz'), 'w') as out:
         out.write(calc.aux_structure.xyz_structure)
+
     ret = launch_orca_calc(in_file, calc, ['calc.out', 'calc_MEP_trj.xyz'])
 
     if ret != 0:
@@ -544,38 +580,12 @@ def xtb_mep(in_file, calc):
     return 0
 
 def xtb_sp(in_file, calc):
-    folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
 
-    if calc.parameters.solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
-    else:
-        solvent_add = ''
-
-    os.chdir(local_folder)
-    ret = system("xtb {} --chrg {} --uhf {} {} ".format(in_file, calc.parameters.charge, calc.parameters.multiplicity, solvent_add), 'calc.out', calc_id=calc.id)
+    ret = launch_xtb_calc(in_file, calc, ['calc.out'])
 
     if ret != 0:
         return ret
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-
-        a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        if a == -1:
-            return -1
-
-        sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
-
-    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
-        return 1
-
-    if not os.path.isfile("{}/calc.out".format(local_folder)):
-        return 1
 
     with open("{}/calc.out".format(local_folder)) as f:
         lines = f.readlines()
@@ -636,87 +646,19 @@ def xtb_ts(in_file, calc):
 
 
 def xtb_scan(in_file, calc):
-    if calc.parameters.solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
-    else:
-        solvent_add = ''
-
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
-    folder = '/'.join(in_file.split('/')[:-1])
 
-    constraints = calc.constraints.split(';')[:-1]
-    if constraints == "":
-        print("No constraints!")
-        return -1, 'e'
+    preparse = XtbCalculation(calc)
 
-    with open("{}/scan".format(local_folder), 'w') as out:
-        out.write("$constrain\n")
-        out.write("force constant=20\n")
-        has_scan = False
-        for cmd in constraints:
-            _cmd, ids = cmd.split('-')
-            _cmd = _cmd.split('_')
-            ids = ids.split('_')
-            type = len(ids)
-            if type == 2:
-                out.write("distance: {}, {}, auto\n".format(*ids))
-            if type == 3:
-                out.write("angle: {}, {}, {}, auto\n".format(*ids))
-            if type == 4:
-                out.write("dihedral: {}, {}, {}, {}, auto\n".format(*ids))
-            if _cmd[0] == "Scan":
-                has_scan = True
-        if has_scan:
-            calc.save()
-            out.write("$scan\n")
-            for counter, cmd in enumerate(constraints):
-                _cmd, ids = cmd.split('-')
-                _cmd = _cmd.split('_')
-                if _cmd[0] == "Scan":
-                    out.write("{}: {}, {}, {}\n".format(counter+1, *_cmd[1:]))
-        out.write("$end")
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-        sftp_put("{}/scan".format(local_folder), os.path.join(folder, 'scan'), conn, lock)
-
-    os.chdir(local_folder)
-    ret = system("xtb {} --input scan --chrg {} --uhf {} {} --opt".format(in_file, calc.parameters.charge, calc.parameters.multiplicity, solvent_add), 'calc.out', calc_id=calc.id)
+    if preparse.has_scan:
+        ret = launch_xtb_calc(in_file, calc, ['calc.out', 'xtbscan.log'])
+    else:
+        ret = launch_xtb_calc(in_file, calc, ['calc.out', 'xtbopt.xyz'])
 
     if ret != 0:
         return ret
 
-    if not local:
-        a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        if has_scan:
-            b = sftp_get("{}/xtbscan.log".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbscan.log"), conn, lock)
-        else:
-            b = sftp_get("{}/xtbopt.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbopt.xyz"), conn, lock)
-        if a == -1 or b == -1:
-            return -1
-
-        sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
-
-    if ret != 0:
-        return ret
-
-    if not os.path.isfile("{}/calc.out".format(local_folder)):
-        return 1
-
-    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
-        return 1
-
-    with open("{}/calc.out".format(local_folder)) as f:
-        lines = f.readlines()
-        for line in lines:
-            if line.find("[WARNING] Runtime exception occurred") != -1:
-                return 1
-
-    if has_scan:
+    if preparse.has_scan:
         if not os.path.isfile("{}/xtbscan.log".format(local_folder)):
             return 1
 
@@ -769,7 +711,6 @@ def xtb_scan(in_file, calc):
             prop = get_or_create(calc.parameters, r)
             prop.energy = E
             prop.homo_lumo_gap = hl_gap
-            #assert E == Eb
 
             r.homo_lumo_gap = hl_gap
             r.save()
@@ -780,50 +721,14 @@ def xtb_scan(in_file, calc):
     return 0
 
 def xtb_freq(in_file, calc):
-    folder = '/'.join(in_file.split('/')[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
 
-    if calc.parameters.solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
-    else:
-        solvent_add = ''
-
-    os.chdir(local_folder)
-    ret = system("xtb {} --uhf 1 --chrg {} --uhf {} {} --hess".format(in_file, calc.parameters.charge, calc.parameters.multiplicity, solvent_add), 'calc.out', calc_id=calc.id)
-
-    if ret != 0:
-        return ret
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-        a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        b = sftp_get("{}/vibspectrum".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "vibspectrum"), conn, lock)
-        c = sftp_get("{}/g98.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "g98.out"), conn, lock)
-
-        if a == -1 or b == -1 or c == -1:
-            return -1
-
-        sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
+    ret = launch_xtb_calc(in_file, calc, ['calc.out', 'vibspectrum', 'g98.out'])
 
     if ret != 0:
         return ret
 
     a = save_to_results(os.path.join(local_folder, "vibspectrum"), calc)
-    if a != 0:
-        return a
-
-    if os.path.isfile("{}/NOT_CONVERGED".format(local_folder)):
-        return 1
-
-    if not os.path.isfile("{}/calc.out".format(local_folder)):
-        return 1
-
-    if not os.path.isfile("{}/g98.out".format(local_folder)):
-        return 1
 
     with open("{}/calc.out".format(local_folder)) as f:
         lines = f.readlines()
@@ -925,82 +830,13 @@ def xtb_freq(in_file, calc):
 
     return 0
 
-def crest_generic(in_file, calc, mode):
-    local = calc.local
-
-    if calc.parameters.solvent != "Vacuum":
-        solvent_add = '-g {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
-    else:
-        solvent_add = ''
-
-    folder = '/'.join(in_file.split('/')[:-1])
+def crest(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    os.chdir(local_folder)
-
-    if calc.parameters.method == "GFN-FF":
-        cmd_add = "-gff"
-    elif calc.parameters.method == "GFN2-xTB//GFN-FF":
-        cmd_add = "-gfn2//gfnff"
-    else:
-        cmd_add = ""
-
-    if mode == "Final":#Restrict the number of conformers
-        ret = system("crest {} --chrg {} {} -rthr 0.5 -ewin 6 {}".format(in_file, calc.parameters.charge, solvent_add, cmd_add), 'calc.out', calc_id=calc.id)
-    elif mode == "NMR":#No restriction, as it will be done by enso
-        ret = system("crest {} --chrg {} {} -nmr {}".format(in_file, calc.parameters.charge, solvent_add, cmd_add), 'calc.out', calc_id=calc.id)
-    elif mode == "Constrained":
-        num_atoms = len(clean_xyz(calc.structure.xyz_structure.split('\n')))-2
-        constraints = calc.constraints.split(';')[:-1]
-        with open(os.path.join(local_folder, '.constrain'), 'w') as out:
-            out.write("$constrain\n")
-            out.write("force constant=1.0\n")
-            out.write('reference=in.xyz\n')
-            constr_atoms = []
-            for cmd in constraints:
-                _cmd, ids = cmd.split('-')
-                _cmd = _cmd.split('_')
-                ids = ids.split('_')
-                type = len(ids)
-                if type == 2:
-                    out.write("distance: {}, {}, auto\n".format(*ids))
-                elif type == 3:
-                    out.write("angle: {}, {}, {}, auto\n".format(*ids))
-                elif type == 4:
-                    out.write("dihedral: {}, {}, {}, {}, auto\n".format(*ids))
-                constr_atoms += ids
-            out.write("atoms: {}\n".format(','.join([str(i) for i in constr_atoms])))
-            mtd_atoms = list(range(1, num_atoms+1))
-            for a in constr_atoms:
-                mtd_atoms.remove(int(a))
-            out.write("$metadyn\n")
-            out.write("atoms: {}\n".format(','.join([str(i) for i in mtd_atoms])))
-            out.write("$end\n")
-
-        ret = system("crest {} --chrg {} {} -cinp .constrain -rthr 0.5 -ewin 6 {}".format(in_file, calc.parameters.charge, solvent_add, cmd_add), 'calc.out', calc_id=calc.id)
-    else:
-        print("Invalid crest mode selected!")
-        return -1
+    ret = launch_xtb_calc(in_file, calc, ['calc.out', 'crest_conformers.xyz'])
 
     if ret != 0:
         return ret
-
-    if not local:
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-
-        a = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
-        b = sftp_get("{}/crest_conformers.xyz".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "crest_conformers.xyz"), conn, lock)
-        if a == -1 or b == -1:
-            return -1
-
-    if not os.path.isfile("{}/calc.out".format(local_folder)):
-        return 1
-
-    if not os.path.isfile("{}/crest_conformers.xyz".format(local_folder)):
-        return 1
 
     with open(os.path.join(local_folder, "calc.out")) as f:
         lines = f.readlines()
@@ -1061,15 +897,6 @@ def clean_struct_line(line):
     a, x, y, z = line.split()
     return "{} {} {} {}\n".format(LOWERCASE_ATOMIC_SYMBOLS[a.lower()], x, y, z)
 
-def crest(in_file, calc):
-    return crest_generic(in_file, calc, "Final")
-
-def crest_pre_nmr(in_file, calc):
-    return crest_generic(in_file, calc, "NMR")
-
-def crest_constrained(in_file, calc):
-    return crest_generic(in_file, calc, "Constrained")
-
 def launch_orca_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     folder = '/'.join(in_file.split('/')[:-1])
@@ -1087,6 +914,9 @@ def launch_orca_calc(in_file, calc, files):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
         sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
+        if calc.step.name == "Minimum Energy Path":
+            sftp_put("{}/struct2.xyz".format(local_folder), os.path.join(folder, "struct2.xyz"), conn, lock)
+
         ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
     else:
         os.chdir(local_folder)
@@ -2452,7 +2282,7 @@ BASICSTEP_TABLE = {
                 #'Anmr': anmr,
                 'Single-Point Energy': xtb_sp,
                 'Minimum Energy Path': xtb_mep,
-                'Constrained Conformational Search': crest_constrained,
+                'Constrained Conformational Search': crest,
             },
         'ORCA':
             {

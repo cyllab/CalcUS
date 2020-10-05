@@ -5,6 +5,7 @@ from django.core.management import call_command
 from django.test import TestCase, Client
 from .Gaussian_calculation import GaussianCalculation
 from .ORCA_calculation import OrcaCalculation
+from .xtb_calculation import XtbCalculation
 from .gen_calc import gen_calc
 
 TESTS_DIR = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
@@ -2473,4 +2474,209 @@ class OrcaTests(TestCase):
         """
 
         self.assertTrue(self.is_equivalent(REF, orca.input_file))
+
+class XtbTests(TestCase):
+    def setUp(self):
+        call_command('init_static_obj')
+        self.user = User.objects.create(username='User')
+        self.profile = Profile.objects.get(user=self.user)
+
+    def is_equivalent(self, ref, res):
+        ref_lines = [i.strip() for i in ref.split('\n')]
+        res_lines = [i.strip() for i in res.split('\n')]
+
+        if len(ref_lines) != len(res_lines):
+            print("Different number of lines: {} and {}".format(len(ref_lines), len(res_lines)))
+            print("----")
+            blue(ref)
+            print("----")
+            green(res)
+            print("----")
+            return False
+
+        for line1, line2 in zip(ref_lines, res_lines):
+            if line1 != line2:
+                print("")
+                print("Difference found:")
+                blue(line1)
+                green(line2)
+                print("")
+                return False
+
+        return True
+
+    def test_sp_basic(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+    def test_sp_charge(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'xtb',
+                'charge': '-1',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --chrg -1"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+    def test_sp_multiplicity(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'xtb',
+                'multiplicity': '2',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --uhf 2"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+    def test_sp_charge_multiplicity(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'xtb',
+                'multiplicity': '3',
+                'charge': '-1',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --chrg -1 --uhf 3"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+    def test_opt_charge(self):
+        params = {
+                'type': 'Geometrical Optimisation',
+                'in_file': 'Cl.xyz',
+                'software': 'xtb',
+                'charge': '-1',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz -o vtight -a 0.05 --chrg -1"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+    def test_freq_charge(self):
+        params = {
+                'type': 'Frequency Calculation',
+                'in_file': 'Cl.xyz',
+                'software': 'xtb',
+                'charge': '-1',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --hess --chrg -1"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+    def test_scan(self):
+        params = {
+                'type': 'Constrained Optimisation',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'constraints': 'Scan_9_1.4_10-1_2;',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --opt --input input"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+        INPUT = """$constrain
+        force constant=1
+        distance: 1, 2, auto
+        $scan
+        1: 9, 1.4, 10
+        $end"""
+        self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
+
+    def test_freeze(self):
+        params = {
+                'type': 'Constrained Optimisation',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'constraints': 'Freeze-1_2;',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --opt --input input"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+        INPUT = """$constrain
+        force constant=1
+        distance: 1, 2, auto
+        $end"""
+        self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
+
+    def test_conformational_search(self):
+        params = {
+                'type': 'Conformational Search',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "crest in.xyz"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+        self.assertEqual('', xtb.option_file)
+
+    def test_constrained_conformational_search(self):
+        params = {
+                'type': 'Constrained Conformational Search',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'constraints': 'Freeze-1_2;',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "crest in.xyz --cinp input"
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+        INPUT = """$constrain
+        force constant=1.0
+        reference=in.xyz
+        distance: 1, 2, auto
+        atoms: 1,2
+        $metadyn
+        atoms: 3,4,5,6,7,8,9,10
+        $end
+        """
+        self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
 

@@ -113,6 +113,11 @@ SPECIFICATIONS = {
         }
 
     },
+    'xtb': {
+        'general': {
+
+        },
+    },
 }
 
 SYN_METHODS = {
