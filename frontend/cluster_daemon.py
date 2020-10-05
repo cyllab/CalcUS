@@ -133,22 +133,27 @@ class ClusterDaemon:
 
     def delete_access(self, access_id):
         try:
-            conn = self.connections[int(access_id)]
+            conn = self.connections[access_id]
         except KeyError:
             self.log("Cannot delete connection {}: no such connection".format(access_id))
             return
-        conn = self.connections[int(access_id)][0]
+        conn = self.connections[access_id][0]
         os.remove(os.path.join(CALCUS_KEY_HOME, str(conn.id) + '.pub'))
         os.remove(os.path.join(CALCUS_KEY_HOME, str(conn.id)))
 
-        del self.connections[int(access_id)]
-        del self.locks[int(access_id)]
+        try:
+            del self.connections[access_id]
+        except KeyError:
+            self.log("No connection with id {} in memory".format(access_id))
+        try:
+            del self.locks[access_id]
+        except KeyError:
+            self.log("No lock for connection with id {} in memory".format(access_id))
 
     def job(self, calc_id, access_id):
-
-        tasks.connections[threading.get_ident()] = self.connections[int(access_id)]
-        tasks.locks[threading.get_ident()] = self.locks[int(access_id)]
-        tasks.remote_dirs[threading.get_ident()] = "/home/{}/scratch/calcus/{}".format(self.connections[int(access_id)][0].cluster_username, calc_id)
+        tasks.connections[threading.get_ident()] = self.connections[access_id]
+        tasks.locks[threading.get_ident()] = self.locks[access_id]
+        tasks.remote_dirs[threading.get_ident()] = "/home/{}/scratch/calcus/{}".format(self.connections[access_id][0].cluster_username, calc_id)
 
         return tasks.run_calc(calc_id)
 
@@ -257,7 +262,7 @@ class ClusterDaemon:
                 tasks.connections[pid] = self.connections
                 self.calculations[calc_id] = pid
                 retval = self.job(calc_id, access_id)
-                del self.calculations[int(calc_id)]
+                del self.calculations[calc_id]
                 del tasks.connections[pid]
             elif cmd == "kill":
                 self.log("Killing calculation {}".format(calc_id))
@@ -267,7 +272,7 @@ class ClusterDaemon:
                 else:
                     self.cancelled.append(calc_id)
             elif cmd == "load_log":
-                if int(calc_id) in self.calculations:
+                if calc_id in self.calculations:
                     try:
                         calc = Calculation.objects.get(pk=calc_id)
                     except Calculation.DoesNotExist:
@@ -279,7 +284,7 @@ class ClusterDaemon:
                         self.log("Cannot load log: invalid access object")
 
                     try:
-                        remote_conn = self.connections[int(access_id)]
+                        remote_conn = self.connections[access_id]
                     except KeyError:
                         self.log("Cannot load log: invalid access")
 
