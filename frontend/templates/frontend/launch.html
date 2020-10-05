@@ -1109,7 +1109,9 @@
 								<option>Local</option>
 							{% endif %}
 							{% for access in profile.accesses %}
-								<option>{{ access.cluster_address }}</option>
+								{% if access.connected %}
+									<option>{{ access.cluster_address }}</option>
+								{% endif %}
 							{% endfor %}
 						  </select>
 						</div>

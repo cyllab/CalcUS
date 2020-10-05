@@ -91,9 +91,13 @@
 					url: "/delete_access/{{ access.id }}",
 					headers: {
 						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					success: function() {
+						window.location.replace("/profile");
 					}
 				});
 			}
+			
 		}
 
 		$(document).ready(function() {
@@ -145,13 +149,13 @@
 						</div>
 					</div>
 
-					<button class="button is-primary" onclick="connect_access();">Connect to cluster</button>
-					<button class="button is-danger" onclick="disconnect_access();">Disconnect</button>
+					<button class="button is-primary" id="connect_button" onclick="connect_access();">Connect to cluster</button>
+					<button class="button is-danger" id="disconnect_button" onclick="disconnect_access();">Disconnect</button>
 					<div id="test_msg">
 					</div>
 				</div>
 				<div class="column">
-					<a class="button is-danger" onclick="delete_access();" >Delete this access</a>
+					<a class="button is-danger" onclick="delete_access();" id="delete_access_button" >Delete this access</a>
 				</div>
 			</div>
 		</div>

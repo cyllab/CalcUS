@@ -319,6 +319,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             badge = self.driver.find_element_by_id("unseen_calculations_badge")
         except selenium.common.exceptions.NoSuchElementException:
             return 0
+        if badge is None:
+            return 0
         return int(badge.text)
 
     def get_number_calc_methods(self):
@@ -811,6 +813,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
                     assert b.get_attribute("class").find("has-background-success") != -1
 
+        self.wait_for_ajax()
 
     def get_calculation_statuses(self):
         assert self.is_on_page_order_details()

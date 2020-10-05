@@ -6,7 +6,6 @@ import bleach
 import math
 import time
 import zipfile
-import pika
 from os.path import basename
 from io import BytesIO
 import basis_set_exchange
@@ -29,7 +28,7 @@ from django.utils.datastructures import MultiValueDictKeyError
 
 from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe
-from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc
+from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc, send_cluster_command
 from .decorators import superuser_required
 from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint, get_Gaussian_xyz
 from .constants import *
@@ -1478,10 +1477,7 @@ def add_clusteraccess(request):
         else:
             return HttpResponse(status=403)
 
-        key_private_name = "{}_{}_{}".format(owner.username, username, ''.join(ch for ch in address if ch.isalnum()))
-        key_public_name = key_private_name + '.pub'
-
-        access = ClusterAccess.objects.create(cluster_address=address, cluster_username=username, private_key_path=key_private_name, public_key_path=key_public_name, owner=owner, pal=pal, memory=memory)
+        access = ClusterAccess.objects.create(cluster_address=address, cluster_username=username, owner=owner, pal=pal, memory=memory)
         access.save()
         owner.save()
 
@@ -1490,24 +1486,16 @@ def add_clusteraccess(request):
         public_key = key.public_key().public_bytes(serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH)
 
         pem = key.private_bytes(encoding=serialization.Encoding.PEM, format=serialization.PrivateFormat.TraditionalOpenSSL, encryption_algorithm=serialization.BestAvailableEncryption(bytes(password, 'UTF-8')))
-        with open(os.path.join(CALCUS_KEY_HOME, key_private_name), 'wb') as out:
+        with open(os.path.join(CALCUS_KEY_HOME, str(access.id)), 'wb') as out:
             out.write(pem)
 
-        with open(os.path.join(CALCUS_KEY_HOME, key_public_name), 'wb') as out:
+        with open(os.path.join(CALCUS_KEY_HOME, str(access.id) + '.pub'), 'wb') as out:
             out.write(public_key)
-            out.write(b' %b@calcUS' % bytes(owner.username, 'utf-8'))
+            out.write(b' %b@CalcUS' % bytes(owner.username, 'utf-8'))
 
         return HttpResponse(public_key.decode('utf-8'))
     else:
         return HttpResponse(status=403)
-
-def send_cluster_command(cmd):
-    conn = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    chan = conn.channel()
-
-    chan.queue_declare(queue='cluster')
-    chan.basic_publish(exchange='', routing_key='cluster', body=cmd)
-    conn.close()
 
 @login_required
 def connect_access(request):
@@ -3011,11 +2999,11 @@ def cancel_calc(request):
     if profile != calc.order.author:
         return HttpResponse(status=403)
 
-    if calc.status == 0 or calc.status == 1:
-        if is_test:
-            cancel(calc.id)
-        else:
-            cancel.delay(calc.id)
+    #if calc.status == 0 or calc.status == 1:
+    if is_test:
+        cancel(calc.id)
+    else:
+        cancel.delay(calc.id)
 
     return HttpResponse(status=200)
 

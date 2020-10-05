@@ -110,8 +110,6 @@ class Project(models.Model):
         return self.name
 
 class ClusterAccess(models.Model):
-    private_key_path = models.CharField(max_length=100)
-    public_key_path = models.CharField(max_length=100)
     owner = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True, related_name="clusteraccess_owner")
 
     cluster_address = models.CharField(max_length=200, blank=True)
@@ -122,7 +120,15 @@ class ClusterAccess(models.Model):
 
     status = models.CharField(max_length=100, default='')
 
-    last_connected = models.DateTimeField('date', default=timezone.now())
+    last_connected = models.DateTimeField('date', default=timezone.datetime(2000, 1, 1, 1, 1, 1, 1))
+
+    @property
+    def connected(self):
+        dt = timezone.now() - self.last_connected
+        if dt.total_seconds() < 600:
+            return True
+        else:
+            return False
 
 
 class BasicStep(models.Model):

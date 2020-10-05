@@ -4,6 +4,7 @@ from calcus.celery import app
 import string
 import signal
 import psutil
+import pika
 
 from celery.signals import task_prerun, task_postrun
 from .models import Calculation, Structure
@@ -2621,12 +2622,8 @@ def dispatcher(drawing, order_id):
                 calculations.append(c)
                 c.local = False
                 c.save()
-                cmd = ClusterCommand.objects.create(issuer=order.author)
-                cmd.save()
-                with open(os.path.join(CALCUS_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
-                    out.write("launch\n")
-                    out.write("{}\n".format(c.id))
-                    out.write("{}\n".format(order.resource.id))
+                cmd = "launch\n{}\n{}\n".format(c.id, order.resource.id)
+                send_cluster_command(cmd)
 
     else:
         if mode == 'c':
@@ -2644,12 +2641,9 @@ def dispatcher(drawing, order_id):
             else:
                 c.local = False
                 c.save()
-                cmd = ClusterCommand.objects.create(issuer=order.author)
-                cmd.save()
-                with open(os.path.join(CALCUS_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
-                    out.write("launch\n")
-                    out.write("{}\n".format(c.id))
-                    out.write("{}\n".format(order.resource.id))
+
+                cmd = "launch\n{}\n{}\n".format(c.id, order.resource.id)
+                send_cluster_command(cmd)
 
     for task, c in zip(group_order, calculations):
         res = task.apply_async()
@@ -2803,6 +2797,14 @@ def _del_structure(s):
 
     s.delete()
 
+def send_cluster_command(cmd):
+    conn = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    chan = conn.channel()
+
+    chan.queue_declare(queue='cluster')
+    chan.basic_publish(exchange='', routing_key='cluster', body=cmd)
+    conn.close()
+
 @app.task
 def cancel(calc_id):
     print("Cancelling calc {}".format(calc_id))
@@ -2823,16 +2825,11 @@ def kill_calc(calc):
         else:
             print("Cannot cancel calculation without task id")
     else:
-        cmd = ClusterCommand.objects.create(issuer=calc.order.author)
-        cmd.save()
+        cmd = "kill\n{}\n{}\n".format(calc.id, calc.order.resource.id)
+        send_cluster_command(cmd)
         calc.status = 3
         calc.error_message = "Job cancelled"
         calc.save()
-
-        with open(os.path.join(CALCUS_CLUSTER_HOME, 'todo', str(cmd.id)), 'w') as out:
-            out.write("kill\n")
-            out.write("{}\n".format(calc.id))
-            out.write("{}\n".format(calc.order.resource.id))#####
 
 
 @app.task(name='celery.ping')

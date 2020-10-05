@@ -66,36 +66,6 @@ class ClusterTests(CalcusLiveServer):
         from .cluster_daemon import ClusterDaemon
         daemon = ClusterDaemon()
 
-    def test_setup(self):
-        pass
-
-    def gen_key(self):
-        key_private_name = "{}_localhost".format(self.profile.username)
-        key_public_name = key_private_name + '.pub'
-
-        self.access = ClusterAccess.objects.create(cluster_address="localhost", cluster_username="calcus", private_key_path=key_private_name, public_key_path=key_public_name, owner=self.profile)
-        self.access.save()
-
-        key = rsa.generate_private_key(backend=default_backend(), public_exponent=65537, key_size=2048)
-
-        public_key = key.public_key().public_bytes(serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH)
-
-        pem = key.private_bytes(encoding=serialization.Encoding.PEM, format=serialization.PrivateFormat.TraditionalOpenSSL, encryption_algorithm=serialization.NoEncryption())
-        with open(os.path.join(KEYS_DIR, key_private_name), 'wb') as out:
-            out.write(pem)
-
-        with open(os.path.join(KEYS_DIR, key_public_name), 'wb') as out:
-            out.write(public_key)
-            out.write(b' %b@CalcUS' % bytes(self.username, 'utf-8'))
-
-        child = pexpect.spawn('su - calcus')
-        child.expect ('Password:')
-        child.sendline('clustertest')
-        child.expect('\$')
-        child.sendline('mkdir -p /home/calcus/.ssh/')
-        child.expect('\$')
-        child.sendline("echo '{} {}@CalcUS' > /home/calcus/.ssh/authorized_keys".format(public_key.decode('utf-8'), self.username))
-
     def wait_command_done(self, cmd_id, timeout):
         ind = 0
         while ind < timeout:
@@ -114,18 +84,10 @@ class ClusterTests(CalcusLiveServer):
             return lines[0].strip()
 
 
-    def test_connection(self):
-        self.gen_key()
-        cmd = ClusterCommand.objects.create(issuer=self.profile)
-        with open(os.path.join(CLUSTER_DIR, 'todo', str(cmd.id)), 'w') as out:
-            out.write("access_test\n")
-            out.write("{}\n".format(self.access.id))
-
-        ret = self.wait_command_done(str(cmd.id), 10)
-        self.assertTrue(ret)
-        status = self.get_command_status(str(cmd.id))
-        self.assertEqual(status, "Connection successful")
-
+    def test_setup(self):
+        self.setup_cluster()
+        msg = self.driver.find_element_by_id("test_msg").text
+        self.assertEqual(msg, "Connected")
 
     def setup_cluster(self):
         self.lget("/profile")
@@ -144,8 +106,11 @@ class ClusterTests(CalcusLiveServer):
         memory.clear()
         memory.send_keys("10000")
 
-        self.driver.find_element_by_css_selector("div.field:nth-child(6) > div:nth-child(1) > button:nth-child(1)").click()
+        password = self.driver.find_element_by_name("cluster_password")
+        password.clear()
+        password.send_keys("Selenium")
 
+        self.driver.find_element_by_id("add_access_button").click()
 
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "public_key_area"))
@@ -170,14 +135,19 @@ class ClusterTests(CalcusLiveServer):
 
         manage = self.driver.find_element_by_css_selector("#owned_accesses > center > table > tbody > tr > th:nth-child(5) > a")
         manage.send_keys(Keys.RETURN)
-        test_access = self.driver.find_element_by_css_selector("#content_container > div > div:nth-child(3) > div > button")
+
+        password = self.driver.find_element_by_id("ssh_password")
+        password.clear()
+        password.send_keys("Selenium")
+
+        test_access = self.driver.find_element_by_id("connect_button")
         test_access.click()
         ind = 0
         while ind < 10:
             time.sleep(1)
             try:
                 msg = self.driver.find_element_by_id("test_msg").text
-                if msg == "Connection successful":
+                if msg == "Connected":
                     break
             except:
                 pass
@@ -188,10 +158,22 @@ class ClusterTests(CalcusLiveServer):
         keys = glob.glob("{}/*".format(KEYS_DIR))
         initial_keys = len(keys)
 
-        delete_access = self.driver.find_element_by_css_selector("a.button:nth-child(3)")
+        main_window_handle = None
+        while not main_window_handle:
+            main_window_handle = self.driver.current_window_handle
+
+        delete_access = self.driver.find_element_by_id("delete_access_button")
         delete_access.click()
 
-        time.sleep(10)
+        alert = self.driver.switch_to_alert()
+        alert.accept()
+        self.driver.switch_to_default_content()
+
+        ind = 0
+        while len(glob.glob("{}/*".format(KEYS_DIR))) == initial_keys and ind < 5:
+            time.sleep(1)
+            ind += 1
+
         keys = glob.glob("{}/*".format(KEYS_DIR))
         self.assertEqual(len(keys), initial_keys-2)
 
@@ -212,11 +194,15 @@ class ClusterTests(CalcusLiveServer):
         memory.clear()
         memory.send_keys("10000")
 
-        self.driver.find_element_by_css_selector("div.field:nth-child(6) > div:nth-child(1) > button:nth-child(1)").click()
+        password = self.driver.find_element_by_name("cluster_password")
+        password.clear()
+        password.send_keys("Selenium")
+
+        self.driver.find_element_by_id("add_access_button").click()
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "public_key_area"))
         )
-        time.sleep(1)
+        time.sleep(2)
 
         acc = ClusterAccess.objects.all()
         self.assertEqual(len(acc), 1)
@@ -241,7 +227,11 @@ class ClusterTests(CalcusLiveServer):
         memory.clear()
         memory.send_keys("31000")
 
-        self.driver.find_element_by_css_selector("div.field:nth-child(6) > div:nth-child(1) > button:nth-child(1)").click()
+        password = self.driver.find_element_by_name("cluster_password")
+        password.clear()
+        password.send_keys("Selenium")
+
+        self.driver.find_element_by_id("add_access_button").click()
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "public_key_area"))
         )
@@ -256,7 +246,7 @@ class ClusterTests(CalcusLiveServer):
     def test_connection_gui(self):
         self.setup_cluster()
         msg = self.driver.find_element_by_id("test_msg").text
-        self.assertEqual(msg, "Connection successful")
+        self.assertEqual(msg, "Connected")
 
         self.lget("/profile/")
         manage = self.driver.find_element_by_css_selector("#owned_accesses > center > table > tbody > tr > th:nth-child(5) > a")
@@ -827,7 +817,6 @@ class ClusterTests(CalcusLiveServer):
         self.relaunch_all_calc()
 
         self.lget("/calculations/")
-
         self.assertEqual(self.get_number_unseen_calcs(), 0)
         self.wait_latest_calc_done(300)
         self.assertEqual(self.get_number_unseen_calcs(), 1)
