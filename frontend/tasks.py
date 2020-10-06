@@ -2452,7 +2452,7 @@ def dispatcher(drawing, order_id):
                 calculations.append(c)
                 c.local = False
                 c.save()
-                cmd = "launch\n{}\n{}\n".format(c.id, order.resource.id)
+                cmd = "launch\n{}\n".format(c.id)
                 send_cluster_command(cmd)
 
     else:
@@ -2472,7 +2472,7 @@ def dispatcher(drawing, order_id):
                 c.local = False
                 c.save()
 
-                cmd = "launch\n{}\n{}\n".format(c.id, order.resource.id)
+                cmd = "launch\n{}\n".format(c.id)
                 send_cluster_command(cmd)
 
     for task, c in zip(group_order, calculations):
@@ -2661,7 +2661,7 @@ def kill_calc(calc):
         else:
             print("Cannot cancel calculation without task id")
     else:
-        cmd = "kill\n{}\n{}\n".format(calc.id, calc.order.resource.id)
+        cmd = "kill\n{}\n".format(calc.id)
         send_cluster_command(cmd)
         calc.status = 3
         calc.error_message = "Job cancelled"

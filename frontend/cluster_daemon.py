@@ -150,7 +150,8 @@ class ClusterDaemon:
         except KeyError:
             self.log("No lock for connection with id {} in memory".format(access_id))
 
-    def job(self, calc_id, access_id):
+    def job(self, calc):
+        access_id = calc.order.resource.id
         tasks.connections[threading.get_ident()] = self.connections[access_id]
         tasks.locks[threading.get_ident()] = self.locks[access_id]
         tasks.remote_dirs[threading.get_ident()] = "/home/{}/scratch/calcus/{}".format(self.connections[access_id][0].cluster_username, calc_id)
@@ -209,7 +210,7 @@ class ClusterDaemon:
         pid = threading.get_ident()
         tasks.connections[pid] = self.connections
         self.calculations[c.id] = pid
-        retval = self.job(c.id, c.order.resource.id)
+        retval = self.job(c)
 
         del self.calculations[c.id]
 
@@ -245,23 +246,33 @@ class ClusterDaemon:
             self.delete_access(access_id)
         else:
             calc_id = int(lines[1].strip())
-            access_id = int(lines[2].strip())
 
-            if access_id not in self.connections.keys():
-                self.log("Cannot execute command: access {} not connected".format(access_id))
+            try:
+                calc = Calculation.objects.get(pk=calc_id)
+            except Calculation.DoesNotExist:
+                self.log("Could not find calculation {}".format(calc_id))
+                return
+
+            access = calc.order.resource
+
+            if access is None:
+                self.log("Cannot load log: resource is null for calculation {}".format(calc_id))
+                return
+
+            if access.id not in self.connections.keys():
+                self.log("Cannot execute command: access {} not connected".format(access.id))
                 return
 
             if cmd == "launch":
                 if calc_id in self.cancelled:
                     self.cancelled.remove(calc_id)
-                    calc = Calculation.objects.get(pk=calc_id)
                     calc.status = 3
                     calc.save()
                     return
                 pid = threading.get_ident()
                 tasks.connections[pid] = self.connections
                 self.calculations[calc_id] = pid
-                retval = self.job(calc_id, access_id)
+                retval = self.job(calc)
                 del self.calculations[calc_id]
                 del tasks.connections[pid]
             elif cmd == "kill":
@@ -274,21 +285,11 @@ class ClusterDaemon:
             elif cmd == "load_log":
                 if calc_id in self.calculations:
                     try:
-                        calc = Calculation.objects.get(pk=calc_id)
-                    except Calculation.DoesNotExist:
-                        self.log("Cannot load log: invalid calculation")
-
-                    try:
-                        access = ClusterAccess.objects.get(pk=access_id)
-                    except ClusterAccess.DoesNotExist:
-                        self.log("Cannot load log: invalid access object")
-
-                    try:
-                        remote_conn = self.connections[access_id]
+                        remote_conn = self.connections[access.id]
                     except KeyError:
                         self.log("Cannot load log: invalid access")
 
-                    tasks.sftp_get("/scratch/{}/calcus/{}/calc.log".format(access.cluster_username, calc.id), os.path.join(CALCUS_SCR_HOME, str(calc_id), "calc.log"), remote_conn, self.locks[access_id])
+                    tasks.sftp_get("/scratch/{}/calcus/{}/calc.log".format(access.cluster_username, calc.id), os.path.join(CALCUS_SCR_HOME, str(calc_id), "calc.log"), remote_conn, self.locks[access.id])
 
                 else:
                     self.log("Cannot load log: unknown calculation")
