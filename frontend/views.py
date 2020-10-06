@@ -2686,6 +2686,7 @@ def launch_pk(request, pk):
             'ensemble': e,
             'procs': BasicStep.objects.all(),
             'init_params_id': init_params.id,
+            'allow_local_calc': settings.ALLOW_LOCAL_CALC,
         })
 
 @login_required
@@ -2709,6 +2710,7 @@ def launch_frame(request, cid, fid):
             'frame_id': fid,
             'procs': BasicStep.objects.all(),
             'init_params_id': init_params.id,
+            'allow_local_calc': settings.ALLOW_LOCAL_CALC,
         })
 
 
@@ -2736,6 +2738,7 @@ def launch_structure_pk(request, ee, pk):
             'structure': s,
             'procs': BasicStep.objects.all(),
             'init_params': init_params,
+            'allow_local_calc': settings.ALLOW_LOCAL_CALC,
         })
 
 @login_required
@@ -2758,12 +2761,14 @@ def launch_project(request, pk):
                 'profile': request.user.profile,
                 'procs': BasicStep.objects.all(),
                 'init_params_id': init_params_id,
+                'allow_local_calc': settings.ALLOW_LOCAL_CALC,
             })
     else:
         return render(request, 'frontend/launch.html', {
                 'proj': proj,
                 'profile': request.user.profile,
                 'procs': BasicStep.objects.all(),
+                'allow_local_calc': settings.ALLOW_LOCAL_CALC,
             })
 
 @login_required

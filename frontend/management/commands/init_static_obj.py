@@ -257,6 +257,7 @@ class Command(BaseCommand):
         ###Finishing the process
         #self.verify()
 
+        '''
         title = "Example 1: Simple equilibrium calculation"
         if self.is_absent_title(Example, title):
             self.print("Adding Example: {}".format(title))
@@ -300,7 +301,7 @@ class Command(BaseCommand):
             q1 = Question.objects.create(exercise=a, question="What is the wavenumber of the negative vibration mode of the transition state?", answer=-492.77, tolerance=10.)
             q2 = Question.objects.create(exercise=a, question="What is the free energy barrier of the rearrangement (kJ/mol)?", answer=92.98, tolerance=3.)
 
-
+        '''
         title = "NMR Prediction (Quick)"
         if self.is_absent_title(Recipe, title):
             self.print("Adding Recipe: {}".format(title))
