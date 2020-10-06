@@ -1105,8 +1105,10 @@
 					<div class="control" >
 						<div class="select">
 						<select name="calc_ressource">
-							{% if profile.group or profile.is_PI %}
-								<option>Local</option>
+							{% if allow_local_calc %}
+								{% if profile.group or profile.is_PI %}
+									<option>Local</option>
+								{% endif %}
 							{% endif %}
 							{% for access in profile.accesses %}
 								{% if access.connected %}

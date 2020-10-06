@@ -36,6 +36,7 @@ from .libxyz import parse_xyz_from_text, equivalent_atoms
 
 from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
+from django.conf import settings
 
 from throttle.decorators import throttle
 
@@ -2662,6 +2663,7 @@ def launch(request):
     return render(request, 'frontend/launch.html', {
             'profile': request.user.profile,
             'procs': BasicStep.objects.all(),
+            'allow_local_calc': settings.ALLOW_LOCAL_CALC,
         })
 
 @login_required
