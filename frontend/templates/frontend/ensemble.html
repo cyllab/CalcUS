@@ -270,6 +270,20 @@
 						edit_title();
 					}
 				});
+				$('[contenteditable=true]').on('keyup', function(e) {//Fixes bug in Firefox where a linebreak is added when a space is entered
+					if (e.keyCode == 32) {
+						let children = Array.from(el.childNodes);
+						console.log(children);
+    						children.forEach(child => {
+							if (children.indexOf(child) == children.length - 1) {
+								if (child.tagName && child.tagName === "BR") {
+									editableNode.removeChild(child)
+								}
+							} 
+    						})
+					}
+				});
+
 
 			}
 						
