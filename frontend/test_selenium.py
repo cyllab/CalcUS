@@ -1188,7 +1188,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.get_number_calc_orders(), 0)
 
 
-
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):
         params = {
@@ -3445,6 +3444,9 @@ class ComplexCalculationTests(CalcusLiveServer):
 
 
     def test_selective_delete(self):
+
+        self.assertEqual(self.get_number_unseen_calcs(), 0)
+
         params = {
                 'calc_name': 'H2',
                 'type': 'Geometrical Optimisation',
@@ -3456,8 +3458,11 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.lget("/launch/")
         self.calc_input_params(params)
         self.calc_launch()
-        self.wait_latest_calc_done(10)
+        self.wait_latest_calc_done(60)
+        self.assertEqual(self.get_number_unseen_calcs(), 1)
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 1)
         self.click_latest_calc()
+        self.assertEqual(self.get_number_unseen_calcs(), 0)
         self.launch_ensemble_next_step()
 
         params = {
@@ -3466,7 +3471,10 @@ class ComplexCalculationTests(CalcusLiveServer):
                 }
         self.calc_input_params(params)
         self.calc_launch()
-        self.wait_latest_calc_done(10)
+        self.wait_latest_calc_done(60)
+
+        self.assertEqual(self.get_number_unseen_calcs(), 1)
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 1)
 
         self.lget("/launch/")
         params = {
@@ -3479,6 +3487,8 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.calc_launch()
         self.wait_latest_calc_done(150)
         self.assertEqual(self.get_number_calc_orders(), 3)
+        self.assertEqual(self.get_number_unseen_calcs(), 2)
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
 
         self.lget("/projects/")
         n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
@@ -3517,6 +3527,8 @@ class ComplexCalculationTests(CalcusLiveServer):
 
         self.lget("/projects/")
         self.assertEqual(self.get_number_projects(), 1)
+        self.assertEqual(self.get_number_unseen_calcs(), 1)
+
         n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
         self.assertEqual(n_mol, 1)
         self.assertEqual(n_calc, 2)
@@ -3547,6 +3559,8 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.calc_launch()
         self.wait_latest_calc_done(150)
         self.assertEqual(self.get_number_calc_orders(), 3)
+        self.assertEqual(self.get_number_unseen_calcs(), 2)
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
 
         self.lget("/launch/")
         params = {
@@ -3559,6 +3573,8 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.calc_launch()
         self.wait_latest_calc_done(150)
         self.assertEqual(self.get_number_calc_orders(), 4)
+        self.assertEqual(self.get_number_unseen_calcs(), 3)
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 3)
 
         self.lget("/projects/")
         n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
@@ -3571,11 +3587,15 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.click_project("SeleniumProject")
         self.click_molecule("NH3")
         self.delete_ensemble("Ammonia")
+        self.driver.refresh()
+        self.assertEqual(self.get_number_ensembles(), 1)
         self.delete_ensemble("File Upload")#Should not delete molecule
 
         self.lget("/calculations/")
 
         self.assertEqual(self.get_number_calc_orders(), 3)
+        self.assertEqual(self.get_number_unseen_calcs(), 2)
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
 
     def test_advanced_nmr_analysis(self):
         params = {

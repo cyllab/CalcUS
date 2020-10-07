@@ -323,6 +323,16 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             return 0
         return int(badge.text)
 
+    def get_number_unseen_calcs_manually(self):
+        assert self.is_on_page_calculations()
+
+        orders = self.get_calc_orders()
+        num = 0
+        for o in orders:
+            if o.get_attribute("class").find("new") != -1:
+                num += 1
+        return num
+
     def get_number_calc_methods(self):
         assert self.is_on_page_ensemble()
 
@@ -917,7 +927,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def launch_ensemble_next_step(self):
         assert self.is_on_page_ensemble()
-        button = WebDriverWait(self.driver, 2).until(
+        button = WebDriverWait(self.driver, 1).until(
             EC.presence_of_element_located((By.ID, "next_step_ensemble"))
         )
         button.send_keys(Keys.RETURN)
@@ -925,10 +935,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def launch_structure_next_step(self):
         assert self.is_on_page_ensemble()
 
-        button = WebDriverWait(self.driver, 2).until(
+        button = WebDriverWait(self.driver, 1).until(
             EC.presence_of_element_located((By.ID, "next_step_structure"))
         )
-        table = WebDriverWait(self.driver, 4).until(
+        table = WebDriverWait(self.driver, 1).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "#conf_table > tr"))
         )
 
@@ -937,12 +947,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def launch_frame_next_step(self):
         assert self.is_on_page_calculation()
 
-        button = WebDriverWait(self.driver, 2).until(
+        button = WebDriverWait(self.driver, 1).until(
             EC.presence_of_element_located((By.ID, "launch_from_frame"))
         )
 
         button.send_keys(Keys.RETURN)
-
 
     def delete_project(self, name):
         assert self.is_on_page_projects()
@@ -1073,6 +1082,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 alert = self.driver.switch_to_alert()
                 alert.accept()
                 self.driver.switch_to_default_content()
+                self.wait_for_ajax()
                 return
         raise Exception("Could not delete ensemble")
 
