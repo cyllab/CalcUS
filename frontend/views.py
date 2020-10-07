@@ -318,7 +318,7 @@ def project_details(request, username, proj):
             return HttpResponseRedirect("/home/")
         if can_view_project(project, request.user.profile):
             return render(request, 'frontend/project_details.html', {
-            'molecules': project.molecule_set.all().order_by(Lower('name')),
+            'molecules': project.molecule_set.prefetch_related('ensemble_set').all().order_by(Lower('name')),
             'project': project,
             })
         else:
@@ -2880,7 +2880,7 @@ def get_csv(proj, profile, scope="all", details="full"):
     hashes = {}
     csv = ""
 
-    molecules = list(proj.molecule_set.all())
+    molecules = list(proj.molecule_set.prefetch_related('ensemble_set').all())
     for mol in molecules:
         ensembles = mol.ensemble_set.all()
         for e in ensembles:

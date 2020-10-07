@@ -326,7 +326,7 @@ class Ensemble(models.Model):
 
         ret = {}
         hashes = {}
-        for s in self.structure_set.all():
+        for s in self.structure_set.prefetch_related('properties').all():
             for prop in s.properties.all():
                 if prop.energy == 0:
                     continue
@@ -370,7 +370,7 @@ class Ensemble(models.Model):
 
         arr_e = {}
         arr_f_e = {}
-        for s in self.structure_set.all():
+        for s in self.structure_set.prefetch_related('properties').all():
             for prop in s.properties.all():
                 if prop.energy == 0:
                     continue

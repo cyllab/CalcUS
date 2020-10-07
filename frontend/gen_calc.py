@@ -2,9 +2,7 @@ from .models import *
 
 TESTS_DIR = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
 
-def gen_calc(params, profile):
-    step = BasicStep.objects.get(name=params['type'])
-
+def gen_param(params):
     charge = 0
     multiplicity = 1
     solvent = "Vacuum"
@@ -62,6 +60,13 @@ def gen_calc(params, profile):
     software = params['software']
 
     p = Parameters.objects.create(charge=charge, multiplicity=multiplicity, solvent=solvent, solvation_model=solvation_model, solvation_radii=solvation_radii, basis_set=basis_set, theory_level=theory_level, method=method, additional_command=additional_command, custom_basis_sets=custom_basis_sets, density_fitting=density_fitting, specifications=specifications, software=software)
+    return p
+
+def gen_calc(params, profile):
+    step = BasicStep.objects.get(name=params['type'])
+
+    p = gen_param(params)
+
     with open(os.path.join(TESTS_DIR, params['in_file'])) as f:
         lines = f.readlines()
         xyz_structure = ''.join(lines)

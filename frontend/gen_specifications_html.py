@@ -39,3 +39,22 @@ for section, d in SPECIFICATIONS['ORCA'].items():
             _value = k
 
         print("""<option value="{}" class="{}{}">{}</option>""".format(_value, avail_str, option_str, _option))
+
+for section, d in SPECIFICATIONS['xtb'].items():
+    for k, num in d.items():
+        avail_str = 'software_specific avail_xtb'
+        if section == 'Geometrical Optimisation':
+            avail_str += ' type_specific avail_Geometrical_Optimisation avail_Constrained_Optimisation avail_TS_Optimisation'
+        elif section == 'Conformational Search':
+            avail_str += ' type_specific avail_Conformational_Search avail_Constrained_Conformational_Search'
+
+        if num == 1:
+            option_str = " has_value"
+            _option = "{}=...".format(k)
+            _value = "{}=".format(k)
+        else:
+            option_str = ""
+            _option = k
+            _value = k
+
+        print("""<option value="{}" class="{}{}">{}</option>""".format(_value, avail_str, option_str, _option))

@@ -115,7 +115,25 @@ SPECIFICATIONS = {
     },
     'xtb': {
         'general': {
-
+            'acc': 1,
+            'iterations': 1,
+            'GFN2-xTB': 0,
+            'GFN1-xTB': 0,
+            'GFN0-xTB': 0,
+            'GFN-FF': 0,
+        },
+        'Geometrical Optimisation': {
+            'opt(crude)': 0,
+            'opt(sloppy)': 0,
+            'opt(loose)': 0,
+            'opt(lax)': 0,
+            'opt(normal)': 0,
+            'opt(tight)': 0,
+            'opt(vtight)': 0,
+            'opt(extreme)': 0,
+        },
+        'Conformational Search': {
+            'GFN2-xTB//GFN-FF': 0,
         },
     },
 }

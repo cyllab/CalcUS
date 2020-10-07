@@ -97,7 +97,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         pass
 
     def login(self, username, password):
-        self.driver.get('{}/accounts/login/'.format(self.live_server_url))
+        self.lget('/accounts/login/')
 
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "id_username"))
