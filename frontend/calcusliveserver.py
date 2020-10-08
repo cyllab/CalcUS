@@ -200,6 +200,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             mol_select = self.driver.find_element_by_id("aux_mol")
             mol_select.find_element_by_xpath("option[text()='{}']".format(aux_mol)).click()
 
+            self.wait_for_ajax()
             ind = 0
             while ind < 2:
                 try:
@@ -211,7 +212,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 else:
                     break
 
-
+            self.wait_for_ajax()
             ind = 0
             while ind < 2:
                 try:
