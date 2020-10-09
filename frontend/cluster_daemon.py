@@ -35,6 +35,7 @@ else:
 GRIMME_SUITE = ['xtb', 'crest', 'xtb4stda', 'stda', 'enso.py', 'anmr']
 
 CONNECTION_CODE = {
+            0: "Already connected",
             1: "Invalid cluster access",
             2: "Invalid host",
             3: "Could not connect to the server",
@@ -301,27 +302,28 @@ class ClusterDaemon:
                 return
 
     def keep_alive(self):
-        ind = 0
         self.log("Starting the keepalive daemon")
         while True:
-            time.sleep(5)
-            ind += 1
+            time.sleep(60)
+            for conn_name in self.connections.keys():
+                access, sock, session, sftp = self.connections[conn_name]
+                success = False
+                for i in range(5):
+                    try:
+                        session.keepalive_send()
+                    except ssh2.exceptions.SocketSendError:
+                        self.log("Could not send keepalive signal, trying again")
+                        time.sleep(1)
+                    else:
+                        success = True
+                        break
+                if not success:
+                    self.log("Could not keep connection {} alive".format(conn_name))
+                else:
+                    access.last_connected = timezone.now()
+                    access.status = "Connected"
+                    access.save()
 
-            if ind % 12 == 0:
-                for conn_name in self.connections.keys():
-                    conn, sock, session, sftp = self.connections[conn_name]
-                    success = False
-                    for i in range(5):
-                        try:
-                            session.keepalive_send()
-                        except ssh2.exceptions.SocketSendError:
-                            self.log("Could not send keepalive signal, trying again")
-                            time.sleep(1)
-                        else:
-                            success = True
-                            break
-                    if not success:
-                        self.log("Could not keep connection {} alive".format(conn_name))
 
     def __init__(self):
         t = threading.Thread(target=self.keep_alive)

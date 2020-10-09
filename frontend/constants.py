@@ -64,8 +64,8 @@ SPECIFICATIONS = {
     'Gaussian': {
         'general': {
             'nosymm': 0,
-            '5D': 0,
-            '6D': 0,
+            '5d': 0,
+            '6d': 0,
         },
         'scf': {
             'xqc': 0,
@@ -117,10 +117,10 @@ SPECIFICATIONS = {
         'general': {
             'acc': 1,
             'iterations': 1,
-            'GFN2-xTB': 0,
-            'GFN1-xTB': 0,
-            'GFN0-xTB': 0,
-            'GFN-FF': 0,
+            'gfn2-xtb': 0,
+            'gfn1-xtb': 0,
+            'gfn0-xtb': 0,
+            'gfn-ff': 0,
         },
         'Geometrical Optimisation': {
             'opt(crude)': 0,
@@ -133,7 +133,7 @@ SPECIFICATIONS = {
             'opt(extreme)': 0,
         },
         'Conformational Search': {
-            'GFN2-xTB//GFN-FF': 0,
+            'gfn2-xtb//gfn-ff': 0,
         },
     },
 }

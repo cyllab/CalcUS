@@ -966,6 +966,8 @@ def parse_parameters(request, name_required=True):
                 if spec.strip() == '':
                     continue
                 if software == "Gaussian":
+                    print(spec)
+                    print(SPECIFICATIONS['Gaussian']['general'].keys())
                     if spec in SPECIFICATIONS['Gaussian']['general'].keys():
                         continue
                     try:

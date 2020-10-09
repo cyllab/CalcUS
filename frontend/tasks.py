@@ -1495,17 +1495,18 @@ def parse_gaussian_charges(calc, s):
     for spec in calc.parameters.specifications.split(';'):
         if spec.strip() == '':
             continue
-        key, option = spec.split('(')
-        option = option.replace(')', '')
-        if key == 'pop':
-            if option == 'nbo' or option == 'npa':
-                parse_NPA_gaussian_charges(calc, s)
-            elif option == 'hirshfeld':
-                parse_Hirshfeld_gaussian_charges(calc, s)
-            elif option == 'esp':
-                parse_ESP_gaussian_charges(calc, s)
-            elif option == 'hly':
-                parse_HLY_gaussian_charges(calc, s)
+        if spec.find('(') != -1:
+            key, option = spec.split('(')
+            option = option.replace(')', '')
+            if key == 'pop':
+                if option == 'nbo' or option == 'npa':
+                    parse_NPA_gaussian_charges(calc, s)
+                elif option == 'hirshfeld':
+                    parse_Hirshfeld_gaussian_charges(calc, s)
+                elif option == 'esp':
+                    parse_ESP_gaussian_charges(calc, s)
+                elif option == 'hly':
+                    parse_HLY_gaussian_charges(calc, s)
 
 def parse_default_gaussian_charges(calc, s):
     prop = get_or_create(calc.parameters, s)

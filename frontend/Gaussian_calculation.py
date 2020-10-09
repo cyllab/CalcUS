@@ -58,7 +58,7 @@ class GaussianCalculation:
         self.pal = 0
         self.appendix = []
         self.command_line = ""
-        self.additional_commands = self.calc.order.author.default_gaussian
+        self.additional_commands = self.calc.order.author.default_gaussian + " "
         self.command_specifications = []
         self.xyz_structure = ""
         self.input_file = ""
@@ -85,26 +85,37 @@ class GaussianCalculation:
         for spec in self.calc.parameters.specifications.lower().split(';'):
             if spec.strip() == '':
                 continue
-            key, option = spec.split('(')
-            option = option.replace(')', '')
-            val = ""
-            if option.find('=') != -1:
-                option, val = option.split('=')
-            if option not in SPECIFICATIONS[self.calc.parameters.software][key].keys():
-                raise Exception("Unknown specification")
-            if key in self.KEYWORDS.values():
-                if key != self.KEYWORDS[self.calc.step.name]:
-                    raise Exception("Invalid specification for the requested step")
-                if val == '':
-                    self.command_specifications.append(option)
+            if spec.find("(") != -1:
+                key, option = spec.split('(')
+                option = option.replace(')', '')
+                val = ""
+                if option.find('=') != -1:
+                    option, val = option.split('=')
+                if option not in SPECIFICATIONS["Gaussian"][key].keys():
+                    raise Exception("Unknown specification")
+                if key in self.KEYWORDS.values():
+                    if key != self.KEYWORDS[self.calc.step.name]:
+                        raise Exception("Invalid specification for the requested step")
+                    if val == '':
+                        self.command_specifications.append(option)
+                    else:
+                        self.command_specifications.append("{}={}".format(option, val))
                 else:
-                    self.command_specifications.append("{}={}".format(option, val))
+                    add_spec(key, option, val)
+
             else:
-                add_spec(key, option, val)
+                if spec not in SPECIFICATIONS["Gaussian"]["general"].keys():
+                    raise Exception("Unknown specification")
+
+                if self.additional_commands.lower().find(spec) == -1:
+                    self.additional_commands += "{} ".format(spec)
 
         for spec in specs.keys():
             specs_str = ','.join(specs[spec])
-            self.additional_commands += '{}({}) '.format(spec, specs_str)
+            spec_formatted = '{}({}) '.format(spec, specs_str)
+
+            if self.additional_commands.lower().find(spec_formatted.strip()) == -1:
+                self.additional_commands += spec_formatted
 
     def handle_command(self):
         cmd = ""
