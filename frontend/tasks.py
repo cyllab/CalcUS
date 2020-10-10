@@ -5,6 +5,7 @@ import string
 import signal
 import psutil
 import pika
+import requests
 
 from celery.signals import task_prerun, task_postrun
 from .models import Calculation, Structure
@@ -2672,4 +2673,8 @@ def kill_calc(calc):
 @app.task(name='celery.ping')
 def ping():
     return 'pong'
+
+@app.task
+def ping_home():
+    requests.post("http://minotaurr.org/calcus")
 

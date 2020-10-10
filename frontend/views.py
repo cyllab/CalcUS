@@ -25,6 +25,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.utils.datastructures import MultiValueDictKeyError
+from django.db.models import Prefetch
 
 from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe
@@ -2884,12 +2885,12 @@ def get_csv(proj, profile, scope="all", details="full"):
 
     molecules = list(proj.molecule_set.prefetch_related('ensemble_set').all())
     for mol in molecules:
-        ensembles = mol.ensemble_set.all()
-        for e in ensembles:
-            if scope == "flagged":
-                if not e.flagged:
-                    continue
+        if scope == "flagged":
+            ensembles = mol.ensemble_set.filter(flagged=True)
+        else:
+            ensembles = mol.ensemble_set.all()
 
+        for e in ensembles:
             if details == "full":
                 summ, ehashes = e.ensemble_summary
             else:
