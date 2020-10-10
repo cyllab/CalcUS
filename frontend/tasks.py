@@ -10,6 +10,7 @@ import requests
 from celery.signals import task_prerun, task_postrun
 from .models import Calculation, Structure
 from django.utils import timezone
+from django.conf import settings
 
 from django.db.utils import IntegrityError
 from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
@@ -2676,5 +2677,5 @@ def ping():
 
 @app.task
 def ping_home():
-    requests.post("http://minotaurr.org/calcus")
+    requests.post("http://minotaurr.org/calcus", data={'id': settings.MACHINE_ID})
 

@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import os
+from datetime import datetime
 
 from celery import Celery
 from django.conf import settings
@@ -24,7 +25,7 @@ if settings.PING_HOME:
     app.conf.beat_schedule = {
             'ping-home': {
                 'task': 'frontend.tasks.ping_home',
-                'schedule': crontab(hour=12, minute=0),
+                'schedule': crontab(minute=(datetime.now().minute + 1)),
             },
     }
 
