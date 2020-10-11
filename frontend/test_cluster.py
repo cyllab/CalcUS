@@ -913,6 +913,7 @@ class ClusterTests(CalcusLiveServer):
         self.calc_launch()
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
+        self.assertEqual(self.get_number_unseen_calcs(), 1)
         self.click_latest_calc()
         num = self.get_number_conformers()
 
@@ -922,6 +923,7 @@ class ClusterTests(CalcusLiveServer):
         time.sleep(5)
 
         self.lget("/calculations/")
+        self.assertEqual(self.get_number_unseen_calcs(), 0)
         self.click_latest_calc()
         self.assertEqual(num, self.get_number_conformers())
 

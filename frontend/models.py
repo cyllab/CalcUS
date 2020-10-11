@@ -768,6 +768,34 @@ class CalculationOrder(models.Model):
     def status(self):
         return self._status(*self.get_all_calcs)
 
+    def update_unseen(self, old_status, old_unseen):
+        new_status = self.status
+        new_unseen = self.new_status
+
+        if old_unseen:
+            if not new_unseen:
+                self.author.unseen_calculations -= 1
+                self.author.save()
+        else:
+            if new_unseen:
+                self.author.unseen_calculations += 1
+                self.author.save()
+
+    #########
+    def _update_unseen(self, dqueued, drunning, ddone, derror):
+        status = self.status
+        new_queued = self.num_queued + dqueued
+        new_running = self.num_running + drunning
+        new_done = self.num_done + ddone
+        new_error = self.num_error + derror
+
+        if new_queued + new_running + new_done + new_error == 0:
+            #self.delete()
+            return
+
+        new_status = self._status()
+
+
     def _status(self, num_queued, num_running, num_done, num_error):
         if num_queued + num_running + num_done + num_error == 0:
             return 0
@@ -937,6 +965,7 @@ class Calculation(models.Model):
                     self.order.project.save()
                     mol.save()
 
+                    '''
                     if not self.order.new_status:#Predict if this status change will change the status of the order
                         old_status = self.order.status
                         nums = self.order.get_all_calcs
@@ -950,8 +979,13 @@ class Calculation(models.Model):
                         if new_status != old_status:
                             self.order.author.unseen_calculations += 1
                             self.order.author.save()
+                    '''
+
+        old_status = self.order.status
+        old_unseen = self.order.new_status
 
         super(Calculation, self).save(*args, **kwargs)
+        self.order.update_unseen(old_status, old_unseen)
 
 
     def delete(self, *args, **kwargs):
@@ -986,6 +1020,9 @@ class Calculation(models.Model):
         self.order.project.save()
 
         old_status = self.order.status
+        old_unseen = self.order.new_status
+
+        '''
         nums = self.order.get_all_calcs
 
         num_calc_queued += nums[0]
@@ -1004,10 +1041,16 @@ class Calculation(models.Model):
                     self.order.author.save()
 
             self.order.author.save()
-
+        '''
         mol.save()
 
         super(Calculation, self).delete(*args, **kwargs)
+
+        self.order.update_unseen(old_status, old_unseen)
+
+        if self.order.calculation_set.count() == 0:
+            self.order.delete()
+
 
     @property
     def execution_time(self):

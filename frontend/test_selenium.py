@@ -3597,6 +3597,12 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.assertEqual(self.get_number_unseen_calcs(), 2)
         self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
 
+        self.lget("/projects/")
+        self.delete_project("SeleniumProject")
+        time.sleep(2)
+        self.lget("/projects/")
+        self.assertEqual(self.get_number_unseen_calcs(), 0)
+
     def test_advanced_nmr_analysis(self):
         params = {
                 'calc_name': 'test',
