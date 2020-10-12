@@ -25,7 +25,7 @@ if settings.PING_HOME:
     app.conf.beat_schedule = {
             'ping-home': {
                 'task': 'frontend.tasks.ping_home',
-                'schedule': crontab(minute=(datetime.now().minute + 1)),
+                'schedule': crontab(minute=((datetime.now().minute + 1) % 60)),
             },
     }
 
