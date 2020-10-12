@@ -98,7 +98,7 @@ class XtbCalculation:
             self.cmd_arguments += "-o vtight -a 0.05 "
             self.program = "xtb"
         elif self.calc.step.name == "Conformational Search":
-            self.cmd_arguments = "-rthr 0.6 -ewin 6"
+            self.cmd_arguments = "-rthr 0.6 -ewin 6 "
             self.program = "crest"
             if self.calc.parameters.method == "GFN-FF":
                 self.cmd_arguments += "-gff "
