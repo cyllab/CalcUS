@@ -85,7 +85,8 @@ class XtbCalculation:
         self.option_file += "$end\n"
 
     def handle_specifications(self):
-        for spec in self.calc.specifications.split(';'):
+        return
+        for spec in self.calc.parameters.specifications.split(';'):
             if spec.find("=") != -1:
                 self.cmd_arguments += "-{} {}".format(*spec.split('='))
             elif spec.find("(") != -1:
