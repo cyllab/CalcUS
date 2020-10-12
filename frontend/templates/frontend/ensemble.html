@@ -17,6 +17,11 @@
 	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
 	<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
 
+	<style>
+		#ensemble_name > br { 
+			display: none 
+		}
+	</style>
 	<script>
 		$(document).ready(function(){
 			(function(ChemDoodle) {
@@ -270,18 +275,7 @@
 						edit_title();
 					}
 				});
-				$('[contenteditable=true]').on('keyup', function(e) {//Fixes bug in Firefox where a linebreak is added when a space is entered
-					let children = Array.from(el.childNodes);
-					children.forEach(child => {
-						if (children.indexOf(child) == children.length - 1) {
-							if (child.tagName && child.tagName === "BR") {
-								el.removeChild(child)
-							}
-						} 
-					})
-				});
-
-
+				
 			}
 						
 		}
