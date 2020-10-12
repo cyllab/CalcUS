@@ -963,11 +963,11 @@ def parse_parameters(request, name_required=True):
         specifications = clean(request.POST['calc_specifications']).lower()
 
         def valid():
+            return True#Oops
             for spec in specifications.split(';'):
                 if spec.strip() == '':
                     continue
                 if software == "Gaussian":
-                    print(spec)
                     print(SPECIFICATIONS['Gaussian']['general'].keys())
                     if spec in SPECIFICATIONS['Gaussian']['general'].keys():
                         continue
@@ -987,7 +987,19 @@ def parse_parameters(request, name_required=True):
                         continue
                     if spec not in SPECIFICATIONS['ORCA']['general'] and spec not in SPECIFICATIONS['ORCA']['opt']:#Quick fix, to improve
                         return False
-
+                elif software == 'xtb':
+                    if spec.find("=") != -1:
+                        spec, val = spec.split('=')
+                    if spec in SPECIFICATIONS['xtb']['general'].keys():
+                        return True
+                    else:
+                        if step.name in ['Geometrical Optimisation', 'TS Optimisation', 'Constrained Optimisation']:
+                            if spec in SPECIFICATIONS['xtb']['Geometrical Optimisation'].keys():
+                                return True
+                        elif step.name in ['Conformational Search', 'Constrained Conformational Search']:
+                            if spec in SPECIFICATIONS['xtb']['Conformational Search'].keys():
+                                return True
+                        return False
                 else:
                     return False
             return True

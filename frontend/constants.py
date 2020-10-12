@@ -134,6 +134,8 @@ SPECIFICATIONS = {
         },
         'Conformational Search': {
             'gfn2-xtb//gfn-ff': 0,
+            'rthr': 1,
+            'ewin': 1,
         },
     },
 }

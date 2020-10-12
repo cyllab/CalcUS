@@ -12,6 +12,7 @@ class XtbCalculation:
         self.option_file = ""
 
         self.handle_command()
+        self.handle_specifications()
         self.handle_parameters()
 
         self.create_command()
@@ -83,12 +84,20 @@ class XtbCalculation:
         self.option_file += "atoms: {}\n".format(','.join([str(i) for i in mtd_atoms]))
         self.option_file += "$end\n"
 
+    def handle_specifications(self):
+        for spec in self.calc.specifications.split(';'):
+            if spec.find("=") != -1:
+                self.cmd_arguments += "-{} {}".format(*spec.split('='))
+            elif spec.find("(") != -1:
+                pass#########
+            else:
+                self.cmd_arguments += "-{}".format(spec)
     def handle_command(self):
         if self.calc.step.name == "Geometrical Optimisation":
             self.cmd_arguments += "-o vtight -a 0.05 "
             self.program = "xtb"
         elif self.calc.step.name == "Conformational Search":
-            #self.cmd_arguments = "-rthr 0.6 -ewin 6"
+            self.cmd_arguments = "-rthr 0.6 -ewin 6"
             self.program = "crest"
             if self.calc.parameters.method == "GFN-FF":
                 self.cmd_arguments += "-gff "
