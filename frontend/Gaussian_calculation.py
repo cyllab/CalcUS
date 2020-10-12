@@ -25,7 +25,7 @@ class GaussianCalculation:
     TEMPLATE = """%chk=in.chk
     %nproc={}
     %mem={}MB
-    #p {}{}
+    #p {} {}
 
     CalcUS
 
@@ -195,6 +195,7 @@ class GaussianCalculation:
             cmd_specifications_str = "({})".format(', '.join(full_specs))
 
         self.command_line += "{}{} ".format(cmd, cmd_specifications_str)
+
         method = get_method(self.calc.parameters.method, "Gaussian")
         basis_set = get_basis_set(self.calc.parameters.basis_set, "Gaussian")
         custom_basis_set = self.calc.parameters.custom_basis_sets
@@ -337,6 +338,6 @@ class GaussianCalculation:
             PAL = r.pal
             MEM = r.memory
 
-        raw = self.TEMPLATE.format(PAL, MEM, self.command_line, self.additional_commands, self.calc.parameters.charge, self.calc.parameters.multiplicity, self.xyz_structure, '\n'.join(self.appendix))
+        raw = self.TEMPLATE.format(PAL, MEM, self.command_line.strip(), self.additional_commands.strip(), self.calc.parameters.charge, self.calc.parameters.multiplicity, self.xyz_structure, '\n'.join(self.appendix))
         self.input_file = '\n'.join([i.strip() for i in raw.split('\n')]).replace('\n\n\n', '\n\n')
 
