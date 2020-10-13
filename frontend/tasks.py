@@ -1105,9 +1105,6 @@ def orca_freq(in_file, calc):
 
         ind += 1
 
-    with open("{}/orcaspectrum".format(os.path.join(CALCUS_RESULTS_HOME, str(calc.id))), 'w') as out:
-        for vib in vibs:
-            out.write("{}\n".format(vib))
 
     x = np.arange(500, 4000, 1)#Wave number in cm^-1
     spectrum = plot_vibs(x, zip(vibs, intensities))
@@ -1139,10 +1136,30 @@ def orca_freq(in_file, calc):
             a, x, y, z = line.strip().split()
             struct.append([a, float(x), float(y), float(z)])
 
-    while lines[ind].find("NORMAL MODES") == -1 and ind > 0:
+    while lines[ind].find("VIBRATIONAL FREQUENCIES") == -1 and ind > 0:
         ind -= 1
 
     assert ind > 0
+    ind += 5
+
+    vibs = []
+    while lines[ind].strip() != "":
+        sline = lines[ind].strip().split()
+        num = sline[0].replace(':', '')
+        val = float(sline[1])
+        if val != 0.0:
+            vibs.append(val)
+
+        ind += 1
+
+    with open("{}/orcaspectrum".format(os.path.join(CALCUS_RESULTS_HOME, str(calc.id))), 'w') as out:
+        for vib in vibs:
+            out.write("{}\n".format(vib))
+
+    while lines[ind].find("NORMAL MODES") == -1 and ind < len(lines)-1:
+        ind += 1
+
+    assert ind < len(lines)-1
 
     ind += 7
     start_num = int(nums[0])
