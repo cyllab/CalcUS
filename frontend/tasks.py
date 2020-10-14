@@ -1228,7 +1228,7 @@ def orca_scan(in_file, calc):
                 if lines[ind] == num_atoms:
                     inds.append(ind)
                 ind += 1
-            inds.append(len(lines))
+            inds.append(len(lines)+1)
 
             min_E = 0
             for metaind, mol in enumerate(inds[:-1]):
