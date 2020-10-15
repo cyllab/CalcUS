@@ -2224,13 +2224,6 @@ def analyse_opt_Gaussian(calc):
     xyz = ""
 
     while ind < len(lines) - 2:
-        '''
-        while lines[ind].find(orientation_str) == -1 and lines[ind].find("RMS     Displacement") == -1:
-            ind += 1
-            if ind > len(lines) - 3:
-                calc.save()
-                return
-        '''
         if lines[ind].find(orientation_str) != -1:
             s_ind += 1
             xyz += "{}\n\n".format(num_atoms)

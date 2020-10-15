@@ -565,12 +565,12 @@ def link_order(request, pk):
     try:
         o = CalculationOrder.objects.get(pk=pk)
     except CalculationOrder.DoesNotExist:
-        return HttpResponseRedirect("/home/")
+        return HttpResponseRedirect("/calculations/")
 
     profile = request.user.profile
 
-    if not can_view_order(o, profile):
-        return HttpResponseRedirect("/home/")
+    if not can_view_order(o, profile) or o.calculation_set.count() == 0:
+        return HttpResponseRedirect("/calculations/")
 
     if profile == o.author:
         if o.new_status:
@@ -582,7 +582,7 @@ def link_order(request, pk):
     if o.result_ensemble:
         return HttpResponseRedirect("/ensemble/{}".format(o.result_ensemble.id))
     else:
-        if o.ensemble:
+        if o.ensemble is not None:
             return HttpResponseRedirect("/ensemble/{}".format(o.ensemble.id))
         elif o.structure:
             return HttpResponseRedirect("/ensemble/{}".format(o.structure.parent_ensemble.id))
