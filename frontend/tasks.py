@@ -2195,10 +2195,12 @@ def analyse_opt_Gaussian(calc):
         return
 
     orientation_str = ""
+    '''
     for line in lines:
         if line.find("Standard orientation") != -1:
             orientation_str = "Standard orientation"
             break
+    '''
 
     if orientation_str == "":
         orientation_str = "Input orientation"
@@ -2222,11 +2224,13 @@ def analyse_opt_Gaussian(calc):
     xyz = ""
 
     while ind < len(lines) - 2:
+        '''
         while lines[ind].find(orientation_str) == -1 and lines[ind].find("RMS     Displacement") == -1:
             ind += 1
             if ind > len(lines) - 3:
                 calc.save()
                 return
+        '''
         if lines[ind].find(orientation_str) != -1:
             s_ind += 1
             xyz += "{}\n\n".format(num_atoms)
@@ -2248,10 +2252,10 @@ def analyse_opt_Gaussian(calc):
             xyz = ""
             ind += 1
         else:
-            print("Error")
-            calc.save()
-            return
-    calc.save()
+            ind += 1
+            if ind > len(lines) - 3:
+                calc.save()
+                return
 
 def get_Gaussian_xyz(text):
     lines = text.split('\n')

@@ -1,10 +1,19 @@
 import time
+import os
+from shutil import copyfile, rmtree
 
 from .models import *
 from . import views
 from .constants import *
 from django.core.management import call_command
 from django.test import TestCase, Client
+from .gen_calc import gen_calc
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
+SCR_DIR = os.path.join(tests_dir, "scr")
+RESULTS_DIR = os.path.join(tests_dir, "results")
 
 class LaunchTests(TestCase):
     def setUp(self):
@@ -759,3 +768,138 @@ class AnalysisTests(TestCase):
 
         *_, w_e, w_f_e = lines[ind].split(',')
         self.assertTrue(np.isclose(float(w_e), ref_w_e, atol=0.0001))
+
+class CalculationTests(TestCase):
+
+    def tearDown(self):
+        if os.path.isdir(SCR_DIR):
+            rmtree(SCR_DIR)
+        if os.path.isdir(RESULTS_DIR):
+            rmtree(RESULTS_DIR)
+
+    def setUp(self):
+        if not os.path.isdir(SCR_DIR):
+            os.mkdir(SCR_DIR)
+        if not os.path.isdir(RESULTS_DIR):
+            os.mkdir(RESULTS_DIR)
+
+        call_command('init_static_obj')
+        self.username = "Tester"
+        self.password = "test1234"
+
+        u = User.objects.create_superuser(username=self.username, password=self.password)
+        u.profile.is_PI = True
+        u.save()
+        self.profile = Profile.objects.get(user__username=self.username)
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.profile)
+        self.group.save()
+        self.client = Client()
+        self.client.force_login(u)
+
+    def test_Gaussian_frames1(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 130, 10]]],#Dummy
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'CH4.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        calc = gen_calc(params, self.profile)
+        calc.status = 1
+        calc.save()
+        os.mkdir(os.path.join(SCR_DIR, str(calc.id)))
+        copyfile(os.path.join(tests_dir, "Gaussian_scan1.log"), os.path.join(SCR_DIR, str(calc.id), 'calc.log'))
+
+        response = self.client.post("/get_calc_data/{}".format(calc.id))
+
+        data = response.content.decode('utf-8')
+        xyz, rmsd = data.split(';')
+        sxyz = [i.strip() for i in xyz.split('\n') if i.strip() != ""]#This removes the title lines from the xyz
+        num_atoms = int(sxyz[0])
+
+        self.assertEqual(len(sxyz) % (num_atoms+1), 0)
+        num_frames = int(len(sxyz)/(num_atoms+1))
+        self.assertEqual(num_frames, 19)
+
+        srmsd = [i.strip() for i in rmsd.split('\n') if i.strip() != "" ][1:]
+
+        self.assertEqual(num_frames, len(srmsd))
+
+    def test_Gaussian_frames2(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 130, 10]]],#Dummy
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'CH4.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        calc = gen_calc(params, self.profile)
+        calc.status = 1
+        calc.save()
+        os.mkdir(os.path.join(SCR_DIR, str(calc.id)))
+        copyfile(os.path.join(tests_dir, "Gaussian_scan2.log"), os.path.join(SCR_DIR, str(calc.id), 'calc.log'))
+
+        response = self.client.post("/get_calc_data/{}".format(calc.id))
+
+        data = response.content.decode('utf-8')
+        xyz, rmsd = data.split(';')
+        sxyz = [i.strip() for i in xyz.split('\n') if i.strip() != ""]#This removes the title lines from the xyz
+        num_atoms = int(sxyz[0])
+
+        self.assertEqual(len(sxyz) % (num_atoms+1), 0)
+        num_frames = int(len(sxyz)/(num_atoms+1))
+        self.assertEqual(num_frames, 25)
+
+        srmsd = [i.strip() for i in rmsd.split('\n') if i.strip() != "" ][1:]
+
+        self.assertEqual(num_frames, len(srmsd))
+
+
+    def test_Gaussian_frames3(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 130, 10]]],#Dummy
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'CH4.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        calc = gen_calc(params, self.profile)
+        calc.status = 1
+        calc.save()
+        os.mkdir(os.path.join(SCR_DIR, str(calc.id)))
+        copyfile(os.path.join(tests_dir, "Gaussian_scan3.log"), os.path.join(SCR_DIR, str(calc.id), 'calc.log'))
+
+        response = self.client.post("/get_calc_data/{}".format(calc.id))
+
+        data = response.content.decode('utf-8')
+        xyz, rmsd = data.split(';')
+        sxyz = [i.strip() for i in xyz.split('\n') if i.strip() != ""]#This removes the title lines from the xyz
+        num_atoms = int(sxyz[0])
+
+        self.assertEqual(len(sxyz) % (num_atoms+1), 0)
+        num_frames = int(len(sxyz)/(num_atoms+1))
+        self.assertEqual(num_frames, 31)
+
+        srmsd = [i.strip() for i in rmsd.split('\n') if i.strip() != "" ][1:]
+
+        self.assertEqual(num_frames, len(srmsd))
+
+
+
+
+
