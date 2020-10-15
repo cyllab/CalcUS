@@ -1871,13 +1871,14 @@ def get_calc_data(request, pk):
     if calc.status == 0:
         return HttpResponse(status=204)
 
-    analyse_opt(calc.id)###
+    if calc.status == 1:
+        analyse_opt(calc.id)
 
     multi_xyz = ""
     RMSD = "Frame,RMSD\n"
-    for f in calc.calculationframe_set.all():
-        multi_xyz += f.xyz_structure
-        RMSD += "{},{}\n".format(f.number, f.RMSD)
+    for f in calc.calculationframe_set.values('xyz_structure', 'number', 'RMSD').all():
+        multi_xyz += f['xyz_structure']
+        RMSD += "{},{}\n".format(f['number'], f['RMSD'])
 
     return HttpResponse(multi_xyz + ';' + RMSD)
 

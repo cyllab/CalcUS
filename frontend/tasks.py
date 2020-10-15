@@ -2118,6 +2118,8 @@ def analyse_opt_ORCA(calc):
     flag = False
     while not flag:
         while lines[ind].find("RMS step") == -1:
+            if lines[ind].find("THE OPTIMIZATION HAS CONVERGED") != -1:
+                RMSDs.append(0.)
             ind += 1
             if ind > len(lines) - 2:
                 flag = True
@@ -2141,10 +2143,9 @@ def analyse_opt_ORCA(calc):
             f = calc.calculationframe_set.get(number=i)
         except CalculationFrame.DoesNotExist:
             f = CalculationFrame.objects.create(number=i, xyz_structure=xyz, parent_calculation=calc, RMSD=RMSDs[i])
+            f.save()
         else:
-            f.xyz_structure = xyz
-            f.RMSD = RMSDs[i]
-        f.save()
+            continue
 
 def analyse_opt_xtb(calc):
     if calc.status in [2, 3]:
@@ -2169,10 +2170,10 @@ def analyse_opt_xtb(calc):
             f = calc.calculationframe_set.get(number=n+1)
         except CalculationFrame.DoesNotExist:
             f = CalculationFrame.objects.create(parent_calculation=calc, number=n+1, RMSD=rms, xyz_structure=xyz)
+            f.save()
         else:
-            f.xyz_structure = xyz
+            continue
 
-        f.save()
     return
 
 
@@ -2551,6 +2552,9 @@ def run_calc(calc_id):
     except:
         ret = 1
         traceback.print_exc()
+
+    if calc.step.creates_ensemble:
+        analyse_opt(calc.id)
 
     if ret == 7:#Manually disconnected from cluster
         return

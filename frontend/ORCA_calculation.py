@@ -23,7 +23,7 @@ CPCM_SOLVENTS = {
         'Chloroform': 'Chloroform',
         'Cyclohexane': 'Chloroform',
         'Dimethylformamide': 'DMF',
-        'Dimethylsulfoxide': 'SMDO',
+        'Dimethylsulfoxide': 'DMSO',
         'Ethanol': 'Ethanol',
         'n-Hexane': 'Hexane',
         'Methanol': 'Methanol',
@@ -305,7 +305,7 @@ class OrcaCalculation:
                     smd_block = '''%cpcm
                     smd true
                     SMDsolvent "{}"
-                    end'''.format(self.calc.parameters.solvent)
+                    end'''.format(CPCM_SOLVENTS[self.calc.parameters.solvent])
                     self.blocks.append(smd_block)
                 elif self.calc.parameters.solvation_radii == "SMD18":
                     smd_block = '''%cpcm
@@ -313,7 +313,7 @@ class OrcaCalculation:
                     SMDsolvent "{}"
                     radius[53] 2.74
                     radius[35] 2.60
-                    end'''.format(self.calc.parameters.solvent)
+                    end'''.format(CPCM_SOLVENTS[self.calc.parameters.solvent])
                     self.blocks.append(smd_block)
             elif self.calc.parameters.solvation_model == "CPCM":
                 self.command_line += "CPCM({}) ".format(CPCM_SOLVENTS[self.calc.parameters.solvent])
