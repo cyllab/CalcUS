@@ -69,19 +69,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 	<ul data-toc=".content" data-toc-headings="h2,h3,h4,h5" id="toc"></ul>
 
-	<h3 class="title is-3">Theory</h3>
-	<h3 class="title is-3">Practice</h3>
-	<h4 class="title is-4">Exercises</h4>
-
-	<div>
-		{% for ex in exercises %}
-		{% completed ex request.user.profile as comp %}
-		<a class="box learn-item {% if comp %}has-background-success{% endif %}" href="/learn/exercise/{{ ex.id }}" >
-			{{ ex.title }} {% if comp %}(Completed){% endif %}
-		</a>
-		{% endfor %}
-	</div>
-
 	<h3 class="title is-3">Reference</h3>
 	<h4 class="title is-4">Examples</h4>
 	<div>
