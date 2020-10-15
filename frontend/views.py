@@ -1236,9 +1236,10 @@ def submit_calculation(request):
                 mol = Molecule.objects.create(name=tmpname, inchi=fing, project=project_obj)
                 mol.save()
                 e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
-                for s_id in fingerprints[fing]:
+                for s_num, s_id in enumerate(fingerprints[fing]):
                     s = Structure.objects.get(pk=s_id)
                     s.parent_ensemble = e
+                    s.number = s_num + 1
                     s.save()
                 e.save()
                 obj.ensemble = e
