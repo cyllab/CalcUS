@@ -309,7 +309,8 @@
 
 			if(choice.value == "HF"){
 				hf3c = document.getElementById("hf3c").checked;
-				if (hf3c == true) {
+				software = document.getElementById("calc_software").value;
+				if (hf3c == true && software == "ORCA") {
 					document.getElementById("calc_basis_set_field").style.display = "none";
 					document.getElementById("custom_bs_field").style.display = "none";
 				}
@@ -320,7 +321,8 @@
 			}
 			else if(choice.value == "DFT") {
 				pbeh3c = document.getElementById("pbeh3c").checked;
-				if (pbeh3c == true) {
+				software = document.getElementById("calc_software").value;
+				if (pbeh3c == true && software == "ORCA") {
 					document.getElementById("calc_basis_set_field").style.display = "none";
 					document.getElementById("calc_functional_field").style.display = "none";
 					document.getElementById("custom_bs_field").style.display = "none";
