@@ -139,7 +139,7 @@
 			choice = document.getElementById("calc_solvent");
 			solvation_method = document.getElementById("calc_solvation_model_field");
 			solvation_radii = document.getElementById("calc_solvation_radii_field");
-			if(choice.value == "Vacuum") {
+			if(choice.value == "Vacuum" || choice.value == "") {
 				solvation_method.style.display = "none";	
 				solvation_radii.style.display = "none";	
 			}
@@ -741,25 +741,7 @@
 						<div class="field">
 							<label class="label">Solvent</label>
 							<div class="control" >
-								<div class="select">
-									<select name="calc_solvent" id="calc_solvent" onchange="solvent_selection_changed();">
-								    		<option selected="selected">Vacuum</option>
-								    		<option>Acetone</option>
-								    		<option>Acetonitrile</option>
-								    		<option>Benzene</option>
-								    		<option>Dichloromethane</option>
-								    		<option>Chloroform</option>
-								    		<option>Carbon disulfide</option>
-								    		<option>Dimethylformamide</option>
-								    		<option>Dimethylsulfoxide</option>
-								    		<option>Diethyl ether</option>
-								    		<option>Methanol</option>
-								    		<option>n-Hexane</option>
-								    		<option>Tetrahydrofuran</option>
-								    		<option>Toluene</option>
-								    		<option>Water</option>
-								  	</select>
-								</div>
+								<input class="input" name="calc_solvent" id="calc_solvent" type="text" oninput="solvent_selection_changed();">
 							</div>
 						</div>
 					</div>

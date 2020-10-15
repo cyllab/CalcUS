@@ -13,25 +13,6 @@ elif L_STACKSIZE.find("MB") != -1:
 
 L_MEM = int(L_PAL)*L_STACKSIZE
 
-CPCM_SOLVENTS = {
-        'Acetone': 'Acetone',
-        'Acetonitrile': 'Acetonitrile',
-        'Ammonia': 'Ammonia',
-        'Benzene': 'Benzene',
-        'Tetrachloromethane': 'CCl4',
-        'Dichloromethane': 'CH2Cl2',
-        'Chloroform': 'Chloroform',
-        'Cyclohexane': 'Chloroform',
-        'Dimethylformamide': 'DMF',
-        'Dimethylsulfoxide': 'DMSO',
-        'Ethanol': 'Ethanol',
-        'n-Hexane': 'Hexane',
-        'Methanol': 'Methanol',
-        'Octanol': 'Octanol',
-        'Pyridine': 'Pyridine',
-        'Tetrahydrofuran': 'THF',
-        'Toluene': 'Toluene',
-        }
 class OrcaCalculation:
 
     calc = None
@@ -305,7 +286,7 @@ class OrcaCalculation:
                     smd_block = '''%cpcm
                     smd true
                     SMDsolvent "{}"
-                    end'''.format(CPCM_SOLVENTS[self.calc.parameters.solvent])
+                    end'''.format(self.calc.parameters.solvent)
                     self.blocks.append(smd_block)
                 elif self.calc.parameters.solvation_radii == "SMD18":
                     smd_block = '''%cpcm
@@ -313,10 +294,10 @@ class OrcaCalculation:
                     SMDsolvent "{}"
                     radius[53] 2.74
                     radius[35] 2.60
-                    end'''.format(CPCM_SOLVENTS[self.calc.parameters.solvent])
+                    end'''.format(self.calc.parameters.solvent)
                     self.blocks.append(smd_block)
             elif self.calc.parameters.solvation_model == "CPCM":
-                self.command_line += "CPCM({}) ".format(CPCM_SOLVENTS[self.calc.parameters.solvent])
+                self.command_line += "CPCM({}) ".format(self.calc.parameters.solvent)
                 ###CPCM radii
             else:
                 raise Exception("Invalid solvation method for ORCA")

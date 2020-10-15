@@ -36,7 +36,7 @@ SOLVENT_TABLE = {
     'n-Hexane': 'n-hexane',
     'Tetrahydrofuran': 'thf',
     'Toluene': 'toluene',
-        }
+        }#######
 
 #Software->Method/Functional->Basis set->Atom->[m, b, R2]
 NMR_REGRESSIONS = {

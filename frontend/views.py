@@ -953,9 +953,6 @@ def parse_parameters(request, name_required=True):
     if mult not in ["1", "2", "3"]:
         return "Invalid multiplicity (1 to 3)"
 
-    if solvent not in SOLVENT_TABLE.keys() and solvent != "Vacuum":
-        return "Invalid solvent"
-
     if step.name not in BASICSTEP_TABLE[software].keys():
         return "Invalid calculation type"
 
