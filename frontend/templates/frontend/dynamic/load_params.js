@@ -5,6 +5,9 @@ if ("{{ params.program }}" != "Unknown" && "{{ params.program}}" != "Open Babel"
 	solvation_model = document.getElementById("calc_solvation_model");
 	solvation_model.value = "{{ params.solvation_model }}";
 
+	solvation_radii = document.getElementById("calc_solvation_radii");
+	solvation_radii.value = "{{ params.solvation_radii }}";
+
 	charge = document.getElementById("calc_charge");
 	if("{{ params.charge }}" == "1") {
 		charge.value = "+1";
