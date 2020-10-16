@@ -671,7 +671,7 @@ class Parameters(models.Model):
         else:
             name += "{} ".format(self.method)
         if self.solvent.lower() != 'vacuum':
-            name += "({}; {})".format(self.solvation_model, self.solvent)
+            name += "({}; {})".format(self.solvation_model, self.solvent.replace(',', '_'))
         return name
 
     def __str__(self):
