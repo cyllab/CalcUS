@@ -833,7 +833,7 @@ class InterfaceTests(CalcusLiveServer):
         time.sleep(5)
         self.load_preset("Test Preset")
 
-        solvent = Select(self.driver.find_element_by_name('calc_solvent'))
+        solvent = self.driver.find_element_by_name('calc_solvent')
         charge = Select(self.driver.find_element_by_name('calc_charge'))
         theory = Select(self.driver.find_element_by_id("calc_theory_level"))
         func = self.driver.find_element_by_id("calc_functional")
@@ -842,7 +842,7 @@ class InterfaceTests(CalcusLiveServer):
         software = self.driver.find_element_by_id("calc_software")
         specifications = self.driver.find_element_by_id("calc_specifications")
 
-        self.assertEqual(solvent.first_selected_option.text, params1['solvent'])
+        self.assertEqual(solvent.get_attribute('value'), params1['solvent'])
         self.assertEqual(charge.first_selected_option.text, params1['charge'])
         self.assertEqual(theory.first_selected_option.text, params1['theory'])
         self.assertEqual(func.get_attribute('value'), params1['functional'])
@@ -877,7 +877,7 @@ class InterfaceTests(CalcusLiveServer):
         self.click_project("My Project")
         self.create_molecule_in_project()
 
-        solvent = Select(self.driver.find_element_by_name('calc_solvent'))
+        solvent = self.driver.find_element_by_name('calc_solvent')
         solvation_model = Select(self.driver.find_element_by_name('calc_solvation_model'))
         solvation_radii = Select(self.driver.find_element_by_name('calc_solvation_radii'))
         charge = Select(self.driver.find_element_by_name('calc_charge'))
@@ -888,7 +888,7 @@ class InterfaceTests(CalcusLiveServer):
         software = self.driver.find_element_by_id("calc_software")
         specifications = self.driver.find_element_by_id("calc_specifications")
 
-        self.assertEqual(solvent.first_selected_option.text, params1['solvent'])
+        self.assertEqual(solvent.get_attribute('value'), params1['solvent'])
         self.assertEqual(solvation_model.first_selected_option.text, params1['solvation_model'])
         self.assertEqual(solvation_radii.first_selected_option.text, params1['solvation_radii'])
         self.assertEqual(charge.first_selected_option.text, params1['charge'])

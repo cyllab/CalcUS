@@ -156,7 +156,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             name_input.send_keys(params['calc_name'])
 
         if 'solvent' in params.keys():
-            self.driver.find_element_by_xpath("//*[@id='calc_solvent']/option[text()='{}']".format(params['solvent'])).click()
+            solvent_input.send_keys(params['solvent'])
 
         if 'charge' in params.keys():
             self.driver.find_element_by_xpath("//*[@id='calc_charge']/option[text()='{}']".format(params['charge'])).click()

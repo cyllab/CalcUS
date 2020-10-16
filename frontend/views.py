@@ -811,9 +811,9 @@ def parse_parameters(request, name_required=True):
     if 'calc_solvent' in request.POST.keys():
         solvent = clean(request.POST['calc_solvent'])
         if solvent.strip() == '':
-            return "No calculation solvent"
+            solvent = "Vacuum"
     else:
-        return "No calculation solvent"
+        solvent = "Vacuum"
 
     if solvent != "Vacuum":
         if 'calc_solvation_model' in request.POST.keys():
