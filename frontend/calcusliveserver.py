@@ -579,8 +579,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             if proj_name == name:
                 proj = _proj
                 break
-
-        assert proj is not None
+        else:
+            raise Exception("Project not found")
 
         sline = proj.find_element_by_css_selector("a > p").text.split()
         return int(sline[0]), int(sline[2].replace('(', '')), int(sline[4]), int(sline[6]), int(sline[8])
@@ -593,8 +593,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             if mol_name == name:
                 mol = _mol
                 break
-
-        assert mol is not None
+        else:
+            raise Exception("Molecule not found")
 
         sline = mol.find_element_by_css_selector("a > p").text.split()
         return int(sline[0]), int(sline[2].replace('(', '')), int(sline[4]), int(sline[6]), int(sline[8])
@@ -653,6 +653,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 link = proj.find_element_by_css_selector("div > a")
                 link.click()
                 return
+        else:
+            raise Exception("Project not found")
 
     def get_number_molecules(self):
         assert self.is_on_page_user_project()
@@ -673,7 +675,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 #link.click()
                 mol.click()
                 return
-        raise Exception("Could not click on molecule")
+        else:
+            raise Exception("Could not click on molecule")
 
     def get_number_ensembles(self):
         assert self.is_on_page_molecule()
@@ -694,8 +697,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             if e_name == name:
                 e_link.click()
                 return
-
-        raise EnsembleNotFound
+        else:
+            raise EnsembleNotFound
 
     def get_calc_orders(self):
         assert self.is_on_page_calculations()
@@ -911,7 +914,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def launch_ensemble_next_step(self):
         assert self.is_on_page_ensemble()
-        button = WebDriverWait(self.driver, 1).until(
+        button = WebDriverWait(self.driver, 0.5).until(
             EC.presence_of_element_located((By.ID, "next_step_ensemble"))
         )
         button.send_keys(Keys.RETURN)
@@ -919,10 +922,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def launch_structure_next_step(self):
         assert self.is_on_page_ensemble()
 
-        button = WebDriverWait(self.driver, 1).until(
+        button = WebDriverWait(self.driver, 0.5).until(
             EC.presence_of_element_located((By.ID, "next_step_structure"))
         )
-        table = WebDriverWait(self.driver, 1).until(
+        table = WebDriverWait(self.driver, 0.5).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "#conf_table > tr"))
         )
 
@@ -931,7 +934,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def launch_frame_next_step(self):
         assert self.is_on_page_calculation()
 
-        button = WebDriverWait(self.driver, 1).until(
+        button = WebDriverWait(self.driver, 0.5).until(
             EC.presence_of_element_located((By.ID, "launch_from_frame"))
         )
 
@@ -1013,8 +1016,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 alert.accept()
                 self.driver.switch_to_default_content()
                 return
-
-        assert False
+        else:
+            assert False
 
     def get_ensemble_rows(self):
         assert self.is_on_page_molecule()
@@ -1068,7 +1071,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 self.driver.switch_to_default_content()
                 self.wait_for_ajax()
                 return
-        raise Exception("Could not delete ensemble")
+        else:
+            raise Exception("Could not delete ensemble")
 
     def flag_ensemble(self):
         assert self.is_on_page_ensemble()
