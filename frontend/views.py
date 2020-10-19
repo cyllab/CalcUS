@@ -328,8 +328,8 @@ def project_details(request, username, proj):
         return HttpResponseRedirect("/home/")
 
 def clean(txt):
-    _txt = filter(lambda x: x in string.printable, txt)
-    return bleach.clean(_txt)
+    filter(lambda x: x in string.printable, txt)
+    return bleach.clean(txt)
 
 @login_required
 def molecule(request, pk):
@@ -773,7 +773,7 @@ def parse_parameters(request, name_required=True):
                 if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys():
                     return "No calculation name"
         else:
-            if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys():
+            if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys() and len(request.FILES) == 0:
                 return "No calculation name"
             else:
                 name = "Followup"
@@ -860,7 +860,7 @@ def parse_parameters(request, name_required=True):
 
         if theory == "DFT":
             special_functional = False
-            if 'pbeh3c' in request.POST.keys():
+            if 'pbeh3c' in request.POST.keys() and software == "ORCA":
                 field_pbeh3c = clean(request.POST['pbeh3c'])
                 if field_pbeh3c == "on":
                     special_functional = True
@@ -893,7 +893,7 @@ def parse_parameters(request, name_required=True):
                 return "No semi-empirical method chosen"
         elif theory == "HF":
             special_functional = False
-            if 'hf3c' in request.POST.keys():
+            if 'hf3c' in request.POST.keys() and software == "ORCA":
                 field_hf3c = clean(request.POST['hf3c'])
                 if field_hf3c == "on":
                     special_functional = True
@@ -930,7 +930,7 @@ def parse_parameters(request, name_required=True):
             if step.name == "Conformational Search":
                 if 'calc_conf_option' in request.POST.keys():
                     conf_option = clean(request.POST['calc_conf_option'])
-                    if conf_option not in ['GFN2-xTB', 'GFN-FF', 'GFN2-xTB//GFN-FF']:
+                    if conf_option not in ['GFN2-xTB', 'GFN-FF', 'GFN2-xTB//GFN-FF']:########
                         return "Error in the option for the conformational search"
                     functional = conf_option
         else:
@@ -1167,6 +1167,7 @@ def submit_calculation(request):
                 if isinstance(ss, HttpResponse):
                     return ss
                 s, filename = ss
+                filename = clean(filename)
                 names[s.id] = filename
                 fing = gen_fingerprint(s)
 
@@ -1180,7 +1181,7 @@ def submit_calculation(request):
 
             for fing in unique_fingerprints:
                 tmpname = names[fingerprints[fing][0]]
-                obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
+                obj = CalculationOrder.objects.create(name=filename, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
                 mol = Molecule.objects.create(name=tmpname, inchi=fing, project=project_obj)
                 mol.save()
                 e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
