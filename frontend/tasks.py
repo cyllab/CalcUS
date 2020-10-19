@@ -345,42 +345,30 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
             res = AbortableAsyncResult(calc.task_id)
 
         if log_file != "":
-            with open(log_file, 'w') as out:
-                t = subprocess.Popen(shlex.split(command), stdout=out, stderr=out)
-                while True:
-                    poll = t.poll()
-
-                    if not poll is None:
-                        return t.returncode
-
-                    if calc_id != -1 and res.is_aborted() == True:
-                        t.terminate()
-                        t.kill()
-                        t.wait()
-                        return -2
-
-                    sleep(1)
+            stream = open(log_file, 'w')
         else:
-            t = subprocess.Popen(shlex.split(command))
-            while True:
-                poll = t.poll()
+            stream = open("/dev/null", 'w')
 
-                if not poll is None:
-                    return t.returncode
+        t = subprocess.Popen(shlex.split(command), stdout=stream, stderr=stream)
+        while True:
+            poll = t.poll()
 
-                if calc_id != -1 and res.is_aborted() == True:
+            if not poll is None:
+                return t.returncode
 
-                    parent = psutil.Process(t.pid)
-                    children = parent.children(recursive=True)
-                    for process in children:
-                        process.send_signal(signal.SIGTERM)
+            if calc_id != -1 and res.is_aborted() == True:
 
-                    #t.kill()
-                    t.terminate()
-                    t.wait()
-                    return -1
+                parent = psutil.Process(t.pid)
+                children = parent.children(recursive=True)
+                for process in children:
+                    process.send_signal(signal.SIGTERM)
 
-                sleep(1)
+                #t.kill()
+                t.terminate()
+                t.wait()
+                return -1
+
+            sleep(1)
 
 def generate_xyz_structure(drawing, structure):
     if structure.xyz_structure == "":
@@ -2513,9 +2501,6 @@ def run_calc(calc_id):
 
     if calc.status == 3:#Already revoked:
         return
-
-    if calc.task_id == '':
-        print("NO TASK ID: {}".format(calc.id))
 
     ret = verify_charge_mult(calc.structure.xyz_structure, calc.parameters.charge, calc.parameters.multiplicity)
     if ret != 0:
