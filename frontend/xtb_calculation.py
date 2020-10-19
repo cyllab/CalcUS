@@ -19,7 +19,8 @@ class XtbCalculation:
 
     def handle_parameters(self):
         if self.calc.parameters.solvent != "Vacuum":
-            self.cmd_arguments += '-g {} '.format(SOLVENT_TABLE[self.calc.parameters.solvent])
+            #self.cmd_arguments += '-g {} '.format(SOLVENT_TABLE[self.calc.parameters.solvent.lower()])
+            self.cmd_arguments += '-g {} '.format(self.calc.parameters.solvent.lower())
 
         if self.calc.parameters.charge != 0:
             self.cmd_arguments += '--chrg {} '.format(self.calc.parameters.charge)
@@ -85,14 +86,10 @@ class XtbCalculation:
         self.option_file += "$end\n"
 
     def handle_specifications(self):
-        return
-        for spec in self.calc.parameters.specifications.split(';'):
-            if spec.find("=") != -1:
-                self.cmd_arguments += "-{} {}".format(*spec.split('='))
-            elif spec.find("(") != -1:
-                pass#########
-            else:
-                self.cmd_arguments += "-{}".format(spec)
+        ALLOWED = "qwertyuiopasdfghjklzxcvbnm-1234567890 "
+        clean_specs = ''.join([i for i in self.calc.parameters.specifications if i in ALLOWED])
+        self.cmd_arguments += clean_specs
+
     def handle_command(self):
         if self.calc.step.name == "Geometrical Optimisation":
             self.cmd_arguments += "-o vtight -a 0.05 "

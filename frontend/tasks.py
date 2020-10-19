@@ -2501,6 +2501,9 @@ def dispatcher(drawing, order_id):
 @app.task(base=AbortableTask)
 def run_calc(calc_id):
     print("Processing calc {}".format(calc_id))
+
+    sleep(1)#wait for task_id to be saved to the database
+
     calc = Calculation.objects.get(pk=calc_id)
 
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
@@ -2510,6 +2513,9 @@ def run_calc(calc_id):
 
     if calc.status == 3:#Already revoked:
         return
+
+    if calc.task_id == '':
+        print("NO TASK ID: {}".format(calc.id))
 
     ret = verify_charge_mult(calc.structure.xyz_structure, calc.parameters.charge, calc.parameters.multiplicity)
     if ret != 0:

@@ -315,7 +315,7 @@ class GaussianTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
-    def test_sp_DFT_additional_command(self):
+    def test_sp_DFT_specifications(self):
         params = {
                 'type': 'Single-Point Energy',
                 'in_file': 'Cl.xyz',
@@ -324,14 +324,14 @@ class GaussianTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2-SVP',
                 'charge': '-1',
-                'additional_command': 'nosymm 5D',
+                'specifications': 'nosymm 5D',
                 }
 
         calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp M062X/Def2SVP nosymm 5D
+        #p sp M062X/Def2SVP nosymm 5d
 
         CalcUS
 
@@ -1279,7 +1279,7 @@ class GaussianTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2-SVP',
                 'charge': '-1',
-                'specifications': 'SCF(Tight);',
+                'specifications': 'SCF(Tight)',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -1306,14 +1306,14 @@ class GaussianTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2-SVP',
                 'charge': '-1',
-                'specifications': 'SCF(Tight);SCF(XQC);',
+                'specifications': 'SCF(Tight) SCF(XQC)',
                 }
 
         calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp M062X/Def2SVP scf(tight,xqc)
+        #p sp M062X/Def2SVP scf(tight, xqc)
 
         CalcUS
 
@@ -1324,6 +1324,61 @@ class GaussianTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
+    def test_multiple_global_specification2(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'SCF(Tight,XQC)',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p sp M062X/Def2SVP scf(tight, xqc)
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_multiple_global_specification3(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'SCF(Tight, XQC)',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p sp M062X/Def2SVP scf(tight, xqc)
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+
     def test_cmd_specification(self):
         params = {
                 'type': 'Geometrical Optimisation',
@@ -1333,7 +1388,7 @@ class GaussianTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2-SVP',
                 'charge': '-1',
-                'specifications': 'opt(MaxStep=5);',
+                'specifications': 'opt(MaxStep=5)',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -1360,7 +1415,7 @@ class GaussianTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2-SVP',
                 'charge': '-1',
-                'specifications': 'opt(MaxStep=5);opt(Tight);',
+                'specifications': 'opt(MaxStep=5) opt(Tight)',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -1387,7 +1442,7 @@ class GaussianTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2-SVP',
                 'charge': '-1',
-                'specifications': 'opt(MaxStep=5);SCF(Tight);',
+                'specifications': 'opt(MaxStep=5) SCF(Tight)',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -1405,7 +1460,7 @@ class GaussianTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
-    def test_specifications_and_additional_commands(self):
+    def test_specifications_mixed(self):
         params = {
                 'type': 'Geometrical Optimisation',
                 'in_file': 'Cl.xyz',
@@ -1414,15 +1469,41 @@ class GaussianTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2-SVP',
                 'charge': '-1',
-                'specifications': 'opt(MaxStep=5);opt(Tight);',
-                'additional_command': 'nosymm 5D',
+                'specifications': 'opt(MaxStep=5) opt(Tight) nosymm 5D',
                 }
 
         calc = gen_calc(params, self.profile)
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p opt(maxstep=5, tight) M062X/Def2SVP nosymm 5D
+        #p opt(maxstep=5, tight) M062X/Def2SVP nosymm 5d
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_specifications_mixed2(self):
+        params = {
+                'type': 'Geometrical Optimisation',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'opt(MaxStep=5,Tight) nosymm 5D',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt(maxstep=5, tight) M062X/Def2SVP nosymm 5d
 
         CalcUS
 
@@ -1504,7 +1585,7 @@ class GaussianTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2-SVP',
                 'charge': '-1',
-                'specifications': 'opt(MaxStep=5);',
+                'specifications': 'opt(MaxStep=5)',
                 }
 
         user = User.objects.create(username='tmp')
@@ -1745,7 +1826,7 @@ class OrcaTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, orca.input_file))
 
-    def test_sp_DFT_additional_command(self):
+    def test_sp_DFT_specifications(self):
         params = {
                 'type': 'Single-Point Energy',
                 'in_file': 'Cl.xyz',
@@ -1754,7 +1835,7 @@ class OrcaTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2-SVP',
                 'charge': '-1',
-                'additional_command': 'TightSCF',
+                'specifications': 'TightSCF',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -1762,6 +1843,33 @@ class OrcaTests(TestCase):
 
         REF = """
         !SP M062X Def2-SVP TightSCF
+        *xyz -1 1
+        Cl 0.0 0.0 0.0
+        *
+        %pal
+        nprocs 8
+        end
+        """
+
+        self.assertTrue(self.is_equivalent(REF, orca.input_file))
+
+    def test_sp_DFT_multiple_specifications(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'ORCA',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'TightSCF GRID6',
+                }
+
+        calc = gen_calc(params, self.profile)
+        orca = OrcaCalculation(calc)
+
+        REF = """
+        !SP M062X Def2-SVP TightSCF GRID6
         *xyz -1 1
         Cl 0.0 0.0 0.0
         *
@@ -1780,7 +1888,7 @@ class OrcaTests(TestCase):
                 'theory_level': 'RI-MP2',
                 'basis_set': 'cc-pVTZ',
                 'charge': '-1',
-                'additional_command': 'cc-pVTZ/C',
+                'specifications': 'cc-pVTZ/C',
                 }
 
         calc = gen_calc(params, self.profile)

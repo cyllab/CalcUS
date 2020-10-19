@@ -21,7 +21,7 @@ class OrcaCalculation:
     pal = 0
     blocks = []
 
-    TEMPLATE = """!{} {}
+    TEMPLATE = """!{}
     *xyz {} {}
     {}*
     {}"""
@@ -43,7 +43,7 @@ class OrcaCalculation:
         self.pal = 0
         self.blocks = []
         self.command_line = ""
-        self.additional_commands = self.calc.order.author.default_orca
+        self.additional_commands = self.clean(self.calc.order.author.default_orca)
         self.xyz_structure = ""
         self.block_lines = ""
         self.input_file = ""
@@ -60,12 +60,15 @@ class OrcaCalculation:
 
         self.create_input_file()
 
+    def clean(self, s):
+        WHITELIST = set("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/()=-, ")
+        return ''.join([c for c in s if c in WHITELIST])
+
     def handle_specifications(self):
         if self.calc.parameters.specifications.strip() == '':
             return
 
-        specs = self.calc.parameters.specifications.split(';')
-        self.additional_commands += " ".join(specs)
+        self.additional_commands += self.clean(self.calc.parameters.specifications.strip())
 
     def handle_command(self):
         if self.calc.step.name == 'NMR Prediction':
@@ -205,9 +208,6 @@ class OrcaCalculation:
         else:
             self.command_line += "{} {} ".format(method, basis_set)
 
-        if self.calc.parameters.additional_command.strip() != "":
-            self.command_line += "{} ".format(self.calc.parameters.additional_command.strip())
-
     def handle_custom_basis_sets(self):
         if self.calc.parameters.custom_basis_sets == "":
             return
@@ -304,6 +304,7 @@ class OrcaCalculation:
 
     def create_input_file(self):
         self.block_lines = '\n'.join(self.blocks)
-        raw = self.TEMPLATE.format(self.command_line, self.additional_commands, self.calc.parameters.charge, self.calc.parameters.multiplicity, self.xyz_structure, self.block_lines)
+        cmd = "{} {}".format(self.command_line, self.additional_commands).replace('  ', ' ')
+        raw = self.TEMPLATE.format(cmd, self.calc.parameters.charge, self.calc.parameters.multiplicity, self.xyz_structure, self.block_lines)
         self.input_file = '\n'.join([i.strip() for i in raw.split('\n')])
 

@@ -22,21 +22,21 @@ R_CONSTANT = decimal.Decimal(8.31446261815324)
 R_CONSTANT_HARTREE = decimal.Decimal(3.166811565240536e-06)
 TEMP = decimal.Decimal(298)
 SOLVENT_TABLE = {
-    'Acetone': 'acetone',
-    'Acetonitrile': 'acetonitrile',
-    'Benzene': 'benzene',
-    'Dichloromethane': 'ch2cl2',
-    'Chloroform': 'chcl3',
-    'Carbon disulfide': 'cs2',
-    'Dimethylformamide': 'dmf',
-    'Dimethylsulfoxide': 'dmso',
-    'Diethyl ether': 'ether',
-    'Water': 'h2o',
-    'Methanol': 'methanol',
-    'n-Hexane': 'n-hexane',
-    'Tetrahydrofuran': 'thf',
-    'Toluene': 'toluene',
-        }#######
+    'acetone': 'acetone',
+    'acetonitrile': 'acetonitrile',
+    'benzene': 'benzene',
+    'dichloromethane': 'ch2cl2',
+    'chloroform': 'chcl3',
+    'carbon disulfide': 'cs2',
+    'dimethylformamide': 'dmf',
+    'dimethylsulfoxide': 'dmso',
+    'diethyl ether': 'ether',
+    'water': 'h2o',
+    'methanol': 'methanol',
+    'n-hexane': 'n-hexane',
+    'tetrahydrofuran': 'thf',
+    'toluene': 'toluene',
+        }
 
 #Software->Method/Functional->Basis set->Atom->[m, b, R2]
 NMR_REGRESSIONS = {

@@ -11,7 +11,6 @@ def gen_param(params):
     basis_set = ""
     theory_level = ""
     method = ""
-    additional_command = ""
     custom_basis_sets = ""
     density_fitting = ""
     specifications = ""
@@ -51,15 +50,12 @@ def gen_param(params):
     if 'method' in params.keys():
         method = params['method']
 
-    if 'additional_command' in params.keys():
-        additional_command = params['additional_command']
-
     if 'specifications' in params.keys():
         specifications = params['specifications']
 
     software = params['software']
 
-    p = Parameters.objects.create(charge=charge, multiplicity=multiplicity, solvent=solvent, solvation_model=solvation_model, solvation_radii=solvation_radii, basis_set=basis_set, theory_level=theory_level, method=method, additional_command=additional_command, custom_basis_sets=custom_basis_sets, density_fitting=density_fitting, specifications=specifications, software=software)
+    p = Parameters.objects.create(charge=charge, multiplicity=multiplicity, solvent=solvent, solvation_model=solvation_model, solvation_radii=solvation_radii, basis_set=basis_set, theory_level=theory_level, method=method, custom_basis_sets=custom_basis_sets, density_fitting=density_fitting, specifications=specifications, software=software)
     return p
 
 def gen_calc(params, profile):

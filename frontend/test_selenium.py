@@ -823,7 +823,7 @@ class InterfaceTests(CalcusLiveServer):
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
                 'solvation_model': 'CPCM',
-                'specifications': [['tightscf']],
+                'specifications': 'tightscf',
                 }
         self.lget("/launch/")
         self.calc_input_params(params1)
@@ -838,9 +838,8 @@ class InterfaceTests(CalcusLiveServer):
         theory = Select(self.driver.find_element_by_id("calc_theory_level"))
         func = self.driver.find_element_by_id("calc_functional")
         basis_set = self.driver.find_element_by_id("calc_basis_set")
-        additional_command = self.driver.find_element_by_id("calc_additional_command")
-        software = self.driver.find_element_by_id("calc_software")
         specifications = self.driver.find_element_by_id("calc_specifications")
+        software = self.driver.find_element_by_id("calc_software")
 
         self.assertEqual(solvent.get_attribute('value'), params1['solvent'])
         self.assertEqual(charge.first_selected_option.text, params1['charge'])
@@ -848,7 +847,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(func.get_attribute('value'), params1['functional'])
         self.assertEqual(basis_set.get_attribute('value'), params1['basis_set'])
         self.assertEqual(software.get_attribute('value'), params1['software'])
-        self.assertEqual(additional_command.get_attribute('value'), "")
         self.assertEqual(specifications.get_attribute('value'), "tightscf;")
 
     def test_project_preset(self):
@@ -866,7 +864,7 @@ class InterfaceTests(CalcusLiveServer):
                 'solvation_model': 'CPCM',
                 'solvation_radii': 'Bondi',
                 'project': 'My Project',
-                'specifications': [['nosymm']],
+                'specifications': 'nosymm',
                 }
 
         self.lget("/launch/")
@@ -884,7 +882,6 @@ class InterfaceTests(CalcusLiveServer):
         theory = Select(self.driver.find_element_by_id("calc_theory_level"))
         func = self.driver.find_element_by_id("calc_functional")
         basis_set = self.driver.find_element_by_id("calc_basis_set")
-        additional_command = self.driver.find_element_by_id("calc_additional_command")
         software = self.driver.find_element_by_id("calc_software")
         specifications = self.driver.find_element_by_id("calc_specifications")
 
@@ -896,8 +893,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(func.get_attribute('value'), params1['functional'])
         self.assertEqual(basis_set.get_attribute('value'), params1['basis_set'])
         self.assertEqual(software.get_attribute('value'), params1['software'])
-        self.assertEqual(additional_command.get_attribute('value'), "")
-        self.assertEqual(specifications.get_attribute('value'), "nosymm;")
+        self.assertEqual(specifications.get_attribute('value'), "nosymm")
 
     def test_project_preset_independance(self):
         proj = Project.objects.create(name="My Project", author=self.profile)
@@ -1033,32 +1029,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(n_queued, 0)
         self.assertEqual(n_running, 0)
         self.assertEqual(n_completed, 1)
-
-    def test_add_specification(self):
-        self.lget('/launch/')
-        params = {
-                'calc_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'software': 'Gaussian',
-                'theory': 'DFT',
-                }
-        self.calc_input_params(params)
-
-        self.driver.find_element_by_css_selector("summary").click()
-        self.driver.find_element_by_id("pick_specifications_button").click()
-
-        self.driver.find_element_by_xpath("//*[@id='specifications_select']/option[text()='opt(tight)']").click()
-        add_btn = self.driver.find_element_by_id("add_spec_button")
-        add_btn.click()
-
-        box_specs = self.driver.find_element_by_id("specifications")
-        self.assertEqual(box_specs.get_attribute("value"), "opt(tight);")
-
-        close_btn = self.driver.find_element_by_css_selector(".close_specs")
-        close_btn.click()
-
-        form_specs = self.driver.find_element_by_id("calc_specifications")
-        self.assertEqual(form_specs.get_attribute("value"), "opt(tight);")
 
     def test_unseen_calc_badge(self):
         self.setup_test_group()
@@ -2004,7 +1974,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'software': 'ORCA',
                 'theory': 'RI-MP2',
                 'basis_set': 'cc-pVDZ',
-                'additional_command': 'cc-pVDZ/C',
+                'specifications': 'cc-pVDZ/C',
                 }
 
         self.lget("/launch/")
@@ -2113,7 +2083,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'software': 'ORCA',
                 'theory': 'RI-MP2',
                 'basis_set': 'cc-pVDZ',
-                'additional_command': 'cc-pVDZ/C',
+                'specifications': 'cc-pVDZ/C',
                 }
 
         self.lget("/launch/")
@@ -2188,7 +2158,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'PW92',
                 'basis_set': 'Def2-SVP',
-                'additional_command': 'NUMFREQ',
+                'specifications': 'NUMFREQ',
                 }
 
         self.lget("/launch/")
@@ -2215,7 +2185,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'software': 'ORCA',
                 'theory': 'RI-MP2',
                 'basis_set': 'cc-pVDZ',
-                'additional_command': 'cc-pVDZ/C NUMFREQ',
+                'specifications': 'cc-pVDZ/C NUMFREQ',
                 }
 
         self.lget("/launch/")
@@ -2307,7 +2277,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'software': 'ORCA',
                 'theory': 'RI-MP2',
                 'basis_set': 'cc-pVDZ',
-                'additional_command': 'cc-pVDZ/C',
+                'specifications': 'cc-pVDZ/C',
                 }
 
         self.lget("/launch/")
@@ -2511,7 +2481,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'additional_command': 'Def2/JK',
+                'specifications': 'Def2/JK',
                 }
 
         self.lget("/launch/")
@@ -2534,7 +2504,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': [['looseopt']],
+                'specifications': 'looseopt',
                 }
 
         self.lget("/launch/")
@@ -2557,7 +2527,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': [['grid...', 6]],
+                'specifications': 'grid6',
                 }
 
         self.lget("/launch/")
@@ -3154,7 +3124,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': [['pop(nbo)']]
+                'specifications': 'pop(nbo)'
                 }
 
         self.lget("/launch/")
@@ -3177,7 +3147,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': [['pop(nbo)']]
+                'specifications': 'pop(nbo)'
                 }
 
         self.lget("/launch/")
@@ -3224,7 +3194,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': [['pop(nbo)'], ['pop(hirshfeld)']]
+                'specifications': 'pop(nbo, hirshfeld)'
                 }
 
         self.lget("/launch/")
@@ -3250,7 +3220,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': [['pop(esp)']]
+                'specifications': 'pop(esp)'
                 }
 
         self.lget("/launch/")
@@ -3274,7 +3244,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': [['pop(hly)']]
+                'specifications': 'pop(hly)'
                 }
 
         self.lget("/launch/")
@@ -3298,7 +3268,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': [['opt(maxstep=...)', 5]]
+                'specifications': 'opt(maxstep=5)'
                 }
 
         self.lget("/launch/")
@@ -3614,7 +3584,7 @@ class ComplexCalculationTests(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'additional_command': 'Def2/JK',
+                'specifications': 'Def2/JK',
                 }
 
         self.lget("/launch/")

@@ -328,7 +328,8 @@ def project_details(request, username, proj):
         return HttpResponseRedirect("/home/")
 
 def clean(txt):
-    return bleach.clean(txt)
+    _txt = filter(lambda x: x in string.printable, txt)
+    return bleach.clean(_txt)
 
 @login_required
 def molecule(request, pk):
@@ -936,11 +937,6 @@ def parse_parameters(request, name_required=True):
             functional = ""
             basis_set = ""
 
-    if 'calc_additional_command' in request.POST.keys():
-        additional_command = clean(request.POST['calc_additional_command'])
-    else:
-        additional_command = ""
-
     if len(name) > 100:
         return "The chosen name is too long"
 
@@ -958,51 +954,6 @@ def parse_parameters(request, name_required=True):
 
     if 'calc_specifications' in request.POST.keys():
         specifications = clean(request.POST['calc_specifications']).lower()
-
-        def valid():
-            return True#Oops
-            for spec in specifications.split(';'):
-                if spec.strip() == '':
-                    continue
-                if software == "Gaussian":
-                    print(SPECIFICATIONS['Gaussian']['general'].keys())
-                    if spec in SPECIFICATIONS['Gaussian']['general'].keys():
-                        continue
-                    try:
-                        key, option = spec.split('(')
-                    except ValueError:
-                        return False
-                    option = option.replace(')', '')
-                    if key not in [i.lower() for i in SPECIFICATIONS[software].keys()]:
-                        return False
-                    if option.find('=') != -1:
-                        option, val = option.split('=')
-                    if option not in [i.lower() for i in SPECIFICATIONS[software][key].keys()]:
-                        return False
-                elif software == 'ORCA':
-                    if spec[:-1] == "grid":
-                        continue
-                    if spec not in SPECIFICATIONS['ORCA']['general'] and spec not in SPECIFICATIONS['ORCA']['opt']:#Quick fix, to improve
-                        return False
-                elif software == 'xtb':
-                    if spec.find("=") != -1:
-                        spec, val = spec.split('=')
-                    if spec in SPECIFICATIONS['xtb']['general'].keys():
-                        return True
-                    else:
-                        if step.name in ['Geometrical Optimisation', 'TS Optimisation', 'Constrained Optimisation']:
-                            if spec in SPECIFICATIONS['xtb']['Geometrical Optimisation'].keys():
-                                return True
-                        elif step.name in ['Conformational Search', 'Constrained Conformational Search']:
-                            if spec in SPECIFICATIONS['xtb']['Conformational Search'].keys():
-                                return True
-                        return False
-                else:
-                    return False
-            return True
-
-        if specifications.strip() != '' and not valid():
-            return "Invalid specifications"
     else:
         specifications = ""
 
@@ -1026,7 +977,7 @@ def parse_parameters(request, name_required=True):
         else:
             project_obj = project_set[0]
 
-    params = Parameters.objects.create(charge=charge, multiplicity=mult, solvent=solvent, method=functional, basis_set=basis_set, additional_command=additional_command, software=software, theory_level=theory, solvation_model=solvation_model, solvation_radii=solvation_radii, density_fitting=df, custom_basis_sets=bs, specifications=specifications)
+    params = Parameters.objects.create(charge=charge, multiplicity=mult, solvent=solvent, method=functional, basis_set=basis_set, software=software, theory_level=theory, solvation_model=solvation_model, solvation_radii=solvation_radii, density_fitting=df, custom_basis_sets=bs, specifications=specifications)
     params.save()
 
     return params, project_obj, name, step

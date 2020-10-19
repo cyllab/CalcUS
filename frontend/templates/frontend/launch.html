@@ -21,17 +21,7 @@
   		background-color: rgb(0, 0, 0);
   		background-color: rgba(0, 0, 0, 0.5);
 	}
-	.pick_specifications_div {
-		display: none;
-  		position: fixed; 
-  		padding-top: 50px;
-  		left: 0; 
-  		top: 0;
-  		width: 100%;
-  		height: 100%; 
-  		background-color: rgb(0, 0, 0);
-  		background-color: rgba(0, 0, 0, 0.5);
-	}
+
 	.modal-content {
   		position: relative; 
   		background-color: white;
@@ -1008,22 +998,10 @@
 						<div class="columns">
 							<div class="column">
 								<div>
-									<div class="field" id="custom_bs_field">
+									<div class="field" id="custom_specifications_field">
 										<label class="label">Specifications</label>
 										<div class="control">
 											<input class="input" name="calc_specifications" id="calc_specifications" type="text" placeholder="" >
-										<button class="button is-info" id="pick_specifications_button" type="button">Pick specifications</button>
-										</div>
-									</div>
-
-									<div class="modal pick_specifications_div" id="pick_specifications_div">
-										<div class="modal-card">
-											<header class="modal-card-head">
-												<p class="modal-card-title">Specifications</p>
-												<button type="button" class="close_btn close_specs modal-close is-large" aria-label="close"></button>
-											</header>
-											<section class="modal-card-body" id="specifications_body">
-											</section>
 										</div>
 									</div>
 								</div>
@@ -1299,38 +1277,11 @@
 		output.value = tmp_output.value;
 	}
 
-	let modalBtnSpec = document.getElementById("pick_specifications_button")
-	let modalSpec = document.querySelector(".pick_specifications_div")
-	let closeBtnSpec = document.querySelector(".close_specs")
-	modalBtnSpec.onclick = function(){
-		div = $("#specifications_body");
-		if (div.html().replace(/^\s+|\s+$/g, '') == ""){
-			$("#specifications_body").load("/specifications/");
-		}
-  		modalSpec.style.display = "block";
-	}
-	closeBtnSpec.onclick = function(){
-  		modalSpec.style.display = "none";
-		print_output_specs();
-	}
-
-	function print_output_specs() {
-		output = document.getElementById("calc_specifications");
-		tmp_output = document.getElementById("specifications");
-
-		output.value = tmp_output.value;
-	}
-
 	window.onclick = function(e){
   		if(e.target == modalBs){
     			modalBs.style.display = "none";
 			print_output_bs();
   		}
-		else if (e.target == modalSpec){
-    			modalSpec.style.display = "none";
-			print_output_specs();
-  		}
-
 	}		
 	{% if not ensemble and not structure and not calc %}
 		const inputElement = document.getElementById("file_structure");

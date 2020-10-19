@@ -58,7 +58,7 @@ class GaussianCalculation:
         self.pal = 0
         self.appendix = []
         self.command_line = ""
-        self.additional_commands = self.calc.order.author.default_gaussian + " "
+        self.additional_commands = self.clean(self.calc.order.author.default_gaussian) + " "
         self.command_specifications = []
         self.xyz_structure = ""
         self.input_file = ""
@@ -71,51 +71,58 @@ class GaussianCalculation:
 
         self.create_input_file()
 
+    def clean(self, s):
+        WHITELIST = set("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/()=-, ")
+        return ''.join([c for c in s if c in WHITELIST])
+
     def handle_specifications(self):
         specs = {}
-        def add_spec(key, option, val):
-            if val == "":
-                option_val = option
-            else:
-                option_val = "{}={}".format(option, val)
+        def add_spec(key, option):
+            if option == '':
+                return
             if key in specs.keys():
-                specs[key].append(option_val)
+                specs[key].append(option)
             else:
-                specs[key] = [option_val]
-        for spec in self.calc.parameters.specifications.lower().split(';'):
+                specs[key] = [option]
+
+        s = self.calc.parameters.specifications.lower()
+
+        if s.count('(') != s.count(')'):#Could be more sophisticated to catch other incorrect specifications
+            raise Exception("Invalid specifications: parenthesis not matching")
+
+        _specifications = ""
+
+        remove = False
+        for c in s:
+            if c == ' ' and remove:
+                continue
+            _specifications += c
+            if c == '(':
+                remove = True
+            elif c == ')':
+                remove = False
+
+
+        for spec in self.clean(_specifications).split(' '):
             if spec.strip() == '':
                 continue
             if spec.find("(") != -1:
-                key, option = spec.split('(')
-                option = option.replace(')', '')
-                val = ""
-                if option.find('=') != -1:
-                    option, val = option.split('=')
-                if option not in SPECIFICATIONS["Gaussian"][key].keys():
-                    raise Exception("Unknown specification")
+                key, options = spec.split('(')
+                options = options.replace(')', '')
                 if key in self.KEYWORDS.values():
-                    if key != self.KEYWORDS[self.calc.step.name]:
-                        raise Exception("Invalid specification for the requested step")
-                    if val == '':
-                        self.command_specifications.append(option)
-                    else:
-                        self.command_specifications.append("{}={}".format(option, val))
+                    for option in options.split(','):
+                        self.command_specifications.append(option.strip())
                 else:
-                    add_spec(key, option, val)
-
+                    for option in options.split(','):
+                        add_spec(key, option.strip())
             else:
-                if spec not in SPECIFICATIONS["Gaussian"]["general"].keys():
-                    raise Exception("Unknown specification")
-
-                if self.additional_commands.lower().find(spec) == -1:
-                    self.additional_commands += "{} ".format(spec)
+                self.additional_commands += "{} ".format(spec)
 
         for spec in specs.keys():
-            specs_str = ','.join(specs[spec])
+            specs_str = ', '.join(specs[spec])
             spec_formatted = '{}({}) '.format(spec, specs_str)
+            self.additional_commands += spec_formatted
 
-            if self.additional_commands.lower().find(spec_formatted.strip()) == -1:
-                self.additional_commands += spec_formatted
 
     def handle_command(self):
         cmd = ""
@@ -218,8 +225,6 @@ class GaussianCalculation:
                 self.command_line += "{}/{} ".format(method, gen_keyword)
         else:
             self.command_line += "{} ".format(method)
-
-        self.additional_commands += self.calc.parameters.additional_command.strip()
 
     def parse_custom_basis_set(self):
         custom_basis_set = self.calc.parameters.custom_basis_sets

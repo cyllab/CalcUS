@@ -645,7 +645,6 @@ class Parameters(models.Model):
     theory_level = models.CharField(max_length=100, default='')
     method = models.CharField(max_length=100, default='GFN2-xTB')
     specifications = models.CharField(max_length=1000, default='')
-    additional_command = models.CharField(max_length=1000, default='')
     density_fitting = models.CharField(max_length=1000, default='')
     custom_basis_sets = models.CharField(max_length=1000, default='')
 
