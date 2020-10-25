@@ -274,8 +274,11 @@ class ClusterDaemon:
                 tasks.connections[pid] = self.connections
                 self.calculations[calc.id] = pid
                 retval = self.job(calc)
+
                 del self.calculations[calc.id]
-                del tasks.connections[pid]
+
+                if pid in tasks.connections.keys():
+                    del tasks.connections[pid]
             elif cmd == "kill":
                 self.log("Killing calculation {}".format(calc.id))
                 if calc.id in self.calculations.keys():

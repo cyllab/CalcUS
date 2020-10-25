@@ -86,7 +86,6 @@ class ClusterTests(CalcusLiveServer):
             lines = f.readlines()
             return lines[0].strip()
 
-
     def test_setup(self):
         self.setup_cluster()
         msg = self.driver.find_element_by_id("test_msg").text
@@ -95,66 +94,15 @@ class ClusterTests(CalcusLiveServer):
     def setup_cluster(self):
         self.lget("/profile")
 
-        adress = self.driver.find_element_by_name("cluster_address")
-        adress.send_keys("localhost")
-
-        username = self.driver.find_element_by_name("cluster_username")
-        username.send_keys("calcus")
-
-        pal = self.driver.find_element_by_name("cluster_cores")
-        pal.clear()
-        pal.send_keys("8")
-
-        memory = self.driver.find_element_by_name("cluster_memory")
-        memory.clear()
-        memory.send_keys("10000")
-
-        password = self.driver.find_element_by_name("cluster_password")
-        password.clear()
-        password.send_keys("Selenium")
-
-        self.driver.find_element_by_id("add_access_button").click()
-
-        element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, "public_key_area"))
-        )
-        ind = 0
-        while ind < 5:
-            public_key = self.driver.find_element_by_id("public_key_area").text
-            if public_key.strip() != "":
-                break
-            time.sleep(1)
-            ind += 1
-
-        child = pexpect.spawn('su - calcus')
-        child.expect ('Password:')
-        child.sendline('clustertest')
-        child.expect('\$')
-        child.sendline("echo '{}' > /home/calcus/.ssh/authorized_keys".format(public_key))
+        self.add_cluster()
 
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "#owned_accesses > center > table > tbody > tr > th:nth-child(5) > a"))
         )
 
-        manage = self.driver.find_element_by_css_selector("#owned_accesses > center > table > tbody > tr > th:nth-child(5) > a")
-        manage.send_keys(Keys.RETURN)
+        self.select_cluster(1)
 
-        password = self.driver.find_element_by_id("ssh_password")
-        password.clear()
-        password.send_keys("Selenium")
-
-        test_access = self.driver.find_element_by_id("connect_button")
-        test_access.click()
-        ind = 0
-        while ind < 10:
-            time.sleep(1)
-            try:
-                msg = self.driver.find_element_by_id("test_msg").text
-                if msg == "Connected":
-                    break
-            except:
-                pass
-            ind += 1
+        self.connect_cluster()
 
     def test_delete_access(self):
         self.setup_cluster()
@@ -926,4 +874,41 @@ class ClusterTests(CalcusLiveServer):
         self.assertEqual(self.get_number_unseen_calcs(), 0)
         self.click_latest_calc()
         self.assertEqual(num, self.get_number_conformers())
+
+    def test_cluster_disconnect(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Conformational Search',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'pentane.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_running(20)
+
+        self.lget("/profile/")
+        self.select_cluster(1)
+        self.disconnect_cluster()
+
+        self.lget("/calculations/")
+
+        for i in range(5):
+            statuses = self.get_status_calc_orders()
+            self.assertEqual(len(statuses), 1)
+            self.assertEqual(statuses[0], 1)
+            time.sleep(2)
+            self.driver.refresh()
+
+        self.lget("/profile/")
+        self.select_cluster(1)
+        self.connect_cluster()
+
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(300)
+        self.assertTrue(self.latest_calc_successful())
 

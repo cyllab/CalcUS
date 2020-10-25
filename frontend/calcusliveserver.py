@@ -7,6 +7,7 @@ import selenium
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import datetime
+import pexpect
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -298,6 +299,22 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def get_number_calc_orders(self):
         return len(self.get_calc_orders())
 
+    def get_status_calc_orders(self):
+        orders = self.get_calc_orders()
+        statuses = []
+        for o in orders:
+            head = o.find_element_by_css_selector("article > div")
+            color = head.get_attribute("class")
+            if color.find("has-background-warning") != -1:
+                statuses.append(1)
+            elif color.find("has-background-success") != -1:
+                statuses.append(2)
+            elif color.find("has-background-danger") != -1:
+                statuses.append(3)
+            else:
+                statuses.append(0)
+        return statuses
+
     def get_number_unseen_calcs(self):
         try:
             badge = self.driver.find_element_by_id("unseen_calculations_badge")
@@ -403,6 +420,82 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 u.click()
                 return
         raise Exception("No such user")
+
+    def add_cluster(self):
+        assert self.is_on_page_profile()
+
+        address = self.driver.find_element_by_name("cluster_address")
+        address.send_keys("localhost")
+
+        username = self.driver.find_element_by_name("cluster_username")
+        username.send_keys("calcus")
+
+        pal = self.driver.find_element_by_name("cluster_cores")
+        pal.clear()
+        pal.send_keys("8")
+
+        memory = self.driver.find_element_by_name("cluster_memory")
+        memory.clear()
+        memory.send_keys("10000")
+
+        password = self.driver.find_element_by_name("cluster_password")
+        password.clear()
+        password.send_keys("Selenium")
+
+        self.driver.find_element_by_id("add_access_button").click()
+
+        element = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "public_key_area"))
+        )
+        ind = 0
+        while ind < 5:
+            public_key = self.driver.find_element_by_id("public_key_area").text
+            if public_key.strip() != "":
+                break
+            time.sleep(1)
+            ind += 1
+
+        child = pexpect.spawn('su - calcus')
+        child.expect ('Password:')
+        child.sendline('clustertest')
+        child.expect('\$')
+        child.sendline("echo '{}' > /home/calcus/.ssh/authorized_keys".format(public_key))
+        time.sleep(0.1)
+
+    def connect_cluster(self):
+        assert self.is_on_page_access()
+
+        password = self.driver.find_element_by_id("ssh_password")
+        password.clear()
+        password.send_keys("Selenium")
+
+        test_access = self.driver.find_element_by_id("connect_button")
+        test_access.click()
+        ind = 0
+        while ind < 10:
+            time.sleep(1)
+            try:
+                msg = self.driver.find_element_by_id("test_msg").text
+                if msg == "Connected":
+                    break
+            except:
+                pass
+            ind += 1
+
+    def disconnect_cluster(self):
+        assert self.is_on_page_access()
+
+        disconnect = self.driver.find_element_by_id("disconnect_button")
+        disconnect.click()
+
+    def select_cluster(self, num):
+        assert self.is_on_page_profile()
+
+        clusters = self.driver.find_elements_by_css_selector("#owned_accesses > center > table > tbody > tr")
+        cluster = clusters[num-1]
+        cluster.find_element_by_css_selector("th > a.button").click()
+
+
     def is_user(self, username):
         try:
             u = Profile.objects.get(user__username=username)
@@ -504,6 +597,17 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             time.sleep(1)
             ind += 1
         return False
+
+    def is_on_page_access(self):
+        ind = 0
+        while ind < 3:
+            url = self.get_split_url()
+            if url[0] == 'manage_access' and url[1] != '':
+                return True
+            time.sleep(1)
+            ind += 1
+        return False
+
 
     def is_on_page_managePI(self):
         ind = 0
