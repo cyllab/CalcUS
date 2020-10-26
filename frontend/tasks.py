@@ -1870,6 +1870,8 @@ def gaussian_scan(in_file, calc):
 
     failed = False
     if ret != 0:
+        if ret == 7:
+            return ret
         if preparse.has_scan:
             failed = True
         else:
@@ -2217,7 +2219,10 @@ def analyse_opt_Gaussian(calc):
             xyz += "{}\n\n".format(num_atoms)
             ind += 5
             while lines[ind].find("---------") == -1:
-                n, z, T, X, Y, Z = lines[ind].strip().split()
+                try:
+                    n, z, T, X, Y, Z = lines[ind].strip().split()
+                except ValueError:
+                    return
                 A = ATOMIC_SYMBOL[int(z)]
                 xyz += "{} {} {} {}\n".format(A, X, Y, Z)
                 ind += 1
@@ -2563,8 +2568,6 @@ def run_calc(calc_id):
     else:
         calc.status = 2
         calc.save()
-
-
 
     #just calc.out/calc.log?
     for f in glob.glob("{}/*.out".format(workdir)):
