@@ -202,25 +202,22 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             mol_select.find_element_by_xpath("option[text()='{}']".format(aux_mol)).click()
 
             self.wait_for_ajax()
-            ind = 0
-            while ind < 2:
+
+            for i in range(2):
                 try:
                     e_select = self.driver.find_element_by_id("aux_ensemble")
                     e_select.find_element_by_xpath("option[text()='{}']".format(aux_e)).click()
                 except selenium.common.exceptions.NoSuchElementException:
                     time.sleep(1)
-                    ind += 1
                 else:
                     break
 
             self.wait_for_ajax()
-            ind = 0
-            while ind < 2:
+            for i in range(2):
                 try:
                     s_select = self.driver.find_element_by_id("aux_struct")
                     s_select.find_element_by_xpath("option[text()='{}']".format(aux_s)).click()
                 except selenium.common.exceptions.NoSuchElementException:
-                    time.sleep(1)
                     ind += 1
                 else:
                     break
@@ -447,13 +444,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "public_key_area"))
         )
-        ind = 0
-        while ind < 5:
+
+        for i in range(5):
             public_key = self.driver.find_element_by_id("public_key_area").text
             if public_key.strip() != "":
                 break
             time.sleep(1)
-            ind += 1
 
         child = pexpect.spawn('su - calcus')
         child.expect ('Password:')
@@ -471,8 +467,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         test_access = self.driver.find_element_by_id("connect_button")
         test_access.click()
-        ind = 0
-        while ind < 10:
+
+        for i in range(10):
             time.sleep(1)
             try:
                 msg = self.driver.find_element_by_id("test_msg").text
@@ -480,7 +476,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     break
             except:
                 pass
-            ind += 1
+
+        raise Exception("Could not connect to the cluster")
 
     def disconnect_cluster(self):
         assert self.is_on_page_access()
@@ -534,94 +531,80 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             return True
 
     def is_on_page_order_details(self):
-        ind = 0
-        while ind < 3:
+        for i in range(3):
             url = self.get_split_url()
             if url[0] == 'calculationorder' and url[1] != '':
                 return True
             time.sleep(1)
-            ind += 1
 
         return False
 
     def is_on_page_projects(self):
-        ind = 0
-        while ind < 3:
+        for i in range(3):
             url = self.get_split_url()
             if (url[0] == 'projects' or url[0] == 'home') and (url[1] == '' or self.is_user(url[1])):
                 return True
             time.sleep(1)
-            ind += 1
 
         return False
 
     def is_on_page_user_project(self):
-        ind = 0
-        while ind < 3:
+        for i in range(3):
             url = self.get_split_url()
             if url[0] == 'projects' and self.is_user(url[1]) and self.is_user_project(url[1], url[2]):
                 return True
             time.sleep(1)
-            ind += 1
 
         return False
 
     def is_on_page_calculations(self):
-        ind = 0
-        while ind < 3:
+        for i in range(3):
             url = self.get_split_url()
             if url[0] == 'calculations' and url[1] == '':
                 return True
             time.sleep(1)
-            ind += 1
 
         return False
 
     def is_on_page_calculation(self):
-        ind = 0
-        while ind < 3:
+        for i in range(3):
             url = self.get_split_url()
             if url[0] == 'calculation' and url[1] != '':
                 return True
             time.sleep(1)
-            ind += 1
 
         return False
 
     def is_on_page_profile(self):
-        ind = 0
-        while ind < 3:
+        for i in range(3):
             url = self.get_split_url()
             if url[0] == 'profile' and url[1] == '':
                 return True
             time.sleep(1)
-            ind += 1
+
         return False
 
     def is_on_page_access(self):
-        ind = 0
-        while ind < 3:
+        for i in range(3):
             url = self.get_split_url()
             if url[0] == 'manage_access' and url[1] != '':
                 return True
             time.sleep(1)
-            ind += 1
+
         return False
 
 
     def is_on_page_managePI(self):
-        ind = 0
-        while ind < 3:
+        for i in range(3):
             url = self.get_split_url()
             if url[0] == 'manage_pi_requests' and url[1] == '':
                 return True
             time.sleep(1)
-            ind += 1
+
         return False
 
     def is_on_page_molecule(self):
-        ind = 0
-        while ind < 3:
+        for i in range(3):
             url = self.get_split_url()
             try:
                 mol_id = int(url[1])
@@ -631,12 +614,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 if url[0] == 'molecule' and self.is_molecule_id(mol_id):
                     return True
             time.sleep(1)
-            ind += 1
+
         return False
 
     def is_on_page_ensemble(self):
-        ind = 0
-        while ind < 3:
+        for i in range(3):
             url = self.driver.current_url.split('/')[3:]
             try:
                 e_id = int(url[1])
@@ -646,18 +628,15 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 if url[0] == 'ensemble' and self.is_ensemble_id(e_id):
                     return True
             time.sleep(1)
-            ind += 1
 
         return False
 
     def is_on_page_nmr_analysis(self):
-        ind = 0
-        while ind < 3:
+        for i in range(3):
             url = self.get_split_url()
             if url[0] == 'nmr_analysis' and url[1] != '':
                 return True
             time.sleep(1)
-            ind += 1
 
         return False
 
@@ -735,8 +714,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         create_proj_box = self.driver.find_element_by_css_selector(".container > div > center > a")
         create_proj_box.click()
-        ind = 0
-        while ind < 5:
+        for i in range(5):
             num_projects = self.get_number_projects()
             if num_projects == num_before + 1:
                 return
@@ -864,13 +842,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 if b.text == "Kill":
                     b.click()
 
-                    ind = 0
-                    while ind < 3:
+                    for i in range(3):
                         c = b.get_attribute("class")
                         if c.find("has-background-success") != -1:
                             break
                         time.sleep(1)
-                        ind += 1
 
                     assert b.get_attribute("class").find("has-background-success") != -1
 
@@ -884,13 +860,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 if b.text == "Refetch":
                     b.click()
 
-                    ind = 0
-                    while ind < 3:
+                    for i in range(3):
                         c = b.get_attribute("class")
                         if c.find("has-background-success") != -1:
                             break
                         time.sleep(1)
-                        ind += 1
 
                     assert b.get_attribute("class").find("has-background-success") != -1
 
@@ -904,13 +878,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 if b.text == "Relaunch":
                     b.click()
 
-                    ind = 0
-                    while ind < 3:
+                    for i in range(3):
                         c = b.get_attribute("class")
                         if c.find("has-background-success") != -1:
                             break
                         time.sleep(1)
-                        ind += 1
 
                     assert b.get_attribute("class").find("has-background-success") != -1
 
@@ -957,15 +929,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_calculations()
         assert self.get_number_calc_orders() > 0
 
-        ind = 0
-        while ind < timeout:
+        for i in range(0, timeout, 2):
             calculations = self.get_calc_orders()
 
             header = calculations[0].find_element_by_class_name("message-header")
             if "has-background-success" in header.get_attribute("class") or "has-background-danger" in header.get_attribute("class"):
                 return
             time.sleep(2)
-            ind += 2
             self.driver.refresh()
         raise Exception("Calculation did not finish")
 
@@ -973,15 +943,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_calculations()
         assert self.get_number_calc_orders() > 0
 
-        ind = 0
-        while ind < timeout:
+        for i in range(imeout):
             calculations = self.get_calc_orders()
 
             header = calculations[0].find_element_by_class_name("message-header")
             if "has-background-warning" in header.get_attribute("class"):
                     return
             time.sleep(1)
-            ind += 1
             self.driver.refresh()
         raise Exception("Calculation did not run")
 
