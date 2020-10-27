@@ -1277,7 +1277,7 @@ def submit_calculation(request):
 
     profile.save()
 
-    if not 'test' in request.POST.keys():
+    if not is_test:
         for o in orders:
             dispatcher.delay(drawing, o.id)
 

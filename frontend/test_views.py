@@ -6,8 +6,14 @@ from .models import *
 from . import views
 from .constants import *
 from django.core.management import call_command
+from django.contrib.auth import authenticate
 from django.test import TestCase, Client
+from django.http import HttpRequest
 from .gen_calc import gen_calc
+
+from hypothesis import given
+from hypothesis.extra.django import TestCase as HypothesisTestCase
+import hypothesis.strategies as st
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -52,7 +58,6 @@ class LaunchTests(TestCase):
                 'calc_ressource': ['Local'],
                 'constraint_num': ['1'],
                 'structureB': ['Molecule from ChemDoodle Web Components\r\n\r\nhttp://www.ichemlabs.com\r\n  6  6  0  0  0  0            999 V2000\r\n    0.0000    1.0000    0.0000 C   0  0  0  0  0  0\r\n    0.8660    0.5000    0.0000 C   0  0  0  0  0  0\r\n    0.8660   -0.5000    0.0000 C   0  0  0  0  0  0\r\n    0.0000   -1.0000    0.0000 C   0  0  0  0  0  0\r\n   -0.8660   -0.5000    0.0000 C   0  0  0  0  0  0\r\n   -0.8660    0.5000    0.0000 C   0  0  0  0  0  0\r\n  1  2  1  0  0  0  0\r\n  2  3  2  0  0  0  0\r\n  3  4  1  0  0  0  0\r\n  4  5  2  0  0  0  0\r\n  5  6  1  0  0  0  0\r\n  6  1  2  0  0  0  0\r\nM  END'],
-                'test': ['true'],
                 }
 
     def tearDown(self):
@@ -60,11 +65,14 @@ class LaunchTests(TestCase):
 
     def test_get_launch_page(self):
         response = self.client.get("/launch/", follow=True)
+        assert response.content.decode('utf-8').find("Please login to see this page") == -1
         self.assertEqual(response.status_code, 200)
 
     def test_submit_empty(self):
         response = self.client.post("/submit_calculation", data={}, follow=True)
+        assert response.content.decode('utf-8').find("Please login to see this page") == -1
         self.assertContains(response, "Error while submitting your calculation")
+
 
     def test_submit_correct(self):
         response = self.client.post("/submit_calculation/", data=self.basic_params, follow=True)
@@ -75,6 +83,7 @@ class LaunchTests(TestCase):
         params['calc_name'] = 'A'*200
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
+
 
     def test_submit_long_project_name(self):
         params = self.basic_params

@@ -72,7 +72,7 @@ class GaussianCalculation:
         self.create_input_file()
 
     def clean(self, s):
-        WHITELIST = set("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/()=-, ")
+        WHITELIST = set("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/()=-,. ")
         return ''.join([c for c in s if c in WHITELIST])
 
     def handle_specifications(self):

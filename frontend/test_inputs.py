@@ -2684,7 +2684,7 @@ class XtbTests(TestCase):
         calc = gen_calc(params, self.profile)
         xtb = XtbCalculation(calc)
 
-        REF = "xtb in.xyz -o vtight -a 0.05 --chrg -1"
+        REF = "xtb in.xyz --opt tight --chrg -1"
 
         self.assertTrue(self.is_equivalent(REF, xtb.command))
 
@@ -2714,7 +2714,7 @@ class XtbTests(TestCase):
         calc = gen_calc(params, self.profile)
         xtb = XtbCalculation(calc)
 
-        REF = "xtb in.xyz --opt --input input"
+        REF = "xtb in.xyz --opt tight --input input"
 
         self.assertTrue(self.is_equivalent(REF, xtb.command))
 
@@ -2737,7 +2737,7 @@ class XtbTests(TestCase):
         calc = gen_calc(params, self.profile)
         xtb = XtbCalculation(calc)
 
-        REF = "xtb in.xyz --opt --input input"
+        REF = "xtb in.xyz --opt tight --input input"
 
         self.assertTrue(self.is_equivalent(REF, xtb.command))
 
@@ -2757,13 +2757,30 @@ class XtbTests(TestCase):
         calc = gen_calc(params, self.profile)
         xtb = XtbCalculation(calc)
 
-        REF = "crest in.xyz"
+        REF = "crest in.xyz --rthr 0.6 --ewin 6"
 
         self.assertTrue(self.is_equivalent(REF, xtb.command))
 
         self.assertEqual('', xtb.option_file)
 
-    def test_constrained_conformational_search(self):
+    def test_conformational_search_specs(self):
+        params = {
+                'type': 'Conformational Search',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'specifications': '--rthr 0.8 --ewin 8',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "crest in.xyz --rthr 0.8 --ewin 8"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+        self.assertEqual('', xtb.option_file)
+
+    def test_constrained_conformational_search1(self):
         params = {
                 'type': 'Constrained Conformational Search',
                 'in_file': 'ethanol.xyz',
@@ -2774,7 +2791,7 @@ class XtbTests(TestCase):
         calc = gen_calc(params, self.profile)
         xtb = XtbCalculation(calc)
 
-        REF = "crest in.xyz --cinp input"
+        REF = "crest in.xyz -cinp input --rthr 0.6 --ewin 6"
         self.assertTrue(self.is_equivalent(REF, xtb.command))
 
         INPUT = """$constrain
@@ -2783,7 +2800,58 @@ class XtbTests(TestCase):
         distance: 1, 2, auto
         atoms: 1,2
         $metadyn
-        atoms: 3,4,5,6,7,8,9,10
+        atoms: 3-10
+        $end
+        """
+        self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
+
+    def test_constrained_conformational_search2(self):
+        params = {
+                'type': 'Constrained Conformational Search',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'constraints': 'Freeze-1_4;Freeze-6_8;',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "crest in.xyz -cinp input --rthr 0.6 --ewin 6"
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+        INPUT = """$constrain
+        force constant=1.0
+        reference=in.xyz
+        distance: 1, 4, auto
+        distance: 6, 8, auto
+        atoms: 1,4,6,8
+        $metadyn
+        atoms: 2-3,5,7,9-10
+        $end
+        """
+        self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
+
+    def test_constrained_conformational_search3(self):
+        params = {
+                'type': 'Constrained Conformational Search',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'constraints': 'Freeze-2_3;',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "crest in.xyz -cinp input --rthr 0.6 --ewin 6"
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+        INPUT = """$constrain
+        force constant=1.0
+        reference=in.xyz
+        distance: 2, 3, auto
+        atoms: 2,3
+        $metadyn
+        atoms: 1,4-10
         $end
         """
         self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
