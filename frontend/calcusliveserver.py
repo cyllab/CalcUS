@@ -50,6 +50,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         cls.driver.set_window_size(1920, 1080)
 
         app.loader.import_module('celery.contrib.testing.tasks')
+
         cls.celery_worker = start_worker(app, perform_ping_check=False)
         cls.celery_worker.__enter__()
 
@@ -218,7 +219,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     s_select = self.driver.find_element_by_id("aux_struct")
                     s_select.find_element_by_xpath("option[text()='{}']".format(aux_s)).click()
                 except selenium.common.exceptions.NoSuchElementException:
-                    ind += 1
+                    time.sleep(1)
                 else:
                     break
 
@@ -473,7 +474,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             try:
                 msg = self.driver.find_element_by_id("test_msg").text
                 if msg == "Connected":
-                    break
+                    return
             except:
                 pass
 
@@ -943,7 +944,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_calculations()
         assert self.get_number_calc_orders() > 0
 
-        for i in range(imeout):
+        for i in range(timeout):
             calculations = self.get_calc_orders()
 
             header = calculations[0].find_element_by_class_name("message-header")

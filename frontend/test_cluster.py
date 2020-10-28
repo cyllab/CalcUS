@@ -801,8 +801,7 @@ class ClusterTests(CalcusLiveServer):
         self.details_latest_order()
         self.cancel_all_calc()
 
-        ind = 0
-        while ind < 10:
+        for i in range(10):
             self.driver.refresh()
             s = self.get_calculation_statuses()
             self.assertEqual(len(s), 1)
@@ -810,7 +809,6 @@ class ClusterTests(CalcusLiveServer):
                 break
 
             time.sleep(1)
-            ind += 1
 
         self.assertEqual(self.get_number_unseen_calcs(), 1)
         time.sleep(2)

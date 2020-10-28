@@ -847,7 +847,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(func.get_attribute('value'), params1['functional'])
         self.assertEqual(basis_set.get_attribute('value'), params1['basis_set'])
         self.assertEqual(software.get_attribute('value'), params1['software'])
-        self.assertEqual(specifications.get_attribute('value'), "tightscf;")
+        self.assertEqual(specifications.get_attribute('value'), "tightscf")
 
     def test_project_preset(self):
         proj = Project.objects.create(name="My Project", author=self.profile)
@@ -961,7 +961,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(n_completed, 1)
 
         self.click_molecule("NH3")
-        self.delete_ensemble("Ammonia")
+        self.delete_ensemble("NH3")
         self.lget("/projects/")
 
         ind = 0
@@ -1022,8 +1022,13 @@ class InterfaceTests(CalcusLiveServer):
         self.details_latest_order()
         self.cancel_all_calc()
 
-        self.lget("/projects/")
-        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("My Project")
+        for i in range(3):
+            self.lget("/projects/")
+            n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("My Project")
+            if n_mol == 1 and n_running == 0:
+                break
+            time.sleep(1)
+
         self.assertEqual(n_mol, 1)
         self.assertEqual(n_calc, 1)
         self.assertEqual(n_queued, 0)
@@ -1644,23 +1649,6 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 10)
-
-    def test_scan_distance_not_converged(self):
-        params = {
-                'calc_name': 'test',
-                'type': 'Constrained Optimisation',
-                'constraints': [['Scan', 'Distance', [1, 2], [0.01, 3.5, 10]]],
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'CH4.mol',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(150)
-        self.assertFalse(self.latest_calc_successful())
 
     def test_scan_angle(self):
         params = {
@@ -3556,7 +3544,7 @@ class ComplexCalculationTests(CalcusLiveServer):
 
         self.click_project("SeleniumProject")
         self.click_molecule("NH3")
-        self.delete_ensemble("Ammonia")
+        self.delete_ensemble("NH3")
         self.driver.refresh()
         self.assertEqual(self.get_number_ensembles(), 1)
         self.delete_ensemble("File Upload")#Should not delete molecule

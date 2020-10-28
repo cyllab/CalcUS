@@ -273,7 +273,7 @@ class GaussianTests(TestCase):
         self.assertFalse(self.known_energy(E, params))
 
 
-    def test_sp_DFT_additional_command(self):
+    def test_sp_DFT_specifications(self):
         params = {
                 'type': 'Single-Point Energy',
                 'in_file': 'Cl.xyz',
@@ -282,7 +282,7 @@ class GaussianTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2SVP',
                 'charge': '-1',
-                'additional_command': 'nosymm 5D',
+                'specifications': 'nosymm 5D',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -291,7 +291,7 @@ class GaussianTests(TestCase):
         E = self.run_calc(gaussian)
         self.assertFalse(self.known_energy(E, params))
 
-    def test_sp_DFT_additional_command2(self):
+    def test_sp_DFT_specifications2(self):
         params = {
                 'type': 'Single-Point Energy',
                 'in_file': 'Cl.xyz',
@@ -300,7 +300,7 @@ class GaussianTests(TestCase):
                 'method': 'M06-2X',
                 'basis_set': 'Def2SVP',
                 'charge': '-1',
-                'additional_command': 'nosymm 6D',
+                'specifications': 'nosymm 6D',
                 }
 
         calc = gen_calc(params, self.profile)

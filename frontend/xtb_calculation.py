@@ -35,7 +35,7 @@ class XtbCalculation:
             return
 
         self.option_file += "$constrain\n"
-        self.option_file += "force constant=1\n"
+        self.option_file += "force constant=1.0\n"
         self.has_scan = False
         for cmd in constraints:
             _cmd, ids = cmd.split('-')

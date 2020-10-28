@@ -1499,7 +1499,7 @@ def launch_gaussian_calc(in_file, calc, files):
 def parse_gaussian_charges(calc, s):
     parse_default_gaussian_charges(calc, s)
 
-    for spec in calc.parameters.specifications.split(';'):
+    for spec in calc.parameters.specifications.split(' '):
         if spec.strip() == '':
             continue
         if spec.find('(') != -1:

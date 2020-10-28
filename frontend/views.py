@@ -1277,7 +1277,7 @@ def submit_calculation(request):
 
     profile.save()
 
-    if not is_test:
+    if 'test' not in request.POST.keys():
         for o in orders:
             dispatcher.delay(drawing, o.id)
 
@@ -3127,9 +3127,6 @@ def relaunch_calc(request):
         pass
 
     calc.status = 0
-    if calc.order.new_status:
-        calc.order.author.unseen_calculations -= 1
-        calc.order.author.save()
     calc.save()
 
     if calc.local:
