@@ -576,7 +576,6 @@ def link_order(request, pk):
     if profile == o.author:
         if o.new_status:
             o.last_seen_status = o.status
-            o.author.unseen_calculations -= 1
             o.author.save()
             o.save()
 
@@ -1858,7 +1857,6 @@ def get_calc_data_remote(request, pk):
 
         ind = 0
         while not os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")) and ind < 60:
-            print("Waiting for log")
             time.sleep(1)
             ind += 1
 
