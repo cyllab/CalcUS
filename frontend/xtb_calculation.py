@@ -11,9 +11,16 @@ class XtbCalculation:
         self.cmd_arguments = ""
         self.option_file = ""
         self.specifications = ""
+        self.force_constant = 1.0
 
         self.handle_command()
         self.handle_specifications()
+
+        if self.calc.step.name == "Constrained Conformational Search":
+            self.handle_constraints_crest()
+        elif self.calc.step.name == "Constrained Optimisation":
+            self.handle_constraints_scan()
+
         self.handle_parameters()
 
         self.create_command()
@@ -35,7 +42,7 @@ class XtbCalculation:
             return
 
         self.option_file += "$constrain\n"
-        self.option_file += "force constant=1.0\n"
+        self.option_file += "force constant={}\n".format(self.force_constant)
         self.has_scan = False
         for cmd in constraints:
             _cmd, ids = cmd.split('-')
@@ -63,7 +70,7 @@ class XtbCalculation:
         num_atoms = len(self.calc.structure.xyz_structure.split('\n'))-2
         constraints = self.calc.constraints.split(';')[:-1]
         self.option_file += "$constrain\n"
-        self.option_file += "force constant=1.0\n"
+        self.option_file += "force constant={}\n".format(self.force_constant)
         self.option_file += "reference=in.xyz\n"
         constr_atoms = []
         for cmd in constraints:
@@ -176,7 +183,17 @@ class XtbCalculation:
                 elif ss[0] == 'acc':
                     accuracy = float(ss[1])
                 elif ss[0] == 'iterations':
-                    iterations = int(ss[1])
+                    try:
+                        iterations = int(ss[1])
+                    except ValueError:
+                        self.raise_error("Invalid specifications")
+                elif ss[0] == 'forceconstant':
+                    try:
+                        self.force_constant = float(ss[1])
+                    except ValueError:
+                        self.raise_error("Invalid specifications")
+                else:
+                    self.raise_error("Invalid specifications")
             else:
                 self.raise_error("Invalid specifications")
 
@@ -214,16 +231,15 @@ class XtbCalculation:
         elif self.calc.step.name == "Constrained Conformational Search":
             self.cmd_arguments += "-cinp input "
             self.program = "crest"
-            self.handle_constraints_crest()
         elif self.calc.step.name == "Constrained Optimisation":
             self.cmd_arguments += "--opt --input input "
             self.program = "xtb"
-            self.handle_constraints_scan()
         elif self.calc.step.name == "Frequency Calculation":
             self.cmd_arguments += "--hess "
             self.program = "xtb"
         elif self.calc.step.name == "Single-Point Energy":
             self.program = "xtb"
+
 
     def create_command(self):
         self.command = "{} in.xyz {}".format(self.program, self.cmd_arguments)

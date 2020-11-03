@@ -2719,7 +2719,7 @@ class XtbTests(TestCase):
         self.assertTrue(self.is_equivalent(REF, xtb.command))
 
         INPUT = """$constrain
-        force constant=1
+        force constant=1.0
         distance: 1, 2, auto
         $scan
         1: 9, 1.4, 10
@@ -2742,7 +2742,29 @@ class XtbTests(TestCase):
         self.assertTrue(self.is_equivalent(REF, xtb.command))
 
         INPUT = """$constrain
-        force constant=1
+        force constant=1.0
+        distance: 1, 2, auto
+        $end"""
+        self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
+
+    def test_freeze_soft(self):
+        params = {
+                'type': 'Constrained Optimisation',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'constraints': 'Freeze-1_2;',
+                'specifications': '--forceconstant 0.1',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --opt tight --input input"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+        INPUT = """$constrain
+        force constant=0.1
         distance: 1, 2, auto
         $end"""
         self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
@@ -2847,6 +2869,32 @@ class XtbTests(TestCase):
 
         INPUT = """$constrain
         force constant=1.0
+        reference=in.xyz
+        distance: 2, 3, auto
+        atoms: 2,3
+        $metadyn
+        atoms: 1,4-10
+        $end
+        """
+        self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
+
+    def test_constrained_conformational_search4(self):
+        params = {
+                'type': 'Constrained Conformational Search',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'constraints': 'Freeze-2_3;',
+                'specifications': '--force_constant 2.0',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "crest in.xyz -cinp input --rthr 0.6 --ewin 6"
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+        INPUT = """$constrain
+        force constant=2.0
         reference=in.xyz
         distance: 2, 3, auto
         atoms: 2,3
