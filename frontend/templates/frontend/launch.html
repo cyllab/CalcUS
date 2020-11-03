@@ -338,8 +338,6 @@
 
 			});
 
-
-
 		}
 
 		function set_availables() {
@@ -404,7 +402,7 @@
 				<div class="columns"> \
 				<div class="column"> \
 					<p id="calc_label_from_{}"> From (Å)</p> \
-				<input class="input software_specific avail_xtb avail_ORCA" type="text" width="5" name="calc_scan_{}_1" id="calc_scan_{}_1"> \
+				<input class="input software_specific avail_xtb avail_ORCA scan_from" type="text" width="5" name="calc_scan_{}_1" id="calc_scan_{}_1"> \
 				</div> \
 				<div class="column"> \
 					<p id="calc_label_to_{}"> To (Å)</p> \
@@ -416,7 +414,6 @@
 				</div> \
 			</div> \
 			</div>`.format(constraint_num));
-
 		}
 		
 		function get_3D() {
@@ -900,7 +897,7 @@
 								<div class="columns" >
 									<div class="column">
 										<p id="calc_label_from_1"> From (Å)</p>
-										<input class="input software_specific avail_xtb avail_ORCA" type="text" width="5" name="calc_scan_1_1" id="calc_scan_1_1">
+										<input class="input software_specific avail_xtb avail_ORCA scan_from" type="text" width="5" name="calc_scan_1_1" id="calc_scan_1_1">
 									</div>
 									<div class="column">
 										<p id="calc_label_to_1"> To (Å)</p>
