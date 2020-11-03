@@ -81,7 +81,8 @@ class XtbCalculation:
         self.option_file += "atoms: {}\n".format(','.join([str(i) for i in constr_atoms]))
         mtd_atoms = list(range(1, num_atoms+1))
         for a in constr_atoms:
-            mtd_atoms.remove(int(a))
+            if int(a) in mtd_atoms:
+                mtd_atoms.remove(int(a))
 
         mtd_atoms_str = ""
         def add_to_str(curr):

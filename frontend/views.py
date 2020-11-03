@@ -576,6 +576,7 @@ def link_order(request, pk):
     if profile == o.author:
         if o.new_status:
             o.last_seen_status = o.status
+            o.author.unseen_calculations -= 1
             o.author.save()
             o.save()
 
