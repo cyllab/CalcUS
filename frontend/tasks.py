@@ -2168,6 +2168,7 @@ def analyse_opt_xtb(calc):
 
 
 def analyse_opt_Gaussian(calc):
+    #ti = time()
     if calc.status in [2, 3]:
         calc_path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'calc.out')
     elif calc.status == 1:
@@ -2175,6 +2176,8 @@ def analyse_opt_Gaussian(calc):
     else:
         return None
 
+    _calc = Calculation.objects.prefetch_related('calculationframe_set').get(pk=calc.id)
+    frames = _calc.calculationframe_set
     if not os.path.isfile(calc_path):
         return
 
@@ -2213,6 +2216,7 @@ def analyse_opt_Gaussian(calc):
 
     xyz = ""
 
+    to_update = []
     while ind < len(lines) - 2:
         if lines[ind].find(orientation_str) != -1:
             s_ind += 1
@@ -2229,18 +2233,21 @@ def analyse_opt_Gaussian(calc):
         elif lines[ind].find("RMS     Displacement") != -1:
             rms = float(lines[ind].split()[2])
             try:
-                f = calc.calculationframe_set.get(number=s_ind)
+                f = frames.get(number=s_ind)
             except CalculationFrame.DoesNotExist:
                 f = CalculationFrame.objects.create(number=s_ind, xyz_structure=xyz, parent_calculation=calc, RMSD=rms)
             else:
                 f.xyz_structure = xyz
-            f.save()
+                to_update.append(f)
             xyz = ""
             ind += 1
         else:
             ind += 1
             if ind > len(lines) - 3:
                 calc.save()
+                CalculationFrame.objects.bulk_update(to_update, ['xyz_structure'], batch_size=100)
+                #tf = time()
+                #print("Delta t : {}".format(tf-ti))
                 return
 
 def get_Gaussian_xyz(text):
