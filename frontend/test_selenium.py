@@ -1417,6 +1417,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'software': 'xtb',
                 'in_file': 'elimination_substrate.xyz',
                 'aux_file': 'elimination_product.xyz',
+                'charge': '-1',
                 }
 
         self.lget("/launch/")
@@ -1437,6 +1438,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'new_project_name': 'SeleniumProject',
                 'software': 'xtb',
                 'in_file': 'elimination_substrate.xyz',
+                'charge': '-1',
                 }
 
         self.lget("/launch/")
@@ -1470,6 +1472,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'new_project_name': 'SeleniumProject',
                 'software': 'xtb',
                 'in_file': 'elimination_substrate.xyz',
+                'charge': '-1',
                 }
 
         self.lget("/launch/")
@@ -3265,6 +3268,30 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
+
+    def test_scan_distance_pop(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Distance', [1, 2], [3.5, 5.0, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'CH4.mol',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'specifications': 'pop(nbo)',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(150)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 11)
 
 class MiscCalculationTests(CalcusLiveServer):
 
