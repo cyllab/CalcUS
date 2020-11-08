@@ -9,8 +9,8 @@ L_PAL = os.environ['OMP_NUM_THREADS'][0]
 L_STACKSIZE = os.environ['OMP_STACKSIZE']
 if L_STACKSIZE.find("G") != -1:
     L_STACKSIZE = int(L_STACKSIZE.replace('G', ''))*1024
-elif L_STACKSIZE.find("MB") != -1:
-    L_STACKSIZE = int(L_STACKSIZE.replace('MB', ''))
+elif L_STACKSIZE.find("M") != -1:
+    L_STACKSIZE = int(L_STACKSIZE.replace('M', ''))
 
 L_MEM = int(L_PAL)*L_STACKSIZE
 

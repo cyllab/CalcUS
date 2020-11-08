@@ -1499,21 +1499,34 @@ def launch_gaussian_calc(in_file, calc, files):
 def parse_gaussian_charges(calc, s):
     parse_default_gaussian_charges(calc, s)
 
-    for spec in calc.parameters.specifications.split(' '):
+    _specifications = ""
+
+    remove = False
+    for c in calc.parameters.specifications:
+        if c == ' ' and remove:
+            continue
+        _specifications += c
+        if c == '(':
+            remove = True
+        elif c == ')':
+            remove = False
+
+    for spec in _specifications.split(' '):
         if spec.strip() == '':
             continue
         if spec.find('(') != -1:
-            key, option = spec.split('(')
-            option = option.replace(')', '')
+            key, opt_str = spec.split('(')
+            options = [i.strip().lower() for i in opt_str.replace(')', '').split(',')]
             if key == 'pop':
-                if option == 'nbo' or option == 'npa':
-                    parse_NPA_gaussian_charges(calc, s)
-                elif option == 'hirshfeld':
-                    parse_Hirshfeld_gaussian_charges(calc, s)
-                elif option == 'esp':
-                    parse_ESP_gaussian_charges(calc, s)
-                elif option == 'hly':
-                    parse_HLY_gaussian_charges(calc, s)
+                for option in options:
+                    if option == 'nbo' or option == 'npa':
+                        parse_NPA_gaussian_charges(calc, s)
+                    elif option == 'hirshfeld':
+                        parse_Hirshfeld_gaussian_charges(calc, s)
+                    elif option == 'esp':
+                        parse_ESP_gaussian_charges(calc, s)
+                    elif option == 'hly':
+                        parse_HLY_gaussian_charges(calc, s)
 
 def parse_default_gaussian_charges(calc, s):
     prop = get_or_create(calc.parameters, s)
@@ -2181,7 +2194,7 @@ def analyse_opt_Gaussian(calc):
     if not os.path.isfile(calc_path):
         return
 
-    with open(calc_path) as f:
+    with open(calc_path, encoding="utf8", errors='ignore') as f:
         lines = f.readlines()
 
     if not calc.step.creates_ensemble:
