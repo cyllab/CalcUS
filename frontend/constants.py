@@ -1,5 +1,6 @@
 import decimal
 import periodictable
+from enum import IntEnum
 
 ATOMIC_NUMBER = {}
 ATOMIC_SYMBOL = {}
@@ -21,7 +22,25 @@ E_VAL = decimal.Decimal(2.7182818284590452353602874713527)
 R_CONSTANT = decimal.Decimal(8.31446261815324)
 R_CONSTANT_HARTREE = decimal.Decimal(3.166811565240536e-06)
 TEMP = decimal.Decimal(298)
-SOLVENT_TABLE = {
+
+class ErrorCodes(IntEnum):
+    SUCCESS = 0
+    UNKNOWN_TERMINATION = 1
+    JOB_CANCELLED = 2
+    FAILED_TO_CONVERGE = 3
+    INVALID_CHARGE_MULTIPLICITY = 4
+    INVALID_FILE = 5
+
+    SERVER_DISCONNECTED = 7#Not a fatal error (will not end the calculation)
+    CHANNEL_TIMED_OUT = 10
+    INVALID_COMMAND = 11
+    COULD_NOT_GET_REMOTE_FILE = 12
+    NO_JOB_LOG = 13
+    COMMAND_TIMED_OUT = 14
+    FAILED_SUBMISSION = 15
+    UNIMPLEMENTED = 16
+
+SOLVENT_TABLE = {#old
     'acetone': 'acetone',
     'acetonitrile': 'acetonitrile',
     'benzene': 'benzene',

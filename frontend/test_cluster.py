@@ -750,6 +750,36 @@ class ClusterTests(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_gaussian_parse_cancelled_calc(self):
+        self.setup_cluster()
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 160, 1000]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'CH4.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_running(30)
+        time.sleep(5)
+        self.details_latest_order()
+        self.cancel_all_calc()
+
+        self.lget("/calculations/")
+        self.wait_latest_calc_error(10)
+        time.sleep(5)
+
+        self.click_latest_calc()
+        self.assertGreaterEqual(self.get_number_conformers(), 1)
+
     def test_cancel_calc(self):
         self.setup_cluster()
         params = {

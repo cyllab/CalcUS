@@ -1833,6 +1833,32 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_parse_cancelled_calc(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Angle', [5, 2, 13], [90, 180, 200]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'Ph2I_cation.mol',
+                'charge': '+1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_running(5)
+        time.sleep(5)
+        self.details_latest_order()
+        self.cancel_all_calc()
+
+        self.lget("/calculations/")
+        self.wait_latest_calc_error(10)
+
+        self.click_latest_calc()
+        self.assertGreaterEqual(self.get_number_conformers(), 1)
+
 
 class OrcaCalculationTestsPI(CalcusLiveServer):
 
@@ -3292,6 +3318,34 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 11)
+
+    def test_parse_cancelled_calc(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 160, 1000]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'CH4.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_running(5)
+        time.sleep(5)
+        self.details_latest_order()
+        self.cancel_all_calc()
+
+        self.lget("/calculations/")
+        self.wait_latest_calc_error(10)
+
+        self.click_latest_calc()
+        self.assertGreaterEqual(self.get_number_conformers(), 1)
 
 class MiscCalculationTests(CalcusLiveServer):
 

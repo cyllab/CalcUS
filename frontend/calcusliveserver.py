@@ -373,11 +373,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         button.click()
 
     def get_number_conformers(self):
-        conf_table = WebDriverWait(self.driver, 5).until(
+        assert self.is_on_page_ensemble()
+
+        conf_table = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located((By.ID, "conf_table"))
         )
-
-        assert self.is_on_page_ensemble()
 
         conformers = conf_table.find_elements_by_css_selector("tr")
         return len(conformers)
@@ -953,6 +953,20 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             time.sleep(1)
             self.driver.refresh()
         raise Exception("Calculation did not run")
+
+    def wait_latest_calc_error(self, timeout):
+        assert self.is_on_page_calculations()
+        assert self.get_number_calc_orders() > 0
+
+        for i in range(timeout):
+            calculations = self.get_calc_orders()
+
+            header = calculations[0].find_element_by_class_name("message-header")
+            if "has-background-danger" in header.get_attribute("class"):
+                    return
+            time.sleep(1)
+            self.driver.refresh()
+        raise Exception("Calculation did not produce an error")
 
     def latest_calc_successful(self):
         assert self.is_on_page_calculations()

@@ -96,7 +96,7 @@ def direct_command(command, conn, lock):
     except ssh2.exceptions.Timeout:
         print("Command timed out")
         lock.release()
-        return 0
+        return ErrorCodes.SUCCESS
     except ssh2.exceptions.ChannelFailure:
         print("Channel failure")
         lock.release()
@@ -118,7 +118,7 @@ def direct_command(command, conn, lock):
     except ssh2.exceptions.Timeout:
         print("Channel timed out")
         lock.release()
-        return 1
+        return ErrorCodes.CHANNEL_TIMED_OUT
 
     total = b''
     while size > 0:
@@ -141,7 +141,7 @@ def sftp_get(src, dst, conn, lock):
 
     if src.strip() == "":
         lock.release()
-        return -1
+        return ErrorCodes.INVALID_COMMAND
 
     try:
         with sftp.open(_src, LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IRUSR) as f:
@@ -155,13 +155,14 @@ def sftp_get(src, dst, conn, lock):
     except ssh2.exceptions.SFTPProtocolError:
         print("Could not get remote file {}".format(src))
         lock.release()
-        return -1
+        return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
     except ssh2.exceptions.Timeout:
         print("Timeout")
         lock.release()
         return sftp_get(src, dst, conn, lock)
+
     lock.release()
-    return 0
+    return ErrorCodes.SUCCESS
 
 
 def sftp_put(src, dst, conn, lock):
@@ -191,10 +192,10 @@ def sftp_put(src, dst, conn, lock):
     except ssh2.exceptions.Timeout:
         print("Timeout while uploading, retrying...")
         lock.release()
-        sftp_put(src, dst, conn, lock)
-        return
+        return sftp_put(src, dst, conn, lock)
 
     lock.release()
+    return ErrorCodes.SUCCESS
 
 def wait_until_logfile(remote_dir, conn, lock):
     if is_test:
@@ -218,7 +219,7 @@ def wait_until_logfile(remote_dir, conn, lock):
         sleep(DELAY[ind])
         ind += 1
     print("Failed to find a job log")
-    return -1
+    return ErrorCodes.NO_JOB_LOG
 
 def wait_until_done(calc, conn, lock):
     job_id = calc.remote_id
@@ -242,13 +243,13 @@ def wait_until_done(calc, conn, lock):
             if len(output) == 1 and output[0].strip() == '':
                 #Not sure
                 print("Job done")
-                return 0
+                return ErrorCodes.SUCCESS
             else:
                 _output = [i for i in output if i.strip() != '' ]
                 print("Waiting ({})".format(job_id))
                 if _output != None and len(_output) < 2:
                     print("Job done")
-                    return 0
+                    return ErrorCodes.SUCCESS
                 else:
                     status = _output[1].split()[4]
                     if status == "R" and calc.status == 0:
@@ -259,11 +260,11 @@ def wait_until_done(calc, conn, lock):
         if pid in kill_sig:
             direct_command("scancel {}".format(job_id), conn, lock)
             kill_sig.remove(pid)
-            return -2
+            return ErrorCodes.JOB_CANCELLED
 
         if pid not in connections.keys():
             print("Thread aborted for calculation {}".format(calc.id))
-            return 7
+            return ErrorCodes.SERVER_DISCONNECTED
 
 def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
     if REMOTE and not force_local:
@@ -287,7 +288,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
             else:
                 output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{}' >> submit_{}.sh; sbatch submit_{}.sh | tee calcus".format(remote_dir, conn[0].cluster_username, software, command, software, software), conn, lock)
 
-            if output == 1:#Channel timed out
+            if output == ErrorCodes.CHANNEL_TIMED_OUT:
                 if calc_id != -1:
                     ind = 0
 
@@ -302,8 +303,8 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                         if len(output) == 1 and output[0].strip() == '':
                             print("Calcus file empty, waiting for a log file")
                             job_id = wait_until_logfile(remote_dir, conn, lock)
-                            if job_id == -1:
-                                return 1
+                            if isinstance(job_id, ErrorCodes):
+                                return job_id
                             else:
                                 calc.remote_id = int(job_id)
                                 calc.save()
@@ -320,10 +321,10 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                         return output
                 else:
                     print("Channel timed out and no calculation id is set")
-                    return 1
-            elif output == 0:
+                    return output
+            elif output == ErrorCodes.COMMAND_TIMED_OUT:
                 print("Command timed out")
-                return 1
+                return ErrorCodes.COMMAND_TIMED_OUT
             else:
                 if output[-2].find("Submitted batch job") != -1:
                     job_id = output[-2].replace('Submitted batch job', '').strip()
@@ -332,7 +333,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     ret = wait_until_done(calc, conn, lock)
                     return ret
                 else:
-                    return 1
+                    return ErrorCodes.FAILED_SUBMISSION
         else:
             ret = wait_until_done(calc, conn, lock)
             return ret
@@ -354,10 +355,13 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
             poll = t.poll()
 
             if not poll is None:
-                return t.returncode
+                if t.returncode == 0:
+                    return ErrorCodes.SUCCESS
+                else:
+                    print("Got returncode {}".format(t.returncode))
+                    return ErrorCodes.UNKNOWN_TERMINATION
 
             if calc_id != -1 and res.is_aborted() == True:
-
                 parent = psutil.Process(t.pid)
                 children = parent.children(recursive=True)
                 for process in children:
@@ -366,7 +370,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                 #t.kill()
                 t.terminate()
                 t.wait()
-                return -1
+                return ErrorCodes.JOB_CANCELLED
 
             sleep(1)
 
@@ -383,7 +387,7 @@ def generate_xyz_structure(drawing, structure):
                     lines = f.readlines()
                     structure.xyz_structure = clean_xyz(''.join(lines))
                     structure.save()
-                    return 0
+                    return ErrorCodes.SUCCESS
             else:
                 to_print = []
                 for line in structure.mol_structure.split('\n')[4:]:
@@ -401,7 +405,7 @@ def generate_xyz_structure(drawing, structure):
                     _xyz += line
                 structure.xyz_structure = clean_xyz(_xyz)
                 structure.save()
-                return 0
+                return ErrorCodes.SUCCESS
         elif structure.sdf_structure != '':
             t = time()
             fname = "{}_{}".format(t, structure.id)
@@ -414,7 +418,7 @@ def generate_xyz_structure(drawing, structure):
                 lines = f.readlines()
             structure.xyz_structure = clean_xyz('\n'.join([i.strip() for i in lines]))
             structure.save()
-            return 0
+            return ErrorCodes.SUCCESS
         elif structure.mol2_structure != '':
             t = time()
             fname = "{}_{}".format(t, structure.id)
@@ -427,13 +431,13 @@ def generate_xyz_structure(drawing, structure):
                 lines = f.readlines()
             structure.xyz_structure = clean_xyz('\n'.join([i.strip() for i in lines]))
             structure.save()
-            return 0
+            return ErrorCodes.SUCCESS
 
         else:
             print("Unimplemented")
-            return -1
+            return ErrorCodes.UNIMPLEMENTED
     else:
-        return 0
+        return ErrorCodes.SUCCESS
 
 
 def launch_xtb_calc(in_file, calc, files):
@@ -464,32 +468,41 @@ def launch_xtb_calc(in_file, calc, files):
         os.chdir(local_folder)
         ret = system(xtb.command, 'calc.out', software='xtb', calc_id=calc.id)
 
-    if ret != 0:
-        return ret
+    cancelled = False
+    if ret != ErrorCodes.SUCCESS:
+        if ret == ErrorCodes.JOB_CANCELLED:
+            cancelled = True
+        else:
+            return ret
 
     if not calc.local:
         for f in files:
             a = sftp_get("{}/{}".format(folder, f), os.path.join(CALCUS_SCR_HOME, str(calc.id), f), conn, lock)
-            if a == -1:
-                return -1
-        a = sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
-        if a != -1:
-            return -1
+            if not cancelled and a != ErrorCodes.SUCCESS:
+                return a
+        if not cancelled:
+            a = sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
 
-    for f in files:
-        if not os.path.isfile("{}/{}".format(local_folder, f)):
-            return -1
+            if a != ErrorCodes.COULD_NOT_GET_REMOTE_FILE:
+                return ErrorCodes.FAILED_TO_CONVERGE
 
-    '''
-    with open("{}/calc.out".format(local_folder)) as f:
-        lines = f.readlines()
-        for line in lines:
-            if line.find("[WARNING] Runtime exception occurred") != -1:
-                return 1
-    '''
-    #Frequency calculations on unoptimized geometries give an error
+    if not cancelled:
+        for f in files:
+            if not os.path.isfile("{}/{}".format(local_folder, f)):
+                return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
 
-    return 0
+        '''
+        with open("{}/calc.out".format(local_folder)) as f:
+            lines = f.readlines()
+            for line in lines:
+                if line.find("[WARNING] Runtime exception occurred") != -1:
+                    return 1
+        '''
+        #Frequency calculations on unoptimized geometries give an error
+
+        return ErrorCodes.SUCCESS
+    else:
+        return ErrorCodes.JOB_CANCELLED
 
 
 def xtb_opt(in_file, calc):
@@ -497,7 +510,7 @@ def xtb_opt(in_file, calc):
 
     ret = launch_xtb_calc(in_file, calc, ['calc.out', 'xtbopt.xyz'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open("{}/xtbopt.xyz".format(local_folder)) as f:
@@ -521,7 +534,7 @@ def xtb_opt(in_file, calc):
     prop.geom = True
     s.save()
     prop.save()
-    return 0
+    return ErrorCodes.SUCCESS
 
 def xtb_mep(in_file, calc):
     folder = '/'.join(in_file.split('/')[:-1])
@@ -533,7 +546,7 @@ def xtb_mep(in_file, calc):
 
     ret = launch_orca_calc(in_file, calc, ['calc.out', 'calc_MEP_trj.xyz'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open("{}/calc_MEP_trj.xyz".format(local_folder)) as f:
@@ -567,14 +580,14 @@ def xtb_mep(in_file, calc):
 
         calc.result_ensemble.structure_set.add(r)
 
-    return 0
+    return ErrorCodes.SUCCESS
 
 def xtb_sp(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_xtb_calc(in_file, calc, ['calc.out'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open("{}/calc.out".format(local_folder)) as f:
@@ -590,7 +603,7 @@ def xtb_sp(in_file, calc):
     prop.homo_lumo_gap = hl_gap
     prop.energy = E
     prop.save()
-    return 0
+    return ErrorCodes.SUCCESS
 
 def get_or_create(params, struct):
     for p in struct.properties.all():
@@ -605,7 +618,7 @@ def xtb_ts(in_file, calc):
 
     ret = launch_orca_calc(in_file, calc, ['calc.out', 'calc.xyz'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open(os.path.join(local_folder, "calc.xyz")) as f:
@@ -632,7 +645,7 @@ def xtb_ts(in_file, calc):
 
     s.save()
     prop.save()
-    return 0
+    return ErrorCodes.SUCCESS
 
 
 def xtb_scan(in_file, calc):
@@ -645,8 +658,14 @@ def xtb_scan(in_file, calc):
     else:
         ret = launch_xtb_calc(in_file, calc, ['calc.out', 'xtbopt.xyz'])
 
-    if ret != 0:
-        return ret
+    failed = False
+    if ret != ErrorCodes.SUCCESS:
+        if ret == ErrorCodes.SERVER_DISCONNECTED:
+            return ret
+        if preparse.has_scan:
+            failed = True
+        else:
+            return ret
 
     if preparse.has_scan:
         if not os.path.isfile("{}/xtbscan.log".format(local_folder)):
@@ -708,14 +727,17 @@ def xtb_scan(in_file, calc):
             calc.result_ensemble.structure_set.add(r)
             calc.result_ensemble.save()
 
-    return 0
+    if not failed:
+        return ErrorCodes.SUCCESS
+    else:
+        return ret
 
 def xtb_freq(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_xtb_calc(in_file, calc, ['calc.out', 'vibspectrum', 'g98.out'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     a = save_to_results(os.path.join(local_folder, "vibspectrum"), calc)
@@ -818,14 +840,14 @@ def xtb_freq(in_file, calc):
                 for ind2, (a, x, y, z) in enumerate(struct):
                     out.write("{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(a, x, y, z, *vibs[ind][ind2]))
 
-    return 0
+    return ErrorCodes.SUCCESS
 
 def crest(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_xtb_calc(in_file, calc, ['calc.out', 'crest_conformers.xyz'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open(os.path.join(local_folder, "calc.out")) as f:
@@ -881,7 +903,7 @@ def crest(in_file, calc):
             r.xyz_structure = struct
             r.save()
 
-    return 0
+    return ErrorCodes.SUCCESS
 
 def clean_struct_line(line):
     a, x, y, z = line.split()
@@ -912,32 +934,39 @@ def launch_orca_calc(in_file, calc, files):
         os.chdir(local_folder)
         ret = system("{}/orca calc.inp".format(EBROOTORCA), 'calc.out', software="ORCA", calc_id=calc.id)
 
-    if ret != 0:
-        return ret
+    cancelled = False
+    if ret != ErrorCodes.SUCCESS:
+        if ret == ErrorCodes.JOB_CANCELLED:
+            cancelled = True
+        else:
+            return ret
 
     if not calc.local:
         for f in files:
             a = sftp_get("{}/{}".format(folder, f), os.path.join(CALCUS_SCR_HOME, str(calc.id), f), conn, lock)
-            if a == -1:
-                return -1
-        if calc.parameters.software == 'xtb':
+            if not cancelled and a != ErrorCodes.SUCCESS:
+                return a
+
+        if not cancelled and calc.parameters.software == 'xtb':
             a = sftp_get("{}/NOT_CONVERGED".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"), conn, lock)
-            if a != -1:
-                return -1
+            if a != ErrorCodes.COULD_NOT_GET_REMOTE_FILE:
+                return ErrorCodes.FAILED_TO_CONVERGE
 
-    for f in files:
-        if not os.path.isfile("{}/{}".format(local_folder, f)):
-            return -1
+    if not cancelled:
+        for f in files:
+            if not os.path.isfile("{}/{}".format(local_folder, f)):
+                return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
 
-
-    return 0
+        return ErrorCodes.SUCCESS
+    else:
+        return ErrorCodes.JOB_CANCELLED
 
 def orca_mo_gen(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_orca_calc(in_file, calc, ['calc.out', 'in-HOMO.cube', 'in-LUMO.cube', 'in-LUMOA.cube', 'in-LUMOB.cube'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open("{}/calc.out".format(local_folder)) as f:
@@ -958,7 +987,7 @@ def orca_mo_gen(in_file, calc):
     prop.energy = E
     prop.save()
 
-    return 0
+    return ErrorCodes.SUCCESS
 
 def orca_opt(in_file, calc):
     lines = [i + '\n' for i in clean_xyz(calc.structure.xyz_structure).split('\n')[2:] if i != '' ]
@@ -975,7 +1004,7 @@ def orca_opt(in_file, calc):
 
     ret = launch_orca_calc(in_file, calc, ['calc.out', 'calc.xyz'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open("{}/calc.xyz".format(local_folder)) as f:
@@ -998,14 +1027,14 @@ def orca_opt(in_file, calc):
     s.save()
     prop.save()
 
-    return 0
+    return ErrorCodes.SUCCESS
 
 def orca_sp(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_orca_calc(in_file, calc, ['calc.out'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open("{}/calc.out".format(local_folder)) as f:
@@ -1020,14 +1049,14 @@ def orca_sp(in_file, calc):
     prop.energy = E
     prop.save()
 
-    return 0
+    return ErrorCodes.SUCCESS
 
 def orca_ts(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_orca_calc(in_file, calc, ['calc.out', 'calc.xyz'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open("{}/calc.xyz".format(local_folder)) as f:
@@ -1048,14 +1077,14 @@ def orca_ts(in_file, calc):
     s.save()
     prop.save()
 
-    return 0
+    return ErrorCodes.SUCCESS
 
 def orca_freq(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_orca_calc(in_file, calc, ['calc.out'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open("{}/calc.out".format(local_folder)) as f:
@@ -1187,7 +1216,7 @@ def orca_freq(in_file, calc):
             for ind2, (a, x, y, z) in enumerate(struct):
                 out.write("{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(a, x, y, z, *vibs[ind][3*ind2:3*ind2+3]))
 
-    return 0
+    return ErrorCodes.SUCCESS
 
 def orca_scan(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
@@ -1198,7 +1227,7 @@ def orca_scan(in_file, calc):
     else:
         ret = launch_orca_calc(in_file, calc, ['calc.out', 'calc.xyz'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     if preparse.has_scan:
@@ -1254,14 +1283,14 @@ def orca_scan(in_file, calc):
             calc.result_ensemble.structure_set.add(r)
             calc.result_ensemble.save()
 
-    return 0
+    return ErrorCodes.SUCCESS
 
 def orca_nmr(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_orca_calc(in_file, calc, ['calc.out'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open(os.path.join(local_folder, 'calc.out')) as f:
@@ -1285,9 +1314,9 @@ def orca_nmr(in_file, calc):
     E = float(lines[ind].split()[4])
     prop.energy = E
     prop.save()
-    return 0
+    return ErrorCodes.SUCCESS
 
-def enso(in_file, calc):
+def enso(in_file, calc):####OLD
 
     if solvent != "Vacuum":
         solvent_add = '-solv {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
@@ -1331,7 +1360,7 @@ def anmr(in_file, calc):
                     for _x in x:
                         out.write("{:.2f},0.0\n".format(_x))
 
-    return 0, calc.ensemble
+    return ErrorCodes.SUCCESS, calc.ensemble
 
 def save_to_results(f, calc_obj, multiple=False, out_name=""):
     s = f.split('.')
@@ -1351,9 +1380,9 @@ def save_to_results(f, calc_obj, multiple=False, out_name=""):
         name = s
         copyfile(f, os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id), out_name))
     else:
-        print("Odd number of periods!")
-        return -1
-    return 0
+        print("Invalid file")
+        return ErrorCodes.INVALID_FILE
+    return ErrorCodes.SUCCESS
 
 
 FACTOR = 1
@@ -1381,7 +1410,7 @@ def plot_vibs(_x, PP):
     return val
 
 
-def xtb_stda(in_file, calc):
+def xtb_stda(in_file, calc):#TO OPTIMIZE
 
     ww = []
     TT = []
@@ -1399,12 +1428,12 @@ def xtb_stda(in_file, calc):
     os.chdir(local_folder)
     ret1 = system("xtb4stda {} -chrg {} {}".format(in_file, calc.parameters.charge, solvent_add), 'calc.out', calc_id=calc.id)
 
-    if ret1 != 0:
+    if ret1 != ErrorCodes.SUCCESS:
         return ret1
 
     ret2 = system("stda -xtb -e 12".format(in_file, calc.parameters.charge, solvent_add), 'calc2.out', calc_id=calc.id)
 
-    if ret2 != 0:
+    if ret2 != ErrorCodes.SUCCESS:
         return ret2
 
     if not local:
@@ -1417,13 +1446,19 @@ def xtb_stda(in_file, calc):
         b = sftp_get("{}/calc.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"), conn, lock)
         c = sftp_get("{}/calc2.out".format(folder), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc2.out"), conn, lock)
 
-        if a == -1 or b == -1 or c == -1:
-            return -1
+        if a != ErrorCodes.SUCCESS:
+            return a
+
+        if b != ErrorCodes.SUCCESS:
+            return b
+
+        if c != ErrorCodes.SUCCESS:
+            return c
 
     f_x = np.arange(120.0, 1200.0, 1.0)
 
     if not os.path.isfile("{}/tda.dat".format(local_folder)):
-        return 1
+        return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
 
     with open("{}/tda.dat".format(local_folder)) as f:
         lines = f.readlines()
@@ -1452,7 +1487,7 @@ def xtb_stda(in_file, calc):
     prop.uvvis = calc.id
     prop.save()
 
-    return 0
+    return ErrorCodes.SUCCESS
 
 def launch_gaussian_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
@@ -1476,25 +1511,32 @@ def launch_gaussian_calc(in_file, calc, files):
         os.chdir(local_folder)
         ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
 
-    if ret != 0:
-        return ret
+    cancelled = False
+    if ret != ErrorCodes.SUCCESS:
+        if ret == ErrorCodes.JOB_CANCELLED:
+            cancelled = True
+        else:
+            return ret
 
     if not calc.local:
         for f in files:
             a = sftp_get("{}/{}".format(folder, f), os.path.join(local_folder, f), conn, lock)
-            if a == -1:
-                return -1
+            if not cancelled and a != ErrorCodes.SUCCESS:
+                return a
 
-    for f in files:
-        if not os.path.isfile("{}/{}".format(local_folder, f)):
-            return -1
+    if not cancelled:
+        for f in files:
+            if not os.path.isfile("{}/{}".format(local_folder, f)):
+                return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
 
-    with open(os.path.join(local_folder, 'calc.log')) as f:
-        lines = f.readlines()
-        if lines[-1].find("Normal termination") == -1:
-            return -1
+        with open(os.path.join(local_folder, 'calc.log')) as f:
+            lines = f.readlines()
+            if lines[-1].find("Normal termination") == -1:
+                return ErrorCodes.UNKNOWN_TERMINATION
 
-    return 0
+        return ErrorCodes.SUCCESS
+    else:
+        return ErrorCodes.JOB_CANCELLED
 
 def parse_gaussian_charges(calc, s):
     parse_default_gaussian_charges(calc, s)
@@ -1650,7 +1692,7 @@ def gaussian_sp(in_file, calc):
 
     ret = launch_gaussian_calc(in_file, calc, ['calc.log'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open("{}/calc.log".format(local_folder)) as f:
@@ -1667,14 +1709,14 @@ def gaussian_sp(in_file, calc):
     prop.energy = E
     prop.save()
 
-    return 0
+    return ErrorCodes.SUCCESS
 
 def gaussian_opt(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_gaussian_calc(in_file, calc, ['calc.log'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open("{}/calc.log".format(local_folder)) as f:
@@ -1709,14 +1751,14 @@ def gaussian_opt(in_file, calc):
     prop.save()
 
     parse_gaussian_charges(calc, s)
-    return 0
+    return ErrorCodes.SUCCESS
 
 def gaussian_freq(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_gaussian_calc(in_file, calc, ['calc.log'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open("{}/calc.log".format(local_folder)) as f:
@@ -1776,7 +1818,7 @@ def gaussian_freq(in_file, calc):
     ind += 3
 
     if outlines[ind].find("Thermochemistry") != -1:#No vibration
-        return 0
+        return ErrorCodes.SUCCESS
 
     vibs = []
     wavenumbers = []
@@ -1832,14 +1874,14 @@ def gaussian_freq(in_file, calc):
             out.write("-{:.1f},{:.5f}\n".format(_x, i))
 
     parse_gaussian_charges(calc, calc.structure)
-    return 0
+    return ErrorCodes.SUCCESS
 
 def gaussian_ts(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_gaussian_calc(in_file, calc, ['calc.log'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open("{}/calc.log".format(local_folder)) as f:
@@ -1873,7 +1915,7 @@ def gaussian_ts(in_file, calc):
     prop.save()
 
     parse_gaussian_charges(calc, s)
-    return 0
+    return ErrorCodes.SUCCESS
 
 def gaussian_scan(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
@@ -1882,8 +1924,8 @@ def gaussian_scan(in_file, calc):
     ret = launch_gaussian_calc(in_file, calc, ['calc.log'])
 
     failed = False
-    if ret != 0:
-        if ret == 7:
+    if ret != ErrorCodes.SUCCESS:
+        if ret == ErrorCodes.SERVER_DISCONNECTED:
             return ret
         if preparse.has_scan:
             failed = True
@@ -1968,16 +2010,16 @@ def gaussian_scan(in_file, calc):
     parse_gaussian_charges(calc, calc.result_ensemble.structure_set.latest('id'))
 
     if failed:
-        return -1
+        return ret
     else:
-        return 0
+        return ErrorCodes.SUCCESS
 
 def gaussian_nmr(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_gaussian_calc(in_file, calc, ['calc.log'])
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open(os.path.join(local_folder, 'calc.log')) as f:
@@ -2003,7 +2045,7 @@ def gaussian_nmr(in_file, calc):
     prop.save()
 
     parse_gaussian_charges(calc, calc.structure)
-    return 0
+    return ErrorCodes.SUCCESS
 
 def dist(a, b):
     return math.sqrt((a[1] - b[1])**2 + (a[2] - b[2])**2 + (a[3] - b[3])**2)
@@ -2294,8 +2336,9 @@ def verify_charge_mult(xyz, charge, mult):
     odd_m = mult % 2
 
     if odd_e == odd_m:
-        return -1
-    return 0
+        return ErrorCodes.INVALID_CHARGE_MULTIPLICITY
+
+    return ErrorCodes.SUCCESS
 
 
 SPECIAL_FUNCTIONALS = ['HF-3c', 'PBEh-3c']
@@ -2528,11 +2571,13 @@ def run_calc(calc_id):
         return
 
     ret = verify_charge_mult(calc.structure.xyz_structure, calc.parameters.charge, calc.parameters.multiplicity)
-    if ret != 0:
+    if ret == ErrorCodes.INVALID_CHARGE_MULTIPLICITY:
         calc.error_message = "Impossible charge/multiplicity"
         calc.status = 3
         calc.save()
-        return
+        return ret
+    elif ret != ErrorCodes.SUCCESS:
+        return ret
 
     if calc.status == 0:
         try:
@@ -2563,27 +2608,27 @@ def run_calc(calc_id):
     try:
         ret = f(in_file, calc)
     except:
-        ret = 1
+        ret = ErrorCodes.UNKNOWN_TERMINATION
         traceback.print_exc()
 
     if calc.step.creates_ensemble:
         analyse_opt(calc.id)
 
-    if ret == 7:#Manually disconnected from cluster
-        return
+    if ret == ErrorCodes.SERVER_DISCONNECTED:
+        return ret
 
     calc = Calculation.objects.get(pk=calc_id)
     calc.date_finished = timezone.now()
-    if ret == -2:
+    if ret == ErrorCodes.JOB_CANCELLED:
         calc.status = 3
         calc.error_message = "Job cancelled"
         calc.save()
         print("Job {} cancelled".format(calc.id))
-        return
+        return ret
 
-    if ret != 0:
+    if ret != ErrorCodes.SUCCESS:
         calc.status = 3
-        calc.error_message = "Incorrect termination"#TODO: error analysis
+        calc.error_message = "Incorrect termination ({}: {})".format(ret.value, ret.name)#TODO: error analysis
         calc.save()
     else:
         calc.status = 2
