@@ -2223,7 +2223,6 @@ def analyse_opt_xtb(calc):
 
 
 def analyse_opt_Gaussian(calc):
-    #ti = time()
     if calc.status in [2, 3]:
         calc_path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'calc.out')
     elif calc.status == 1:
@@ -2242,16 +2241,7 @@ def analyse_opt_Gaussian(calc):
     if not calc.step.creates_ensemble:
         return
 
-    orientation_str = ""
-    '''
-    for line in lines:
-        if line.find("Standard orientation") != -1:
-            orientation_str = "Standard orientation"
-            break
-    '''
-
-    if orientation_str == "":
-        orientation_str = "Input orientation"
+    orientation_str = "Input orientation"
 
     ind = 0
     s_ind = 0
@@ -2298,7 +2288,6 @@ def analyse_opt_Gaussian(calc):
                 f = CalculationFrame.objects.create(number=s_ind, xyz_structure=xyz, parent_calculation=calc, RMSD=rms, converged=converged)
             else:
                 f.xyz_structure = xyz
-                f.converged = converged####
                 to_update.append(f)
             xyz = ""
             ind += 1
@@ -2306,9 +2295,7 @@ def analyse_opt_Gaussian(calc):
             ind += 1
             if ind > len(lines) - 3:
                 calc.save()
-                CalculationFrame.objects.bulk_update(to_update, ['xyz_structure', 'converged'], batch_size=100)
-                #tf = time()
-                #print("Delta t : {}".format(tf-ti))
+                CalculationFrame.objects.bulk_update(to_update, ['xyz_structure'], batch_size=100)
                 return
 
 def get_Gaussian_xyz(text):
