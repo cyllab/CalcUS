@@ -1821,16 +1821,21 @@ def get_calc_data(request, pk):
     if calc.status == 0:
         return HttpResponse(status=204)
 
+def format_frames(calc):
     if calc.status == 1:
         analyse_opt(calc.id)
 
     multi_xyz = ""
+    multi_converged = ""
     RMSD = "Frame,RMSD\n"
-    for f in calc.calculationframe_set.values('xyz_structure', 'number', 'RMSD').all():
+    for f in calc.calculationframe_set.values('xyz_structure', 'number', 'RMSD', 'converged').all():
         multi_xyz += f['xyz_structure']
         RMSD += "{},{}\n".format(f['number'], f['RMSD'])
-
-    return HttpResponse(multi_xyz + ';' + RMSD)
+        if f['converged'] == True:
+            multi_converged += "1"
+        else:
+            multi_converged += "0"
+    return HttpResponse(multi_xyz + ';' + RMSD + ';' + multi_converged)
 
 @login_required
 @throttle(zone='load_remote_log')
@@ -1867,15 +1872,7 @@ def get_calc_data_remote(request, pk):
         print("Not implemented")
         return HttpResponse(status=403)
 
-    analyse_opt(calc.id)###
-
-    multi_xyz = ""
-    RMSD = "Frame,RMSD\n"
-    for f in calc.calculationframe_set.all():
-        multi_xyz += f.xyz_structure
-        RMSD += "{},{}\n".format(f.number, f.RMSD)
-
-    return HttpResponse(multi_xyz + ';' + RMSD)
+    return format_frames(calc)
 
 def get_calc_frame(request, cid, fid):
     try:

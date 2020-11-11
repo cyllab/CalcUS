@@ -43,6 +43,10 @@
 					sp = data.split(";");
 					xyz = sp[0];
 					rmsd = sp[1];
+					converged = sp[2];
+					
+					rmsd_split = rmsd.split('\n')
+
 					opt_viewer.clear();
 					opt_viewer.addModelsAsFrames(xyz, "xyz");
 					opt_viewer.setStyle({}, {stick:{}, sphere: {radius: 0.5}});
@@ -63,6 +67,23 @@
 								pointClickCallback: function(e, pt) {
 								    set_frame(this.getValue(pt.idx, 0));
 								},
+								underlayCallback: function(canvas, area, g) {
+									for(i = 0; i < converged.length; i++) {
+										if(converged[i] == '1') {
+											var xPoint = g.toDomXCoord(i+1);
+											var yPoint = g.toDomYCoord(rmsd_split[i+1].split(',')[1]);
+
+											// Draw a red circle
+											canvas.fillStyle = 'rgba(0, 0, 255, 1)';
+											canvas.beginPath();
+											canvas.arc(xPoint, yPoint, 5, 0, 2 * Math.PI, false);
+											canvas.fill();
+
+										}
+									}
+
+								},
+
 							}
 					);
 					rmsd_graph.setSelection(0);

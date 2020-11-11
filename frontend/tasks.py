@@ -2287,12 +2287,18 @@ def analyse_opt_Gaussian(calc):
                 ind += 1
         elif lines[ind].find("RMS     Displacement") != -1:
             rms = float(lines[ind].split()[2])
+            if lines[ind].split()[-1] == 'YES' and lines[ind-1].split()[-1] == 'YES' and lines[ind-2].split()[-1] == 'YES' and lines[ind-3].split()[-1] == 'YES':
+                converged = True
+            else:
+                converged = False
+
             try:
                 f = frames.get(number=s_ind)
             except CalculationFrame.DoesNotExist:
-                f = CalculationFrame.objects.create(number=s_ind, xyz_structure=xyz, parent_calculation=calc, RMSD=rms)
+                f = CalculationFrame.objects.create(number=s_ind, xyz_structure=xyz, parent_calculation=calc, RMSD=rms, converged=converged)
             else:
                 f.xyz_structure = xyz
+                f.converged = converged####
                 to_update.append(f)
             xyz = ""
             ind += 1
@@ -2300,7 +2306,7 @@ def analyse_opt_Gaussian(calc):
             ind += 1
             if ind > len(lines) - 3:
                 calc.save()
-                CalculationFrame.objects.bulk_update(to_update, ['xyz_structure'], batch_size=100)
+                CalculationFrame.objects.bulk_update(to_update, ['xyz_structure', 'converged'], batch_size=100)
                 #tf = time()
                 #print("Delta t : {}".format(tf-ti))
                 return

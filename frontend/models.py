@@ -627,6 +627,7 @@ class CalculationFrame(models.Model):
 
     xyz_structure = models.CharField(default="", max_length=5000000)
     RMSD = models.FloatField(default=0)
+    converged = models.BooleanField(default=False)
 
     number = models.PositiveIntegerField(default=0)
 
