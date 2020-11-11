@@ -41,6 +41,17 @@ class Profile(models.Model):
         return self.UNITS[self.pref_units]
 
     @property
+    def unit_conversion_factor(self):
+        if self.pref_units == 0:
+            return HARTREE_FVAL
+        elif self.pref_units == 1:
+            return HARTREE_TO_KCAL_F
+        elif self.pref_units == 2:
+            return 1.
+        else:
+            raise Exception("Unknown units")
+
+    @property
     def username(self):
         return self.user.username
 
@@ -628,6 +639,7 @@ class CalculationFrame(models.Model):
     xyz_structure = models.CharField(default="", max_length=5000000)
     RMSD = models.FloatField(default=0)
     converged = models.BooleanField(default=False)
+    energy = models.FloatField(default=0)
 
     number = models.PositiveIntegerField(default=0)
 

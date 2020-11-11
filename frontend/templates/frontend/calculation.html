@@ -15,6 +15,7 @@
 	<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
 	<title>CalcUS - Calculation</title>
 	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
+	<script src="{% static 'frontend/synchronizer.js' %}"></script>
 	<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
 	<script>
 		function launch_from_selected() {
@@ -43,9 +44,10 @@
 					sp = data.split(";");
 					xyz = sp[0];
 					rmsd = sp[1];
-					converged = sp[2];
+					scan = sp[2];
 					
-					rmsd_split = rmsd.split('\n')
+					sscan = scan.split('\n')
+					rmsd_sp = rmsd.split('\n')
 
 					opt_viewer.clear();
 					opt_viewer.addModelsAsFrames(xyz, "xyz");
@@ -68,24 +70,46 @@
 								    set_frame(this.getValue(pt.idx, 0));
 								},
 								underlayCallback: function(canvas, area, g) {
-									for(i = 0; i < converged.length; i++) {
-										if(converged[i] == '1') {
-											var xPoint = g.toDomXCoord(i+1);
-											var yPoint = g.toDomYCoord(rmsd_split[i+1].split(',')[1]);
-
-											// Draw a red circle
-											canvas.fillStyle = 'rgba(0, 0, 255, 1)';
-											canvas.beginPath();
-											canvas.arc(xPoint, yPoint, 5, 0, 2 * Math.PI, false);
-											canvas.fill();
-
+									for(i = 1; i < sscan.length; i++) {
+										scansp = sscan[i].split(',');
+										num = scansp[0];
+										if(num == "") {
+											break;
 										}
+										var xPoint = g.toDomXCoord(num);
+										var yPoint = g.toDomYCoord(rmsd_sp[num].split(',')[1]);
+
+										canvas.fillStyle = 'rgba(0, 0, 255, 1)';
+										canvas.beginPath();
+										canvas.arc(xPoint, yPoint, 5, 0, 2 * Math.PI, false);
+										canvas.fill();
 									}
 
 								},
 
 							}
 					);
+					relaxed_scan_graph = new Dygraph(
+						document.getElementById("relaxed_scan_graph"),
+							scan, 
+							{
+								strokeWidth: 2,	
+								xlabel: "Frame",
+								ylabel: "Relative Energy",
+								rangeSelectorPlotStrokeColor: "#BABABA",
+								highlightCircleSize:  5, 
+								pointClickCallback: function(e, pt) {
+								    set_frame(this.getValue(pt.idx, 0));
+								},
+								dateWindow: rmsd_graph.xAxisExtremes(),
+
+							}
+					);
+					var sync = Dygraph.synchronize(rmsd_graph, relaxed_scan_graph, {
+						range: false,
+						zoom: true,
+						selection: true,
+					});
 					rmsd_graph.setSelection(0);
 
 					div = document.getElementById("opt_slider");
@@ -229,8 +253,11 @@
 				</div>
 			</div>
 			<div class="column">
-				<div id="rmsd_graph">
+				<div id="rmsd_graph" style="width: 100%;">
 				</div>
+				<div id="relaxed_scan_graph" style="height: 200px; width: 100%;">
+				</div>
+
 			</div>
 		<div>
 

@@ -1970,7 +1970,14 @@ def gaussian_scan(in_file, calc):
 
             E = float(lines[ind2].split()[4])
 
-            s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=s_ind, degeneracy=1)
+            try:
+                s = Structure.objects.get(parent_ensemble=calc.result_ensemble, number=s_ind)
+            except:
+                s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=s_ind, degeneracy=1)
+            else:
+                s.xyz_structure = xyz_structure
+                s.degeneracy = 1
+
             prop = get_or_create(calc.parameters, s)
             prop.energy = E
             prop.geom = True
@@ -2261,6 +2268,7 @@ def analyse_opt_Gaussian(calc):
 
     xyz = ""
 
+    E = 0
     to_update = []
     while ind < len(lines) - 2:
         if lines[ind].find(orientation_str) != -1:
@@ -2275,6 +2283,9 @@ def analyse_opt_Gaussian(calc):
                 A = ATOMIC_SYMBOL[int(z)]
                 xyz += "{} {} {} {}\n".format(A, X, Y, Z)
                 ind += 1
+        elif lines[ind].find("SCF Done:") != -1:
+            E = float(lines[ind].split()[4])
+            ind += 1
         elif lines[ind].find("RMS     Displacement") != -1:
             rms = float(lines[ind].split()[2])
             if lines[ind].split()[-1] == 'YES' and lines[ind-1].split()[-1] == 'YES' and lines[ind-2].split()[-1] == 'YES' and lines[ind-3].split()[-1] == 'YES':
@@ -2282,12 +2293,15 @@ def analyse_opt_Gaussian(calc):
             else:
                 converged = False
 
+            assert E != 0
+
             try:
                 f = frames.get(number=s_ind)
             except CalculationFrame.DoesNotExist:
-                f = CalculationFrame.objects.create(number=s_ind, xyz_structure=xyz, parent_calculation=calc, RMSD=rms, converged=converged)
+                f = CalculationFrame.objects.create(number=s_ind, xyz_structure=xyz, parent_calculation=calc, RMSD=rms, converged=converged, energy=E)
             else:
                 f.xyz_structure = xyz
+                f.energy = E
                 to_update.append(f)
             xyz = ""
             ind += 1
@@ -2295,7 +2309,7 @@ def analyse_opt_Gaussian(calc):
             ind += 1
             if ind > len(lines) - 3:
                 calc.save()
-                CalculationFrame.objects.bulk_update(to_update, ['xyz_structure'], batch_size=100)
+                CalculationFrame.objects.bulk_update(to_update, ['xyz_structure', 'energy'], batch_size=100)
                 return
 
 def get_Gaussian_xyz(text):

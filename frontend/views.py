@@ -1821,21 +1821,30 @@ def get_calc_data(request, pk):
     if calc.status == 0:
         return HttpResponse(status=204)
 
-def format_frames(calc):
+    return format_frames(calc, profile)
+
+def format_frames(calc, profile):
     if calc.status == 1:
         analyse_opt(calc.id)
 
     multi_xyz = ""
-    multi_converged = ""
+    scan_energy = "Frame,Relative Energy\n"
     RMSD = "Frame,RMSD\n"
-    for f in calc.calculationframe_set.values('xyz_structure', 'number', 'RMSD', 'converged').all():
+
+    scan_frames = []
+    scan_energies = []
+
+    for f in calc.calculationframe_set.values('xyz_structure', 'number', 'RMSD', 'converged', 'energy').all():
         multi_xyz += f['xyz_structure']
         RMSD += "{},{}\n".format(f['number'], f['RMSD'])
         if f['converged'] == True:
-            multi_converged += "1"
-        else:
-            multi_converged += "0"
-    return HttpResponse(multi_xyz + ';' + RMSD + ';' + multi_converged)
+            scan_frames.append(f['number'])
+            scan_energies.append(f['energy'])
+
+    scan_min = min(scan_energies)
+    for n, E in zip(scan_frames, scan_energies):
+        scan_energy += "{},{}\n".format(n, (E-scan_min)*profile.unit_conversion_factor)
+    return HttpResponse(multi_xyz + ';' + RMSD + ';' + scan_energy)
 
 @login_required
 @throttle(zone='load_remote_log')
@@ -1872,7 +1881,7 @@ def get_calc_data_remote(request, pk):
         print("Not implemented")
         return HttpResponse(status=403)
 
-    return format_frames(calc)
+    return format_frames(calc, profile)
 
 def get_calc_frame(request, cid, fid):
     try:
