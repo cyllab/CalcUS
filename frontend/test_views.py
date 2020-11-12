@@ -176,6 +176,17 @@ class LaunchTests(TestCase):
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
+    def test_submit_gaussian_valid_specification(self):
+        params = self.basic_params
+        params['calc_software'] = 'Gaussian'
+        params['specifications'] = 'opt(loose)'
+        params['calc_theory_level'] = 'DFT'
+        params['calc_functional'] = 'M06-2X'
+        params['calc_basis_set'] = 'Def2-SVP'
+
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertNotContains(response, "Error while submitting your calculation")
+
     def test_submit_ORCA_empty_theory(self):
         params = self.basic_params
         params['calc_software'] = 'ORCA'
@@ -769,7 +780,7 @@ class CalculationTests(TestCase):
         response = self.client.post("/get_calc_data/{}".format(calc.id))
 
         data = response.content.decode('utf-8')
-        xyz, rmsd = data.split(';')
+        xyz, rmsd, opt = data.split(';')
         sxyz = [i.strip() for i in xyz.split('\n') if i.strip() != ""]#This removes the title lines from the xyz
         num_atoms = int(sxyz[0])
 
@@ -803,7 +814,7 @@ class CalculationTests(TestCase):
         response = self.client.post("/get_calc_data/{}".format(calc.id))
 
         data = response.content.decode('utf-8')
-        xyz, rmsd = data.split(';')
+        xyz, rmsd, opt = data.split(';')
         sxyz = [i.strip() for i in xyz.split('\n') if i.strip() != ""]#This removes the title lines from the xyz
         num_atoms = int(sxyz[0])
 
@@ -838,7 +849,7 @@ class CalculationTests(TestCase):
         response = self.client.post("/get_calc_data/{}".format(calc.id))
 
         data = response.content.decode('utf-8')
-        xyz, rmsd = data.split(';')
+        xyz, rmsd, opt = data.split(';')
         sxyz = [i.strip() for i in xyz.split('\n') if i.strip() != ""]#This removes the title lines from the xyz
         num_atoms = int(sxyz[0])
 

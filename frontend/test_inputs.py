@@ -1608,6 +1608,77 @@ class GaussianTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
+    def test_invalid_specification(self):
+        params = {
+                'type': 'Geometrical Optimisation',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'opt(MaxStep=5,Tight nosymm 5D',
+                }
+
+        calc = gen_calc(params, self.profile)
+        with self.assertRaises(Exception):
+            gaussian = GaussianCalculation(calc)
+
+    def test_invalid_specification2(self):
+        params = {
+                'type': 'Geometrical Optimisation',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'freq(MaxStep=5,Tight) nosymm 5D',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt M062X/Def2SVP nosymm 5d freq(maxstep=5, tight)
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_special_char(self):
+        params = {
+                'type': 'Geometrical Optimisation',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': '!#',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt M062X/Def2SVP
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+
 class OrcaTests(TestCase):
     def setUp(self):
         call_command('init_static_obj')

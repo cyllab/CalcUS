@@ -109,7 +109,7 @@ class GaussianCalculation:
             if spec.find("(") != -1:
                 key, options = spec.split('(')
                 options = options.replace(')', '')
-                if key in self.KEYWORDS.values():
+                if key == self.KEYWORDS[self.calc.step.name]:
                     for option in options.split(','):
                         self.command_specifications.append(option.strip())
                 else:

@@ -92,8 +92,3 @@ class XyzTests(TestCase):
         REF = [[4, 12], [3, 5, 13, 14], [0, 2, 15, 17], [1, 19], [9, 10, 16, 18], [6, 8, 20, 21], [7, 22]]
         self.assertTrue(self.equivalent_equivalence(eqs, REF))
 
-    def test_equivalent_atoms6(self):
-        xyz = parse_xyz_from_file(os.path.join(tests_dir, 'elimination_product.xyz'))
-        eqs = equivalent_atoms(xyz)
-        REF = [[10, 11, 12], [0, 1], [4, 5, 6, 7], [3, 9]]
-        self.assertTrue(self.equivalent_equivalence(eqs, REF))

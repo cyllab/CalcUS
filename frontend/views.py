@@ -1841,9 +1841,10 @@ def format_frames(calc, profile):
             scan_frames.append(f['number'])
             scan_energies.append(f['energy'])
 
-    scan_min = min(scan_energies)
-    for n, E in zip(scan_frames, scan_energies):
-        scan_energy += "{},{}\n".format(n, (E-scan_min)*profile.unit_conversion_factor)
+    if len(scan_frames) > 0:
+        scan_min = min(scan_energies)
+        for n, E in zip(scan_frames, scan_energies):
+            scan_energy += "{},{}\n".format(n, (E-scan_min)*profile.unit_conversion_factor)
     return HttpResponse(multi_xyz + ';' + RMSD + ';' + scan_energy)
 
 @login_required
