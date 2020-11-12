@@ -126,6 +126,10 @@ class OrcaCalculation:
             has_scan = False
             scans = []
             freeze = []
+
+            if self.calc.constraints.strip() == '':
+                raise Exception("No constraints for constrained optimisation")
+
             for cmd in self.calc.constraints.split(';'):
                 if cmd.strip() == '':
                     continue

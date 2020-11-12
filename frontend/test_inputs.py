@@ -289,6 +289,22 @@ class GaussianTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
+    def test_invalid_solvation(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'HF',
+                'basis_set': '3-21G',
+                'charge': '-1',
+                'solvent': 'Chloroform',
+                'solvation_model': 'ABC',
+                }
+
+        calc = gen_calc(params, self.profile)
+        with self.assertRaises(Exception):
+            gaussian = GaussianCalculation(calc)
+
     def test_sp_DFT(self):
         params = {
                 'type': 'Single-Point Energy',
@@ -687,6 +703,39 @@ class GaussianTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
+    def test_invalid_opt_mod(self):
+        params = {
+                'type': 'Constrained Optimisation',
+                'in_file': 'ethanol.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'Semi-empirical',
+                'method': 'DFT',
+                'charge': '0',
+                'method': 'B3LYP',
+                'basis_set': '6-31+G(d,p)',
+                'constraints': '',
+                }
+
+        calc = gen_calc(params, self.profile)
+        with self.assertRaises(Exception):
+            gaussian = GaussianCalculation(calc)
+
+    def test_no_method(self):
+        params = {
+                'type': 'Constrained Optimisation',
+                'in_file': 'ethanol.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'Semi-empirical',
+                'method': 'DFT',
+                'charge': '0',
+                'method': '',
+                'basis_set': '6-31+G(d,p)',
+                'constraints': '',
+                }
+
+        calc = gen_calc(params, self.profile)
+        with self.assertRaises(Exception):
+            gaussian = GaussianCalculation(calc)
 
     def test_freeze_dihedral_DFT(self):
         params = {
@@ -1871,6 +1920,22 @@ class OrcaTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, orca.input_file))
 
+    def test_invalid_solvation(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'ORCA',
+                'theory_level': 'HF',
+                'basis_set': '3-21G',
+                'charge': '-1',
+                'solvent': 'Chloroform',
+                'solvation_model': 'ABC',
+                }
+
+        calc = gen_calc(params, self.profile)
+        with self.assertRaises(Exception):
+            orca = OrcaCalculation(calc)
+
     def test_sp_DFT(self):
         params = {
                 'type': 'Single-Point Energy',
@@ -2171,6 +2236,40 @@ class OrcaTests(TestCase):
         """
 
         self.assertTrue(self.is_equivalent(REF, orca.input_file))
+
+    def test_invalid_opt_mod(self):
+        params = {
+                'type': 'Constrained Optimisation',
+                'in_file': 'ethanol.xyz',
+                'software': 'ORCA',
+                'theory_level': 'Semi-empirical',
+                'method': 'DFT',
+                'charge': '0',
+                'method': 'B3LYP',
+                'basis_set': '6-31+G(d,p)',
+                'constraints': '',
+                }
+
+        calc = gen_calc(params, self.profile)
+        with self.assertRaises(Exception):
+            orca = OrcaCalculation(calc)
+
+    def test_no_method(self):
+        params = {
+                'type': 'Constrained Optimisation',
+                'in_file': 'ethanol.xyz',
+                'software': 'ORCA',
+                'theory_level': 'Semi-empirical',
+                'method': 'DFT',
+                'charge': '0',
+                'method': '',
+                'basis_set': '6-31+G(d,p)',
+                'constraints': '',
+                }
+
+        calc = gen_calc(params, self.profile)
+        with self.assertRaises(Exception):
+            orca = OrcaCalculation(calc)
 
     def test_scan_angle_DFT(self):
         params = {
