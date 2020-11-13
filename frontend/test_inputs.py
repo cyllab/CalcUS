@@ -1978,7 +1978,7 @@ class OrcaTests(TestCase):
         orca = OrcaCalculation(calc)
 
         REF = """
-        !SP M062X Def2-SVP TightSCF
+        !SP M062X Def2-SVP tightscf
         *xyz -1 1
         Cl 0.0 0.0 0.0
         *
@@ -2005,7 +2005,7 @@ class OrcaTests(TestCase):
         orca = OrcaCalculation(calc)
 
         REF = """
-        !SP M062X Def2-SVP TightSCF GRID6
+        !SP M062X Def2-SVP tightscf grid6
         *xyz -1 1
         Cl 0.0 0.0 0.0
         *
@@ -2031,7 +2031,7 @@ class OrcaTests(TestCase):
         orca = OrcaCalculation(calc)
 
         REF = """
-        !SP RI-MP2 cc-pVTZ cc-pVTZ/C
+        !SP RI-MP2 cc-pVTZ cc-pvtz/c
         *xyz -1 1
         Cl 0.0 0.0 0.0
         *
@@ -2753,6 +2753,78 @@ class OrcaTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, orca.input_file))
 
+    def test_NEB(self):
+        params = {
+                'type': 'Minimum Energy Path',
+                'in_file': 'elimination_substrate.xyz',
+                'auxiliary_file': 'elimination_product.xyz',
+                'software': 'xtb',
+                }
+
+        calc = gen_calc(params, self.profile)
+        orca = OrcaCalculation(calc)
+
+        INPUT = """!NEB
+        *xyz 0 1
+        C         -0.74277        0.14309        0.12635
+        C          0.71308       -0.12855       -0.16358
+        Cl         0.90703       -0.47793       -1.61303
+        H         -0.84928        0.38704        1.20767
+        H         -1.36298       -0.72675       -0.06978
+        H         -1.11617        0.99405       -0.43583
+        H          1.06397       -0.95639        0.44985
+        H          1.30839        0.75217        0.07028
+        O         -0.91651        0.74066        3.00993
+        H         -1.82448        0.94856        3.28105
+        *
+        %neb
+        neb_end_xyzfile "struct2.xyz"
+        nimages 8
+        end
+        %pal
+        nprocs 8
+        end
+
+        """
+        self.assertTrue(self.is_equivalent(INPUT, orca.input_file))
+
+    def test_NEB2(self):
+        params = {
+                'type': 'Minimum Energy Path',
+                'in_file': 'elimination_substrate.xyz',
+                'auxiliary_file': 'elimination_product.xyz',
+                'software': 'xtb',
+                'specifications': '--nimages 12',
+                }
+
+        calc = gen_calc(params, self.profile)
+        orca = OrcaCalculation(calc)
+
+        INPUT = """!NEB
+        *xyz 0 1
+        C         -0.74277        0.14309        0.12635
+        C          0.71308       -0.12855       -0.16358
+        Cl         0.90703       -0.47793       -1.61303
+        H         -0.84928        0.38704        1.20767
+        H         -1.36298       -0.72675       -0.06978
+        H         -1.11617        0.99405       -0.43583
+        H          1.06397       -0.95639        0.44985
+        H          1.30839        0.75217        0.07028
+        O         -0.91651        0.74066        3.00993
+        H         -1.82448        0.94856        3.28105
+        *
+        %neb
+        neb_end_xyzfile "struct2.xyz"
+        nimages 12
+        end
+        %pal
+        nprocs 8
+        end
+
+        """
+        self.assertTrue(self.is_equivalent(INPUT, orca.input_file))
+
+
 class XtbTests(TestCase):
     def setUp(self):
         call_command('init_static_obj')
@@ -3073,4 +3145,5 @@ class XtbTests(TestCase):
         $end
         """
         self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
+
 

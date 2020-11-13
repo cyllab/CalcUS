@@ -65,10 +65,25 @@ class OrcaCalculation:
         return ''.join([c for c in s if c in WHITELIST])
 
     def handle_specifications(self):
-        if self.calc.parameters.specifications.strip() == '':
+        _specifications = self.clean(self.calc.parameters.specifications).lower().strip()
+        if _specifications == '':
             return
 
-        self.additional_commands += self.clean(self.calc.parameters.specifications.strip())
+        if _specifications.find("--nimages") != -1:
+            s = _specifications.split()
+            ind = s.index("--nimages")
+            nimages = s[ind+1]
+            try:
+                nimages = int(nimages)
+            except ValueError:
+                raise Exception("Invalid specifications")
+
+            self.specifications['nimages'] = nimages
+
+            del s[ind:ind+2]
+            _specifications = ' '.join(s)
+
+        self.additional_commands += _specifications
 
     def handle_command(self):
         if self.calc.step.name == 'NMR Prediction':
@@ -204,6 +219,8 @@ class OrcaCalculation:
                 method = "HF"
             elif self.calc.parameters.theory_level == "RI-MP2":
                 method = "RI-MP2"
+            elif self.calc.step.name == "Minimum Energy Path":
+                pass
             else:
                 raise Exception("No method")
 
