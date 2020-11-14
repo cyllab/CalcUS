@@ -61,6 +61,7 @@
    ul.tree li:last-child:before {
       border-left:1px solid rgb(100,100,100);   
    }
+
 	</style>
 	<script>
 		$(document).ready(function(){
@@ -426,6 +427,14 @@
 				</p>
 		</div>
 	</div>
+	<div>
+		<details>
+			<summary>Related Calculations</summary>
+			<div id="related_calculations_div">
+
+			</div>
+		</details>
+	</div>
 
 	<br />
 	<span class="tag is-danger is-large">Geometries</span>
@@ -474,14 +483,6 @@
 
 	<br />	
 	<br />	
-	<div>
-		<details>
-			<summary>Related Calculations</summary>
-			<div id="related_calculations_div">
-
-			</div>
-		</details>
-	</div>
 	<div class="tabs is-boxed" id="tabs">
 	  	<ul>
 			{% for p in ensemble.unique_parameters %}
