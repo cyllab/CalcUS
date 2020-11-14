@@ -14,6 +14,7 @@ from .constants import *
 
 register = template.Library()
 
+STATUS_COLORS = {0: '#000000', 1: '#ffdd57', 2: '#23d160', 3: '#ff3860'}
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -167,7 +168,7 @@ class Step(models.Model):
     same_dir = models.BooleanField(default=False)###
 
     def __repr__(self):
-        return self.id
+        return str(self.id)
 
     @property
     def name(self):
@@ -197,23 +198,22 @@ class Ensemble(models.Model):
 
     flagged = models.BooleanField(default=False)
 
-    NODE_COLORS = {0: '#000000', 1: '#ffdd57', 2: '#23d160', 3: '#ff3860'}
     hidden = models.BooleanField(default=False)
     def __repr__(self):
-        return self.id
+        return str(self.id)
 
     @property
     def get_node_color(self):
         orders = self.result_of.all()
         if len(orders) == 0:
-            return self.NODE_COLORS[2]
+            return STATUS_COLORS[2]
         statuses = [i.status for i in orders]
         orders2 = self.calculationorder_set.all()
         statuses += [i.status for i in orders2 if not i.step.creates_ensemble]
         if 3 in statuses:
-            return self.NODE_COLORS[3]
+            return STATUS_COLORS[3]
         else:
-            return self.NODE_COLORS[min(statuses)]
+            return STATUS_COLORS[min(statuses)]
 
 
     @property
@@ -631,7 +631,7 @@ class Structure(models.Model):
     degeneracy = models.PositiveIntegerField(default=1)
 
     def __repr__(self):
-        return self.id
+        return str(self.id)
 
 class CalculationFrame(models.Model):
     parent_calculation = models.ForeignKey('Calculation', on_delete=models.CASCADE, blank=True, null=True)
@@ -644,7 +644,7 @@ class CalculationFrame(models.Model):
     number = models.PositiveIntegerField(default=0)
 
     def __repr__(self):
-        return self.id
+        return str(self.id)
 
 class Parameters(models.Model):
     name = models.CharField(max_length=100, default="Nameless parameters")
@@ -754,6 +754,10 @@ class CalculationOrder(models.Model):
         self.author.unseen_calculations -= 1
         self.author.save()
         self.save()
+
+    @property
+    def color(self):
+        return STATUS_COLORS[self.status]
 
     @property
     def label(self):
@@ -912,6 +916,10 @@ class Calculation(models.Model):
 
     def __str__(self):
         return self.step.name
+
+    @property
+    def color(self):
+        return STATUS_COLORS[self.status]
 
     def get_mol(self):
         if self.result_ensemble is not None:
@@ -1095,7 +1103,7 @@ class Calculation(models.Model):
         return self.procedure.has_mo
 
     def __repr__(self):
-        return self.id
+        return str(self.id)
 
     @property
     def text_status(self):

@@ -372,6 +372,35 @@ def ensemble(request, pk):
         'ensemble': e})
 
 @login_required
+def get_related_calculations(request, pk):
+    try:
+        e = Ensemble.objects.get(pk=pk)
+    except Ensemble.DoesNotExist:
+        return redirect('/home/')
+
+    if not can_view_ensemble(e, request.user.profile):
+        return redirect('/home/')
+
+
+    orders1 = list(set([i.order for i in e.calculation_set.all()]))
+    orders2 = list(e.calculationorder_set.prefetch_related('calculation_set').all())
+
+    '''
+    desc = []
+    for o in orders1:
+        desc.append("Structure {}".format(
+    if self.step.creates_ensemble:
+        return "{} on structure {}".format(self.step.name, self.structure.number)
+    else:
+        return "{} on structure {}".format(self.step.name, self.structure.number)
+    '''
+    return render(request, 'frontend/dynamic/get_related_calculations.html', {'profile': request.user.profile,
+        'ensemble': e,
+        'orders1': orders1,
+        'orders2': orders2})
+
+
+@login_required
 def nmr_analysis(request, pk, pid):
     try:
         e = Ensemble.objects.get(pk=pk)

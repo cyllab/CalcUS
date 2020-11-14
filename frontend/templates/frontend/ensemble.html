@@ -21,6 +21,46 @@
 		#ensemble_name > br { 
 			display: none 
 		}
+		.button_full {
+			width: 100%;
+		}
+		.button_half {
+			width: 50%;
+		}
+   ul.tree, ul.tree ul {
+    list-style: none;
+     margin: 0;
+     padding: 0;
+   } 
+   ul.tree ul {
+     margin-left: 10px;
+   }
+   ul.tree li {
+     margin: 0;
+     padding: 0 7px;
+     line-height: 20px;
+     color: #369;
+     font-weight: bold;
+     border-left:1px solid rgb(100,100,100);
+
+   }
+   ul.tree li:last-child {
+       border-left:none;
+   }
+   ul.tree li:before {
+      position:relative;
+      top:-0.3em;
+      height:1em;
+      width:12px;
+      color:white;
+      border-bottom:1px solid rgb(100,100,100);
+      content:"";
+      display:inline-block;
+      left:-7px;
+   }
+   ul.tree li:last-child:before {
+      border-left:1px solid rgb(100,100,100);   
+   }
 	</style>
 	<script>
 		$(document).ready(function(){
@@ -32,9 +72,14 @@
 	  		};
 
 			})(ChemDoodle);
+
+			var details = document.querySelector("details")
+
+			details.addEventListener("toggle", load_related_calculations);
+
 		});
-	</script>
-	<script>
+
+
 		var loadScript = function(src, callbackfn) {
 			var newScript = document.createElement("script");
 		    	newScript.type = "text/javascript";
@@ -337,6 +382,14 @@
 			}
 
 		}
+		function load_related_calculations() {
+			output = document.getElementById("related_calculations_div");
+			if(output.innerHTML.trim() != "") {
+				return;
+			}
+			console.log("get");
+			$("#related_calculations_div").load("/get_related_calculations/{{ ensemble.id }}");
+		}
 	</script>
 	<style>
 		.hscroll {
@@ -385,18 +438,16 @@
 				editor.oneMolecule = false;
 			</script>
 			<br />
-			<button class="button" onclick="window.location.href='/download_structures/{{ ensemble.id }}'">Download ensemble in .xyz <i class="fas fa-download"></i></button>
+			<button class="button button_full" onclick="window.location.href='/download_structures/{{ ensemble.id }}'">Download ensemble in .xyz <i class="fas fa-download"></i></button>
 			<br />	
-			<button class="button" onclick="download_selected_structure();">Download selected structure in .xyz <i class="fas fa-download"></i></button>
+			<button class="button button_full" onclick="download_selected_structure();">Download selected structure in .xyz <i class="fas fa-download"></i></button>
 			<br />	
-			<button class="button" onclick="decrease_conf()">Previous Structure</button>
-			<button class="button" onclick="increase_conf()">Next Structure</button>
+			<button class="button button_half" onclick="decrease_conf()">Previous Structure</button><button class="button button_half" onclick="increase_conf()">Next Structure</button>
 			<br/>
 			<br/>
-			<a class="button" href="/launch/{{ ensemble.id }}" id="next_step_ensemble">Launch calculation on ensemble<i class="fas fa-external-link-alt" ></i></a>
+			<a class="button button_full" href="/launch/{{ ensemble.id }}" id="next_step_ensemble">Launch calculation on ensemble<i class="fas fa-external-link-alt" ></i></a>
 			<br/>
-			<button class="button" onclick="launch_selected();" id="next_step_structure">Launch calculation on selected structure <i class="fas fa-external-link-alt" ></i></button>
-
+			<button class="button button_full" onclick="launch_selected();" id="next_step_structure">Launch calculation on selected structure <i class="fas fa-external-link-alt" ></i></button>
 
 		</div>
 		<div class="column">
@@ -423,7 +474,14 @@
 
 	<br />	
 	<br />	
+	<div>
+		<details>
+			<summary>Related Calculations</summary>
+			<div id="related_calculations_div">
 
+			</div>
+		</details>
+	</div>
 	<div class="tabs is-boxed" id="tabs">
 	  	<ul>
 			{% for p in ensemble.unique_parameters %}

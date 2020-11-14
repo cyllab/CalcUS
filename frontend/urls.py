@@ -104,6 +104,8 @@ urlpatterns = [
     path('details_ensemble/', views.details_ensemble, name='details_ensemble'),
     path('details_structure/', views.details_structure, name='details_structure'),
 
+    path('get_related_calculations/<int:pk>', views.get_related_calculations, name='get_related_calculations'),
+
     path('launch/', views.launch, name='launch'),
     path('launch/calc/<int:cid>/<int:fid>', views.launch_frame, name='launch_frame'),
     path('launch/<int:pk>', views.launch_pk, name='launch_pk'),

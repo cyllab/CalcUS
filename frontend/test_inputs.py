@@ -3146,4 +3146,40 @@ class XtbTests(TestCase):
         """
         self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
 
+    def test_invalid_specification(self):
+        params = {
+                'type': 'Constrained Conformational Search',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'constraints': 'Freeze-2_3;',
+                'specifications': '--force 2.0',
+                }
 
+        calc = gen_calc(params, self.profile)
+        with self.assertRaises(Exception):
+            xtb = XtbCalculation(calc)
+
+    def test_invalid_specification2(self):
+        params = {
+                'type': 'Constrained Conformational Search',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'constraints': 'Freeze-2_3;',
+                'specifications': '-force_constant 2.0',
+                }
+
+        calc = gen_calc(params, self.profile)
+        with self.assertRaises(Exception):
+            xtb = XtbCalculation(calc)
+
+    def test_invalid_specification3(self):
+        params = {
+                'type': 'Conformational Search',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'specifications': '-rthr 0.8 --ewin 8',
+                }
+
+        calc = gen_calc(params, self.profile)
+        with self.assertRaises(Exception):
+            xtb = XtbCalculation(calc)

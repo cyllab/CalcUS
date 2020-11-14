@@ -1,0 +1,23 @@
+<ul class="tree">
+{% for o in orders1 %}
+	<li><a style="color: {{ o.color }};" href="/calculationorder/{{ o.id }}">Order {{ o.id }}</a>
+	<ul>
+		{% for c in o.calculation_set.all %}
+			{% if c.step.name == "Conformational Search" or c.step.name == "Constrained Conformational Search" or c.step.name == "Constrained Optimisation" or c.step.name == "Minimum Energy Path" %}
+			<li><a style="color: {{ c.color }};" href="/calculation/{{ c.id }}">Calculation {{ c.id }} - Structure Generation ({{ c.step.name }})</a></li>
+			{% else %}
+			<li><a style="color: {{ c.color }};" href="/calculation/{{ c.id }}">Calculation {{ c.id }} - Structure {{ c.structure.number }} Generation ({{ c.step.name }})</a></li>
+			{% endif %}
+		{% endfor %}
+	</ul>
+{% endfor %}
+{% for o in orders2 %}
+	<li><a style="color: {{ o.color }};" href="/calculationorder/{{ o.id }}">Order {{ o.id }}</a>
+	<ul>
+		{% for c in o.calculation_set.all %}
+		<li><a style="color: {{ c.color }};" href="/calculation/{{ c.id }}">Calculation {{ c.id }} - {{ c.step.name }} on structure {{ c.structure.number }}</a></li>
+		{% endfor %}
+	</ul>
+{% endfor %}
+
+</ul>
