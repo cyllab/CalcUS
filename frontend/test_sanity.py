@@ -9,6 +9,7 @@ from django.core.management import call_command
 from django.test import TestCase, Client
 from .Gaussian_calculation import GaussianCalculation
 from .ORCA_calculation import OrcaCalculation
+from .xtb_calculation import XtbCalculation
 from .gen_calc import gen_calc
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -793,5 +794,267 @@ class OrcaTests(TestCase):
         orca = OrcaCalculation(calc)
 
         E = self.run_calc(orca)
+        self.assertFalse(self.known_energy(E, params))
+
+class CrestTests(TestCase):
+    energies = []
+
+    def setUp(self):
+        call_command('init_static_obj')
+        if not os.path.isdir(SCR_DIR):
+            os.mkdir(SCR_DIR)
+
+        self.user = User.objects.create(username='User')
+        self.profile = Profile.objects.get(user=self.user)
+
+
+    def tearDown(self):
+        rmtree(SCR_DIR)
+
+    def known_energy(self, E, params):
+        if E == -1:
+            raise Exception("Invalid calculation")
+        for entry in self.energies:
+            if entry[1] == E:
+                print("")
+                print("Clash detected:")
+                print(entry[0])
+                print(params)
+                print("")
+                return True
+
+        self.energies.append([params, E])
+        return False
+
+    def run_calc(self, obj):
+        os.chdir(dir_path)
+        t = time.time()
+        c_dir = os.path.join(SCR_DIR, str(t))
+
+        os.mkdir(c_dir)
+        os.chdir(c_dir)
+
+        with open("in.xyz", 'w') as out:
+            out.write(obj.calc.structure.xyz_structure)
+
+        with open("calc.out", 'w') as out:
+            ret = subprocess.run(shlex.split(obj.command), cwd=c_dir, stdout=out, stderr=out)
+
+        if ret.returncode != 0:
+            os.system("tail calc.out")
+            return -1
+
+        with open("{}/crest_best.xyz".format(c_dir)) as f:
+            lines = f.readlines()
+
+        return float(lines[1])
+
+    def test_gfn2_conf_search(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Conformational Search',
+                'project': 'New Project',
+                'software': 'xtb',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.xyz',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        E = self.run_calc(xtb)
+        self.assertFalse(self.known_energy(E, params))
+
+    def test_gfnff_conf_search(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Conformational Search',
+                'project': 'New Project',
+                'software': 'xtb',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.xyz',
+                'specifications': '--gfnff',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        E = self.run_calc(xtb)
+        self.assertFalse(self.known_energy(E, params))
+
+    def test_gfnff_conf_search2(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Conformational Search',
+                'project': 'New Project',
+                'software': 'xtb',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.xyz',
+                'specifications': '--gfnff',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        E = self.run_calc(xtb)
+        self.assertTrue(self.known_energy(E, params))
+
+    def test_gfnff_sp_conf_search(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Conformational Search',
+                'project': 'New Project',
+                'software': 'xtb',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.xyz',
+                'specifications': '--gfn2//gfnff',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        E = self.run_calc(xtb)
+        self.assertFalse(self.known_energy(E, params))
+
+
+class XtbTests(TestCase):
+    energies = []
+
+    def setUp(self):
+        call_command('init_static_obj')
+        if not os.path.isdir(SCR_DIR):
+            os.mkdir(SCR_DIR)
+
+        self.user = User.objects.create(username='User')
+        self.profile = Profile.objects.get(user=self.user)
+
+
+    def tearDown(self):
+        rmtree(SCR_DIR)
+
+    def known_energy(self, E, params):
+        if E == -1:
+            raise Exception("Invalid calculation")
+        for entry in self.energies:
+            if entry[1] == E:
+                print("")
+                print("Clash detected:")
+                print(entry[0])
+                print(params)
+                print("")
+                return True
+
+        self.energies.append([params, E])
+        return False
+
+    def run_calc(self, obj):
+        os.chdir(dir_path)
+        t = time.time()
+        c_dir = os.path.join(SCR_DIR, str(t))
+
+        os.mkdir(c_dir)
+        os.chdir(c_dir)
+
+        with open("in.xyz", 'w') as out:
+            out.write(obj.calc.structure.xyz_structure)
+
+        with open("calc.out", 'w') as out:
+            ret = subprocess.run(shlex.split(obj.command), cwd=c_dir, stdout=out, stderr=out)
+
+        if ret.returncode != 0:
+            os.system("tail calc.out")
+            return -1
+
+        with open("calc.out") as f:
+            lines = f.readlines()
+            ind = len(lines)-1
+
+        while lines[ind].find("TOTAL ENERGY") == -1:
+            ind -= 1
+
+        return float(lines[ind].split()[3])
+
+    def test_sp_gfn2(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'software': 'xtb',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.xyz',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        E = self.run_calc(xtb)
+        self.assertFalse(self.known_energy(E, params))
+
+    def test_sp_gfn2_explicit(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'software': 'xtb',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.xyz',
+                'specifications': '--gfn2',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        E = self.run_calc(xtb)
+        self.assertTrue(self.known_energy(E, params))
+
+    def test_sp_gfn1(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'software': 'xtb',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.xyz',
+                'specifications': '--gfn1',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        E = self.run_calc(xtb)
+        self.assertFalse(self.known_energy(E, params))
+
+    def test_sp_gfn0(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'software': 'xtb',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.xyz',
+                'specifications': '--gfn0',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        E = self.run_calc(xtb)
+        self.assertFalse(self.known_energy(E, params))
+
+    def test_sp_gfnff(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'software': 'xtb',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.xyz',
+                'specifications': '--gfnff',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        E = self.run_calc(xtb)
         self.assertFalse(self.known_energy(E, params))
 
