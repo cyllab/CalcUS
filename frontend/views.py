@@ -1767,28 +1767,15 @@ def conformer_table_post(request):
         except Parameters.DoesNotExist:
             return HttpResponse(status=403)
 
-        properties = []
-        energies = []
-        for s in e.structure_set.all():
-            try:
-                prop = s.properties.get(parameters=p)
-            except Property.DoesNotExist:
-                energies.append([''])
-            else:
-                energies.append(prop.energy)
+        full_summary, hashes = e.ensemble_summary
+        summary = full_summary[p.md5]
 
-        _rel_energies = e.relative_energies(p)
-        pref_units = profile.pref_units
-        if pref_units == 0:
-            rel_energies = ["{:.2f}".format(float(i)*HARTREE_FVAL) if i != '' else '' for i in _rel_energies]
-        elif pref_units == 1:
-            rel_energies = ["{:.2f}".format(float(i)*HARTREE_TO_KCAL_F) if i != '' else '' for i in _rel_energies]
-        elif pref_units == 2:
-            rel_energies = ["{:.5f}".format(i) if i != '' else '' for i in _rel_energies]
+        fms = profile.pref_units_format_string
 
-        weights = e.weights(p)
-        data = zip(e.structure_set.all(), energies, rel_energies, weights)
+        rel_energies = [fms.format(i) for i in np.array(summary[4])*profile.unit_conversion_factor]
+        data = zip(e.structure_set.all(), summary[2], rel_energies, summary[5])
         data = sorted(data, key=lambda i: i[0].number)
+
         return render(request, 'frontend/dynamic/conformer_table.html', {
                 'profile': request.user.profile,
                 'data': data,

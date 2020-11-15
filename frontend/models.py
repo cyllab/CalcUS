@@ -35,6 +35,7 @@ class Profile(models.Model):
 
     UNITS = {0: 'kJ/mol', 1: 'kcal/mol', 2: 'Ha'}
     UNITS_PRECISION = {0: 0, 1: 1, 2: 6}
+    UNITS_FORMAT_STRING = {0: "{:.1f}", 1: "{:.1f}", 2: "{:.6f}"}
 
     INV_UNITS = {v: k for k, v in UNITS.items()}
 
@@ -45,6 +46,10 @@ class Profile(models.Model):
     @property
     def pref_units_precision(self):
         return self.UNITS_PRECISION[self.pref_units]
+
+    @property
+    def pref_units_format_string(self):
+        return self.UNITS_FORMAT_STRING[self.pref_units]
 
     @property
     def unit_conversion_factor(self):

@@ -3521,6 +3521,72 @@ class MiscCalculationTests(CalcusLiveServer):
         self.wait_latest_calc_done(150)
         self.assertTrue(self.latest_calc_successful())
 
+    def test_conformer_table1(self):
+        proj = Project.objects.create(name="TestProj", author=self.profile)
+        mol = Molecule.objects.create(project=proj, name="TestMol")
+        e = Ensemble.objects.create(parent_molecule=mol, name="TestEnsemble")
+
+        proj.save()
+        mol.save()
+        e.save()
+
+        structs = [[-16.82945685, 9], [-16.82855278, 36], [-16.82760256, 7], [-16.82760254, 9], [-16.82760156, 2], [-16.82558904, 33], [-16.82495672, 1]]#From CREST (GFN2-xTB)
+        rel_energies = [i[0] + 16.82945685 for i in structs]
+
+        params = Parameters.objects.create(charge=0, multiplicity=1)
+        for ind, _s in enumerate(structs):
+            s = Structure.objects.create(parent_ensemble=e, number=ind+1, degeneracy=structs[ind][1])
+            prop = Property.objects.create(parameters=params, energy=structs[ind][0], parent_structure=s)
+            prop.save()
+            s.save()
+        e.save()
+        proj.save()
+        mol.save()
+
+        ref_weights = [0.34724, 0.53361, 0.03796, 0.04880, 0.01082, 0.02125, 0.00033]
+
+        self.lget("/ensemble/{}".format(e.id))
+        data = self.get_conformer_data()
+
+        for ind, line in enumerate(data):
+            self.assertEqual(line[0], str(ind+1))
+            self.assertEqual(line[1], "{:.6f}".format(structs[ind][0]))
+            self.assertEqual(line[3], str(structs[ind][1]))
+            self.assertEqual(line[4], "{:.2f}".format(ref_weights[ind]))
+
+    def test_conformer_table2(self):
+        proj = Project.objects.create(name="TestProj", author=self.profile)
+        mol = Molecule.objects.create(project=proj, name="TestMol")
+        e = Ensemble.objects.create(parent_molecule=mol, name="TestEnsemble")
+
+        proj.save()
+        mol.save()
+        e.save()
+
+        structs = [[-16.82945685, 9], [-16.82855278, 36], [-16.82760256, 7], [-16.82760254, 9], [-16.82760156, 2], [-16.82558904, 33], [-16.82495672, 1]]#From CREST (GFN2-xTB)
+        rel_energies = [i[0] + 16.82945685 for i in structs]
+
+        params = Parameters.objects.create(charge=0, multiplicity=1)
+        for ind, _s in reversed(list(enumerate(structs))):
+            s = Structure.objects.create(parent_ensemble=e, number=ind+1, degeneracy=structs[ind][1])
+            prop = Property.objects.create(parameters=params, energy=structs[ind][0], parent_structure=s)
+            prop.save()
+            s.save()
+        e.save()
+        proj.save()
+        mol.save()
+
+        ref_weights = [0.34724, 0.53361, 0.03796, 0.04880, 0.01082, 0.02125, 0.00033]
+
+        self.lget("/ensemble/{}".format(e.id))
+        data = self.get_conformer_data()
+
+        for ind, line in enumerate(data):
+            self.assertEqual(line[0], str(ind+1))
+            self.assertEqual(line[1], "{:.6f}".format(structs[ind][0]))
+            self.assertEqual(line[3], str(structs[ind][1]))
+            self.assertEqual(line[4], "{:.2f}".format(ref_weights[ind]))
+
 class ComplexCalculationTests(CalcusLiveServer):
 
     def setUp(self):

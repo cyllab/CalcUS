@@ -372,16 +372,29 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         button = self.driver.find_element_by_id("get_shifts_button")
         button.click()
 
-    def get_number_conformers(self):
+    def get_conformers(self):
         assert self.is_on_page_ensemble()
+        self.wait_for_ajax()
 
         conf_table = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located((By.ID, "conf_table"))
         )
-
         conformers = conf_table.find_elements_by_css_selector("tr")
+        return conformers
+
+    def get_number_conformers(self):
+        conformers = self.get_conformers()
         return len(conformers)
 
+    def get_conformer_data(self):
+        conformers = self.get_conformers()
+        conf_data = []
+
+        for line in conformers:
+            data = line.find_elements_by_css_selector("th")
+            conf_data.append([i.text for i in data])
+
+        return conf_data
     def get_split_url(self):
         return self.driver.current_url.split('/')[3:]
 
