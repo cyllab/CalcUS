@@ -235,6 +235,30 @@ class LaunchTests(TestCase):
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
+    def test_clean_name1(self):
+        params = self.basic_params
+        params['calc_name'] = 'name'
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+
+        o = CalculationOrder.objects.latest('id')
+        self.assertEqual(o.name, 'name')
+
+    def test_clean_name2(self):
+        params = self.basic_params
+        params['calc_name'] = '<br>name'
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+
+        o = CalculationOrder.objects.latest('id')
+        self.assertEqual(o.name, '&lt;br&gt;name')
+
+    def test_clean_name3(self):
+        params = self.basic_params
+        params['calc_name'] = 'name/details-.'
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+
+        o = CalculationOrder.objects.latest('id')
+        self.assertEqual(o.name, 'name/details-.')
+
 class PermissionTestsStudent(TestCase):
     def setUp(self):
         call_command('init_static_obj')
