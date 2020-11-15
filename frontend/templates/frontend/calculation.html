@@ -150,10 +150,6 @@
 			    });
 
 		}
-		function show_load_logs_button() {
-			btn = document.getElementById("load_remote_log_button");
-			btn.style.display = "block";  
-		}
 
 		function load_remote_log() {
 			ring = document.getElementById("lds-ring");
@@ -163,14 +159,19 @@
 		}
 
 		$(document).ready(function(){
-			if( 'True' == '{{ calc.local }}' || 2 == {{ calc.status }} || 3 == {{ calc.status }}) {
+			{% if calc.local or calc.status == 2 or calc.status == 3 %}
 				ring = document.getElementById("lds-ring");
 				ring.style.display = "block";
 				get_opt_structs("/get_calc_data/");
-			}
-			else {
-				show_load_logs_button();
-			}
+			{% else %}
+				{% if calc.order.resource.connected %}
+					d = document.getElementById("load_remote_div");
+					d.style.display = "block";  
+				{% else %}
+					d = document.getElementById("access_not_connected_div");
+					d.style.display = "block";  
+				{% endif %}
+			{% endif %}
 		});
 
 	</script>
@@ -265,10 +266,15 @@
 
 	</div>
 	{% endif %}
-	<center>
-		<button class="button is-info" id="load_remote_log_button" onclick="load_remote_log();" style="display: none;">Load remote log</button>
-		<label class="label" style="display: none; color: red" id="throttle_label">Request throttled; try again in one minute</label>
-	</center>
+	<div id="load_remote_div" style="display: none;">
+		<center>
+			<button class="button is-info" id="load_remote_log_button" onclick="load_remote_log();">Load remote log</button>
+			<label class="label" style="display: none; color: red" id="throttle_label">Request throttled; try again in one minute</label>
+		</center>
+	</div>
+	<div id="access_not_connected_div" style="display: none;">
+		<div class="box" style="width: 400px;">Access not connected</div>
+	</div>
 	<div>
 		<label class="label">Input File</label>
 		<textarea class="textarea" style="height: 300px;" readonly>{{ calc.input_file }}</textarea>
