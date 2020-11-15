@@ -153,7 +153,7 @@ class XtbCalculation:
         ewin = 6
         cmd_arguments = ""
 
-        ALLOWED = "qwertyuiopasdfghjklzxcvbnm-1234567890. "
+        ALLOWED = "qwertyuiopasdfghjklzxcvbnm-1234567890./ "
         clean_specs = ''.join([i for i in self.specifications + self.calc.parameters.specifications.lower() if i in ALLOWED])
 
         specs = clean_specs.strip().split('--')
@@ -163,10 +163,12 @@ class XtbCalculation:
                 continue
             ss = spec.strip().split()
             if len(ss) == 1:
-                if ss[0] in ['gfn2-xtb', 'gfn1-xtb', 'gfn0-xtb', 'gfn-ff', 'gfn2-xtb//gfn-ff']:
-                    if ss[0] == 'gfn2-xtb//gfn-ff' and self.calc.step.name not in ['Conformational Search', 'Constrained Conformational Search']:
+                if ss[0] in ['gfn2', 'gfn1', 'gfn0', 'gfnff', 'gfn2//gfnff']:
+                    if ss[0] == 'gfn2//gfnff' and self.calc.step.name not in ['Conformational Search', 'Constrained Conformational Search']:
                         self.raise_error("Invalid specifications")
-                    method = ss
+                    method = ss[0]
+                else:
+                    self.raise_error("Invalid specifications")
             elif len(ss) == 2:
                 if ss[0] == 'o' or ss[0] == 'opt':
                     if ss[1] not in ['crude', 'sloppy', 'loose', 'lax', 'normal', 'tight', 'vtight', 'extreme']:
@@ -202,12 +204,14 @@ class XtbCalculation:
         if iterations != -1:
             self.cmd_arguments += "--iterations {} ".format(iterations)
         if method != "gfn2-xtb":
-            self.cmd_arguments += "--{}".format(method)
+            self.cmd_arguments += "--{} ".format(method)
         if opt_level != "normal":
             self.cmd_arguments = self.cmd_arguments.replace('--opt ', '--opt {} '.format(opt_level))
 
         if self.calc.step.name in ['Conformational Search', 'Constrained Conformational Search']:
             self.cmd_arguments += "--rthr {} --ewin {} ".format(rthr, ewin)
+
+            self.cmd_arguments = self.cmd_arguments.replace('--', '-')#Crest 2.10.2 does not read arguments with double dashes
 
 
     def raise_error(self, msg):
@@ -224,10 +228,12 @@ class XtbCalculation:
         elif self.calc.step.name == "Conformational Search":
             self.specifications = "--rthr 0.6 --ewin 6 "
             self.program = "crest"
+            '''
             if self.calc.parameters.method == "GFN-FF":
                 self.cmd_arguments += "-gff "
             elif self.calc.parameters.method == "GFN2-xTB//GFN-FF":
                 self.cmd_arguments += "-gfn2//gfnff "
+            '''
         elif self.calc.step.name == "Constrained Conformational Search":
             self.cmd_arguments += "-cinp input "
             self.program = "crest"

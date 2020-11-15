@@ -1336,6 +1336,58 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
 
+    def test_conf_search_gfnff(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Conformational Search',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.sdf',
+                'specifications': '--gfnff',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+
+    def test_conf_search_invalid_specification(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Conformational Search',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.sdf',
+                'specifications': '--gfn2-ff',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertFalse(self.latest_calc_successful())
+
+
+    def test_conf_search_gfnff_sp(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Conformational Search',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.sdf',
+                'specifications': '--gfn2//gfnff',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+
     def test_ts(self):
         params = {
                 'calc_name': 'test',

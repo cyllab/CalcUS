@@ -3021,7 +3021,7 @@ class XtbTests(TestCase):
         calc = gen_calc(params, self.profile)
         xtb = XtbCalculation(calc)
 
-        REF = "crest in.xyz --rthr 0.6 --ewin 6"
+        REF = "crest in.xyz -rthr 0.6 -ewin 6"
 
         self.assertTrue(self.is_equivalent(REF, xtb.command))
 
@@ -3038,7 +3038,7 @@ class XtbTests(TestCase):
         calc = gen_calc(params, self.profile)
         xtb = XtbCalculation(calc)
 
-        REF = "crest in.xyz --rthr 0.8 --ewin 8"
+        REF = "crest in.xyz -rthr 0.8 -ewin 8"
 
         self.assertTrue(self.is_equivalent(REF, xtb.command))
 
@@ -3055,7 +3055,7 @@ class XtbTests(TestCase):
         calc = gen_calc(params, self.profile)
         xtb = XtbCalculation(calc)
 
-        REF = "crest in.xyz -cinp input --rthr 0.6 --ewin 6"
+        REF = "crest in.xyz -cinp input -rthr 0.6 -ewin 6"
         self.assertTrue(self.is_equivalent(REF, xtb.command))
 
         INPUT = """$constrain
@@ -3080,7 +3080,7 @@ class XtbTests(TestCase):
         calc = gen_calc(params, self.profile)
         xtb = XtbCalculation(calc)
 
-        REF = "crest in.xyz -cinp input --rthr 0.6 --ewin 6"
+        REF = "crest in.xyz -cinp input -rthr 0.6 -ewin 6"
         self.assertTrue(self.is_equivalent(REF, xtb.command))
 
         INPUT = """$constrain
@@ -3106,7 +3106,7 @@ class XtbTests(TestCase):
         calc = gen_calc(params, self.profile)
         xtb = XtbCalculation(calc)
 
-        REF = "crest in.xyz -cinp input --rthr 0.6 --ewin 6"
+        REF = "crest in.xyz -cinp input -rthr 0.6 -ewin 6"
         self.assertTrue(self.is_equivalent(REF, xtb.command))
 
         INPUT = """$constrain
@@ -3132,7 +3132,7 @@ class XtbTests(TestCase):
         calc = gen_calc(params, self.profile)
         xtb = XtbCalculation(calc)
 
-        REF = "crest in.xyz -cinp input --rthr 0.6 --ewin 6"
+        REF = "crest in.xyz -cinp input -rthr 0.6 -ewin 6"
         self.assertTrue(self.is_equivalent(REF, xtb.command))
 
         INPUT = """$constrain
