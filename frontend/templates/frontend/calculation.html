@@ -86,6 +86,11 @@
 									}
 
 								},
+								axes: {
+									y: {
+										axisLabelWidth: 80,
+									}
+								}
 
 							}
 					);
@@ -95,15 +100,21 @@
 							{
 								strokeWidth: 2,	
 								xlabel: "Frame",
-								ylabel: "Relative Energy",
+								ylabel: "Relative Energy ({{ request.user.profile.pref_units_name }})",
 								rangeSelectorPlotStrokeColor: "#BABABA",
 								highlightCircleSize:  5, 
 								pointClickCallback: function(e, pt) {
 								    set_frame(this.getValue(pt.idx, 0));
 								},
 								dateWindow: rmsd_graph.xAxisExtremes(),
-
+								digitsAfterDecimal: {{ request.user.profile.pref_units_precision}},
+								axes: {
+									y: {
+										axisLabelWidth: 80,
+									}
+								}
 							}
+
 					);
 					var sync = Dygraph.synchronize(rmsd_graph, relaxed_scan_graph, {
 						range: false,

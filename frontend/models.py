@@ -34,12 +34,17 @@ class Profile(models.Model):
     unseen_calculations = models.PositiveIntegerField(default=0)
 
     UNITS = {0: 'kJ/mol', 1: 'kcal/mol', 2: 'Ha'}
+    UNITS_PRECISION = {0: 0, 1: 1, 2: 6}
 
     INV_UNITS = {v: k for k, v in UNITS.items()}
 
     @property
     def pref_units_name(self):
         return self.UNITS[self.pref_units]
+
+    @property
+    def pref_units_precision(self):
+        return self.UNITS_PRECISION[self.pref_units]
 
     @property
     def unit_conversion_factor(self):
