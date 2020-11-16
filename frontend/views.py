@@ -1768,18 +1768,24 @@ def conformer_table_post(request):
             return HttpResponse(status=403)
 
         full_summary, hashes = e.ensemble_summary
-        summary = full_summary[p.md5]
+        if p.md5 in full_summary.keys():
+            summary = full_summary[p.md5]
 
-        fms = profile.pref_units_format_string
+            fms = profile.pref_units_format_string
 
-        rel_energies = [fms.format(i) for i in np.array(summary[4])*profile.unit_conversion_factor]
-        data = zip(e.structure_set.all(), summary[2], rel_energies, summary[5])
-        data = sorted(data, key=lambda i: i[0].number)
+            rel_energies = [fms.format(i) for i in np.array(summary[4])*profile.unit_conversion_factor]
+            data = zip(e.structure_set.all(), summary[2], rel_energies, summary[5])
+            data = sorted(data, key=lambda i: i[0].number)
 
+        else:
+            blank = ['-' for i in range(e.structure_set.count())]
+            data = zip(e.structure_set.all(), blank, blank, blank)
+            data = sorted(data, key=lambda i: i[0].number)
         return render(request, 'frontend/dynamic/conformer_table.html', {
                 'profile': request.user.profile,
                 'data': data,
             })
+
     else:
         return HttpResponse(status=403)
 
