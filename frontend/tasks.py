@@ -499,6 +499,8 @@ def launch_xtb_calc(in_file, calc, files):
                     return 1
         '''
         #Frequency calculations on unoptimized geometries give an error
+        if calc.step.creates_ensemble:
+            analyse_opt(calc.id)
 
         return ErrorCodes.SUCCESS
     else:
@@ -551,6 +553,8 @@ def xtb_mep(in_file, calc):
 
     with open("{}/calc_MEP_trj.xyz".format(local_folder)) as f:
         lines = f.readlines()
+
+    save_to_results(os.path.join(local_folder, 'calc_MEP_trj.xyz'), calc)
 
     num_atoms = lines[0]
     inds = []
@@ -2187,8 +2191,6 @@ def analyse_opt_ORCA(calc):
     num = int(lines[0])
     nstructs = int(len(lines)/(num+2))
 
-    #assert nstructs == len(RMSDs)
-
     for i in range(1, nstructs):
         xyz = ''.join(lines[(num+2)*i:(num+2)*(i+1)])
         try:
@@ -2200,33 +2202,58 @@ def analyse_opt_ORCA(calc):
             continue
 
 def analyse_opt_xtb(calc):
-    if calc.status in [2, 3]:
-        path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'xtbopt.out')
-    else:
-        path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'xtbopt.log')
-
-    if not os.path.isfile(path):
-        return
-
-    with open(path) as f:
-        lines = f.readlines()
-
-    xyz = ''.join(lines)
-    natoms = int(lines[0])
-    nn = int(len(lines)/(natoms+2))
-    RMSD = "Frame,RMS Displacement\n"
-    for n in range(nn):
-        xyz = ''.join(lines[(natoms+2)*n:(natoms+2)*(n+1)])
-        rms = lines[n*(natoms+2)+1].split()[3]
-        try:
-            f = calc.calculationframe_set.get(number=n+1)
-        except CalculationFrame.DoesNotExist:
-            f = CalculationFrame.objects.create(parent_calculation=calc, number=n+1, RMSD=rms, xyz_structure=xyz)
-            f.save()
+    if calc.step.name == "Minimum Energy Path":
+        if calc.status in [2, 3]:
+            path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'calc_MEP_trj.xyz')
         else:
-            continue
+            path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc_MEP_trj.xyz')
 
-    return
+        if not os.path.isfile(path):
+            return
+
+        with open(path) as f:
+            lines = f.readlines()
+
+        xyz = ''.join(lines)
+        natoms = int(lines[0])
+        nn = int(len(lines)/(natoms+2))
+
+        for n in range(nn):
+            xyz = ''.join(lines[(natoms+2)*n:(natoms+2)*(n+1)])
+            E = float(lines[n*(natoms+2)+1].split()[-1])
+            try:
+                f = calc.calculationframe_set.get(number=n+1)
+            except CalculationFrame.DoesNotExist:
+                f = CalculationFrame.objects.create(parent_calculation=calc, number=n+1, RMSD=0, xyz_structure=xyz, energy=E, converged=True)
+            else:
+                f.xyz_structure = xyz
+                f.energy = E
+            f.save()
+    else:
+        if calc.status in [2, 3]:
+            path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'xtbopt.out')
+        else:
+            path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'xtbopt.log')
+
+        if not os.path.isfile(path):
+            return
+
+        with open(path) as f:
+            lines = f.readlines()
+
+        xyz = ''.join(lines)
+        natoms = int(lines[0])
+        nn = int(len(lines)/(natoms+2))
+        for n in range(nn):
+            xyz = ''.join(lines[(natoms+2)*n:(natoms+2)*(n+1)])
+            rms = lines[n*(natoms+2)+1].split()[3]
+            try:
+                f = calc.calculationframe_set.get(number=n+1)
+            except CalculationFrame.DoesNotExist:
+                f = CalculationFrame.objects.create(parent_calculation=calc, number=n+1, RMSD=rms, xyz_structure=xyz)
+                f.save()
+            else:
+                continue
 
 
 def analyse_opt_Gaussian(calc):
