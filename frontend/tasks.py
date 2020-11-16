@@ -2207,17 +2207,24 @@ def analyse_opt_xtb(calc):
             path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'calc_MEP_trj.xyz')
         else:
             path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc_MEP_trj.xyz')
+    else:
+        if calc.status in [2, 3]:
+            path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'xtbopt.out')
+        else:
+            path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'xtbopt.log')
 
-        if not os.path.isfile(path):
-            return
+    if not os.path.isfile(path):
+        return
 
-        with open(path) as f:
-            lines = f.readlines()
+    with open(path) as f:
+        lines = f.readlines()
 
-        xyz = ''.join(lines)
-        natoms = int(lines[0])
-        nn = int(len(lines)/(natoms+2))
+    xyz = ''.join(lines)
+    natoms = int(lines[0])
+    nn = int(len(lines)/(natoms+2))
 
+    to_update = []
+    if calc.step.name == "Minimum Energy Path":
         for n in range(nn):
             xyz = ''.join(lines[(natoms+2)*n:(natoms+2)*(n+1)])
             E = float(lines[n*(natoms+2)+1].split()[-1])
@@ -2228,22 +2235,10 @@ def analyse_opt_xtb(calc):
             else:
                 f.xyz_structure = xyz
                 f.energy = E
-            f.save()
+            to_update.append(f)
+
+        CalculationFrame.objects.bulk_update(to_update, ['xyz_structure', 'energy'], batch_size=100)
     else:
-        if calc.status in [2, 3]:
-            path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), 'xtbopt.out')
-        else:
-            path = os.path.join(CALCUS_SCR_HOME, str(calc.id), 'xtbopt.log')
-
-        if not os.path.isfile(path):
-            return
-
-        with open(path) as f:
-            lines = f.readlines()
-
-        xyz = ''.join(lines)
-        natoms = int(lines[0])
-        nn = int(len(lines)/(natoms+2))
         for n in range(nn):
             xyz = ''.join(lines[(natoms+2)*n:(natoms+2)*(n+1)])
             rms = lines[n*(natoms+2)+1].split()[3]
@@ -2251,10 +2246,10 @@ def analyse_opt_xtb(calc):
                 f = calc.calculationframe_set.get(number=n+1)
             except CalculationFrame.DoesNotExist:
                 f = CalculationFrame.objects.create(parent_calculation=calc, number=n+1, RMSD=rms, xyz_structure=xyz)
-                f.save()
+                to_update.append(f)
             else:
                 continue
-
+        CalculationFrame.objects.bulk_update(to_update, ['xyz_structure', 'rms'], batch_size=100)
 
 def analyse_opt_Gaussian(calc):
     if calc.status in [2, 3]:
