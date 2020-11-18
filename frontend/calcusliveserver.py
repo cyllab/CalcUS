@@ -1117,7 +1117,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 self.driver.switch_to_default_content()
                 return
         else:
-            assert False
+            raise Exception("Could not delete molecule")
 
     def get_ensemble_rows(self):
         assert self.is_on_page_molecule()

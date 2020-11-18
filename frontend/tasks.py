@@ -1320,52 +1320,6 @@ def orca_nmr(in_file, calc):
     prop.save()
     return ErrorCodes.SUCCESS
 
-def enso(in_file, calc):####OLD
-
-    if solvent != "Vacuum":
-        solvent_add = '-solv {}'.format(SOLVENT_TABLE[calc.parameters.solvent])
-    else:
-        solvent_add = ''
-
-    a = system("enso.py {} --charge {}".format(solvent_add, calc.parameters.charge), 'enso_pre.out', calc_id=calc.id)
-
-    if a != 0:
-        return a, 'e'
-
-    a = system("enso.py -run", 'enso.out', calc_id=calc.id)
-
-    return a, calc.ensemble
-
-def anmr(in_file, calc):
-    a = system("anmr", 'anmr.out', calc_id=calc.id)
-
-    if a != 0:
-        return a, 'e'
-
-    folder = '/'.join(in_file.split('/')[:-1])
-
-    with open("{}/anmr.dat".format(folder)) as f:
-        lines = f.readlines()
-        with open("{}/nmr.csv".format(os.path.join(CALCUS_RESULTS_HOME, str(calc.id))), 'w') as out:
-                out.write("Chemical shift (ppm),Intensity\n")
-                for ind, line in enumerate(lines):
-                    if ind % 15 == 0:
-                        sline = line.strip().split()
-                        if float(sline[1]) > 0.001:
-                            out.write("{},{}\n".format(-float(sline[0]), sline[1]))
-                        else:
-                            out.write("{},{}\n".format(-float(sline[0]), 0.0))
-                if float(lines[0].strip().split()[0]) > 0.:
-                    x = np.arange(-float(lines[0].strip().split()[0]), 0.0, 0.1)
-                    for _x in x:
-                        out.write("{:.2f},0.0\n".format(_x))
-                if float(lines[-1].strip().split()[0]) < 10.:
-                    x = np.arange(-10.0, -float(lines[-1].strip().split()[0]), 0.1)
-                    for _x in x:
-                        out.write("{:.2f},0.0\n".format(_x))
-
-    return ErrorCodes.SUCCESS, calc.ensemble
-
 def save_to_results(f, calc_obj, multiple=False, out_name=""):
     s = f.split('.')
     fname = f.split('/')[-1]
@@ -2249,7 +2203,7 @@ def analyse_opt_xtb(calc):
                 to_update.append(f)
             else:
                 continue
-        CalculationFrame.objects.bulk_update(to_update, ['xyz_structure', 'rms'], batch_size=100)
+        CalculationFrame.objects.bulk_update(to_update, ['xyz_structure', 'RMSD'], batch_size=100)
 
 def analyse_opt_Gaussian(calc):
     if calc.status in [2, 3]:
@@ -2380,9 +2334,6 @@ BASICSTEP_TABLE = {
                 'Frequency Calculation': xtb_freq,
                 'TS Optimisation': xtb_ts,
                 'UV-Vis Calculation': xtb_stda,
-                #'Crest Pre NMR': crest_pre_nmr,
-                #'Enso': enso,
-                #'Anmr': anmr,
                 'Single-Point Energy': xtb_sp,
                 'Minimum Energy Path': xtb_mep,
                 'Constrained Conformational Search': crest,

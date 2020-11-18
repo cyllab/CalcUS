@@ -27,7 +27,6 @@ class XtbCalculation:
 
     def handle_parameters(self):
         if self.calc.parameters.solvent != "Vacuum":
-            #self.cmd_arguments += '-g {} '.format(SOLVENT_TABLE[self.calc.parameters.solvent.lower()])
             self.cmd_arguments += '-g {} '.format(self.calc.parameters.solvent.lower())
 
         if self.calc.parameters.charge != 0:
@@ -228,12 +227,6 @@ class XtbCalculation:
         elif self.calc.step.name == "Conformational Search":
             self.specifications = "--rthr 0.6 --ewin 6 "
             self.program = "crest"
-            '''
-            if self.calc.parameters.method == "GFN-FF":
-                self.cmd_arguments += "-gff "
-            elif self.calc.parameters.method == "GFN2-xTB//GFN-FF":
-                self.cmd_arguments += "-gfn2//gfnff "
-            '''
         elif self.calc.step.name == "Constrained Conformational Search":
             self.cmd_arguments += "-cinp input "
             self.program = "crest"

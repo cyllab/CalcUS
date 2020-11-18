@@ -28,7 +28,7 @@ from django.utils.datastructures import MultiValueDictKeyError
 from django.db.models import Prefetch
 
 from .forms import UserCreateForm
-from .models import Calculation, Profile, Project, ClusterAccess, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, Procedure, Step, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe
+from .models import Calculation, Profile, Project, ClusterAccess, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe
 from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc, send_cluster_command
 from .decorators import superuser_required
 from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint, get_Gaussian_xyz
@@ -385,15 +385,6 @@ def get_related_calculations(request, pk):
     orders1 = list(set([i.order for i in e.calculation_set.all()]))
     orders2 = list(e.calculationorder_set.prefetch_related('calculation_set').all())
 
-    '''
-    desc = []
-    for o in orders1:
-        desc.append("Structure {}".format(
-    if self.step.creates_ensemble:
-        return "{} on structure {}".format(self.step.name, self.structure.number)
-    else:
-        return "{} on structure {}".format(self.step.name, self.structure.number)
-    '''
     return render(request, 'frontend/dynamic/get_related_calculations.html', {'profile': request.user.profile,
         'ensemble': e,
         'orders1': orders1,

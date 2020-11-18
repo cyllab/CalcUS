@@ -163,43 +163,11 @@ class BasicStep(models.Model):
     avail_ORCA = models.BooleanField(default=False)
 
     creates_ensemble = models.BooleanField(default=False)
-    def __repr__(self):
-        return self.id
-
-class Step(models.Model):
-    step_model = models.ForeignKey(BasicStep, on_delete=models.CASCADE)
-    parent_step = models.ForeignKey('Step', on_delete=models.CASCADE, blank=True, null=True)
-    parent_procedure = models.ForeignKey('Procedure', on_delete=models.CASCADE, blank=True, null=True, related_name="initial_steps")
-
-    from_procedure = models.ForeignKey('Procedure', on_delete=models.CASCADE)
-
-    parameters = models.ForeignKey('Parameters', on_delete=models.CASCADE, blank=True, null=True)###
-
-    same_dir = models.BooleanField(default=False)###
-
-    def __repr__(self):
-        return str(self.id)
-
-    @property
-    def name(self):
-        return self.step_model.name
 
 class Preset(models.Model):
     name = models.CharField(max_length=100, default="My Preset")
     params = models.ForeignKey('Parameters', on_delete=models.SET_NULL, blank=True, null=True)
     author = models.ForeignKey('Profile', on_delete=models.CASCADE, blank=True, null=True)
-
-class Procedure(models.Model):
-    name = models.CharField(max_length=100)
-
-    has_nmr = models.BooleanField(default=False)
-    has_freq = models.BooleanField(default=False)
-    has_uvvis = models.BooleanField(default=False)
-    has_mo = models.BooleanField(default=False)
-
-    avail_xtb = models.BooleanField(default=False)
-    avail_Gaussian = models.BooleanField(default=False)
-    avail_orca = models.BooleanField(default=False)
 
 class Ensemble(models.Model):
     name = models.CharField(max_length=100, default="Nameless ensemble")
@@ -209,8 +177,6 @@ class Ensemble(models.Model):
     flagged = models.BooleanField(default=False)
 
     hidden = models.BooleanField(default=False)
-    def __repr__(self):
-        return str(self.id)
 
     @property
     def get_node_color(self):
@@ -473,78 +439,14 @@ class Ensemble(models.Model):
 
         return float(w_energy)
 
-    def relative_energy(self, structure, params):
-        lowest = 0
-        try:
-            main_p = structure.properties.get(parameters=params)
-        except Property.DoesNotExist:
-            return '-'
-
-        for s in self.structure_set.all():
-            try:
-                p = s.properties.get(parameters=params)
-            except Property.DoesNotExist:
-                continue#Handle this better?
-            if p.energy < lowest:
-                lowest = p.energy
-        return (main_p.energy - lowest)
-
-    def relative_energies(self, params):
-        lowest = 0
-        energies = []
-        for s in self.structure_set.all():
-            try:
-                p = s.properties.get(parameters=params)
-            except Property.DoesNotExist:
-                energies.append('')
-                continue
-            if p.energy < lowest:
-                lowest = decimal.Decimal(p.energy)
-            energies.append(decimal.Decimal(p.energy))
-        rel_energies = [(i-lowest) if i != '' else '' for i in energies]
-        return rel_energies
-
-    def weights(self, params):
-        data = []
-        en_0 = 0
-        for s in self.structure_set.all():
-            try:
-                p = s.properties.get(parameters=params)
-            except Property.DoesNotExist:
-                data.append(['', ''])
-                continue
-            en = p.energy
-            if en_0 == 0:
-                en_0 = en
-            data.append([decimal.Decimal(en-en_0), s.degeneracy])
-
-        en_0 = decimal.Decimal(en_0)
-        if len(data) == 1:
-            return [1]
-
-        s = decimal.Decimal(0)
-
-        for e, degen in data:
-            if e != '':
-                if degen == 0:
-                    s += np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
-                else:
-                    s += degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
-
-        weights = []
-        for e, degen in data:
-            if e == '':
-                weights.append('')
-                continue
-            if degen == 0:
-                w = np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
-            else:
-                w = degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
-            weights.append(w)
-        return weights
-
     def weighted_nmr_shifts(self, params):
-        weights = self.weights(params)
+        summary, hashes = self.ensemble_summary
+
+        if params.md5 not in summary:
+            return []
+
+        weights = [decimal.Decimal(i) for i in summary[params.md5][5]]
+
         shifts = []
         for ind, s in enumerate(self.structure_set.all()):
             try:
@@ -579,36 +481,6 @@ class Ensemble(models.Model):
                 shift.append((float(shift[2])-b)/m)
         return shifts
 
-    def weight(self, structure, params):
-        data = []
-        en_0 = 0
-        for s in self.structure_set.all():
-            try:
-                p = s.properties.get(parameters=params)
-            except Property.DoesNotExist:
-                continue#Handle this better?
-            en = p.energy
-            if en == 0:
-                return ''
-            if en_0 == 0:
-                en_0 = en
-            data.append([decimal.Decimal(en-en_0), s.degeneracy])
-
-        if len(data) == 1:
-            return 1
-
-        s = decimal.Decimal(0)
-
-        for e, degen in data:
-            s += degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
-
-        try:
-            main_p = structure.properties.get(parameters=params)
-        except Property.DoesNotExist:
-            return '-'
-
-        main_weight = structure.degeneracy*np.exp(-decimal.Decimal(main_p.energy-en_0)*HARTREE_VAL*1000/(R_CONSTANT*TEMP))/s
-        return float(main_weight)
 
 class Property(models.Model):
     parameters = models.ForeignKey('Parameters', on_delete=models.SET_NULL, blank=True, null=True)
@@ -640,9 +512,6 @@ class Structure(models.Model):
     number = models.PositiveIntegerField(default=1)
     degeneracy = models.PositiveIntegerField(default=1)
 
-    def __repr__(self):
-        return str(self.id)
-
 class CalculationFrame(models.Model):
     parent_calculation = models.ForeignKey('Calculation', on_delete=models.CASCADE, blank=True, null=True)
 
@@ -652,9 +521,6 @@ class CalculationFrame(models.Model):
     energy = models.FloatField(default=0)
 
     number = models.PositiveIntegerField(default=0)
-
-    def __repr__(self):
-        return str(self.id)
 
 class Parameters(models.Model):
     name = models.CharField(max_length=100, default="Nameless parameters")
@@ -806,21 +672,6 @@ class CalculationOrder(models.Model):
             if new_unseen:
                 self.author.unseen_calculations += 1
                 self.author.save()
-
-    #########
-    def _update_unseen(self, dqueued, drunning, ddone, derror):
-        status = self.status
-        new_queued = self.num_queued + dqueued
-        new_running = self.num_running + drunning
-        new_done = self.num_done + ddone
-        new_error = self.num_error + derror
-
-        if new_queued + new_running + new_done + new_error == 0:
-            #self.delete()
-            return
-
-        new_status = self._status()
-
 
     def _status(self, num_queued, num_running, num_done, num_error):
         if num_queued + num_running + num_done + num_error == 0:
@@ -995,22 +846,6 @@ class Calculation(models.Model):
                     self.order.project.save()
                     mol.save()
 
-                    '''
-                    if not self.order.new_status:#Predict if this status change will change the status of the order
-                        old_status = self.order.status
-                        nums = self.order.get_all_calcs
-
-                        num_calc_queued += nums[0]
-                        num_calc_running += nums[1]
-                        num_calc_done += nums[2]
-                        num_calc_error += nums[3]
-
-                        new_status = self.order._status(num_calc_queued, num_calc_running, num_calc_done, num_calc_error)
-                        if new_status != old_status:
-                            self.order.author.unseen_calculations += 1
-                            self.order.author.save()
-                    '''
-
         old_status = self.order.status
         old_unseen = self.order.new_status
 
@@ -1052,26 +887,6 @@ class Calculation(models.Model):
         old_status = self.order.status
         old_unseen = self.order.new_status
 
-        '''
-        nums = self.order.get_all_calcs
-
-        num_calc_queued += nums[0]
-        num_calc_running += nums[1]
-        num_calc_done += nums[2]
-        num_calc_error += nums[3]
-
-        new_status = self.order._status(num_calc_queued, num_calc_running, num_calc_done, num_calc_error)
-
-        if self.order.calculation_set.count() == 1:
-            self.order.delete()
-        else:
-            if new_status != old_status:
-                if not self.order.new_status:
-                    self.order.author.unseen_calculations += 1
-                    self.order.author.save()
-
-            self.order.author.save()
-        '''
         mol.save()
 
         super(Calculation, self).delete(*args, **kwargs)
@@ -1095,22 +910,6 @@ class Calculation(models.Model):
 
         else:
             return '-'
-
-    @property
-    def has_freq(self):
-        return self.procedure.has_freq
-
-    @property
-    def has_uvvis(self):
-        return self.procedure.has_uvvis
-
-    @property
-    def has_nmr(self):
-        return self.procedure.has_nmr
-
-    @property
-    def has_mo(self):
-        return self.procedure.has_mo
 
     def __repr__(self):
         return str(self.id)
