@@ -383,61 +383,32 @@ class Ensemble(models.Model):
         return ret, hashes
 
     def weighted_free_energy(self, params):
-        data = []
+        energies = []
+        degeneracies = []
         en_0 = 0
         for s in self.structure_set.all():
             try:
                 p = s.properties.get(parameters=params)
             except Property.DoesNotExist:
                 continue#Handle this better?
-            if p.free_energy == 0.:
-                return '-'
-            if en_0 == 0:
-                en_0 = p.free_energy
-            data.append([decimal.Decimal(p.free_energy-en_0), s.degeneracy])
+            energies.append(p.free_energy)
+            degeneracies.append(s.degeneracy)
 
-        if len(data) == 1:
-            return float(en_0)
-
-        s = decimal.Decimal(0)
-
-        w_energy = decimal.Decimal(0)
-
-        for e, degen in data:
-            s += degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
-            w_energy += degen*(e+decimal.Decimal(en_0))*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
-        w_energy /= s
-
-        return float(w_energy)
+        return self.boltzmann_weighing_lite(energies, degeneracies)
 
     def weighted_energy(self, params):
-        data = []
+        energies = []
+        degeneracies = []
         en_0 = 0
         for s in self.structure_set.all():
             try:
                 p = s.properties.get(parameters=params)
             except Property.DoesNotExist:
                 continue#Handle this better?
-            en = decimal.Decimal(p.energy)
-            if en == 0:
-                return ''
-            if en_0 == 0:
-                en_0 = en
-            data.append([en-en_0, s.degeneracy])
+            energies.append(p.energy)
+            degeneracies.append(s.degeneracy)
 
-        if len(data) == 1:
-            return float(en_0)
-
-        s = decimal.Decimal(0)
-        w_energy = decimal.Decimal(0)
-
-        for e, degen in data:
-            s += degen*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
-            w_energy += degen*(e+en_0)*np.exp(-e*HARTREE_VAL*1000/(R_CONSTANT*TEMP))
-
-        w_energy /= s
-
-        return float(w_energy)
+        return self.boltzmann_weighing_lite(energies, degeneracies)
 
     def weighted_nmr_shifts(self, params):
         summary, hashes = self.ensemble_summary
