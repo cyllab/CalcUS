@@ -1763,6 +1763,26 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.driver.implicitly_wait(5)
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_freeze_distance2(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Freeze', 'Distance', [1, 4]], ['Freeze', 'Distance', [2, 3]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(150)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.driver.implicitly_wait(5)
+        self.assertEqual(self.get_number_conformers(), 1)
+
     def test_freeze_angle(self):
         params = {
                 'calc_name': 'test',
@@ -2495,6 +2515,28 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_freeze_distance_SE2(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Freeze', 'Distance', [1, 4]], ['Freeze', 'Distance', [2, 3]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'ORCA',
+                'in_file': 'CH4.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(150)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 1)
+
     def test_freeze_angle_SE(self):
         params = {
                 'calc_name': 'test',
@@ -3143,6 +3185,28 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'calc_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Dihedral', [1, 2, 3, 4]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'Gaussian',
+                'in_file': 'CH4.mol',
+                'theory': 'Semi-empirical',
+                'method': 'AM1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(150)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_freeze_dihedral_SE2(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Freeze', 'Dihedral', [1, 2, 3, 4]], ['Freeze', 'Dihedral', [2, 3, 4, 5]]],
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'software': 'Gaussian',

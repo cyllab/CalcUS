@@ -252,7 +252,7 @@
 
 	{% if calc.step.creates_ensemble %}
 	<div id="opt_div">
-		<div class="columns is-vcentered is-desktop">
+		<div class="columns is-vcentered is-desktop" id="graph_columns">
 			<div class="column">
 				<div style="width: 400px;">
 					<div id="opt_viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
@@ -270,13 +270,10 @@
 				</div>
 				<div id="relaxed_scan_graph" style="height: 200px; width: 100%;">
 				</div>
-
 			</div>
-		<div>
-
 		</div>
-
 	</div>
+
 	{% endif %}
 	<div id="load_remote_div" style="display: none;">
 		<center>
@@ -285,7 +282,9 @@
 		</center>
 	</div>
 	<div id="access_not_connected_div" style="display: none;">
-		<div class="box" style="width: 400px;">Access not connected</div>
+		<center>
+			<div class="box has-background-danger" style="width: 400px;"><strong>Access not connected</strong></div>
+		</center>
 	</div>
 	<div>
 		<label class="label">Input File</label>

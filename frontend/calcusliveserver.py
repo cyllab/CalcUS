@@ -261,8 +261,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             if len(constr) > 1:
                 ind = 2
                 for c in params['constraints'][1:]:
-                    #click add
-                    handle_constraint(c)
+                    self.driver.find_element_by_id("add_constraint_btn").click()
+                    handle_constraint(c, ind)
                     ind += 1
 
 
