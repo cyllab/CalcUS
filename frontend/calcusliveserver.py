@@ -279,15 +279,20 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             element = WebDriverWait(self.driver, 5).until(
                 EC.presence_of_element_located((By.ID, "calc_functional"))
             )
-
-            self.driver.find_element_by_id("calc_functional").send_keys(params['functional'])
+            func = self.driver.find_element_by_id("calc_functional")
+            func.clear()
+            func.send_keys(params['functional'])
 
         if 'basis_set' in params.keys():
-            self.driver.find_element_by_id("calc_basis_set").send_keys(params['basis_set'])
+            bs = self.driver.find_element_by_id("calc_basis_set")
+            bs.clear()
+            bs.send_keys(params['basis_set'])
 
         if 'specifications' in params.keys():
             self.driver.find_element_by_css_selector("summary").click()
-            self.driver.find_element_by_id("calc_specifications").send_keys(params['specifications'])
+            specs = self.driver.find_element_by_id("calc_specifications")
+            specs.clear()
+            specs.send_keys(params['specifications'])
             self.driver.find_element_by_css_selector("summary").click()
 
     def calc_launch(self):
@@ -794,7 +799,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 e_link.click()
                 return
         else:
-            raise EnsembleNotFound
+            raise Exception("Ensemble not found")
 
     def get_calc_orders(self):
         assert self.is_on_page_calculations()

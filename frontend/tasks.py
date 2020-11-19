@@ -2471,6 +2471,8 @@ def dispatcher(drawing, order_id):
         ensemble = Ensemble.objects.create(parent_molecule=molecule, origin=calc.result_ensemble, name="Extracted frame {}".format(fid))
         f = calc.calculationframe_set.get(number=fid)
         s = Structure.objects.create(parent_ensemble=ensemble, xyz_structure=f.xyz_structure, number=order.start_calc.structure.number, degeneracy=1)
+        prop = Property.objects.create(parent_structure=s, parameters=calc.parameters, geom=True)
+        prop.save()
         ensemble.save()
         s.save()
         input_structures = [s]
