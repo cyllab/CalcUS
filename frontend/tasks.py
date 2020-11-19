@@ -235,7 +235,17 @@ def wait_until_done(calc, conn, lock):
     pid = int(threading.get_ident())
 
     while True:
-        sleep(DELAY[ind])
+        for i in range(DELAY[ind]):
+            if pid in kill_sig:
+                direct_command("scancel {}".format(job_id), conn, lock)
+                kill_sig.remove(pid)
+                return ErrorCodes.JOB_CANCELLED
+
+            if pid not in connections.keys():
+                print("Thread aborted for calculation {}".format(calc.id))
+                return ErrorCodes.SERVER_DISCONNECTED
+            sleep(1)
+
         if ind < len(DELAY)-1:
             ind += 1
         output = direct_command("squeue -j {}".format(job_id), conn, lock)
@@ -257,14 +267,6 @@ def wait_until_done(calc, conn, lock):
                         calc.status = 1
                         calc.save()
 
-        if pid in kill_sig:
-            direct_command("scancel {}".format(job_id), conn, lock)
-            kill_sig.remove(pid)
-            return ErrorCodes.JOB_CANCELLED
-
-        if pid not in connections.keys():
-            print("Thread aborted for calculation {}".format(calc.id))
-            return ErrorCodes.SERVER_DISCONNECTED
 
 def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
     if REMOTE and not force_local:
