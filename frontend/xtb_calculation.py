@@ -63,7 +63,6 @@ class XtbCalculation:
                 _cmd = _cmd.split('_')
                 if _cmd[0] == "Scan":
                     self.option_file += "{}: {}, {}, {}\n".format(counter+1, *_cmd[1:])
-        self.option_file += "$end"
 
     def handle_constraints_crest(self):
         num_atoms = len(self.calc.structure.xyz_structure.split('\n'))-2
@@ -85,7 +84,7 @@ class XtbCalculation:
                 self.option_file += "dihedral: {}, {}, {}, {}, auto\n".format(*ids)
             constr_atoms += ids
         self.option_file += "atoms: {}\n".format(','.join([str(i) for i in constr_atoms]))
-        mtd_atoms = list(range(1, num_atoms+1))
+        mtd_atoms = list(range(1, num_atoms))
         for a in constr_atoms:
             if int(a) in mtd_atoms:
                 mtd_atoms.remove(int(a))
@@ -115,7 +114,6 @@ class XtbCalculation:
 
         self.option_file += "$metadyn\n"
         self.option_file += "atoms: {}\n".format(mtd_atoms_str[1:])#remove the first comma
-        self.option_file += "$end\n"
 
     def handle_specifications(self):
         SPECIFICATIONS = {
