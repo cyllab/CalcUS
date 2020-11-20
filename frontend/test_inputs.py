@@ -3004,7 +3004,7 @@ class XtbTests(TestCase):
         distance: 1, 2, auto
         $scan
         1: 9, 1.4, 10
-        $end"""
+        """
         self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
 
     def test_freeze(self):
@@ -3025,7 +3025,7 @@ class XtbTests(TestCase):
         INPUT = """$constrain
         force constant=1.0
         distance: 1, 2, auto
-        $end"""
+        """
         self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
 
     def test_freeze_soft(self):
@@ -3047,7 +3047,7 @@ class XtbTests(TestCase):
         INPUT = """$constrain
         force constant=0.1
         distance: 1, 2, auto
-        $end"""
+        """
         self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
 
     def test_conformational_search(self):
@@ -3103,8 +3103,7 @@ class XtbTests(TestCase):
         distance: 1, 2, auto
         atoms: 1,2
         $metadyn
-        atoms: 3-10
-        $end
+        atoms: 3-9
         """
         self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
 
@@ -3129,8 +3128,7 @@ class XtbTests(TestCase):
         distance: 6, 8, auto
         atoms: 1,4,6,8
         $metadyn
-        atoms: 2-3,5,7,9-10
-        $end
+        atoms: 2-3,5,7,9
         """
         self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
 
@@ -3154,8 +3152,7 @@ class XtbTests(TestCase):
         distance: 2, 3, auto
         atoms: 2,3
         $metadyn
-        atoms: 1,4-10
-        $end
+        atoms: 1,4-9
         """
         self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
 
@@ -3180,8 +3177,7 @@ class XtbTests(TestCase):
         distance: 2, 3, auto
         atoms: 2,3
         $metadyn
-        atoms: 1,4-10
-        $end
+        atoms: 1,4-9
         """
         self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
 

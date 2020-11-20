@@ -84,6 +84,7 @@ class XtbCalculation:
                 self.option_file += "dihedral: {}, {}, {}, {}, auto\n".format(*ids)
             constr_atoms += ids
         self.option_file += "atoms: {}\n".format(','.join([str(i) for i in constr_atoms]))
+
         mtd_atoms = list(range(1, num_atoms))
         for a in constr_atoms:
             if int(a) in mtd_atoms:

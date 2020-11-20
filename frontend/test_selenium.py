@@ -3615,8 +3615,6 @@ class MiscCalculationTests(CalcusLiveServer):
 
         self.assertTrue(self.latest_calc_successful())
 
-
-
     def test_multiple_files(self):
         params = {
                 'calc_name': 'test',
