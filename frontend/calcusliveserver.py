@@ -128,11 +128,22 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def calc_input_params(self, params):
         self.driver.implicitly_wait(10)
-        if 'calc_name' in params.keys():
-            element = WebDriverWait(self.driver, 2).until(
+
+        if 'mol_name' in params.keys():
+            element = WebDriverWait(self.driver, 1).until(
+                EC.presence_of_element_located((By.NAME, "calc_mol_name"))
+            )
+            name_input = self.driver.find_element_by_name('calc_mol_name')
+            name_input.clear()
+            name_input.send_keys(params['mol_name'])
+
+        if 'name' in params.keys():
+            element = WebDriverWait(self.driver, 1).until(
                 EC.presence_of_element_located((By.NAME, "calc_name"))
             )
             name_input = self.driver.find_element_by_name('calc_name')
+            name_input.clear()
+            name_input.send_keys(params['name'])
 
         element = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located((By.NAME, "calc_solvent"))
@@ -152,10 +163,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             upload_input = self.driver.find_element_by_name('file_structure')
         except selenium.common.exceptions.NoSuchElementException:
             pass
-
-        if 'calc_name' in params.keys():
-            name_input.clear()
-            name_input.send_keys(params['calc_name'])
 
         if 'solvent' in params.keys():
             solvent_input.send_keys(params['solvent'])

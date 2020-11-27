@@ -783,22 +783,8 @@ def error(request, msg):
         'error_message': msg,
         })
 
-def parse_parameters(request, name_required=True):
+def parse_parameters(request):
     profile = request.user.profile
-
-    if name_required:
-        if 'calc_name' in request.POST.keys():
-            name = clean(request.POST['calc_name'])
-            if name.strip() == '':
-                if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys():
-                    return "No calculation name"
-        else:
-            if 'starting_struct' not in request.POST.keys() and 'starting_ensemble' not in request.POST.keys() and len(request.FILES) == 0:
-                return "No calculation name"
-            else:
-                name = "Followup"
-    else:
-        name = ""
 
     if 'calc_type' in request.POST.keys():
         try:
@@ -957,9 +943,6 @@ def parse_parameters(request, name_required=True):
             functional = ""
             basis_set = ""
 
-    if len(name) > 100:
-        return "The chosen name is too long"
-
     if len(project) > 100:
         return "The chosen project name is too long"
 
@@ -1000,15 +983,15 @@ def parse_parameters(request, name_required=True):
     params = Parameters.objects.create(charge=charge, multiplicity=mult, solvent=solvent, method=functional, basis_set=basis_set, software=software, theory_level=theory, solvation_model=solvation_model, solvation_radii=solvation_radii, density_fitting=df, custom_basis_sets=bs, specifications=specifications)
     params.save()
 
-    return params, project_obj, name, step
+    return params, project_obj, step
 
 @login_required
 def save_preset(request):
-    ret = parse_parameters(request, name_required=False)
+    ret = parse_parameters(request)
 
     if isinstance(ret, str):
         return HttpResponse(ret)
-    params, project_obj, name, step = ret
+    params, project_obj, step = ret
 
     if 'preset_name' in request.POST.keys():
         preset_name = clean(request.POST['preset_name'])
@@ -1021,12 +1004,12 @@ def save_preset(request):
 
 @login_required
 def set_project_default(request):
-    ret = parse_parameters(request, name_required=False)
+    ret = parse_parameters(request)
 
     if isinstance(ret, str):
         return HttpResponse(ret)
 
-    params, project_obj, name, step = ret
+    params, project_obj, step = ret
 
     preset = Preset.objects.create(name="{} Default".format(project_obj.name), author=request.user.profile, params=params)
     preset.save()
@@ -1067,14 +1050,14 @@ def handle_file_upload(ff, params):
 
 @login_required
 def submit_calculation(request):
-    ret = parse_parameters(request, name_required=True)
+    ret = parse_parameters(request)
 
     if isinstance(ret, str):
         return error(request, ret)
 
     profile = request.user.profile
 
-    params, project_obj, name, step = ret
+    params, project_obj, step = ret
 
     if 'calc_ressource' in request.POST.keys():
         ressource = clean(request.POST['calc_ressource'])
@@ -1098,9 +1081,29 @@ def submit_calculation(request):
     orders = []
     drawing = True
 
+    def get_default_name():
+        return step.name + " Result"
+
+    if 'calc_name' in request.POST.keys():
+        name = clean(request.POST['calc_name'])
+
+        if name.strip() == '' and step.creates_ensemble:
+            name = get_default_name()
+    else:
+        name = get_default_name()
+
+    if 'calc_mol_name' in request.POST.keys():
+        mol_name = clean(request.POST['calc_mol_name'])
+    else:
+        mol_name = ''
+
+    if len(name) > 100:
+        return error(request, "The chosen ensemble name is too long")
+
+    if len(mol_name) > 100:
+        return error(request, "The chosen molecule name is too long")
+
     if 'starting_ensemble' in request.POST.keys():
-        obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
-        drawing = False
         start_id = int(clean(request.POST['starting_ensemble']))
         try:
             start_e = Ensemble.objects.get(pk=start_id)
@@ -1110,8 +1113,13 @@ def submit_calculation(request):
         start_author = start_e.parent_molecule.project.author
         if not can_view_ensemble(start_e, profile):
             return error(request, "You do not have permission to access the starting calculation")
-        obj.ensemble = start_e
 
+        if step.creates_ensemble:
+            order_name = name
+        else:
+            order_name = start_e.name
+
+        filter = None
         if 'calc_filter' in request.POST.keys():
             filter_type = clean(request.POST['calc_filter'])
             if filter_type == "None":
@@ -1140,43 +1148,63 @@ def submit_calculation(request):
                         return error(request, "Invalid filter parameters")
 
                     filter = Filter.objects.create(type=filter_type, parameters=filter_parameters, value=filter_value)
-                    obj.filter = filter
                 else:
                     return error(request, "No filter parameters")
 
             else:
                 return error(request, "Invalid filter type")
-        orders.append(obj)
 
+        obj = CalculationOrder.objects.create(name=order_name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj, ensemble=start_e)
+
+        if filter is not None:
+            obj.filter = filter
+
+        orders.append(obj)
     elif 'starting_struct' in request.POST.keys():
-        obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
-        drawing = False
         start_id = int(clean(request.POST['starting_struct']))
         try:
             start_s = Structure.objects.get(pk=start_id)
         except Structure.DoesNotExist:
             return error(request, "No starting ensemble found")
+
         if not can_view_structure(start_s, profile):
             return error(request, "You do not have permission to access the starting calculation")
-        obj.structure = start_s
+
+        if step.creates_ensemble:
+            order_name = name
+        else:
+            order_name = start_s.parent_ensemble.name
+
+        obj = CalculationOrder.objects.create(name=order_name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj, structure=start_s)
+
         orders.append(obj)
     elif 'starting_calc' in request.POST.keys():
-        print("Starting calc")
-        obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
+
         if not 'starting_frame' in request.POST.keys():
             return error(request, "Missing starting frame number")
+        ###
         c_id = int(clean(request.POST['starting_calc']))
         f_id = int(clean(request.POST['starting_frame']))
+        ###
+
         try:
             start_c = Calculation.objects.get(pk=c_id)
         except Calculation.DoesNotExist:
             return error(request, "No starting ensemble found")
         if not can_view_calculation(start_c, profile):
             return error(request, "You do not have permission to access the starting calculation")
-        obj.start_calc = start_c
-        obj.start_calc_frame = f_id
+
+        if step.creates_ensemble:
+            order_name = name
+        else:
+            order_name = start_c.result_ensemble.name + " - Frame {}".format(f_id)
+
+        obj = CalculationOrder.objects.create(name=order_name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj, start_calc=start_c, start_calc_frame=f_id)
         orders.append(obj)
     else:
+        if mol_name == '':
+            return error(request, "Missing molecule name")
+
         fingerprints = {}
         unique_fingerprints = []
         in_structs = []
@@ -1200,9 +1228,8 @@ def submit_calculation(request):
                     unique_fingerprints.append(fing)
 
             for fing in unique_fingerprints:
-                tmpname = names[fingerprints[fing][0]]
-                obj = CalculationOrder.objects.create(name=filename, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
-                mol = Molecule.objects.create(name=tmpname, inchi=fing, project=project_obj)
+                obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
+                mol = Molecule.objects.create(name=mol_name, inchi=fing, project=project_obj)
                 mol.save()
                 e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
                 for s_num, s_id in enumerate(fingerprints[fing]):
@@ -1215,7 +1242,7 @@ def submit_calculation(request):
                 obj.save()
                 orders.append(obj)
         else:
-            if 'structureB' in request.POST.keys():
+            if 'structure' in request.POST.keys():
                 obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
                 drawing = True
                 e = Ensemble.objects.create(name="Drawn Structure")
@@ -1227,7 +1254,7 @@ def submit_calculation(request):
                 p.save()
                 params.save()
 
-                mol = clean(request.POST['structureB'])
+                mol = clean(request.POST['structure'])
                 s.mol_structure = mol
                 orders.append(obj)
             else:

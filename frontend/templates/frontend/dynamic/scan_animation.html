@@ -1,7 +1,0 @@
-	editor.frames = []
-	{% for xyz in xyz_files %}
-		editor.addFrame([ChemDoodle.readXYZ('{{ xyz }}')], []);
-	{% endfor %}
-	editor.loadMolecule(editor.frames[0].mols[0]);
-	editor.startAnimation();
-

@@ -772,7 +772,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertTrue(self.is_ensemble_flagged())
 
     def test_save_preset(self):
-        params1 = {
+        params = {
                 'software': 'Gaussian',
                 'type': 'Frequency Calculation',
                 'charge': '+1',
@@ -784,7 +784,7 @@ class InterfaceTests(CalcusLiveServer):
                 'solvation_model': 'CPCM',
                 }
         self.lget("/launch/")
-        self.calc_input_params(params1)
+        self.calc_input_params(params)
         self.save_preset("Test Preset")
 
         presets = self.get_names_presets()
@@ -792,7 +792,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(presets[0], "Test Preset")
 
     def test_delete_preset(self):
-        params1 = {
+        params = {
                 'software': 'Gaussian',
                 'type': 'Frequency Calculation',
                 'charge': '+1',
@@ -804,7 +804,7 @@ class InterfaceTests(CalcusLiveServer):
                 'solvation_model': 'CPCM',
                 }
         self.lget("/launch/")
-        self.calc_input_params(params1)
+        self.calc_input_params(params)
         self.save_preset("Test Preset")
         time.sleep(1)
         self.delete_preset("Test Preset")
@@ -813,7 +813,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(len(presets), 0)
 
     def test_load_preset(self):
-        params1 = {
+        params = {
                 'software': 'Gaussian',
                 'type': 'Frequency Calculation',
                 'charge': '+1',
@@ -826,7 +826,7 @@ class InterfaceTests(CalcusLiveServer):
                 'specifications': 'tightscf',
                 }
         self.lget("/launch/")
-        self.calc_input_params(params1)
+        self.calc_input_params(params)
         self.save_preset("Test Preset")
 
         self.lget("/launch/")
@@ -841,19 +841,19 @@ class InterfaceTests(CalcusLiveServer):
         specifications = self.driver.find_element_by_id("calc_specifications")
         software = self.driver.find_element_by_id("calc_software")
 
-        self.assertEqual(solvent.get_attribute('value'), params1['solvent'])
-        self.assertEqual(charge.first_selected_option.text, params1['charge'])
-        self.assertEqual(theory.first_selected_option.text, params1['theory'])
-        self.assertEqual(func.get_attribute('value'), params1['functional'])
-        self.assertEqual(basis_set.get_attribute('value'), params1['basis_set'])
-        self.assertEqual(software.get_attribute('value'), params1['software'])
+        self.assertEqual(solvent.get_attribute('value'), params['solvent'])
+        self.assertEqual(charge.first_selected_option.text, params['charge'])
+        self.assertEqual(theory.first_selected_option.text, params['theory'])
+        self.assertEqual(func.get_attribute('value'), params['functional'])
+        self.assertEqual(basis_set.get_attribute('value'), params['basis_set'])
+        self.assertEqual(software.get_attribute('value'), params['software'])
         self.assertEqual(specifications.get_attribute('value'), "tightscf")
 
     def test_project_preset(self):
         proj = Project.objects.create(name="My Project", author=self.profile)
         proj.save()
 
-        params1 = {
+        params = {
                 'software': 'Gaussian',
                 'type': 'Frequency Calculation',
                 'charge': '+1',
@@ -868,7 +868,7 @@ class InterfaceTests(CalcusLiveServer):
                 }
 
         self.lget("/launch/")
-        self.calc_input_params(params1)
+        self.calc_input_params(params)
         self.set_project_preset()
 
         self.lget("/projects")
@@ -885,21 +885,21 @@ class InterfaceTests(CalcusLiveServer):
         software = self.driver.find_element_by_id("calc_software")
         specifications = self.driver.find_element_by_id("calc_specifications")
 
-        self.assertEqual(solvent.get_attribute('value'), params1['solvent'])
-        self.assertEqual(solvation_model.first_selected_option.text, params1['solvation_model'])
-        self.assertEqual(solvation_radii.first_selected_option.text, params1['solvation_radii'])
-        self.assertEqual(charge.first_selected_option.text, params1['charge'])
-        self.assertEqual(theory.first_selected_option.text, params1['theory'])
-        self.assertEqual(func.get_attribute('value'), params1['functional'])
-        self.assertEqual(basis_set.get_attribute('value'), params1['basis_set'])
-        self.assertEqual(software.get_attribute('value'), params1['software'])
+        self.assertEqual(solvent.get_attribute('value'), params['solvent'])
+        self.assertEqual(solvation_model.first_selected_option.text, params['solvation_model'])
+        self.assertEqual(solvation_radii.first_selected_option.text, params['solvation_radii'])
+        self.assertEqual(charge.first_selected_option.text, params['charge'])
+        self.assertEqual(theory.first_selected_option.text, params['theory'])
+        self.assertEqual(func.get_attribute('value'), params['functional'])
+        self.assertEqual(basis_set.get_attribute('value'), params['basis_set'])
+        self.assertEqual(software.get_attribute('value'), params['software'])
         self.assertEqual(specifications.get_attribute('value'), "nosymm")
 
     def test_project_preset_independance(self):
         proj = Project.objects.create(name="My Project", author=self.profile)
         proj.save()
 
-        params1 = {
+        params = {
                 'type': 'Frequency Calculation',
                 'charge': '+1',
                 'solvent': 'Chloroform',
@@ -912,7 +912,7 @@ class InterfaceTests(CalcusLiveServer):
                 }
 
         self.lget("/launch/")
-        self.calc_input_params(params1)
+        self.calc_input_params(params)
         self.set_project_preset()
         self.delete_preset("My Project Default")
         self.lget("/projects/")
@@ -934,7 +934,7 @@ class InterfaceTests(CalcusLiveServer):
 
         self.lget("/launch/")
         params = {
-                'calc_name': 'Ammonia',
+                'mol_name': 'Ammonia',
                 'type': 'Geometrical Optimisation',
                 'project': 'My Project',
                 'in_file': 'NH3.mol',
@@ -953,14 +953,14 @@ class InterfaceTests(CalcusLiveServer):
 
         self.click_project("My Project")
 
-        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("NH3")
+        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("Ammonia")
         self.assertEqual(n_e, 2)
         self.assertEqual(n_calc, 1)
         self.assertEqual(n_queued, 0)
         self.assertEqual(n_running, 0)
         self.assertEqual(n_completed, 1)
 
-        self.click_molecule("NH3")
+        self.click_molecule("Ammonia")
         self.delete_ensemble("NH3")
         self.lget("/projects/")
 
@@ -981,7 +981,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(n_completed, 0)
 
         self.click_project("My Project")
-        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("NH3")
+        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("Ammonia")
         self.assertEqual(n_e, 1)
         self.assertEqual(n_calc, 0)
         self.assertEqual(n_queued, 0)
@@ -995,7 +995,7 @@ class InterfaceTests(CalcusLiveServer):
 
         self.lget("/launch/")
         params = {
-                'calc_name': 'Ph2I_cation',
+                'mol_name': 'Ph2I_cation',
                 'type': 'Geometrical Optimisation',
                 'project': 'My Project',
                 'in_file': 'Ph2I_cation.mol',
@@ -1038,7 +1038,7 @@ class InterfaceTests(CalcusLiveServer):
     def test_unseen_calc_badge(self):
         self.setup_test_group()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1062,7 +1062,7 @@ class InterfaceTests(CalcusLiveServer):
     def test_unseen_calc_badge_click(self):
         self.setup_test_group()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1094,7 +1094,7 @@ class InterfaceTests(CalcusLiveServer):
     def test_delete_unseen_calc(self):
         self.setup_test_group()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1129,7 +1129,7 @@ class InterfaceTests(CalcusLiveServer):
     def test_delete_unseen_calc2(self):
         self.setup_test_group()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1146,7 +1146,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.lget("/projects/")
         self.click_project("SeleniumProject")
-        self.delete_molecule("CH4")
+        self.delete_molecule("test")
 
         self.driver.refresh()
         ind = 0
@@ -1166,7 +1166,7 @@ class InterfaceTests(CalcusLiveServer):
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1207,7 +1207,7 @@ class UserPermissionsTests(CalcusLiveServer):
         self.lget('/launch/')
 
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1235,7 +1235,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
     def test_opt(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1251,7 +1251,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
     def test_sp(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1270,7 +1270,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         proj.save()
 
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'TestProj',
                 'in_file': 'CH4.mol',
@@ -1285,7 +1285,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
     def test_freq(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1303,7 +1303,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
     def test_freq_solv(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1322,7 +1322,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
     def test_conf_search(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1338,7 +1338,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
     def test_conf_search_gfnff(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1355,7 +1355,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
     def test_conf_search_invalid_specification(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1373,7 +1373,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
     def test_conf_search_gfnff_sp(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1390,7 +1390,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
     def test_ts(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1406,7 +1406,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
     def test_ensemble_second_step(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1434,7 +1434,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
     def test_structure_second_step(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1460,9 +1460,10 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
 
+    '''
     def test_NEB_from_file(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Minimum Energy Path',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1476,14 +1477,14 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(600)
+        self.wait_latest_calc_done(1200)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 10)
 
     def test_NEB_from_structure(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Distance', [1, 4], [1.1, 3.5, 10]]],
                 'project': 'New Project',
@@ -1497,13 +1498,13 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(60)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.launch_structure_next_step()
 
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Minimum Energy Path',
                 'project': 'SeleniumProject',
                 'software': 'xtb',
@@ -1517,7 +1518,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
     def test_NEB_hybrid(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Distance', [1, 4], [1.1, 3.5, 10]]],
                 'project': 'New Project',
@@ -1536,7 +1537,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
         self.lget("/launch/")
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Minimum Energy Path',
                 'project': 'SeleniumProject',
                 'software': 'xtb',
@@ -1548,10 +1549,10 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.calc_launch()
         self.wait_latest_calc_done(1200)
         self.assertTrue(self.latest_calc_successful())
-
+    '''
     def test_constrained_conf_search(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1598,7 +1599,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_opt(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1620,7 +1621,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         proj.save()
 
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'TestProj',
                 'in_file': 'CH4.mol',
@@ -1635,7 +1636,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_freq(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1652,7 +1653,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_conf_search(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1670,7 +1671,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_ts(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1688,7 +1689,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_scan_distance(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Distance', [1, 2], [1.5, 2.0, 10]]],
                 'project': 'New Project',
@@ -1707,7 +1708,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_scan_angle(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 130, 10]]],
                 'project': 'New Project',
@@ -1726,7 +1727,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_scan_dihedral(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Dihedral', [1, 2, 3, 4], [0, 10, 10]]],
                 'project': 'New Project',
@@ -1745,7 +1746,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_freeze_distance(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Distance', [1, 4]]],
                 'project': 'New Project',
@@ -1765,7 +1766,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_freeze_distance2(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Distance', [1, 4]], ['Freeze', 'Distance', [2, 3]]],
                 'project': 'New Project',
@@ -1785,7 +1786,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_freeze_angle(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Angle', [1, 2, 3]]],
                 'project': 'New Project',
@@ -1804,7 +1805,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_freeze_dihedral(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Dihedral', [1, 2, 3, 4]]],
                 'project': 'New Project',
@@ -1823,7 +1824,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_uvvis(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'UV-Vis Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1842,7 +1843,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_ensemble_second_step(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1874,7 +1875,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_structure_second_step(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1907,7 +1908,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
     def test_parse_cancelled_calc(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Angle', [5, 2, 13], [90, 180, 200]]],
                 'project': 'New Project',
@@ -1946,7 +1947,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_sp_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1967,7 +1968,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_sp_HF(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -1988,7 +1989,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_sp_HF_CPCM(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2011,7 +2012,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_sp_DFT(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2033,7 +2034,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_sp_DFT2(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2055,7 +2056,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_sp_RIMP2(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2077,7 +2078,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_opt_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2098,7 +2099,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_opt_HF(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2119,7 +2120,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_opt_DFT(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2141,7 +2142,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_opt_DFT_single_atom(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2164,7 +2165,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_opt_RIMP2(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2186,7 +2187,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_freq_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2211,7 +2212,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_freq_HF(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2237,7 +2238,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
     '''
     def test_freq_DFT(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2266,7 +2267,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_freq_RIMP2(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2294,7 +2295,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_ts_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2315,7 +2316,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_ts_HF(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2336,7 +2337,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_ts_DFT(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2358,7 +2359,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_ts_RIMP2(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2380,7 +2381,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_mo_HF(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'MO Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2404,7 +2405,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_mo_DFT(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'MO Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2429,7 +2430,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_scan_distance_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Distance', [1, 2], [3.5, 1.5, 5]]],
                 'project': 'New Project',
@@ -2451,7 +2452,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_scan_angle_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 130, 10]]],
                 'project': 'New Project',
@@ -2473,7 +2474,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_scan_dihedral_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Dihedral', [1, 2, 3, 4], [0, 10, 10]]],
                 'project': 'New Project',
@@ -2495,7 +2496,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_freeze_distance_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Distance', [1, 4]]],
                 'project': 'New Project',
@@ -2517,7 +2518,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_freeze_distance_SE2(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Distance', [1, 4]], ['Freeze', 'Distance', [2, 3]]],
                 'project': 'New Project',
@@ -2539,7 +2540,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_freeze_angle_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Angle', [1, 2, 3]]],
                 'project': 'New Project',
@@ -2561,7 +2562,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_freeze_dihedral_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Dihedral', [1, 2, 3, 4]]],
                 'project': 'New Project',
@@ -2583,7 +2584,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_nmr_DFT(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'NMR Prediction',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2606,7 +2607,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_opt_DFT_loose(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2629,7 +2630,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
 
     def test_opt_DFT_grid6(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2664,7 +2665,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_sp_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2685,7 +2686,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_sp_HF(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2706,7 +2707,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_sp_DFT(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2728,7 +2729,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_sp_DFT_SMD18(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2753,7 +2754,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_sp_DFT_PCM(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2777,7 +2778,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_sp_DFT_CPCM(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2801,7 +2802,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_sp_DFT2(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2824,7 +2825,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_opt_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2845,7 +2846,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_opt_HF(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2866,7 +2867,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_opt_DFT(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2888,7 +2889,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_opt_DFT_single_atom(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2912,7 +2913,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_freq_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2936,7 +2937,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_freq_HF(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2960,7 +2961,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_freq_DFT(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -2983,7 +2984,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_freq_DFT_single_atom(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3007,7 +3008,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_ts_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3028,7 +3029,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_ts_HF(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3049,7 +3050,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_ts_DFT(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3072,7 +3073,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_scan_distance_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Distance', [1, 2], [3.5, 5.0, 10]]],
                 'project': 'New Project',
@@ -3094,7 +3095,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_scan_angle_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 130, 10]]],
                 'project': 'New Project',
@@ -3116,7 +3117,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_scan_dihedral_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Dihedral', [1, 2, 3, 4], [0, 10, 10]]],
                 'project': 'New Project',
@@ -3138,7 +3139,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_freeze_distance_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Distance', [1, 2]]],
                 'project': 'New Project',
@@ -3160,7 +3161,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_freeze_angle_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Angle', [1, 2, 3]]],
                 'project': 'New Project',
@@ -3182,7 +3183,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_freeze_dihedral_SE(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Dihedral', [1, 2, 3, 4]]],
                 'project': 'New Project',
@@ -3204,7 +3205,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_freeze_dihedral_SE2(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Dihedral', [1, 2, 3, 4]], ['Freeze', 'Dihedral', [2, 3, 4, 5]]],
                 'project': 'New Project',
@@ -3226,7 +3227,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_nmr_DFT(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'NMR Prediction',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3248,7 +3249,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_DFT_pop(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3271,7 +3272,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_DFT_pop_opt(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3295,7 +3296,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_DFT_not_pop(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3318,7 +3319,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_DFT_multiple_pop(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3344,7 +3345,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_DFT_pop_ESP(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3368,7 +3369,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_DFT_pop_HLY(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3392,7 +3393,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_DFT_max_step(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3413,7 +3414,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_scan_distance_pop(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Distance', [1, 2], [3.5, 5.0, 10]]],
                 'project': 'New Project',
@@ -3437,7 +3438,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
     def test_parse_cancelled_calc(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 160, 1000]]],
                 'project': 'New Project',
@@ -3478,7 +3479,7 @@ class MiscCalculationTests(CalcusLiveServer):
 
     def test_cancel_calc(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3508,7 +3509,7 @@ class MiscCalculationTests(CalcusLiveServer):
 
     def test_input_file_present(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3532,7 +3533,7 @@ class MiscCalculationTests(CalcusLiveServer):
 
     def test_sp_from_frame(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3553,7 +3554,7 @@ class MiscCalculationTests(CalcusLiveServer):
 
         self.launch_frame_next_step()
         params = {
-                'calc_name': 'test',
+                'name': 'test',
                 'type': 'Single-Point Energy',
                 'software': 'Gaussian',
                 'theory': 'DFT',
@@ -3569,7 +3570,7 @@ class MiscCalculationTests(CalcusLiveServer):
 
     def test_calc_from_extracted_frame(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'CH4',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3590,7 +3591,7 @@ class MiscCalculationTests(CalcusLiveServer):
 
         self.launch_frame_next_step()
         params = {
-                'calc_name': 'test',
+                'name': 'test',
                 'type': 'Single-Point Energy',
                 'software': 'Gaussian',
                 'theory': 'DFT',
@@ -3617,7 +3618,7 @@ class MiscCalculationTests(CalcusLiveServer):
 
     def test_multiple_files(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3641,7 +3642,7 @@ class MiscCalculationTests(CalcusLiveServer):
         proj = Project.objects.create(name="MyProj", author=self.profile)
         proj.save()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'MyProj',
                 'in_files': ['CH4.mol', 'H2.mol2', 'H2.sdf', 'ethanol.xyz'],
@@ -3663,7 +3664,7 @@ class MiscCalculationTests(CalcusLiveServer):
     def test_many_same_files(self):
         files = ["batch/benzene{:02d}.xyz".format(i) for i in range(1, 11)]
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3767,7 +3768,7 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.assertEqual(self.get_number_unseen_calcs(), 0)
 
         params = {
-                'calc_name': 'H2',
+                'mol_name': 'H2',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3797,7 +3798,7 @@ class ComplexCalculationTests(CalcusLiveServer):
 
         self.lget("/launch/")
         params = {
-                'calc_name': 'Ethanol',
+                'mol_name': 'Ethanol',
                 'type': 'Geometrical Optimisation',
                 'project': 'SeleniumProject',
                 'in_file': 'ethanol.xyz',
@@ -3825,7 +3826,7 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.assertEqual(n_queued, 0)
         self.assertEqual(n_running, 0)
         self.assertEqual(n_completed, 2)
-        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("ethanol")
+        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("Ethanol")
         self.assertEqual(n_e, 2)
         self.assertEqual(n_calc, 1)
         self.assertEqual(n_queued, 0)
@@ -3833,7 +3834,7 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.assertEqual(n_completed, 1)
 
 
-        self.delete_molecule("ethanol")
+        self.delete_molecule("Ethanol")
         self.lget("/calculations/")
         ind = 0
         while ind < 5:
@@ -3869,7 +3870,7 @@ class ComplexCalculationTests(CalcusLiveServer):
 
         self.lget("/launch/")
         params = {
-                'calc_name': 'Methane',
+                'mol_name': 'Methane',
                 'type': 'Geometrical Optimisation',
                 'project': 'SeleniumProject',
                 'in_file': 'CH4.xyz',
@@ -3883,7 +3884,7 @@ class ComplexCalculationTests(CalcusLiveServer):
 
         self.lget("/launch/")
         params = {
-                'calc_name': 'Ammonia',
+                'mol_name': 'Ammonia',
                 'type': 'Geometrical Optimisation',
                 'project': 'SeleniumProject',
                 'in_file': 'NH3.mol',
@@ -3904,7 +3905,7 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.assertEqual(n_completed, 4)
 
         self.click_project("SeleniumProject")
-        self.click_molecule("NH3")
+        self.click_molecule("Ammonia")
         self.delete_ensemble("NH3")
         self.driver.refresh()
         self.assertEqual(self.get_number_ensembles(), 1)
@@ -3924,7 +3925,7 @@ class ComplexCalculationTests(CalcusLiveServer):
 
     def test_advanced_nmr_analysis(self):
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'NMR Prediction',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',

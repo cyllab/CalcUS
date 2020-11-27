@@ -238,7 +238,6 @@ def wait_until_done(calc, conn, lock):
         for i in range(DELAY[ind]):
             if pid in kill_sig:
                 direct_command("scancel {}".format(job_id), conn, lock)
-                kill_sig.remove(pid)
                 return ErrorCodes.JOB_CANCELLED
 
             if pid not in connections.keys():
@@ -372,6 +371,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                 #t.kill()
                 t.terminate()
                 t.wait()
+
                 return ErrorCodes.JOB_CANCELLED
 
             sleep(1)
@@ -2092,7 +2092,10 @@ def gen_fingerprint(structure):
     with open(mol_file, 'w') as out:
         for line in mol:
             out.write(line)
-    a = os.system("inchi-1 {}".format(mol_file))
+
+    with open("/dev/null", 'w') as stream:
+        t = subprocess.run(shlex.split("inchi-1 {}".format(mol_file)), stdout=stream, stderr=stream)
+
     try:
         with open(mol_file + '.txt') as f:
             lines = f.readlines()
@@ -2540,6 +2543,7 @@ def dispatcher(drawing, order_id):
 
 @app.task(base=AbortableTask)
 def run_calc(calc_id):
+    print("RUN_CALC", kill_sig)
     print("Processing calc {}".format(calc_id))
 
     sleep(1)#wait for task_id to be saved to the database
@@ -2596,15 +2600,17 @@ def run_calc(calc_id):
         ret = ErrorCodes.UNKNOWN_TERMINATION
         traceback.print_exc()
 
-    if calc.step.creates_ensemble:
-        analyse_opt(calc.id)
-
     if ret == ErrorCodes.SERVER_DISCONNECTED:
         return ret
+
+    if calc.step.creates_ensemble:
+        analyse_opt(calc.id)
 
     calc = Calculation.objects.get(pk=calc_id)
     calc.date_finished = timezone.now()
     if ret == ErrorCodes.JOB_CANCELLED:
+        pid = int(threading.get_ident())
+        kill_sig.remove(pid)
         calc.status = 3
         calc.error_message = "Job cancelled"
         calc.save()
@@ -2728,10 +2734,6 @@ def kill_calc(calc):
     else:
         cmd = "kill\n{}\n".format(calc.id)
         send_cluster_command(cmd)
-        calc.status = 3
-        calc.error_message = "Job cancelled"
-        calc.save()
-
 
 @app.task(name='celery.ping')
 def ping():

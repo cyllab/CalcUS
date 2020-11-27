@@ -38,6 +38,7 @@ class LaunchTests(TestCase):
 
         self.basic_params = {
                 'file_structure': [''],
+                'calc_mol_name': ['Test'],
                 'calc_name': ['Test'],
                 'calc_solvent': ['Vacuum'],
                 'calc_charge': ['0'],
@@ -57,7 +58,7 @@ class LaunchTests(TestCase):
                 'calc_scan_1_3': [''],
                 'calc_ressource': ['Local'],
                 'constraint_num': ['1'],
-                'structureB': ['Molecule from ChemDoodle Web Components\r\n\r\nhttp://www.ichemlabs.com\r\n  6  6  0  0  0  0            999 V2000\r\n    0.0000    1.0000    0.0000 C   0  0  0  0  0  0\r\n    0.8660    0.5000    0.0000 C   0  0  0  0  0  0\r\n    0.8660   -0.5000    0.0000 C   0  0  0  0  0  0\r\n    0.0000   -1.0000    0.0000 C   0  0  0  0  0  0\r\n   -0.8660   -0.5000    0.0000 C   0  0  0  0  0  0\r\n   -0.8660    0.5000    0.0000 C   0  0  0  0  0  0\r\n  1  2  1  0  0  0  0\r\n  2  3  2  0  0  0  0\r\n  3  4  1  0  0  0  0\r\n  4  5  2  0  0  0  0\r\n  5  6  1  0  0  0  0\r\n  6  1  2  0  0  0  0\r\nM  END'],
+                'structure': ['Molecule from ChemDoodle Web Components\r\n\r\nhttp://www.ichemlabs.com\r\n  6  6  0  0  0  0            999 V2000\r\n    0.0000    1.0000    0.0000 C   0  0  0  0  0  0\r\n    0.8660    0.5000    0.0000 C   0  0  0  0  0  0\r\n    0.8660   -0.5000    0.0000 C   0  0  0  0  0  0\r\n    0.0000   -1.0000    0.0000 C   0  0  0  0  0  0\r\n   -0.8660   -0.5000    0.0000 C   0  0  0  0  0  0\r\n   -0.8660    0.5000    0.0000 C   0  0  0  0  0  0\r\n  1  2  1  0  0  0  0\r\n  2  3  2  0  0  0  0\r\n  3  4  1  0  0  0  0\r\n  4  5  2  0  0  0  0\r\n  5  6  1  0  0  0  0\r\n  6  1  2  0  0  0  0\r\nM  END'],
                 'test': ['true'],
                 }
 
@@ -92,9 +93,9 @@ class LaunchTests(TestCase):
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
-    def test_submit_empty_name(self):
+    def test_submit_empty_mol_name(self):
         params = self.basic_params
-        params['calc_name'] = ''
+        params['calc_mol_name'] = ''
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
@@ -128,9 +129,9 @@ class LaunchTests(TestCase):
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
-    def test_submit_no_name(self):
+    def test_submit_no_mol_name(self):
         params = self.basic_params
-        del params['calc_name']
+        del params['calc_mol_name']
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
@@ -239,6 +240,7 @@ class LaunchTests(TestCase):
         params = self.basic_params
         params['calc_name'] = 'name'
         response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertNotContains(response, "Error while submitting your calculation")
 
         o = CalculationOrder.objects.latest('id')
         self.assertEqual(o.name, 'name')
@@ -248,6 +250,7 @@ class LaunchTests(TestCase):
         params['calc_name'] = '<br>name'
         response = self.client.post("/submit_calculation/", data=params, follow=True)
 
+        self.assertNotContains(response, "Error while submitting your calculation")
         o = CalculationOrder.objects.latest('id')
         self.assertEqual(o.name, '&lt;br&gt;name')
 
@@ -256,6 +259,7 @@ class LaunchTests(TestCase):
         params['calc_name'] = 'name/details-.'
         response = self.client.post("/submit_calculation/", data=params, follow=True)
 
+        self.assertNotContains(response, "Error while submitting your calculation")
         o = CalculationOrder.objects.latest('id')
         self.assertEqual(o.name, 'name/details-.')
 

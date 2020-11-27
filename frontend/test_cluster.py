@@ -212,7 +212,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_xtb_crest(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -229,7 +229,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_constrained_conf_search(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -257,7 +257,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_NEB_from_file(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Minimum Energy Path',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -278,7 +278,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_xtb_sp(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -295,7 +295,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_xtb_opt(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -312,7 +312,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_xtb_freq(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -329,7 +329,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_scan_distance(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Distance', [1, 4], [3.5, 1.5, 20]]],
                 'project': 'New Project',
@@ -349,7 +349,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_freeze_distance(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Distance', [1, 4]]],
                 'project': 'New Project',
@@ -369,7 +369,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_uvvis(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'UV-Vis Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -388,7 +388,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_xtb_ts(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -405,7 +405,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_orca_mo(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'MO Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -430,7 +430,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_orca_opt(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -452,7 +452,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_orca_sp(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -474,7 +474,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_orca_ts(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -496,7 +496,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_orca_freq(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -521,7 +521,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_orca_scan(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 130, 10]]],
                 'project': 'New Project',
@@ -544,7 +544,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_orca_freeze(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Dihedral', [1, 2, 3, 4]]],
                 'project': 'New Project',
@@ -577,7 +577,7 @@ class ClusterTests(CalcusLiveServer):
         self.setup_cluster()
 
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -599,7 +599,7 @@ class ClusterTests(CalcusLiveServer):
         self.setup_cluster()
 
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -616,7 +616,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_gaussian_opt(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -638,7 +638,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_gaussian_sp(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -660,7 +660,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_gaussian_ts(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'TS Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -682,7 +682,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_gaussian_freq(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Frequency Calculation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -707,7 +707,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_gaussian_scan(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 130, 10]]],
                 'project': 'New Project',
@@ -730,7 +730,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_gaussian_freeze(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Freeze', 'Dihedral', [1, 2, 3, 4]]],
                 'project': 'New Project',
@@ -753,7 +753,7 @@ class ClusterTests(CalcusLiveServer):
     def test_gaussian_parse_cancelled_calc(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 160, 1000]]],
                 'project': 'New Project',
@@ -783,7 +783,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cancel_calc(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -814,7 +814,7 @@ class ClusterTests(CalcusLiveServer):
     def test_relaunch_calc(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -854,7 +854,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_unseen_calc(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Single-Point Energy',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -877,7 +877,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_refetch(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -906,7 +906,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_disconnect(self):
         self.setup_cluster()
         params = {
-                'calc_name': 'test',
+                'mol_name': 'test',
                 'type': 'Conformational Search',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
