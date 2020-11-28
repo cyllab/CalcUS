@@ -2543,7 +2543,6 @@ def dispatcher(drawing, order_id):
 
 @app.task(base=AbortableTask)
 def run_calc(calc_id):
-    print("RUN_CALC", kill_sig)
     print("Processing calc {}".format(calc_id))
 
     sleep(1)#wait for task_id to be saved to the database
