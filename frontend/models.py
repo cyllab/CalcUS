@@ -624,6 +624,8 @@ class CalculationOrder(models.Model):
             return self.ensemble.parent_molecule.name
         elif self.structure != None and self.structure.parent_ensemble != None and self.structure.parent_ensemble.parent_molecule != None:
             return self.structure.parent_ensemble.parent_molecule.name
+        elif self.start_calc != None and self.start_calc.result_ensemble != None and self.start_calc.result_ensemble.parent_molecule != None:
+            return self.start_calc.result_ensemble.parent_molecule.name
         else:
             return "Unknown"
 
