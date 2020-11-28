@@ -113,6 +113,8 @@ class GaussianCalculation:
                     for option in options.split(','):
                         self.command_specifications.append(option.strip())
                 else:
+                    if key in self.KEYWORDS.values():
+                        continue#Invalid specification
                     for option in options.split(','):
                         add_spec(key, option.strip())
             else:
