@@ -16,6 +16,8 @@ from threading import Lock
 
 from django.utils.timezone import now
 
+import code, traceback, signal
+
 try:
     is_test = os.environ['CALCUS_TEST']
 except:
@@ -49,6 +51,7 @@ else:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calcus.settings")
     django.setup()
 
+
 from frontend.models import *
 from frontend import tasks
 
@@ -60,6 +63,7 @@ class ClusterDaemon:
     locks = {}
     calculations = {}
     cancelled = []
+    stopped = False
 
     def log(self, msg):
         print("{} - {}".format(now(), msg), flush=True)
@@ -223,9 +227,16 @@ class ClusterDaemon:
 
     def process_command(self, ch, method, properties, body):
         lines = body.decode('UTF-8').split('\n')
+
+        if lines[0].strip() == "stop":
+            self.log("Stopping the daemon")
+            for conn_id in list(self.connections.keys()):
+                self.disconnect(conn_id)
+
+            ch.stop_consuming()
+            return
         t = threading.Thread(target=self._process_command, args=(lines,))
         t.start()
-
 
     def _process_command(self, lines):
         cmd = lines[0].strip()
@@ -307,7 +318,11 @@ class ClusterDaemon:
     def keep_alive(self):
         self.log("Starting the keepalive daemon")
         while True:
-            time.sleep(60)
+            for i in range(60):
+                if self.stopped:
+                    return
+                time.sleep(1)
+
             for conn_name in self.connections.keys():
                 access, sock, session, sftp = self.connections[conn_name]
                 success = False
@@ -329,8 +344,9 @@ class ClusterDaemon:
 
 
     def __init__(self):
-        t = threading.Thread(target=self.keep_alive)
-        t.start()
+        if not is_test:
+            t = threading.Thread(target=self.keep_alive)
+            t.start()
 
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         chan = connection.channel()
@@ -338,6 +354,12 @@ class ClusterDaemon:
         chan.basic_consume(queue='cluster', auto_ack=True, on_message_callback=self.process_command)
         self.log("Starting to listen to cluster commands")
         chan.start_consuming()
+        chan.cancel()
+        chan.close()
+        connection.close()
+        self.stopped = True
+        self.log("Daemon closed")
 
 if __name__ == "__main__":
     a = ClusterDaemon()
+

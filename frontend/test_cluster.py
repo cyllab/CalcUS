@@ -5,9 +5,11 @@ import glob
 import signal
 import selenium
 import pexpect
+import psutil
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import datetime
+import traceback
 
 from django.contrib.auth.models import User, Group
 
@@ -23,6 +25,7 @@ from calcus.celery import app
 
 from .models import *
 from .libxyz import *
+from .tasks import send_cluster_command
 
 from django.core.management import call_command
 from .calcusliveserver import CalcusLiveServer
@@ -40,9 +43,6 @@ RESULTS_DIR = os.path.join(tests_dir, "results")
 CLUSTER_DIR = os.path.join(tests_dir, "cluster")
 KEYS_DIR = os.path.join(tests_dir, "keys")
 
-for s in glob.glob("{}/selenium_screenshots/*.png".format(dir_path)):
-    os.remove(s)
-
 class ClusterTests(CalcusLiveServer):
     @classmethod
     def setUpClass(cls):
@@ -55,36 +55,23 @@ class ClusterTests(CalcusLiveServer):
 
     def setUp(self):
         super().setUp()
-        self.server_pid = None
-        pid = os.fork()
-        if not pid:
-            return self.run_daemon()
-        self.server_pid = pid
+        from multiprocessing import Process
+        p = Process(target=self.run_daemon)
+        p.start()
 
     def tearDown(self):
+        send_cluster_command("stop\n")
+
         super().tearDown()
-        os.kill(self.server_pid, signal.SIGTERM)
 
     def run_daemon(self):
         from .cluster_daemon import ClusterDaemon
-        daemon = ClusterDaemon()
-
-    def wait_command_done(self, cmd_id, timeout):
-        ind = 0
-        while ind < timeout:
-            expected_file = os.path.join(CLUSTER_DIR, "done", cmd_id)
-            if os.path.isfile(expected_file):
-                return True
-            ind += 1
-            time.sleep(1)
-        return False
-
-    def get_command_status(self, cmd_id):
-        expected_file = os.path.join(CLUSTER_DIR, "done", cmd_id)
-        assert os.path.isfile(expected_file) == True
-        with open(expected_file) as f:
-            lines = f.readlines()
-            return lines[0].strip()
+        try:
+            daemon = ClusterDaemon()
+        except SystemExit:
+            print("Daemon has exited")
+        except:
+            traceback.print_exc()
 
     def test_setup(self):
         self.setup_cluster()
