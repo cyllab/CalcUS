@@ -6,40 +6,35 @@ import signal
 import psutil
 import pika
 import requests
-
-from celery.signals import task_prerun, task_postrun
-from .models import Calculation, Structure
-from django.utils import timezone
-from django.conf import settings
-
-from django.db.utils import IntegrityError
-from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
-
 import os
 import numpy as np
 import decimal
 import math
-from time import time, sleep
-
 import subprocess
 import shlex
-from shutil import copyfile, rmtree
 import glob
 import ssh2
-from threading import Lock
+
 import threading
+from threading import Lock
 
-from .libxyz import *
-
+from shutil import copyfile, rmtree
+from time import time, sleep
+from celery.signals import task_prerun, task_postrun
+from django.utils import timezone
+from django.conf import settings
+from django.db.utils import IntegrityError
+from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
 from celery import group
 from celery.task.control import revoke
 
-from .models import *
 from ssh2.sftp import LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IWGRP, LIBSSH2_SFTP_S_IRWXU
 from ssh2.sftp import LIBSSH2_FXF_CREAT, LIBSSH2_FXF_WRITE, \
     LIBSSH2_SFTP_S_IRUSR, LIBSSH2_SFTP_S_IRGRP, LIBSSH2_SFTP_S_IWUSR, \
     LIBSSH2_SFTP_S_IROTH
 
+from .libxyz import *
+from .models import *
 from .ORCA_calculation import OrcaCalculation
 from .Gaussian_calculation import GaussianCalculation
 from .xtb_calculation import XtbCalculation
@@ -679,6 +674,12 @@ def xtb_scan(in_file, calc):
 
         with open(os.path.join(local_folder, 'xtbscan.log')) as f:
             lines = f.readlines()
+            if len(lines) == 0:
+                if failed:
+                    return ret
+
+                return ErrorCodes.INVALID_FILE
+
             num_atoms = lines[0]
             inds = []
             ind = 0
@@ -707,9 +708,6 @@ def xtb_scan(in_file, calc):
 
                 calc.result_ensemble.structure_set.add(r)
     else:
-        if not os.path.isfile("{}/xtbopt.xyz".format(local_folder)):
-            return 1
-
         with open(os.path.join(local_folder, 'xtbopt.xyz')) as f:
             lines = f.readlines()
             r = Structure.objects.create(number=calc.structure.number)
@@ -1455,7 +1453,9 @@ def launch_gaussian_calc(in_file, calc, files):
 
     gaussian = GaussianCalculation(calc)
     calc.input_file = gaussian.input_file
+    calc.parameters.specifications = gaussian.confirmed_specifications
     calc.save()
+    calc.parameters.save()
 
     with open(os.path.join(local_folder, 'calc.com'), 'w') as out:
         out.write(gaussian.input_file)
@@ -1701,7 +1701,6 @@ def gaussian_opt(in_file, calc):
             xyz_structure += "{} {} {} {}\n".format(*el)
 
         xyz_structure = clean_xyz(xyz_structure)
-
 
     s = Structure.objects.create(parent_ensemble=calc.result_ensemble, xyz_structure=xyz_structure, number=calc.structure.number, degeneracy=calc.structure.degeneracy)
     prop = get_or_create(calc.parameters, s)
@@ -1973,8 +1972,13 @@ def gaussian_scan(in_file, calc):
         prop.geom = True
         s.save()
         prop.save()
+    try:
+        struct = calc.result_ensemble.structure_set.latest('id')
+    except Structure.DoesNotExist:
+        struct = False
 
-    parse_gaussian_charges(calc, calc.result_ensemble.structure_set.latest('id'))
+    if struct:
+        parse_gaussian_charges(calc, struct)
 
     if failed:
         return ret
@@ -2609,7 +2613,8 @@ def run_calc(calc_id):
     calc.date_finished = timezone.now()
     if ret == ErrorCodes.JOB_CANCELLED:
         pid = int(threading.get_ident())
-        kill_sig.remove(pid)
+        if pid in kill_sig:
+            kill_sig.remove(pid)
         calc.status = 3
         calc.error_message = "Job cancelled"
         calc.save()

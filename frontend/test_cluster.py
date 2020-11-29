@@ -10,6 +10,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import datetime
 import traceback
+from multiprocessing import Process
 
 from django.contrib.auth.models import User, Group
 
@@ -26,6 +27,7 @@ from calcus.celery import app
 from .models import *
 from .libxyz import *
 from .tasks import send_cluster_command
+from .cluster_daemon import ClusterDaemon
 
 from django.core.management import call_command
 from .calcusliveserver import CalcusLiveServer
@@ -55,17 +57,21 @@ class ClusterTests(CalcusLiveServer):
 
     def setUp(self):
         super().setUp()
-        from multiprocessing import Process
+
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        chan = connection.channel()
+        chan.queue_purge('cluster')
+        chan.close()
+        connection.close()
+
         p = Process(target=self.run_daemon)
         p.start()
 
     def tearDown(self):
         send_cluster_command("stop\n")
-
         super().tearDown()
 
     def run_daemon(self):
-        from .cluster_daemon import ClusterDaemon
         try:
             daemon = ClusterDaemon()
         except SystemExit:

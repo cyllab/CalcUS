@@ -882,7 +882,7 @@ class CrestTests(TestCase):
         E = self.run_calc(xtb)
         self.assertFalse(self.known_energy(E, params))
 
-    def test_gfnff_conf_search2(self):
+    def test_gfnff_conf_search2(self):#Flaky?
         params = {
                 'calc_name': 'test',
                 'type': 'Conformational Search',

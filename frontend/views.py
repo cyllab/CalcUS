@@ -679,6 +679,7 @@ def details_structure(request):
 
     return HttpResponse(status=403)
 
+'''
 @login_required
 def details(request, pk):
     try:
@@ -691,6 +692,7 @@ def details(request, pk):
 
     return render(request, 'frontend/details.html', {'profile': request.user.profile,
         'calculation': calc})
+'''
 
 def learn(request):
     exercises = Exercise.objects.all()

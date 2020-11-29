@@ -60,6 +60,7 @@ class GaussianCalculation:
         self.command_line = ""
         self.additional_commands = self.clean(self.calc.order.author.default_gaussian) + " "
         self.command_specifications = []
+        self.confirmed_specifications = ""
         self.xyz_structure = ""
         self.input_file = ""
 
@@ -124,7 +125,6 @@ class GaussianCalculation:
             specs_str = ', '.join(specs[spec])
             spec_formatted = '{}({}) '.format(spec, specs_str)
             self.additional_commands += spec_formatted
-
 
     def handle_command(self):
         cmd = ""
@@ -197,13 +197,17 @@ class GaussianCalculation:
         elif self.calc.step.name == 'Single-Point Energy':
             cmd = "sp"
 
+        if len(self.command_specifications) > 0:
+            self.confirmed_specifications += "{}({}) ".format(cmd, ', '.join(self.command_specifications))
         full_specs = base_specs + self.command_specifications
+
         if len(full_specs) == 0:
-            cmd_specifications_str = ""
+            cmd_full = cmd + ' '
         else:
             cmd_specifications_str = "({})".format(', '.join(full_specs))
+            cmd_full = "{}{} ".format(cmd, cmd_specifications_str)
 
-        self.command_line += "{}{} ".format(cmd, cmd_specifications_str)
+        self.command_line += cmd_full
 
         method = get_method(self.calc.parameters.method, "Gaussian")
         basis_set = get_basis_set(self.calc.parameters.basis_set, "Gaussian")
@@ -345,6 +349,7 @@ class GaussianCalculation:
             PAL = r.pal
             MEM = r.memory
 
+        self.confirmed_specifications += self.additional_commands.strip()
         raw = self.TEMPLATE.format(PAL, MEM, self.command_line.strip(), self.additional_commands.strip(), self.calc.parameters.charge, self.calc.parameters.multiplicity, self.xyz_structure, '\n'.join(self.appendix))
         self.input_file = '\n'.join([i.strip() for i in raw.split('\n')]).replace('\n\n\n', '\n\n')
 

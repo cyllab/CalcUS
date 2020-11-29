@@ -118,7 +118,6 @@ urlpatterns = [
     path('presets/', views.launch_presets, name='presets'),
 
     path('get_cube/', views.get_cube, name='get_cube'),
-    path('details/<int:pk>', views.details, name='details'),
     path('get_calc_data/<int:pk>', views.get_calc_data, name='get_calc_data'),
     path('get_calc_data_remote/<int:pk>', views.get_calc_data_remote, name='get_calc_data_remote'),
     path('get_calc_frame/<int:cid>/<int:fid>', views.get_calc_frame, name='get_calc_frame'),

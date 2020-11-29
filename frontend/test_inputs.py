@@ -371,6 +371,7 @@ class GaussianTests(TestCase):
                 }
 
         calc = gen_calc(params, self.profile)
+
         gaussian = GaussianCalculation(calc)
 
         REF = """
@@ -384,6 +385,8 @@ class GaussianTests(TestCase):
         """
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+        self.assertEqual(gaussian.confirmed_specifications.strip(), '')
+
 
     def test_superfluous_specifications2(self):
         params = {
@@ -411,6 +414,7 @@ class GaussianTests(TestCase):
         """
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+        self.assertEqual(gaussian.confirmed_specifications.strip(), '')
 
     def test_opt_SE(self):
         params = {
@@ -488,6 +492,7 @@ class GaussianTests(TestCase):
         """
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+        self.assertEqual(gaussian.confirmed_specifications.strip(), '')
 
     def test_freq_SE(self):
         params = {
@@ -1438,6 +1443,7 @@ class GaussianTests(TestCase):
         """
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+        self.assertEqual(gaussian.confirmed_specifications.strip(), 'scf(tight)')
 
     def test_multiple_global_specification(self):
         params = {
@@ -1465,6 +1471,7 @@ class GaussianTests(TestCase):
         """
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+        self.assertEqual(gaussian.confirmed_specifications.strip(), 'scf(tight, xqc)')
 
     def test_multiple_global_specification2(self):
         params = {
@@ -1492,6 +1499,7 @@ class GaussianTests(TestCase):
         """
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+        self.assertEqual(gaussian.confirmed_specifications.strip(), 'scf(tight, xqc)')
 
     def test_multiple_global_specification3(self):
         params = {
@@ -1519,6 +1527,7 @@ class GaussianTests(TestCase):
         """
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+        self.assertEqual(gaussian.confirmed_specifications.strip(), 'scf(tight, xqc)')
 
 
     def test_cmd_specification(self):
@@ -1792,6 +1801,24 @@ class GaussianTests(TestCase):
         """
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_confirmed_specification_not_step(self):
+        params = {
+                'type': 'Constrained Optimisation',
+                'constraints': 'Freeze-1_2_3;',
+                'in_file': 'CH4.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '0',
+                'specifications': 'pop(nbo)',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        self.assertEqual(gaussian.confirmed_specifications, 'pop(nbo)')
 
 
 class OrcaTests(TestCase):

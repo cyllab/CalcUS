@@ -306,6 +306,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         submit = self.driver.find_element_by_id('submit_button')
         submit.click()
 
+    def get_confirmed_specifications(self):
+        assert self.is_on_page_ensemble()
+        cell = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.ID, "param_specifications_cell"))
+        )
+
+        return cell.text
+
     def get_number_calc_orders(self):
         return len(self.get_calc_orders())
 

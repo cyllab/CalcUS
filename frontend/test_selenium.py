@@ -3412,6 +3412,12 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
 
+        self.click_latest_calc()
+        self.click_calc_method(1)
+
+        specs = self.get_confirmed_specifications()
+        self.assertEqual(specs, 'opt(maxstep=5)')
+
     def test_scan_distance_pop(self):
         params = {
                 'mol_name': 'test',
@@ -3435,6 +3441,10 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 11)
+        self.click_calc_method(1)
+
+        specs = self.get_confirmed_specifications()
+        self.assertEqual(specs, 'pop(nbo)')
 
     def test_parse_cancelled_calc(self):
         params = {
@@ -3749,6 +3759,31 @@ class MiscCalculationTests(CalcusLiveServer):
             self.assertEqual(line[1], "{:.6f}".format(structs[ind][0]))
             self.assertEqual(line[3], str(structs[ind][1]))
             self.assertEqual(line[4], "{:.2f}".format(ref_weights[ind]))
+
+    def test_confirmed_specifications(self):
+        params = {
+                'mol_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'specifications': 'freq(NoRaman)',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(150)
+        self.click_latest_calc()
+        self.click_calc_method(1)
+
+        specs = self.get_confirmed_specifications()
+        self.assertEqual(specs, '')
 
 class ComplexCalculationTests(CalcusLiveServer):
 
