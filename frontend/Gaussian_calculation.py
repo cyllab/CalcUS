@@ -319,23 +319,24 @@ class GaussianCalculation:
 
     def handle_solvation(self):
         if self.calc.parameters.solvent != "Vacuum":
+            solvent_keyword = get_solvent(self.calc.parameters.solvent, self.calc.parameters.software, solvation_model=self.calc.parameters.solvation_model)
             if self.calc.parameters.solvation_model == "SMD":
                 if self.calc.parameters.solvation_radii == "Default":
-                    self.command_line += "SCRF(SMD, Solvent={}) ".format(self.calc.parameters.solvent)
+                    self.command_line += "SCRF(SMD, Solvent={}) ".format(solvent_keyword)
                 else:
-                    self.command_line += "SCRF(SMD, Solvent={}, Read) ".format(self.calc.parameters.solvent)
+                    self.command_line += "SCRF(SMD, Solvent={}, Read) ".format(solvent_keyword)
                     self.appendix.append(self.SMD18_APPENDIX)
             elif self.calc.parameters.solvation_model == "PCM":
                 if self.calc.parameters.solvation_radii in ["UFF", ""]:
-                    self.command_line += "SCRF(PCM, Solvent={}) ".format(self.calc.parameters.solvent)
+                    self.command_line += "SCRF(PCM, Solvent={}) ".format(solvent_keyword)
                 else:
-                    self.command_line += "SCRF(PCM, Solvent={}, Read) ".format(self.calc.parameters.solvent)
+                    self.command_line += "SCRF(PCM, Solvent={}, Read) ".format(solvent_keyword)
                     self.appendix.append("Radii={}\n".format(self.calc.parameters.solvation_radii))
             elif self.calc.parameters.solvation_model == "CPCM":
                 if self.calc.parameters.solvation_radii in ["UFF", ""]:
-                    self.command_line += "SCRF(CPCM, Solvent={}) ".format(self.calc.parameters.solvent)
+                    self.command_line += "SCRF(CPCM, Solvent={}) ".format(solvent_keyword)
                 else:
-                    self.command_line += "SCRF(CPCM, Solvent={}, Read) ".format(self.calc.parameters.solvent)
+                    self.command_line += "SCRF(CPCM, Solvent={}, Read) ".format(solvent_keyword)
                     self.appendix.append("Radii={}\n".format(self.calc.parameters.solvation_radii))
             else:
                 raise Exception("Invalid solvation method for Gaussian")

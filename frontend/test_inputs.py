@@ -129,7 +129,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp HF/3-21G SCRF(SMD, Solvent=Chloroform)
+        #p sp HF/3-21G SCRF(SMD, Solvent=chloroform)
 
         CalcUS
 
@@ -157,7 +157,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp HF/3-21G SCRF(SMD, Solvent=Chloroform, Read)
+        #p sp HF/3-21G SCRF(SMD, Solvent=chloroform, Read)
 
         CalcUS
 
@@ -181,7 +181,7 @@ class GaussianTests(TestCase):
                 'theory_level': 'HF',
                 'basis_set': '3-21G',
                 'charge': '-1',
-                'solvent': 'Chloroform',
+                'solvent': 'chloroform',
                 'solvation_model': 'PCM',
                 'solvation_radii': 'Bondi',
                 }
@@ -190,7 +190,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp HF/3-21G SCRF(PCM, Solvent=Chloroform, Read)
+        #p sp HF/3-21G SCRF(PCM, Solvent=chloroform, Read)
 
         CalcUS
 
@@ -220,7 +220,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp HF/3-21G SCRF(PCM, Solvent=Chloroform)
+        #p sp HF/3-21G SCRF(PCM, Solvent=chloroform)
 
         CalcUS
 
@@ -248,7 +248,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp HF/3-21G SCRF(CPCM, Solvent=Chloroform, Read)
+        #p sp HF/3-21G SCRF(CPCM, Solvent=chloroform, Read)
 
         CalcUS
 
@@ -278,7 +278,63 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp HF/3-21G SCRF(CPCM, Solvent=Chloroform)
+        #p sp HF/3-21G SCRF(CPCM, Solvent=chloroform)
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_solvent_synonyms1(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'HF',
+                'basis_set': '3-21G',
+                'charge': '-1',
+                'solvent': 'chcl3',
+                'solvation_model': 'CPCM',
+                'solvation_radii': 'UFF',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p sp HF/3-21G SCRF(CPCM, Solvent=chloroform)
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_solvent_synonyms2(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'HF',
+                'basis_set': '3-21G',
+                'charge': '-1',
+                'solvent': 'meoh',
+                'solvation_model': 'CPCM',
+                'solvation_radii': 'UFF',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p sp HF/3-21G SCRF(CPCM, Solvent=methanol)
 
         CalcUS
 
@@ -1945,7 +2001,7 @@ class OrcaTests(TestCase):
         end
         %cpcm
         smd true
-        SMDsolvent "Chloroform"
+        SMDsolvent "chloroform"
         end
         """
 
@@ -1977,7 +2033,7 @@ class OrcaTests(TestCase):
         end
         %cpcm
         smd true
-        SMDsolvent "Chloroform"
+        SMDsolvent "chloroform"
         radius[53] 2.74
         radius[35] 2.60
         end
@@ -1985,6 +2041,37 @@ class OrcaTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, orca.input_file))
 
+
+    def test_solvation_octanol_smd(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'ORCA',
+                'theory_level': 'HF',
+                'basis_set': '3-21G',
+                'charge': '-1',
+                'solvent': 'octanol',
+                'solvation_model': 'SMD',
+                }
+
+        calc = gen_calc(params, self.profile)
+        orca = OrcaCalculation(calc)
+
+        REF = """
+        !SP HF 3-21G
+        *xyz -1 1
+        Cl 0.0 0.0 0.0
+        *
+        %pal
+        nprocs 8
+        end
+        %cpcm
+        smd true
+        SMDsolvent "1-octanol"
+        end
+        """
+
+        self.assertTrue(self.is_equivalent(REF, orca.input_file))
 
     def test_sp_HF_CPCM(self):
         params = {
@@ -2002,7 +2089,61 @@ class OrcaTests(TestCase):
         orca = OrcaCalculation(calc)
 
         REF = """
-        !SP HF 3-21G CPCM(Chloroform)
+        !SP HF 3-21G CPCM(chloroform)
+        *xyz -1 1
+        Cl 0.0 0.0 0.0
+        *
+        %pal
+        nprocs 8
+        end
+        """
+
+        self.assertTrue(self.is_equivalent(REF, orca.input_file))
+
+    def test_solvation_octanol_cpcm1(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'ORCA',
+                'theory_level': 'HF',
+                'basis_set': '3-21G',
+                'charge': '-1',
+                'solvent': 'octanol',
+                'solvation_model': 'CPCM',
+                }
+
+        calc = gen_calc(params, self.profile)
+        orca = OrcaCalculation(calc)
+
+        REF = """
+        !SP HF 3-21G CPCM(octanol)
+        *xyz -1 1
+        Cl 0.0 0.0 0.0
+        *
+        %pal
+        nprocs 8
+        end
+        """
+
+        self.assertTrue(self.is_equivalent(REF, orca.input_file))
+
+    def test_solvation_octanol_cpcm2(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'ORCA',
+                'theory_level': 'HF',
+                'basis_set': '3-21G',
+                'charge': '-1',
+                'solvent': '1-octanol',
+                'solvation_model': 'CPCM',
+                }
+
+        calc = gen_calc(params, self.profile)
+        orca = OrcaCalculation(calc)
+
+        REF = """
+        !SP HF 3-21G CPCM(octanol)
         *xyz -1 1
         Cl 0.0 0.0 0.0
         *

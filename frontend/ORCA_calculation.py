@@ -302,12 +302,14 @@ class OrcaCalculation:
 
     def handle_solvation(self):
         if self.calc.parameters.solvent != "Vacuum":
+            solvent_keyword = get_solvent(self.calc.parameters.solvent, self.calc.parameters.software, solvation_model=self.calc.parameters.solvation_model)
+
             if self.calc.parameters.solvation_model == "SMD" or self.calc.parameters.software == 'xtb':
                 if self.calc.parameters.solvation_radii == "Default":
                     smd_block = '''%cpcm
                     smd true
                     SMDsolvent "{}"
-                    end'''.format(self.calc.parameters.solvent)
+                    end'''.format(solvent_keyword)
                     self.blocks.append(smd_block)
                 elif self.calc.parameters.solvation_radii == "SMD18":
                     smd_block = '''%cpcm
@@ -315,10 +317,10 @@ class OrcaCalculation:
                     SMDsolvent "{}"
                     radius[53] 2.74
                     radius[35] 2.60
-                    end'''.format(self.calc.parameters.solvent)
+                    end'''.format(solvent_keyword)
                     self.blocks.append(smd_block)
             elif self.calc.parameters.solvation_model == "CPCM":
-                self.command_line += "CPCM({}) ".format(self.calc.parameters.solvent)
+                self.command_line += "CPCM({}) ".format(solvent_keyword)
                 ###CPCM radii
             else:
                 raise Exception("Invalid solvation method for ORCA")

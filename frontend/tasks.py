@@ -443,6 +443,8 @@ def launch_xtb_calc(in_file, calc, files):
 
     xtb = XtbCalculation(calc)
     calc.input_file = xtb.command
+    calc.parameters.custom_basis_sets = ''
+    calc.parameters.save()
     calc.save()
 
     if xtb.option_file != "":

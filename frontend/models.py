@@ -539,6 +539,11 @@ class Parameters(models.Model):
     def __eq__(self, other):
         values = [(k,v) for k,v in self.__dict__.items() if k != '_state' and k != 'id']
         other_values = [(k,v) for k,v in other.__dict__.items() if k != '_state' and k != 'id']
+
+        #Not sure
+        #values = [(k,v) for k,v in self.__dict__.items() if k not in ['_state', 'id', 'specifications']]
+        #other_values = [(k,v) for k,v in other.__dict__.items() if k not in ['_state', 'id', 'specifications']]
+
         return values == other_values
 
     @property
