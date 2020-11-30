@@ -31,14 +31,16 @@ KEYS_DIR = os.path.join(tests_dir, "keys")
 
 HEADLESS = os.getenv("CALCUS_HEADLESS")
 
-
 from calcus.celery import app
+from frontend import tasks
+
 class CalcusLiveServer(StaticLiveServerTestCase):
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
 
+        tasks.REMOTE = False
         chrome_options = Options()
         if HEADLESS is not None and HEADLESS.lower() == "true":
             from pyvirtualdisplay import Display
@@ -93,6 +95,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         u.save()
         self.login(self.username, self.password)
         self.profile = Profile.objects.get(user__username=self.username)
+        print(self._testMethodName)
         time.sleep(0.1)#Reduces glitches (I think?)
 
     def tearDown(self):

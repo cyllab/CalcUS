@@ -55,7 +55,6 @@ else:
 from frontend.models import *
 from frontend import tasks
 
-tasks.REMOTE = True
 
 class ClusterDaemon:
 
@@ -347,6 +346,8 @@ class ClusterDaemon:
         if not is_test:
             t = threading.Thread(target=self.keep_alive)
             t.start()
+
+        tasks.REMOTE = True
 
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         chan = connection.channel()

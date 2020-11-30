@@ -6,6 +6,7 @@ import signal
 import selenium
 import pexpect
 import psutil
+import pika
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import datetime
