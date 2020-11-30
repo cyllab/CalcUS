@@ -27,12 +27,10 @@ if is_test:
     CALCUS_SCR_HOME = os.environ['CALCUS_TEST_SCR_HOME']
     CALCUS_RESULTS_HOME = os.environ['CALCUS_TEST_RESULTS_HOME']
     CALCUS_KEY_HOME = os.environ['CALCUS_TEST_KEY_HOME']
-    CALCUS_CLUSTER_HOME = os.environ['CALCUS_TEST_CLUSTER_HOME']
 else:
     CALCUS_SCR_HOME = os.environ['CALCUS_SCR_HOME']
     CALCUS_RESULTS_HOME = os.environ['CALCUS_RESULTS_HOME']
     CALCUS_KEY_HOME = os.environ['CALCUS_KEY_HOME']
-    CALCUS_CLUSTER_HOME = os.environ['CALCUS_CLUSTER_HOME']
 
 GRIMME_SUITE = ['xtb', 'crest', 'xtb4stda', 'stda', 'enso.py', 'anmr']
 
@@ -101,10 +99,6 @@ class ClusterDaemon:
 
     def system(self, command):
         return subprocess.run(shlex.split(command)).returncode
-
-    def output(self, id, msg):
-        with open(os.path.join(CALCUS_CLUSTER_HOME, 'done', str(id)), 'w') as out:
-            out.write(msg)
 
     def setup_connection(self, conn, password):
         addr = conn.cluster_address
