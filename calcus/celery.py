@@ -7,12 +7,24 @@ from celery import Celery
 from django.conf import settings
 from celery.schedules import crontab
 
+docker = False
+try:
+    a = os.environ["CALCUS_DOCKER"]
+except KeyError:
+    pass
+else:
+    if a.lower() == "true":
+        docker = True
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'calcus.settings')
 
 username = settings.RABBITMQ_USERNAME
 password = settings.RABBITMQ_PASSWORD
 
-app = Celery('calcus', backend="amqp", broker='amqp://{}:{}@localhost//'.format(username, password))
+if docker:
+    app = Celery('calcus', backend="amqp", broker='amqp://{}:{}@rabbit//'.format(username, password))
+else:
+    app = Celery('calcus', backend="amqp", broker='amqp://{}:{}@localhost//'.format(username, password))
 
 app.autodiscover_tasks()
 

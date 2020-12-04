@@ -18,6 +18,15 @@ from django.utils.timezone import now
 
 import code, traceback, signal
 
+docker = False
+try:
+    a = os.environ["CALCUS_DOCKER"]
+except KeyError:
+    pass
+else:
+    if a.lower() == "true":
+        docker = True
+
 try:
     is_test = os.environ['CALCUS_TEST']
 except:
@@ -239,9 +248,9 @@ class ClusterDaemon:
             password = lines[2]
             r = self.connect(access_id, password)
             if r in [1, 2, 3, 4]:
-                self.output(id, "Error: {}".format(CONNECTION_CODE[r]))
+                self.log("{} - Error: {}".format(id, CONNECTION_CODE[r]))
             else:
-                self.output(id, "Connection successful")
+                self.log("{} - Connection successful".format(id))
         elif cmd == "disconnect":
             access_id = int(lines[1])
             self.disconnect(access_id)
@@ -343,7 +352,12 @@ class ClusterDaemon:
 
         tasks.REMOTE = True
 
-        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        if docker:
+            time.sleep(10)
+            credentials = pika.PlainCredentials('calcus', 'rabbitmqcalcuspassword')
+            connection = pika.BlockingConnection(pika.ConnectionParameters('rabbit', credentials=credentials))
+        else:
+            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         chan = connection.channel()
         chan.queue_declare(queue='cluster')
         chan.basic_consume(queue='cluster', auto_ack=True, on_message_callback=self.process_command)

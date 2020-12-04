@@ -40,6 +40,15 @@ from .Gaussian_calculation import GaussianCalculation
 from .xtb_calculation import XtbCalculation
 from .calculation_helper import *
 
+docker = False
+try:
+    a = os.environ["CALCUS_DOCKER"]
+except KeyError:
+    pass
+else:
+    if a.lower() == "true":
+        docker = True
+
 try:
     is_test = os.environ['CALCUS_TEST']
 except:
@@ -2709,7 +2718,11 @@ def _del_structure(s):
     s.delete()
 
 def send_cluster_command(cmd):
-    conn = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    if docker:
+        credentials = pika.PlainCredentials('calcus', 'rabbitmqcalcuspassword')
+        conn = pika.BlockingConnection(pika.ConnectionParameters('rabbit', credentials=credentials))
+    else:
+        conn = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     chan = conn.channel()
 
     chan.queue_declare(queue='cluster')

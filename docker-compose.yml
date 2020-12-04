@@ -1,0 +1,76 @@
+version: "3"
+
+services:  
+        redis:
+                image: redis:latest
+                hostname: redis
+
+        rabbit:
+                build: ./docker/rabbit
+                hostname: rabbit
+        web:
+                build:
+                        context: .
+                        dockerfile: Dockerfile
+                hostname: web
+                command: ./scripts/run_web.sh
+                expose:
+                        - 8000
+                volumes:
+                        - .:/calcus 
+                        - ./docker/binaries:/binaries
+                links:
+                        - rabbit
+                        - redis
+        nginx:
+                image: nginx:latest
+                ports:
+                        - "8080:8080"
+                volumes:
+                        - ./docker/nginx/:/etc/nginx/conf.d
+                        - ./static:/static
+                        - .:/calcus
+                depends_on: 
+                        - web        
+        celery_main:
+                build:
+                        context: .
+                        dockerfile: Dockerfile
+                command: ./scripts/run_celery_main.sh
+                volumes:
+                        - .:/calcus
+                        - ${CALCUS_INCHI}:/binaries/other
+                links:
+                        - rabbit
+                        - redis
+                depends_on:
+                        - rabbit
+        celery_comp:
+                build:
+                        context: .
+                        dockerfile: Dockerfile
+                command: ./scripts/run_celery_comp.sh
+                volumes:
+                        - .:/calcus
+                        - ${CALCUS_GAUSSIAN}:/binaries/g16
+                        - ${CALCUS_ORCA}:/binaries/orca
+                        - ${CALCUS_XTB}:/binaries/xtb
+                        - ${CALCUS_INCHI}:/binaries/other
+                links:
+                        - rabbit
+                        - redis
+                depends_on:
+                        - rabbit
+        cluster:
+                build:
+                        context: .
+                        dockerfile: Dockerfile
+                command: ./scripts/run_cluster_daemon.sh
+                volumes:
+                        - .:/calcus
+                links:
+                        - web
+                depends_on:
+                        - rabbit
+
+

@@ -1,6 +1,7 @@
 basis-set-exchange==0.8.12
 bleach==3.1.5
 celery==4.4.7
+redis
 coverage==5.3
 cryptography==3.1
 Django==3.1.1
@@ -11,6 +12,7 @@ django-pipeline==2.0.5
 django-debug-toolbar==2.2
 django-ipware==3.0.1
 django-throttle-requests==0.5.9
+gunicorn
 nmrglue==0.7
 numpy==1.19.2
 periodictable==1.5.2

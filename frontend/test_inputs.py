@@ -1783,6 +1783,38 @@ class GaussianTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
+    def test_default_append_bis(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                }
+
+        user = User.objects.create(username='tmp')
+        profile = Profile.objects.get(user=user)
+        profile.default_gaussian = "Int(UltraFineGrid)"
+        profile.save()
+
+        calc = gen_calc(params, profile)
+        gaussian = GaussianCalculation(calc)
+        _ = gaussian.input_file
+
+        REF = """
+        #p sp M062X/Def2SVP Int(UltraFineGrid)
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
     def test_default_append_and_specification(self):
         params = {
                 'type': 'Geometrical Optimisation',
