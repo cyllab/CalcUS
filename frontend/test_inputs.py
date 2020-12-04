@@ -2132,6 +2132,38 @@ class OrcaTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, orca.input_file))
 
+    def test_solvent_synonym(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'ORCA',
+                'theory_level': 'HF',
+                'basis_set': '3-21G',
+                'charge': '-1',
+                'solvent': 'CHCL3',
+                'solvation_model': 'SMD',
+                }
+
+        calc = gen_calc(params, self.profile)
+        orca = OrcaCalculation(calc)
+
+        REF = """
+        !SP HF 3-21G
+        *xyz -1 1
+        Cl 0.0 0.0 0.0
+        *
+        %pal
+        nprocs 8
+        end
+        %cpcm
+        smd true
+        SMDsolvent "chloroform"
+        end
+        """
+
+        self.assertTrue(self.is_equivalent(REF, orca.input_file))
+
+
     def test_solvation_octanol_cpcm1(self):
         params = {
                 'type': 'Single-Point Energy',
@@ -3210,6 +3242,52 @@ class XtbTests(TestCase):
         REF = "xtb in.xyz --hess --chrg -1"
 
         self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+    def test_solvent(self):
+        params = {
+                'type': 'Frequency Calculation',
+                'in_file': 'Cl.xyz',
+                'software': 'xtb',
+                'solvent': 'chcl3',
+                'charge': '-1',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --hess -g chcl3 --chrg -1"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+    def test_solvent_synonym(self):
+        params = {
+                'type': 'Frequency Calculation',
+                'in_file': 'Cl.xyz',
+                'software': 'xtb',
+                'solvent': 'chloroform',
+                'charge': '-1',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --hess -g chcl3 --chrg -1"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+    def test_solvent_invalid(self):
+        params = {
+                'type': 'Frequency Calculation',
+                'in_file': 'Cl.xyz',
+                'software': 'xtb',
+                'solvent': 'octanol',
+                'charge': '-1',
+                }
+
+        calc = gen_calc(params, self.profile)
+
+        with self.assertRaises(Exception):
+            xtb = XtbCalculation(calc)
 
     def test_scan(self):
         params = {

@@ -1,6 +1,7 @@
 import os
 import periodictable
 from .constants import *
+from .calculation_helper import *
 
 class XtbCalculation:
 
