@@ -2,7 +2,6 @@ import os
 import periodictable
 from .constants import *
 
-
 class XtbCalculation:
 
     def __init__(self, calc):
@@ -27,7 +26,8 @@ class XtbCalculation:
 
     def handle_parameters(self):
         if self.calc.parameters.solvent != "Vacuum":
-            self.cmd_arguments += '-g {} '.format(self.calc.parameters.solvent.lower())
+            solvent_keyword = get_solvent(self.calc.parameters.solvent, self.calc.parameters.software)
+            self.cmd_arguments += '-g {} '.format(solvent_keyword)
 
         if self.calc.parameters.charge != 0:
             self.cmd_arguments += '--chrg {} '.format(self.calc.parameters.charge)
