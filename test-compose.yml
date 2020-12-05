@@ -1,0 +1,44 @@
+version: "3"
+
+services:  
+        redis:
+                image: redis:latest
+                hostname: redis
+
+        rabbit:
+                build: ./docker/rabbit
+                hostname: rabbit
+                env_file:
+                        - ./.env
+        web:
+                build:
+                        context: .
+                        dockerfile: Dockerfile
+                hostname: web
+                command: ./scripts/run_tests.sh
+                expose:
+                        - 8000
+                volumes:
+                        - .:/calcus 
+                        - ${CALCUS_INCHI}:/binaries/other
+                        - ${CALCUS_GAUSSIAN}:/binaries/g16
+                        - ${CALCUS_ORCA}:/binaries/orca
+                        - ${CALCUS_XTB}:/binaries/xtb
+                links:
+                        - rabbit
+                        - redis
+                        - selenium
+                env_file:
+                        - ./.env
+                environment:
+                        - CALCUS_TEST=True
+                        - CALCUS_HEADLESS=True
+        selenium:
+                container_name: selenium
+                image: selenium/standalone-chrome-debug:3.7.1
+                volumes:
+                        - ${CALCUS_INCHI}:/binaries/other
+                ports:
+                        - "4444:4444"
+                        - "5900:5900"
+
