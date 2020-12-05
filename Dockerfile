@@ -23,10 +23,5 @@ WORKDIR /calcus/
 RUN pip install -r requirements.txt
 RUN apt update && apt install openbabel -y
 
-RUN mkdir -p $CALCUS_SCR_HOME
-RUN mkdir -p $CALCUS_RESULTS_HOME
-RUN mkdir -p $CALCUS_KEY_HOME
-RUN mkdir -p logs
-
 RUN adduser --disabled-password --gecos '' calcus  
 

@@ -18,8 +18,8 @@ from django.utils.timezone import now
 
 from django.conf import settings
 
-RABBITMQ_USERNAME = settings.RABBITMQ_USERNAME
-RABBITMQ_PASSWORD = settings.RABBITMQ_PASSWORD
+RABBITMQ_USERNAME = os.environ["CALCUS_RABBITMQ_USERNAME"]
+RABBITMQ_PASSWORD = os.environ["CALCUS_RABBITMQ_PASSWORD"]
 
 import code, traceback, signal
 
