@@ -4,15 +4,7 @@ from .constants import *
 from .calculation_helper import *
 from .libxyz import *
 import basis_set_exchange
-
-L_PAL = os.environ['OMP_NUM_THREADS'][0]
-L_STACKSIZE = os.environ['OMP_STACKSIZE']
-if L_STACKSIZE.find("G") != -1:
-    L_STACKSIZE = int(L_STACKSIZE.replace('G', ''))*1024
-elif L_STACKSIZE.find("M") != -1:
-    L_STACKSIZE = int(L_STACKSIZE.replace('M', ''))
-
-L_MEM = int(L_PAL)*L_STACKSIZE
+from .environment_variables import *
 
 class GaussianCalculation:
 
@@ -342,10 +334,9 @@ class GaussianCalculation:
                 raise Exception("Invalid solvation method for Gaussian")
 
     def create_input_file(self):
-        if self.calc.local:
-            PAL = L_PAL
-            MEM = L_MEM
-        else:
+        global PAL
+        global MEM
+        if not self.calc.local:
             r = self.calc.order.resource
             PAL = r.pal
             MEM = r.memory

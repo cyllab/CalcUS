@@ -11,12 +11,12 @@ from .Gaussian_calculation import GaussianCalculation
 from .ORCA_calculation import OrcaCalculation
 from .xtb_calculation import XtbCalculation
 from .gen_calc import gen_calc
+from .environment_variables import *
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 TESTS_DIR = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
 SCR_DIR = os.path.join(TESTS_DIR, "scr")
-EBROOTORCA = os.environ['EBROOTORCA']
 
 class GaussianTests(TestCase):
 

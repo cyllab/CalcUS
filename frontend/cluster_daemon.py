@@ -23,28 +23,6 @@ RABBITMQ_PASSWORD = os.environ["CALCUS_RABBITMQ_PASSWORD"]
 
 import code, traceback, signal
 
-docker = False
-try:
-    a = os.environ["CALCUS_DOCKER"]
-except KeyError:
-    pass
-else:
-    if a.lower() == "true":
-        docker = True
-
-try:
-    is_test = os.environ['CALCUS_TEST']
-except:
-    is_test = False
-
-if is_test:
-    CALCUS_SCR_HOME = os.environ['CALCUS_TEST_SCR_HOME']
-    CALCUS_RESULTS_HOME = os.environ['CALCUS_TEST_RESULTS_HOME']
-    CALCUS_KEY_HOME = os.environ['CALCUS_TEST_KEY_HOME']
-else:
-    CALCUS_SCR_HOME = os.environ['CALCUS_SCR_HOME']
-    CALCUS_RESULTS_HOME = os.environ['CALCUS_RESULTS_HOME']
-    CALCUS_KEY_HOME = os.environ['CALCUS_KEY_HOME']
 
 GRIMME_SUITE = ['xtb', 'crest', 'xtb4stda', 'stda', 'enso.py', 'anmr']
 
@@ -65,6 +43,7 @@ else:
 
 
 from frontend.models import *
+from frontend.environment_variables import *
 from frontend import tasks
 
 

@@ -2,16 +2,8 @@ import os
 import periodictable
 from .constants import *
 from .calculation_helper import *
+from .environment_variables import *
 import basis_set_exchange
-
-L_PAL = os.environ['OMP_NUM_THREADS'][0]
-L_STACKSIZE = os.environ['OMP_STACKSIZE']
-if L_STACKSIZE.find("G") != -1:
-    L_STACKSIZE = int(L_STACKSIZE.replace('G', ''))*1024
-elif L_STACKSIZE.find("MB") != -1:
-    L_STACKSIZE = int(L_STACKSIZE.replace('MB', ''))
-
-L_MEM = int(L_PAL)*L_STACKSIZE
 
 class OrcaCalculation:
 
@@ -286,11 +278,12 @@ class OrcaCalculation:
         self.xyz_structure = ''.join(lines)
 
     def handle_pal(self):
+        global PAL
         if self.calc.parameters.theory_level == "Semi-empirical":
             self.pal = 1
         else:
             if self.calc.local:
-                self.pal = L_PAL
+                self.pal = PAL
             else:
                 self.pal = self.calc.order.resource.pal
 

@@ -22,6 +22,7 @@ from celery.contrib.testing.worker import start_worker
 from django.core.management import call_command
 from django.contrib.auth.models import User, Group
 from .models import *
+from .environment_variables import *
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -32,15 +33,6 @@ CLUSTER_DIR = os.path.join(tests_dir, "cluster")
 KEYS_DIR = os.path.join(tests_dir, "keys")
 
 HEADLESS = os.getenv("CALCUS_HEADLESS")
-
-docker = False
-try:
-    a = os.environ["CALCUS_DOCKER"]
-except KeyError:
-    pass
-else:
-    if a.lower() == "true":
-        docker = True
 
 from calcus.celery import app
 from frontend import tasks

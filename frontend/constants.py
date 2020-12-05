@@ -2,6 +2,8 @@ import decimal
 import periodictable
 from enum import IntEnum
 
+KEY_SIZE = 32
+
 ATOMIC_NUMBER = {}
 ATOMIC_SYMBOL = {}
 LOWERCASE_ATOMIC_SYMBOLS = {}

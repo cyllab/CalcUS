@@ -34,6 +34,7 @@ from .decorators import superuser_required
 from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint, get_Gaussian_xyz
 from .constants import *
 from .libxyz import parse_xyz_from_text, equivalent_atoms
+from .environment_variables import *
 
 from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
@@ -42,22 +43,6 @@ from django.conf import settings
 from throttle.decorators import throttle
 
 import nmrglue as ng
-
-try:
-    is_test = os.environ['CALCUS_TEST']
-except:
-    is_test = False
-
-if is_test:
-    CALCUS_SCR_HOME = os.environ['CALCUS_TEST_SCR_HOME']
-    CALCUS_RESULTS_HOME = os.environ['CALCUS_TEST_RESULTS_HOME']
-    CALCUS_KEY_HOME = os.environ['CALCUS_TEST_KEY_HOME']
-else:
-    CALCUS_SCR_HOME = os.environ['CALCUS_SCR_HOME']
-    CALCUS_RESULTS_HOME = os.environ['CALCUS_RESULTS_HOME']
-    CALCUS_KEY_HOME = os.environ['CALCUS_KEY_HOME']
-
-KEY_SIZE = 32
 
 class IndexView(generic.ListView):
     template_name = 'frontend/dynamic/list.html'
