@@ -9,4 +9,3 @@ static/CACHE/
 frontend/migrations/
 *.sqlite3
 .*
-*.sh
