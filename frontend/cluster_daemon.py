@@ -15,7 +15,11 @@ import threading
 from threading import Lock
 
 from django.utils.timezone import now
-from django.conf.settings import RABBITMQ_USERNAME, RABBITMQ_PASSWORD
+
+from django.conf import settings
+
+RABBITMQ_USERNAME = settings.RABBITMQ_USERNAME
+RABBITMQ_PASSWORD = settings.RABBITMQ_PASSWORD
 
 import code, traceback, signal
 
