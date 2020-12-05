@@ -9,7 +9,11 @@ except:
 else:
     is_test = True
 
-SECRET_KEY = os.environ['CALCUS_SECRET_KEY']
+if is_test:
+    SECRET_KEY = "testkey"
+else:
+    SECRET_KEY = os.environ['CALCUS_SECRET_KEY']
+
 
 DEBUG = False
 PROD = False
@@ -135,6 +139,7 @@ if is_test:
     EMAIL_FILE_PATH = os.path.join(BASE_DIR, "frontend", "tests", "sent_emails")
 
 MEDIA_URL = '/media/'
+
 RABBITMQ_USERNAME = os.environ['CALCUS_RABBITMQ_USERNAME']
 RABBITMQ_PASSWORD = os.environ['CALCUS_RABBITMQ_PASSWORD']
 

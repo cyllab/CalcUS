@@ -8,12 +8,14 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import datetime
 import pexpect
+import socket
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from shutil import copyfile, rmtree
 
 from celery.contrib.testing.worker import start_worker
@@ -31,26 +33,46 @@ KEYS_DIR = os.path.join(tests_dir, "keys")
 
 HEADLESS = os.getenv("CALCUS_HEADLESS")
 
+docker = False
+try:
+    a = os.environ["CALCUS_DOCKER"]
+except KeyError:
+    pass
+else:
+    if a.lower() == "true":
+        docker = True
+
 from calcus.celery import app
 from frontend import tasks
 
 class CalcusLiveServer(StaticLiveServerTestCase):
 
+    host = '0.0.0.0'
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
 
+        cls.host = socket.gethostbyname(socket.gethostname())
+
+        if docker:
+            cls.driver = webdriver.Remote(
+                    command_executor='http://selenium:4444/wd/hub',
+                    desired_capabilities=DesiredCapabilities.CHROME,
+            )
+            cls.driver.implicitly_wait(5)
+        else:
+            chrome_options = Options()
+            if HEADLESS is not None and HEADLESS.lower() == "true":
+                from pyvirtualdisplay import Display
+
+                display = Display(visible=0, size=(1920, 1080))
+                display.start()
+
+            cls.driver = webdriver.Chrome(chrome_options=chrome_options)
+            cls.driver.set_window_size(1920, 1080)
+
         tasks.REMOTE = False
-        chrome_options = Options()
-        if HEADLESS is not None and HEADLESS.lower() == "true":
-            from pyvirtualdisplay import Display
-
-            display = Display(visible=0, size=(1920, 1080))
-            display.start()
-
-        cls.driver = webdriver.Chrome(chrome_options=chrome_options)
-        cls.driver.set_window_size(1920, 1080)
-
         app.loader.import_module('celery.contrib.testing.tasks')
 
         cls.celery_worker = start_worker(app, perform_ping_check=False)
@@ -60,14 +82,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             os.mkdir(SCR_DIR)
         if not os.path.isdir(RESULTS_DIR):
             os.mkdir(RESULTS_DIR)
-        if not os.path.isdir(CLUSTER_DIR):
-            os.mkdir(CLUSTER_DIR)
-        if not os.path.isdir(os.path.join(CLUSTER_DIR, 'todo')):
-            os.mkdir(os.path.join(CLUSTER_DIR, 'todo'))
-        if not os.path.isdir(os.path.join(CLUSTER_DIR, 'done')):
-            os.mkdir(os.path.join(CLUSTER_DIR, 'done'))
-        if not os.path.isdir(os.path.join(CLUSTER_DIR, 'connections')):
-            os.mkdir(os.path.join(CLUSTER_DIR, 'connections'))
         if not os.path.isdir(KEYS_DIR):
             os.mkdir(KEYS_DIR)
 
@@ -81,8 +95,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             rmtree(SCR_DIR)
         if os.path.isdir(RESULTS_DIR):
             rmtree(RESULTS_DIR)
-        if os.path.isdir(CLUSTER_DIR):
-            rmtree(CLUSTER_DIR)
         if os.path.isdir(KEYS_DIR):
             rmtree(KEYS_DIR)
 

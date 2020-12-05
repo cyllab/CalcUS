@@ -5,7 +5,6 @@ calcus/*settings*
 *keys/
 *scr/
 *results/
-*cluster/
 static/CACHE/
 frontend/migrations/
 *.sqlite3

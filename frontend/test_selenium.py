@@ -3785,6 +3785,42 @@ class MiscCalculationTests(CalcusLiveServer):
         specs = self.get_confirmed_specifications()
         self.assertEqual(specs, '')
 
+    def test_combine_molecule(self):
+        params = {
+                'mol_name': 'Test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                'software': 'Gaussian',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(150)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/projects")
+        self.click_project("SeleniumProject")
+        self.assertEqual(self.get_number_molecules(), 1)
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(150)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/projects")
+        self.click_project("SeleniumProject")
+        self.assertEqual(self.get_number_molecules(), 1)
+
+
 class ComplexCalculationTests(CalcusLiveServer):
 
     def setUp(self):
@@ -3992,4 +4028,5 @@ class ComplexCalculationTests(CalcusLiveServer):
         prop = Property.objects.latest('id')
         calc_shifts = [float(i.split()[2]) for i in prop.simple_nmr.split('\n') if i.strip() != '']
         self.assertEqual(shifts[1], "{:.3f}".format(np.mean(calc_shifts[1:4])))
+
 

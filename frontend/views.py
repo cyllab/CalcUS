@@ -1229,8 +1229,13 @@ def submit_calculation(request):
 
             for fing in unique_fingerprints:
                 obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
-                mol = Molecule.objects.create(name=mol_name, inchi=fing, project=project_obj)
-                mol.save()
+                try:
+                    mol = Molecule.objects.get(project=project_obj, name=mol_name)
+                    #Inchi might not match
+                except Molecule.DoesNotExist:
+                    mol = Molecule.objects.create(name=mol_name, inchi=fing, project=project_obj)
+                    mol.save()
+
                 e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
                 for s_num, s_id in enumerate(fingerprints[fing]):
                     s = Structure.objects.get(pk=s_id)

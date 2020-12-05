@@ -11,10 +11,6 @@ from django.test import TestCase, Client
 from django.http import HttpRequest
 from .gen_calc import gen_calc
 
-from hypothesis import given
-from hypothesis.extra.django import TestCase as HypothesisTestCase
-import hypothesis.strategies as st
-
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
