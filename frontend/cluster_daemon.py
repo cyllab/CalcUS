@@ -15,6 +15,7 @@ import threading
 from threading import Lock
 
 from django.utils.timezone import now
+from django.conf.settings import RABBITMQ_USERNAME, RABBITMQ_PASSWORD
 
 import code, traceback, signal
 
@@ -354,7 +355,7 @@ class ClusterDaemon:
 
         if docker:
             time.sleep(10)
-            credentials = pika.PlainCredentials('calcus', 'rabbitmqcalcuspassword')
+            credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
             connection = pika.BlockingConnection(pika.ConnectionParameters('rabbit', credentials=credentials))
         else:
             connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))

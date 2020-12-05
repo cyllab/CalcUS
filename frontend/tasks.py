@@ -54,6 +54,7 @@ try:
 except:
     is_test = False
 
+from django.conf.settings import RABBITMQ_USERNAME, RABBITMQ_PASSWORD
 
 import traceback
 import periodictable
@@ -2719,7 +2720,7 @@ def _del_structure(s):
 
 def send_cluster_command(cmd):
     if docker:
-        credentials = pika.PlainCredentials('calcus', 'rabbitmqcalcuspassword')
+        credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
         conn = pika.BlockingConnection(pika.ConnectionParameters('rabbit', credentials=credentials))
     else:
         conn = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
