@@ -15,6 +15,7 @@ services:
                         context: .
                         dockerfile: Dockerfile
                 hostname: web
+                user: calcus
                 command: ./scripts/run_tests.sh
                 expose:
                         - 8000
@@ -24,6 +25,8 @@ services:
                         - ${CALCUS_GAUSSIAN}:/binaries/g16
                         - ${CALCUS_ORCA}:/binaries/orca
                         - ${CALCUS_XTB}:/binaries/xtb
+                        - ${CALCUS_OPENMPI}/bin:/binaries/openmpi
+                        - ${CALCUS_OPENMPI}/lib:/usr/lib/openmpi
                 links:
                         - rabbit
                         - redis
@@ -32,10 +35,10 @@ services:
                         - ./.env
                 environment:
                         - CALCUS_TEST=True
-                        - CALCUS_HEADLESS=True
         selenium:
                 container_name: selenium
                 image: selenium/standalone-chrome-debug:3.7.1
+                user: calcus
                 volumes:
                         - ${CALCUS_INCHI}:/binaries/other
                 ports:

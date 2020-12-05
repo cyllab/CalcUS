@@ -15,6 +15,7 @@ services:
                         context: .
                         dockerfile: Dockerfile
                 hostname: web
+                user: calcus
                 command: ./scripts/run_web.sh
                 expose:
                         - 8000
@@ -40,6 +41,7 @@ services:
                 build:
                         context: .
                         dockerfile: Dockerfile
+                user: calcus
                 command: ./scripts/run_celery_main.sh
                 volumes:
                         - .:/calcus
@@ -55,6 +57,7 @@ services:
                 build:
                         context: .
                         dockerfile: Dockerfile
+                user: calcus
                 command: ./scripts/run_celery_comp.sh
                 volumes:
                         - .:/calcus
@@ -62,6 +65,8 @@ services:
                         - ${CALCUS_ORCA}:/binaries/orca
                         - ${CALCUS_XTB}:/binaries/xtb
                         - ${CALCUS_INCHI}:/binaries/other
+                        - ${CALCUS_OPENMPI}/bin:/binaries/openmpi
+                        - ${CALCUS_OPENMPI}/lib:/usr/lib/openmpi
                 env_file:
                         - ./.env
                 links:
@@ -73,6 +78,7 @@ services:
                 build:
                         context: .
                         dockerfile: Dockerfile
+                user: calcus
                 command: ./scripts/run_cluster_daemon.sh
                 env_file:
                         - ./.env

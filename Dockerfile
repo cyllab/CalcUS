@@ -14,14 +14,15 @@ ENV GAUSS_EXEDIR "/binaries/g16"
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/binaries/orca"
 ENV CALCUS_DOCKER "True"
 
-ENV PATH=$PATH:"/binaries/xtb:/binaries/g16:/binaries/orca:/binaries/other"
+ENV PATH=$PATH:"/binaries/xtb:/binaries/g16:/binaries/orca:/binaries/other:/binaries/openmpi"
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/binaries/orca:/usr/lib/openmpi/
 
 ADD requirements.txt /calcus/requirements.txt
 
 WORKDIR /calcus/
 
 RUN pip install -r requirements.txt
-RUN apt update && apt install openbabel -y
+RUN apt update && apt install openbabel locate -y
 
 RUN adduser --disabled-password --gecos '' calcus  
 

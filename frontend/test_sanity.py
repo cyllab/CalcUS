@@ -476,7 +476,8 @@ class OrcaTests(TestCase):
 
 
     def tearDown(self):
-        rmtree(SCR_DIR)
+        pass
+        #rmtree(SCR_DIR)
 
     def run_calc(self, obj):
         os.chdir(dir_path)
