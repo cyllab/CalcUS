@@ -2279,6 +2279,9 @@ def rename_molecule(request):
         if 'new_name' in request.POST.keys():
             name = clean(request.POST['new_name'])
 
+        if name.strip() == "":
+            name = "Nameless molecule"
+
         mol.name = name
         mol.save()
         return HttpResponse(status=200)
@@ -2302,6 +2305,9 @@ def rename_project(request):
 
         if 'new_name' in request.POST.keys():
             name = clean(request.POST['new_name'])
+
+        if name.strip() == "":
+            name = "Nameless project"
 
         proj.name = name
         proj.save()
@@ -2393,6 +2399,9 @@ def rename_ensemble(request):
 
         if 'new_name' in request.POST.keys():
             name = clean(request.POST['new_name'])
+
+        if name.strip() == "":
+            name = "Nameless ensemble"
 
         e.name = name
         e.save()

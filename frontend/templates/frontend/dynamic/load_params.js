@@ -43,9 +43,6 @@ if ("{{ params.program }}" != "Unknown" && "{{ params.program}}" != "Open Babel"
 	{% endif %}
 
 
-	additional_command = document.getElementById("calc_additional_command");
-	additional_command.value = "{{ params.additional_command }}";
-
 	df = document.getElementById("calc_df");
 	df.value = "{{ params.density_fitting }}";
 
