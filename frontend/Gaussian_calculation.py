@@ -50,7 +50,7 @@ class GaussianCalculation:
         self.pal = 0
         self.appendix = []
         self.command_line = ""
-        self.additional_commands = self.clean(self.calc.order.author.default_gaussian) + " "
+        self.additional_commands = [] 
         self.command_specifications = []
         self.confirmed_specifications = ""
         self.xyz_structure = ""
@@ -74,17 +74,18 @@ class GaussianCalculation:
             if option == '':
                 return
             if key in specs.keys():
-                specs[key].append(option)
+                if option not in specs[key]:
+                    specs[key].append(option)
             else:
                 specs[key] = [option]
 
-        s = self.calc.parameters.specifications.lower()
+        s = self.calc.parameters.specifications.lower() + " " + self.clean(self.calc.order.author.default_gaussian).lower()
+
 
         if s.count('(') != s.count(')'):#Could be more sophisticated to catch other incorrect specifications
             raise Exception("Invalid specifications: parenthesis not matching")
 
         _specifications = ""
-
         remove = False
         for c in s:
             if c == ' ' and remove:
@@ -95,7 +96,6 @@ class GaussianCalculation:
             elif c == ')':
                 remove = False
 
-
         for spec in self.clean(_specifications).split(' '):
             if spec.strip() == '':
                 continue
@@ -104,19 +104,21 @@ class GaussianCalculation:
                 options = options.replace(')', '')
                 if key == self.KEYWORDS[self.calc.step.name]:
                     for option in options.split(','):
-                        self.command_specifications.append(option.strip())
+                        if option not in self.command_specifications:
+                            self.command_specifications.append(option.strip())
                 else:
                     if key in self.KEYWORDS.values():
                         continue#Invalid specification
                     for option in options.split(','):
                         add_spec(key, option.strip())
             else:
-                self.additional_commands += "{} ".format(spec)
+                if spec not in self.additional_commands:
+                    self.additional_commands.append(spec)
 
         for spec in specs.keys():
             specs_str = ', '.join(specs[spec])
             spec_formatted = '{}({}) '.format(spec, specs_str)
-            self.additional_commands += spec_formatted
+            self.additional_commands.append(spec_formatted)
 
     def handle_command(self):
         cmd = ""
@@ -341,7 +343,8 @@ class GaussianCalculation:
             PAL = r.pal
             MEM = r.memory
 
-        self.confirmed_specifications += self.additional_commands.strip()
-        raw = self.TEMPLATE.format(PAL, MEM, self.command_line.strip(), self.additional_commands.strip(), self.calc.parameters.charge, self.calc.parameters.multiplicity, self.xyz_structure, '\n'.join(self.appendix))
+        additional_commands = " ".join([i.strip() for i in self.additional_commands]).strip()
+        self.confirmed_specifications += additional_commands
+        raw = self.TEMPLATE.format(PAL, MEM, self.command_line.strip(), additional_commands, self.calc.parameters.charge, self.calc.parameters.multiplicity, self.xyz_structure, '\n'.join(self.appendix))
         self.input_file = '\n'.join([i.strip() for i in raw.split('\n')]).replace('\n\n\n', '\n\n')
 

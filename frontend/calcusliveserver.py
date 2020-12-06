@@ -53,6 +53,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     desired_capabilities=DesiredCapabilities.CHROME,
             )
             cls.driver.implicitly_wait(5)
+            cls.driver.set_window_size(1920, 1080)
         else:
             chrome_options = Options()
             if HEADLESS is not None and HEADLESS.lower() == "true":
@@ -345,7 +346,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             badge = self.driver.find_element_by_id("unseen_calculations_badge")
         except selenium.common.exceptions.NoSuchElementException:
             return 0
-        if badge is None:
+        if badge is None or badge.text.strip() == '':
             return 0
         return int(badge.text)
 
@@ -1161,9 +1162,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def rename_ensemble(self, e, name):
         rename_icon = e.find_element_by_class_name("fa-edit")
         rename_icon.click()
+
         text_box = e.find_element_by_css_selector("tr > td > a")
         text_box.clear()
         text_box.send_keys(name)
+
         text_box.send_keys(Keys.RETURN)
         self.wait_for_ajax()
 

@@ -35,7 +35,7 @@ class OrcaCalculation:
         self.pal = 0
         self.blocks = []
         self.command_line = ""
-        self.additional_commands = self.clean(self.calc.order.author.default_orca)
+        self.additional_commands = ""
         self.xyz_structure = ""
         self.block_lines = ""
         self.input_file = ""
@@ -58,6 +58,7 @@ class OrcaCalculation:
 
     def handle_specifications(self):
         _specifications = self.clean(self.calc.parameters.specifications).lower().strip()
+        _specifications += " " + self.clean(self.calc.order.author.default_orca).lower().strip()
         if _specifications == '':
             return
 
@@ -75,7 +76,14 @@ class OrcaCalculation:
             del s[ind:ind+2]
             _specifications = ' '.join(s)
 
-        self.additional_commands += _specifications
+        specifications_list = []
+
+        for spec in _specifications.split():
+            if spec not in specifications_list:
+                specifications_list.append(spec)
+
+        if len(specifications_list) > 0:
+            self.additional_commands = " ".join(specifications_list)
 
     def handle_command(self):
         if self.calc.step.name == 'NMR Prediction':

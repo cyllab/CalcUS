@@ -37,7 +37,7 @@ services:
                         - CALCUS_TEST=True
         selenium:
                 container_name: selenium
-                image: selenium/standalone-chrome-debug:3.7.1
+                image: selenium/standalone-chrome-debug:latest
                 user: calcus
                 volumes:
                         - ${CALCUS_INCHI}:/binaries/other

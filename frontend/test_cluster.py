@@ -61,8 +61,11 @@ class ClusterTests(CalcusLiveServer):
 
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         chan = connection.channel()
-        chan.queue_purge('cluster')
-        chan.close()
+        try:
+            chan.queue_purge('cluster')
+            chan.close()
+        except pika.exceptions.ChannelClosedByBroker:
+            pass
         connection.close()
 
         p = Process(target=self.run_daemon)

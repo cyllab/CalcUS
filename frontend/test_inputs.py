@@ -472,6 +472,60 @@ class GaussianTests(TestCase):
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
         self.assertEqual(gaussian.confirmed_specifications.strip(), '')
 
+    def test_duplicate_specifications(self):
+        params = {
+                'type': 'Geometrical Optimisation',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'NoSymm NoSymm',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt M062X/Def2SVP nosymm
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_duplicate_specifications2(self):
+        params = {
+                'type': 'Geometrical Optimisation',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'NoSymm NOSYMM',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt M062X/Def2SVP nosymm
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
     def test_opt_SE(self):
         params = {
                 'type': 'Geometrical Optimisation',
@@ -1741,7 +1795,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp M062X/Def2SVP Int(UltraFineGrid)
+        #p sp M062X/Def2SVP int(ultrafinegrid)
 
         CalcUS
 
@@ -1772,7 +1826,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp M062X/Def2SVP Int(UltraFineGrid) SCF(Tight)
+        #p sp M062X/Def2SVP int(ultrafinegrid) scf(tight)
 
         CalcUS
 
@@ -1804,7 +1858,40 @@ class GaussianTests(TestCase):
         _ = gaussian.input_file
 
         REF = """
-        #p sp M062X/Def2SVP Int(UltraFineGrid)
+        #p sp M062X/Def2SVP int(ultrafinegrid)
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_default_append_default_redundant(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'Int(ultrafinegrid) nosymm',
+                }
+
+        user = User.objects.create(username='tmp')
+        profile = Profile.objects.get(user=user)
+        profile.default_gaussian = "Int(UltraFineGrid) NOSYMM"
+        profile.save()
+
+        calc = gen_calc(params, profile)
+        gaussian = GaussianCalculation(calc)
+        _ = gaussian.input_file
+
+        REF = """
+        #p sp M062X/Def2SVP nosymm int(ultrafinegrid)
 
         CalcUS
 
@@ -1836,7 +1923,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p opt(maxstep=5) M062X/Def2SVP Int(UltraFineGrid) SCF(Tight)
+        #p opt(maxstep=5) M062X/Def2SVP int(ultrafinegrid) scf(tight)
 
         CalcUS
 
@@ -2300,6 +2387,96 @@ class OrcaTests(TestCase):
                 }
 
         calc = gen_calc(params, self.profile)
+        orca = OrcaCalculation(calc)
+
+        REF = """
+        !SP M062X Def2-SVP tightscf grid6
+        *xyz -1 1
+        Cl 0.0 0.0 0.0
+        *
+        %pal
+        nprocs 8
+        end
+        """
+
+        self.assertTrue(self.is_equivalent(REF, orca.input_file))
+
+    def test_sp_DFT_duplicate_specifications(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'ORCA',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'tightscf TightSCF GRID6',
+                }
+
+        calc = gen_calc(params, self.profile)
+        orca = OrcaCalculation(calc)
+
+        REF = """
+        !SP M062X Def2-SVP tightscf grid6
+        *xyz -1 1
+        Cl 0.0 0.0 0.0
+        *
+        %pal
+        nprocs 8
+        end
+        """
+
+        self.assertTrue(self.is_equivalent(REF, orca.input_file))
+
+    def test_default_append1(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'ORCA',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                }
+
+        user = User.objects.create(username='tmp')
+        profile = Profile.objects.get(user=user)
+        profile.default_orca = "TightSCF Grid6"
+        profile.save()
+
+        calc = gen_calc(params, profile)
+        orca = OrcaCalculation(calc)
+
+        REF = """
+        !SP M062X Def2-SVP tightscf grid6
+        *xyz -1 1
+        Cl 0.0 0.0 0.0
+        *
+        %pal
+        nprocs 8
+        end
+        """
+
+        self.assertTrue(self.is_equivalent(REF, orca.input_file))
+
+    def test_duplicate_specifications_profile(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'ORCA',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'tightscf grid6',
+                }
+
+        user = User.objects.create(username='tmp')
+        profile = Profile.objects.get(user=user)
+        profile.default_orca = "TightSCF Grid6"
+        profile.save()
+
+        calc = gen_calc(params, profile)
         orca = OrcaCalculation(calc)
 
         REF = """

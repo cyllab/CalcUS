@@ -34,6 +34,11 @@ CONNECTION_CODE = {
             4: "No calcus folder found",
             5: "Invalid key password",
         }
+try:
+    is_test = os.environ['CALCUS_TEST']
+except:
+    is_test = False
+
 if is_test:
     pass
 else:
