@@ -224,13 +224,13 @@ def wait_until_done(calc, conn, lock):
         if not isinstance(output, int):
             if len(output) == 1 and output[0].strip() == '':
                 #Not sure
-                print("Job done")
+                print("Job done ({})".format(job_id))
                 return ErrorCodes.SUCCESS
             else:
                 _output = [i for i in output if i.strip() != '' ]
                 print("Waiting ({})".format(job_id))
                 if _output != None and len(_output) < 2:
-                    print("Job done")
+                    print("Job done ({})".format(job_id))
                     return ErrorCodes.SUCCESS
                 else:
                     status = _output[1].split()[4]

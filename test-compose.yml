@@ -16,7 +16,6 @@ services:
                         dockerfile: Dockerfile
                 hostname: web
                 user: calcus
-                command: ./scripts/run_tests.sh
                 expose:
                         - 8000
                 volumes:
@@ -27,10 +26,31 @@ services:
                         - ${CALCUS_XTB}:/binaries/xtb
                         - ${CALCUS_OPENMPI}/bin:/binaries/openmpi
                         - ${CALCUS_OPENMPI}/lib:/usr/lib/openmpi
-                links:
+                depends_on:
                         - rabbit
                         - redis
-                        - selenium
+                        - slurm
+                env_file:
+                        - ./.env
+                environment:
+                        - CALCUS_TEST=True
+                links:
+                        - slurm
+        slurm:
+                build:
+                        context: ./docker/slurm
+                        dockerfile: Dockerfile
+                hostname: slurm
+                command: /home/slurm/run_slurm.sh
+                volumes:
+                        - .:/calcus 
+                        - ./docker/slurm/calcus:/home/slurm/calcus 
+                        - ${CALCUS_INCHI}:/home/slurm/other
+                        - ${CALCUS_GAUSSIAN}:/home/slurm/g16
+                        - ${CALCUS_ORCA}:/home/slurm/orca
+                        - ${CALCUS_XTB}:/home/slurm/xtb
+                        - ${CALCUS_OPENMPI}/bin:/home/slurm/openmpi
+                        - ${CALCUS_OPENMPI}/lib:/usr/lib/openmpi
                 env_file:
                         - ./.env
                 environment:
@@ -38,10 +58,12 @@ services:
         selenium:
                 container_name: selenium
                 image: selenium/standalone-chrome-debug:latest
-                user: calcus
+                #user: calcus
                 volumes:
                         - ${CALCUS_INCHI}:/binaries/other
                 ports:
                         - "4444:4444"
                         - "5900:5900"
+                links:
+                        - web
 

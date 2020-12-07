@@ -22,7 +22,7 @@ ADD requirements.txt /calcus/requirements.txt
 WORKDIR /calcus/
 
 RUN pip install -r requirements.txt
-RUN apt update && apt install openbabel locate -y
+RUN apt update && apt install openbabel sshpass -y
 
 RUN adduser --disabled-password --gecos '' calcus  
 

@@ -464,10 +464,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_profile()
 
         address = self.driver.find_element_by_name("cluster_address")
-        address.send_keys("localhost")
-
         username = self.driver.find_element_by_name("cluster_username")
-        username.send_keys("calcus")
+        if docker:
+            address.send_keys("slurm")
+            username.send_keys("slurm")
+        else:
+            address.send_keys("localhost")
+            username.send_keys("calcus")
+
 
         pal = self.driver.find_element_by_name("cluster_cores")
         pal.clear()
@@ -493,12 +497,30 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 break
             time.sleep(1)
 
-        child = pexpect.spawn('su - calcus')
-        child.expect ('Password:')
-        child.sendline('clustertest')
-        child.expect('\$')
-        child.sendline("echo '{}' > /home/calcus/.ssh/authorized_keys".format(public_key))
-        time.sleep(0.1)
+        if docker:
+            child = pexpect.spawn('ssh slurm@slurm')
+            #child.logfile = open("/calcus/pexpect.log", 'wb')
+            child.expect("(yes/no)")
+            child.sendline('yes')
+            child.expect("password")
+            child.sendline('clustertest')
+            child.expect("\$")
+            child.sendline("mkdir -p .ssh/".format(public_key))
+            child.expect("\$")
+            child.sendline("echo '{}' > .ssh/authorized_keys".format(public_key))
+            child.expect("\$")
+            child.sendline("chmod 700 .ssh/authorized_keys")
+            child.expect("\$")
+            child.sendline("chown slurm:slurm .ssh/authorized_keys")
+            child.expect("\$")
+            child.sendline("exit")
+        else:
+            child = pexpect.spawn('su - calcus')
+            child.expect ('Password:')
+            child.sendline('clustertest')
+            child.expect('\$')
+            child.sendline("echo '{}' > /home/calcus/.ssh/authorized_keys".format(public_key))
+            time.sleep(0.1)
 
     def connect_cluster(self):
         assert self.is_on_page_access()

@@ -236,7 +236,7 @@ class ClusterDaemon:
             access_id = int(lines[1])
             password = lines[2]
             r = self.connect(access_id, password)
-            if r in [1, 2, 3, 4]:
+            if r in [1, 2, 3, 4, 5]:
                 self.log("Error with connection {}: {}".format(access_id, CONNECTION_CODE[r]))
             else:
                 self.log("Connection successful ({})".format(access_id))

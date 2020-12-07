@@ -29,6 +29,7 @@ from .models import *
 from .libxyz import *
 from .tasks import send_cluster_command
 from .cluster_daemon import ClusterDaemon
+from .environment_variables import *
 
 from django.core.management import call_command
 from .calcusliveserver import CalcusLiveServer
@@ -49,17 +50,23 @@ KEYS_DIR = os.path.join(tests_dir, "keys")
 class ClusterTests(CalcusLiveServer):
     @classmethod
     def setUpClass(cls):
-        child = pexpect.spawn('su - calcus')
-        child.expect ('Password:')
-        child.sendline('clustertest')
-        child.expect('\$')
-        child.sendline("rm -r /home/calcus/scratch")
+        if not docker:
+            child = pexpect.spawn('su - calcus')
+            child.expect ('Password:')
+            child.sendline('clustertest')
+            child.expect('\$')
+            child.sendline("rm -r /home/calcus/scratch")
+
         super().setUpClass()
 
     def setUp(self):
         super().setUp()
 
-        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        if docker:
+            credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
+            connection = pika.BlockingConnection(pika.ConnectionParameters('rabbit', credentials=credentials))
+        else:
+            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         chan = connection.channel()
         try:
             chan.queue_purge('cluster')
@@ -132,7 +139,7 @@ class ClusterTests(CalcusLiveServer):
         adress.send_keys("localhost")
 
         username = self.driver.find_element_by_name("cluster_username")
-        username.send_keys("calcus")
+        username.send_keys("cluster")
 
         pal = self.driver.find_element_by_name("cluster_cores")
         pal.clear()
@@ -165,7 +172,7 @@ class ClusterTests(CalcusLiveServer):
         adress.send_keys("localhost")
 
         username = self.driver.find_element_by_name("cluster_username")
-        username.send_keys("calcus")
+        username.send_keys("cluster")
 
         pal = self.driver.find_element_by_name("cluster_cores")
         pal.clear()

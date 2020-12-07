@@ -1,0 +1,29 @@
+FROM ubuntu:latest
+
+RUN apt update && apt install slurmd slurmctld munge openssh-server -y
+RUN mkdir -p /home/slurm/
+RUN usermod --shell /bin/bash --home /home/slurm slurm
+RUN chown slurm:slurm /home/slurm
+
+RUN yes "clustertest" | passwd slurm
+
+ENV EBROOTORCA "/home/slurm/orca"
+ENV GAUSS_EXEDIR "/home/slurm/g16"
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/home/slurm/orca"
+ENV CALCUS_DOCKER "True"
+
+ENV PATH=$PATH:"/home/slurm/xtb:/home/slurm/g16:/home/slurm/orca:/home/slurm/other:/home/slurm/openmpi"
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/binaries/orca:/usr/lib/openmpi/
+
+ADD slurm.conf /etc/slurm-llnl/
+ADD cgroup.conf /etc/slurm-llnl/
+ADD run_slurm.sh /home/slurm
+
+RUN mkdir -p /var/spool/slurmd
+RUN mkdir -p /var/log/slurmctl/
+RUN mkdir -p /var/log/slurmd/
+RUN chown slurm:slurm /var/spool/slurmd
+RUN chown slurm:slurm /var/log/slurmctl
+RUN chown slurm:slurm /var/log/slurmd
+
+ENV PYTHONUNBUFFERED 1
