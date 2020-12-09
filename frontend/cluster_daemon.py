@@ -342,7 +342,8 @@ class ClusterDaemon:
         tasks.REMOTE = True
 
         if docker:
-            time.sleep(10)
+            if not is_test:
+                time.sleep(10)
             credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
             connection = pika.BlockingConnection(pika.ConnectionParameters('rabbit', credentials=credentials))
         else:

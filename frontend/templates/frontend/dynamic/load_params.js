@@ -8,17 +8,6 @@ if ("{{ params.program }}" != "Unknown" && "{{ params.program}}" != "Open Babel"
 	solvation_radii = document.getElementById("calc_solvation_radii");
 	solvation_radii.value = "{{ params.solvation_radii }}";
 
-	charge = document.getElementById("calc_charge");
-	if("{{ params.charge }}" == "1") {
-		charge.value = "+1";
-	}
-	else if ("{{ params.charge }}" == "2") {
-		charge.value = "+2";
-	}
-	else {
-		charge.value = "{{ params.charge }}";
-	}
-
 	mult = document.getElementById("calc_multiplicity");
 	mult.value = "{{ params.multiplicity }}";
 

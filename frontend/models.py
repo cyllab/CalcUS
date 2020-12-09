@@ -140,7 +140,7 @@ class ClusterAccess(models.Model):
     pal = models.PositiveIntegerField(default=8)
     memory = models.PositiveIntegerField(default=15000)
 
-    status = models.CharField(max_length=100, default='')
+    status = models.CharField(max_length=500, default='')
 
     last_connected = models.DateTimeField('date', default=timezone.now() - timezone.timedelta(1))
 

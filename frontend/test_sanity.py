@@ -39,15 +39,14 @@ class GaussianTests(TestCase):
         c_dir = os.path.join(SCR_DIR, str(t))
 
         os.mkdir(c_dir)
-        os.chdir(c_dir)
 
-        with open("calc.com", 'w') as out:
+        with open("{}/calc.com".format(c_dir), 'w') as out:
             out.write(obj.input_file)
 
-        ret = subprocess.run(shlex.split("g16 calc.com"), cwd=c_dir)
+        ret = subprocess.run("cd {}; g16 calc.com".format(c_dir), shell=True)
 
         if ret.returncode != 0:
-            os.system("tail calc.log")
+            os.system("tail {}/calc.log".format(c_dir))
             return -1
 
         with open("{}/calc.log".format(c_dir)) as f:
@@ -57,6 +56,8 @@ class GaussianTests(TestCase):
         while lines[ind].find("SCF Done") == -1:
             ind -= 1
         E = lines[ind].split()[4].strip()
+
+        os.chdir(dir_path)
         return E
 
     def known_energy(self, E, params):
@@ -476,8 +477,7 @@ class OrcaTests(TestCase):
 
 
     def tearDown(self):
-        pass
-        #rmtree(SCR_DIR)
+        rmtree(SCR_DIR)
 
     def run_calc(self, obj):
         os.chdir(dir_path)
@@ -485,16 +485,15 @@ class OrcaTests(TestCase):
         c_dir = os.path.join(SCR_DIR, str(t))
 
         os.mkdir(c_dir)
-        os.chdir(c_dir)
 
-        with open("calc.inp", 'w') as out:
+        with open("{}/calc.inp".format(c_dir), 'w') as out:
             out.write(obj.input_file)
 
-        with open("calc.out", 'w') as out:
-            ret = subprocess.run(shlex.split("{}/orca calc.inp".format(EBROOTORCA)), cwd=c_dir, stdout=out, stderr=out)
+        with open("{}/calc.out".format(c_dir), 'w') as out:
+            ret = subprocess.run("cd {}; {}/orca calc.inp".format(c_dir, EBROOTORCA), shell=True, stdout=out, stderr=out)
 
         if ret.returncode != 0:
-            os.system("tail calc.out")
+            os.system("tail {}/calc.out".format(c_dir))
             return -1
 
         with open("{}/calc.out".format(c_dir)) as f:
@@ -833,16 +832,15 @@ class CrestTests(TestCase):
         c_dir = os.path.join(SCR_DIR, str(t))
 
         os.mkdir(c_dir)
-        os.chdir(c_dir)
 
-        with open("in.xyz", 'w') as out:
+        with open("{}/in.xyz".format(c_dir), 'w') as out:
             out.write(obj.calc.structure.xyz_structure)
 
-        with open("calc.out", 'w') as out:
-            ret = subprocess.run(shlex.split(obj.command), cwd=c_dir, stdout=out, stderr=out)
+        with open("{}/calc.out".format(c_dir), 'w') as out:
+            ret = subprocess.run("cd {};".format(c_dir) + obj.command, shell=True, stdout=out, stderr=out)
 
         if ret.returncode != 0:
-            os.system("tail calc.out")
+            os.system("tail {}/calc.out".format(c_dir))
             return -1
 
         with open("{}/crest_best.xyz".format(c_dir)) as f:
@@ -954,19 +952,18 @@ class XtbTests(TestCase):
         c_dir = os.path.join(SCR_DIR, str(t))
 
         os.mkdir(c_dir)
-        os.chdir(c_dir)
 
-        with open("in.xyz", 'w') as out:
+        with open("{}/in.xyz".format(c_dir), 'w') as out:
             out.write(obj.calc.structure.xyz_structure)
 
-        with open("calc.out", 'w') as out:
-            ret = subprocess.run(shlex.split(obj.command), cwd=c_dir, stdout=out, stderr=out)
+        with open("{}/calc.out".format(c_dir), 'w') as out:
+            ret = subprocess.run("cd {};".format(c_dir) + obj.command, shell=True, stdout=out, stderr=out)
 
         if ret.returncode != 0:
-            os.system("tail calc.out")
+            os.system("tail {}/calc.out".format(c_dir))
             return -1
 
-        with open("calc.out") as f:
+        with open("{}/calc.out".format(c_dir)) as f:
             lines = f.readlines()
             ind = len(lines)-1
 

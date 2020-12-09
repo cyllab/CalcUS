@@ -2,8 +2,10 @@
 omit = 
 	*/migrations/*
 	manage.py
-	frontend/test*.py
+	frontend/test.py
+	frontend/_*.py
 	*__init__.py
 	/usr/*
-	/home/raphael/.local/*
 	calcus/*
+	frontend/tests/*
+source = .

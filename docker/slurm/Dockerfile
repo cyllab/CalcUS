@@ -4,6 +4,8 @@ RUN apt update && apt install slurmd slurmctld munge openssh-server -y
 RUN mkdir -p /home/slurm/
 RUN usermod --shell /bin/bash --home /home/slurm slurm
 RUN chown slurm:slurm /home/slurm
+RUN groupadd calcus
+RUN usermod -a -G calcus slurm
 
 RUN yes "clustertest" | passwd slurm
 

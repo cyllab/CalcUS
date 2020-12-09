@@ -500,10 +500,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if docker:
             child = pexpect.spawn('ssh slurm@slurm')
             #child.logfile = open("/calcus/pexpect.log", 'wb')
-            child.expect("(yes/no)")
-            child.sendline('yes')
-            child.expect("password")
-            child.sendline('clustertest')
+            choice = child.expect(["(yes/no)", "password"])
+            if choice == 0:
+                child.sendline('yes')
+                child.expect("password")
+                child.sendline('clustertest')
+            elif choice == 1:
+                child.sendline('clustertest')
+
             child.expect("\$")
             child.sendline("mkdir -p .ssh/".format(public_key))
             child.expect("\$")

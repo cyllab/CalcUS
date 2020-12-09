@@ -445,9 +445,9 @@
 		function add_file_name() {
 			path = $("#file_structure").val();
 			file_name = path.replace('C:\\fakepath\\', '').split('.')[0];
-			curr_name = document.getElementById("calc_name").value;
+			curr_name = document.getElementById("calc_mol_name").value;
 			if(curr_name == "") {
-				$("#calc_name").val(file_name);
+				$("#calc_mol_name").val(file_name);
 			}
 		}
 
