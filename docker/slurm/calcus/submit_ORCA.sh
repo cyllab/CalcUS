@@ -7,7 +7,7 @@
 
 export OMP_NUM_THREADS=8,1
 export OMP_STACKSIZE=1G
-export PATH=$PATH:/home/slurm/:/home/slurm/.openmpi
+export PATH=$PATH:/home/slurm/:/home/slurm/openmpi
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/slurm/orca:/usr/lib/openmpi
 export EBROOTORCA=/home/slurm/orca
 

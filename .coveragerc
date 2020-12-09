@@ -8,4 +8,9 @@ omit =
 	/usr/*
 	calcus/*
 	frontend/tests/*
+	frontend/gen_data_documentation.py
+	frontend/gen_periodictable_css.py
+	frontend/check_data.py
+	frontend/calculate_rmsd.py
+
 source = .
