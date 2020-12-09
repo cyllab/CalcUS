@@ -834,7 +834,6 @@ class InterfaceTests(CalcusLiveServer):
         self.load_preset("Test Preset")
 
         solvent = self.driver.find_element_by_name('calc_solvent')
-        charge = Select(self.driver.find_element_by_name('calc_charge'))
         theory = Select(self.driver.find_element_by_id("calc_theory_level"))
         func = self.driver.find_element_by_id("calc_functional")
         basis_set = self.driver.find_element_by_id("calc_basis_set")
@@ -842,7 +841,6 @@ class InterfaceTests(CalcusLiveServer):
         software = self.driver.find_element_by_id("calc_software")
 
         self.assertEqual(solvent.get_attribute('value'), params['solvent'])
-        self.assertEqual(charge.first_selected_option.text, params['charge'])
         self.assertEqual(theory.first_selected_option.text, params['theory'])
         self.assertEqual(func.get_attribute('value'), params['functional'])
         self.assertEqual(basis_set.get_attribute('value'), params['basis_set'])
@@ -878,7 +876,6 @@ class InterfaceTests(CalcusLiveServer):
         solvent = self.driver.find_element_by_name('calc_solvent')
         solvation_model = Select(self.driver.find_element_by_name('calc_solvation_model'))
         solvation_radii = Select(self.driver.find_element_by_name('calc_solvation_radii'))
-        charge = Select(self.driver.find_element_by_name('calc_charge'))
         theory = Select(self.driver.find_element_by_id("calc_theory_level"))
         func = self.driver.find_element_by_id("calc_functional")
         basis_set = self.driver.find_element_by_id("calc_basis_set")
@@ -888,7 +885,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(solvent.get_attribute('value'), params['solvent'])
         self.assertEqual(solvation_model.first_selected_option.text, params['solvation_model'])
         self.assertEqual(solvation_radii.first_selected_option.text, params['solvation_radii'])
-        self.assertEqual(charge.first_selected_option.text, params['charge'])
         self.assertEqual(theory.first_selected_option.text, params['theory'])
         self.assertEqual(func.get_attribute('value'), params['functional'])
         self.assertEqual(basis_set.get_attribute('value'), params['basis_set'])
@@ -935,6 +931,7 @@ class InterfaceTests(CalcusLiveServer):
         self.lget("/launch/")
         params = {
                 'mol_name': 'Ammonia',
+                'name': 'NH3',
                 'type': 'Geometrical Optimisation',
                 'project': 'My Project',
                 'in_file': 'NH3.mol',
@@ -3840,6 +3837,7 @@ class ComplexCalculationTests(CalcusLiveServer):
 
         params = {
                 'mol_name': 'H2',
+                'name': 'H2',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
@@ -3870,6 +3868,7 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.lget("/launch/")
         params = {
                 'mol_name': 'Ethanol',
+                'name': 'Ethanol',
                 'type': 'Geometrical Optimisation',
                 'project': 'SeleniumProject',
                 'in_file': 'ethanol.xyz',
@@ -3956,6 +3955,7 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.lget("/launch/")
         params = {
                 'mol_name': 'Ammonia',
+                'name': 'NH3',
                 'type': 'Geometrical Optimisation',
                 'project': 'SeleniumProject',
                 'in_file': 'NH3.mol',
