@@ -281,6 +281,7 @@ class ClusterTests(CalcusLiveServer):
                 'software': 'xtb',
                 'in_file': 'elimination_substrate.xyz',
                 'aux_file': 'elimination_product.xyz',
+                'charge': '-1',
                 }
 
         self.lget("/launch/")

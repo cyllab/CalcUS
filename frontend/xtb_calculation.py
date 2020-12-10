@@ -165,7 +165,10 @@ class XtbCalculation:
                 if ss[0] in ['gfn2', 'gfn1', 'gfn0', 'gfnff', 'gfn2//gfnff']:
                     if ss[0] == 'gfn2//gfnff' and self.calc.step.name not in ['Conformational Search', 'Constrained Conformational Search']:
                         self.raise_error("Invalid specifications")
-                    method = ss[0]
+                    if ss[0] in ['gfn2', 'gfn1', 'gfn0']:
+                        method = "{} {}".format(ss[0][:-1], ss[0][-1])
+                    else:
+                        method = ss[0]
                 else:
                     self.raise_error("Invalid specifications")
             elif len(ss) == 2:
@@ -193,6 +196,10 @@ class XtbCalculation:
                         self.force_constant = float(ss[1])
                     except ValueError:
                         self.raise_error("Invalid specifications")
+                elif ss[0] == 'gfn':
+                    if ss[1] not in ['0', '1', '2']:
+                        self.raise_error("Invalid specifications")
+                    method = "{} {}".format(ss[0], ss[1])
                 else:
                     self.raise_error("Invalid specifications")
             else:
@@ -202,7 +209,7 @@ class XtbCalculation:
             self.cmd_arguments += "--acc {:.2f} ".format(accuracy)
         if iterations != -1:
             self.cmd_arguments += "--iterations {} ".format(iterations)
-        if method != "gfn2-xtb":
+        if method != "gfn2-xtb" and method != "gfn 2":
             self.cmd_arguments += "--{} ".format(method)
         if opt_level != "normal":
             self.cmd_arguments = self.cmd_arguments.replace('--opt ', '--opt {} '.format(opt_level))

@@ -11,6 +11,7 @@ RUN yes "clustertest" | passwd slurm
 
 ENV EBROOTORCA "/home/slurm/orca"
 ENV GAUSS_EXEDIR "/home/slurm/g16"
+ENV XTB4STDAHOME "/binaries/xtb/"
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/home/slurm/orca"
 ENV CALCUS_DOCKER "True"
 
@@ -29,3 +30,6 @@ RUN chown slurm:slurm /var/log/slurmctl
 RUN chown slurm:slurm /var/log/slurmd
 
 ENV PYTHONUNBUFFERED 1
+
+RUN echo "export PATH="$PATH > /home/slurm/.bashrc
+RUN chown slurm:slurm /home/slurm/.bashrc

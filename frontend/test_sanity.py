@@ -881,23 +881,6 @@ class CrestTests(TestCase):
         E = self.run_calc(xtb)
         self.assertFalse(self.known_energy(E, params))
 
-    def test_gfnff_conf_search2(self):#Flaky?
-        params = {
-                'calc_name': 'test',
-                'type': 'Conformational Search',
-                'project': 'New Project',
-                'software': 'xtb',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'ethanol.xyz',
-                'specifications': '--gfnff',
-                }
-
-        calc = gen_calc(params, self.profile)
-        xtb = XtbCalculation(calc)
-
-        E = self.run_calc(xtb)
-        self.assertTrue(self.known_energy(E, params))
-
     def test_gfnff_sp_conf_search(self):
         params = {
                 'calc_name': 'test',

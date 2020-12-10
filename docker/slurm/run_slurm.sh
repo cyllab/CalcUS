@@ -15,7 +15,7 @@ chgrp calcus /home/slurm/orca
 chgrp calcus /home/slurm/orca/*
 chgrp calcus /home/slurm/xtb/*
 
-USER slurm
+su slurm
 
 tail -f /var/log/slurmd/slurmd.log
 

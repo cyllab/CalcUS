@@ -3700,3 +3700,79 @@ class XtbTests(TestCase):
         calc = gen_calc(params, self.profile)
         with self.assertRaises(Exception):
             xtb = XtbCalculation(calc)
+
+    def test_gfn0(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'specifications': '--gfn 0'
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --gfn 0"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+    def test_gfn0_2(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'specifications': '--gfn0'
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --gfn 0"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+    def test_gfn1(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'specifications': '--gfn 0'
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --gfn 0"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+    def test_gfn2(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'specifications': '--gfn 2'
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+    def test_gfnff(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'specifications': '--gfnff'
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --gfnff"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+

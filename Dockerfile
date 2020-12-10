@@ -11,6 +11,8 @@ ENV CALCUS_TEST_KEY_HOME "/calcus/frontend/tests/keys"
 
 ENV EBROOTORCA "/binaries/orca"
 ENV GAUSS_EXEDIR "/binaries/g16"
+ENV XTBHOME "/binaries/xtb"
+ENV XTB4STDAHOME "/binaries/xtb"
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/binaries/orca"
 ENV CALCUS_DOCKER "True"
 
