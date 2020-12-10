@@ -1457,7 +1457,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
 
-    '''
     def test_NEB_from_file(self):
         params = {
                 'mol_name': 'test',
@@ -1546,7 +1545,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.calc_launch()
         self.wait_latest_calc_done(1200)
         self.assertTrue(self.latest_calc_successful())
-    '''
+
     def test_constrained_conf_search(self):
         params = {
                 'mol_name': 'test',

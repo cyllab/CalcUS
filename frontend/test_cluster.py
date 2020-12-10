@@ -38,13 +38,11 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 
-
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
 SCR_DIR = os.path.join(tests_dir, "scr")
 RESULTS_DIR = os.path.join(tests_dir, "results")
-CLUSTER_DIR = os.path.join(tests_dir, "cluster")
 KEYS_DIR = os.path.join(tests_dir, "keys")
 
 class ClusterTests(CalcusLiveServer):
@@ -957,4 +955,32 @@ class ClusterTests(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(300)
         self.assertTrue(self.latest_calc_successful())
+
+    def test_stress_num_calcs(self):
+        self.setup_cluster()
+        files = ["batch/benzene{:02d}.xyz".format(i) for i in range(1, 11)]
+        params = {
+                'mol_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_files': files,
+                'software': 'xtb',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.assertEqual(self.get_number_calc_orders(), 1)
+        self.wait_latest_calc_done(600)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/projects/")
+        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
+        self.assertEqual(n_mol, 1)
+        self.assertEqual(n_calc, 10)
+        self.assertEqual(n_queued, 0)
+        self.assertEqual(n_running, 0)
+        self.assertEqual(n_completed, 10)
 
