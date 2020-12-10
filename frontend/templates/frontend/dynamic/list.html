@@ -1,7 +1,5 @@
 {% if latest_frontend %}
-<div class="grid">
-    {% for order in latest_frontend %}
-    <article class="grid-item main-grid-item message {% if order.new_status %}new{% endif %}" id="order_{{ order.id }}" >
+    {% for order in latest_frontend %}<article class="grid-item main-grid-item message {% if order.new_status %}new{% endif %}" id="order_{{ order.id }}" >
 			<div class="message-header {% if order.status == 1 %} has-background-warning {% elif order.status == 2 %} has-background-success {% elif order.status == 3 %} has-background-danger{% endif %}" style="padding-right: 0;">
 				<div class="columns is-vcentered" style="width: 100%;">
 					<div class="column" style="text-align: left;">
@@ -41,16 +39,7 @@
 				</center>
 			</div>
 	</a>
-		</article>
-    {% endfor %}
-</div>
-<script>
-	$('.grid').masonry({
-	  itemSelector: '.grid-item',
-	  fitWidth: true
-	});
-</script>
-{% else %}
+</article>{% endfor %}{% else %}
     <p>No calculation found</p>
 {% endif %}
 

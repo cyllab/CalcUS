@@ -26,11 +26,18 @@
 	</style>
 	<script>
 		let page = 1;
+		
 		$(document).ready(function(){
 			refresh_list('add');
 		});
 		
 		function see(o_id) {
+			var calc_mode = document.getElementById("calc_mode");
+			mode = calc_mode.options[calc_mode.selectedIndex].text;
+
+			if (mode == "All orders") { return; }
+
+			art = document.getElementById("order_" + o_id);
 			$.ajax({
 				data: {
 					csrfmiddlewaretoken: ('{{csrf_token}}'),
@@ -38,15 +45,22 @@
 				method: "POST",
 				url: '/see/' + o_id,
 				success: function () {
-					$("#order_" + o_id).removeClass("new");	
-					badge = document.getElementById("unseen_calculations_badge");
-					old_num = badge.textContent;
-					new_num = parseInt(old_num)-1;
-					if (new_num > 0) {
-						badge.textContent = new_num;
+					if (art.classList.contains("new")) {
+						$("#order_" + o_id).removeClass("new");	
+						badge = document.getElementById("unseen_calculations_badge");
+						old_num = badge.textContent;
+						new_num = parseInt(old_num)-1;
+						if (new_num > 0) {
+							badge.textContent = new_num;
+						}
+						else {
+							$("#unseen_calculations_badge").remove();
+						}
 					}
 					else {
-						$("#unseen_calculations_badge").remove();
+						if (art.firstElementChild.classList.contains("has-background-success") || art.firstElementChild.classList.contains("has-background-danger") ) {
+							$grid.masonry('remove', art).masonry();
+						}
 					}
 				},
 			    });
@@ -66,10 +80,13 @@
 			var sel4 = document.getElementById("calc_status");
 			status = sel4.options[sel4.selectedIndex].text;
 
-			var sel5 = document.getElementById("calc_unseen");
-			unseen = sel5.checked;
+			var sel5 = document.getElementById("calc_mode");
+			sel_mode = sel5.options[sel5.selectedIndex].text;
 
-			if (mode == 'new') { page = 1; }
+			if (mode == 'new') { 
+				page = 1; 
+				$grid.masonry('remove', $grid.find('.grid-item'));
+			}
 
 			$.ajax({
 				data: {
@@ -79,19 +96,15 @@
 					user: user,
 					type: type,
 					status: status,
-					unseen: unseen,
+					mode: sel_mode,
 				},
 				method: "GET",
 				url: '/list/',
 				success: function (data, textStatus, xhr) {
 					if (xhr.status != 204) {
-						if(mode == 'new') {
-				    			$("#calculations_list").html(data);
-						}
-						else {
-				    			$("#calculations_list").append(data);
-						}
-
+						let items = $(data);
+						$grid.append(items).masonry('appended', items);	
+						$grid.masonry();
    						$(window).bind('scroll', scroll_test);
 					}
 				},
@@ -192,22 +205,30 @@
 					<option>Queued</option>
 				</select>
 			</div>
-				<label class="checkbox" style="margin-left: 30px; margin-top: 10px;">
-					<input type="checkbox" id="calc_unseen" onchange="refresh_list('new');">
-					Unseen only
-				</label>
+			<div class="select" >
+				<select name="calc_mode" id="calc_mode" onchange="refresh_list('new');">
+					<option>Workspace</option>
+					<option>Unseen only</option>
+					<option>All orders</option>
+				</select>
+			</div>
 
 		</div>
 		
-		<div id="calculations_list">
-		
+		<div class="grid" id="calculations_list">
+
 		</div>
 	</center>
 		<br>
 	{% else %}
 		Please login to access the Sandbox
 	{% endif %}
-
+	<script>
+		var $grid = $('.grid').masonry({
+			  itemSelector: '.grid-item',
+			  fitWidth: true
+		});
+	</script>
 <br />
 {% endblock %}
 

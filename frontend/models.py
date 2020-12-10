@@ -598,14 +598,20 @@ class CalculationOrder(models.Model):
 
     date = models.DateTimeField('date', null=True, blank=True)
     last_seen_status = models.PositiveIntegerField(default=0)
+    hidden = models.BooleanField(default=False)
 
     resource = models.ForeignKey('ClusterAccess', on_delete=models.SET_NULL, blank=True, null=True)
 
     def see(self):
-        self.last_seen_status = self.status
-        self.author.unseen_calculations -= 1
-        self.author.save()
-        self.save()
+        if self.last_seen_status != self.status:
+            self.last_seen_status = self.status
+            self.author.unseen_calculations -= 1
+            self.author.save()
+            self.save()
+        else:
+            if not self.hidden and self.status in [2, 3]:
+                self.hidden = True
+                self.save()
 
     @property
     def color(self):
