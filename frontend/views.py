@@ -71,10 +71,8 @@ class IndexView(generic.ListView):
             return []
 
         if profile_intersection(self.request.user.profile, target_profile):
-            if mode == "Workspace":
+            if mode in ["Workspace", "Unseen only"]:
                 hits = target_profile.calculationorder_set.filter(hidden=False)
-            elif mode == "Unseen only":
-                hits = target_profile.calculationorder_set.filter(hidden=False, status__neq=0)
             elif mode == "All orders":
                 hits = target_profile.calculationorder_set.all()
 
@@ -94,6 +92,7 @@ class IndexView(generic.ListView):
                     if hit.status != hit.last_seen_status:
                         new_hits.append(hit)
                 hits = new_hits
+
             res = sorted(hits, key=lambda d: (1 if d.new_status or d.status == 1 else 0, d.date), reverse=True)
 
             return res

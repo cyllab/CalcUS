@@ -26,6 +26,7 @@
 	</style>
 	<script>
 		let page = 1;
+		let loading = false;
 		
 		$(document).ready(function(){
 			refresh_list('add');
@@ -86,6 +87,8 @@
 			if (mode == 'new') { 
 				page = 1; 
 				$grid.masonry('remove', $grid.find('.grid-item'));
+				msg = document.getElementById("tmp_msg");
+				if (msg) { msg.remove() }
 			}
 
 			$.ajax({
@@ -101,7 +104,7 @@
 				method: "GET",
 				url: '/list/',
 				success: function (data, textStatus, xhr) {
-					if (xhr.status != 204) {
+					if (xhr.status == 200) {
 						let items = $(data);
 						$grid.append(items).masonry('appended', items);	
 						$grid.masonry();
@@ -145,9 +148,13 @@
 			let user_bottom = $(window).scrollTop() + window.innerHeight; 
 
 			if (page_bottom - user_bottom < 200) {
-				$(window).unbind();
-				page += 1;
-				refresh_list('add');
+				if (!loading) {
+					loading = true;
+					$(window).unbind();
+					page += 1;
+					refresh_list('add');
+					loading = false;
+				}
 			    }
 		}
 	</script>
