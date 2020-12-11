@@ -451,8 +451,7 @@
 			}
 		}
 
-		function preview_upload() {
-  			file_list = this.files;
+		function preview_upload(file_list) {
 			if(file_list.length == 1 && file_list[0].type == "chemical/x-xyz") {
 				var reader = new FileReader();
 				reader.readAsText(file_list[0], "UTF-8");
@@ -471,6 +470,22 @@
 					editor.loadMolecule(mol_read);	
 				}
 
+			}
+
+
+		}
+
+		function file_upload_changed() {
+  			file_list = this.files;
+			add_file_name();	
+			preview_upload(file_list);
+
+			combine = document.getElementById("calc_combine_files_column");
+			if (file_list.length > 1) {
+				combine.style.display = "block";	
+			}
+			else {
+				combine.style.display = "none";	
 			}
 		}
 
@@ -668,13 +683,25 @@
 			<form action="/submit_calculation/" method="post" id="calcform" enctype="multipart/form-data">
 
 				{% if not ensemble and not structure %}
-				<div class="field">
-					<label class="label">Draw a structure or choose a file</label>
-					<div class="control">
-						<input type="file" name="file_structure" id="file_structure" multiple="multiple" onchange="add_file_name();">
+
+				<div class="columns">
+					<div class="column">
+						<div class="field">
+							<label class="label">Draw a structure or choose a file</label>
+							<div class="control">
+								<input type="file" name="file_structure" id="file_structure" multiple="multiple">
+							</div>
+						</div>
+					</div>
+					<div class="column is-narrow" id="calc_combine_files_column" style="display: none;">
+						<label class="label">Single ensemble</label>
+						<div class="control">
+							<input type="checkbox" id="calc_combine_files" name="calc_combine_files">
+						</div>
 					</div>
 				</div>
-				<div class="field type_specific avail_Minimum_Energy_Path">
+
+				<div class="field type_specific avail_Minimum_Energy_Path" style="display: none;">
 					<label class="label">Upload auxiliary structure</label>
 					<div class="control">
 						<input type="file" name="aux_file_structure" id="aux_file_structure">
@@ -1271,7 +1298,7 @@
 	}		
 	{% if not ensemble and not structure and not calc %}
 		const inputElement = document.getElementById("file_structure");
-		inputElement.addEventListener("change", preview_upload, false);
+		inputElement.addEventListener("change", file_upload_changed, false);
 	{% endif %}
 
 	</script>

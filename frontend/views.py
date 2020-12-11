@@ -1197,16 +1197,21 @@ def submit_calculation(request):
 
         fingerprints = {}
         unique_fingerprints = []
+        unique_structures = []
         in_structs = []
-        names = {}
         if len(request.FILES) > 0:
+
+            combine = ""
+            if 'calc_combine_files' in request.POST.keys():
+                combine = clean(request.POST['calc_combine_files'])
+
             for ind, ff in enumerate(request.FILES.getlist("file_structure")):
                 ss = handle_file_upload(ff, params)
                 if isinstance(ss, HttpResponse):
                     return ss
                 s, filename = ss
-                filename = clean(filename)
-                names[s.id] = filename
+
+                unique_structures.append(s.id)
                 fing = gen_fingerprint(s)
 
                 if fing in fingerprints.keys():
@@ -1217,25 +1222,47 @@ def submit_calculation(request):
                 if fing not in unique_fingerprints:
                     unique_fingerprints.append(fing)
 
-            for fing in unique_fingerprints:
+            if combine == "on":
                 obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
                 try:
                     mol = Molecule.objects.get(project=project_obj, name=mol_name)
                     #Inchi might not match
                 except Molecule.DoesNotExist:
-                    mol = Molecule.objects.create(name=mol_name, inchi=fing, project=project_obj)
+                    mol = Molecule.objects.create(name=mol_name, inchi=unique_fingerprints[0], project=project_obj)#"Random" Inchi
                     mol.save()
 
                 e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
-                for s_num, s_id in enumerate(fingerprints[fing]):
+
+                for s_num, s_id in enumerate(unique_structures):
                     s = Structure.objects.get(pk=s_id)
                     s.parent_ensemble = e
                     s.number = s_num + 1
                     s.save()
+
                 e.save()
                 obj.ensemble = e
                 obj.save()
                 orders.append(obj)
+            else:
+                for fing in unique_fingerprints:
+                    obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
+                    try:
+                        mol = Molecule.objects.get(project=project_obj, name=mol_name)
+                        #Inchi might not match
+                    except Molecule.DoesNotExist:
+                        mol = Molecule.objects.create(name=mol_name, inchi=fing, project=project_obj)
+                        mol.save()
+
+                    e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+                    for s_num, s_id in enumerate(fingerprints[fing]):
+                        s = Structure.objects.get(pk=s_id)
+                        s.parent_ensemble = e
+                        s.number = s_num + 1
+                        s.save()
+                    e.save()
+                    obj.ensemble = e
+                    obj.save()
+                    orders.append(obj)
         else:
             if 'structure' in request.POST.keys():
                 obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)

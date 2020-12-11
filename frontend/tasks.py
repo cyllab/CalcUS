@@ -2529,9 +2529,20 @@ def dispatcher(drawing, order_id):
 def run_calc(calc_id):
     print("Processing calc {}".format(calc_id))
 
-    sleep(1)#wait for task_id to be saved to the database
+    def get_calc(calc_id):
+        for i in range(3):
+            try:
+                calc = Calculation.objects.get(pk=calc_id)
+            except Calculation.DoesNotExist:
+                sleep(1)
+            else:
+                if calc.task_id == '':
+                    sleep(1)
+                else:
+                    return calc
+        raise Exception("Could not get calculation to run")
 
-    calc = Calculation.objects.get(pk=calc_id)
+    calc = get_calc(calc_id)
 
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
 

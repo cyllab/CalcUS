@@ -3667,6 +3667,26 @@ class MiscCalculationTests(CalcusLiveServer):
         for c in calcs:
             self.assertEqual(c.status, 2)
 
+    def test_multiple_files_combine(self):
+        params = {
+                'mol_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_files': ['CH4.mol', 'H2.mol2', 'H2.sdf', 'ethanol.xyz'],
+                'software': 'xtb',
+                'combine': True,
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.assertEqual(self.get_number_calc_orders(), 1)
+        self.wait_latest_calc_done(150)
+        self.assertTrue(self.latest_calc_successful())
+
+
     def test_many_same_files(self):
         files = ["batch/benzene{:02d}.xyz".format(i) for i in range(1, 11)]
         params = {

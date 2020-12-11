@@ -207,6 +207,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if 'in_files' in params.keys():
             for f in params['in_files']:
                 upload_input.send_keys("{}/tests/{}".format(dir_path, f))
+            if 'combine' in params.keys() and params['combine'] == True:
+                combine_box = self.driver.find_element_by_id("calc_combine_files");
+                combine_box.click()
 
         if 'aux_file' in params.keys():
             aux_upload = self.driver.find_element_by_name('aux_file_structure')
@@ -855,7 +858,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         try:
             calculations_div = WebDriverWait(self.driver, 1).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "#calculations_list > .grid"))
+                EC.presence_of_element_located((By.CSS_SELECTOR, "#calculations_list"))
             )
         except selenium.common.exceptions.TimeoutException:
             return []
@@ -1041,8 +1044,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
 
         calculations_container = self.driver.find_element_by_id("calculations_list")
-        calculations_div = calculations_container.find_element_by_css_selector(".grid")
-        calculations = calculations_div.find_elements_by_css_selector("article")
+        calculations = calculations_container.find_elements_by_css_selector("article")
         header = calculations[0].find_element_by_class_name("message-header")
         return "has-background-success" in header.get_attribute("class")
 
