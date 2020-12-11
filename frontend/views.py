@@ -59,11 +59,11 @@ class IndexView(generic.ListView):
             page = 0
 
         self.request.session['previous_page'] = page
-        proj = self.request.GET.get('project')
-        type = self.request.GET.get('type')
-        status = self.request.GET.get('status')
-        target_username = self.request.GET.get('user')
-        mode = self.request.GET.get('mode')
+        proj = clean(self.request.GET.get('project'))
+        type = clean(self.request.GET.get('type'))
+        status = clean(self.request.GET.get('status'))
+        target_username = clean(self.request.GET.get('user'))
+        mode = clean(self.request.GET.get('mode'))
 
         try:
             target_profile = User.objects.get(username=target_username).profile
@@ -94,7 +94,6 @@ class IndexView(generic.ListView):
                 hits = new_hits
 
             res = sorted(hits, key=lambda d: (1 if d.new_status or d.status == 1 else 0, d.date), reverse=True)
-
             return res
         else:
             return []
