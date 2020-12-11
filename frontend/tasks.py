@@ -2536,7 +2536,7 @@ def run_calc(calc_id):
             except Calculation.DoesNotExist:
                 sleep(1)
             else:
-                if calc.task_id == '':
+                if calc.task_id == '' and calc.local:
                     sleep(1)
                 else:
                     return calc
