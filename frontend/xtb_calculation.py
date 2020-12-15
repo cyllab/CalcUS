@@ -28,7 +28,13 @@ class XtbCalculation:
     def handle_parameters(self):
         if self.calc.parameters.solvent != "Vacuum":
             solvent_keyword = get_solvent(self.calc.parameters.solvent, self.calc.parameters.software)
-            self.cmd_arguments += '-g {} '.format(solvent_keyword)
+            if self.calc.parameters.solvation_model == "GBSA":
+                self.cmd_arguments += '-g {} '.format(solvent_keyword)
+            elif self.calc.parameters.solvation_model == "ALPB":
+                self.cmd_arguments += '--alpb {} '.format(solvent_keyword)
+            else:
+                raise Exception("Invalid solvation method for xtb: {}".format(self.calc.parameters.solvation_model))
+
 
         if self.calc.parameters.charge != 0:
             self.cmd_arguments += '--chrg {} '.format(self.calc.parameters.charge)

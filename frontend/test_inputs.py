@@ -3425,6 +3425,7 @@ class XtbTests(TestCase):
                 'type': 'Frequency Calculation',
                 'in_file': 'Cl.xyz',
                 'software': 'xtb',
+                'solvation_model': 'GBSA',
                 'solvent': 'chcl3',
                 'charge': '-1',
                 }
@@ -3436,12 +3437,30 @@ class XtbTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, xtb.command))
 
+    def test_solvent_ALPB(self):
+        params = {
+                'type': 'Frequency Calculation',
+                'in_file': 'Cl.xyz',
+                'software': 'xtb',
+                'solvent': 'chcl3',
+                'solvation_model': 'ALPB',
+                'charge': '-1',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --hess --alpb chcl3 --chrg -1"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
     def test_solvent_synonym(self):
         params = {
                 'type': 'Frequency Calculation',
                 'in_file': 'Cl.xyz',
                 'software': 'xtb',
                 'solvent': 'chloroform',
+                'solvation_model': 'GBSA',
                 'charge': '-1',
                 }
 

@@ -1039,3 +1039,39 @@ class XtbTests(TestCase):
         E = self.run_calc(xtb)
         self.assertFalse(self.known_energy(E, params))
 
+    def test_sp_GBSA(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'software': 'xtb',
+                'solvent': 'Benzene',
+                'solvation_model': 'GBSA',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.xyz',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        E = self.run_calc(xtb)
+        self.assertFalse(self.known_energy(E, params))
+
+    def test_sp_ALPB(self):
+        params = {
+                'calc_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'software': 'xtb',
+                'solvent': 'Benzene',
+                'solvation_model': 'ALPB',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.xyz',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        E = self.run_calc(xtb)
+        self.assertFalse(self.known_energy(E, params))
+

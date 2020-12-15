@@ -1298,7 +1298,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
 
-    def test_freq_solv(self):
+    def test_freq_solv_GBSA(self):
         params = {
                 'mol_name': 'test',
                 'type': 'Frequency Calculation',
@@ -1307,6 +1307,27 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'in_file': 'carbo_cation.mol',
                 'charge': '+1',
                 'solvent': 'Chloroform',
+                'solvation_model': 'GBSA',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+
+    def test_freq_solv_ALPB(self):
+        params = {
+                'mol_name': 'test',
+                'type': 'Frequency Calculation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.mol',
+                'charge': '+1',
+                'solvent': 'Chloroform',
+                'solvation_model': 'ALPB',
                 }
 
         self.lget("/launch/")

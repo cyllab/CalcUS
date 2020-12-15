@@ -34,7 +34,6 @@ def gen_param(params):
             if solvation_model in ["PCM", "CPCM"]:
                 solvation_radii = "UFF"
 
-
     if 'basis_set' in params.keys():
         basis_set = params['basis_set']
 
