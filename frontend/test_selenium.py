@@ -1428,7 +1428,8 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'CH4.mol',
+                'in_file': 'Cl.xyz',
+                'charge': '-1'
                 }
 
         self.lget("/launch/")
@@ -1442,9 +1443,13 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
         params2 = {
                 'type': 'Frequency Calculation',
-                #project implicit
+                #project and charge implicit
                 }
         self.calc_input_params(params2)
+
+        charge = Select(self.driver.find_element_by_name('calc_charge'))
+        self.assertEqual(charge.first_selected_option.text, params['charge'])
+
         self.calc_launch()
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
@@ -1456,7 +1461,8 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'CH4.mol',
+                'in_file': 'Cl.xyz',
+                'charge': '-1',
                 }
 
         self.lget("/launch/")
@@ -1470,8 +1476,12 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
         params2 = {
                 'type': 'Frequency Calculation',
-                #project implicit
+                #project and charge implicit
                 }
+
+        charge = Select(self.driver.find_element_by_name('calc_charge'))
+        self.assertEqual(charge.first_selected_option.text, params['charge'])
+
         self.calc_input_params(params2)
         self.calc_launch()
         self.lget("/calculations/")

@@ -2094,7 +2094,13 @@ def analyse_opt(calc_id):
                 "ORCA": analyse_opt_ORCA,
                 "xtb": analyse_opt_xtb,
                 }
+
     calc = Calculation.objects.get(pk=calc_id)
+
+    xyz = parse_xyz_from_text(calc.structure.xyz_structure)
+
+    if len(xyz) == 1:#Single atom
+        return
 
     software = calc.parameters.software
 

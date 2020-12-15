@@ -2869,6 +2869,7 @@ def load_preset(request, pk):
 
     return render(request, 'frontend/dynamic/load_params.js', {
             'params': p.params,
+            'load_charge': False,
         })
 
 @login_required
@@ -2887,6 +2888,7 @@ def load_params_ensemble(request, pk):
 
     return render(request, 'frontend/dynamic/load_params.js', {
             'params': params,
+            'load_charge': True,
         })
 
 @login_required
@@ -2905,6 +2907,7 @@ def load_params_structure(request, pk):
 
     return render(request, 'frontend/dynamic/load_params.js', {
             'params': params,
+            'load_charge': True,
         })
 
 class CsvParameters:

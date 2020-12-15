@@ -31,6 +31,19 @@ if ("{{ params.program }}" != "Unknown" && "{{ params.program}}" != "Open Babel"
 		func.value = "{{ params.method }}";
 	{% endif %}
 
+	
+	{% if load_charge %}
+		charge = document.getElementById("calc_charge");
+		if("{{ params.charge }}" == "1") {
+			charge.value = "+1";
+		}
+		else if ("{{ params.charge }}" == "2") {
+			charge.value = "+2";
+		}
+		else {
+			charge.value = "{{ params.charge }}";
+		}
+	{% endif %}
 
 	df = document.getElementById("calc_df");
 	df.value = "{{ params.density_fitting }}";
