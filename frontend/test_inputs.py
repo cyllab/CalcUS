@@ -3299,6 +3299,35 @@ class OrcaTests(TestCase):
         """
         self.assertTrue(self.is_equivalent(INPUT, orca.input_file))
 
+    def test_hirshfeld_pop(self):
+        params = {
+                'type': 'Single-Point Energy',
+                'in_file': 'Cl.xyz',
+                'software': 'ORCA',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'phirshfeld',
+                }
+
+        calc = gen_calc(params, self.profile)
+        orca = OrcaCalculation(calc)
+
+        REF = """
+        !SP M062X Def2-SVP
+        *xyz -1 1
+        Cl 0.0 0.0 0.0
+        *
+        %output
+        Print[ P_Hirshfeld] 1
+        end
+        %pal
+        nprocs 8
+        end
+        """
+
+        self.assertTrue(self.is_equivalent(REF, orca.input_file))
 
 class XtbTests(TestCase):
     def setUp(self):

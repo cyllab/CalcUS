@@ -79,7 +79,12 @@ class OrcaCalculation:
         specifications_list = []
 
         for spec in _specifications.split():
-            if spec not in specifications_list:
+            if spec == "phirshfeld":
+                HIRSHFELD_BLOCK = """%output
+                Print[ P_Hirshfeld] 1
+                end"""
+                self.blocks.append(HIRSHFELD_BLOCK)
+            elif spec not in specifications_list:
                 specifications_list.append(spec)
 
         if len(specifications_list) > 0:

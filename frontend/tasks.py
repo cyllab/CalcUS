@@ -971,6 +971,8 @@ def orca_mo_gen(in_file, calc):
     prop.energy = E
     prop.save()
 
+    parse_orca_charges(calc, calc.structure)
+
     return ErrorCodes.SUCCESS
 
 def orca_opt(in_file, calc):
@@ -1011,6 +1013,8 @@ def orca_opt(in_file, calc):
     s.save()
     prop.save()
 
+    parse_orca_charges(calc, s)
+
     return ErrorCodes.SUCCESS
 
 def orca_sp(in_file, calc):
@@ -1032,6 +1036,8 @@ def orca_sp(in_file, calc):
     prop = get_or_create(calc.parameters, calc.structure)
     prop.energy = E
     prop.save()
+
+    parse_orca_charges(calc, calc.structure)
 
     return ErrorCodes.SUCCESS
 
@@ -1060,6 +1066,8 @@ def orca_ts(in_file, calc):
     prop.geom = True
     s.save()
     prop.save()
+
+    parse_orca_charges(calc, s)
 
     return ErrorCodes.SUCCESS
 
@@ -1200,6 +1208,8 @@ def orca_freq(in_file, calc):
             for ind2, (a, x, y, z) in enumerate(struct):
                 out.write("{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(a, x, y, z, *vibs[ind][3*ind2:3*ind2+3]))
 
+    parse_orca_charges(calc, calc.structure)
+
     return ErrorCodes.SUCCESS
 
 def orca_scan(in_file, calc):
@@ -1267,6 +1277,9 @@ def orca_scan(in_file, calc):
             calc.result_ensemble.structure_set.add(r)
             calc.result_ensemble.save()
 
+    ###CHARGES
+    #Start_ind?
+
     return ErrorCodes.SUCCESS
 
 def orca_nmr(in_file, calc):
@@ -1298,6 +1311,9 @@ def orca_nmr(in_file, calc):
     E = float(lines[ind].split()[4])
     prop.energy = E
     prop.save()
+
+    parse_orca_charges(calc, calc.structure)
+
     return ErrorCodes.SUCCESS
 
 def save_to_results(f, calc_obj, multiple=False, out_name=""):
@@ -1478,11 +1494,73 @@ def launch_gaussian_calc(in_file, calc, files):
     else:
         return ErrorCodes.JOB_CANCELLED
 
+def parse_orca_charges(calc, s):
+    parse_default_orca_charges(calc, s)
+
+    if calc.parameters.specifications.lower().replace('_', '').find("phirshfeld") != -1:
+        parse_hirshfeld_orca_charges(calc, s)
+
+def parse_hirshfeld_orca_charges(calc, s):
+    prop = get_or_create(calc.parameters, s)
+
+    with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.out')) as f:
+        lines = f.readlines()
+    ind = len(lines)-1
+
+    while lines[ind].find("HIRSHFELD ANALYSIS") == -1:
+        ind -= 1
+
+    ind += 7
+
+    charges = []
+    while lines[ind].strip() != "":
+        n, a, chrg, spin = lines[ind].split()
+        charges.append("{:.2f}".format(float(chrg)))
+        ind += 1
+
+    prop.charges += "Hirshfeld:{};".format(','.join(charges))
+    prop.save()
+
+def parse_default_orca_charges(calc, s):
+    prop = get_or_create(calc.parameters, s)
+
+    with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), 'calc.out')) as f:
+        lines = f.readlines()
+    ind = len(lines)-1
+
+    while lines[ind].find("MULLIKEN ATOMIC CHARGES") == -1:
+        ind -= 1
+
+    ind += 2
+
+    charges = []
+    while lines[ind].find("Sum of atomic charges:") == -1:
+        n, a, _, chrg = lines[ind].split()
+        charges.append("{:.2f}".format(float(chrg)))
+        ind += 1
+
+    prop.charges += "Mulliken:{};".format(','.join(charges))
+
+    while lines[ind].find("LOEWDIN ATOMIC CHARGES") == -1:
+        ind -= 1
+
+    ind += 2
+
+    charges = []
+    while lines[ind].strip() != "":
+        n, a, _, chrg = lines[ind].split()
+        charges.append("{:.2f}".format(float(chrg)))
+        ind += 1
+
+    prop.charges += "Loewdin:{};".format(','.join(charges))
+    prop.save()
+
 def parse_gaussian_charges(calc, s):
     parse_default_gaussian_charges(calc, s)
 
     _specifications = ""
 
+    ###TODO: optimize this part
     remove = False
     for c in calc.parameters.specifications:
         if c == ' ' and remove:
