@@ -3532,6 +3532,28 @@ class XtbTests(TestCase):
         """
         self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
 
+    def test_duplicate_specifications(self):
+        params = {
+                'type': 'Constrained Optimisation',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'constraints': 'Freeze-1_2;',
+                'specifications': '--forceconstant 0.1 --forceconstant 0.2',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "xtb in.xyz --opt tight --input input"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+        INPUT = """$constrain
+        force constant=0.2
+        distance: 1, 2, auto
+        """
+        self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
+
     def test_conformational_search(self):
         params = {
                 'type': 'Conformational Search',

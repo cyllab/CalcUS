@@ -64,12 +64,18 @@
 <div class="container">
 	<div class="box">
 		<center>
-					{% if order.ensemble %}
-						<h3 class="title is-h3">Calculation Order {{ order.id }} - {{ order.ensemble.name }}</h3>
-					{% else %}
-					<h3 class="title is-h3">Calculation Order {{ order.id }} - {{ order.structure.parent_ensemble.name }}</h3>
-					{% endif %}
+			{% if order.ensemble %}
+				<h3 class="title is-h3">Calculation Order {{ order.id }} - {{ order.ensemble.name }}</h3>
+			{% else %}
+			<h3 class="title is-h3">Calculation Order {{ order.id }} - {{ order.structure.parent_ensemble.name }}</h3>
+			{% endif %}
 
+			{% if order.resource.cluster_address %}
+				Remote calculation ({{ order.resource.cluster_address }}) <br />
+			{% else %}
+				Local calculation <br />
+			{% endif %}
+				
 			<table class="table">
 				<thead>
 					<tr>

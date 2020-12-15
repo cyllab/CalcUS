@@ -166,20 +166,9 @@
 			<div class="select" >
 				<select name="calc_user" id="calc_user" onchange="refresh_project_list('new');">
 					<option>{{ user.username }}</option>
-					{% for teammate in user.profile.groups.members.all %}
-						{% if teammate != user.profile %}
-							<option name="{{ teammate.username }}">{{ teammate.username }}</option>
-						{% endif %}
+					{% for teammate in teammates %}
+							<option name="{{ teammate }}">{{ teammate }}</option>
 					{% endfor %}
-					{% if user.profile.groups.PI != None %}
-						<option name="{{ user.profile.groups.PI.username }}">{{ user.profile.groups.PI.username }}</option>
-					{% endif %}
-					{% for group in user.profile.researchgroup_PI.all %}
-						{% for teammate in group.members.all %}
-							<option name="{{ teammate.username }}">{{ teammate.username }}</option>
-						{% endfor %}
-					{% endfor %}
-
 				</select>
 			</div>
 

@@ -206,9 +206,29 @@ def aux_structure(request):
 
 @login_required
 def calculations(request):
+    profile = request.user.profile
+
+    teammates = []
+    if profile.member_of:
+        for t in profile.member_of.members.all():
+            teammates.append(t.username)
+
+    if profile.member_of and profile.member_of.PI:
+        teammates.append(profile.member_of.PI.username)
+
+    if profile.researchgroup_PI:
+        for g in profile.researchgroup_PI.all():
+            for t in g.members.all():
+                teammates.append(t.username)
+
+    teammates = list(set(teammates))
+    if profile.username in teammates:
+        teammates.remove(profile.username)
+
     return render(request, 'frontend/calculations.html', {
             'profile': request.user.profile,
             'steps': BasicStep.objects.all(),
+            'teammates': teammates,
         })
 
 @login_required

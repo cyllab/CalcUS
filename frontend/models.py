@@ -788,44 +788,26 @@ class Calculation(models.Model):
             if old:
                 if self.status != old.status:
                     mol = self.get_mol()
-                    num_calc_queued = 0
-                    num_calc_running = 0
-                    num_calc_done = 0
-                    num_calc_error = 0
 
                     if old.status == 0:
                         self.order.project.num_calc_queued -= 1
                         mol.num_calc_queued -= 1
-                        num_calc_queued -= 1
                     elif old.status == 1:
                         self.order.project.num_calc_running -= 1
                         mol.num_calc_running -= 1
-                        num_calc_running -= 1
-                    elif old.status == 2:
+                    elif old.status in [2, 3]:
                         self.order.project.num_calc_completed -= 1
                         mol.num_calc_completed -= 1
-                        num_calc_done -= 1
-                    if old.status == 3:
-                        self.order.project.num_calc_completed -= 1
-                        mol.num_calc_completed -= 1
-                        num_calc_error -= 1
 
                     if self.status == 0:
                         self.order.project.num_calc_queued += 1
                         mol.num_calc_queued += 1
-                        num_calc_queued += 1
                     elif self.status == 1:
                         self.order.project.num_calc_running += 1
                         mol.num_calc_running += 1
-                        num_calc_running += 1
-                    elif self.status == 2:
+                    elif self.status in [2, 3]:
                         self.order.project.num_calc_completed += 1
                         mol.num_calc_completed += 1
-                        num_calc_done += 1
-                    if self.status == 3:
-                        self.order.project.num_calc_completed += 1
-                        mol.num_calc_completed += 1
-                        num_calc_error += 1
 
                     self.order.project.save()
                     mol.save()
@@ -842,27 +824,15 @@ class Calculation(models.Model):
         self.order.project.num_calc -= 1
         mol.num_calc -= 1
 
-        num_calc_queued = 0
-        num_calc_running = 0
-        num_calc_done = 0
-        num_calc_error = 0
-
         if self.status == 0:
             self.order.project.num_calc_queued -= 1
             mol.num_calc_queued -= 1
-            num_calc_queued -= 1
         elif self.status == 1:
             self.order.project.num_calc_running -= 1
             mol.num_calc_running -= 1
-            num_calc_running -= 1
-        elif self.status == 2:
+        elif self.status in [2, 3]:
             self.order.project.num_calc_completed -= 1
             mol.num_calc_completed -= 1
-            num_calc_done -= 1
-        elif self.status == 3:
-            self.order.project.num_calc_completed -= 1
-            mol.num_calc_completed -= 1
-            num_calc_error -= 1
         else:
             raise Exception("Unknown calculation status")
 

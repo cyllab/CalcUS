@@ -21,8 +21,10 @@ from django.conf import settings
 RABBITMQ_USERNAME = os.environ["CALCUS_RABBITMQ_USERNAME"]
 RABBITMQ_PASSWORD = os.environ["CALCUS_RABBITMQ_PASSWORD"]
 
-import code, traceback, signal
+import code, traceback, signal, logging
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 GRIMME_SUITE = ['xtb', 'crest', 'xtb4stda', 'stda', 'enso.py', 'anmr']
 
@@ -59,9 +61,6 @@ class ClusterDaemon:
     calculations = {}
     cancelled = []
     stopped = False
-
-    def log(self, msg):
-        print("{} - {}".format(now(), msg), flush=True)
 
     def access_test(self, id, password):
         if id in self.connections.keys():
@@ -107,7 +106,7 @@ class ClusterDaemon:
         try:
             sock.connect((addr, 22))
         except socket.gaierror:
-            self.log("Invalid host")
+            logger.warning("Invalid host")
             return 2
 
         session = Session()
@@ -118,10 +117,10 @@ class ClusterDaemon:
         try:
             session.userauth_publickey_fromfile(username, keypath, passphrase=password)
         except ssh2.exceptions.AuthenticationError:
-            self.log("Could not connect to cluster {} with username {}".format(addr, username))
+            logger.warning("Could not connect to cluster {} with username {}".format(addr, username))
             return 3
         except ssh2.exceptions.FileError:
-            self.log("Invalid password for cluster {} with username {}".format(addr, username))
+            logger.warning("Invalid password for cluster {} with username {}".format(addr, username))
             return 5
 
         sftp = session.sftp_init()
@@ -131,8 +130,9 @@ class ClusterDaemon:
         try:
             conn = self.connections[access_id]
         except KeyError:
-            self.log("Cannot delete connection {}: no such connection".format(access_id))
+            logger.warning("Cannot delete connection {}: no such connection".format(access_id))
             return
+
         conn = self.connections[access_id][0]
         os.remove(os.path.join(CALCUS_KEY_HOME, str(conn.id) + '.pub'))
         os.remove(os.path.join(CALCUS_KEY_HOME, str(conn.id)))
@@ -140,11 +140,11 @@ class ClusterDaemon:
         try:
             del self.connections[access_id]
         except KeyError:
-            self.log("No connection with id {} in memory".format(access_id))
+            logger.warning("No connection with id {} in memory".format(access_id))
         try:
             del self.locks[access_id]
         except KeyError:
-            self.log("No lock for connection with id {} in memory".format(access_id))
+            logger.warning("No lock for connection with id {} in memory".format(access_id))
 
     def job(self, calc):
         access_id = calc.order.resource.id
@@ -155,7 +155,7 @@ class ClusterDaemon:
         return tasks.run_calc(calc.id)
 
     def connect(self, access_id, password):
-        self.log("Connecting ({})".format(access_id))
+        logger.info("Connecting ({})".format(access_id))
 
         c = self.access_test(access_id, password)
 
@@ -163,7 +163,7 @@ class ClusterDaemon:
         if not isinstance(c, int):
             self.connections[access_id] = c
             self.locks[access_id] = Lock()
-            self.log("Connected to cluster access {}".format(access_id))
+            logger.info("Connected to cluster access {}".format(access_id))
 
             access.last_connected = timezone.now()
             access.status = "Connected"
@@ -174,13 +174,13 @@ class ClusterDaemon:
                 t = threading.Thread(target=self.resume_calc, args=(c,))
                 t.start()
         else:
-            self.log("Error with cluster access {}: {}".format(access_id, CONNECTION_CODE[c]))
+            logger.warning("Error with cluster access {}: {}".format(access_id, CONNECTION_CODE[c]))
             access.status = CONNECTION_CODE[c]
 
         access.save()
 
     def disconnect(self, access_id):
-        self.log("Disconnecting cluster access {}".format(access_id))
+        logger.info("Disconnecting cluster access {}".format(access_id))
         if access_id in self.connections.keys():
             del self.connections[access_id]
         if access_id in self.locks.keys():
@@ -200,7 +200,7 @@ class ClusterDaemon:
         access.status = ""
         access.save()
 
-        self.log("Disconnected cluster access {}".format(access_id))
+        logger.info("Disconnected cluster access {}".format(access_id))
 
     def resume_calc(self, c):
         pid = threading.get_ident()
@@ -220,7 +220,7 @@ class ClusterDaemon:
         lines = body.decode('UTF-8').split('\n')
 
         if lines[0].strip() == "stop":
-            self.log("Stopping the daemon")
+            logger.info("Stopping the daemon")
             for conn_id in list(self.connections.keys()):
                 self.disconnect(conn_id)
 
@@ -237,15 +237,15 @@ class ClusterDaemon:
             password = lines[2]
             r = self.connect(access_id, password)
             if r in [1, 2, 3, 4, 5]:
-                self.log("Error with connection {}: {}".format(access_id, CONNECTION_CODE[r]))
+                logger.warning("Error with connection {}: {}".format(access_id, CONNECTION_CODE[r]))
             else:
-                self.log("Connection successful ({})".format(access_id))
+                logger.info("Connection successful ({})".format(access_id))
         elif cmd == "disconnect":
             access_id = int(lines[1])
             self.disconnect(access_id)
         elif cmd == "delete_access":
             access_id = int(lines[1])
-            self.log("Deleting connection {}".format(access_id))
+            logger.info("Deleting connection {}".format(access_id))
             self.delete_access(access_id)
         else:
             calc_id = int(lines[1].strip())
@@ -253,17 +253,17 @@ class ClusterDaemon:
             try:
                 calc = Calculation.objects.get(pk=calc_id)
             except Calculation.DoesNotExist:
-                self.log("Could not find calculation {}".format(calc_id))
+                logger.warning("Could not find calculation {}".format(calc_id))
                 return
 
             access = calc.order.resource
 
             if access is None:
-                self.log("Cannot load log: resource is null for calculation {}".format(calc.id))
+                logger.warning("Cannot load log: resource is null for calculation {}".format(calc.id))
                 return
 
             if access.id not in self.connections.keys():
-                self.log("Cannot execute command: access {} not connected".format(access.id))
+                logger.warning("Cannot execute command: access {} not connected".format(access.id))
                 return
 
             if cmd == "launch":
@@ -282,7 +282,7 @@ class ClusterDaemon:
                 if pid in tasks.connections.keys():
                     del tasks.connections[pid]
             elif cmd == "kill":
-                self.log("Killing calculation {}".format(calc.id))
+                logger.info("Killing calculation {}".format(calc.id))
                 if calc.id in self.calculations.keys():
                     pid = self.calculations[calc.id]
                     tasks.kill_sig.append(pid)
@@ -293,41 +293,42 @@ class ClusterDaemon:
                     try:
                         remote_conn = self.connections[access.id]
                     except KeyError:
-                        self.log("Cannot load log: invalid access")
+                        logger.warning("Cannot load log: invalid access")
 
                     tasks.sftp_get("/scratch/{}/calcus/{}/calc.log".format(access.cluster_username, calc.id), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), remote_conn, self.locks[access.id])
 
                 else:
-                    self.log("Cannot load log: unknown calculation")
-                    self.log("Known calculations:")
-                    self.log(self.calculations)
+                    logger.warning("Cannot load log: unknown calculation")
+                    logger.debug("Known calculations: \n {}".format(self.calculations))
                     return
             else:
-                self.log("Unknown command: {}".format(cmd))
+                logger.warning("Unknown command: {}".format(cmd))
                 return
 
     def keep_alive(self):
-        self.log("Starting the keepalive daemon")
+        logger.info("Starting the keepalive daemon")
         while True:
             for i in range(60):
                 if self.stopped:
                     return
                 time.sleep(1)
 
-            for conn_name in self.connections.keys():
+            for conn_name in list(self.connections.keys()):
                 access, sock, session, sftp = self.connections[conn_name]
                 success = False
                 for i in range(5):
                     try:
                         session.keepalive_send()
                     except ssh2.exceptions.SocketSendError:
-                        self.log("Could not send keepalive signal, trying again")
+                        logger.info("Could not send keepalive signal, trying again")
                         time.sleep(1)
                     else:
                         success = True
                         break
+
                 if not success:
-                    self.log("Could not keep connection {} alive".format(conn_name))
+                    logger.warning("Could not keep connection {} alive".format(conn_name))
+                    tasks.send_cluster_command("disconnect\n{}\n".format(access.id))
                 else:
                     access.last_connected = timezone.now()
                     access.status = "Connected"
@@ -351,13 +352,13 @@ class ClusterDaemon:
         chan = connection.channel()
         chan.queue_declare(queue='cluster')
         chan.basic_consume(queue='cluster', auto_ack=True, on_message_callback=self.process_command)
-        self.log("Starting to listen to cluster commands")
+        logger.info("Starting to listen to cluster commands")
         chan.start_consuming()
         chan.cancel()
         chan.close()
         connection.close()
         self.stopped = True
-        self.log("Daemon closed")
+        logger.info("Daemon closed")
 
 if __name__ == "__main__":
     a = ClusterDaemon()
