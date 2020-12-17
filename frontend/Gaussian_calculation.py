@@ -50,7 +50,7 @@ class GaussianCalculation:
         self.pal = 0
         self.appendix = []
         self.command_line = ""
-        self.additional_commands = [] 
+        self.additional_commands = []
         self.command_specifications = []
         self.confirmed_specifications = ""
         self.xyz_structure = ""

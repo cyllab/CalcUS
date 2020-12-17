@@ -23,8 +23,7 @@ RABBITMQ_PASSWORD = os.environ["CALCUS_RABBITMQ_PASSWORD"]
 
 import code, traceback, signal, logging
 
-logging.basicConfig(level=logging.INFO)
-formatter = logging.Formatter(fmt="%(levelname)s %(asctime)s %(module)s: %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 GRIMME_SUITE = ['xtb', 'crest', 'xtb4stda', 'stda', 'enso.py', 'anmr']

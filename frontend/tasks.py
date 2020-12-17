@@ -14,6 +14,7 @@ import subprocess
 import shlex
 import glob
 import ssh2
+import sys
 
 import threading
 from threading import Lock
@@ -49,6 +50,10 @@ RABBITMQ_PASSWORD = settings.RABBITMQ_PASSWORD
 import traceback
 import periodictable
 
+import logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s")
+logger = logging.getLogger(__name__)
+
 REMOTE = False
 connections = {}
 locks = {}
@@ -62,21 +67,21 @@ def direct_command(command, conn, lock):
     try:
         chan = sess.open_session()
         if isinstance(chan, int):
-            print("Failed to open channel, trying again")
+            logger.warning("Failed to open channel, trying again")
             lock.release()
             sleep(1)
             return direct_command(command, conn, lock)
     except ssh2.exceptions.Timeout:
-        print("Command timed out")
+        logger.warning("Command timed out")
         lock.release()
         return ErrorCodes.SUCCESS
     except ssh2.exceptions.ChannelFailure:
-        print("Channel failure")
+        logger.warning("Channel failure")
         lock.release()
         sleep(1)
         return direct_command(command, conn, lock)
     except ssh2.exceptions.SocketSendError:
-        print("Socket send error, trying again")
+        logger.warning("Socket send error, trying again")
         lock.release()
         sleep(1)
         return direct_command(command, conn, lock)
@@ -89,7 +94,7 @@ def direct_command(command, conn, lock):
         chan.wait_closed()
         size, data = chan.read()
     except ssh2.exceptions.Timeout:
-        print("Channel timed out")
+        logger.warning("Channel timed out")
         lock.release()
         return ErrorCodes.CHANNEL_TIMED_OUT
 
@@ -126,11 +131,11 @@ def sftp_get(src, dst, conn, lock):
                     else:
                         local.write(data)
     except ssh2.exceptions.SFTPProtocolError:
-        print("Could not get remote file {}".format(src))
+        logger.info("Could not get remote file {}".format(src))
         lock.release()
         return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
     except ssh2.exceptions.Timeout:
-        print("Timeout")
+        logger.warning("Timeout")
         lock.release()
         return sftp_get(src, dst, conn, lock)
 
@@ -163,7 +168,7 @@ def sftp_put(src, dst, conn, lock):
                 else:
                     remote.write(data)
     except ssh2.exceptions.Timeout:
-        print("Timeout while uploading, retrying...")
+        logger.warning("Timeout while uploading, retrying...")
         lock.release()
         return sftp_put(src, dst, conn, lock)
 
@@ -181,22 +186,22 @@ def wait_until_logfile(remote_dir, conn, lock):
         output = direct_command("ls {}".format(remote_dir), conn, lock)
         if not isinstance(output, int):
             if len(output) == 1 and output[0].strip() == '':
-                print("Received nothing, ignoring")
+                logger.info("Received nothing, ignoring")
             else:
                 _output = [i for i in output if i.strip() != '' ]
                 for i in _output:
                     if i.find("CalcUS-") != -1 and i.find(".log") != -1:
                         job_id = i.replace('CalcUS-', '').replace('.log', '')
-                        print("Log found: {}".format(job_id))
+                        logger.debug("Log found: {}".format(job_id))
                         return job_id
         sleep(DELAY[ind])
         ind += 1
-    print("Failed to find a job log")
+    logger.warning("Failed to find a job log")
     return ErrorCodes.NO_JOB_LOG
 
 def wait_until_done(calc, conn, lock):
     job_id = calc.remote_id
-    print("Waiting for job {} to finish".format(job_id))
+    logger.info("Waiting for job {} to finish".format(job_id))
 
     if is_test:
         DELAY = [5]
@@ -214,7 +219,7 @@ def wait_until_done(calc, conn, lock):
                 return ErrorCodes.JOB_CANCELLED
 
             if pid not in connections.keys():
-                print("Thread aborted for calculation {}".format(calc.id))
+                logger.info("Thread aborted for calculation {}".format(calc.id))
                 return ErrorCodes.SERVER_DISCONNECTED
             sleep(1)
 
@@ -224,13 +229,13 @@ def wait_until_done(calc, conn, lock):
         if not isinstance(output, int):
             if len(output) == 1 and output[0].strip() == '':
                 #Not sure
-                print("Job done ({})".format(job_id))
+                logger.info("Job done ({})".format(job_id))
                 return ErrorCodes.SUCCESS
             else:
                 _output = [i for i in output if i.strip() != '' ]
-                print("Waiting ({})".format(job_id))
+                logger.info("Waiting ({})".format(job_id))
                 if _output != None and len(_output) < 2:
-                    print("Job done ({})".format(job_id))
+                    logger.info("Job done ({})".format(job_id))
                     return ErrorCodes.SUCCESS
                 else:
                     status = _output[1].split()[4]
@@ -275,7 +280,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                             break
                     if not isinstance(output, int):
                         if len(output) == 1 and output[0].strip() == '':
-                            print("Calcus file empty, waiting for a log file")
+                            logger.info("Calcus file empty, waiting for a log file")
                             job_id = wait_until_logfile(remote_dir, conn, lock)
                             if isinstance(job_id, ErrorCodes):
                                 return job_id
@@ -294,10 +299,10 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     else:
                         return output
                 else:
-                    print("Channel timed out and no calculation id is set")
+                    logger.warning("Channel timed out and no calculation id is set")
                     return output
             elif output == ErrorCodes.COMMAND_TIMED_OUT:
-                print("Command timed out")
+                logger.warning("Command timed out")
                 return ErrorCodes.COMMAND_TIMED_OUT
             else:
                 if output[-2].find("Submitted batch job") != -1:
@@ -332,7 +337,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                 if t.returncode == 0:
                     return ErrorCodes.SUCCESS
                 else:
-                    print("Got returncode {}".format(t.returncode))
+                    logger.info("Got returncode {}".format(t.returncode))
                     return ErrorCodes.UNKNOWN_TERMINATION
 
             if calc_id != -1 and res.is_aborted() == True:
@@ -409,7 +414,7 @@ def generate_xyz_structure(drawing, structure):
             return ErrorCodes.SUCCESS
 
         else:
-            print("Unimplemented")
+            loggin.error("Unimplemented")
             return ErrorCodes.UNIMPLEMENTED
     else:
         return ErrorCodes.SUCCESS
@@ -1334,7 +1339,7 @@ def save_to_results(f, calc_obj, multiple=False, out_name=""):
         name = s
         copyfile(f, os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id), out_name))
     else:
-        print("Invalid file")
+        logger.error("Invalid file")
         return ErrorCodes.INVALID_FILE
     return ErrorCodes.SUCCESS
 
@@ -2137,7 +2142,7 @@ def write_mol(xyz):
 
 def gen_fingerprint(structure):
     if structure.xyz_structure == '':
-        print("No xyz structure!")
+        logger.error("No xyz structure!")
         return -1
 
     raw_xyz = structure.xyz_structure
@@ -2305,7 +2310,7 @@ def analyse_opt_Gaussian(calc):
         while lines[ind].find("Symbolic Z-matrix:") == -1:
             ind += 1
     except IndexError:
-        print("Could not parse Gaussian log for calc {}".format(calc.id))
+        logger.error("Could not parse Gaussian log for calc {}".format(calc.id))
         return
     ind += 2
 
@@ -2550,7 +2555,7 @@ def dispatcher(drawing, order_id):
         s.save()
         input_structures = [s]
     else:
-        print("Invalid calculation order: {}".format(order.id))
+        logger.error("Invalid calculation order: {}".format(order.id))
         return
 
     group_order = []
@@ -2611,7 +2616,7 @@ def dispatcher(drawing, order_id):
 
 @app.task(base=AbortableTask)
 def run_calc(calc_id):
-    print("Processing calc {}".format(calc_id))
+    logger.info("Processing calc {}".format(calc_id))
 
     def get_calc(calc_id):
         for i in range(3):
@@ -2651,11 +2656,11 @@ def run_calc(calc_id):
         try:
             os.mkdir(res_dir)
         except OSError:
-            print("Directory already exists: {}".format(res_dir))
+            logger.info("Directory already exists: {}".format(res_dir))
         try:
             os.mkdir(workdir)
         except OSError:
-            print("Directory already exists: {}".format(res_dir))
+            logger.info("Directory already exists: {}".format(res_dir))
 
         with open(in_file, 'w') as out:
             out.write(clean_xyz(calc.structure.xyz_structure))
@@ -2693,7 +2698,7 @@ def run_calc(calc_id):
         calc.status = 3
         calc.error_message = "Job cancelled"
         calc.save()
-        print("Job {} cancelled".format(calc.id))
+        logger.info("Job {} cancelled".format(calc.id))
         return ret
 
     if ret != ErrorCodes.SUCCESS:
@@ -2797,7 +2802,7 @@ def send_cluster_command(cmd):
 
 @app.task
 def cancel(calc_id):
-    print("Cancelling calc {}".format(calc_id))
+    logger.info("Cancelling calc {}".format(calc_id))
     calc = Calculation.objects.get(pk=calc_id)
     kill_calc(calc)
 
@@ -2813,7 +2818,7 @@ def kill_calc(calc):
                 calc.error_message = "Job cancelled"
                 calc.save()
         else:
-            print("Cannot cancel calculation without task id")
+            logger.error("Cannot cancel calculation without task id")
     else:
         cmd = "kill\n{}\n".format(calc.id)
         send_cluster_command(cmd)

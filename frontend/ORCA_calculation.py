@@ -111,8 +111,7 @@ class OrcaCalculation:
             electrons -= self.calc.parameters.charge
 
             if self.calc.parameters.multiplicity != 1:
-                print("Unimplemented multiplicity")
-                return -1
+                raise Exception("Unimplemented multiplicity")
 
             n_HOMO = int(electrons/2)-1
             n_LUMO = int(electrons/2)

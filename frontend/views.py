@@ -44,6 +44,10 @@ from throttle.decorators import throttle
 
 import nmrglue as ng
 
+import logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s")
+logger = logging.getLogger(__name__)
+
 class IndexView(generic.ListView):
     template_name = 'frontend/dynamic/list.html'
     context_object_name = 'latest_frontend'
@@ -156,7 +160,7 @@ def aux_molecule(request):
         return HttpResponse(status=404)
 
     if len(project_set) != 1:
-        print("More than one project with the same name found!")
+        logger.warning("More than one project with the same name found!")
         return HttpResponse(status=404)
     else:
         project_obj = project_set[0]
@@ -977,7 +981,7 @@ def parse_parameters(request):
             project_obj = Project.objects.create(name=new_project_name, author=profile)
             profile.project_set.add(project_obj)
         else:
-            print("Project with that name already exists")
+            logger.info("Project with that name already exists")
     else:
         try:
             project_set = profile.project_set.filter(name=project)
@@ -1756,7 +1760,7 @@ def accept_pi_request(request, pk):
     except ResearchGroup.DoesNotExist:
         pass
     else:
-        print("Group with that name already exists")
+        logger.error("Group with that name already exists")
         return HttpResponse(status=403)
     issuer = a.issuer
     group = ResearchGroup.objects.create(name=a.group_name, PI=issuer)
@@ -1960,7 +1964,7 @@ def get_calc_data_remote(request, pk):
         if not os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")):
             return HttpResponse(status=404)
     else:
-        print("Not implemented")
+        logger.error("Not implemented")
         return HttpResponse(status=403)
 
     return format_frames(calc, profile)
@@ -2264,7 +2268,7 @@ def download_structures(request, ee):
     for s in e.structure_set.all():
         if s.xyz_structure == "":
             structs += "1\nMissing Structure\nC 0 0 0"
-            print("Missing structure! ({}, {})".format(profile.username, ee))
+            logger.warning("Missing structure! ({}, {})".format(profile.username, ee))
         structs += s.xyz_structure
 
     response = HttpResponse(structs)
@@ -3107,7 +3111,7 @@ def download_project_logs(proj, profile, scope, details):
                     try:
                         copyfile(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "calc.out"), os.path.join(e_dir, log_name + '.log'))
                     except FileNotFoundError:
-                        print("Calculation not found: {}".format(calc.id))
+                        logger.warning("Calculation not found: {}".format(calc.id))
                     if calc.parameters.software == 'xtb':#xtb logs don't contain the structure
                         with open(os.path.join(e_dir, log_name + '.xyz'), 'w') as out:
                             out.write(s.xyz_structure)
