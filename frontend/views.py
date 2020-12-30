@@ -2617,14 +2617,24 @@ def download_log(request, pk):
     logs = glob.glob(dir + '/*.out')
     logs += glob.glob(dir + '/*.log')
 
-    mem = BytesIO()
-    with zipfile.ZipFile(mem, 'w', zipfile.ZIP_DEFLATED) as zip:
-        for f in logs:
-            zip.write(f, "{}_".format(calc.id) + basename(f))
+    if len(logs) > 1:
+        mem = BytesIO()
+        with zipfile.ZipFile(mem, 'w', zipfile.ZIP_DEFLATED) as zip:
+            for f in logs:
+                zip.write(f, "{}_".format(calc.id) + basename(f))
 
-    response = HttpResponse(mem.getvalue(), content_type='application/zip')
-    response['Content-Disposition'] = 'attachment; filename="calc_{}.zip"'.format(calc.id)
-    return response
+        response = HttpResponse(mem.getvalue(), content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="calc_{}.zip"'.format(calc.id)
+        return response
+    elif len(logs) == 1:
+        with open(logs[0]) as f:
+            lines = f.readlines()
+            response = HttpResponse(''.join(lines), content_type='text/plain')
+            response['Content-Disposition'] = 'attachment; filename="calc_{}.log"'.format(calc.id)
+            return response
+    else:
+        print("No log to download!")
+        return HttpResponse(status=404)
 
 @login_required
 def log(request, pk):
