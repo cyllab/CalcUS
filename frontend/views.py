@@ -2633,7 +2633,7 @@ def download_log(request, pk):
             response['Content-Disposition'] = 'attachment; filename="calc_{}.log"'.format(calc.id)
             return response
     else:
-        print("No log to download!")
+        logger.warning("No log to download! (Calculation {})".format(pk))
         return HttpResponse(status=404)
 
 @login_required

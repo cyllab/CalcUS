@@ -2343,94 +2343,29 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	</p>
 	<h3 class="title is-3">Developer Guide</h3>
 	<h4 class="title is-4">Contributing</h4>
-	<h4 class="title is-4">Selenium Tests</h4>
-	<p>
-		Before running any test, set the environment variable <code>CALCUS_TEST</code> to <code>True</code>. This variable is parsed by different parts of the program to ensure proper function while testing. The variable <code>CALCUS_HEADLESS</code> can also be set to <code>True</code> to run the code in headless mode.
-	</p>
-	<h4 class="title is-4">Cluster Tests</h4>
-	<p>
-		To test the cluster functionalities, you will need to configure a minimal environment mimicking the remote resource. This is most easily done by having another user account with on your local machine with a completely separate environment.
+	<h4 class="title is-4">Tests</h4>
+	The entire test suite should be run before submitting any pull request. If you do not have access to all the supported software, simply ignore the errors involving running the missing software.
 
-		You will need to create a new user named <em>calcus</em> to act as "remote" user. Make sure that this user can run the relevant software and does not have permission to directly access to your main account's files. Create the empty directory <code>/home/calcus/.ssh</code>.
+	To run the test suite, first start the development environment:
+	<sh>
+		<code class="bash">
+			docker-compose -f test-compose.yml up
+		</code>
+	</sh>
 
-		Then, setup <code>/home/calcus/calcus</code> as detailed in the <a href="#Remote_Calculations">Remote Calculations</a> section of the user manual. 
+	Then, in another shell, run the tests:
+	<sh>
+		<code class="bash">
+			docker-compose -f test-compose.yml run web bash run_tests.sh
+		</code>
+	</sh>
 
-		Install slurm as such:
-		<sh>
-			<codetitle>install_slurm.sh</codetitle>
-			<code class="bash">
-				sudo apt-get install slurmd
-				sudo apt-get install slurmctld
-				sudo apt-get install munge
-			</code>
-		</sh>
-
-		Make sure to setup slurm.conf and cgroup.conf in <code>/etc/slurm-llnl/</code>. You can use the following files as starting points.
-
-		<sh>
-			<codetitle>slurm.conf</codetitle>
-			<code>
-				SlurmctldHost=<strong>&lt;Hostname&gt;</strong>
-				MailProg=/usr/bin/munge
-				MpiDefault=none
-				ProctrackType=proctrack/cgroup
-				ReturnToService=1
-				SlurmctldPidFile=/var/run/slurmctld.pid
-				SlurmdPidFile=/var/run/slurmd.pid
-				SlurmdSpoolDir=/var/spool/slurmd
-				SlurmUser=slurm
-				StateSaveLocation=/var/spool/slurmd
-				SwitchType=switch/none
-				TaskPlugin=task/affinity
-
-				SchedulerType=sched/backfill
-				SelectType=select/cons_res
-				SelectTypeParameters=CR_Core
-				
-				AccountingStorageType=accounting_storage/none
-				ClusterName=testcluster
-				JobAcctGatherType=jobacct_gather/none
-
-				NodeName=<strong>&lt;Hostname&gt;</strong> NodeAddr=127.0.0.1 CPUs=<strong>&lt;Number of Cores&gt;</strong> State=UNKNOWN
-				PartitionName=test Nodes=<strong>&lt;Hostname&gt;</strong> Default=YES MaxTime=INFINITE State=UP
-			</code>
-		</sh>
-		Make sure to give ownership of the directory <code>/var/spool/slurmd</code> to user <code>slurm</code>.
-		<sh>
-			<codetitle>cgroup.conf</codetitle>
-			<code>
-				CgroupAutomount=yes
-				ConstrainCores=yes
-			</code>
-		</sh>
-
-
-		Before running the tests, start the relevant services:
-		<sh>
-			<codetitle>start_slurm.sh</codetitle>
-			<code class="bash">
-				sudo systemctl start slurmctld
-				sudo systemctl status slurmctld
-				sudo systemctl enable slurmctld
-
-				sudo systemctl start slurmd
-				sudo systemctl status slurmd
-				sudo systemctl enable slurmd
-			</code>
-		</sh>
-		
-		Make sure to set the environment variable <code>CALCUS_TEST</code> to <code>True</code> as well.
-
-		After the tests, they can be stopped as such:
-		<sh>
-			<codetitle>stop_slurm.sh</codetitle>
-			<code class="bash">
-				sudo systemctl stop slurmctld
-				sudo systemctl stop slurmd
-			</code>
-		</sh>
-
-	</p>
+	You may also run specific tests during the development process as such:
+	<sh>
+		<code class="bash">
+			docker-compose -f test-compose.yml run web python3 manage.py test &lt;relative path to test&gt;
+		</code>
+	</sh>
 
 </div>
 {% endblock %}
