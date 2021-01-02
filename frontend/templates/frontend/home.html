@@ -5,49 +5,17 @@
 {% block extrahead %}
 	<title>CalcUS - Home</title>
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
-	<script src="{% static 'frontend/jquery.toc.min.js' %}"></script>
-	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.1/styles/default.min.css">
-	<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.1/highlight.min.js"></script>
-	<script>
-document.addEventListener('DOMContentLoaded', (event) => {
-  document.querySelectorAll('sh code').forEach((block) => {
-    hljs.highlightBlock(block);
-  });
-});
-	</script>
+
 	<style>
 		.title {
 			margin-top: 50px;
 			margin-bottom: 20px;
 		}
-		sh {
-			white-space: pre-line;
-			border: 1px solid #ddd;
-			color: #666;
-			font-size: 15px;
-			line-height: 1.6;
-			margin-top: 1.6em;
-			margin-bottom: 1.6em;
-			max-width: 100%;
-			padding: 1em 1.5em;
-			display: block;
-		}
-		codetitle {
-			font-weight: bold;
-			text-align: center;
-		}
-		p {
- 			white-space: pre-line;
-		}
+
 		h1 {
 			text-align: center;
 		}
-		#toc {
-			list-style-type: none;
-		}
-		li > a, p > a {
-			color: green;
-		}
+
 		.content {
 			width: 50%; 
 			margin-left: 25%;

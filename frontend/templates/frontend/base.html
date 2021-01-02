@@ -5,7 +5,7 @@
 	<head>
  		<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 		<link rel="shortcut icon" type="image/png" href="{% static 'frontend/favicon.ico' %}"/>
-		<link rel="stylesheet" href="{% static 'bulma/css/style.css' %}" />
+		<link rel="stylesheet" href="{% static 'frontend/bulma.min.css' %}" />
 		<script src="https://kit.fontawesome.com/55d0fd4831.js" crossorigin="anonymous"></script>
 		<link rel="stylesheet" href="{% static 'frontend/bulma-badge.min.css' %}">
 
@@ -19,7 +19,7 @@
 					type: 'GET',
 					success: function(data) {
 						if (data != "0") {
-							$("#pi_requests").html("(" + data + ")");
+							$("#pi_requests").html('<span class="badge is-bottom is-warning">' + data + '</span>');
 							
 						}
 						else {
@@ -43,14 +43,12 @@
 			</script>
 		{% endif %}
 		<style>
-			.container {
-				width: 90%;
+			.main_content {
+				width: 60%;
 				flex: 1;
+				margin-left: 15%;
 			}
 
-			#content_container {
-				margin-bottom: 30px;
-			}
 			nav {
 				margin-bottom: 20px;
 			}
@@ -100,8 +98,10 @@
   				flex-direction: column;
 			}
 			.footer {
-
+				background-color: #ffffff;
 			}
+
+
 			</style>
 	</head>
 
@@ -156,7 +156,7 @@
 
 					{% if user.is_superuser %}
 						<a class="navbar-item" href="/manage_pi_requests/">
-							Manage PI requests <strong><font color="red" id="pi_requests" style="margin-left: 5px;"></font></strong>
+							Manage PI requests <font id="pi_requests"></font>
 						</a>
 						<a class="navbar-item" href="/server_summary/">
 							Server Summary	
@@ -183,7 +183,8 @@
 				</div>
 			</div>
 		</nav>
-		<div class="container" id="content_container">
+
+		<div class="main_content" id="content_container">
 			{% block content %}
 
 			{% endblock %}

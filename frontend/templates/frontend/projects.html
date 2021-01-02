@@ -4,8 +4,6 @@
 
 {% block extrahead %}
 	<title>CalcUS - Projects</title>
-	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
-	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
 	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 
@@ -134,45 +132,45 @@
 		}
 	</script>
 
-<div class="container">
-	<nav class="breadcrumb" aria-label="breadcrumbs">
-	 	<ul>
-	    		<li><a href="/projects/">Projects</a></li>
+	<nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+		<ul>
+			<li><a href="/projects/">Projects</a></li>
 			<li class="is-active"><a aria-current="page" href="#">{{ target_profile.username }}</a></li>
-	  	</ul>
+		</ul>
 		<hr />	
 	</nav>
 
-		<div id="projects_list">
-				{% for proj in projects %}
-					<div class="box has-background-danger" id="proj_box_{{ proj.id }}">
-						<p style="float: right;">
-							<a onclick="toggle_private({{ proj.id }});"><i class="fas fa-user-shield" id="private_icon_{{ proj.id }}" title="Toggle private" {% if proj.private %}style="color: silver;"{% endif %}></i></a>
-							<a href="/analyse/{{ proj.id }}"><i class="fas fa-table" title="Go to spreadsheet"></i></a>
-							<a href="/download_project/{{ proj.id }}"><i class="fas fa-download" title="Download Project"></i></a>
-							{% if proj.author == profile %}
-							<a onclick="edit_field({{ proj.id }});"><i class="fas fa-edit" title="Rename" id="icon_{{ proj.id}}"></i></a>
-							<a onclick="del({{ proj.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>
-							{% endif %}
-						</p>
-						<a href="/projects/{{ proj.author }}/{{ proj.name }}">
-							<strong><p id="proj_name_{{ proj.id }}">{{ proj.name }}</p></strong>
-							<p>{{ proj.molecule_set.count }} Molecule(s) &nbsp; ({{ proj.num_calc }} Calculation(s): &nbsp; {{ proj.num_calc_queued }} Queued; &nbsp; {{ proj.num_calc_running }} Running; &nbsp;{{ proj.num_calc_completed }} Completed) </p>
-						</a>
-					</div>
-
-				{% endfor %}
-		</div>
-		<div style="margin-top: 30px; margin-bottom: 30px;">
-			{% if request.user.profile == target_profile %}
-				<center>
-					<a onclick="create_project();">
-						<div class="box has-background-danger"style="opacity: 0.5;">
-							<i class="fas fa-plus"></i>
-						</div>
+	<div id="projects_list">
+			{% for proj in projects %}
+				<div class="box has-background-danger" id="proj_box_{{ proj.id }}">
+					<p style="float: right;">
+						<a onclick="toggle_private({{ proj.id }});"><i class="fas fa-user-shield" id="private_icon_{{ proj.id }}" title="Toggle private" {% if proj.private %}style="color: silver;"{% endif %}></i></a>
+						<a href="/analyse/{{ proj.id }}"><i class="fas fa-table" title="Go to spreadsheet"></i></a>
+						<a href="/download_project/{{ proj.id }}"><i class="fas fa-download" title="Download Project"></i></a>
+						{% if proj.author == profile %}
+						<a onclick="edit_field({{ proj.id }});"><i class="fas fa-edit" title="Rename" id="icon_{{ proj.id}}"></i></a>
+						<a onclick="del({{ proj.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>
+						{% endif %}
+					</p>
+					<a href="/projects/{{ proj.author }}/{{ proj.name }}">
+						<strong><p id="proj_name_{{ proj.id }}">{{ proj.name }}</p></strong>
+						<p>{{ proj.molecule_set.count }} Molecule(s) &nbsp; ({{ proj.num_calc }} Calculation(s): &nbsp; {{ proj.num_calc_queued }} Queued; &nbsp; {{ proj.num_calc_running }} Running; &nbsp;{{ proj.num_calc_completed }} Completed) </p>
 					</a>
-				</center>
-			{% endif %}
-		</div>
+				</div>
+
+			{% endfor %}
+	</div>
+	<div style="margin-top: 30px; margin-bottom: 30px;">
+		{% if request.user.profile == target_profile %}
+			<center>
+				<a onclick="create_project();">
+					<div class="box has-background-danger" style="opacity: 0.5;">
+						<i class="fas fa-plus"></i>
+					</div>
+				</a>
+			</center>
+		{% endif %}
+	</div>
+
 {% endblock %}
 
