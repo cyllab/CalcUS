@@ -1571,7 +1571,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp M062X/Def2SVP scf(tight, xqc)
+        #p sp M062X/Def2SVP scf(tight,xqc)
 
         CalcUS
 
@@ -1581,7 +1581,7 @@ class GaussianTests(TestCase):
         """
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
-        self.assertEqual(gaussian.confirmed_specifications.strip(), 'scf(tight, xqc)')
+        self.assertEqual(gaussian.confirmed_specifications.strip(), 'scf(tight,xqc)')
 
     def test_multiple_global_specification2(self):
         params = {
@@ -1599,7 +1599,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp M062X/Def2SVP scf(tight, xqc)
+        #p sp M062X/Def2SVP scf(tight,xqc)
 
         CalcUS
 
@@ -1609,7 +1609,7 @@ class GaussianTests(TestCase):
         """
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
-        self.assertEqual(gaussian.confirmed_specifications.strip(), 'scf(tight, xqc)')
+        self.assertEqual(gaussian.confirmed_specifications.strip(), 'scf(tight,xqc)')
 
     def test_multiple_global_specification3(self):
         params = {
@@ -1627,7 +1627,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         REF = """
-        #p sp M062X/Def2SVP scf(tight, xqc)
+        #p sp M062X/Def2SVP scf(tight,xqc)
 
         CalcUS
 
@@ -1637,7 +1637,7 @@ class GaussianTests(TestCase):
         """
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
-        self.assertEqual(gaussian.confirmed_specifications.strip(), 'scf(tight, xqc)')
+        self.assertEqual(gaussian.confirmed_specifications.strip(), 'scf(tight,xqc)')
 
 
     def test_cmd_specification(self):

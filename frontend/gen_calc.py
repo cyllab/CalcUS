@@ -62,13 +62,32 @@ def gen_calc(params, profile):
 
     p = gen_param(params)
 
-    with open(os.path.join(TESTS_DIR, params['in_file'])) as f:
-        lines = f.readlines()
-        xyz_structure = ''.join(lines)
-
     mol = Molecule.objects.create()
     e = Ensemble.objects.create(parent_molecule=mol)
-    s = Structure.objects.create(xyz_structure=xyz_structure, parent_ensemble=e)
+    s = Structure.objects.create(parent_ensemble=e)
+
+    with open(os.path.join(TESTS_DIR, params['in_file'])) as f:
+        lines = f.readlines()
+
+        in_file = ''.join(lines)
+        ext = params['in_file'].split('.')[-1]
+        if ext == 'mol':
+            s.mol_structure = in_file
+            generate_xyz_structure(False, s)
+        elif ext == 'xyz':
+            s.xyz_structure = in_file
+        elif ext == 'sdf':
+            s.sdf_structure = in_file
+            generate_xyz_structure(False, s)
+        elif ext == 'mol2':
+            s.mol2_structure = in_file
+            generate_xyz_structure(False, s)
+        elif ext == 'log':
+            s.xyz_structure = get_Gaussian_xyz(in_file)
+        else:
+            raise Exception("Unknown file format")
+        xyz_structure = ''.join(lines)
+
 
     proj = Project.objects.create()
     dummy = CalculationOrder.objects.create(project=proj, author=profile)

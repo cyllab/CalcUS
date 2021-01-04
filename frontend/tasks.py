@@ -1569,20 +1569,7 @@ def parse_default_orca_charges(calc, s):
 def parse_gaussian_charges(calc, s):
     parse_default_gaussian_charges(calc, s)
 
-    _specifications = ""
-
-    ###TODO: optimize this part
-    remove = False
-    for c in calc.parameters.specifications:
-        if c == ' ' and remove:
-            continue
-        _specifications += c
-        if c == '(':
-            remove = True
-        elif c == ')':
-            remove = False
-
-    for spec in _specifications.split(' '):
+    for spec in calc.parameters.specifications.split(' '):#The specifications have been cleaned/formatted already
         if spec.strip() == '':
             continue
         if spec.find('(') != -1:

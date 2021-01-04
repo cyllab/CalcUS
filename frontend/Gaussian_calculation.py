@@ -116,7 +116,7 @@ class GaussianCalculation:
                     self.additional_commands.append(spec)
 
         for spec in specs.keys():
-            specs_str = ', '.join(specs[spec])
+            specs_str = ','.join(specs[spec])
             spec_formatted = '{}({}) '.format(spec, specs_str)
             self.additional_commands.append(spec_formatted)
 
