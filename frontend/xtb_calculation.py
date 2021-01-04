@@ -26,7 +26,7 @@ class XtbCalculation:
         self.create_command()
 
     def handle_parameters(self):
-        if self.calc.parameters.solvent != "Vacuum":
+        if self.calc.parameters.solvent.lower() != "vacuum":
             solvent_keyword = get_solvent(self.calc.parameters.solvent, self.calc.parameters.software)
             if self.calc.parameters.solvation_model == "GBSA":
                 self.cmd_arguments += '-g {} '.format(solvent_keyword)

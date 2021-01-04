@@ -85,6 +85,7 @@
 			'{{ proj.name }}': {% if proj.preset %}{{ proj.preset.id }} {% else %} -1 {% endif %},
 			{% endfor %}
 		}
+
 		function load_preset(id) {
 			$.ajax({
 				method: "POST",	 	 
@@ -172,6 +173,7 @@
 			}
 
 		}
+
 
 		function constraint_type_selection_changed(id) {
 			choice = document.getElementById("constraint_type_{}".format(id));
@@ -1297,6 +1299,18 @@
 			print_output_bs();
   		}
 	}		
+
+	$('#calc_software').data('software', $("#calc_software").val());
+
+	$('#calc_software').change(function(e){
+		var software = $(this).data('software');
+
+		$('#calc_specifications').data(software, $('#calc_specifications').val());
+		$('#calc_specifications').val($('#calc_specifications').data($(this).val()));
+
+		$(this).data('software', $(this).val());
+	})
+
 	{% if not ensemble and not structure and not calc %}
 		const inputElement = document.getElementById("file_structure");
 		inputElement.addEventListener("change", file_upload_changed, false);

@@ -15,7 +15,7 @@ else:
     SECRET_KEY = os.environ['CALCUS_SECRET_KEY']
 
 
-DEBUG = True
+DEBUG = False
 PROD = False
 
 ALLOWED_HOSTS = '*.*.*.*'

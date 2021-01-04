@@ -19,8 +19,6 @@ STATUS_COLORS = {0: '#000000', 1: '#ffdd57', 2: '#23d160', 3: '#ff3860'}
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
-    calculation_time_used = models.PositiveIntegerField(default=0)
-
     is_PI = models.BooleanField(default=False)
 
     member_of = models.ForeignKey('ResearchGroup', on_delete=models.SET_NULL, blank=True, null=True, related_name='members')
