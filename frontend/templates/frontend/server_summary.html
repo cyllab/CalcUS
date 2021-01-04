@@ -44,12 +44,13 @@
 
 <div class="container">
 	<h1 class="title is-1">Users</h1>
-	<table class="table">
+	<table class="table is-fullwidth is-striped">
 		<thead>
 			<tr>
 			<th>Username</th>
 			<th>Group</th>
 			<th>Date joined</th>
+			<th>Last login</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -58,53 +59,32 @@
 					<td>{{ u.username }}</td>
 					<td>{{ u.group }}</td>
 					<td>{{ u.user.date_joined }}</td>
+					<td>{{ u.user.last_login }}</td>
 				</tr>
 				
 			{% endfor %}	
 		</tbody>
 	</table>
 
-	<h1 class="title is-1">Groups</h1>
-	{% for g in groups %}
-		<table class="table">
-			<thead>
-				<tr>
-					<th>{{ g.name }}</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td>{{ g.PI.username }} (PI)</td>
-				</tr>
-
-				{% for u in g.members.all %}
-					<tr>
-						<td>{{ u.username }}</td>
-					</tr>
-				{% endfor %}	
-			</tbody>
-		</table>
-	{% endfor %}
-
 	<h1 class="title is-1">Cluster Accesses</h1>
-		<table class="table">
-			<thead>
+	<table class="table is-fullwidth is-striped">
+		<thead>
+			<tr>
+				<th>Server</th>
+				<th>Owner</th>
+				<th>Status</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for a in accesses %}
 				<tr>
-					<th>Server</th>
-					<th>Owner</th>
-					<th>Status</th>
+					<td>{{ a.cluster_address }}</td>
+					<td>{{ a.owner.username }}</td>
+					<td><span id="status_{{ a.id }}"></span></td>
 				</tr>
-			</thead>
-			<tbody>
-				{% for a in accesses %}
-					<tr>
-						<td>{{ a.cluster_address }}</td>
-						<td>{{ a.owner.username }}</td>
-						<td><div class="box" id="status_{{ a.id }}"></div></td>
-					</tr>
-				{% endfor %}	
-			</tbody>
-		</table>
+			{% endfor %}	
+		</tbody>
+	</table>
 
 </div>
 {% endblock content %}
