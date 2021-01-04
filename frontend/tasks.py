@@ -1500,6 +1500,12 @@ def launch_gaussian_calc(in_file, calc, files):
         return ErrorCodes.JOB_CANCELLED
 
 def parse_orca_charges(calc, s):
+
+    xyz = parse_xyz_from_text(calc.structure.xyz_structure)
+
+    if len(xyz) < 2:#Monoatomic
+        return
+
     parse_default_orca_charges(calc, s)
 
     if calc.parameters.specifications.lower().replace('_', '').find("phirshfeld") != -1:

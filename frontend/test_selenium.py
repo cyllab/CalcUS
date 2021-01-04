@@ -638,7 +638,7 @@ class InterfaceTests(CalcusLiveServer):
 
         self.create_empty_project()
 
-        self.driver.implicitly_wait(5)
+        self.wait_for_ajax()
 
         self.assertEqual(self.get_number_projects(), 1)
         self.assertEqual(self.get_name_projects()[0], "My Project")
@@ -1511,7 +1511,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
     def test_NEB_from_structure(self):
         params = {
-                'mol_name': 'test',
+                'mol_name': 'elimination_substrate',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Distance', [1, 4], [1.1, 3.5, 10]]],
                 'project': 'New Project',
@@ -1531,7 +1531,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.launch_structure_next_step()
 
         params = {
-                'mol_name': 'test',
+                'name': 'test',
                 'type': 'Minimum Energy Path',
                 'project': 'SeleniumProject',
                 'software': 'xtb',
@@ -1545,7 +1545,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
     def test_NEB_hybrid(self):
         params = {
-                'mol_name': 'test',
+                'mol_name': 'elimination_substrate',
                 'type': 'Constrained Optimisation',
                 'constraints': [['Scan', 'Distance', [1, 4], [1.1, 3.5, 10]]],
                 'project': 'New Project',
@@ -1564,7 +1564,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
         self.lget("/launch/")
         params = {
-                'mol_name': 'test',
+                'name': 'test',
                 'type': 'Minimum Energy Path',
                 'project': 'SeleniumProject',
                 'software': 'xtb',
@@ -2494,7 +2494,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(150)
+        self.wait_latest_calc_done(250)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 10)
@@ -2516,7 +2516,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(150)
+        self.wait_latest_calc_done(250)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 10)
@@ -3999,8 +3999,7 @@ class ComplexCalculationTests(CalcusLiveServer):
 
     def test_selective_delete(self):
 
-        self.assertEqual(self.get_number_unseen_calcs(), 0)
-
+        self.assertTrue(self.try_assert_number_unseen_calcs(0, 3))
         params = {
                 'mol_name': 'H2',
                 'name': 'H2',
@@ -4014,10 +4013,10 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.wait_latest_calc_done(60)
-        self.assertEqual(self.get_number_unseen_calcs(), 1)
-        self.assertEqual(self.get_number_unseen_calcs_manually(), 1)
+
+        self.assertTrue(self.try_assert_number_unseen_calcs(1, 3))
+        self.assertTrue(self.get_number_unseen_calcs_manually(), 1)
         self.click_latest_calc()
-        self.assertEqual(self.get_number_unseen_calcs(), 0)
         self.launch_ensemble_next_step()
 
         params = {
@@ -4028,7 +4027,7 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.calc_launch()
         self.wait_latest_calc_done(60)
 
-        self.assertEqual(self.get_number_unseen_calcs(), 1)
+        self.assertTrue(self.try_assert_number_unseen_calcs(1, 3))
         self.assertEqual(self.get_number_unseen_calcs_manually(), 1)
 
         self.lget("/launch/")
@@ -4043,7 +4042,7 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.calc_launch()
         self.wait_latest_calc_done(150)
         self.assertEqual(self.get_number_calc_orders(), 3)
-        self.assertEqual(self.get_number_unseen_calcs(), 2)
+        self.assertTrue(self.try_assert_number_unseen_calcs(2, 3))
         self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
 
         self.lget("/projects/")
@@ -4083,7 +4082,7 @@ class ComplexCalculationTests(CalcusLiveServer):
 
         self.lget("/projects/")
         self.assertEqual(self.get_number_projects(), 1)
-        self.assertEqual(self.get_number_unseen_calcs(), 1)
+        self.assertTrue(self.try_assert_number_unseen_calcs(1, 3))
 
         n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
         self.assertEqual(n_mol, 1)
@@ -4115,7 +4114,8 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.calc_launch()
         self.wait_latest_calc_done(150)
         self.assertEqual(self.get_number_calc_orders(), 3)
-        self.assertEqual(self.get_number_unseen_calcs(), 2)
+
+        self.assertTrue(self.try_assert_number_unseen_calcs(2, 3))
         self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
 
         self.lget("/launch/")
@@ -4130,7 +4130,7 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.calc_launch()
         self.wait_latest_calc_done(150)
         self.assertEqual(self.get_number_calc_orders(), 4)
-        self.assertEqual(self.get_number_unseen_calcs(), 3)
+        self.assertTrue(self.try_assert_number_unseen_calcs(3, 3))
         self.assertEqual(self.get_number_unseen_calcs_manually(), 3)
 
         self.lget("/projects/")
@@ -4151,14 +4151,14 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.lget("/calculations/")
 
         self.assertEqual(self.get_number_calc_orders(), 3)
-        self.assertEqual(self.get_number_unseen_calcs(), 2)
+        self.assertTrue(self.try_assert_number_unseen_calcs(2, 3))
         self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
 
         self.lget("/projects/")
         self.delete_project("SeleniumProject")
         time.sleep(2)
         self.lget("/projects/")
-        self.assertEqual(self.get_number_unseen_calcs(), 0)
+        self.assertTrue(self.try_assert_number_unseen_calcs(0, 3))
 
     def test_advanced_nmr_analysis(self):
         params = {

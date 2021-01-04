@@ -792,7 +792,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_projects()
         num_before = self.get_number_projects()
 
-        create_proj_box = self.driver.find_element_by_css_selector(".container > div > center > a")
+        create_proj_box = self.driver.find_element_by_css_selector("#content_container > div > center > a")
         create_proj_box.click()
         for i in range(5):
             num_projects = self.get_number_projects()
@@ -921,7 +921,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         return len(calcs)
 
     def cancel_all_calc(self):
-        calcs = self.get_calc_in_order()
+        calcs = self.get_calcs_in_order()
         for c in calcs:
             buttons = c.find_elements_by_css_selector(".button")
             for b in buttons:
@@ -1365,3 +1365,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         self.driver.find_element_by_xpath("//*[@id='presets']/option[text()='{}']".format(name)).click()
 
+    def try_assert_number_unseen_calcs(self, num, timeout):
+        for i in range(timeout):
+            if self.get_number_unseen_calcs() == num:
+                return True
+            self.refresh()
+            time.sleep(1)
+        return False
