@@ -313,6 +313,15 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             specs.send_keys(params['specifications'])
             self.driver.find_element_by_css_selector("summary").click()
 
+        if 'filter' in params.keys():
+            assert 'filter_value' in params.keys()
+
+            filter_select = self.driver.find_element_by_id("calc_filter")
+            filter_select.find_element_by_xpath("option[text()='{}']".format(params['filter'])).click()
+
+            filter_value = self.driver.find_element_by_id("filter_value_input")
+            filter_value.send_keys(params['filter_value'])
+
     def calc_launch(self):
         submit = self.driver.find_element_by_id('submit_button')
         submit.click()
@@ -902,11 +911,17 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert details.text != "Kill"
         details.click()
 
+    def get_calcs_in_order(self):
+        assert self.is_on_page_order_details()
+        calcs = self.driver.find_elements_by_css_selector("tbody > tr")
+        return calcs
+
+    def get_number_calc_in_order(self):
+        calcs = self.get_calcs_in_order()
+        return len(calcs)
 
     def cancel_all_calc(self):
-        assert self.is_on_page_order_details()
-
-        calcs = self.driver.find_elements_by_css_selector("tbody > tr")
+        calcs = self.get_calc_in_order()
         for c in calcs:
             buttons = c.find_elements_by_css_selector(".button")
             for b in buttons:
@@ -1046,7 +1061,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         calculations_container = self.driver.find_element_by_id("calculations_list")
         calculations = calculations_container.find_elements_by_css_selector("article")
         header = calculations[0].find_element_by_class_name("message-header")
-        return "has-background-success" in header.get_attribute("class")
+        successful = "has-background-success" in header.get_attribute("class")
+
+        if not successful:
+            latest_order = CalculationOrder.objects.latest('id')
+            print("Error messages of calculations in order {}".format(latest_order.id))
+            for c in latest_order.calculation_set.all():
+                print(c.error_message)
+        return successful
 
     def add_user_to_group(self, username):
         assert self.is_on_page_profile()

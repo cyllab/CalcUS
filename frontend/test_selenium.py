@@ -3913,6 +3913,76 @@ class MiscCalculationTests(CalcusLiveServer):
         self.click_project("SeleniumProject")
         self.assertEqual(self.get_number_molecules(), 1)
 
+    def setup_propane_ensemble(self):
+        proj = Project.objects.create(name="TestProj", author=self.profile)
+        mol = Molecule.objects.create(project=proj, name="TestMol")
+        e = Ensemble.objects.create(parent_molecule=mol, name="TestEnsemble")
+
+        proj.save()
+        mol.save()
+        e.save()
+
+        structs = [[-16.82945685, 9], [-16.82855278, 36], [-16.82760256, 7], [-16.82760254, 9], [-16.82760156, 2], [-16.82558904, 33], [-16.82495672, 1]]#From CREST (GFN2-xTB)
+        rel_energies = [i[0] + 16.82945685 for i in structs]
+
+        with open(os.path.join(tests_dir, "propane.xyz")) as f:
+            xyz_structure = ''.join(f.readlines())
+
+        params = Parameters.objects.create(charge=0, multiplicity=1)
+        for ind, _s in enumerate(structs):
+            s = Structure.objects.create(parent_ensemble=e, number=ind+1, degeneracy=structs[ind][1], xyz_structure=xyz_structure)
+            prop = Property.objects.create(parameters=params, energy=structs[ind][0], parent_structure=s)
+            prop.save()
+            s.save()
+        e.save()
+        proj.save()
+        mol.save()
+
+    def test_filter_ensemble_energy(self):
+        self.setup_propane_ensemble()
+
+        self.lget("/projects/")
+        self.click_project("TestProj")
+        self.click_molecule("TestMol")
+        self.click_ensemble("TestEnsemble")
+        self.launch_ensemble_next_step()
+
+        params = {
+                'type': 'Geometrical Optimisation',
+                'filter': 'By Relative Energy',
+                'filter_value': '5',
+                }
+
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.wait_latest_calc_done(300)
+        self.assertTrue(self.latest_calc_successful())
+        self.details_latest_order()
+        self.assertEqual(self.get_number_calc_in_order(), 5)
+
+    def test_filter_ensemble_weight(self):
+        self.setup_propane_ensemble()
+
+        self.lget("/projects/")
+        self.click_project("TestProj")
+        self.click_molecule("TestMol")
+        self.click_ensemble("TestEnsemble")
+        self.launch_ensemble_next_step()
+
+        params = {
+                'type': 'Geometrical Optimisation',
+                'filter': 'By Boltzmann Weight',
+                'filter_value': '0.05',
+                }
+
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.wait_latest_calc_done(300)
+        self.assertTrue(self.latest_calc_successful())
+        self.details_latest_order()
+        self.assertEqual(self.get_number_calc_in_order(), 2)
 
 class ComplexCalculationTests(CalcusLiveServer):
 
@@ -4124,5 +4194,6 @@ class ComplexCalculationTests(CalcusLiveServer):
         prop = Property.objects.latest('id')
         calc_shifts = [float(i.split()[2]) for i in prop.simple_nmr.split('\n') if i.strip() != '']
         self.assertEqual(shifts[1], "{:.3f}".format(np.mean(calc_shifts[1:4])))
+
 
 

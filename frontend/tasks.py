@@ -2444,15 +2444,32 @@ def filter(order, input_structures):
     if order.filter == None:
         return input_structures
 
+    summary, hashes = input_structures[0].parent_ensemble.ensemble_summary
+
+    target_hash = order.filter.parameters.md5
+
+    if target_hash not in summary.keys():
+        return []
+
+    summary_data = summary[target_hash]
+
+    def get_weight(s):
+        ind = summary_data[0].index(s.number)
+        return summary_data[5][ind]
+
+    def get_rel_energy(s):
+        ind = summary_data[0].index(s.number)
+        return summary_data[4][ind]
+
     structures = []
 
     if order.filter.type == "By Boltzmann Weight":
         for s in input_structures:
-            if s.parent_ensemble.weight(s, order.filter.parameters) > order.filter.value:
+            if get_weight(s) > order.filter.value:
                 structures.append(s)
     elif order.filter.type == "By Relative Energy":
         for s in input_structures:
-            val = s.parent_ensemble.relative_energy(s, order.filter.parameters)
+            val = get_rel_energy(s)
             if order.author.pref_units == 0:
                 E = val*HARTREE_FVAL
             elif order.author.pref_units == 1:
