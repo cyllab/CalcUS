@@ -863,8 +863,7 @@ def crest(in_file, calc):
                 number = int(sline[5])
                 degeneracy = int(sline[6])
 
-                r = Structure.objects.create(number=number, degeneracy=degeneracy)
-                r.parent_ensemble = calc.result_ensemble
+                r = Structure.objects.create(number=number, degeneracy=degeneracy, parent_ensemble=calc.result_ensemble)
                 structures.append(r)
 
             ind += 1
@@ -895,7 +894,7 @@ def crest(in_file, calc):
             r.save()
 
             prop = Property(parameters=calc.parameters, parent_structure=r)
-            prop.energy = energy
+            prop.energy = E
             prop.geom = True
             properties.append(prop)
 
