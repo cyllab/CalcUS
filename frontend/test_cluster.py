@@ -280,6 +280,7 @@ class ClusterTests(CalcusLiveServer):
                 'in_file': 'elimination_substrate.xyz',
                 'aux_file': 'elimination_product.xyz',
                 'charge': '-1',
+                'specifications': '--nimages 3',
                 }
 
         self.lget("/launch/")
@@ -289,7 +290,7 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(600)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertEqual(self.get_number_conformers(), 10)
+        self.assertEqual(self.get_number_conformers(), 5)
 
     def test_cluster_xtb_sp(self):
         self.setup_cluster()

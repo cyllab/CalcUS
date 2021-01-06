@@ -259,9 +259,6 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         remote_dir = remote_dirs[pid]
 
         if calc.status == 0:
-            #calc.status = 1
-            #calc.save()
-
             if log_file != "":
                 output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{} | tee {}' >> submit_{}.sh; sbatch submit_{}.sh | tee calcus".format(remote_dir, conn[0].cluster_username, software, command, log_file, software, software), conn, lock)
             else:
@@ -414,7 +411,7 @@ def generate_xyz_structure(drawing, structure):
             return ErrorCodes.SUCCESS
 
         else:
-            loggin.error("Unimplemented")
+            logger.error("Unimplemented")
             return ErrorCodes.UNIMPLEMENTED
     else:
         return ErrorCodes.SUCCESS
@@ -547,25 +544,22 @@ def xtb_mep(in_file, calc):
         ind += 1
     inds.append(len(lines))
 
-    min_E = 0
+    properties = []
     for metaind, mol in enumerate(inds[:-1]):
         sline = lines[inds[metaind]+1].strip().split()
         E = float(sline[-1])
-        #E = float(lines[inds[metaind]+1].split()[2])
         struct = ''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]]])
 
-        r = Structure.objects.create(number=metaind+1, degeneracy=1)
+        r = Structure.objects.create(number=metaind+1, degeneracy=1, parent_ensemble=calc.result_ensemble)
+        r.xyz_structure = clean_xyz(struct)
+        r.save()
+
         prop = get_or_create(calc.parameters, r)
         prop.energy = E
         prop.geom = True
-        prop.save()
-        r.xyz_structure = clean_xyz(struct)
-        r.save()
-        if E < min_E:
-            min_E = E
+        properties.append(prop)
 
-        calc.result_ensemble.structure_set.add(r)
-
+    Property.objects.bulk_update(properties, ['energy', 'geom'])
     return ErrorCodes.SUCCESS
 
 def xtb_sp(in_file, calc):
@@ -675,23 +669,34 @@ def xtb_scan(in_file, calc):
             inds.append(len(lines))
 
             min_E = 0
+
+            '''
+                Since we can't get the keys of items created in bulk and we can't set a reference without first creating the objects, I haven't found a way to create both the structures and properties using bulk_update. This is still >2.5 times faster than the naive approach.
+            '''
+            properties = []
+
+
             for metaind, mol in enumerate(inds[:-1]):
+                r = Structure.objects.create(number=metaind+1, degeneracy=1)
+                r.parent_ensemble = calc.result_ensemble
+
                 sline = lines[inds[metaind]+1].strip().split()
                 en_index = sline.index('energy:')
                 E = float(sline[en_index+1])
                 struct = ''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]]])
 
-                r = Structure.objects.create(number=metaind+1, degeneracy=1)
-                prop = get_or_create(calc.parameters, r)
+                r.xyz_structure = clean_xyz(struct)
+
+                r.save()
+
+                prop = Property(parameters=calc.parameters)
+                prop.parent_structure = r
                 prop.energy = E
                 prop.geom = True
-                prop.save()
-                r.xyz_structure = clean_xyz(struct)
-                r.save()
-                if E < min_E:
-                    min_E = E
 
-                calc.result_ensemble.structure_set.add(r)
+                properties.append(prop)
+
+            Property.objects.bulk_create(properties)
     else:
         with open(os.path.join(local_folder, 'xtbopt.xyz')) as f:
             lines = f.readlines()
@@ -848,24 +853,21 @@ def crest(in_file, calc):
 
         weighted_energy = 0.0
         ind += 1
+        structures = []
+        properties = []
         while lines[ind].find("T /K") == -1:
             sline = lines[ind].strip().split()
             if len(sline) == 8:
                 energy = float(sline[2])
-                weight = float(sline[4])
+                #weight = float(sline[4])
                 number = int(sline[5])
                 degeneracy = int(sline[6])
-                weighted_energy += energy*weight
-                r = Structure.objects.create(number=number, degeneracy=degeneracy)
-                prop = get_or_create(calc.parameters, r)
-                prop.energy = energy
-                prop.geom = True
 
-                r.save()
-                prop.save()
-                calc.result_ensemble.structure_set.add(r)
+                r = Structure.objects.create(number=number, degeneracy=degeneracy)
+                r.parent_ensemble = calc.result_ensemble
+                structures.append(r)
+
             ind += 1
-        calc.result_ensemble.save()
 
     with open(os.path.join(local_folder, 'crest_conformers.xyz')) as f:
         lines = f.readlines()
@@ -878,7 +880,7 @@ def crest(in_file, calc):
             ind += 1
         inds.append(len(lines))
 
-        assert len(inds)-1 == len(calc.result_ensemble.structure_set.all())
+        assert len(inds)-1 == len(structures)
         for metaind, mol in enumerate(inds[:-1]):
             E = float(lines[inds[metaind]+1].strip())
             raw_lines = lines[inds[metaind]:inds[metaind+1]]
@@ -888,9 +890,16 @@ def crest(in_file, calc):
                 clean_lines.append(clean_struct_line(l))
 
             struct = clean_xyz(''.join([i.strip() + '\n' for i in clean_lines]))
-            r = calc.result_ensemble.structure_set.get(number=metaind+1)
+            r = structures[metaind]
             r.xyz_structure = struct
             r.save()
+
+            prop = Property(parameters=calc.parameters, parent_structure=r)
+            prop.energy = energy
+            prop.geom = True
+            properties.append(prop)
+
+    Property.objects.bulk_create(properties)
 
     return ErrorCodes.SUCCESS
 
@@ -1119,7 +1128,6 @@ def orca_freq(in_file, calc):
 
         ind += 1
 
-
     x = np.arange(500, 4000, 1)#Wave number in cm^-1
     spectrum = plot_vibs(x, zip(vibs, intensities))
 
@@ -1230,6 +1238,7 @@ def orca_scan(in_file, calc):
         return ret
 
     if preparse.has_scan:
+        properties = []
         energies = []
         with open(os.path.join(local_folder, 'calc.relaxscanact.dat')) as f:
             lines = f.readlines()
@@ -1251,21 +1260,20 @@ def orca_scan(in_file, calc):
                 E = energies[metaind]
                 struct = clean_xyz(''.join([i.strip() + '\n' for i in lines[inds[metaind]:inds[metaind+1]-1]]))
 
-                r = Structure.objects.create(number=metaind+1, degeneracy=1)
-                prop = get_or_create(calc.parameters, r)
-                prop.energy = E
-                prop.geom = True
-                prop.save()
+                r = Structure.objects.create(number=metaind+1, degeneracy=1, parent_ensemble=calc.result_ensemble)
                 r.xyz_structure = struct
                 r.save()
-                if E < min_E:
-                    min_E = E
 
-                calc.result_ensemble.structure_set.add(r)
+                prop = Property(parameters=calc.parameters, parent_structure=r)
+                prop.energy = E
+                prop.geom = True
+                properties.append(prop)
+
+        Property.objects.bulk_create(properties)
     else:
         with open(os.path.join(local_folder, 'calc.xyz')) as f:
             lines = f.readlines()
-            r = Structure.objects.create(number=calc.structure.number)
+            r = Structure.objects.create(number=calc.structure.number, parent_ensemble=calc.result_ensemble)
             r.xyz_structure = clean_xyz(''.join([i.strip() + '\n' for i in lines]))
 
         with open(os.path.join(local_folder, "calc.out")) as f:
@@ -1279,8 +1287,6 @@ def orca_scan(in_file, calc):
             prop.energy = E
             r.save()
             prop.save()
-            calc.result_ensemble.structure_set.add(r)
-            calc.result_ensemble.save()
 
     ###CHARGES
     #Start_ind?
@@ -2216,15 +2222,16 @@ def analyse_opt_ORCA(calc):
     num = int(lines[0])
     nstructs = int(len(lines)/(num+2))
 
+    new_frames = []
     for i in range(1, nstructs):
         xyz = ''.join(lines[(num+2)*i:(num+2)*(i+1)])
         try:
             f = calc.calculationframe_set.get(number=i)
         except CalculationFrame.DoesNotExist:
-            f = CalculationFrame.objects.create(number=i, xyz_structure=xyz, parent_calculation=calc, RMSD=RMSDs[i])
-            f.save()
+            new_frames.append(CalculationFrame(number=i, xyz_structure=xyz, parent_calculation=calc, RMSD=RMSDs[i]))
         else:
             continue
+    CalculationFrame.objects.bulk_create(new_frames)
 
 def analyse_opt_xtb(calc):
     if calc.step.name == "Minimum Energy Path":
@@ -2249,6 +2256,7 @@ def analyse_opt_xtb(calc):
     nn = int(len(lines)/(natoms+2))
 
     to_update = []
+    to_create = []
     if calc.step.name == "Minimum Energy Path":
         for n in range(nn):
             xyz = ''.join(lines[(natoms+2)*n:(natoms+2)*(n+1)])
@@ -2256,13 +2264,14 @@ def analyse_opt_xtb(calc):
             try:
                 f = calc.calculationframe_set.get(number=n+1)
             except CalculationFrame.DoesNotExist:
-                f = CalculationFrame.objects.create(parent_calculation=calc, number=n+1, RMSD=0, xyz_structure=xyz, energy=E, converged=True)
+                to_create.append(CalculationFrame(parent_calculation=calc, number=n+1, RMSD=0, xyz_structure=xyz, energy=E, converged=True))
             else:
                 f.xyz_structure = xyz
                 f.energy = E
-            to_update.append(f)
+                to_update.append(f)
 
-        CalculationFrame.objects.bulk_update(to_update, ['xyz_structure', 'energy'], batch_size=100)
+        CalculationFrame.objects.bulk_update(to_update, ['xyz_structure', 'energy'])
+        CalculationFrame.objects.bulk_create(to_create)
     else:
         for n in range(nn):
             xyz = ''.join(lines[(natoms+2)*n:(natoms+2)*(n+1)])
@@ -2270,11 +2279,11 @@ def analyse_opt_xtb(calc):
             try:
                 f = calc.calculationframe_set.get(number=n+1)
             except CalculationFrame.DoesNotExist:
-                f = CalculationFrame.objects.create(parent_calculation=calc, number=n+1, RMSD=rms, xyz_structure=xyz)
-                to_update.append(f)
+                to_create.append(CalculationFrame(parent_calculation=calc, number=n+1, RMSD=rms, xyz_structure=xyz))
             else:
                 continue
-        CalculationFrame.objects.bulk_update(to_update, ['xyz_structure', 'RMSD'], batch_size=100)
+        CalculationFrame.objects.bulk_update(to_update, ['xyz_structure', 'RMSD'])
+        CalculationFrame.objects.bulk_create(to_create)
 
 def analyse_opt_Gaussian(calc):
     if calc.status in [2, 3]:
@@ -2317,6 +2326,7 @@ def analyse_opt_Gaussian(calc):
 
     E = 0
     to_update = []
+    to_create = []
     while ind < len(lines) - 2:
         if lines[ind].find(orientation_str) != -1:
             s_ind += 1
@@ -2345,8 +2355,9 @@ def analyse_opt_Gaussian(calc):
             try:
                 f = frames.get(number=s_ind)
             except CalculationFrame.DoesNotExist:
-                f = CalculationFrame.objects.create(number=s_ind, xyz_structure=xyz, parent_calculation=calc, RMSD=rms, converged=converged, energy=E)
+                to_create.append(CalculationFrame(number=s_ind, xyz_structure=xyz, parent_calculation=calc, RMSD=rms, converged=converged, energy=E))
             else:
+                #Really necessary? Not sure there is a good case where frames should systematically be overwritten
                 f.xyz_structure = xyz
                 f.energy = E
                 to_update.append(f)
@@ -2357,6 +2368,7 @@ def analyse_opt_Gaussian(calc):
             if ind > len(lines) - 3:
                 calc.save()
                 CalculationFrame.objects.bulk_update(to_update, ['xyz_structure', 'energy'], batch_size=100)
+                CalculationFrame.objects.bulk_create(to_create)
                 return
 
 def get_Gaussian_xyz(text):
@@ -2629,7 +2641,7 @@ def run_calc(calc_id):
     logger.info("Processing calc {}".format(calc_id))
 
     def get_calc(calc_id):
-        for i in range(3):
+        for i in range(5):
             try:
                 calc = Calculation.objects.get(pk=calc_id)
             except Calculation.DoesNotExist:
@@ -2641,7 +2653,10 @@ def run_calc(calc_id):
                     return calc
         raise Exception("Could not get calculation to run")
 
-    calc = get_calc(calc_id)
+    try:
+        calc = get_calc(calc_id)
+    except Exception:
+        return ErrorCodes.UNKNOWN_CALCULATION
 
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
 

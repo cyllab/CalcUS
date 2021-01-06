@@ -1498,6 +1498,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'in_file': 'elimination_substrate.xyz',
                 'aux_file': 'elimination_product.xyz',
                 'charge': '-1',
+                'specifications': '--nimages 3',
                 }
 
         self.lget("/launch/")
@@ -1507,7 +1508,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(1200)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertEqual(self.get_number_conformers(), 10)
+        self.assertEqual(self.get_number_conformers(), 5)
 
     def test_NEB_from_structure(self):
         params = {
@@ -1536,6 +1537,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'project': 'SeleniumProject',
                 'software': 'xtb',
                 'aux_structure': ['elimination_substrate', 'test', 4],
+                'specifications': '--nimages 3',
                 }
 
         self.calc_input_params(params)
@@ -1570,6 +1572,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'software': 'xtb',
                 'aux_structure': ['elimination_substrate', 'test', 4],
                 'in_file': 'elimination_substrate.xyz',
+                'specifications': '--nimages 3',
                 }
 
         self.calc_input_params(params)
@@ -3576,8 +3579,7 @@ class MiscCalculationTests(CalcusLiveServer):
         self.details_latest_order()
         self.cancel_all_calc()
 
-        ind = 0
-        while ind < 10:
+        for i in range(10):
             self.driver.refresh()
             s = self.get_calculation_statuses()
             self.assertEqual(len(s), 1)
@@ -3585,7 +3587,6 @@ class MiscCalculationTests(CalcusLiveServer):
                 break
 
             time.sleep(1)
-            ind += 1
 
         s = self.get_calculation_statuses()
         self.assertEqual(s[0], "Error - Job cancelled")

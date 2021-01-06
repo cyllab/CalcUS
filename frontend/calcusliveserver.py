@@ -1369,6 +1369,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         for i in range(timeout):
             if self.get_number_unseen_calcs() == num:
                 return True
-            self.refresh()
+            self.driver.refresh()
             time.sleep(1)
         return False

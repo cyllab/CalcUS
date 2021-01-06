@@ -41,6 +41,7 @@ class ErrorCodes(IntEnum):
     COMMAND_TIMED_OUT = 14
     FAILED_SUBMISSION = 15
     UNIMPLEMENTED = 16
+    UNKNOWN_CALCULATION = 17
 
 #Software->Method/Functional->Basis set->Atom->[m, b, R2]
 NMR_REGRESSIONS = {
