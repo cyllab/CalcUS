@@ -96,7 +96,6 @@
 				success: function(data) {
 					eval(data);
 					refresh_availabilities();
-					solvent_selection_changed();
 				},
 			});
 
@@ -125,20 +124,6 @@
 			}
 
 		{% endif %}
-
-		function solvent_selection_changed() {
-			choice = document.getElementById("calc_solvent");
-			solvation_method = document.getElementById("calc_solvation_model_field");
-			solvation_radii = document.getElementById("calc_solvation_radii_field");
-			if(choice.value == "Vacuum" || choice.value == "") {
-				solvation_method.style.display = "none";	
-				solvation_radii.style.display = "none";	
-			}
-			else {
-				solvation_method.style.display = "block";	
-				solvation_radii.style.display = "block";	
-			}
-		}
 
 		function calc_selection_changed() {
 			choice = document.getElementById("calc_type");
@@ -214,24 +199,8 @@
 			}
 			else if (choice.value == "Scan") {
 				div.style.display = "block";	
-				check_scan_from();
 			}
-		}
-
-		function check_scan_from() {
-			software = document.getElementById("calc_software");
-			if (software.value == "Gaussian") {
-				to_hide = $(".scan_from");
-				for (i=0; i < to_hide.length; i++) {
-					to_hide[i].style.display = "none";
-				}
-			}
-			else {
-				to_hide = $(".scan_from");
-				for (i=0; i < to_hide.length; i++) {
-					to_hide[i].style.display = "block";
-				}
-			}
+			refresh_availabilities();
 		}
 
 		function project_selection_changed() {
@@ -767,7 +736,7 @@
 						<div class="field">
 							<label class="label">Solvent</label>
 							<div class="control" >
-								<input class="input" name="calc_solvent" id="calc_solvent" type="text" oninput="solvent_selection_changed();">
+								<input class="input" name="calc_solvent" id="calc_solvent" type="text" oninput="refresh_availabilities();">
 							</div>
 						</div>
 					</div>
@@ -788,7 +757,7 @@
 						</div>
 					</div>
 					<div class="column is-narrow">
-						<div class="field" id="calc_solvation_radii_field">
+						<div class="field software_specific avail_Gaussian avail_ORCA" id="calc_solvation_radii_field">
 							<label class="label">Solvation Radii</label>
 							<div class="control">
 								<div class="select">
@@ -1191,8 +1160,6 @@
 
 		refresh_presets();
 
-		solvent_selection_changed();
-
 		refresh_availabilities();
 
 		{% if proj %}
@@ -1224,9 +1191,10 @@
 				},
 				success: function(data) {
 					eval(data);
-					solvent_selection_changed();
 					refresh_availabilities();
 					refresh_availabilities();//Whatever
+					$('#calc_software').data('software', $("#calc_software").val());
+
 				},
 			});
 
@@ -1246,8 +1214,9 @@
 				success: function(data) {
 					eval(data);
 					refresh_availabilities();
-					solvent_selection_changed();
 					refresh_availabilities();//Whatever
+					$('#calc_software').data('software', $("#calc_software").val());
+
 				},
 			});
 
@@ -1264,6 +1233,8 @@
 					let mol_read = ChemDoodle.readXYZ(data);
 					ChemDoodle.relabel(mol_read);
 					editor.loadMolecule(mol_read);	
+					$('#calc_software').data('software', $("#calc_software").val());
+
 				},
 			});
 
@@ -1300,8 +1271,7 @@
   		}
 	}		
 
-	$('#calc_software').data('software', $("#calc_software").val());
-
+	
 	$('#calc_software').change(function(e){
 		var software = $(this).data('software');
 
