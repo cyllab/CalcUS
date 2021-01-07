@@ -295,7 +295,7 @@ class ClusterDaemon:
                     except KeyError:
                         logger.warning("Cannot load log: invalid access")
 
-                    tasks.sftp_get("/scratch/{}/calcus/{}/calc.log".format(access.cluster_username, calc.id), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), remote_conn, self.locks[access.id])
+                    tasks.sftp_get("/home/{}/scratch/calcus/{}/calc.log".format(access.cluster_username, calc.id), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), remote_conn, self.locks[access.id])
 
                 else:
                     logger.warning("Cannot load log: unknown calculation")

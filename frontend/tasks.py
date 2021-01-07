@@ -117,7 +117,7 @@ def sftp_get(src, dst, conn, lock):
 
     system("mkdir -p {}".format('/'.join(_dst.split('/')[:-1])), force_local=True)
 
-    if src.strip() == "":
+    if _src.strip() == "":
         lock.release()
         return ErrorCodes.INVALID_COMMAND
 
@@ -131,13 +131,13 @@ def sftp_get(src, dst, conn, lock):
                     else:
                         local.write(data)
     except ssh2.exceptions.SFTPProtocolError:
-        logger.info("Could not get remote file {}".format(src))
+        logger.info("Could not get remote file {}".format(_src))
         lock.release()
         return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
     except ssh2.exceptions.Timeout:
         logger.warning("Timeout")
         lock.release()
-        return sftp_get(src, dst, conn, lock)
+        return sftp_get(_src, dst, conn, lock)
 
     lock.release()
     return ErrorCodes.SUCCESS
@@ -258,7 +258,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
 
-        if calc.status == 0:
+        if calc.status == 0 and calc.remote_id == 0:
             if log_file != "":
                 output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{} | tee {}' >> submit_{}.sh; sbatch submit_{}.sh | tee calcus".format(remote_dir, conn[0].cluster_username, software, command, log_file, software, software), conn, lock)
             else:
@@ -419,7 +419,7 @@ def generate_xyz_structure(drawing, structure):
 
 def launch_xtb_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    folder = '/'.join(in_file.split('/')[:-1])
+    folder = 'scratch/calcus/{}'.format(calc.id)
 
     xtb = XtbCalculation(calc)
     calc.input_file = xtb.command
@@ -438,7 +438,9 @@ def launch_xtb_calc(in_file, calc, files):
         conn = connections[pid]
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
-        sftp_put("{}/in.xyz".format(local_folder), os.path.join(folder, "in.xyz"), conn, lock)
+
+        if calc.remote_id == 0:
+            sftp_put("{}/in.xyz".format(local_folder), os.path.join(folder, "in.xyz"), conn, lock)
         if xtb.option_file != "":
             sftp_put("{}/input".format(local_folder), os.path.join(folder, "input"), conn, lock)
 
@@ -908,7 +910,7 @@ def clean_struct_line(line):
 
 def launch_orca_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    folder = '/'.join(in_file.split('/')[:-1])
+    folder = 'scratch/calcus/{}'.format(calc.id)
 
     orca = OrcaCalculation(calc)
     calc.input_file = orca.input_file
@@ -922,9 +924,10 @@ def launch_orca_calc(in_file, calc, files):
         conn = connections[pid]
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
-        sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
-        if calc.step.name == "Minimum Energy Path":
-            sftp_put("{}/struct2.xyz".format(local_folder), os.path.join(folder, "struct2.xyz"), conn, lock)
+        if calc.remote_id == 0:
+            sftp_put("{}/calc.inp".format(local_folder), os.path.join(folder, "calc.inp"), conn, lock)
+            if calc.step.name == "Minimum Energy Path":
+                sftp_put("{}/struct2.xyz".format(local_folder), os.path.join(folder, "struct2.xyz"), conn, lock)
 
         ret = system("$EBROOTORCA/orca calc.inp", 'calc.out', software="ORCA", calc_id=calc.id)
     else:
@@ -1455,7 +1458,7 @@ def xtb_stda(in_file, calc):#TO OPTIMIZE
 
 def launch_gaussian_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    folder = '/'.join(in_file.split('/')[:-1])
+    folder = 'scratch/calcus/{}'.format(calc.id)
 
     gaussian = GaussianCalculation(calc)
     calc.input_file = gaussian.input_file
@@ -1471,7 +1474,9 @@ def launch_gaussian_calc(in_file, calc, files):
         conn = connections[pid]
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
-        sftp_put("{}/calc.com".format(local_folder), os.path.join(folder, "calc.com"), conn, lock)
+
+        if calc.remote_id == 0:
+            sftp_put("{}/calc.com".format(local_folder), os.path.join(folder, "calc.com"), conn, lock)
         ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
     else:
         os.chdir(local_folder)
@@ -2689,7 +2694,7 @@ def run_calc(calc_id):
         with open(in_file, 'w') as out:
             out.write(clean_xyz(calc.structure.xyz_structure))
 
-    if not calc.local:
+    if not calc.local and calc.remote_id == 0:
         pid = int(threading.get_ident())
         conn = connections[pid]
         lock = locks[pid]
@@ -2846,6 +2851,7 @@ def kill_calc(calc):
     else:
         cmd = "kill\n{}\n".format(calc.id)
         send_cluster_command(cmd)
+
 
 @app.task(name='celery.ping')
 def ping():
