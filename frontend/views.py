@@ -1221,6 +1221,7 @@ def submit_calculation(request):
         fingerprints = {}
         unique_fingerprints = []
         unique_structures = []
+        unique_names = []
         in_structs = []
         if len(request.FILES) > 0:
 
@@ -1244,6 +1245,7 @@ def submit_calculation(request):
 
                 if fing not in unique_fingerprints:
                     unique_fingerprints.append(fing)
+                    unique_names.append(filename)
 
             if combine == "on":
                 obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
@@ -1267,14 +1269,15 @@ def submit_calculation(request):
                 obj.save()
                 orders.append(obj)
             else:
-                for fing in unique_fingerprints:
-                    obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
+                for fname, fing in zip(unique_names, unique_fingerprints):
+                    obj = CalculationOrder.objects.create(name=fname, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
                     try:
-                        mol = Molecule.objects.get(project=project_obj, name=mol_name)
+                        mol = Molecule.objects.get(project=project_obj, inchi=fing)
                         #Inchi might not match
                     except Molecule.DoesNotExist:
                         mol = Molecule.objects.create(name=mol_name, inchi=fing, project=project_obj)
                         mol.save()
+
 
                     e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
                     for s_num, s_id in enumerate(fingerprints[fing]):
@@ -3026,7 +3029,7 @@ def get_csv(proj, profile, scope="all", details="full"):
                         csv += structure_str.format(n, d, en*CONVERSION, r_el*CONVERSION, w, f_en*CONVERSION)
     csv += "\n\n"
     csv += "SUMMARY\n"
-    csv += "Method,Molecule,Ensemble,Weighted Energy,Weighted Free Energy,\n"
+    csv += "Method,Molecule,Ensemble,Weighted Energy ({}),Weighted Free Energy ({}),\n".format(units, units)
     for p_name in summary.keys():
         p = summary[p_name]
         csv += "{},\n".format(hashes[p_name])
@@ -3240,6 +3243,9 @@ def relaunch_calc(request):
         pass
 
     calc.status = 0
+    calc.remote_id = 0
+    calc.order.hidden = False
+    calc.order.save()
     calc.save()
 
     if calc.local:
