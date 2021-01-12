@@ -1291,7 +1291,7 @@ def submit_calculation(request):
                     orders.append(obj)
         else:
             if 'structure' in request.POST.keys():
-                obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
+                obj = CalculationOrder.objects.create(name=mol_name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
                 drawing = True
                 e = Ensemble.objects.create(name="Drawn Structure")
                 obj.ensemble = e
