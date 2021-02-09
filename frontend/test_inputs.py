@@ -3514,6 +3514,10 @@ class XtbTests(TestCase):
         with self.assertRaises(Exception):
             xtb = XtbCalculation(calc)
 
+        calc = Calculation.objects.get(pk=calc.id)
+
+        self.assertIn('invalid solvent', calc.error_message.lower())
+
     def test_scan(self):
         params = {
                 'type': 'Constrained Optimisation',
@@ -3715,6 +3719,31 @@ class XtbTests(TestCase):
                 'software': 'xtb',
                 'constraints': 'Freeze-2_3;',
                 'specifications': '--force_constant 2.0',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "crest in.xyz -cinp input -rthr 0.6 -ewin 6"
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+        INPUT = """$constrain
+        force constant=2.0
+        reference=in.xyz
+        distance: 2, 3, auto
+        atoms: 2,3
+        $metadyn
+        atoms: 1,4-9
+        """
+        self.assertTrue(self.is_equivalent(INPUT, xtb.option_file))
+
+    def test_constrained_conformational_search_equals(self):
+        params = {
+                'type': 'Constrained Conformational Search',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'constraints': 'Freeze-2_3;',
+                'specifications': '--force_constant=2.0',
                 }
 
         calc = gen_calc(params, self.profile)

@@ -27,13 +27,17 @@ class XtbCalculation:
 
     def handle_parameters(self):
         if self.calc.parameters.solvent.lower() != "vacuum":
-            solvent_keyword = get_solvent(self.calc.parameters.solvent, self.calc.parameters.software)
+            try:
+                solvent_keyword = get_solvent(self.calc.parameters.solvent, self.calc.parameters.software)
+            except KeyError:
+                self.raise_error("Invalid solvent")
+
             if self.calc.parameters.solvation_model == "GBSA":
                 self.cmd_arguments += '-g {} '.format(solvent_keyword)
             elif self.calc.parameters.solvation_model == "ALPB":
                 self.cmd_arguments += '--alpb {} '.format(solvent_keyword)
             else:
-                raise Exception("Invalid solvation method for xtb: {}".format(self.calc.parameters.solvation_model))
+                self.raise_error("Invalid solvation method for xtb: {}".format(self.calc.parameters.solvation_model))
 
 
         if self.calc.parameters.charge != 0:
@@ -158,8 +162,9 @@ class XtbCalculation:
         ewin = 6
         cmd_arguments = ""
 
-        ALLOWED = "qwertyuiopasdfghjklzxcvbnm-1234567890./ "
+        ALLOWED = "qwertyuiopasdfghjklzxcvbnm-1234567890./= "
         clean_specs = ''.join([i for i in self.specifications + self.calc.parameters.specifications.lower() if i in ALLOWED])
+        clean_specs = clean_specs.replace('=', ' ').replace('  ', ' ')
 
         specs = clean_specs.strip().split('--')
 
@@ -170,25 +175,25 @@ class XtbCalculation:
             if len(ss) == 1:
                 if ss[0] in ['gfn2', 'gfn1', 'gfn0', 'gfnff', 'gfn2//gfnff']:
                     if ss[0] == 'gfn2//gfnff' and self.calc.step.name not in ['Conformational Search', 'Constrained Conformational Search']:
-                        self.raise_error("Invalid specifications")
+                        self.raise_error("Invalid method for calculation type: {}".format(ss[0]))
                     if ss[0] in ['gfn2', 'gfn1', 'gfn0']:
                         method = "{} {}".format(ss[0][:-1], ss[0][-1])
                     else:
                         method = ss[0]
                 else:
-                    self.raise_error("Invalid specifications")
+                    self.raise_error("Invalid specification")
             elif len(ss) == 2:
                 if ss[0] == 'o' or ss[0] == 'opt':
                     if ss[1] not in ['crude', 'sloppy', 'loose', 'lax', 'normal', 'tight', 'vtight', 'extreme']:
-                        self.raise_error("Invalid specifications")
+                        self.raise_error("Invalid optimization specification")
                     opt_level = ss[1]
                 elif ss[0] == 'rthr':
                     if self.calc.step.name not in ['Conformational Search', 'Constrained Conformational Search']:
-                        self.raise_error("Invalid specifications")
+                        self.raise_error("Invalid specification for calculation type: rthr")
                     rthr = ss[1]
                 elif ss[0] == 'ewin':
                     if self.calc.step.name not in ['Conformational Search', 'Constrained Conformational Search']:
-                        self.raise_error("Invalid specifications")
+                        self.raise_error("Invalid specification for calculation type: ewin")
                     ewin = ss[1]
                 elif ss[0] == 'acc':
                     accuracy = float(ss[1])
@@ -196,20 +201,20 @@ class XtbCalculation:
                     try:
                         iterations = int(ss[1])
                     except ValueError:
-                        self.raise_error("Invalid specifications")
+                        self.raise_error("Invalid number of iterations: must be an integer")
                 elif ss[0] == 'forceconstant':
                     try:
                         self.force_constant = float(ss[1])
                     except ValueError:
-                        self.raise_error("Invalid specifications")
+                        self.raise_error("Invalid force constant: must be a floating point value")
                 elif ss[0] == 'gfn':
                     if ss[1] not in ['0', '1', '2']:
-                        self.raise_error("Invalid specifications")
+                        self.raise_error("Invalid GFN version")
                     method = "{} {}".format(ss[0], ss[1])
                 else:
-                    self.raise_error("Invalid specifications")
+                    self.raise_error("Unknown specification: {}".format(ss[0]))
             else:
-                self.raise_error("Invalid specifications")
+                self.raise_error("Invalid specification: {}".format(ss))
 
         if accuracy != -1:
             self.cmd_arguments += "--acc {:.2f} ".format(accuracy)
