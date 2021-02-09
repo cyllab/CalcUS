@@ -285,7 +285,8 @@ class ClusterDaemon:
                 logger.info("Killing calculation {}".format(calc.id))
                 if calc.id in self.calculations.keys():
                     pid = self.calculations[calc.id]
-                    tasks.kill_sig.append(pid)
+                    if pid not in tasks.kill_sig:
+                        tasks.kill_sig.append(pid)
                 else:
                     self.cancelled.append(calc.id)
             elif cmd == "load_log":
