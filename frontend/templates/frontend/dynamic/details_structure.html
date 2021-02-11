@@ -22,7 +22,7 @@
 				},
 				success: function(data, textStatus, xhr) {
 					charges_viewer.addModel(data, "xyz");
-					charges_viewer.setStyle({}, {stick:{}, sphere: {radius: 0.5}});
+					charges_viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
 					charges_viewer.zoomTo();
 					charges_viewer.render();
 					unpack_charges("{{ property.charges}}");
@@ -124,7 +124,8 @@
 					vib_viewer.addModel(data, "xyz");
 					vib_viewer.vibrate(10, amplitude, true, null);
 					vib_viewer.animate({'loop': 'backAndForth'});
-					vib_viewer.setStyle({}, {stick:{}, sphere: {radius: 0.5}});
+					vib_viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
+
 					vib_viewer.zoomTo();
 					vib_viewer.render();
 				}
@@ -249,7 +250,8 @@
 				},
 				success: function(data, textStatus, xhr) {
 					mo_viewer.addModel(data, "xyz");
-					mo_viewer.setStyle({}, {stick:{}, sphere: {radius: 0.5}});
+					mo_viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
+
 					mo_viewer.zoomTo();
 					mo_viewer.render();
 				}
