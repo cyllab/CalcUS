@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.db.models.signals import pre_save
 from django.utils import timezone
 from django.contrib.auth.models import User, Group
@@ -688,20 +688,11 @@ class CalculationOrder(models.Model):
 
     @property
     def get_all_calcs(self):
-        num_queued = 0
-        num_running = 0
-        num_done = 0
-        num_error = 0
-        for calc in self.calculation_set.all():
-            if calc.status == 0:
-                num_queued += 1
-            elif calc.status == 1:
-                num_running += 1
-            elif calc.status == 2:
-                num_done += 1
-            elif calc.status == 3:
-                num_error += 1
-        return num_queued, num_running, num_done, num_error
+        res = {i: 0 for i in range(4)}
+
+        for calc in self.calculation_set.all().values('status'):
+            res[calc['status']] += 1
+        return [res[i] for i in range(4)]
 
     @property
     def new_status(self):
@@ -775,40 +766,61 @@ class Calculation(models.Model):
     def save(self, *args, **kwargs):
         if not self.pk:
             mol = self.get_mol()
-            self.order.project.num_calc += 1
-            self.order.project.num_calc_queued += 1
-            self.order.project.save()
-            mol.num_calc += 1
-            mol.num_calc_queued += 1
-            mol.save()
+            with transaction.atomic():
+                _mol = Molecule.objects.select_for_update().get(id=mol.id)
+                _mol.num_calc += 1
+                _mol.num_calc_queued += 1
+                _mol.save()
+
+            with transaction.atomic():
+                _proj = Project.objects.select_for_update().get(id=self.order.project.id)
+                _proj.num_calc += 1
+                _proj.num_calc_queued += 1
+                _proj.save()
+
         else:
             old = Calculation.objects.filter(pk=self.pk).first()
             if old:
-                if self.status != old.status:
+                ostatus = old.status
+                nstatus = self.status
+                if nstatus != ostatus:
                     mol = self.get_mol()
 
-                    if old.status == 0:
-                        self.order.project.num_calc_queued -= 1
-                        mol.num_calc_queued -= 1
-                    elif old.status == 1:
-                        self.order.project.num_calc_running -= 1
-                        mol.num_calc_running -= 1
-                    elif old.status in [2, 3]:
-                        self.order.project.num_calc_completed -= 1
-                        mol.num_calc_completed -= 1
+                    with transaction.atomic():
+                        _mol = Molecule.objects.select_for_update().get(id=mol.id)
 
-                    if self.status == 0:
-                        self.order.project.num_calc_queued += 1
-                        mol.num_calc_queued += 1
-                    elif self.status == 1:
-                        self.order.project.num_calc_running += 1
-                        mol.num_calc_running += 1
-                    elif self.status in [2, 3]:
-                        self.order.project.num_calc_completed += 1
-                        mol.num_calc_completed += 1
+                        if ostatus == 0:
+                            _mol.num_calc_queued -= 1
+                        elif ostatus == 1:
+                            _mol.num_calc_running -= 1
+                        elif ostatus in [2, 3]:
+                            _mol.num_calc_completed -= 1
 
-                    self.order.project.save()
-                    mol.save()
+                        if nstatus == 0:
+                            _mol.num_calc_queued += 1
+                        elif nstatus == 1:
+                            _mol.num_calc_running += 1
+                        elif nstatus in [2, 3]:
+                            _mol.num_calc_completed += 1
+                        _mol.save()
+
+                    with transaction.atomic():
+                        _proj = Project.objects.select_for_update().get(id=self.order.project.id)
+
+                        if ostatus == 0:
+                            _proj.num_calc_queued -= 1
+                        elif ostatus == 1:
+                            _proj.num_calc_running -= 1
+                        elif ostatus in [2, 3]:
+                            _proj.num_calc_completed -= 1
+
+                        if nstatus == 0:
+                            _proj.num_calc_queued += 1
+                        elif nstatus == 1:
+                            _proj.num_calc_running += 1
+                        elif nstatus in [2, 3]:
+                            _proj.num_calc_completed += 1
+                        _proj.save()
 
         old_status = self.order.status
         old_unseen = self.order.new_status
@@ -819,27 +831,35 @@ class Calculation(models.Model):
 
     def delete(self, *args, **kwargs):
         mol = self.get_mol()
-        self.order.project.num_calc -= 1
-        mol.num_calc -= 1
 
-        if self.status == 0:
-            self.order.project.num_calc_queued -= 1
-            mol.num_calc_queued -= 1
-        elif self.status == 1:
-            self.order.project.num_calc_running -= 1
-            mol.num_calc_running -= 1
-        elif self.status in [2, 3]:
-            self.order.project.num_calc_completed -= 1
-            mol.num_calc_completed -= 1
-        else:
-            raise Exception("Unknown calculation status")
+        with transaction.atomic():
+            _proj = Project.objects.select_for_update().get(id=self.order.project.id)
+            _proj.num_calc -= 1
+            if self.status == 0:
+                _proj.num_calc_queued -= 1
+            elif self.status == 1:
+                _proj.num_calc_running -= 1
+            elif self.status in [2, 3]:
+                _proj.num_calc_completed -= 1
+            else:
+                raise Exception("Unknown calculation status")
+            _proj.save()
 
-        self.order.project.save()
+        with transaction.atomic():
+            _mol = Molecule.objects.select_for_update().get(id=mol.id)
+            _mol.num_calc -= 1
+            if self.status == 0:
+                _mol.num_calc_queued -= 1
+            elif self.status == 1:
+                _mol.num_calc_running -= 1
+            elif self.status in [2, 3]:
+                _mol.num_calc_completed -= 1
+            else:
+                raise Exception("Unknown calculation status")
+            _mol.save()
 
         old_status = self.order.status
         old_unseen = self.order.new_status
-
-        mol.save()
 
         super(Calculation, self).delete(*args, **kwargs)
 
@@ -847,7 +867,6 @@ class Calculation(models.Model):
 
         if self.order.calculation_set.count() == 0:
             self.order.delete()
-
 
     @property
     def execution_time(self):
