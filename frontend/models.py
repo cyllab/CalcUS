@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.db.models.signals import pre_save
 from django.utils import timezone
 from django.contrib.auth.models import User, Group
@@ -603,9 +603,12 @@ class CalculationOrder(models.Model):
     def see(self):
         if self.last_seen_status != self.status:
             self.last_seen_status = self.status
-            self.author.unseen_calculations -= 1
-            self.author.save()
             self.save()
+
+            with transaction.atomic():
+                p = Profile.objects.select_for_update().get(id=self.author.id)
+                p.unseen_calculations -= 1
+                p.save()
         else:
             if not self.hidden and self.status in [2, 3]:
                 self.hidden = True
@@ -648,12 +651,16 @@ class CalculationOrder(models.Model):
 
         if old_unseen:
             if not new_unseen:
-                self.author.unseen_calculations -= 1
-                self.author.save()
+                with transaction.atomic():
+                    p = Profile.objects.select_for_update().get(id=self.author.id)
+                    p.unseen_calculations -= 1
+                    p.save()
         else:
             if new_unseen:
-                self.author.unseen_calculations += 1
-                self.author.save()
+                with transaction.atomic():
+                    p = Profile.objects.select_for_update().get(id=self.author.id)
+                    p.unseen_calculations += 1
+                    p.save()
 
     def _status(self, num_queued, num_running, num_done, num_error):
         if num_queued + num_running + num_done + num_error == 0:
@@ -712,8 +719,10 @@ class CalculationOrder(models.Model):
 
     def delete(self, *args, **kwargs):
         if self.new_status:
-            self.author.unseen_calculations -= 1
-            self.author.save()
+            with transaction.atomic():
+                p = Profile.objects.select_for_update().get(id=self.author.id)
+                p.unseen_calculations -= 1
+                p.save()
         super(CalculationOrder, self).delete(*args, **kwargs)
 
 class Calculation(models.Model):
@@ -773,43 +782,6 @@ class Calculation(models.Model):
             print("Could not find molecule to update!")
 
     def save(self, *args, **kwargs):
-        if not self.pk:
-            mol = self.get_mol()
-            self.order.project.num_calc += 1
-            self.order.project.num_calc_queued += 1
-            self.order.project.save()
-            mol.num_calc += 1
-            mol.num_calc_queued += 1
-            mol.save()
-        else:
-            old = Calculation.objects.filter(pk=self.pk).first()
-            if old:
-                if self.status != old.status:
-                    mol = self.get_mol()
-
-                    if old.status == 0:
-                        self.order.project.num_calc_queued -= 1
-                        mol.num_calc_queued -= 1
-                    elif old.status == 1:
-                        self.order.project.num_calc_running -= 1
-                        mol.num_calc_running -= 1
-                    elif old.status in [2, 3]:
-                        self.order.project.num_calc_completed -= 1
-                        mol.num_calc_completed -= 1
-
-                    if self.status == 0:
-                        self.order.project.num_calc_queued += 1
-                        mol.num_calc_queued += 1
-                    elif self.status == 1:
-                        self.order.project.num_calc_running += 1
-                        mol.num_calc_running += 1
-                    elif self.status in [2, 3]:
-                        self.order.project.num_calc_completed += 1
-                        mol.num_calc_completed += 1
-
-                    self.order.project.save()
-                    mol.save()
-
         old_status = self.order.status
         old_unseen = self.order.new_status
 
@@ -818,24 +790,6 @@ class Calculation(models.Model):
 
 
     def delete(self, *args, **kwargs):
-        mol = self.get_mol()
-        self.order.project.num_calc -= 1
-        mol.num_calc -= 1
-
-        if self.status == 0:
-            self.order.project.num_calc_queued -= 1
-            mol.num_calc_queued -= 1
-        elif self.status == 1:
-            self.order.project.num_calc_running -= 1
-            mol.num_calc_running -= 1
-        elif self.status in [2, 3]:
-            self.order.project.num_calc_completed -= 1
-            mol.num_calc_completed -= 1
-        else:
-            raise Exception("Unknown calculation status")
-
-        self.order.project.save()
-
         old_status = self.order.status
         old_unseen = self.order.new_status
 
