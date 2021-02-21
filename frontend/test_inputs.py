@@ -790,11 +790,50 @@ class GaussianTests(TestCase):
         O          0.62360        0.07990        1.25870
         H          0.94410        0.53240        2.04240
 
-        D 4 1 5 8 S 10 17.99
+        D 4 1 5 8 S 10 -17.99
 
         """
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_scan_dihedral_DFT2(self):
+        params = {
+                'type': 'Constrained Optimisation',
+                'in_file': 'ethanol.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'Semi-empirical',
+                'method': 'DFT',
+                'charge': '0',
+                'method': 'B3LYP',
+                'basis_set': '6-31+G(d,p)',
+                'constraints': 'Scan_2_0_10-4_1_5_6;',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt(modredundant) B3LYP/6-31+G(d,p)
+
+        CalcUS
+
+        0 1
+        C         -1.31970       -0.64380        0.00000
+        H         -0.96310       -1.65260        0.00000
+        H         -0.96310       -0.13940       -0.87370
+        H         -2.38970       -0.64380        0.00000
+        C         -0.80640        0.08220        1.25740
+        H         -1.16150        1.09160        1.25640
+        H         -1.16470       -0.42110        2.13110
+        O          0.62360        0.07990        1.25870
+        H          0.94410        0.53240        2.04240
+
+        D 4 1 5 6 S 10 6.01
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
 
     def test_freeze_bond_DFT(self):
         params = {

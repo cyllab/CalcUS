@@ -176,7 +176,7 @@ class GaussianCalculation:
                         gaussian_constraints += "A {} {} {} S {} {}\n".format(*ids, num_steps, step_size)
                     if type == 4:
                         start = get_dihedral(xyz, *ids)
-                        step_size = "{:.2f}".format((end-start)/num_steps)
+                        step_size = "{:.2f}".format(-1*(end-start)/num_steps)#Gaussian seems to use a different sign convention?
                         gaussian_constraints += "D {} {} {} {} S {} {}\n".format(*ids, num_steps, step_size)
                 else:
                     if type == 2:
