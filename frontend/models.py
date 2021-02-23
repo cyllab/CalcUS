@@ -118,11 +118,6 @@ class Project(models.Model):
 
     preset = models.ForeignKey('Preset', on_delete=models.SET_NULL, blank=True, null=True)
 
-    num_calc = models.IntegerField(default=0)
-    num_calc_queued = models.IntegerField(default=0)
-    num_calc_running = models.IntegerField(default=0)
-    num_calc_completed = models.IntegerField(default=0)
-
     def __str__(self):
         return self.name
 
@@ -563,11 +558,6 @@ class Molecule(models.Model):
     name = models.CharField(max_length=100)
     inchi = models.CharField(max_length=1000)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
-
-    num_calc = models.IntegerField(default=0)
-    num_calc_queued = models.IntegerField(default=0)
-    num_calc_running = models.IntegerField(default=0)
-    num_calc_completed = models.IntegerField(default=0)
 
     @property
     def count_vis(self):
