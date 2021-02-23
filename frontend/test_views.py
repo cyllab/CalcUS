@@ -16,6 +16,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
 SCR_DIR = os.path.join(tests_dir, "scr")
 RESULTS_DIR = os.path.join(tests_dir, "results")
+
 basic_params = {
                 'file_structure': [''],
                 'calc_mol_name': ['Test'],
@@ -26,6 +27,7 @@ basic_params = {
                 'calc_project': ['New Project'],
                 'new_project_name': ['Test'],
                 'calc_software': ['xtb'],
+                'calc_theory_level': [''],
                 'calc_type': ['Geometrical Optimisation'],
                 'constraint_mode_1': ['Freeze'],
                 'constraint_type_1': ['Distance'],
@@ -76,104 +78,103 @@ class LaunchTests(TestCase):
         self.assertNotContains(response, "Error while submitting your calculation")
 
     def test_submit_long_name(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_name'] = 'A'*200
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
-
     def test_submit_long_project_name(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_project'] = 'A'*200
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_empty_mol_name(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_mol_name'] = ''
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_empty_charge(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_charge'] = ''
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_empty_project(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_project'] = ''
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_empty_software(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_software'] = ''
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_empty_type(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_type'] = ''
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_empty_resource(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_ressource'] = ''
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_no_mol_name(self):
-        params = basic_params
+        params = basic_params.copy()
         del params['calc_mol_name']
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_no_charge(self):
-        params = basic_params
+        params = basic_params.copy()
         del params['calc_charge']
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_no_project(self):
-        params = basic_params
+        params = basic_params.copy()
         del params['calc_project']
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_no_software(self):
-        params = basic_params
+        params = basic_params.copy()
         del params['calc_software']
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_no_type(self):
-        params = basic_params
+        params = basic_params.copy()
         del params['calc_type']
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_no_resource(self):
-        params = basic_params
+        params = basic_params.copy()
         del params['calc_ressource']
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_no_resource(self):
-        params = basic_params
+        params = basic_params.copy()
         del params['calc_ressource']
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_ORCA_no_theory(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_software'] = 'ORCA'
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_gaussian_valid_specification(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_software'] = 'Gaussian'
         params['specifications'] = 'opt(loose)'
         params['calc_theory_level'] = 'DFT'
@@ -184,21 +185,21 @@ class LaunchTests(TestCase):
         self.assertNotContains(response, "Error while submitting your calculation")
 
     def test_submit_ORCA_empty_theory(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_software'] = 'ORCA'
         params['calc_theory_level'] = ''
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_ORCA_DFT_no_functional(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_software'] = 'ORCA'
         params['calc_theory_level'] = 'DFT'
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_ORCA_DFT_no_basis_set(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_software'] = 'ORCA'
         params['calc_theory_level'] = 'DFT'
         params['calc_functional'] = 'M06-2X'
@@ -206,7 +207,7 @@ class LaunchTests(TestCase):
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_ORCA_DFT_empty_functional(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_software'] = 'ORCA'
         params['calc_theory_level'] = 'DFT'
         params['calc_functional'] = ''
@@ -214,7 +215,7 @@ class LaunchTests(TestCase):
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_ORCA_DFT_correct(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_software'] = 'ORCA'
         params['calc_theory_level'] = 'DFT'
         params['calc_functional'] = 'M06-2X'
@@ -223,7 +224,7 @@ class LaunchTests(TestCase):
         self.assertNotContains(response, "Error while submitting your calculation")
 
     def test_submit_ORCA_DFT_empty_basis_set(self):
-        params = basic_params
+        params = basic_params.copy()
         params['calc_software'] = 'ORCA'
         params['calc_theory_level'] = 'DFT'
         params['calc_functional'] = 'M06-2X'
@@ -232,8 +233,8 @@ class LaunchTests(TestCase):
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_clean_name1(self):
-        params = basic_params
-        params['calc_name'] = 'name'
+        params = basic_params.copy()
+        params['calc_mol_name'] = 'name'
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertNotContains(response, "Error while submitting your calculation")
 
@@ -241,8 +242,8 @@ class LaunchTests(TestCase):
         self.assertEqual(o.name, 'name')
 
     def test_clean_name2(self):
-        params = basic_params
-        params['calc_name'] = '<br>name'
+        params = basic_params.copy()
+        params['calc_mol_name'] = '<br>name'
         response = self.client.post("/submit_calculation/", data=params, follow=True)
 
         self.assertNotContains(response, "Error while submitting your calculation")
@@ -250,8 +251,8 @@ class LaunchTests(TestCase):
         self.assertEqual(o.name, '&lt;br&gt;name')
 
     def test_clean_name3(self):
-        params = basic_params
-        params['calc_name'] = 'name/details-.'
+        params = basic_params.copy()
+        params['calc_mol_name'] = 'name/details-.'
         response = self.client.post("/submit_calculation/", data=params, follow=True)
 
         self.assertNotContains(response, "Error while submitting your calculation")
