@@ -152,7 +152,7 @@ class OrcaCalculation:
             for cmd in self.calc.constraints.split(';'):
                 if cmd.strip() == '':
                     continue
-                _cmd, ids = cmd.split('-')
+                _cmd, ids = cmd.split('/')
                 _cmd = _cmd.split('_')
                 ids = ids.split('_')
                 ids = [int(i)-1 for i in ids]
@@ -170,7 +170,7 @@ class OrcaCalculation:
                 for cmd in self.calc.constraints.split(';'):
                     if cmd.strip() == '':
                         continue
-                    _cmd, ids = cmd.split('-')
+                    _cmd, ids = cmd.split('/')
                     ids = ids.split('_')
                     _cmd = _cmd.split('_')
                     ids_str = "{}".format(int(ids[0])-1)

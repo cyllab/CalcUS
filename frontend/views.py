@@ -1352,13 +1352,13 @@ def submit_calculation(request):
 
                 ids = '_'.join([str(i) for i in ids])
                 if mode == "Freeze":
-                    constraints += "{}-{};".format(mode, ids)
+                    constraints += "{}/{};".format(mode, ids)
                 elif mode == "Scan":
                     obj.has_scan = True
                     begin = clean(request.POST['calc_scan_{}_1'.format(ind)])
                     end = float(clean(request.POST['calc_scan_{}_2'.format(ind)]))
                     steps = float(clean(request.POST['calc_scan_{}_3'.format(ind)]))
-                    constraints += "{}_{}_{}_{}-{};".format(mode, begin, end, steps, ids)
+                    constraints += "{}_{}_{}_{}/{};".format(mode, begin, end, steps, ids)
                 else:
                     return error(request, "Invalid constrained optimisation")
     obj.save()

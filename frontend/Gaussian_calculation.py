@@ -155,7 +155,7 @@ class GaussianCalculation:
             for c in scmd:
                 if c.strip() == '':
                     continue
-                _c, ids = c.split('-')
+                _c, ids = c.split('/')
                 _c= _c.split('_')
                 ids = ids.split('_')
                 ids = [int(i) if i.strip() != '' else -1 for i in ids]
