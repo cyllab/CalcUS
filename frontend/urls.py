@@ -131,6 +131,7 @@ urlpatterns = [
 
     path('log/<int:pk>', views.log, name='log'),
     path('download_log/<int:pk>', views.download_log, name='download_log'),
+    path('download_all_logs/<int:pk>', views.download_all_logs, name='download_all_logs'),
     path('submit_calculation/', views.submit_calculation, name='submit_calculation'),
     path('get_structure/', views.get_structure, name='get_structure'),
     path('get_details_sections/<int:pk>', views.get_details_sections, name='get_details_sections'),

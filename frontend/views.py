@@ -2640,6 +2640,44 @@ def download_log(request, pk):
         return HttpResponse(status=404)
 
 @login_required
+def download_all_logs(request, pk):
+    try:
+        order = CalculationOrder.objects.get(pk=pk)
+    except CalculationOrder.DoesNotExist:
+        return HttpResponse(status=404)
+
+    profile = request.user.profile
+
+    if not can_view_order(order, profile):
+        return HttpResponse(status=403)
+
+    order_logs = {}
+    for calc in order.calculation_set.all():
+        if calc.status == 2 or calc.status == 3:
+            dir = os.path.join(CALCUS_RESULTS_HOME, str(calc.id))
+        elif calc.status == 1:
+            dir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+        elif calc.status == 0:
+            return HttpResponse(status=204)
+
+        logs = glob.glob(dir + '/*.out')
+        logs += glob.glob(dir + '/*.log')
+
+        order_logs[calc.id] = logs
+
+    mem = BytesIO()
+    with zipfile.ZipFile(mem, 'w', zipfile.ZIP_DEFLATED) as zip:
+        for c in order_logs.keys():
+            for f in order_logs[c]:
+                print(f, c)
+                print(f, "{}_".format(c) + basename(f))
+                zip.write(f, "{}_".format(c) + basename(f))
+
+    response = HttpResponse(mem.getvalue(), content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename="order_{}.zip"'.format(pk)
+    return response
+
+@login_required
 def log(request, pk):
     LOG_HTML = """
     <label class="label">{}</label>
