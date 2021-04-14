@@ -280,7 +280,7 @@ class GaussianCalculation:
                         ecp_ind = ind
                         break
                 bs_gen = '\n'.join(sbs[:ecp_ind-2]) + '\n'
-                bs_ecp = '\n'.join(sbs[ecp_ind-2:]) + '\n'
+                bs_ecp = '\n'.join(sbs[ecp_ind-2:])
                 to_append_gen.append(bs_gen)
                 to_append_ecp.append(bs_ecp)
             else:
@@ -301,7 +301,8 @@ class GaussianCalculation:
                 custom_bs += '****\n'
 
             custom_bs += ''.join(to_append_gen)
-            custom_bs += ''.join(to_append_ecp)
+            custom_bs += ''.join(to_append_ecp).replace('\n\n', '\n')
+
 
             return gen_keyword, custom_bs
         else:
