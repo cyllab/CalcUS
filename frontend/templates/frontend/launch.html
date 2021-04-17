@@ -1160,6 +1160,22 @@
 		proj.value = "{{ proj.name }}";
 		{% endif %}
 
+		{% if init_params_id %}
+			$.ajax({
+				method: "POST",	 	 
+				url: "/load_params/" + {{ init_params_id }},
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				success: function(data) {
+					eval(data);
+					refresh_availabilities();
+					refresh_availabilities();//Whatever
+					$('#calc_software').data('software', $("#calc_software").val());
+
+				},
+			});
+		{% endif %}
 		{% if ensemble %}
 			$("#calc_project").val("{{ ensemble.parent_molecule.project.name }}");
 			$.ajax({
@@ -1176,20 +1192,6 @@
 					editor.loadMolecule(mol_read);	
 				}
 			});
-			$.ajax({
-				method: "POST",	 	 
-				url: "/load_params_ensemble/" + {{ ensemble.id }},
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				success: function(data) {
-					eval(data);
-					refresh_availabilities();
-					refresh_availabilities();//Whatever
-					$('#calc_software').data('software', $("#calc_software").val());
-
-				},
-			});
 
 		{% endif %}
 
@@ -1198,20 +1200,6 @@
 			let mol_read = ChemDoodle.readXYZ(`{{ structure.xyz_structure }}`);
 			ChemDoodle.relabel(mol_read);
 			editor.loadMolecule(mol_read);	
-			$.ajax({
-				method: "POST",	 	 
-				url: "/load_params_structure/" + {{ structure.id }},
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				success: function(data) {
-					eval(data);
-					refresh_availabilities();
-					refresh_availabilities();//Whatever
-					$('#calc_software').data('software', $("#calc_software").val());
-
-				},
-			});
 
 		{% endif %}
 		{% if calc %}

@@ -111,8 +111,10 @@ urlpatterns = [
     path('launch/<int:pk>', views.launch_pk, name='launch_pk'),
     path('launch/<int:ee>/<int:pk>', views.launch_structure_pk, name='launch_structure_pk'),
     path('launch/project/<int:pk>', views.launch_project, name='launch_project'),
-    path('load_params_ensemble/<int:pk>', views.load_params_ensemble, name='load_params_ensemble'),
-    path('load_params_structure/<int:pk>', views.load_params_structure, name='load_params_structure'),
+    path('load_params/<int:pk>', views.load_params, name='load_params'),
+
+    #path('load_params_ensemble/<int:pk>', views.load_params_ensemble, name='load_params_ensemble'),
+    #path('load_params_structure/<int:pk>', views.load_params_structure, name='load_params_structure'),
     path('load_preset/<int:pk>', views.load_preset, name='load_preset'),
     path('delete_preset/<int:pk>', views.delete_preset, name='delete_preset'),
     path('presets/', views.launch_presets, name='presets'),

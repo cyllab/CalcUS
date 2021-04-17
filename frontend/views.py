@@ -1398,8 +1398,15 @@ def can_view_structure(s, profile):
     return can_view_ensemble(s.parent_ensemble, profile)
 
 def can_view_parameters(p, profile):
-    prop = p.property_set.all()[0]
-    return can_view_structure(prop.parent_structure, profile)
+    prop = p.property_set.first()
+
+    if prop is not None:
+        return can_view_structure(prop.parent_structure, profile)
+
+    c = p.calculation_set.first()
+
+    if c is not None:
+        return can_view_calculation(c, profile)
 
 def can_view_preset(p, profile):
     return profile_intersection(p.author, profile)
@@ -2928,6 +2935,22 @@ def load_preset(request, pk):
         })
 
 @login_required
+def load_params(request, pk):
+    try:
+        params = Parameters.objects.get(pk=pk)
+    except Parameters.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if not can_view_parameters(params, request.user.profile):
+        return HttpResponse(status=403)
+
+    return render(request, 'frontend/dynamic/load_params.js', {
+            'params': params,
+            'load_charge': True,
+        })
+
+'''
+@login_required
 def load_params_ensemble(request, pk):
     try:
         e = Ensemble.objects.get(pk=pk)
@@ -2964,6 +2987,7 @@ def load_params_structure(request, pk):
             'params': params,
             'load_charge': True,
         })
+'''
 
 class CsvParameters:
     def __init__(self):
