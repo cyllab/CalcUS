@@ -491,7 +491,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         memory = self.driver.find_element_by_name("cluster_memory")
         memory.clear()
-        memory.send_keys("10000")
+        memory.send_keys("6000")
 
         password = self.driver.find_element_by_name("cluster_password")
         password.clear()

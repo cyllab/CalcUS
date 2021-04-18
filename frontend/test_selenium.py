@@ -830,7 +830,8 @@ class InterfaceTests(CalcusLiveServer):
         self.save_preset("Test Preset")
 
         self.lget("/launch/")
-        time.sleep(5)
+        self.wait_for_ajax()
+
         self.load_preset("Test Preset")
 
         solvent = self.driver.find_element_by_name('calc_solvent')
@@ -890,6 +891,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(basis_set.get_attribute('value'), params['basis_set'])
         self.assertEqual(software.get_attribute('value'), params['software'])
         self.assertEqual(specifications.get_attribute('value'), "nosymm")
+
 
     def test_project_preset_independance(self):
         proj = Project.objects.create(name="My Project", author=self.profile)
@@ -1962,6 +1964,104 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.click_latest_calc()
         self.assertGreaterEqual(self.get_number_conformers(), 1)
 
+    def test_default_settings_from_ensemble(self):
+        params = {
+                'mol_name': 'test',
+                'in_file': 'Ph2I_cation.xyz',
+                'software': 'xtb',
+                'type': 'Geometrical Optimisation',
+                'charge': '+1',
+                'solvent': 'dcm',
+                'solvation_model': 'GBSA',
+                'project': 'New Project',
+                'new_project_name': 'Proj',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.lget("/calculations")
+        self.wait_latest_calc_done(120)
+        self.click_latest_calc()
+
+        self.launch_ensemble_next_step()
+
+        solvent = self.driver.find_element_by_name('calc_solvent')
+        charge = self.driver.find_element_by_name('calc_charge')
+        solvation_model = Select(self.driver.find_element_by_name('calc_solvation_model'))
+        software = self.driver.find_element_by_id("calc_software")
+
+        self.assertEqual(solvent.get_attribute('value'), params['solvent'])
+        self.assertEqual(charge.get_attribute('value'), params['charge'])
+        self.assertEqual(solvation_model.first_selected_option.text, params['solvation_model'])
+        self.assertEqual(software.get_attribute('value'), params['software'])
+
+    def test_default_settings_from_structure(self):
+        params = {
+                'mol_name': 'test',
+                'in_file': 'Ph2I_cation.xyz',
+                'software': 'xtb',
+                'type': 'Geometrical Optimisation',
+                'charge': '+1',
+                'solvent': 'dcm',
+                'solvation_model': 'GBSA',
+                'project': 'New Project',
+                'new_project_name': 'Proj',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.lget("/calculations")
+        self.wait_latest_calc_done(120)
+        self.click_latest_calc()
+
+        self.launch_structure_next_step()
+
+        solvent = self.driver.find_element_by_name('calc_solvent')
+        charge = self.driver.find_element_by_name('calc_charge')
+        solvation_model = Select(self.driver.find_element_by_name('calc_solvation_model'))
+        software = self.driver.find_element_by_id("calc_software")
+
+        self.assertEqual(solvent.get_attribute('value'), params['solvent'])
+        self.assertEqual(charge.get_attribute('value'), params['charge'])
+        self.assertEqual(solvation_model.first_selected_option.text, params['solvation_model'])
+        self.assertEqual(software.get_attribute('value'), params['software'])
+
+    def test_default_settings_from_frame(self):
+        params = {
+                'mol_name': 'test',
+                'in_file': 'Ph2I_cation.xyz',
+                'software': 'xtb',
+                'type': 'Geometrical Optimisation',
+                'charge': '+1',
+                'solvent': 'dcm',
+                'solvation_model': 'GBSA',
+                'project': 'New Project',
+                'new_project_name': 'Proj',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.lget("/calculations")
+        self.wait_latest_calc_done(120)
+        self.details_latest_order()
+        self.details_first_calc()
+        self.launch_frame_next_step()
+
+        solvent = self.driver.find_element_by_name('calc_solvent')
+        charge = self.driver.find_element_by_name('calc_charge')
+        solvation_model = Select(self.driver.find_element_by_name('calc_solvation_model'))
+        software = self.driver.find_element_by_id("calc_software")
+
+        self.assertEqual(solvent.get_attribute('value'), params['solvent'])
+        self.assertEqual(charge.get_attribute('value'), params['charge'])
+        self.assertEqual(solvation_model.first_selected_option.text, params['solvation_model'])
+        self.assertEqual(software.get_attribute('value'), params['software'])
 
 class OrcaCalculationTestsPI(CalcusLiveServer):
 

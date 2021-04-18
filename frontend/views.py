@@ -2861,7 +2861,7 @@ def launch_structure_pk(request, ee, pk):
             'profile': request.user.profile,
             'structure': s,
             'procs': BasicStep.objects.all(),
-            'init_params': init_params,
+            'init_params_id': init_params.id,
             'allow_local_calc': settings.ALLOW_LOCAL_CALC,
         })
 
