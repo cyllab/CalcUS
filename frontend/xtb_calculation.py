@@ -180,6 +180,8 @@ class XtbCalculation:
                         method = "{} {}".format(ss[0][:-1], ss[0][-1])
                     else:
                         method = ss[0]
+                elif ss[0] == 'nci':
+                    self.cmd_arguments += "--nci "
                 else:
                     self.raise_error("Invalid specification")
             elif len(ss) == 2:
