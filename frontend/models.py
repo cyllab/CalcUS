@@ -569,6 +569,7 @@ class CalculationOrder(models.Model):
 
     structure = models.ForeignKey(Structure, on_delete=models.SET_NULL, blank=True, null=True)
     aux_structure = models.ForeignKey(Structure, on_delete=models.SET_NULL, blank=True, null=True, related_name='aux_of_order')
+
     ensemble = models.ForeignKey(Ensemble, on_delete=models.SET_NULL, blank=True, null=True)
     start_calc = models.ForeignKey('Calculation', on_delete=models.SET_NULL, blank=True, null=True)
     start_calc_frame = models.PositiveIntegerField(default=0)
@@ -783,8 +784,6 @@ class Calculation(models.Model):
         old_status = self.order.status
         old_unseen = self.order.new_status
 
-        mol.save()
-
         super(Calculation, self).delete(*args, **kwargs)
 
         self.order.update_unseen(old_status, old_unseen)
@@ -816,8 +815,8 @@ class Calculation(models.Model):
 
 class Filter(models.Model):
     type = models.CharField(max_length=500)
-    parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE)
-    value = models.FloatField()
+    parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, null=True)
+    value = models.CharField(max_length=500)
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

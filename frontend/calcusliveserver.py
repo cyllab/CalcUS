@@ -19,6 +19,8 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from shutil import copyfile, rmtree
 
 from celery.contrib.testing.worker import start_worker
+from celery.contrib.abortable import AbortableAsyncResult
+
 from django.core.management import call_command
 from django.contrib.auth.models import User, Group
 from .models import *
@@ -68,7 +70,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         tasks.REMOTE = False
         app.loader.import_module('celery.contrib.testing.tasks')
 
-        cls.celery_worker = start_worker(app, perform_ping_check=False)
+        cls.celery_worker = start_worker(app, perform_ping_check=False)##True?
         cls.celery_worker.__enter__()
 
         if not os.path.isdir(SCR_DIR):
@@ -92,6 +94,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             rmtree(KEYS_DIR)
 
     def setUp(self):
+        self.addCleanup(self.cleanupCalculations)
         call_command('init_static_obj')
         self.username = "Selenium"
         self.password = "test1234"
@@ -103,8 +106,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         print(self._testMethodName)
         time.sleep(0.1)#Reduces glitches (I think?)
 
-    def tearDown(self):
-        pass
+    def cleanupCalculations(self):
+        print("Cleanup")
+        for c in Calculation.objects.all():
+            print("Killing calc {} ({})".format(c.id, c.task_id))
+            res = AbortableAsyncResult(c.task_id)
+            res.abort()
 
     def login(self, username, password):
         self.lget('/accounts/login/')
@@ -746,7 +753,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             raise Exception("Project not found")
 
         sline = proj.find_element_by_css_selector("a > p").text.split()
-        return int(sline[0]), int(sline[2].replace('(', '')), int(sline[4]), int(sline[6]), int(sline[8])
+        return int(sline[0])
 
     def get_number_calcs_in_molecule(self, name):
         molecules = self.get_molecules()
@@ -760,7 +767,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             raise Exception("Molecule not found")
 
         sline = mol.find_element_by_css_selector("a > p").text.split()
-        return int(sline[0]), int(sline[2].replace('(', '')), int(sline[4]), int(sline[6]), int(sline[8])
+        return int(sline[0])
 
     def rename_project(self, proj, name):
         rename_icon = proj.find_element_by_class_name("fa-edit")
