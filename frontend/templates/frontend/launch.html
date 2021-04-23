@@ -50,7 +50,6 @@
 	</style>
 
 	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
-
 	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
 
@@ -94,7 +93,7 @@
 
 		}
 
-		{% if ensemble %}
+		{% if ensemble and not structures %}
 			function filter_changed() {
 				choice = document.getElementById("calc_filter");
 				value_input = document.getElementById("calc_filter_value");
@@ -1053,7 +1052,7 @@
 					</div>
 				</div>
 
-				{% if ensemble %}
+				{% if ensemble and not structures %}
 					<div class="columns">
 						<div class="column">
 							<div class="field">
@@ -1111,17 +1110,17 @@
 				.attr('value', constraint_num)
 				.appendTo(this);
 
-			{% if ensemble %}
+			{% if ensemble or structures %}
 			$('<input />').attr('type', 'hidden')
 				.attr('name', "starting_ensemble")
 				.attr('value', {{ ensemble.id }})
 				.appendTo(this);
 			{% endif %}
 
-			{% if structure %}
+			{% if structures %}
 			$('<input />').attr('type', 'hidden')
-				.attr('name', "starting_struct")
-				.attr('value', {{ structure.id }})
+				.attr('name', "starting_structs")
+				.attr('value', {{ structures }})
 				.appendTo(this);
 			{% endif %}
 
@@ -1132,7 +1131,7 @@
 				.appendTo(this);
 			$('<input />').attr('type', 'hidden')
 				.attr('name', "starting_frame")
-				.attr('value', {{ frame_id }})
+				.attr('value', {{ frame_num }})
 				.appendTo(this);
 			{% endif %}
 
@@ -1200,13 +1199,12 @@
 			let mol_read = ChemDoodle.readXYZ(`{{ structure.xyz_structure }}`);
 			ChemDoodle.relabel(mol_read);
 			editor.loadMolecule(mol_read);	
-
 		{% endif %}
 		{% if calc %}
 			$("#calc_project").val("{{ calc.order.project.name }}");
 			$.ajax({
 				method: "POST",	 	 
-				url: "/get_calc_frame/{{ calc.id }}/{{ frame_id }}",
+				url: "/get_calc_frame/{{ calc.id }}/{{ frame_num }}",
 				headers: {
 					"X-CSRFToken": '{{ csrf_token }}',
 				},

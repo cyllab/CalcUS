@@ -892,6 +892,40 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(software.get_attribute('value'), params['software'])
         self.assertEqual(specifications.get_attribute('value'), "nosymm")
 
+    def test_duplicate_project_preset(self):
+        proj = Project.objects.create(name="My Project", author=self.profile)
+        proj.save()
+
+        params = {
+                'software': 'Gaussian',
+                'type': 'Frequency Calculation',
+                'charge': '+1',
+                'solvent': 'Chloroform',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'solvation_model': 'CPCM',
+                'solvation_radii': 'Bondi',
+                'project': 'My Project',
+                'specifications': 'nosymm',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.set_project_preset()
+        presets = self.get_names_presets()
+        param_count = Parameters.objects.count()
+        self.assertEqual(param_count, 1)
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.set_project_preset()
+
+        self.lget("/launch/")
+        presets = self.get_names_presets()
+        self.assertEqual(len(presets), 1)
+        param_count = Parameters.objects.count()
+        self.assertEqual(param_count, 2)
 
     def test_project_preset_independance(self):
         proj = Project.objects.create(name="My Project", author=self.profile)
@@ -1430,8 +1464,8 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'Cl.xyz',
-                'charge': '-1'
+                'in_file': 'carbo_cation.xyz',
+                'charge': '+1'
                 }
 
         self.lget("/launch/")
@@ -1463,8 +1497,8 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'Cl.xyz',
-                'charge': '-1',
+                'in_file': 'carbo_cation.xyz',
+                'charge': '+1',
                 }
 
         self.lget("/launch/")
