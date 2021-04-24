@@ -6,6 +6,11 @@ from .libxyz import *
 import basis_set_exchange
 from .environment_variables import *
 
+try:
+    is_test = os.environ['CALCUS_TEST']
+except:
+    is_test = False
+
 class GaussianCalculation:
 
     SMD18_APPENDIX = """modifysph
@@ -343,6 +348,9 @@ class GaussianCalculation:
             r = self.calc.order.resource
             PAL = r.pal
             MEM = r.memory
+
+        if is_test:
+            MEM = 2000#Gaussian takes too much memory in test runs, while it doesn't need to
 
         additional_commands = " ".join([i.strip() for i in self.additional_commands]).strip()
         self.confirmed_specifications += additional_commands

@@ -1479,7 +1479,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(60)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
 
         self.lget("/launch/")
@@ -4063,28 +4063,19 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
 
         self.lget("/projects/")
-        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
+        n_mol = self.get_number_calcs_in_project("SeleniumProject")
+
         self.assertEqual(n_mol, 2)
-        self.assertEqual(n_calc, 3)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 3)
 
         self.click_project("SeleniumProject")
 
-        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("H2")
-        self.assertEqual(n_e, 2)
-        self.assertEqual(n_calc, 2)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 2)
-        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("Ethanol")
-        self.assertEqual(n_e, 2)
-        self.assertEqual(n_calc, 1)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 1)
+        n_e = self.get_number_calcs_in_molecule("H2")
 
+        self.assertEqual(n_e, 2)
+
+        n_e = self.get_number_calcs_in_molecule("Ethanol")
+
+        self.assertEqual(n_e, 2)
 
         self.delete_molecule("Ethanol")
         self.lget("/calculations/")
@@ -4101,21 +4092,14 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.assertEqual(self.get_number_projects(), 1)
         self.assertTrue(self.try_assert_number_unseen_calcs(1, 3))
 
-        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
+        n_mol = self.get_number_calcs_in_project("SeleniumProject")
         self.assertEqual(n_mol, 1)
-        self.assertEqual(n_calc, 2)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 2)
 
         self.click_project("SeleniumProject")
         self.assertEqual(self.get_number_molecules(), 1)
-        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("H2")
+
+        n_e = self.get_number_calcs_in_molecule("H2")
         self.assertEqual(n_e, 2)
-        self.assertEqual(n_calc, 2)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 2)
 
         self.click_molecule("H2")
         self.assertEqual(self.get_number_ensembles(), 2)
@@ -4151,12 +4135,9 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.assertEqual(self.get_number_unseen_calcs_manually(), 3)
 
         self.lget("/projects/")
-        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
+        n_mol = self.get_number_calcs_in_project("SeleniumProject")
+
         self.assertEqual(n_mol, 3)
-        self.assertEqual(n_calc, 4)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 4)
 
         self.click_project("SeleniumProject")
         self.click_molecule("Ammonia")

@@ -39,6 +39,8 @@ HEADLESS = os.getenv("CALCUS_HEADLESS")
 from calcus.celery import app
 from frontend import tasks
 
+base_cwd = os.getcwd()
+
 class CalcusLiveServer(StaticLiveServerTestCase):
 
     host = '0.0.0.0'
@@ -70,21 +72,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         tasks.REMOTE = False
         app.loader.import_module('celery.contrib.testing.tasks')
 
-        cls.celery_worker = start_worker(app, perform_ping_check=False)##True?
+        cls.celery_worker = start_worker(app, perform_ping_check=False)
         cls.celery_worker.__enter__()
-
-        if not os.path.isdir(SCR_DIR):
-            os.mkdir(SCR_DIR)
-        if not os.path.isdir(RESULTS_DIR):
-            os.mkdir(RESULTS_DIR)
-        if not os.path.isdir(KEYS_DIR):
-            os.mkdir(KEYS_DIR)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.quit()
-        super().tearDownClass()
-        cls.celery_worker.__exit__(None, None, None)
 
         if os.path.isdir(SCR_DIR):
             rmtree(SCR_DIR)
@@ -92,6 +81,18 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             rmtree(RESULTS_DIR)
         if os.path.isdir(KEYS_DIR):
             rmtree(KEYS_DIR)
+
+        os.mkdir(SCR_DIR)
+        os.mkdir(RESULTS_DIR)
+        os.mkdir(KEYS_DIR)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.driver.quit()
+        cls.celery_worker.__exit__(None, None, None)
+        os.chdir(base_cwd)#Prevent coverage.py crash
+        super().tearDownClass()
+
 
     def setUp(self):
         self.addCleanup(self.cleanupCalculations)
@@ -107,9 +108,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         time.sleep(0.1)#Reduces glitches (I think?)
 
     def cleanupCalculations(self):
-        print("Cleanup")
         for c in Calculation.objects.all():
-            print("Killing calc {} ({})".format(c.id, c.task_id))
             res = AbortableAsyncResult(c.task_id)
             res.abort()
 

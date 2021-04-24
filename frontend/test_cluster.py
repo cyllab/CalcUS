@@ -978,10 +978,7 @@ class ClusterTests(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
 
         self.lget("/projects/")
-        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
+        n_mol = self.get_number_calcs_in_project("SeleniumProject")
+
         self.assertEqual(n_mol, 1)
-        self.assertEqual(n_calc, 10)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 10)
 

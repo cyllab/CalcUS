@@ -2453,6 +2453,15 @@ def filter(order, input_structures):
     if order.filter == None:
         return input_structures
 
+    structures = []
+
+    if order.filter.type == "By Number":
+        allowed_nums = [int(i) for i in order.filter.value.split(',')]
+        for s in input_structures:
+            if s.number in allowed_nums:
+                structures.append(s)
+        return structures
+
     summary, hashes = input_structures[0].parent_ensemble.ensemble_summary
 
     target_hash = order.filter.parameters.md5
@@ -2470,11 +2479,10 @@ def filter(order, input_structures):
         ind = summary_data[0].index(s.number)
         return summary_data[4][ind]
 
-    structures = []
 
     if order.filter.type == "By Boltzmann Weight":
         for s in input_structures:
-            if get_weight(s) > order.filter.value:
+            if get_weight(s) > float(order.filter.value):
                 structures.append(s)
     elif order.filter.type == "By Relative Energy":
         for s in input_structures:
@@ -2485,7 +2493,7 @@ def filter(order, input_structures):
                 E = val*HARTREE_TO_KCAL_F
             elif order.author.pref_units == 2:
                 E = val
-            if E < order.filter.value:
+            if E < float(order.filter.value):
                 structures.append(s)
 
     return structures
