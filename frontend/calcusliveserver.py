@@ -96,6 +96,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def setUp(self):
         self.addCleanup(self.cleanupCalculations)
+        os.chdir(base_cwd)
         call_command('init_static_obj')
         self.username = "Selenium"
         self.password = "test1234"
