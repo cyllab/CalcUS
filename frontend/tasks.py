@@ -2164,7 +2164,7 @@ def gen_fingerprint(structure):
             out.write(line)
 
     with open("/dev/null", 'w') as stream:
-        t = subprocess.run(shlex.split("inchi-1 {}".format(mol_file)), stdout=stream, stderr=stream)
+        t = subprocess.run(shlex.split("inchi-1 -DoNotAddH {}".format(mol_file)), stdout=stream, stderr=stream)
 
     try:
         with open(mol_file + '.txt') as f:
