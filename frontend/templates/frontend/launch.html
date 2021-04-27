@@ -1175,7 +1175,7 @@
 				},
 			});
 		{% endif %}
-		{% if ensemble %}
+		{% if ensemble and not structure %}
 			$("#calc_project").val("{{ ensemble.parent_molecule.project.name }}");
 			$.ajax({
 				method: "POST",	 	 
