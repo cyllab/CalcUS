@@ -69,6 +69,40 @@
 			-khtml-user-select: none; /* webkit (konqueror) browsers */
 			-ms-user-select: none; /* IE10+ */
 		}
+		.close_btn {
+		  	float: right; 
+		  	color: lightgray; 
+		  	font-size: 24px;  
+		  	font-weight: bold;
+		}
+		.fullscreen_div {
+			display: none;
+			position: fixed; 
+			padding-top: 50px;
+			left: 0; 
+			top: 0;
+			width: 100%;
+			height: 100%; 
+			background-color: rgb(0, 0, 0);
+			background-color: rgba(0, 0, 0, 0.5);
+		}
+		.close_btn:hover {
+			color: darkgray;
+		}
+		.modal-card {
+			max-width: 850px;
+			width: 100%;
+		}
+
+		@-webkit-keyframes animatetop {
+		  	from {top:-300px; opacity:0} 
+		  	to {top:0; opacity:1}
+		}
+		@keyframes animatetop {
+		  	from {top:-300px; opacity:0}
+		  	to {top:0; opacity:1}
+		}
+
 	</style>
 	<script>
 		var ctrl = false;
@@ -138,6 +172,7 @@
 
 						ChemDoodle.relabel(mol);	
 						editor.loadMolecule(mol);
+						editorfs.loadMolecule(mol);
 
 						$("#next_step_div").load("/next_step/{{ calculation.id }}");
 						$.ajax({
@@ -187,6 +222,7 @@
 					if (xhr.status != 204) {
 						let mol = ChemDoodle.readXYZ(data);
 						editor.loadMolecule(mol);
+						editorfs.loadMolecule(mol);
 					}
 
 				}
@@ -470,6 +506,8 @@
 				editor.oneMolecule = false;
 			</script>
 			<br />
+			<button class="button button_full" id="fullscreen_btn">Large View</button>
+			<br />
 			<button class="button button_full" onclick="window.location.href='/download_structures/{{ ensemble.id }}'">Download ensemble in .xyz <i class="fas fa-download"></i></button>
 			<br />	
 			<button class="button button_full" onclick="download_selected_structure();">Download selected structure in .xyz <i class="fas fa-download"></i></button>
@@ -480,12 +518,12 @@
 			<form method="POST" action="/launch/" id="launch_ensemble_form">
 				{% csrf_token %}
 				<input type="hidden" name="ensemble" value="{{ ensemble.id }}"></input>
-				<button class="button button_full"  id="next_step_ensemble">Launch calculation on ensemble<i class="fas fa-external-link-alt" ></i></button>
+				<button class="button button_full is-info"  id="next_step_ensemble">Launch calculation on ensemble<i class="fas fa-external-link-alt" ></i></button>
 			</form>
 			<form method="POST" action="/launch/" id="launch_selected_form">
 				{% csrf_token %}
 				<input type="hidden" name="ensemble" value="{{ ensemble.id }}"></input>
-				<button class="button button_full" id="next_step_structure">Launch calculation on selected structure(s) <i class="fas fa-external-link-alt" ></i></button>
+				<button class="button button_full is-info" id="next_step_structure">Launch calculation on selected structure(s) <i class="fas fa-external-link-alt" ></i></button>
 			</form>
 
 		</div>
@@ -511,6 +549,24 @@
 		</div>
 	</div>
 
+	<div class="modal fullscreen_div" id="fullscreen_div">
+		<div class="modal-card">
+			<header class="modal-card-head">
+				<p class="modal-card-title">Large View</p>
+				<button type="button" class="close_btn modal-close is-large" aria-label="close"></button>
+			</header>
+			<section class="modal-card-body" id="fullscreen_section">
+			<script>
+				let editorfs = new ChemDoodle.EditorCanvas3D('editorfs', 800, 600, {useServices: false});
+				editorfs.styles.set3DRepresentation('Stick');
+				editorfs.styles.backgroundColor = '#FFFFFF';
+				editorfs.oneMolecule = false;
+			</script>
+
+			</section>
+		</div>
+	</div>
+
 	<br />	
 	<br />	
 	<div class="tabs is-boxed" id="tabs">
@@ -533,6 +589,22 @@
 		<a class="button is-danger" href="/delete/{{ calculation.id }}">Delete this calculation</a>
 	{% endif %}
 	<script>
+		let modalBtnFS = document.getElementById("fullscreen_btn");
+		let modalFS = document.querySelector(".fullscreen_div");
+		let closeBtnFS = document.querySelector(".close_btn");
+
+		modalBtnFS.onclick = function(){
+			modalFS.style.display = "block";
+		}
+		closeBtnFS.onclick = function(){
+			modalFS.style.display = "none";
+		}
+		window.onclick = function(e){
+			if(e.target == modalFS){
+				modalFS.style.display = "none";
+			}
+		}		
+
 		$('#launch_selected_form').submit(function(){
 			var structures = document.querySelectorAll("#conf_table > tr.is-selected");
 
