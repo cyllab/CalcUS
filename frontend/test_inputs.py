@@ -3883,6 +3883,23 @@ class XtbTests(TestCase):
 
         self.assertEqual('', xtb.option_file)
 
+    def test_conformational_search_nci(self):
+        params = {
+                'type': 'Conformational Search',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'specifications': '--rthr 0.8 --nci',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "crest in.xyz -nci -rthr 0.8 -ewin 6"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+        self.assertEqual('', xtb.option_file)
+
     def test_constrained_conformational_search1(self):
         params = {
                 'type': 'Constrained Conformational Search',
