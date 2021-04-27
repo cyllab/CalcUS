@@ -100,6 +100,7 @@
 		});
 
 
+		/*
 		var loadScript = function(src, callbackfn) {
 			var newScript = document.createElement("script");
 		    	newScript.type = "text/javascript";
@@ -116,6 +117,7 @@
 
 		    document.documentElement.firstChild.appendChild(newScript);
 		}
+		*/
 
 		let num = 0;
 		let conf_length = 1;
@@ -161,8 +163,8 @@
 
 		function select_conf(conf_num) {
 			if(!ctrl) {
-				for (i=0; i < conf_length - 1; ++i) {
-					document.getElementById("conf_" + String(i+1)).classList.remove("is-selected");
+				for (i=0; i < conf_length; i++) {
+					document.getElementById("conf_" + String(i)).classList.remove("is-selected");
 				}
 				
 				num = conf_num;
@@ -259,7 +261,7 @@
 			curr_p = p_id;
 
 			actives = document.getElementById("tabs").getElementsByClassName("is-active");
-			for (i=0; i < actives.length; ++i) {
+			for (i=0; i < actives.length; i++) {
 				actives[i].classList.remove("is-active");
 			}
 			
@@ -410,7 +412,6 @@
 			if(output.innerHTML.trim() != "") {
 				return;
 			}
-			console.log("get");
 			$("#related_calculations_div").load("/get_related_calculations/{{ ensemble.id }}");
 		}
 	</script>
@@ -534,11 +535,11 @@
 	<script>
 		$('#launch_selected_form').submit(function(){
 			var structures = document.querySelectorAll("#conf_table > tr.is-selected");
-			console.log(structures);
 
 			selected_structures = [];
 			for(i=0; i < structures.length; i++) {
-				selected_structures.push(structures[i].id.replace('conf_', ''));
+				struct_num = structures[i].dataset['num'];
+				selected_structures.push(struct_num);
 			}
 
 			$('<input />').attr('type', 'hidden')
