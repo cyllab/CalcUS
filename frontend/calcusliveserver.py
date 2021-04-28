@@ -1379,3 +1379,41 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             self.driver.refresh()
             time.sleep(1)
         return False
+
+    def get_related_calculations_div(self):
+        assert self.is_on_page_ensemble()
+        fold_details = self.driver.find_element_by_css_selector("details")
+
+        if fold_details.get_attribute("open") is None:
+            fold = self.driver.find_element_by_css_selector("summary")
+            fold.click()
+            self.wait_for_ajax()
+
+        return self.driver.find_element_by_id("related_calculations_div")
+
+    def get_related_orders(self):
+        related_calculations_div = self.get_related_calculations_div()
+
+        orders_links = related_calculations_div.find_elements_by_css_selector("ul.tree > li > a")
+        orders = [i.text for i in orders_links]
+        return orders
+
+    def get_related_calculations(self, order_id):
+        related_calculations_div = self.get_related_calculations_div()
+
+        trees = related_calculations_div.find_elements_by_css_selector("ul.tree > li")
+        for t in trees:
+            link = t.find_element_by_css_selector("li > a")
+            t_id = int(link.text.split()[1])
+            if t_id == order_id:
+                tree = t
+                break
+        else:
+            raise Exception("Order {} is not related to this ensemble!".format(order_id))
+
+        calc_tree = tree.find_elements_by_css_selector("ul > li")
+
+        calcs = [i.find_element_by_css_selector("a").text for i in calc_tree]
+        return calcs
+
+

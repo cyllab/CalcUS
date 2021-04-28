@@ -1077,6 +1077,149 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.get_number_unseen_calcs(), 0)
         self.assertEqual(self.get_number_calc_orders(), 0)
 
+    def test_related_calculations(self):
+        self.setup_test_group()
+
+        params = {
+                'mol_name': 'H2',
+                'name': 'H2',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'H2.sdf',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/projects/")
+        self.click_project("SeleniumProject")
+        self.click_molecule("H2")
+        self.click_ensemble("H2")
+
+        calc = Calculation.objects.latest('id')
+        order = calc.order
+
+        orders = self.get_related_orders()
+
+        self.assertEqual(len(orders), 1)
+        self.assertEqual(int(orders[0].split()[1]), order.id)
+
+        calcs = self.get_related_calculations(order.id)
+
+        self.assertEqual(len(calcs), 1)
+        self.assertEqual(int(calcs[0].split()[1]), calc.id)
+
+    def test_related_calculations_from_structure(self):
+        self.setup_test_group()
+
+        params = {
+                'mol_name': 'H2',
+                'name': 'H2',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'H2.sdf',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/projects/")
+        self.click_project("SeleniumProject")
+        self.click_molecule("H2")
+        self.click_ensemble("H2")
+        self.launch_structure_next_step()
+
+        params2 = {
+                'type': 'Frequency Calculation',
+                }
+        self.calc_input_params(params2)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/projects/")
+        self.click_project("SeleniumProject")
+        self.click_molecule("H2")
+        self.click_ensemble("H2")
+
+        calc = Calculation.objects.latest('id')
+        order = calc.order
+
+        orders = self.get_related_orders()
+
+        self.assertEqual(len(orders), 2)
+        self.assertEqual(int(orders[1].split()[1]), order.id)
+
+        calcs = self.get_related_calculations(order.id)
+
+        self.assertEqual(len(calcs), 1)
+        self.assertEqual(int(calcs[0].split()[1]), calc.id)
+
+    def test_related_calculations_from_ensemble(self):
+        self.setup_test_group()
+
+        params = {
+                'mol_name': 'H2',
+                'name': 'H2',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'H2.sdf',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/projects/")
+        self.click_project("SeleniumProject")
+        self.click_molecule("H2")
+        self.click_ensemble("H2")
+        self.launch_ensemble_next_step()
+
+        params2 = {
+                'type': 'Frequency Calculation',
+                }
+        self.calc_input_params(params2)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/projects/")
+        self.click_project("SeleniumProject")
+        self.click_molecule("H2")
+        self.click_ensemble("H2")
+
+        calc = Calculation.objects.latest('id')
+        order = calc.order
+
+        orders = self.get_related_orders()
+
+        self.assertEqual(len(orders), 2)
+        self.assertEqual(int(orders[1].split()[1]), order.id)
+
+        calcs = self.get_related_calculations(order.id)
+
+        self.assertEqual(len(calcs), 1)
+        self.assertEqual(int(calcs[0].split()[1]), calc.id)
 
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):
@@ -4192,6 +4335,5 @@ class ComplexCalculationTests(CalcusLiveServer):
         prop = Property.objects.latest('id')
         calc_shifts = [float(i.split()[2]) for i in prop.simple_nmr.split('\n') if i.strip() != '']
         self.assertEqual(shifts[1], "{:.3f}".format(np.mean(calc_shifts[1:4])))
-
 
 
