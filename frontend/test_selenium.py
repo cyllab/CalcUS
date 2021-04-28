@@ -1115,6 +1115,9 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(len(calcs), 1)
         self.assertEqual(int(calcs[0].split()[1]), calc.id)
 
+        with self.assertRaises(Exception):
+            calcs2 = self.get_related_calculations(order.id + 1)
+
     def test_related_calculations_from_structure(self):
         self.setup_test_group()
 

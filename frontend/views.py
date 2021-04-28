@@ -329,8 +329,19 @@ def project_details(request, username, proj):
         except Project.DoesNotExist:
             return HttpResponseRedirect("/home/")
         if can_view_project(project, request.user.profile):
+            molecules = []
+            for m in project.molecule_set.prefetch_related('ensemble_set').all().order_by(Lower('name')):
+                ### To fully implement
+                '''
+                for e in m.ensemble_set.all():
+                    if e.flagged:
+                        molecules.append(m)
+                        break
+                '''
+                molecules.append(m)
+
             return render(request, 'frontend/project_details.html', {
-            'molecules': project.molecule_set.prefetch_related('ensemble_set').all().order_by(Lower('name')),
+            'molecules': molecules,
             'project': project,
             })
         else:
