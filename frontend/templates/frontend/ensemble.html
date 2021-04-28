@@ -27,43 +27,85 @@
 		.button_half {
 			width: 50%;
 		}
-   ul.tree, ul.tree ul {
-    list-style: none;
-     margin: 0;
-     padding: 0;
-   } 
-   ul.tree ul {
-     margin-left: 10px;
-   }
-   ul.tree li {
-     margin: 0;
-     padding: 0 7px;
-     line-height: 20px;
-     color: #369;
-     font-weight: bold;
-     border-left:1px solid rgb(100,100,100);
 
-   }
-   ul.tree li:last-child {
-       border-left:none;
-   }
-   ul.tree li:before {
-      position:relative;
-      top:-0.3em;
-      height:1em;
-      width:12px;
-      color:white;
-      border-bottom:1px solid rgb(100,100,100);
-      content:"";
-      display:inline-block;
-      left:-7px;
-   }
-   ul.tree li:last-child:before {
-      border-left:1px solid rgb(100,100,100);   
-   }
+		ul.tree, ul.tree ul {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+		} 
+		ul.tree ul {
+			margin-left: 10px;
+		}
+		ul.tree li {
+			margin: 0;
+			padding: 0 7px;
+			line-height: 20px;
+			color: #369;
+			font-weight: bold;
+			border-left:1px solid rgb(100,100,100);
+		}
+		ul.tree li:last-child {
+			border-left:none;
+		}
+		ul.tree li:before {
+			position:relative;
+			top:-0.3em;
+			height:1em;
+			width:12px;
+			color:white;
+			border-bottom:1px solid rgb(100,100,100);
+			content:"";
+			display:inline-block;
+			left:-7px;
+		}
+		ul.tree li:last-child:before {
+			border-left:1px solid rgb(100,100,100);   
+		}
+		#conf_table {
+			/* Thanks Stackoverflow */	
+			user-select: none; /* standard syntax */
+			-webkit-user-select: none; /* webkit (safari, chrome) browsers */
+			-moz-user-select: none; /* mozilla browsers */
+			-khtml-user-select: none; /* webkit (konqueror) browsers */
+			-ms-user-select: none; /* IE10+ */
+		}
+		.close_btn {
+		  	float: right; 
+		  	color: lightgray; 
+		  	font-size: 24px;  
+		  	font-weight: bold;
+		}
+		.fullscreen_div {
+			display: none;
+			position: fixed; 
+			padding-top: 50px;
+			left: 0; 
+			top: 0;
+			width: 100%;
+			height: 100%; 
+			background-color: rgb(0, 0, 0);
+			background-color: rgba(0, 0, 0, 0.5);
+		}
+		.close_btn:hover {
+			color: darkgray;
+		}
+		.modal-card {
+			max-width: 850px;
+			width: 100%;
+		}
+
+		@-webkit-keyframes animatetop {
+		  	from {top:-300px; opacity:0} 
+		  	to {top:0; opacity:1}
+		}
+		@keyframes animatetop {
+		  	from {top:-300px; opacity:0}
+		  	to {top:0; opacity:1}
+		}
 
 	</style>
 	<script>
+		var ctrl = false;
 		$(document).ready(function(){
 			(function(ChemDoodle) {
 				ChemDoodle.relabel = function(molecule){
@@ -74,13 +116,25 @@
 
 			})(ChemDoodle);
 
-			var details = document.querySelector("details")
-
+			var details = document.querySelector("details");
 			details.addEventListener("toggle", load_related_calculations);
 
 		});
 
+		$(window).keydown(function (e) {
+			if(e.keyCode == 17) {
+				ctrl = true;	
+			}
+		});
 
+		$(window).keyup(function (e) {
+			if(e.keyCode == 17) {
+				ctrl = false;	
+			}
+		});
+
+
+		/*
 		var loadScript = function(src, callbackfn) {
 			var newScript = document.createElement("script");
 		    	newScript.type = "text/javascript";
@@ -97,6 +151,7 @@
 
 		    document.documentElement.firstChild.appendChild(newScript);
 		}
+		*/
 
 		let num = 0;
 		let conf_length = 1;
@@ -117,6 +172,7 @@
 
 						ChemDoodle.relabel(mol);	
 						editor.loadMolecule(mol);
+						editorfs.loadMolecule(mol);
 
 						$("#next_step_div").load("/next_step/{{ calculation.id }}");
 						$.ajax({
@@ -141,12 +197,17 @@
 		});
 
 		function select_conf(conf_num) {
-			document.getElementById("conf_table").rows[num].classList.remove("is-selected");
-			
-			num = conf_num;
-			document.getElementById("conf_table").rows[num].classList.add("is-selected");
-			refresh();
+			if(!ctrl) {
+				for (i=0; i < conf_length; i++) {
+					document.getElementById("conf_" + String(i)).classList.remove("is-selected");
+				}
+				
+				num = conf_num;
+				refresh();
+			}
+			document.getElementById("conf_table").rows[conf_num].classList.add("is-selected");
 		}
+
 
 		function refresh() {
 			$.ajax({
@@ -161,6 +222,7 @@
 					if (xhr.status != 204) {
 						let mol = ChemDoodle.readXYZ(data);
 						editor.loadMolecule(mol);
+						editorfs.loadMolecule(mol);
 					}
 
 				}
@@ -235,7 +297,7 @@
 			curr_p = p_id;
 
 			actives = document.getElementById("tabs").getElementsByClassName("is-active");
-			for (i=0; i < actives.length; ++i) {
+			for (i=0; i < actives.length; i++) {
 				actives[i].classList.remove("is-active");
 			}
 			
@@ -267,14 +329,12 @@
 		function get_conf_number() {
 			return document.getElementById("conf_table").rows[parseInt(num)].cells[0].innerHTML;
 		}
-		function launch_selected() {
-			url = "/launch/{{ ensemble.id }}/" + get_conf_number();
-			window.location.href = url;
-		}
+
 		function download_selected_structure() {
 			url = "/download_structures/{{ ensemble.id }}/" + get_conf_number();
 			window.location.href = url;
 		}
+
 		function selectText(node) {
 		    	node = document.getElementById(node);
 
@@ -388,7 +448,6 @@
 			if(output.innerHTML.trim() != "") {
 				return;
 			}
-			console.log("get");
 			$("#related_calculations_div").load("/get_related_calculations/{{ ensemble.id }}");
 		}
 	</script>
@@ -447,6 +506,8 @@
 				editor.oneMolecule = false;
 			</script>
 			<br />
+			<button class="button button_full" id="fullscreen_btn">Large View</button>
+			<br />
 			<button class="button button_full" onclick="window.location.href='/download_structures/{{ ensemble.id }}'">Download ensemble in .xyz <i class="fas fa-download"></i></button>
 			<br />	
 			<button class="button button_full" onclick="download_selected_structure();">Download selected structure in .xyz <i class="fas fa-download"></i></button>
@@ -454,9 +515,16 @@
 			<button class="button button_half" onclick="decrease_conf()">Previous Structure</button><button class="button button_half" onclick="increase_conf()">Next Structure</button>
 			<br/>
 			<br/>
-			<a class="button button_full" href="/launch/{{ ensemble.id }}" id="next_step_ensemble">Launch calculation on ensemble<i class="fas fa-external-link-alt" ></i></a>
-			<br/>
-			<button class="button button_full" onclick="launch_selected();" id="next_step_structure">Launch calculation on selected structure <i class="fas fa-external-link-alt" ></i></button>
+			<form method="POST" action="/launch/" id="launch_ensemble_form">
+				{% csrf_token %}
+				<input type="hidden" name="ensemble" value="{{ ensemble.id }}"></input>
+				<button class="button button_full is-info"  id="next_step_ensemble">Launch calculation on ensemble<i class="fas fa-external-link-alt" ></i></button>
+			</form>
+			<form method="POST" action="/launch/" id="launch_selected_form">
+				{% csrf_token %}
+				<input type="hidden" name="ensemble" value="{{ ensemble.id }}"></input>
+				<button class="button button_full is-info" id="next_step_structure">Launch calculation on selected structure(s) <i class="fas fa-external-link-alt" ></i></button>
+			</form>
 
 		</div>
 		<div class="column">
@@ -481,6 +549,24 @@
 		</div>
 	</div>
 
+	<div class="modal fullscreen_div" id="fullscreen_div">
+		<div class="modal-card">
+			<header class="modal-card-head">
+				<p class="modal-card-title">Large View</p>
+				<button type="button" class="close_btn modal-close is-large" aria-label="close"></button>
+			</header>
+			<section class="modal-card-body" id="fullscreen_section">
+			<script>
+				let editorfs = new ChemDoodle.EditorCanvas3D('editorfs', 800, 600, {useServices: false});
+				editorfs.styles.set3DRepresentation('Stick');
+				editorfs.styles.backgroundColor = '#FFFFFF';
+				editorfs.oneMolecule = false;
+			</script>
+
+			</section>
+		</div>
+	</div>
+
 	<br />	
 	<br />	
 	<div class="tabs is-boxed" id="tabs">
@@ -502,6 +588,39 @@
 	{% if profile == calculation.author %}
 		<a class="button is-danger" href="/delete/{{ calculation.id }}">Delete this calculation</a>
 	{% endif %}
+	<script>
+		let modalBtnFS = document.getElementById("fullscreen_btn");
+		let modalFS = document.querySelector(".fullscreen_div");
+		let closeBtnFS = document.querySelector(".close_btn");
+
+		modalBtnFS.onclick = function(){
+			modalFS.style.display = "block";
+		}
+		closeBtnFS.onclick = function(){
+			modalFS.style.display = "none";
+		}
+		window.onclick = function(e){
+			if(e.target == modalFS){
+				modalFS.style.display = "none";
+			}
+		}		
+
+		$('#launch_selected_form').submit(function(){
+			var structures = document.querySelectorAll("#conf_table > tr.is-selected");
+
+			selected_structures = [];
+			for(i=0; i < structures.length; i++) {
+				struct_num = structures[i].dataset['num'];
+				selected_structures.push(struct_num);
+			}
+
+			$('<input />').attr('type', 'hidden')
+				.attr('name', "structures")
+				.attr('value', selected_structures.join(','))
+				.appendTo(this);
+
+		});
+	</script>
 </div>
 
 {% endblock content %}

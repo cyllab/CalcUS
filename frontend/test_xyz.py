@@ -92,3 +92,10 @@ class XyzTests(TestCase):
         REF = [[4, 12], [3, 5, 13, 14], [0, 2, 15, 17], [1, 19], [9, 10, 16, 18], [6, 8, 20, 21], [7, 22]]
         self.assertTrue(self.equivalent_equivalence(eqs, REF))
 
+    def test_reorder1(self):
+        xyz1 = parse_xyz_from_file(os.path.join(tests_dir, 'reorder/CHIFBr_A.xyz'))
+        xyz2 = parse_xyz_from_file(os.path.join(tests_dir, 'reorder/CHIFBr_B.xyz'))
+
+        self.assertNotEqual(xyz1[1][0], xyz2[1][0])
+
+        xyz2_reorder = reorder_xyz(xyz1, xyz2)

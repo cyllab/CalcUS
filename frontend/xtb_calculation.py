@@ -55,7 +55,7 @@ class XtbCalculation:
         self.option_file += "force constant={}\n".format(self.force_constant)
         self.has_scan = False
         for cmd in constraints:
-            _cmd, ids = cmd.split('-')
+            _cmd, ids = cmd.split('/')
             _cmd = _cmd.split('_')
             ids = ids.split('_')
             type = len(ids)
@@ -70,7 +70,7 @@ class XtbCalculation:
         if self.has_scan:
             self.option_file += "$scan\n"
             for counter, cmd in enumerate(constraints):
-                _cmd, ids = cmd.split('-')
+                _cmd, ids = cmd.split('/')
                 _cmd = _cmd.split('_')
                 if _cmd[0] == "Scan":
                     self.option_file += "{}: {}, {}, {}\n".format(counter+1, *_cmd[1:])
@@ -83,7 +83,7 @@ class XtbCalculation:
         self.option_file += "reference=in.xyz\n"
         constr_atoms = []
         for cmd in constraints:
-            _cmd, ids = cmd.split('-')
+            _cmd, ids = cmd.split('/')
             _cmd = _cmd.split('_')
             ids = ids.split('_')
             type = len(ids)
@@ -180,6 +180,8 @@ class XtbCalculation:
                         method = "{} {}".format(ss[0][:-1], ss[0][-1])
                     else:
                         method = ss[0]
+                elif ss[0] == 'nci':
+                    self.cmd_arguments += "--nci "
                 else:
                     self.raise_error("Invalid specification")
             elif len(ss) == 2:

@@ -6,6 +6,11 @@ from .libxyz import *
 import basis_set_exchange
 from .environment_variables import *
 
+try:
+    is_test = os.environ['CALCUS_TEST']
+except:
+    is_test = False
+
 class GaussianCalculation:
 
     SMD18_APPENDIX = """modifysph
@@ -155,7 +160,7 @@ class GaussianCalculation:
             for c in scmd:
                 if c.strip() == '':
                     continue
-                _c, ids = c.split('-')
+                _c, ids = c.split('/')
                 _c= _c.split('_')
                 ids = ids.split('_')
                 ids = [int(i) if i.strip() != '' else -1 for i in ids]
@@ -176,7 +181,7 @@ class GaussianCalculation:
                         gaussian_constraints += "A {} {} {} S {} {}\n".format(*ids, num_steps, step_size)
                     if type == 4:
                         start = get_dihedral(xyz, *ids)
-                        step_size = "{:.2f}".format((end-start)/num_steps)
+                        step_size = "{:.2f}".format(-1*(end-start)/num_steps)#Gaussian seems to use a different sign convention?
                         gaussian_constraints += "D {} {} {} {} S {} {}\n".format(*ids, num_steps, step_size)
                 else:
                     if type == 2:
@@ -280,7 +285,7 @@ class GaussianCalculation:
                         ecp_ind = ind
                         break
                 bs_gen = '\n'.join(sbs[:ecp_ind-2]) + '\n'
-                bs_ecp = '\n'.join(sbs[ecp_ind-2:]) + '\n'
+                bs_ecp = '\n'.join(sbs[ecp_ind-2:])
                 to_append_gen.append(bs_gen)
                 to_append_ecp.append(bs_ecp)
             else:
@@ -301,7 +306,8 @@ class GaussianCalculation:
                 custom_bs += '****\n'
 
             custom_bs += ''.join(to_append_gen)
-            custom_bs += ''.join(to_append_ecp)
+            custom_bs += ''.join(to_append_ecp).replace('\n\n', '\n')
+
 
             return gen_keyword, custom_bs
         else:
@@ -342,6 +348,9 @@ class GaussianCalculation:
             r = self.calc.order.resource
             PAL = r.pal
             MEM = r.memory
+
+        if is_test:
+            MEM = 2000#Gaussian takes too much memory in test runs, while it doesn't need to
 
         additional_commands = " ".join([i.strip() for i in self.additional_commands]).strip()
         self.confirmed_specifications += additional_commands

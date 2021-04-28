@@ -118,11 +118,6 @@ class Project(models.Model):
 
     preset = models.ForeignKey('Preset', on_delete=models.SET_NULL, blank=True, null=True)
 
-    num_calc = models.IntegerField(default=0)
-    num_calc_queued = models.IntegerField(default=0)
-    num_calc_running = models.IntegerField(default=0)
-    num_calc_completed = models.IntegerField(default=0)
-
     def __str__(self):
         return self.name
 
@@ -564,11 +559,6 @@ class Molecule(models.Model):
     inchi = models.CharField(max_length=1000)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
 
-    num_calc = models.IntegerField(default=0)
-    num_calc_queued = models.IntegerField(default=0)
-    num_calc_running = models.IntegerField(default=0)
-    num_calc_completed = models.IntegerField(default=0)
-
     @property
     def count_vis(self):
         return len(self.ensemble_set.filter(hidden=False))
@@ -579,6 +569,7 @@ class CalculationOrder(models.Model):
 
     structure = models.ForeignKey(Structure, on_delete=models.SET_NULL, blank=True, null=True)
     aux_structure = models.ForeignKey(Structure, on_delete=models.SET_NULL, blank=True, null=True, related_name='aux_of_order')
+
     ensemble = models.ForeignKey(Ensemble, on_delete=models.SET_NULL, blank=True, null=True)
     start_calc = models.ForeignKey('Calculation', on_delete=models.SET_NULL, blank=True, null=True)
     start_calc_frame = models.PositiveIntegerField(default=0)
@@ -603,9 +594,12 @@ class CalculationOrder(models.Model):
     def see(self):
         if self.last_seen_status != self.status:
             self.last_seen_status = self.status
-            self.author.unseen_calculations -= 1
-            self.author.save()
             self.save()
+
+            with transaction.atomic():
+                p = Profile.objects.select_for_update().get(id=self.author.id)
+                p.unseen_calculations -= 1
+                p.save()
         else:
             if not self.hidden and self.status in [2, 3]:
                 self.hidden = True
@@ -648,12 +642,16 @@ class CalculationOrder(models.Model):
 
         if old_unseen:
             if not new_unseen:
-                self.author.unseen_calculations -= 1
-                self.author.save()
+                with transaction.atomic():
+                    p = Profile.objects.select_for_update().get(id=self.author.id)
+                    p.unseen_calculations -= 1
+                    p.save()
         else:
             if new_unseen:
-                self.author.unseen_calculations += 1
-                self.author.save()
+                with transaction.atomic():
+                    p = Profile.objects.select_for_update().get(id=self.author.id)
+                    p.unseen_calculations += 1
+                    p.save()
 
     def _status(self, num_queued, num_running, num_done, num_error):
         if num_queued + num_running + num_done + num_error == 0:
@@ -703,8 +701,10 @@ class CalculationOrder(models.Model):
 
     def delete(self, *args, **kwargs):
         if self.new_status:
-            self.author.unseen_calculations -= 1
-            self.author.save()
+            with transaction.atomic():
+                p = Profile.objects.select_for_update().get(id=self.author.id)
+                p.unseen_calculations -= 1
+                p.save()
         super(CalculationOrder, self).delete(*args, **kwargs)
 
 class Calculation(models.Model):
@@ -764,64 +764,6 @@ class Calculation(models.Model):
             print("Could not find molecule to update!")
 
     def save(self, *args, **kwargs):
-        if not self.pk:
-            mol = self.get_mol()
-            with transaction.atomic():
-                _mol = Molecule.objects.select_for_update().get(id=mol.id)
-                _mol.num_calc += 1
-                _mol.num_calc_queued += 1
-                _mol.save()
-
-            with transaction.atomic():
-                _proj = Project.objects.select_for_update().get(id=self.order.project.id)
-                _proj.num_calc += 1
-                _proj.num_calc_queued += 1
-                _proj.save()
-
-        else:
-            old = Calculation.objects.filter(pk=self.pk).first()
-            if old:
-                ostatus = old.status
-                nstatus = self.status
-                if nstatus != ostatus:
-                    mol = self.get_mol()
-
-                    with transaction.atomic():
-                        _mol = Molecule.objects.select_for_update().get(id=mol.id)
-
-                        if ostatus == 0:
-                            _mol.num_calc_queued -= 1
-                        elif ostatus == 1:
-                            _mol.num_calc_running -= 1
-                        elif ostatus in [2, 3]:
-                            _mol.num_calc_completed -= 1
-
-                        if nstatus == 0:
-                            _mol.num_calc_queued += 1
-                        elif nstatus == 1:
-                            _mol.num_calc_running += 1
-                        elif nstatus in [2, 3]:
-                            _mol.num_calc_completed += 1
-                        _mol.save()
-
-                    with transaction.atomic():
-                        _proj = Project.objects.select_for_update().get(id=self.order.project.id)
-
-                        if ostatus == 0:
-                            _proj.num_calc_queued -= 1
-                        elif ostatus == 1:
-                            _proj.num_calc_running -= 1
-                        elif ostatus in [2, 3]:
-                            _proj.num_calc_completed -= 1
-
-                        if nstatus == 0:
-                            _proj.num_calc_queued += 1
-                        elif nstatus == 1:
-                            _proj.num_calc_running += 1
-                        elif nstatus in [2, 3]:
-                            _proj.num_calc_completed += 1
-                        _proj.save()
-
         old_status = self.order.status
         old_unseen = self.order.new_status
 
@@ -830,34 +772,6 @@ class Calculation(models.Model):
 
 
     def delete(self, *args, **kwargs):
-        mol = self.get_mol()
-
-        with transaction.atomic():
-            _proj = Project.objects.select_for_update().get(id=self.order.project.id)
-            _proj.num_calc -= 1
-            if self.status == 0:
-                _proj.num_calc_queued -= 1
-            elif self.status == 1:
-                _proj.num_calc_running -= 1
-            elif self.status in [2, 3]:
-                _proj.num_calc_completed -= 1
-            else:
-                raise Exception("Unknown calculation status")
-            _proj.save()
-
-        with transaction.atomic():
-            _mol = Molecule.objects.select_for_update().get(id=mol.id)
-            _mol.num_calc -= 1
-            if self.status == 0:
-                _mol.num_calc_queued -= 1
-            elif self.status == 1:
-                _mol.num_calc_running -= 1
-            elif self.status in [2, 3]:
-                _mol.num_calc_completed -= 1
-            else:
-                raise Exception("Unknown calculation status")
-            _mol.save()
-
         old_status = self.order.status
         old_unseen = self.order.new_status
 
@@ -891,8 +805,8 @@ class Calculation(models.Model):
 
 class Filter(models.Model):
     type = models.CharField(max_length=500)
-    parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE)
-    value = models.FloatField()
+    parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, null=True)
+    value = models.CharField(max_length=500)
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

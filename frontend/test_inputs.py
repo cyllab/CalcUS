@@ -687,12 +687,11 @@ class GaussianTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'Gaussian',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
-                'constraints': 'Scan_9_1.4_10-1_2;',
+                'constraints': 'Scan_9_1.4_10/1_2;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -725,12 +724,11 @@ class GaussianTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'Gaussian',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
-                'constraints': 'Scan_9_90_10-2_1_3;',
+                'constraints': 'Scan_9_90_10/2_1_3;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -763,12 +761,11 @@ class GaussianTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'Gaussian',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
-                'constraints': 'Scan_9_0_10-4_1_5_8;',
+                'constraints': 'Scan_9_0_10/4_1_5_8;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -790,7 +787,81 @@ class GaussianTests(TestCase):
         O          0.62360        0.07990        1.25870
         H          0.94410        0.53240        2.04240
 
-        D 4 1 5 8 S 10 17.99
+        D 4 1 5 8 S 10 -17.99
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_scan_dihedral_DFT2(self):
+        params = {
+                'type': 'Constrained Optimisation',
+                'in_file': 'ethanol.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'charge': '0',
+                'method': 'B3LYP',
+                'basis_set': '6-31+G(d,p)',
+                'constraints': 'Scan_2_0_10/2_1_5_8;',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt(modredundant) B3LYP/6-31+G(d,p)
+
+        CalcUS
+
+        0 1
+        C         -1.31970       -0.64380        0.00000
+        H         -0.96310       -1.65260        0.00000
+        H         -0.96310       -0.13940       -0.87370
+        H         -2.38970       -0.64380        0.00000
+        C         -0.80640        0.08220        1.25740
+        H         -1.16150        1.09160        1.25640
+        H         -1.16470       -0.42110        2.13110
+        O          0.62360        0.07990        1.25870
+        H          0.94410        0.53240        2.04240
+
+        D 2 1 5 8 S 10 -5.99
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
+    def test_scan_dihedral_DFT3(self):
+        params = {
+                'type': 'Constrained Optimisation',
+                'in_file': 'ethanol.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'charge': '0',
+                'method': 'B3LYP',
+                'basis_set': '6-31+G(d,p)',
+                'constraints': 'Scan_2_0_10/3_1_5_8;',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt(modredundant) B3LYP/6-31+G(d,p)
+
+        CalcUS
+
+        0 1
+        C         -1.31970       -0.64380        0.00000
+        H         -0.96310       -1.65260        0.00000
+        H         -0.96310       -0.13940       -0.87370
+        H         -2.38970       -0.64380        0.00000
+        C         -0.80640        0.08220        1.25740
+        H         -1.16150        1.09160        1.25640
+        H         -1.16470       -0.42110        2.13110
+        O          0.62360        0.07990        1.25870
+        H          0.94410        0.53240        2.04240
+
+        D 3 1 5 8 S 10 6.01
 
         """
 
@@ -801,12 +872,11 @@ class GaussianTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'Gaussian',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
-                'constraints': 'Freeze-1_2;',
+                'constraints': 'Freeze/1_2;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -839,12 +909,11 @@ class GaussianTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'Gaussian',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
-                'constraints': 'Freeze-2_1_3;',
+                'constraints': 'Freeze/2_1_3;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -877,8 +946,7 @@ class GaussianTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'Gaussian',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
@@ -894,8 +962,7 @@ class GaussianTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'Gaussian',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': '',
                 'basis_set': '6-31+G(d,p)',
@@ -911,12 +978,11 @@ class GaussianTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'Gaussian',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
-                'constraints': 'Freeze-4_1_5_8;',
+                'constraints': 'Freeze/4_1_5_8;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -949,12 +1015,11 @@ class GaussianTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'Gaussian',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
-                'constraints': 'Freeze-4_1_5_8;Freeze-1_2_3_4;',
+                'constraints': 'Freeze/4_1_5_8;Freeze/1_2_3_4;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -1527,6 +1592,194 @@ class GaussianTests(TestCase):
 
         self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
+    def test_multiple_ecp(self):
+        params = {
+                'type': 'Geometrical Optimisation',
+                'in_file': 'AuI.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'charge': '0',
+                'method': 'B3LYP',
+                'basis_set': '6-31+G(d,p)',
+                'custom_basis_sets': 'I=Def2-TZVPD;Au=Def2-TZVPD;',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p opt B3LYP/GenECP
+
+        CalcUS
+
+        0 1
+        Au        -9.27600       -1.06330        0.00000
+        I         -6.60600       -1.06330        0.00000
+
+        I     0
+        S   5   1.00
+        5899.5791533              0.24188269271D-03
+        898.54238765             0.15474041742D-02
+        200.37237912             0.42836684457D-02
+        31.418053840           -0.39417936275D-01
+        15.645987838            0.96086691992
+        S   2   1.00
+        11.815741857            0.75961524091
+        6.4614458287           0.42495501835
+        S   1   1.00
+        2.3838067579           1.0000000
+        S   1   1.00
+        1.1712089662           1.0000000
+        S   1   1.00
+        0.32115875757          1.0000000
+        S   1   1.00
+        0.12387919364          1.0000000
+        S   1   1.00
+        0.43491550641D-01      1.0000000
+        P   4   1.00
+        12.984316904           -0.49096186164D-01
+        3.6199503008           0.38914432482
+        2.0232273090           0.65610817262
+        1.0367490559           0.31803551647
+        P   3   1.00
+        197.30030547             0.73951226905D-03
+        20.061411349            0.66168450008D-01
+        9.7631460485          -0.28554662348
+        P   1   1.00
+        0.45937816000          1.0000000
+        P   1   1.00
+        0.19116532928          1.0000000
+        P   1   1.00
+        0.74878813023D-01      1.0000000
+        P   1   1.00
+        0.21653491846D-01      1.0000000
+        D   6   1.00
+        119.12671745             0.82596039573D-03
+        33.404240134            0.68377675770D-02
+        17.805918203           -0.10308158997D-01
+        4.8990510353           0.22670457658
+        2.4516753106           0.44180113937
+        1.1820693432           0.36775472225
+        D   1   1.00
+        0.52923110068          1.0000000
+        D   1   1.00
+        0.17000000000          1.0000000
+        D   1   1.00
+        0.61341708807D-01      1.0000000
+        F   1   1.00
+        2.1800000              1.0000000
+        F   1   1.00
+        0.44141808             1.0000000
+        ****
+        Au     0
+        S   3   1.00
+        30.000000000            0.20749231108
+        27.000000000           -0.33267893394
+        14.746824331            0.38302817958
+        S   1   1.00
+        5.6017248938           1.0000000
+        S   1   1.00
+        1.3874162443           1.0000000
+        S   1   1.00
+        0.62923031957          1.0000000
+        S   1   1.00
+        0.14027517613          1.0000000
+        S   1   1.00
+        0.49379413761D-01      1.0000000
+        P   4   1.00
+        15.500000000            0.15001711880
+        14.000000000           -0.23609813183
+        6.4227368205           0.31458896948
+        1.6595601681          -0.57279670446
+        P   1   1.00
+        0.79402913993          1.0000000
+        P   1   1.00
+        0.35125155397          1.0000000
+        P   1   1.00
+        0.11801737494          1.0000000
+        P   1   1.00
+        0.45000000000D-01      1.0000000
+        D   4   1.00
+        9.5524098656           0.40145559502D-01
+        7.2698886937          -0.93690906606D-01
+        1.7746496789           0.31746282317
+        0.79960541055          0.46795192483
+        D   1   1.00
+        0.33252279372          1.0000000
+        D   1   1.00
+        0.12445133105          1.0000000
+        F   1   1.00
+        0.7248200              1.0000000
+        ****
+
+        I     0
+        I-ECP     3     28
+        f potential
+        4
+        2     19.45860900           -21.84204000
+        2     19.34926000           -28.46819100
+        2      4.82376700            -0.24371300
+        2      4.88431500            -0.32080400
+        s-f potential
+        7
+        2     40.01583500            49.99429300
+        2     17.42974700           281.02531700
+        2      9.00548400            61.57332600
+        2     19.45860900            21.84204000
+        2     19.34926000            28.46819100
+        2      4.82376700             0.24371300
+        2      4.88431500             0.32080400
+        p-f potential
+        8
+        2     15.35546600            67.44284100
+        2     14.97183300           134.88113700
+        2      8.96016400            14.67505100
+        2      8.25909600            29.37566600
+        2     19.45860900            21.84204000
+        2     19.34926000            28.46819100
+        2      4.82376700             0.24371300
+        2      4.88431500             0.32080400
+        d-f potential
+        10
+        2     15.06890800            35.43952900
+        2     14.55532200            53.17605700
+        2      6.71864700             9.06719500
+        2      6.45639300            13.20693700
+        2      1.19177900             0.08933500
+        2      1.29115700             0.05238000
+        2     19.45860900            21.84204000
+        2     19.34926000            28.46819100
+        2      4.82376700             0.24371300
+        2      4.88431500             0.32080400
+        AU     0
+        AU-ECP     3     60
+        f potential
+        2
+        2      4.78982000            30.49008890
+        2      2.39491000             5.17107381
+        s-f potential
+        4
+        2     13.20510000           426.84667920
+        2      6.60255000            37.00708285
+        2      4.78982000           -30.49008890
+        2      2.39491000            -5.17107381
+        p-f potential
+        4
+        2     10.45202000           261.19958038
+        2      5.22601000            26.96249604
+        2      4.78982000           -30.49008890
+        2      2.39491000            -5.17107381
+        d-f potential
+        4
+        2      7.85110000           124.79066561
+        2      3.92555000            16.30072573
+        2      4.78982000           -30.49008890
+        2      2.39491000            -5.17107381
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
     def test_global_specification(self):
         params = {
                 'type': 'Single-Point Energy',
@@ -1980,7 +2233,7 @@ class GaussianTests(TestCase):
     def test_confirmed_specification_not_step(self):
         params = {
                 'type': 'Constrained Optimisation',
-                'constraints': 'Freeze-1_2_3;',
+                'constraints': 'Freeze/1_2_3;',
                 'in_file': 'CH4.xyz',
                 'software': 'Gaussian',
                 'theory_level': 'DFT',
@@ -2572,8 +2825,7 @@ class OrcaTests(TestCase):
                 'type': 'Geometrical Optimisation',
                 'in_file': 'Cl.xyz',
                 'software': 'ORCA',
-                'theory_level': 'Semi-empirical',
-                'method': 'AM1',
+                'theory_level': 'DFT',
                 'charge': '-1',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
@@ -2677,12 +2929,11 @@ class OrcaTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'ORCA',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
-                'constraints': 'Scan_9_1.4_10-1_2;',
+                'constraints': 'Scan_9_1.4_10/1_2;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -2717,8 +2968,7 @@ class OrcaTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'ORCA',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
@@ -2734,8 +2984,7 @@ class OrcaTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'ORCA',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': '',
                 'basis_set': '6-31+G(d,p)',
@@ -2751,12 +3000,11 @@ class OrcaTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'ORCA',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
-                'constraints': 'Scan_9_90_10-2_1_3;',
+                'constraints': 'Scan_9_90_10/2_1_3;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -2791,12 +3039,11 @@ class OrcaTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'ORCA',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
-                'constraints': 'Scan_9_0_10-4_1_5_8;',
+                'constraints': 'Scan_9_0_10/4_1_5_8;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -2831,12 +3078,11 @@ class OrcaTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'ORCA',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
-                'constraints': 'Freeze-1_2;',
+                'constraints': 'Freeze/1_2;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -2871,12 +3117,11 @@ class OrcaTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'ORCA',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
-                'constraints': 'Freeze-2_1_3;',
+                'constraints': 'Freeze/2_1_3;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -2912,12 +3157,11 @@ class OrcaTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'ORCA',
-                'theory_level': 'Semi-empirical',
-                'method': 'DFT',
+                'theory_level': 'DFT',
                 'charge': '0',
                 'method': 'B3LYP',
                 'basis_set': '6-31+G(d,p)',
-                'constraints': 'Freeze-4_1_5_8;',
+                'constraints': 'Freeze/4_1_5_8;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -3523,7 +3767,7 @@ class XtbTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'xtb',
-                'constraints': 'Scan_9_1.4_10-1_2;',
+                'constraints': 'Scan_9_1.4_10/1_2;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -3546,7 +3790,7 @@ class XtbTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'xtb',
-                'constraints': 'Freeze-1_2;',
+                'constraints': 'Freeze/1_2;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -3567,7 +3811,7 @@ class XtbTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'xtb',
-                'constraints': 'Freeze-1_2;',
+                'constraints': 'Freeze/1_2;',
                 'specifications': '--forceconstant 0.1',
                 }
 
@@ -3589,7 +3833,7 @@ class XtbTests(TestCase):
                 'type': 'Constrained Optimisation',
                 'in_file': 'ethanol.xyz',
                 'software': 'xtb',
-                'constraints': 'Freeze-1_2;',
+                'constraints': 'Freeze/1_2;',
                 'specifications': '--forceconstant 0.1 --forceconstant 0.2',
                 }
 
@@ -3639,12 +3883,29 @@ class XtbTests(TestCase):
 
         self.assertEqual('', xtb.option_file)
 
+    def test_conformational_search_nci(self):
+        params = {
+                'type': 'Conformational Search',
+                'in_file': 'ethanol.xyz',
+                'software': 'xtb',
+                'specifications': '--rthr 0.8 --nci',
+                }
+
+        calc = gen_calc(params, self.profile)
+        xtb = XtbCalculation(calc)
+
+        REF = "crest in.xyz -nci -rthr 0.8 -ewin 6"
+
+        self.assertTrue(self.is_equivalent(REF, xtb.command))
+
+        self.assertEqual('', xtb.option_file)
+
     def test_constrained_conformational_search1(self):
         params = {
                 'type': 'Constrained Conformational Search',
                 'in_file': 'ethanol.xyz',
                 'software': 'xtb',
-                'constraints': 'Freeze-1_2;',
+                'constraints': 'Freeze/1_2;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -3668,7 +3929,7 @@ class XtbTests(TestCase):
                 'type': 'Constrained Conformational Search',
                 'in_file': 'ethanol.xyz',
                 'software': 'xtb',
-                'constraints': 'Freeze-1_4;Freeze-6_8;',
+                'constraints': 'Freeze/1_4;Freeze/6_8;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -3693,7 +3954,7 @@ class XtbTests(TestCase):
                 'type': 'Constrained Conformational Search',
                 'in_file': 'ethanol.xyz',
                 'software': 'xtb',
-                'constraints': 'Freeze-2_3;',
+                'constraints': 'Freeze/2_3;',
                 }
 
         calc = gen_calc(params, self.profile)
@@ -3717,7 +3978,7 @@ class XtbTests(TestCase):
                 'type': 'Constrained Conformational Search',
                 'in_file': 'ethanol.xyz',
                 'software': 'xtb',
-                'constraints': 'Freeze-2_3;',
+                'constraints': 'Freeze/2_3;',
                 'specifications': '--force_constant 2.0',
                 }
 
@@ -3742,7 +4003,7 @@ class XtbTests(TestCase):
                 'type': 'Constrained Conformational Search',
                 'in_file': 'ethanol.xyz',
                 'software': 'xtb',
-                'constraints': 'Freeze-2_3;',
+                'constraints': 'Freeze/2_3;',
                 'specifications': '--force_constant=2.0',
                 }
 
@@ -3767,7 +4028,7 @@ class XtbTests(TestCase):
                 'type': 'Constrained Conformational Search',
                 'in_file': 'ethanol.xyz',
                 'software': 'xtb',
-                'constraints': 'Freeze-2_3;',
+                'constraints': 'Freeze/2_3;',
                 'specifications': '--force 2.0',
                 }
 
@@ -3780,7 +4041,7 @@ class XtbTests(TestCase):
                 'type': 'Constrained Conformational Search',
                 'in_file': 'ethanol.xyz',
                 'software': 'xtb',
-                'constraints': 'Freeze-2_3;',
+                'constraints': 'Freeze/2_3;',
                 'specifications': '-force_constant 2.0',
                 }
 

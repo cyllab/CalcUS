@@ -18,10 +18,6 @@
 	<script src="{% static 'frontend/synchronizer.js' %}"></script>
 	<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
 	<script>
-		function launch_from_selected() {
-			frame_num = document.getElementById("opt_scroll").value
-			window.location.href = "/launch/calc/{{ calc.id }}/" + frame_num;
-		}
 		function get_opt_structs(url) {
 			label = document.getElementById("throttle_label");
 			label.style.display = "none";
@@ -261,7 +257,11 @@
 						<center>
 						<input type="range" min="1" max="1" value="1" class="slider" id="opt_scroll" onchange="update_frame();" style="width: 100%;">
 						<label class="label" id="frame_label">Frame 1</label>
-						<button id="launch_from_frame" class="button" onclick="launch_from_selected();">Launch from selected frame</button>
+						<form method="POST" action="/launch/" id="launch_frame_form">
+							{% csrf_token %}
+							<input type="hidden" name="calc_id" value="{{ calc.id }}"></input>
+							<button id="launch_from_frame" class="button" >Launch from selected frame</button>
+						</form>
 						</center>
 					</div>
 				</div>
@@ -305,6 +305,17 @@
 		opt_viewer.setBackgroundColor(0xffffff);
 	</script>
 	{% endif %}
+	<script>
+		frame_num = document.getElementById("opt_scroll").value;
+
+		$('#launch_frame_form').submit(function(){
+			$('<input />').attr('type', 'hidden')
+				.attr('name', "frame_num")
+				.attr('value', frame_num)
+				.appendTo(this);
+		});
+	</script>
+
 
 </div>
 

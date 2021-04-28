@@ -830,7 +830,8 @@ class InterfaceTests(CalcusLiveServer):
         self.save_preset("Test Preset")
 
         self.lget("/launch/")
-        time.sleep(5)
+        self.wait_for_ajax()
+
         self.load_preset("Test Preset")
 
         solvent = self.driver.find_element_by_name('calc_solvent')
@@ -891,6 +892,41 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(software.get_attribute('value'), params['software'])
         self.assertEqual(specifications.get_attribute('value'), "nosymm")
 
+    def test_duplicate_project_preset(self):
+        proj = Project.objects.create(name="My Project", author=self.profile)
+        proj.save()
+
+        params = {
+                'software': 'Gaussian',
+                'type': 'Frequency Calculation',
+                'charge': '+1',
+                'solvent': 'Chloroform',
+                'theory': 'DFT',
+                'functional': 'M062X',
+                'basis_set': 'Def2-SVP',
+                'solvation_model': 'CPCM',
+                'solvation_radii': 'Bondi',
+                'project': 'My Project',
+                'specifications': 'nosymm',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.set_project_preset()
+        presets = self.get_names_presets()
+        param_count = Parameters.objects.count()
+        self.assertEqual(param_count, 1)
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.set_project_preset()
+
+        self.lget("/launch/")
+        presets = self.get_names_presets()
+        self.assertEqual(len(presets), 1)
+        param_count = Parameters.objects.count()
+        self.assertEqual(param_count, 2)
+
     def test_project_preset_independance(self):
         proj = Project.objects.create(name="My Project", author=self.profile)
         proj.save()
@@ -913,124 +949,6 @@ class InterfaceTests(CalcusLiveServer):
         self.delete_preset("My Project Default")
         self.lget("/projects/")
         self.assertEqual(self.get_number_projects(), 1)
-
-
-    def test_num_calcs(self):
-        self.setup_test_group()
-        self.lget("/projects/")
-        self.create_empty_project()
-
-        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("My Project")
-
-        self.assertEqual(n_mol, 0)
-        self.assertEqual(n_calc, 0)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 0)
-
-        self.lget("/launch/")
-        params = {
-                'mol_name': 'Ammonia',
-                'name': 'NH3',
-                'type': 'Geometrical Optimisation',
-                'project': 'My Project',
-                'in_file': 'NH3.mol',
-                }
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.wait_latest_calc_done(150)
-
-        self.lget("/projects/")
-        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("My Project")
-        self.assertEqual(n_mol, 1)
-        self.assertEqual(n_calc, 1)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 1)
-
-        self.click_project("My Project")
-
-        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("Ammonia")
-        self.assertEqual(n_e, 2)
-        self.assertEqual(n_calc, 1)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 1)
-
-        self.click_molecule("Ammonia")
-        self.delete_ensemble("NH3")
-        self.lget("/projects/")
-
-        ind = 0
-        while ind < 5:
-            n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("My Project")
-            if n_calc == 0:
-                break
-            time.sleep(1)
-            ind += 1
-            self.lget("/projects/")
-
-        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("My Project")
-        self.assertEqual(n_mol, 1)
-        self.assertEqual(n_calc, 0)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 0)
-
-        self.click_project("My Project")
-        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("Ammonia")
-        self.assertEqual(n_e, 1)
-        self.assertEqual(n_calc, 0)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 0)
-
-    def test_num_calcs_cancel(self):
-        self.setup_test_group()
-        self.lget("/projects/")
-        self.create_empty_project()
-
-        self.lget("/launch/")
-        params = {
-                'mol_name': 'Ph2I_cation',
-                'type': 'Geometrical Optimisation',
-                'project': 'My Project',
-                'in_file': 'Ph2I_cation.mol',
-                'charge': '+1',
-                'software': 'ORCA',
-                'theory': 'DFT',
-                'functional': 'M062X',
-                'basis_set': 'Def2QZVP',
-                }
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.wait_latest_calc_running(10)
-
-        self.lget("/projects/")
-        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("My Project")
-        self.assertEqual(n_mol, 1)
-        self.assertEqual(n_calc, 1)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 1)
-        self.assertEqual(n_completed, 0)
-
-        self.lget("/calculations/")
-
-        self.details_latest_order()
-        self.cancel_all_calc()
-
-        for i in range(3):
-            self.lget("/projects/")
-            n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("My Project")
-            if n_mol == 1 and n_running == 0:
-                break
-            time.sleep(1)
-
-        self.assertEqual(n_mol, 1)
-        self.assertEqual(n_calc, 1)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 1)
 
     def test_unseen_calc_badge(self):
         self.setup_test_group()
@@ -1159,6 +1077,152 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.get_number_unseen_calcs(), 0)
         self.assertEqual(self.get_number_calc_orders(), 0)
 
+    def test_related_calculations(self):
+        self.setup_test_group()
+
+        params = {
+                'mol_name': 'H2',
+                'name': 'H2',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'H2.sdf',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/projects/")
+        self.click_project("SeleniumProject")
+        self.click_molecule("H2")
+        self.click_ensemble("H2")
+
+        calc = Calculation.objects.latest('id')
+        order = calc.order
+
+        orders = self.get_related_orders()
+
+        self.assertEqual(len(orders), 1)
+        self.assertEqual(int(orders[0].split()[1]), order.id)
+
+        calcs = self.get_related_calculations(order.id)
+
+        self.assertEqual(len(calcs), 1)
+        self.assertEqual(int(calcs[0].split()[1]), calc.id)
+
+        with self.assertRaises(Exception):
+            calcs2 = self.get_related_calculations(order.id + 1)
+
+    def test_related_calculations_from_structure(self):
+        self.setup_test_group()
+
+        params = {
+                'mol_name': 'H2',
+                'name': 'H2',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'H2.sdf',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/projects/")
+        self.click_project("SeleniumProject")
+        self.click_molecule("H2")
+        self.click_ensemble("H2")
+        self.launch_structure_next_step()
+
+        params2 = {
+                'type': 'Frequency Calculation',
+                }
+        self.calc_input_params(params2)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/projects/")
+        self.click_project("SeleniumProject")
+        self.click_molecule("H2")
+        self.click_ensemble("H2")
+
+        calc = Calculation.objects.latest('id')
+        order = calc.order
+
+        orders = self.get_related_orders()
+
+        self.assertEqual(len(orders), 2)
+        self.assertEqual(int(orders[1].split()[1]), order.id)
+
+        calcs = self.get_related_calculations(order.id)
+
+        self.assertEqual(len(calcs), 1)
+        self.assertEqual(int(calcs[0].split()[1]), calc.id)
+
+    def test_related_calculations_from_ensemble(self):
+        self.setup_test_group()
+
+        params = {
+                'mol_name': 'H2',
+                'name': 'H2',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'H2.sdf',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/projects/")
+        self.click_project("SeleniumProject")
+        self.click_molecule("H2")
+        self.click_ensemble("H2")
+        self.launch_ensemble_next_step()
+
+        params2 = {
+                'type': 'Frequency Calculation',
+                }
+        self.calc_input_params(params2)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/projects/")
+        self.click_project("SeleniumProject")
+        self.click_molecule("H2")
+        self.click_ensemble("H2")
+
+        calc = Calculation.objects.latest('id')
+        order = calc.order
+
+        orders = self.get_related_orders()
+
+        self.assertEqual(len(orders), 2)
+        self.assertEqual(int(orders[1].split()[1]), order.id)
+
+        calcs = self.get_related_calculations(order.id)
+
+        self.assertEqual(len(calcs), 1)
+        self.assertEqual(int(calcs[0].split()[1]), calc.id)
 
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):
@@ -1428,8 +1492,8 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'Cl.xyz',
-                'charge': '-1'
+                'in_file': 'carbo_cation.xyz',
+                'charge': '+1'
                 }
 
         self.lget("/launch/")
@@ -1461,8 +1525,8 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'Cl.xyz',
-                'charge': '-1',
+                'in_file': 'carbo_cation.xyz',
+                'charge': '+1',
                 }
 
         self.lget("/launch/")
@@ -1561,7 +1625,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.wait_latest_calc_done(60)
+        self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
 
         self.lget("/launch/")
@@ -1962,6 +2026,104 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.click_latest_calc()
         self.assertGreaterEqual(self.get_number_conformers(), 1)
 
+    def test_default_settings_from_ensemble(self):
+        params = {
+                'mol_name': 'test',
+                'in_file': 'Ph2I_cation.xyz',
+                'software': 'xtb',
+                'type': 'Geometrical Optimisation',
+                'charge': '+1',
+                'solvent': 'dcm',
+                'solvation_model': 'GBSA',
+                'project': 'New Project',
+                'new_project_name': 'Proj',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.lget("/calculations")
+        self.wait_latest_calc_done(120)
+        self.click_latest_calc()
+
+        self.launch_ensemble_next_step()
+
+        solvent = self.driver.find_element_by_name('calc_solvent')
+        charge = self.driver.find_element_by_name('calc_charge')
+        solvation_model = Select(self.driver.find_element_by_name('calc_solvation_model'))
+        software = self.driver.find_element_by_id("calc_software")
+
+        self.assertEqual(solvent.get_attribute('value'), params['solvent'])
+        self.assertEqual(charge.get_attribute('value'), params['charge'])
+        self.assertEqual(solvation_model.first_selected_option.text, params['solvation_model'])
+        self.assertEqual(software.get_attribute('value'), params['software'])
+
+    def test_default_settings_from_structure(self):
+        params = {
+                'mol_name': 'test',
+                'in_file': 'Ph2I_cation.xyz',
+                'software': 'xtb',
+                'type': 'Geometrical Optimisation',
+                'charge': '+1',
+                'solvent': 'dcm',
+                'solvation_model': 'GBSA',
+                'project': 'New Project',
+                'new_project_name': 'Proj',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.lget("/calculations")
+        self.wait_latest_calc_done(120)
+        self.click_latest_calc()
+
+        self.launch_structure_next_step()
+
+        solvent = self.driver.find_element_by_name('calc_solvent')
+        charge = self.driver.find_element_by_name('calc_charge')
+        solvation_model = Select(self.driver.find_element_by_name('calc_solvation_model'))
+        software = self.driver.find_element_by_id("calc_software")
+
+        self.assertEqual(solvent.get_attribute('value'), params['solvent'])
+        self.assertEqual(charge.get_attribute('value'), params['charge'])
+        self.assertEqual(solvation_model.first_selected_option.text, params['solvation_model'])
+        self.assertEqual(software.get_attribute('value'), params['software'])
+
+    def test_default_settings_from_frame(self):
+        params = {
+                'mol_name': 'test',
+                'in_file': 'Ph2I_cation.xyz',
+                'software': 'xtb',
+                'type': 'Geometrical Optimisation',
+                'charge': '+1',
+                'solvent': 'dcm',
+                'solvation_model': 'GBSA',
+                'project': 'New Project',
+                'new_project_name': 'Proj',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+
+        self.lget("/calculations")
+        self.wait_latest_calc_done(120)
+        self.details_latest_order()
+        self.details_first_calc()
+        self.launch_frame_next_step()
+
+        solvent = self.driver.find_element_by_name('calc_solvent')
+        charge = self.driver.find_element_by_name('calc_charge')
+        solvation_model = Select(self.driver.find_element_by_name('calc_solvation_model'))
+        software = self.driver.find_element_by_id("calc_software")
+
+        self.assertEqual(solvent.get_attribute('value'), params['solvent'])
+        self.assertEqual(charge.get_attribute('value'), params['charge'])
+        self.assertEqual(solvation_model.first_selected_option.text, params['solvation_model'])
+        self.assertEqual(software.get_attribute('value'), params['software'])
 
 class OrcaCalculationTestsPI(CalcusLiveServer):
 
@@ -4047,28 +4209,19 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
 
         self.lget("/projects/")
-        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
+        n_mol = self.get_number_calcs_in_project("SeleniumProject")
+
         self.assertEqual(n_mol, 2)
-        self.assertEqual(n_calc, 3)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 3)
 
         self.click_project("SeleniumProject")
 
-        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("H2")
-        self.assertEqual(n_e, 2)
-        self.assertEqual(n_calc, 2)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 2)
-        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("Ethanol")
-        self.assertEqual(n_e, 2)
-        self.assertEqual(n_calc, 1)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 1)
+        n_e = self.get_number_calcs_in_molecule("H2")
 
+        self.assertEqual(n_e, 2)
+
+        n_e = self.get_number_calcs_in_molecule("Ethanol")
+
+        self.assertEqual(n_e, 2)
 
         self.delete_molecule("Ethanol")
         self.lget("/calculations/")
@@ -4085,21 +4238,14 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.assertEqual(self.get_number_projects(), 1)
         self.assertTrue(self.try_assert_number_unseen_calcs(1, 3))
 
-        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
+        n_mol = self.get_number_calcs_in_project("SeleniumProject")
         self.assertEqual(n_mol, 1)
-        self.assertEqual(n_calc, 2)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 2)
 
         self.click_project("SeleniumProject")
         self.assertEqual(self.get_number_molecules(), 1)
-        n_e, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_molecule("H2")
+
+        n_e = self.get_number_calcs_in_molecule("H2")
         self.assertEqual(n_e, 2)
-        self.assertEqual(n_calc, 2)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 2)
 
         self.click_molecule("H2")
         self.assertEqual(self.get_number_ensembles(), 2)
@@ -4135,12 +4281,9 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.assertEqual(self.get_number_unseen_calcs_manually(), 3)
 
         self.lget("/projects/")
-        n_mol, n_calc, n_queued, n_running, n_completed = self.get_number_calcs_in_project("SeleniumProject")
+        n_mol = self.get_number_calcs_in_project("SeleniumProject")
+
         self.assertEqual(n_mol, 3)
-        self.assertEqual(n_calc, 4)
-        self.assertEqual(n_queued, 0)
-        self.assertEqual(n_running, 0)
-        self.assertEqual(n_completed, 4)
 
         self.click_project("SeleniumProject")
         self.click_molecule("Ammonia")
@@ -4195,6 +4338,5 @@ class ComplexCalculationTests(CalcusLiveServer):
         prop = Property.objects.latest('id')
         calc_shifts = [float(i.split()[2]) for i in prop.simple_nmr.split('\n') if i.strip() != '']
         self.assertEqual(shifts[1], "{:.3f}".format(np.mean(calc_shifts[1:4])))
-
 
 

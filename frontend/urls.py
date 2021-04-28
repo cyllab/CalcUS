@@ -107,12 +107,14 @@ urlpatterns = [
     path('get_related_calculations/<int:pk>', views.get_related_calculations, name='get_related_calculations'),
 
     path('launch/', views.launch, name='launch'),
-    path('launch/calc/<int:cid>/<int:fid>', views.launch_frame, name='launch_frame'),
-    path('launch/<int:pk>', views.launch_pk, name='launch_pk'),
-    path('launch/<int:ee>/<int:pk>', views.launch_structure_pk, name='launch_structure_pk'),
+    #path('launch/calc/<int:cid>/<int:fid>', views.launch_frame, name='launch_frame'),
+    #path('launch/<int:pk>', views.launch_pk, name='launch_pk'),
+    #path('launch/<int:ee>/<int:pk>', views.launch_structure_pk, name='launch_structure_pk'),
     path('launch/project/<int:pk>', views.launch_project, name='launch_project'),
-    path('load_params_ensemble/<int:pk>', views.load_params_ensemble, name='load_params_ensemble'),
-    path('load_params_structure/<int:pk>', views.load_params_structure, name='load_params_structure'),
+    path('load_params/<int:pk>', views.load_params, name='load_params'),
+
+    #path('load_params_ensemble/<int:pk>', views.load_params_ensemble, name='load_params_ensemble'),
+    #path('load_params_structure/<int:pk>', views.load_params_structure, name='load_params_structure'),
     path('load_preset/<int:pk>', views.load_preset, name='load_preset'),
     path('delete_preset/<int:pk>', views.delete_preset, name='delete_preset'),
     path('presets/', views.launch_presets, name='presets'),
@@ -131,6 +133,7 @@ urlpatterns = [
 
     path('log/<int:pk>', views.log, name='log'),
     path('download_log/<int:pk>', views.download_log, name='download_log'),
+    path('download_all_logs/<int:pk>', views.download_all_logs, name='download_all_logs'),
     path('submit_calculation/', views.submit_calculation, name='submit_calculation'),
     path('get_structure/', views.get_structure, name='get_structure'),
     path('get_details_sections/<int:pk>', views.get_details_sections, name='get_details_sections'),

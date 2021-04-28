@@ -60,16 +60,17 @@ class GaussianTests(TestCase):
         os.chdir(dir_path)
         return E
 
-    def known_energy(self, E, params):
+    def known_energy(self, E, params, fail=False):
         if E == -1:
             raise Exception("Invalid calculation")
         for entry in self.energies:
             if entry[1] == E:
-                print("")
-                print("Clash detected:")
-                print(entry[0])
-                print(params)
-                print("")
+                if not fail:
+                    print("")
+                    print("Clash detected:")
+                    print(entry[0])
+                    print(params)
+                    print("")
                 return True
 
         self.energies.append([params, E])
@@ -93,7 +94,7 @@ class GaussianTests(TestCase):
         self.assertFalse(self.known_energy(E, params))
 
         E = self.run_calc(gaussian)
-        self.assertTrue(self.known_energy(E, params))
+        self.assertTrue(self.known_energy(E, params, fail=True))
 
     def test_sp_SE2(self):
         params = {
@@ -177,7 +178,7 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         E = self.run_calc(gaussian)
-        self.assertTrue(self.known_energy(E, params))
+        self.assertTrue(self.known_energy(E, params, fail=True))
 
     def test_sp_HF_SMD18(self):
         params = {
@@ -505,16 +506,17 @@ class OrcaTests(TestCase):
         E = lines[ind].split()[4].strip()
         return E
 
-    def known_energy(self, E, params):
+    def known_energy(self, E, params, fail=False):
         if E == -1:
             raise Exception("Invalid calculation")
         for entry in self.energies:
             if entry[1] == E:
-                print("")
-                print("Clash detected:")
-                print(entry[0])
-                print(params)
-                print("")
+                if not fail:
+                    print("")
+                    print("Clash detected:")
+                    print(entry[0])
+                    print(params)
+                    print("")
                 return True
 
         self.energies.append([params, E])
@@ -536,7 +538,7 @@ class OrcaTests(TestCase):
         E = self.run_calc(orca)
         self.assertFalse(self.known_energy(E, params))
 
-        self.assertTrue(self.known_energy(E, params))
+        self.assertTrue(self.known_energy(E, params, fail=True))
 
     def test_sp_SE2(self):
         params = {
@@ -604,7 +606,7 @@ class OrcaTests(TestCase):
         orca = OrcaCalculation(calc)
 
         E = self.run_calc(orca)
-        self.assertTrue(self.known_energy(E, params))
+        self.assertTrue(self.known_energy(E, params, fail=True))
 
     def test_sp_HF_SMD18(self):
         params = {
@@ -811,16 +813,17 @@ class CrestTests(TestCase):
     def tearDown(self):
         rmtree(SCR_DIR)
 
-    def known_energy(self, E, params):
+    def known_energy(self, E, params, fail=False):
         if E == -1:
             raise Exception("Invalid calculation")
         for entry in self.energies:
             if entry[1] == E:
-                print("")
-                print("Clash detected:")
-                print(entry[0])
-                print(params)
-                print("")
+                if not fail:
+                    print("")
+                    print("Clash detected:")
+                    print(entry[0])
+                    print(params)
+                    print("")
                 return True
 
         self.energies.append([params, E])
@@ -914,16 +917,17 @@ class XtbTests(TestCase):
     def tearDown(self):
         rmtree(SCR_DIR)
 
-    def known_energy(self, E, params):
+    def known_energy(self, E, params, fail=False):
         if E == -1:
             raise Exception("Invalid calculation")
         for entry in self.energies:
             if entry[1] == E:
-                print("")
-                print("Clash detected:")
-                print(entry[0])
-                print(params)
-                print("")
+                if not fail:
+                    print("")
+                    print("Clash detected:")
+                    print(entry[0])
+                    print(params)
+                    print("")
                 return True
 
         self.energies.append([params, E])
@@ -986,7 +990,7 @@ class XtbTests(TestCase):
         xtb = XtbCalculation(calc)
 
         E = self.run_calc(xtb)
-        self.assertTrue(self.known_energy(E, params))
+        self.assertTrue(self.known_energy(E, params, fail=True))
 
     def test_sp_gfn1(self):
         params = {

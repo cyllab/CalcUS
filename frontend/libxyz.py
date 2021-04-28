@@ -122,4 +122,26 @@ def equivalent_atoms(xyz, algorithm="morgan"):
                 equivalent.append(eqs)
     return equivalent
 
+def get_networkx_graph_from_xyz(xyz):
+    import networkx as nx
+
+    bonds = get_connectivity(xyz)
+
+    G = nx.Graph()
+    elements = {}
+    for ind, (el, pos) in enumerate(xyz):
+        G.add_node(ind, element=el, position=pos)
+
+    for b in bonds:
+        G.add_edge(*b)
+
+    return G
+
+def reorder_xyz(ref, xyz):
+    """ Reorders the atoms in xyz to correspond to the order in ref """
+
+    new_order = {i: -1 for i in range(len(xyz))}
+
+    elements = {i: e[0] for i, e in enumerate(ref)}
+
 

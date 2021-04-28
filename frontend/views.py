@@ -329,8 +329,19 @@ def project_details(request, username, proj):
         except Project.DoesNotExist:
             return HttpResponseRedirect("/home/")
         if can_view_project(project, request.user.profile):
+            molecules = []
+            for m in project.molecule_set.prefetch_related('ensemble_set').all().order_by(Lower('name')):
+                ### To fully implement
+                '''
+                for e in m.ensemble_set.all():
+                    if e.flagged:
+                        molecules.append(m)
+                        break
+                '''
+                molecules.append(m)
+
             return render(request, 'frontend/project_details.html', {
-            'molecules': project.molecule_set.prefetch_related('ensemble_set').all().order_by(Lower('name')),
+            'molecules': molecules,
             'project': project,
             })
         else:
@@ -1026,6 +1037,10 @@ def set_project_default(request):
 
     preset = Preset.objects.create(name="{} Default".format(project_obj.name), author=request.user.profile, params=params)
     preset.save()
+
+    if project_obj.preset is not None:
+        project_obj.preset.delete()
+
     project_obj.preset = preset
     project_obj.save()
 
@@ -1133,7 +1148,18 @@ def submit_calculation(request):
             order_name = start_e.name
 
         filter = None
-        if 'calc_filter' in request.POST.keys():
+        if 'starting_structs' in request.POST.keys():
+            structs_str = clean(request.POST['starting_structs'])
+            structs_nums = [int(i) for i in structs_str.split(',')]
+
+            avail_nums = [i['number'] for i in start_e.structure_set.values('number')]
+
+            for s_num in structs_nums:
+                if s_num not in avail_nums:
+                    return error(request, "Invalid starting structures")
+
+            filter = Filter.objects.create(type="By Number", value=structs_str)
+        elif 'calc_filter' in request.POST.keys():
             filter_type = clean(request.POST['calc_filter'])
             if filter_type == "None":
                 pass
@@ -1173,31 +1199,13 @@ def submit_calculation(request):
             obj.filter = filter
 
         orders.append(obj)
-    elif 'starting_struct' in request.POST.keys():
-        start_id = int(clean(request.POST['starting_struct']))
-        try:
-            start_s = Structure.objects.get(pk=start_id)
-        except Structure.DoesNotExist:
-            return error(request, "No starting ensemble found")
-
-        if not can_view_structure(start_s, profile):
-            return error(request, "You do not have permission to access the starting calculation")
-
-        if step.creates_ensemble:
-            order_name = name
-        else:
-            order_name = start_s.parent_ensemble.name
-
-        obj = CalculationOrder.objects.create(name=order_name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj, structure=start_s)
-
-        orders.append(obj)
     elif 'starting_calc' in request.POST.keys():
 
         if not 'starting_frame' in request.POST.keys():
             return error(request, "Missing starting frame number")
         ###
         c_id = int(clean(request.POST['starting_calc']))
-        f_id = int(clean(request.POST['starting_frame']))
+        frame_num = int(clean(request.POST['starting_frame']))
         ###
 
         try:
@@ -1210,9 +1218,9 @@ def submit_calculation(request):
         if step.creates_ensemble:
             order_name = name
         else:
-            order_name = start_c.result_ensemble.name + " - Frame {}".format(f_id)
+            order_name = start_c.result_ensemble.name + " - Frame {}".format(frame_num)
 
-        obj = CalculationOrder.objects.create(name=order_name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj, start_calc=start_c, start_calc_frame=f_id)
+        obj = CalculationOrder.objects.create(name=order_name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj, start_calc=start_c, start_calc_frame=frame_num)
         orders.append(obj)
     else:
         if mol_name == '':
@@ -1352,13 +1360,13 @@ def submit_calculation(request):
 
                 ids = '_'.join([str(i) for i in ids])
                 if mode == "Freeze":
-                    constraints += "{}-{};".format(mode, ids)
+                    constraints += "{}/{};".format(mode, ids)
                 elif mode == "Scan":
                     obj.has_scan = True
                     begin = clean(request.POST['calc_scan_{}_1'.format(ind)])
                     end = float(clean(request.POST['calc_scan_{}_2'.format(ind)]))
                     steps = float(clean(request.POST['calc_scan_{}_3'.format(ind)]))
-                    constraints += "{}_{}_{}_{}-{};".format(mode, begin, end, steps, ids)
+                    constraints += "{}_{}_{}_{}/{};".format(mode, begin, end, steps, ids)
                 else:
                     return error(request, "Invalid constrained optimisation")
     obj.save()
@@ -1398,8 +1406,15 @@ def can_view_structure(s, profile):
     return can_view_ensemble(s.parent_ensemble, profile)
 
 def can_view_parameters(p, profile):
-    prop = p.property_set.all()[0]
-    return can_view_structure(prop.parent_structure, profile)
+    prop = p.property_set.first()
+
+    if prop is not None:
+        return can_view_structure(prop.parent_structure, profile)
+
+    c = p.calculation_set.first()
+
+    if c is not None:
+        return can_view_calculation(c, profile)
 
 def can_view_preset(p, profile):
     return profile_intersection(p.author, profile)
@@ -2640,6 +2655,42 @@ def download_log(request, pk):
         return HttpResponse(status=404)
 
 @login_required
+def download_all_logs(request, pk):
+    try:
+        order = CalculationOrder.objects.get(pk=pk)
+    except CalculationOrder.DoesNotExist:
+        return HttpResponse(status=404)
+
+    profile = request.user.profile
+
+    if not can_view_order(order, profile):
+        return HttpResponse(status=403)
+
+    order_logs = {}
+    for calc in order.calculation_set.all():
+        if calc.status == 2 or calc.status == 3:
+            dir = os.path.join(CALCUS_RESULTS_HOME, str(calc.id))
+        elif calc.status == 1:
+            dir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+        elif calc.status == 0:
+            return HttpResponse(status=204)
+
+        logs = glob.glob(dir + '/*.out')
+        logs += glob.glob(dir + '/*.log')
+
+        order_logs[calc.id] = logs
+
+    mem = BytesIO()
+    with zipfile.ZipFile(mem, 'w', zipfile.ZIP_DEFLATED) as zip:
+        for c in order_logs.keys():
+            for f in order_logs[c]:
+                zip.write(f, "{}_".format(c) + basename(f))
+
+    response = HttpResponse(mem.getvalue(), content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename="order_{}.zip"'.format(pk)
+    return response
+
+@login_required
 def log(request, pk):
     LOG_HTML = """
     <label class="label">{}</label>
@@ -2739,12 +2790,77 @@ def update_preferences(request):
 
 @login_required
 def launch(request):
-    return render(request, 'frontend/launch.html', {
-            'profile': request.user.profile,
+    profile = request.user.profile
+    params = {
+            'profile': profile,
             'procs': BasicStep.objects.all(),
             'allow_local_calc': settings.ALLOW_LOCAL_CALC,
-        })
+        }
 
+    if 'ensemble' in request.POST.keys():
+        try:
+            e = Ensemble.objects.get(pk=clean(request.POST['ensemble']))
+        except Ensemble.DoesNotExist:
+            return redirect('/home/')
+
+        if not can_view_ensemble(e, profile):
+            return HttpResponse(status=403)
+
+        params['ensemble'] = e
+        if 'structures' in request.POST.keys():
+            s_str = clean(request.POST['structures'])
+            s_nums = [int(i) for i in s_str.split(',')]
+
+            try:
+                struct = e.structure_set.get(number=s_nums[0])
+            except Structure.DoesNotExist:
+                return HttpResponse(status=404)
+
+            avail_nums = [i['number'] for i in e.structure_set.values('number')]
+
+            for s_num in s_nums:
+                if s_num not in avail_nums:
+                    return HttpResponse(status=404)
+
+            init_params = struct.properties.all()[0].parameters
+
+            params['structures'] = s_str
+            params['structure'] = struct
+            params['init_params_id'] = init_params.id
+        else:
+            init_params = e.structure_set.all()[0].properties.all()[0].parameters
+
+            params['init_params_id'] = init_params.id
+    elif 'calc_id' in request.POST.keys():
+        calc_id = int(clean(request.POST['calc_id']))
+
+        if 'frame_num' not in request.POST.keys():
+            return HttpResponse(status=404)
+
+        frame_num = int(clean(request.POST['frame_num']))
+
+        try:
+            calc = Calculation.objects.get(pk=calc_id)
+        except Calculation.DoesNotExist:
+            return redirect('/home/')
+
+        if not can_view_calculation(calc, profile):
+            return HttpResponse(status=403)
+
+        try:
+            frame = calc.calculationframe_set.get(number=frame_num)
+        except CalculationFrame.DoesNotExist:
+            return redirect('/home/')
+
+        init_params = calc.order.parameters
+
+        params['calc'] = calc
+        params['frame_num'] = frame_num
+        params['init_params_id'] = init_params.id
+
+    return render(request, 'frontend/launch.html', params)
+
+'''
 @login_required
 def launch_pk(request, pk):
 
@@ -2763,6 +2879,33 @@ def launch_pk(request, pk):
     return render(request, 'frontend/launch.html', {
             'profile': request.user.profile,
             'ensemble': e,
+            'procs': BasicStep.objects.all(),
+            'init_params_id': init_params.id,
+            'allow_local_calc': settings.ALLOW_LOCAL_CALC,
+        })
+
+@login_required
+def launch_structure_pk(request, ee, pk):
+
+    try:
+        e = Ensemble.objects.get(pk=ee)
+    except Ensemble.DoesNotExist:
+        return redirect('/home/')
+
+    profile = request.user.profile
+
+    if not can_view_ensemble(e, profile):
+        return HttpResponse(status=403)
+
+    try:
+        s = e.structure_set.get(number=pk)
+    except Structure.DoesNotExist:
+        return redirect('/home/')
+
+    init_params = s.properties.all()[0].parameters
+    return render(request, 'frontend/launch.html', {
+            'profile': request.user.profile,
+            'structure': s,
             'procs': BasicStep.objects.all(),
             'init_params_id': init_params.id,
             'allow_local_calc': settings.ALLOW_LOCAL_CALC,
@@ -2792,33 +2935,8 @@ def launch_frame(request, cid, fid):
             'allow_local_calc': settings.ALLOW_LOCAL_CALC,
         })
 
+'''
 
-@login_required
-def launch_structure_pk(request, ee, pk):
-
-    try:
-        e = Ensemble.objects.get(pk=ee)
-    except Ensemble.DoesNotExist:
-        return redirect('/home/')
-
-    profile = request.user.profile
-
-    if not can_view_ensemble(e, profile):
-        return HttpResponse(status=403)
-
-    try:
-        s = e.structure_set.get(number=pk)
-    except Structure.DoesNotExist:
-        return redirect('/home/')
-
-    init_params = s.properties.all()[0].parameters
-    return render(request, 'frontend/launch.html', {
-            'profile': request.user.profile,
-            'structure': s,
-            'procs': BasicStep.objects.all(),
-            'init_params': init_params,
-            'allow_local_calc': settings.ALLOW_LOCAL_CALC,
-        })
 
 @login_required
 def launch_project(request, pk):
@@ -2890,6 +3008,22 @@ def load_preset(request, pk):
         })
 
 @login_required
+def load_params(request, pk):
+    try:
+        params = Parameters.objects.get(pk=pk)
+    except Parameters.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if not can_view_parameters(params, request.user.profile):
+        return HttpResponse(status=403)
+
+    return render(request, 'frontend/dynamic/load_params.js', {
+            'params': params,
+            'load_charge': True,
+        })
+
+'''
+@login_required
 def load_params_ensemble(request, pk):
     try:
         e = Ensemble.objects.get(pk=pk)
@@ -2926,6 +3060,7 @@ def load_params_structure(request, pk):
             'params': params,
             'load_charge': True,
         })
+'''
 
 class CsvParameters:
     def __init__(self):

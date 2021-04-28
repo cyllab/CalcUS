@@ -19,6 +19,8 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from shutil import copyfile, rmtree
 
 from celery.contrib.testing.worker import start_worker
+from celery.contrib.abortable import AbortableAsyncResult
+
 from django.core.management import call_command
 from django.contrib.auth.models import User, Group
 from .models import *
@@ -36,6 +38,8 @@ HEADLESS = os.getenv("CALCUS_HEADLESS")
 
 from calcus.celery import app
 from frontend import tasks
+
+base_cwd = os.getcwd()
 
 class CalcusLiveServer(StaticLiveServerTestCase):
 
@@ -71,19 +75,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         cls.celery_worker = start_worker(app, perform_ping_check=False)
         cls.celery_worker.__enter__()
 
-        if not os.path.isdir(SCR_DIR):
-            os.mkdir(SCR_DIR)
-        if not os.path.isdir(RESULTS_DIR):
-            os.mkdir(RESULTS_DIR)
-        if not os.path.isdir(KEYS_DIR):
-            os.mkdir(KEYS_DIR)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.quit()
-        super().tearDownClass()
-        cls.celery_worker.__exit__(None, None, None)
-
         if os.path.isdir(SCR_DIR):
             rmtree(SCR_DIR)
         if os.path.isdir(RESULTS_DIR):
@@ -91,7 +82,21 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if os.path.isdir(KEYS_DIR):
             rmtree(KEYS_DIR)
 
+        os.mkdir(SCR_DIR)
+        os.mkdir(RESULTS_DIR)
+        os.mkdir(KEYS_DIR)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.driver.quit()
+        cls.celery_worker.__exit__(None, None, None)
+        os.chdir(base_cwd)#Prevent coverage.py crash
+        super().tearDownClass()
+
+
     def setUp(self):
+        self.addCleanup(self.cleanupCalculations)
+        os.chdir(base_cwd)
         call_command('init_static_obj')
         self.username = "Selenium"
         self.password = "test1234"
@@ -103,8 +108,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         print(self._testMethodName)
         time.sleep(0.1)#Reduces glitches (I think?)
 
-    def tearDown(self):
-        pass
+    def cleanupCalculations(self):
+        for c in Calculation.objects.all():
+            res = AbortableAsyncResult(c.task_id)
+            res.abort()
 
     def login(self, username, password):
         self.lget('/accounts/login/')
@@ -491,7 +498,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         memory = self.driver.find_element_by_name("cluster_memory")
         memory.clear()
-        memory.send_keys("10000")
+        memory.send_keys("6000")
 
         password = self.driver.find_element_by_name("cluster_password")
         password.clear()
@@ -746,7 +753,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             raise Exception("Project not found")
 
         sline = proj.find_element_by_css_selector("a > p").text.split()
-        return int(sline[0]), int(sline[2].replace('(', '')), int(sline[4]), int(sline[6]), int(sline[8])
+        return int(sline[0])
 
     def get_number_calcs_in_molecule(self, name):
         molecules = self.get_molecules()
@@ -760,7 +767,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             raise Exception("Molecule not found")
 
         sline = mol.find_element_by_css_selector("a > p").text.split()
-        return int(sline[0]), int(sline[2].replace('(', '')), int(sline[4]), int(sline[6]), int(sline[8])
+        return int(sline[0])
 
     def rename_project(self, proj, name):
         rename_icon = proj.find_element_by_class_name("fa-edit")
@@ -1372,3 +1379,41 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             self.driver.refresh()
             time.sleep(1)
         return False
+
+    def get_related_calculations_div(self):
+        assert self.is_on_page_ensemble()
+        fold_details = self.driver.find_element_by_css_selector("details")
+
+        if fold_details.get_attribute("open") is None:
+            fold = self.driver.find_element_by_css_selector("summary")
+            fold.click()
+            self.wait_for_ajax()
+
+        return self.driver.find_element_by_id("related_calculations_div")
+
+    def get_related_orders(self):
+        related_calculations_div = self.get_related_calculations_div()
+
+        orders_links = related_calculations_div.find_elements_by_css_selector("ul.tree > li > a")
+        orders = [i.text for i in orders_links]
+        return orders
+
+    def get_related_calculations(self, order_id):
+        related_calculations_div = self.get_related_calculations_div()
+
+        trees = related_calculations_div.find_elements_by_css_selector("ul.tree > li")
+        for t in trees:
+            link = t.find_element_by_css_selector("li > a")
+            t_id = int(link.text.split()[1])
+            if t_id == order_id:
+                tree = t
+                break
+        else:
+            raise Exception("Order {} is not related to this ensemble!".format(order_id))
+
+        calc_tree = tree.find_elements_by_css_selector("ul > li")
+
+        calcs = [i.find_element_by_css_selector("a").text for i in calc_tree]
+        return calcs
+
+
