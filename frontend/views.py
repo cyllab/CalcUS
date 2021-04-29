@@ -28,7 +28,7 @@ from django.utils.datastructures import MultiValueDictKeyError
 from django.db.models import Prefetch
 
 from .forms import UserCreateForm
-from .models import Calculation, Profile, Project, ClusterAccess, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe
+from .models import Calculation, Profile, Project, ClusterAccess, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe, Folder
 from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc, send_cluster_command
 from .decorators import superuser_required
 from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint, get_Gaussian_xyz
@@ -304,12 +304,49 @@ def create_project(request):
         </p>
         <a href="/projects/{}/{}">
                 <strong><p id="proj_name_{}">{}</p></strong>
-                <p>0 Molecule(s) &nbsp; (0 Calculation(s): &nbsp; 0 Queued; &nbsp; 0 Running; &nbsp; 0 Completed) </p>
+                <p>0 Molecule(s)</p>
         </a>
 </div>
 """.format(proj.id, proj.id, proj.id, proj.id, proj.id, proj.id, profile.username, proj.name, proj.id, proj.name)
 
         return HttpResponse(response)
+    else:
+        return HttpResponse(status=404)
+
+@login_required
+def create_folder(request):
+    if request.method == 'POST':
+        profile = request.user.profile
+
+        if "current_folder_id" not in request.POST.keys():
+            return HttpResponse(status=403)
+
+        current_folder_id = int(clean(request.POST['current_folder_id']))
+
+        try:
+            current_folder = Folder.objects.get(pk=current_folder_id)
+        except Folder.DoesNotExist:
+            return HttpResponse(status=404)
+
+        if current_folder.depth > MAX_FOLDER_DEPTH:
+            return HttpResponse(status=403)
+
+        if current_folder.project.author != profile:
+            return HttpResponse(status=403)
+
+        for i in range(1, 6):
+            try:
+                existing_folder = Folder.objects.get(name="My Folder {}".format(i))
+            except Folder.DoesNotExist:
+                break
+        else:
+            return HttpResponse(status=403)
+
+        folder = Folder.objects.create(name="My Folder {}".format(i), project=current_folder.project, parent_folder=current_folder)
+        folder.depth = current_folder.depth + 1
+        folder.save()
+
+        return HttpResponse("{};{}".format(folder.id, folder.name))
     else:
         return HttpResponse(status=404)
 
@@ -1494,6 +1531,30 @@ def delete_project(request):
         return HttpResponse(status=403)
 
 @login_required
+def delete_folder(request):
+    if request.method == 'POST':
+        if 'id' in request.POST.keys():
+            folder_id = int(clean(request.POST['id']))
+        else:
+            return HttpResponse(status=403)
+
+        try:
+            to_delete = Folder.objects.get(pk=folder_id)
+        except Project.DoesNotExist:
+            return HttpResponse(status=403)
+
+        if to_delete.project.author != request.user.profile:
+            return HttpResponse(status=403)
+
+        if to_delete.ensemble_set.count() == 0 and to_delete.folder_set.count() == 0:## To modify?
+            to_delete.delete()
+            return HttpResponse(status=204)
+
+        return HttpResponse(status=400)
+    else:
+        return HttpResponse(status=403)
+
+@login_required
 def delete_molecule(request):
     if request.method == 'POST':
         if 'id' in request.POST.keys():
@@ -2483,6 +2544,34 @@ def rename_ensemble(request):
         return HttpResponse(status=403)
 
 @login_required
+def rename_folder(request):
+    if request.method == 'POST':
+        id = int(clean(request.POST['id']))
+
+        try:
+            f = Folder.objects.get(pk=id)
+        except Folder.DoesNotExist:
+            return HttpResponse(status=403)
+
+        profile = request.user.profile
+
+        if f.project.author != profile:
+            return HttpResponse(status=403)
+
+        if 'new_name' in request.POST.keys():
+            name = clean(request.POST['new_name'])
+
+        if name.strip() == "":
+            return HttpResponse(status=403)
+
+        f.name = name
+        f.save()
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=403)
+
+
+@login_required
 def get_structure(request):
     if request.method == 'POST':
         try:
@@ -2860,83 +2949,6 @@ def launch(request):
 
     return render(request, 'frontend/launch.html', params)
 
-'''
-@login_required
-def launch_pk(request, pk):
-
-    try:
-        e = Ensemble.objects.get(pk=pk)
-    except Ensemble.DoesNotExist:
-        return redirect('/home/')
-
-    profile = request.user.profile
-
-    if not can_view_ensemble(e, profile):
-        return HttpResponse(status=403)
-
-    init_params = e.structure_set.all()[0].properties.all()[0].parameters
-
-    return render(request, 'frontend/launch.html', {
-            'profile': request.user.profile,
-            'ensemble': e,
-            'procs': BasicStep.objects.all(),
-            'init_params_id': init_params.id,
-            'allow_local_calc': settings.ALLOW_LOCAL_CALC,
-        })
-
-@login_required
-def launch_structure_pk(request, ee, pk):
-
-    try:
-        e = Ensemble.objects.get(pk=ee)
-    except Ensemble.DoesNotExist:
-        return redirect('/home/')
-
-    profile = request.user.profile
-
-    if not can_view_ensemble(e, profile):
-        return HttpResponse(status=403)
-
-    try:
-        s = e.structure_set.get(number=pk)
-    except Structure.DoesNotExist:
-        return redirect('/home/')
-
-    init_params = s.properties.all()[0].parameters
-    return render(request, 'frontend/launch.html', {
-            'profile': request.user.profile,
-            'structure': s,
-            'procs': BasicStep.objects.all(),
-            'init_params_id': init_params.id,
-            'allow_local_calc': settings.ALLOW_LOCAL_CALC,
-        })
-
-@login_required
-def launch_frame(request, cid, fid):
-
-    try:
-        calc = Calculation.objects.get(pk=cid)
-    except Calculation.DoesNotExist:
-        return redirect('/home/')
-
-    profile = request.user.profile
-
-    if not can_view_calculation(calc, profile):
-        return HttpResponse(status=403)
-
-    init_params = calc.order.parameters
-
-    return render(request, 'frontend/launch.html', {
-            'profile': request.user.profile,
-            'calc': calc,
-            'frame_id': fid,
-            'procs': BasicStep.objects.all(),
-            'init_params_id': init_params.id,
-            'allow_local_calc': settings.ALLOW_LOCAL_CALC,
-        })
-
-'''
-
 
 @login_required
 def launch_project(request, pk):
@@ -3021,46 +3033,6 @@ def load_params(request, pk):
             'params': params,
             'load_charge': True,
         })
-
-'''
-@login_required
-def load_params_ensemble(request, pk):
-    try:
-        e = Ensemble.objects.get(pk=pk)
-    except Ensemble.DoesNotExist:
-        return HttpResponse(status=404)
-
-    profile = request.user.profile
-
-    if not can_view_ensemble(e, profile):
-        return HttpResponse(status=403)
-
-    params = e.structure_set.all()[0].properties.all()[0].parameters
-
-    return render(request, 'frontend/dynamic/load_params.js', {
-            'params': params,
-            'load_charge': True,
-        })
-
-@login_required
-def load_params_structure(request, pk):
-    try:
-        s = Structure.objects.get(pk=pk)
-    except Structure.DoesNotExist:
-        return HttpResponse(status=404)
-
-    profile = request.user.profile
-
-    if not can_view_structure(s, profile):
-        return HttpResponse(status=403)
-
-    params = s.properties.all()[0].parameters
-
-    return render(request, 'frontend/dynamic/load_params.js', {
-            'params': params,
-            'load_charge': True,
-        })
-'''
 
 class CsvParameters:
     def __init__(self):
@@ -3340,6 +3312,132 @@ def download_project(request, pk):
 
     return render(request, 'frontend/download_project.html', {'proj': proj})
 
+@login_required
+def project_folders(request, username, proj, folder_path):
+    path = clean(folder_path).split('/')
+
+    # Make trailing slashes mandatory
+    if path[-1].strip() != '':
+        return HttpResponseRedirect("/projects/{}/{}/{}".format(username, proj, folder_path + '/'))
+
+    target_project = clean(proj)
+    target_username = clean(username)
+
+    try:
+        target_profile = User.objects.get(username=target_username).profile
+    except User.DoesNotExist:
+        return HttpResponseRedirect("/home/")
+
+    if not profile_intersection(request.user.profile, target_profile):
+        return HttpResponseRedirect("/home/")
+
+    try:
+        project = target_profile.project_set.get(name=target_project)
+    except Project.DoesNotExist:
+        return HttpResponseRedirect("/home/")
+
+    if not can_view_project(project, request.user.profile):
+        return HttpResponseRedirect("/home/")
+
+    folders = []
+    ensembles = []
+
+    def get_subfolder(path, folder):
+        if len(path) == 0 or path[0].strip() == '':
+            return folder
+        name = path.pop(0)
+
+        try:
+            subfolder = folder.folder_set.get(name=name)
+        except Folder.DoesNotExist:
+            return None
+
+        return get_subfolder(path, subfolder)
+
+    if len(path) == 1:
+        folder = project.main_folder
+    else:
+        folder = get_subfolder(path[1:], project.main_folder)
+
+    if folder is None:
+        return HttpResponse(status=404)
+
+
+    folders = folder.folder_set.all().order_by(Lower('name'))
+    ensembles = folder.ensemble_set.all().order_by(Lower('name'))
+    '''
+    for m in project.molecule_set.prefetch_related('ensemble_set').all().order_by(Lower('name')):
+        molecules.append(m)
+    '''
+    return render(request, 'frontend/project_folders.html', {
+        'project': project,
+        'folder': folder,
+        'folders': folders,
+        'ensembles': ensembles,
+    })
+
+@login_required
+def move_element(request):
+
+    if 'id' not in request.POST.keys():
+        return HttpResponse(status=400)
+
+    id = int(clean(request.POST['id']))
+
+    if 'folder_id' not in request.POST.keys():
+        return HttpResponse(status=400)
+
+    folder_id = int(clean(request.POST['folder_id']))
+
+    if 'type' not in request.POST.keys():
+        return HttpResponse(status=400)
+
+    type = clean(request.POST['type'])
+
+    if type not in ['ensemble', 'folder']:
+        return HttpResponse(status=400)
+
+    try:
+        folder = Folder.objects.get(pk=folder_id)
+    except Folder.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if request.user.profile != folder.project.author:
+        return HttpResponse(status=403)
+
+    if type == 'ensemble':
+        try:
+            e = Ensemble.objects.get(pk=id)
+        except Ensemble.DoesNotExist:
+            return HttpResponse(status=404)
+
+        if request.user.profile != e.parent_molecule.project.author:
+            return HttpResponse(status=404)
+
+        if not e.flagged:
+            return HttpResponse(status=400)
+
+        if e.folder != folder:
+            e.folder = folder
+            e.save()
+    elif type == 'folder':
+        if folder.depth > MAX_FOLDER_DEPTH:
+            return HttpResponse(status=403)
+
+        try:
+            f = Folder.objects.get(pk=id)
+        except Folder.DoesNotExist:
+            return HttpResponse(status=404)
+
+        if request.user.profile != f.project.author:
+            return HttpResponse(status=403)
+
+        if f.parent_folder != folder:
+            f.parent_folder = folder
+            f.depth = folder.depth + 1
+            f.save()
+
+    return HttpResponse(status=204)
 
 @login_required
 def relaunch_calc(request):

@@ -2,7 +2,7 @@ from django.db import models, transaction
 from django.db.models.signals import pre_save
 from django.utils import timezone
 from django.contrib.auth.models import User, Group
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_init
 from django.dispatch import receiver
 from django import template
 import random, string
@@ -117,12 +117,26 @@ class Project(models.Model):
     private = models.PositiveIntegerField(default=0)
 
     preset = models.ForeignKey('Preset', on_delete=models.SET_NULL, blank=True, null=True)
+    main_folder = models.ForeignKey('Folder', on_delete=models.SET_NULL, blank=True, null=True, related_name="defaultfolder_of")
 
     def __str__(self):
         return self.name
 
     def __repr__(self):
         return self.name
+
+
+
+@receiver(post_save, sender=Project)
+def create_main_folder(sender, instance, created, **kwargs):
+    instance.main_folder = Folder.objects.create(name="Main Folder", project=instance, depth=0)
+
+class Folder(models.Model):
+    name = models.CharField(max_length=100)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
+    parent_folder = models.ForeignKey('Folder', on_delete=models.SET_NULL, blank=True, null=True)
+    depth = models.PositiveIntegerField(default=0)
+
 
 class ClusterAccess(models.Model):
     owner = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True, related_name="clusteraccess_owner")
@@ -166,6 +180,7 @@ class Ensemble(models.Model):
     name = models.CharField(max_length=100, default="Nameless ensemble")
     parent_molecule = models.ForeignKey('Molecule', on_delete=models.CASCADE, blank=True, null=True)
     origin = models.ForeignKey('Ensemble', on_delete=models.SET_NULL, blank=True, null=True)
+    folder = models.ForeignKey('Folder', on_delete=models.SET_NULL, blank=True, null=True)
 
     flagged = models.BooleanField(default=False)
 
@@ -445,6 +460,18 @@ class Ensemble(models.Model):
                 shift.append((float(shift[2])-b)/m)
         return shifts
 
+@receiver(pre_save, sender=Ensemble)
+def handle_folder(sender, instance, **kwargs):
+    try:
+        obj = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        pass
+    else:
+        if not obj.flagged == instance.flagged:
+            if instance.flagged:
+                instance.folder = instance.parent_molecule.project.main_folder
+            else:
+                instance.folder = None
 
 class Property(models.Model):
     parameters = models.ForeignKey('Parameters', on_delete=models.SET_NULL, blank=True, null=True)
@@ -810,8 +837,8 @@ class Filter(models.Model):
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
-    code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(16))
     if created:
+        code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(16))
         Profile.objects.create(user=instance, code=code)
 
 @receiver(post_save, sender=User)

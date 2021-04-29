@@ -3,6 +3,7 @@ import periodictable
 from enum import IntEnum
 
 KEY_SIZE = 32
+MAX_FOLDER_DEPTH = 5
 
 ATOMIC_NUMBER = {}
 ATOMIC_SYMBOL = {}

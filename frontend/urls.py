@@ -23,6 +23,8 @@ urlpatterns = [
     path('toggle_flag/', views.toggle_flag, name='toggle_flag'),
 
     path('projects/', views.projects, name='projects'),
+    path('projects/<str:username>/<str:proj>/<path:folder_path>', views.project_folders, name='project_folders'),
+
     path('projects/<str:username>', views.projects_username, name='projects_username'),
     path('get_projects/', views.get_projects, name='get_projects'),
     path('projects/<str:username>/<str:proj>', views.project_details, name='project_details'),
@@ -45,8 +47,11 @@ urlpatterns = [
     path('rename_project/', views.rename_project, name='rename_project'),
     path('rename_molecule/', views.rename_molecule, name='rename_molecule'),
     path('rename_ensemble/', views.rename_ensemble, name='rename_ensemble'),
+    path('rename_folder/', views.rename_folder, name='rename_folder'),
 
     path('create_project/', views.create_project, name='create_project'),
+    path('create_folder/', views.create_folder, name='create_folder'),
+    path('move_element/', views.move_element, name='move_element'),
 
     path('download_project/', views.download_project_post, name='download_project_post'),
     path('download_project/<int:pk>', views.download_project, name='download_project'),
@@ -149,6 +154,7 @@ urlpatterns = [
     path('delete_project/', views.delete_project, name='delete_project'),
     path('delete_molecule/', views.delete_molecule, name='delete_molecule'),
     path('delete_ensemble/', views.delete_ensemble, name='delete_ensemble'),
+    path('delete_folder/', views.delete_folder, name='delete_folder'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

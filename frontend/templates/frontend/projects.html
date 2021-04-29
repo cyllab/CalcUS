@@ -144,6 +144,7 @@
 			{% for proj in projects %}
 				<div class="box has-background-danger" id="proj_box_{{ proj.id }}">
 					<p style="float: right;">
+						<a href="/projects/{{ proj.author }}/{{ proj.name }}/folders/"><i class="fas fa-folder" id="folder_icon_{{ proj.id }}" title="Go to folders"></i></a>
 						<a onclick="toggle_private({{ proj.id }});"><i class="fas fa-user-shield" id="private_icon_{{ proj.id }}" title="Toggle private" {% if proj.private %}style="color: silver;"{% endif %}></i></a>
 						<a href="/analyse/{{ proj.id }}"><i class="fas fa-table" title="Go to spreadsheet"></i></a>
 						<a href="/download_project/{{ proj.id }}"><i class="fas fa-download" title="Download Project"></i></a>
