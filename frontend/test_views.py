@@ -599,6 +599,46 @@ class AnalysisTests(TestCase):
             self.assertEqual(float(free_energy), 0.0)
             ind += 1
 
+    def test_boltzmann_weighing_Ha2(self):
+        self.profile.pref_units = 2#Hartree
+        self.profile.save()
+
+        proj = Project.objects.create(name="TestProj", author=self.profile)
+        mol = Molecule.objects.create(name="Mol1", project=proj)
+        e = Ensemble.objects.create(name="Confs", parent_molecule=mol)
+
+        structs = [[-37.76591, 1], [-37.76575, 1], [-37.76533, 1]]#From CREST (GFN2-xTB)
+        rel_energies = [i[0] + 37.76591 for i in structs]
+
+        params = Parameters.objects.create(charge=0, multiplicity=1)
+        for ind, _s in enumerate(structs):
+            s = Structure.objects.create(parent_ensemble=e, number=ind+1, degeneracy=structs[ind][1])
+            prop = Property.objects.create(parameters=params, energy=structs[ind][0], parent_structure=s)
+            prop.save()
+            s.save()
+        e.save()
+        proj.save()
+        mol.save()
+        ref_weights = [0.42044, 0.35261, 0.22695]
+
+        response = self.client.post("/download_project/", {'id': proj.id, 'data': 'summary', 'scope': 'all', 'details': 'full'})
+        csv = response.content.decode('utf-8')
+
+        lines = csv.split('\n')
+        ind = 0
+        while lines[ind].find(",,Confs") == -1:
+            ind += 1
+        ind += 1
+
+        while lines[ind].strip() != '':
+            *_, num, degeneracy, energy, rel_energy, weight, free_energy = lines[ind].split(',')
+
+            self.assertTrue(np.isclose(float(energy), structs[int(num)-1][0], atol=0.0001))
+            self.assertTrue(np.isclose(float(weight), ref_weights[int(num)-1], atol=0.01))
+            self.assertTrue(np.isclose(float(rel_energy), rel_energies[int(num)-1], atol=0.0001))
+            self.assertEqual(float(free_energy), 0.0)
+            ind += 1
+
     def test_boltzmann_weighing_kJ(self):
         self.profile.pref_units = 0#kJ/mol
         self.profile.save()
