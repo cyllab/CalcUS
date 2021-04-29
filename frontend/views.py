@@ -3101,7 +3101,7 @@ def get_csv(proj, profile, scope="flagged", details="full", folders=True):
 
         def format_data(ensemble_data, folder_data, hash):
             _str = ""
-            for ename, edata in ensemble_data.items():
+            for ename, edata in sorted(ensemble_data.items(), key=lambda a: a[0]):
                 if hash in edata.keys():
                     nums, degens, energies, free_energies, rel_energies, weights, w_e, w_f_e  = edata[hash]
                     if isinstance(w_f_e, float):
@@ -3111,7 +3111,7 @@ def get_csv(proj, profile, scope="flagged", details="full", folders=True):
                     _w_e = ensemble_str.format(w_e*CONVERSION)
                     _str += "{},{},{}\n".format(ename, _w_e, _w_f_e)
 
-            for fname, f in folder_data.items():
+            for fname, f in sorted(folder_data.items(), key=lambda a: a[0]):
                 _str += "\n,{},Energy,Free Energy\n".format(fname)
 
                 f_str = format_data(*f, hash)
