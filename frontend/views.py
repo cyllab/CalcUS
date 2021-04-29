@@ -3048,7 +3048,7 @@ class CsvEnsemble:
         self.name = ""
         self.data = []
 
-def get_csv(proj, profile, scope="all", details="full"):
+def get_csv(proj, profile, scope="flagged", details="full", folders=True):
     pref_units = profile.pref_units
     units = profile.pref_units_name
 
@@ -3069,98 +3069,154 @@ def get_csv(proj, profile, scope="all", details="full"):
     hashes = {}
     csv = ""
 
-    molecules = list(proj.molecule_set.prefetch_related('ensemble_set').all())
-    for mol in molecules:
-        if scope == "flagged":
-            ensembles = mol.ensemble_set.filter(flagged=True)
-        else:
-            ensembles = mol.ensemble_set.all()
+    if folders:
+        def get_folder_data(folder):
+            subfolders = folder.folder_set.all()
+            ensembles = folder.ensemble_set.filter(flagged=True)
 
-        for e in ensembles:
-            if details == "full":
-                summ, ehashes = e.ensemble_summary
-            else:
-                summ, ehashes = e.ensemble_short_summary
+            ensemble_data = {}
+            folder_data = {}
 
-            for hash, long_name in ehashes.items():
-                if hash not in hashes.keys():
-                    hashes[hash] = long_name
+            for e in ensembles:
+                if details == "full":
+                    summ, ehashes = e.ensemble_summary
+                else:
+                    summ, ehashes = e.ensemble_short_summary
 
-            for p_name in summ.keys():
-                if p_name in summary.keys():
-                    csv_p = summary[p_name]
-                    if mol.id in csv_p.molecules.keys():
-                        csv_mol = csv_p.molecules[mol.id]
+                for hash, long_name in ehashes.items():
+                    if hash not in hashes.keys():
+                        hashes[hash] = long_name
+                ensemble_data["{} - {}".format(e.parent_molecule.name, e.name)] = summ
 
-                        csv_e = CsvEnsemble()
-                        csv_e.name = e.name
-                        csv_e.data = summ[p_name]
-                        csv_mol.ensembles[e.id] = csv_e
+            for f in subfolders:
+                folder_data[f.name] = get_folder_data(f)
 
+            return [ensemble_data, folder_data]
+
+        main_folder = proj.main_folder
+        if main_folder is None:
+            raise Exception("Main folder of project {} is null!".format(proj.id))
+
+        data = get_folder_data(main_folder)
+
+        def format_data(ensemble_data, folder_data, hash):
+            _str = ""
+            for ename, edata in ensemble_data.items():
+                if hash in edata.keys():
+                    nums, degens, energies, free_energies, rel_energies, weights, w_e, w_f_e  = edata[hash]
+                    if isinstance(w_f_e, float):
+                        _w_f_e = ensemble_str.format(w_f_e*CONVERSION)
                     else:
+                        _w_f_e = w_f_e
+                    _w_e = ensemble_str.format(w_e*CONVERSION)
+                    _str += "{},{},{}\n".format(ename, _w_e, _w_f_e)
+
+            for fname, f in folder_data.items():
+                _str += "\n,{},Energy,Free Energy\n".format(fname)
+
+                f_str = format_data(*f, hash)
+                _str += '\n'.join([',' + i for i in f_str.split('\n')])
+            return _str
+
+        main_str = ""
+        for i, n in hashes.items():
+            main_str += "{}\n".format(n)
+            main_str += format_data(*data, i)
+            main_str += "\n\n"
+        return main_str
+    else:
+        molecules = list(proj.molecule_set.prefetch_related('ensemble_set').all())
+        for mol in molecules:
+            if scope == "flagged":
+                ensembles = mol.ensemble_set.filter(flagged=True)
+            else:
+                ensembles = mol.ensemble_set.all()
+
+            for e in ensembles:
+                if details == "full":
+                    summ, ehashes = e.ensemble_summary
+                else:
+                    summ, ehashes = e.ensemble_short_summary
+
+                for hash, long_name in ehashes.items():
+                    if hash not in hashes.keys():
+                        hashes[hash] = long_name
+
+                for p_name in summ.keys():
+                    if p_name in summary.keys():
+                        csv_p = summary[p_name]
+                        if mol.id in csv_p.molecules.keys():
+                            csv_mol = csv_p.molecules[mol.id]
+
+                            csv_e = CsvEnsemble()
+                            csv_e.name = e.name
+                            csv_e.data = summ[p_name]
+                            csv_mol.ensembles[e.id] = csv_e
+
+                        else:
+                            csv_mol = CsvMolecule()
+                            csv_mol.name = mol.name
+                            csv_p.molecules[mol.id] = csv_mol
+
+                            csv_e = CsvEnsemble()
+                            csv_e.name = e.name
+                            csv_e.data = summ[p_name]
+                            csv_mol.ensembles[e.id] = csv_e
+                    else:
+                        csv_p = CsvParameters()
+
                         csv_mol = CsvMolecule()
                         csv_mol.name = mol.name
-                        csv_p.molecules[mol.id] = csv_mol
 
                         csv_e = CsvEnsemble()
                         csv_e.name = e.name
                         csv_e.data = summ[p_name]
+
                         csv_mol.ensembles[e.id] = csv_e
-                else:
-                    csv_p = CsvParameters()
 
-                    csv_mol = CsvMolecule()
-                    csv_mol.name = mol.name
+                        csv_p.molecules[mol.id] = csv_mol
+                        summary[p_name] = csv_p
 
-                    csv_e = CsvEnsemble()
-                    csv_e.name = e.name
-                    csv_e.data = summ[p_name]
-
-                    csv_mol.ensembles[e.id] = csv_e
-
-                    csv_p.molecules[mol.id] = csv_mol
-                    summary[p_name] = csv_p
-
-    if details == 'full':
-        csv += "Parameters,Molecule,Ensemble,Structure\n"
+        if details == 'full':
+            csv += "Parameters,Molecule,Ensemble,Structure\n"
+            for p_name in summary.keys():
+                p = summary[p_name]
+                csv += "{},\n".format(hashes[p_name])
+                for mol in p.molecules.values():
+                    csv += ",{},\n".format(mol.name)
+                    csv += ",,,Number,Degeneracy,Energy,Relative Energy,Weight,Free Energy,\n"
+                    for e in mol.ensembles.values():
+                        csv += ",,{},\n".format(e.name)
+                        nums, degens, energies, free_energies, rel_energies, weights, w_e, w_f_e = e.data
+                        for n, d, en, f_en, r_el, w in zip(nums, degens, energies, free_energies, rel_energies, weights):
+                            csv += structure_str.format(n, d, en*CONVERSION, r_el*CONVERSION, w, f_en*CONVERSION)
+        csv += "\n\n"
+        csv += "SUMMARY\n"
+        csv += "Method,Molecule,Ensemble,Weighted Energy ({}),Weighted Free Energy ({}),\n".format(units, units)
         for p_name in summary.keys():
             p = summary[p_name]
             csv += "{},\n".format(hashes[p_name])
             for mol in p.molecules.values():
                 csv += ",{},\n".format(mol.name)
-                csv += ",,,Number,Degeneracy,Energy,Relative Energy,Weight,Free Energy,\n"
                 for e in mol.ensembles.values():
-                    csv += ",,{},\n".format(e.name)
-                    nums, degens, energies, free_energies, rel_energies, weights, w_e, w_f_e = e.data
-                    for n, d, en, f_en, r_el, w in zip(nums, degens, energies, free_energies, rel_energies, weights):
-                        csv += structure_str.format(n, d, en*CONVERSION, r_el*CONVERSION, w, f_en*CONVERSION)
-    csv += "\n\n"
-    csv += "SUMMARY\n"
-    csv += "Method,Molecule,Ensemble,Weighted Energy ({}),Weighted Free Energy ({}),\n".format(units, units)
-    for p_name in summary.keys():
-        p = summary[p_name]
-        csv += "{},\n".format(hashes[p_name])
-        for mol in p.molecules.values():
-            csv += ",{},\n".format(mol.name)
-            for e in mol.ensembles.values():
-                if details == "full":
-                    arr_ind = 6
-                else:
-                    arr_ind = 0
+                    if details == "full":
+                        arr_ind = 6
+                    else:
+                        arr_ind = 0
 
-                _w_e = e.data[arr_ind]
-                if _w_e != '-':
-                    w_e = ensemble_str.format(_w_e*CONVERSION)
-                else:
-                    w_e = _w_e
+                    _w_e = e.data[arr_ind]
+                    if _w_e != '-':
+                        w_e = ensemble_str.format(_w_e*CONVERSION)
+                    else:
+                        w_e = _w_e
 
-                _w_f_e = e.data[arr_ind+1]
-                if _w_f_e != '-':
-                    w_f_e = ensemble_str.format(_w_f_e*CONVERSION)
-                else:
-                    w_f_e = _w_f_e
+                    _w_f_e = e.data[arr_ind+1]
+                    if _w_f_e != '-':
+                        w_f_e = ensemble_str.format(_w_f_e*CONVERSION)
+                    else:
+                        w_f_e = _w_f_e
 
-                csv += ",,{},{},{}\n".format(e.name, w_e, w_f_e)
+                    csv += ",,{},{},{}\n".format(e.name, w_e, w_f_e)
 
     return csv
 
