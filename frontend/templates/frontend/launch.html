@@ -1120,7 +1120,7 @@
 			{% if structures %}
 			$('<input />').attr('type', 'hidden')
 				.attr('name', "starting_structs")
-				.attr('value', {{ structures }})
+				.attr('value', "{{ structures }}")
 				.appendTo(this);
 			{% endif %}
 

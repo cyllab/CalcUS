@@ -4,18 +4,19 @@ import sys
 import glob
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 import selenium
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 import datetime
 import pexpect
 import socket
 
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.common.action_chains import ActionChains
 from shutil import copyfile, rmtree
 
 from celery.contrib.testing.worker import start_worker
@@ -442,6 +443,21 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             conf_data.append([i.text for i in data])
 
         return conf_data
+
+    def select_conformer(self, num):
+        conformers = self.get_conformers()
+        conformers[num-1].click()
+
+    def select_conformers(self, nums):
+        conformers = self.get_conformers()
+        first_conf = nums.pop(0)-1
+
+        conformers[first_conf].click()
+
+        for n in nums:
+            ActionChains(self.driver).key_down(Keys.CONTROL).click(conformers[n-1]).key_up(Keys.CONTROL).perform()
+
+
     def get_split_url(self):
         return self.driver.current_url.split('/')[3:]
 

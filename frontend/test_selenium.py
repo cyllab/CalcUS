@@ -1552,6 +1552,48 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
 
+    def test_multiple_structures_second_step(self):
+        in_files = ["batch/benzene{:02d}.xyz".format(i) for i in range(1, 5)]
+        params = {
+                'mol_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_files': in_files,
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+
+        self.select_conformers([2, 3])
+
+        self.launch_structure_next_step()
+
+        params2 = {
+                'type': 'Single-Point Energy',
+                }
+
+        self.calc_input_params(params2)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+
+        self.details_latest_order()
+        num = self.get_number_calc_in_order()
+        self.assertEqual(num, 2)
+
+        order = CalculationOrder.objects.latest('id')
+        calcs = order.calculation_set.all()
+        self.assertIn(calcs[0].structure.number, [2, 3])
+        self.assertIn(calcs[1].structure.number, [2, 3])
+        self.assertNotEqual(calcs[0].structure.number, calcs[1].structure.number)
+
+
     def test_NEB_from_file(self):
         params = {
                 'mol_name': 'test',
