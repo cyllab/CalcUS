@@ -2066,6 +2066,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_error(10)
 
         self.click_latest_calc()
+        self.wait_for_ajax()
         self.assertGreaterEqual(self.get_number_conformers(), 1)
 
     def test_default_settings_from_ensemble(self):
@@ -3942,8 +3943,8 @@ class MiscCalculationTests(CalcusLiveServer):
         self.calc_launch()
         self.lget("/calculations/")
         self.assertEqual(self.get_number_calc_orders(), 3)
-        self.wait_latest_calc_done(150)
-        self.assertTrue(self.latest_calc_successful())
+        self.wait_all_calc_done(150)
+        self.assertTrue(self.all_calc_successful())
 
         calcs = Calculation.objects.all()
         for c in calcs:
@@ -3965,8 +3966,8 @@ class MiscCalculationTests(CalcusLiveServer):
         self.calc_launch()
         self.lget("/calculations/")
         self.assertEqual(self.get_number_calc_orders(), 1)
-        self.wait_latest_calc_done(150)
-        self.assertTrue(self.latest_calc_successful())
+        self.wait_all_calc_done(150)
+        self.assertTrue(self.all_calc_successful())
 
 
     def test_many_same_files(self):

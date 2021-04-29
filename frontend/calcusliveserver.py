@@ -1048,6 +1048,28 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             self.driver.refresh()
         raise Exception("Calculation did not finish")
 
+    def wait_all_calc_done(self, timeout):
+        assert self.is_on_page_calculations()
+        assert self.get_number_calc_orders() > 0
+
+
+        def calc_done():
+            for c in calculations:
+                header = c.find_element_by_class_name("message-header")
+                if not "has-background-success" in header.get_attribute("class") and not "has-background-danger" in header.get_attribute("class"):
+                    return False
+            else:
+                return True
+
+        for i in range(0, timeout, 2):
+            calculations = self.get_calc_orders()
+            if calc_done():
+                return
+            time.sleep(2)
+            self.driver.refresh()
+        raise Exception("Calculation did not finish")
+
+
     def wait_latest_calc_running(self, timeout):
         assert self.is_on_page_calculations()
         assert self.get_number_calc_orders() > 0
@@ -1092,6 +1114,24 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             for c in latest_order.calculation_set.all():
                 print(c.error_message)
         return successful
+
+    def all_calc_successful(self):
+        assert self.is_on_page_calculations()
+        assert self.get_number_calc_orders() > 0
+
+        calculations_container = self.driver.find_element_by_id("calculations_list")
+        calculations = calculations_container.find_elements_by_css_selector("article")
+        for c in calculations:
+            header = c.find_element_by_class_name("message-header")
+            successful = "has-background-success" in header.get_attribute("class")
+
+            if not successful:
+                latest_order = CalculationOrder.objects.latest('id')
+                print("Error messages of calculations in order {}".format(latest_order.id))
+                for c in latest_order.calculation_set.all():
+                    print(c.error_message)
+                return False
+        return True
 
     def add_user_to_group(self, username):
         assert self.is_on_page_profile()
