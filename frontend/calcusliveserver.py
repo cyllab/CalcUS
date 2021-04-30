@@ -633,6 +633,15 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         else:
             return True
 
+    def is_on_page_folders(self):
+        for i in range(3):
+            url = self.get_split_url()
+            if url[0] == 'projects' and self.is_user(url[1]) and self.is_user_project(url[1], url[2]) and url[3] == "folders":
+                return True
+            time.sleep(1)
+
+        return False
+
     def is_on_page_order_details(self):
         for i in range(3):
             url = self.get_split_url()
@@ -742,7 +751,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             time.sleep(1)
 
         return False
-
 
     def get_projects(self):
         assert self.is_on_page_projects()
@@ -1415,7 +1423,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         button = self.driver.find_element_by_css_selector("a.button:nth-child(7)")
         button.click()
 
-    def get_names_presets(self):
+    def get_name_presets(self):
         select = self.driver.find_element_by_css_selector("#presets")
         presets = select.find_elements_by_css_selector("option")
         names = [p.text for p in presets]
@@ -1472,4 +1480,92 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         calcs = [i.find_element_by_css_selector("a").text for i in calc_tree]
         return calcs
 
+    def click_icon(self, proj_name, icon):
+        projects = self.get_projects()
+        for proj in projects:
+            name = proj.find_element_by_css_selector("a > strong > p").text
+            if name == proj_name:
+                icon = proj.find_element_by_css_selector(".fa-{}".format(icon))
+                icon.click()
+                return
+        else:
+            raise Exception("No such project found")
 
+    def click_icon_folder(self, proj_name):
+        self.click_icon(proj_name, "folder")
+
+    def create_empty_folder(self):
+        assert self.is_on_page_folders()
+
+        create_box = self.driver.find_element_by_id("create_folder_link")
+        create_box.click()
+        self.wait_for_ajax()
+
+    def get_folders(self):
+        assert self.is_on_page_folders()
+
+        folder_list = self.driver.find_element_by_id("folder_list")
+        return folder_list.find_elements_by_css_selector(".box")
+
+    def get_folder_ensembles(self):
+        assert self.is_on_page_folders()
+
+        return self.driver.find_elements_by_css_selector(".grid > .box")
+
+    def get_number_folders(self):
+        folders = self.get_folders()
+        return len(folders)
+
+    def get_number_folder_ensembles(self):
+        ensembles = self.get_folder_ensembles()
+        return len(ensembles)
+
+    def get_name_folders(self):
+        folders = self.get_folders()
+        names = [i.find_element_by_css_selector("a > strong > p").text for i in folders]
+        return names
+
+    def get_name_folder_ensembles(self):
+        ensembles = self.get_folder_ensembles()
+        names = []
+
+        for e in ensembles:
+            pars = e.find_elements_by_css_selector("a > strong > p")
+            names.append(''.join([i.text for i in pars]))
+
+        return names
+
+    def get_folder(self, folder_name):
+        folders = self.get_folders()
+        for f in folders:
+            name = f.find_element_by_css_selector("a > strong > p").text
+            if name == folder_name:
+                return f
+        else:
+            raise Exception("No such folder found")
+
+    def get_folder_ensemble(self, ensemble_name):
+        ensembles = self.get_folder_ensembles()
+        for e in ensembles:
+            pars = e.find_elements_by_css_selector("a > strong > p")
+            name = ''.join([i.text for i in pars])
+            if name == ensemble_name:
+                return e
+        else:
+            raise Exception("No such ensemble found")
+
+    def drag_folder_to_folder(self, folder_name1, folder_name2):
+        folder1 = self.get_folder(folder_name1)
+        folder2 = self.get_folder(folder_name2)
+
+        ActionChains(self.driver).drag_and_drop(folder1, folder2).perform()
+
+    def drag_ensemble_to_folder(self, ensemble_name, folder_name):
+        folder = self.get_folder(folder_name)
+        ensemble = self.get_folder_ensemble(ensemble_name)
+
+        ActionChains(self.driver).drag_and_drop(ensemble, folder).perform()
+
+    def click_folder(self, folder_name):
+        folder = self.get_folder(folder_name)
+        folder.click()

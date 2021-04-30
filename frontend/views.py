@@ -1027,7 +1027,7 @@ def parse_parameters(request):
             project_obj = Project.objects.get(name=new_project_name, author=profile)
         except Project.DoesNotExist:
             project_obj = Project.objects.create(name=new_project_name, author=profile)
-            profile.project_set.add(project_obj)
+            project_obj.save()
         else:
             logger.info("Project with that name already exists")
     else:

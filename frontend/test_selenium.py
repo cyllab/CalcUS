@@ -787,7 +787,7 @@ class InterfaceTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.save_preset("Test Preset")
 
-        presets = self.get_names_presets()
+        presets = self.get_name_presets()
         self.assertEqual(len(presets), 1)
         self.assertEqual(presets[0], "Test Preset")
 
@@ -809,7 +809,7 @@ class InterfaceTests(CalcusLiveServer):
         time.sleep(1)
         self.delete_preset("Test Preset")
         time.sleep(1)
-        presets = self.get_names_presets()
+        presets = self.get_name_presets()
         self.assertEqual(len(presets), 0)
 
     def test_load_preset(self):
@@ -913,7 +913,7 @@ class InterfaceTests(CalcusLiveServer):
         self.lget("/launch/")
         self.calc_input_params(params)
         self.set_project_preset()
-        presets = self.get_names_presets()
+        presets = self.get_name_presets()
         param_count = Parameters.objects.count()
         self.assertEqual(param_count, 1)
 
@@ -922,7 +922,7 @@ class InterfaceTests(CalcusLiveServer):
         self.set_project_preset()
 
         self.lget("/launch/")
-        presets = self.get_names_presets()
+        presets = self.get_name_presets()
         self.assertEqual(len(presets), 1)
         param_count = Parameters.objects.count()
         self.assertEqual(param_count, 2)
@@ -1223,6 +1223,97 @@ class InterfaceTests(CalcusLiveServer):
 
         self.assertEqual(len(calcs), 1)
         self.assertEqual(int(calcs[0].split()[1]), calc.id)
+
+    def test_create_empty_folders(self):
+        self.setup_test_group()
+        proj = Project.objects.create(name="Proj", author=self.profile)
+        proj.save()
+
+        self.assertEqual(proj.main_folder.folder_set.count(), 0)
+        self.lget("/projects/")
+        self.click_icon_folder("Proj")
+
+        self.assertEqual(self.get_number_folders(), 0)
+        self.create_empty_folder()
+
+        proj = Project.objects.get(name="Proj", author=self.profile)
+        self.assertEqual(proj.main_folder.folder_set.count(), 1)
+        self.assertEqual(self.get_number_folders(), 1)
+        self.assertEqual(self.get_number_folder_ensembles(), 0)
+
+        self.create_empty_folder()
+        self.assertEqual(self.get_number_folders(), 2)
+
+        names = self.get_name_folders()
+        self.assertEqual(len(set(names)), 2)
+
+        self.drag_folder_to_folder(names[0], names[1])
+
+        self.assertEqual(self.get_number_folders(), 1)
+        self.assertEqual(self.get_name_folders()[0], names[1])
+        self.assertEqual(self.get_number_folder_ensembles(), 0)
+        self.click_folder(names[1])
+
+        self.assertEqual(self.get_number_folders(), 1)
+        self.assertEqual(self.get_name_folders()[0], names[0])
+        self.assertEqual(self.get_number_folder_ensembles(), 0)
+
+    def test_folders_ensembles(self):
+        self.setup_test_group()
+
+        params = {
+                'mol_name': 'H2',
+                'name': 'H2',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'Proj',
+                'in_file': 'H2.sdf',
+                }
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+        self.click_latest_calc()
+        self.flag_ensemble()
+
+        self.lget("/projects/")
+        self.click_icon_folder("Proj")
+
+        self.assertEqual(self.get_number_folders(), 0)
+        self.assertEqual(self.get_number_folder_ensembles(), 1)
+
+        self.create_empty_folder()
+        self.assertEqual(self.get_number_folders(), 1)
+
+        folder_name = self.get_name_folders()[0]
+
+        self.drag_ensemble_to_folder("{} -{}".format(params['mol_name'], params['name']), folder_name)
+
+        self.assertEqual(self.get_number_folders(), 1)
+        self.assertEqual(self.get_number_folder_ensembles(), 0)
+
+        self.click_folder(folder_name)
+
+        self.assertEqual(self.get_number_folders(), 0)
+        self.assertEqual(self.get_number_folder_ensembles(), 1)
+
+        self.lget("/projects/")
+        self.click_project("Proj")
+        self.click_molecule("H2")
+        self.click_ensemble("H2")
+        self.flag_ensemble()
+
+        self.lget("/projects/")
+        self.click_icon_folder("Proj")
+
+        self.assertEqual(self.get_number_folders(), 1)
+        self.assertEqual(self.get_number_folder_ensembles(), 0)
+
+        self.click_folder(folder_name)
+        self.assertEqual(self.get_number_folders(), 0)
+        self.assertEqual(self.get_number_folder_ensembles(), 0)
+
 
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):

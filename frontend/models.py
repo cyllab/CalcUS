@@ -126,10 +126,12 @@ class Project(models.Model):
         return self.name
 
 
-
 @receiver(post_save, sender=Project)
 def create_main_folder(sender, instance, created, **kwargs):
-    instance.main_folder = Folder.objects.create(name="Main Folder", project=instance, depth=0)
+    if created:
+        instance.main_folder = Folder.objects.create(name="Main Folder", project=instance, depth=0)
+        instance.main_folder.save()
+        instance.save()
 
 class Folder(models.Model):
     name = models.CharField(max_length=100)
