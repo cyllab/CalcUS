@@ -294,22 +294,8 @@ def create_project(request):
         profile = request.user.profile
         proj = Project.objects.create(name="My Project", author=profile)
         proj.save()
-        response = """
-<div class="box has-background-danger" id="proj_box_{}">
-        <p style="float: right;">
-                        <a href="/analyse/{}"><i class="fas fa-table"></i></a>
-                        <a href="/download_project/{}"><i class="fas fa-download"></i></a>
-                        <a onclick="edit_field({});"><i class="fas fa-edit" id="icon_{}"></i></a>
-                        <a onclick="del({});"><i class="fas fa-trash-alt"></i></a>
-        </p>
-        <a href="/projects/{}/{}">
-                <strong><p id="proj_name_{}">{}</p></strong>
-                <p>0 Molecule(s)</p>
-        </a>
-</div>
-""".format(proj.id, proj.id, proj.id, proj.id, proj.id, proj.id, profile.username, proj.name, proj.id, proj.name)
 
-        return HttpResponse(response)
+        return HttpResponse("{};{}".format(proj.id, proj.name))
     else:
         return HttpResponse(status=404)
 
@@ -389,6 +375,9 @@ def project_details(request, username, proj):
 def clean(txt):
     filter(lambda x: x in string.printable, txt)
     return bleach.clean(txt)
+
+def clean_filename(txt):
+    return clean(txt).replace(' ', '_').replace('/', '_')
 
 @login_required
 def molecule(request, pk):
@@ -3418,19 +3407,49 @@ def project_folders(request, username, proj, folder_path):
     if folder is None:
         return HttpResponse(status=404)
 
-
     folders = folder.folder_set.all().order_by(Lower('name'))
     ensembles = folder.ensemble_set.all().order_by(Lower('name'))
-    '''
-    for m in project.molecule_set.prefetch_related('ensemble_set').all().order_by(Lower('name')):
-        molecules.append(m)
-    '''
+
     return render(request, 'frontend/project_folders.html', {
         'project': project,
         'folder': folder,
         'folders': folders,
         'ensembles': ensembles,
     })
+
+@login_required
+def download_folder(request, pk):
+    try:
+        folder = Folder.objects.get(pk=pk)
+    except Folder.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if not can_view_project(folder.project):
+        return HttpResponse(status=403)
+
+    def get_folder_data(folder):
+        subfolders = folder.folder_set.all()
+        ensembles = folder.ensemble_set.filter(flagged=True)
+
+        ensemble_data = {}
+        folder_data = {}
+
+        for e in ensembles:
+            ensemble_data["{} - {}".format(e.parent_molecule.name, e.name)] = e.id###
+
+        for f in subfolders:
+            folder_data[f.name] = get_folder_data(f)
+
+        return [ensemble_data, folder_data]
+
+    mem = BytesIO()
+    with zipfile.ZipFile(mem, 'w', zipfile.ZIP_DEFLATED) as zip:
+        for f in logs:
+            zip.write(f, "{}_".format(calc.id) + basename(f))
+
+    response = HttpResponse(mem.getvalue(), content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename="folder_{}.zip"'.format(clean_filename(folder.name))
+    return response
 
 @login_required
 def move_element(request):

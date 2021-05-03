@@ -1370,7 +1370,44 @@ class UserPermissionsTests(CalcusLiveServer):
         self.lget("/calculations")
         self.assertEqual(self.get_number_calc_orders(), 1)
 
+    def test_private_project_invisible_to_others(self):
+        self.setup_test_group()
 
+        self.lget("/projects/")
+        self.create_empty_project()
+
+        self.assertEqual(self.get_number_projects(), 1)
+        self.click_icon_shield("My Project")
+
+        self.assertEqual(self.get_number_projects(), 1)
+
+        self.logout()
+        self.login("Student", self.password)
+
+        self.lget("/projects/{}".format(self.username))
+
+        self.assertEqual(self.get_number_projects(), 0)
+
+    def test_private_project_invisible_to_others2(self):
+        self.setup_test_group()
+
+        self.logout()
+        self.login("Student", self.password)
+
+        self.lget("/projects/")
+        self.create_empty_project()
+
+        self.assertEqual(self.get_number_projects(), 1)
+        self.click_icon_shield("My Project")
+
+        self.assertEqual(self.get_number_projects(), 1)
+
+        self.logout()
+        self.login(self.username, self.password)
+
+        self.lget("/projects/Student")
+
+        self.assertEqual(self.get_number_projects(), 0)
 
 class XtbCalculationTestsPI(CalcusLiveServer):
 
@@ -1493,6 +1530,30 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
 
+    def test_invalid_solvent(self):
+        params = {
+                'mol_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.sdf',
+                'solvent': 'dichloroethane',
+                'solvation_model': 'ALPB',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertFalse(self.latest_calc_successful())
+
+        self.details_latest_order()
+        msg = self.get_error_messages()
+        self.assertEqual(len(msg), 1)
+        self.assertTrue("invalid solvent" in msg[0].lower())
+
+
     def test_conf_search(self):
         params = {
                 'mol_name': 'test',
@@ -1542,7 +1603,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.assertFalse(self.latest_calc_successful())
-
 
     def test_conf_search_gfnff_sp(self):
         params = {

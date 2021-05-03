@@ -932,6 +932,15 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         link = calculations[0].find_element_by_class_name("fa-list")
         link.click()
 
+    def get_error_messages(self):
+        assert self.is_on_page_order_details()
+        assert self.get_number_calc_in_order() > 0
+
+        calcs = self.get_calcs_in_order()
+
+        error_messages = [i.find_element_by_css_selector("th:nth-child(2)").text for i in calcs]
+        return error_messages
+
     def details_first_calc(self):
         assert self.is_on_page_order_details()
 
@@ -1493,6 +1502,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def click_icon_folder(self, proj_name):
         self.click_icon(proj_name, "folder")
+
+    def click_icon_shield(self, proj_name):
+        self.click_icon(proj_name, "user-shield")
 
     def create_empty_folder(self):
         assert self.is_on_page_folders()
