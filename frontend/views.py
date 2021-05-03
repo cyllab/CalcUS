@@ -3210,9 +3210,9 @@ def get_csv(proj, profile, scope="flagged", details="full", folders=True):
 
     return csv
 
-def download_project_csv(proj, profile, scope, details):
+def download_project_csv(proj, profile, scope, details, folders):
 
-    csv = get_csv(proj, profile, scope, details)
+    csv = get_csv(proj, profile, scope, details, folders)
 
     proj_name = proj.name.replace(' ', '_')
     response = HttpResponse(csv, content_type='text/csv')
@@ -3241,7 +3241,6 @@ def cancel_calc(request):
     if profile != calc.order.author:
         return HttpResponse(status=403)
 
-    #if calc.status == 0 or calc.status == 1:
     if is_test:
         cancel(calc.id)
     else:
@@ -3249,7 +3248,8 @@ def cancel_calc(request):
 
     return HttpResponse(status=200)
 
-def download_project_logs(proj, profile, scope, details):
+def download_project_logs(proj, profile, scope, details, folders):
+    #folders options makes this somewhat duplicate code
 
     tmp_dir = "/tmp/{}_{}_{}".format(profile.username, proj.author.username, time.time())
     os.mkdir(tmp_dir)
@@ -3329,6 +3329,15 @@ def download_project_post(request):
     else:
         return error(request, "No details level given")
 
+    if 'folders' in request.POST.keys():
+        folders = clean(request.POST['folders'])
+        if folders.lower() == "false":
+            folders = False
+        elif folders.lower() == "true":
+            folders = True
+        else:
+            return error(request, "Invalid folders option (true or false)")
+
     try:
         proj = Project.objects.get(pk=id)
     except Project.DoesNotExist:
@@ -3340,9 +3349,9 @@ def download_project_post(request):
         return HttpResponseRedirect("/home/")
 
     if data == 'summary':
-        return download_project_csv(proj, profile, scope, details)
+        return download_project_csv(proj, profile, scope, details, folders)
     elif data == 'logs':
-        return download_project_logs(proj, profile, scope, details)
+        return download_project_logs(proj, profile, scope, details, folders)
 
 @login_required
 def download_project(request, pk):

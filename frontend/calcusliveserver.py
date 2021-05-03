@@ -407,6 +407,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         tabs_list = self.driver.find_element_by_css_selector("#tabs")
         tabs = tabs_list.find_elements_by_css_selector("li")
         tabs[num-1].click()
+        self.wait_for_ajax()
 
     def click_advanced_nmr_analysis(self):
         assert self.is_on_page_ensemble()

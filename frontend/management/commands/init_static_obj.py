@@ -43,7 +43,7 @@ class Command(BaseCommand):
 
         self.add_step("Geometrical Optimisation", "opt", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
-        self.add_step("Conformation Search", "conf_search", creates_ensemble=True, avail_xtb=True, avail_Gaussian=False, avail_ORCA=False)
+        self.add_step("Conformational Search", "conf_search", creates_ensemble=True, avail_xtb=True, avail_Gaussian=False, avail_ORCA=False)
 
         self.add_step("Constrained Optimisation", "constr_opt", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
