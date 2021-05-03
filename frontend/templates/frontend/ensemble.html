@@ -106,6 +106,9 @@
 	</style>
 	<script>
 		var ctrl = false;
+		var shift = false;
+		var previous_selection = 1;
+
 		$(document).ready(function(){
 			(function(ChemDoodle) {
 				ChemDoodle.relabel = function(molecule){
@@ -125,11 +128,17 @@
 			if(e.keyCode == 17) {
 				ctrl = true;	
 			}
+			else if(e.keyCode == 16) {
+				shift = true;
+			}
 		});
 
 		$(window).keyup(function (e) {
 			if(e.keyCode == 17) {
 				ctrl = false;	
+			}
+			else if(e.keyCode == 16) {
+				shift = false;
 			}
 		});
 
@@ -197,15 +206,36 @@
 		});
 
 		function select_conf(conf_num) {
-			if(!ctrl) {
+			if(shift) {
+				bounds = [previous_selection, conf_num];
+				Array.prototype.sort.call(bounds);
+
+				for(i=bounds[0]; i<=bounds[1]; i++) {
+					target = document.getElementById("conf_table").rows[i];
+					if(!target.classList.contains("is-selected")) {
+						target.classList.add("is-selected");
+					}
+				}
+			}
+			else if(ctrl) {
+				target = document.getElementById("conf_table").rows[conf_num];
+				if(target.classList.contains("is-selected")) {
+					target.classList.remove("is-selected");
+				}
+				else {
+					target.classList.add("is-selected");
+				}
+			}
+			else {
 				for (i=0; i < conf_length; i++) {
 					document.getElementById("conf_" + String(i)).classList.remove("is-selected");
 				}
 				
 				num = conf_num;
 				refresh();
+				document.getElementById("conf_table").rows[conf_num].classList.add("is-selected");
 			}
-			document.getElementById("conf_table").rows[conf_num].classList.add("is-selected");
+			previous_selection = conf_num;
 		}
 
 
