@@ -1,5 +1,5 @@
 <ul class="tree">
-{% for o in orders1 %}
+{% for o in orders %}
 	<li><a style="color: {{ o.color }};" href="/calculationorder/{{ o.id }}">Order {{ o.id }}</a>
 	<ul>
 		{% for c in o.calculation_set.all %}
@@ -11,13 +11,4 @@
 		{% endfor %}
 	</ul>
 {% endfor %}
-{% for o in orders2 %}
-	<li><a style="color: {{ o.color }};" href="/calculationorder/{{ o.id }}">Order {{ o.id }}</a>
-	<ul>
-		{% for c in o.calculation_set.all %}
-		<li><a style="color: {{ c.color }};" href="/calculation/{{ c.id }}">Calculation {{ c.id }} - {{ c.step.name }} on structure {{ c.structure.number }}</a></li>
-		{% endfor %}
-	</ul>
-{% endfor %}
-
 </ul>

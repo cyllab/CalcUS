@@ -55,6 +55,7 @@ urlpatterns = [
 
     path('download_project/', views.download_project_post, name='download_project_post'),
     path('download_project/<int:pk>', views.download_project, name='download_project'),
+    path('download_folder/<int:pk>', views.download_folder, name='download_folder'),
 
     path('nmr_analysis/<int:pk>/<int:pid>', views.nmr_analysis, name='nmr_analysis'),
     path('get_shifts/', views.get_shifts, name='get_shifts'),

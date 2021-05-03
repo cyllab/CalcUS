@@ -419,6 +419,11 @@ def ensemble(request, pk):
     return render(request, 'frontend/ensemble.html', {'profile': request.user.profile,
         'ensemble': e})
 
+def _get_related_calculations(e):
+    orders = list(set([i.order for i in e.calculation_set.all()]))
+    orders += list(e.calculationorder_set.prefetch_related('calculation_set').all())
+    return orders
+
 @login_required
 def get_related_calculations(request, pk):
     try:
@@ -429,15 +434,11 @@ def get_related_calculations(request, pk):
     if not can_view_ensemble(e, request.user.profile):
         return redirect('/home/')
 
-
-    orders1 = list(set([i.order for i in e.calculation_set.all()]))
-    orders2 = list(e.calculationorder_set.prefetch_related('calculation_set').all())
-
+    orders = _get_related_calculations(e)
     return render(request, 'frontend/dynamic/get_related_calculations.html', {'profile': request.user.profile,
         'ensemble': e,
-        'orders1': orders1,
-        'orders2': orders2})
-
+        'orders': orders,
+        })
 
 @login_required
 def nmr_analysis(request, pk, pid):
@@ -3424,31 +3425,34 @@ def download_folder(request, pk):
     except Folder.DoesNotExist:
         return HttpResponse(status=404)
 
-    if not can_view_project(folder.project):
+    if not can_view_project(folder.project, request.user.profile):
         return HttpResponse(status=403)
 
-    def get_folder_data(folder):
+    def add_folder_data(zip, folder, path):
         subfolders = folder.folder_set.all()
         ensembles = folder.ensemble_set.filter(flagged=True)
 
-        ensemble_data = {}
-        folder_data = {}
-
         for e in ensembles:
-            ensemble_data["{} - {}".format(e.parent_molecule.name, e.name)] = e.id###
+            prefix = "{}.{}_".format(e.parent_molecule.name, e.name)
+            related_orders = _get_related_calculations(e)
+            # Verify if the user can view the ensemble?
+            # The ensembles should be in the project which he can view, so probably not necessary
+
+            for o in related_orders:
+                for c in o.calculation_set.all():
+                    if c.status == 2:
+                        name = clean_filename(prefix + c.parameters.file_name + "_" + c.step.short_name + "_conf" + str(c.structure.number) + ".log")
+                        zip.write(os.path.join(CALCUS_RESULTS_HOME, str(c.id), "calc.out"), os.path.join(path, clean_filename(folder.name), name))
 
         for f in subfolders:
-            folder_data[f.name] = get_folder_data(f)
-
-        return [ensemble_data, folder_data]
+            add_folder_data(zip, f, os.path.join(path, clean_filename(folder.name)))
 
     mem = BytesIO()
     with zipfile.ZipFile(mem, 'w', zipfile.ZIP_DEFLATED) as zip:
-        for f in logs:
-            zip.write(f, "{}_".format(calc.id) + basename(f))
+        add_folder_data(zip, folder, '')
 
     response = HttpResponse(mem.getvalue(), content_type='application/zip')
-    response['Content-Disposition'] = 'attachment; filename="folder_{}.zip"'.format(clean_filename(folder.name))
+    response['Content-Disposition'] = 'attachment; filename="{}_{}.zip"'.format(clean_filename(folder.project.name), clean_filename(folder.name))
     return response
 
 @login_required

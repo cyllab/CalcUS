@@ -161,11 +161,9 @@ class ClusterAccess(models.Model):
         else:
             return False
 
-
 class BasicStep(models.Model):
     name = models.CharField(max_length=100)
-    desc = models.CharField(max_length=500, default="")
-    error_message = models.CharField(max_length=500, default="")
+    short_name = models.CharField(max_length=100, default="")
 
     avail_xtb = models.BooleanField(default=False)
     avail_Gaussian = models.BooleanField(default=False)

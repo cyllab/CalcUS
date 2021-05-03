@@ -34,93 +34,34 @@ class Command(BaseCommand):
         if not is_test:
             print(txt)
 
+    def add_step(self, name, short_name, creates_ensemble=False, avail_xtb=False, avail_Gaussian=False, avail_ORCA=False):
+        if self.is_absent(BasicStep, name):
+            BasicStep.objects.create(name=name, short_name=short_name, creates_ensemble=creates_ensemble, avail_xtb=avail_xtb, avail_Gaussian=avail_xtb, avail_ORCA=avail_ORCA)
+
     def handle(self, *args, **options):
         ###BasicStep creations
 
-        ###Template:
-        #name = "Geometrical Optimisation"
-        #if self.is_absent(BasicStep, name):
-        #    self.print("Adding BasicStep: {}".format(name))
-        #    a = BasicStep.objects.create(name=name)
+        self.add_step("Geometrical Optimisation", "opt", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
-        name = "Geometrical Optimisation"
-        if self.is_absent(BasicStep, name):
-            self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Optimizing geometry", error_message="Failed to optimize geometry", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
+        self.add_step("Conformation Search", "conf_search", creates_ensemble=True, avail_xtb=True, avail_Gaussian=False, avail_ORCA=False)
 
-        name = "Conformational Search"
-        if self.is_absent(BasicStep, name):
-            self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Finding conformers", error_message="Failed to find the conformers", creates_ensemble=True, avail_xtb=True)
+        self.add_step("Constrained Optimisation", "constr_opt", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
-        '''
-        name = "Crest Pre NMR"
-        if self.is_absent(BasicStep, name):
-            self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Finding conformers", error_message="Failed to find the conformers", creates_ensemble=True, avail_xtb=True)
-        '''
+        self.add_step("Frequency Calculation", "freq", creates_ensemble=False, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
-        name = "Constrained Optimisation"
-        if self.is_absent(BasicStep, name):
-            self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Optimizing geometry", error_message="Failed to optimize geometry", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
+        self.add_step("TS Optimisation", "optts", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
-        name = "Frequency Calculation"
-        if self.is_absent(BasicStep, name):
-            self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Calculating frequencies", error_message="Failed to calculate frequencies", avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
+        self.add_step("UV-Vis Calculation", "uvvis", creates_ensemble=False, avail_xtb=True, avail_Gaussian=False, avail_ORCA=False)
 
-        name = "TS Optimisation"
-        if self.is_absent(BasicStep, name):
-            self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Optimizing the transition state", error_message="Failed to optimize the transition state", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
+        self.add_step("NMR Prediction", "nmr", creates_ensemble=False, avail_xtb=False, avail_Gaussian=True, avail_ORCA=True)
 
-        name = "UV-Vis Calculation"
-        if self.is_absent(BasicStep, name):
-            self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Calculating UV-Vis spectrum", error_message="Failed to calculate the UV-Vis spectrum", avail_xtb=True)
+        self.add_step("Single-Point Energy", "sp", creates_ensemble=False, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
-        name = "NMR Prediction"
-        if self.is_absent(BasicStep, name):
-            self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Calculating NMR shifts", error_message="Failed to calculate the NMR shifts", avail_Gaussian=True, avail_ORCA=True)
+        self.add_step("MO Calculation", "mo", creates_ensemble=False, avail_xtb=False, avail_Gaussian=False, avail_ORCA=True)
 
-        name = "Single-Point Energy"
-        if self.is_absent(BasicStep, name):
-            self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Calculating single-point energy", error_message="Failed to calculate single-point energy", avail_Gaussian=True, avail_ORCA=True, avail_xtb=True)
+        self.add_step("Minimum Energy Path", "mep", creates_ensemble=True, avail_xtb=True, avail_Gaussian=False, avail_ORCA=False)
 
-        '''
-        name = "Enso"
-        if self.is_absent(BasicStep, name):
-            self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Calculating NMR Spectrum", error_message="Failed to calculate the NMR spectrum")
-
-
-        name = "Anmr"
-        if self.is_absent(BasicStep, name):
-            self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Creating the final NMR Spectrum", error_message="Failed to create the final NMR spectrum", avail_xtb=True)
-
-        '''
-
-        name = "MO Calculation"
-        if self.is_absent(BasicStep, name):
-            self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Creating the Molecular Orbitals", error_message="Failed to create the Molecular Orbitals", avail_ORCA=True)
-
-        name = "Minimum Energy Path"
-        if self.is_absent(BasicStep, name):
-            self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Finding the minimum energy path", creates_ensemble=True, error_message="Failed to converge the minimum energy path", avail_xtb=True)
-
-        name = "Constrained Conformational Search"
-        if self.is_absent(BasicStep, name):
-            self.print("Adding BasicStep: {}".format(name))
-            a = BasicStep.objects.create(name=name, desc="Generating conformers", error_message="Failed to generate conformers", creates_ensemble=True, avail_xtb=True)
-
-
-        ###Finishing the process
+        self.add_step("Constrained Conformational Search", "constr_conf_search", creates_ensemble=True, avail_xtb=True, avail_Gaussian=False, avail_ORCA=False)
 
         title = "NHC-Catalysed Condensation"
         if self.is_absent_title(Example, title):

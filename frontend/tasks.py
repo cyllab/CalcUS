@@ -27,7 +27,6 @@ from django.conf import settings
 from django.db.utils import IntegrityError
 from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
 from celery import group
-from celery.task.control import revoke
 
 from ssh2.sftp import LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IWGRP, LIBSSH2_SFTP_S_IRWXU
 from ssh2.sftp import LIBSSH2_FXF_CREAT, LIBSSH2_FXF_WRITE, \
@@ -2716,9 +2715,13 @@ def run_calc(calc_id):
 
     try:
         ret = f(in_file, calc)
-    except:
+    except Exception as e:
         ret = ErrorCodes.UNKNOWN_TERMINATION
         traceback.print_exc()
+        calc.status = 3
+        calc.error_message = "Incorrect termination ({})".format(str(e))
+        calc.save()
+
 
     if ret == ErrorCodes.SERVER_DISCONNECTED:
         return ret
@@ -2738,11 +2741,7 @@ def run_calc(calc_id):
         logger.info("Job {} cancelled".format(calc.id))
         return ret
 
-    if ret != ErrorCodes.SUCCESS:
-        calc.status = 3
-        calc.error_message = "Incorrect termination ({}: {})".format(ret.value, ret.name)#TODO: error analysis
-        calc.save()
-    else:
+    if ret == ErrorCodes.SUCCESS:
         calc.status = 2
         calc.save()
 
@@ -2850,7 +2849,7 @@ def kill_calc(calc):
                 res = AbortableAsyncResult(calc.task_id)
                 res.abort()
             else:
-                revoke(calc.task_id)
+                app.control.revoke(calc.task_id)
                 calc.status = 3
                 calc.error_message = "Job cancelled"
                 calc.save()
