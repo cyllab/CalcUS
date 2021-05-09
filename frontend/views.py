@@ -28,7 +28,7 @@ from django.utils.datastructures import MultiValueDictKeyError
 from django.db.models import Prefetch
 
 from .forms import UserCreateForm
-from .models import Calculation, Profile, Project, ClusterAccess, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe, Folder
+from .models import Calculation, Profile, Project, ClusterAccess, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe, Folder, CalculationFrame
 from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc, send_cluster_command
 from .decorators import superuser_required
 from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint, get_Gaussian_xyz

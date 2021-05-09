@@ -34,6 +34,12 @@ SCR_DIR = os.path.join(tests_dir, "scr")
 RESULTS_DIR = os.path.join(tests_dir, "results")
 
 class InterfaceTests(CalcusLiveServer):
+    @classmethod
+    def setUpClass(cls):
+        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
+        cls.patcher.start()
+        super().setUpClass()
+
     def test_default_login_page(self):
         self.assertTrue(self.is_on_page_projects())
 
@@ -1873,6 +1879,12 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
 
 class XtbCalculationTestsStudent(CalcusLiveServer):
+    @classmethod
+    def setUpClass(cls):
+        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
+        cls.patcher.start()
+        super().setUpClass()
+
     def setUp(self):
         super().setUp()
 
@@ -2200,6 +2212,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
+    @mock.patch.dict(os.environ, {'CAN_USE_CACHED_CALCULATIONS': 'false'})
     def test_parse_cancelled_calc(self):
         params = {
                 'mol_name': 'test',
@@ -2327,6 +2340,11 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.assertEqual(software.get_attribute('value'), params['software'])
 
 class OrcaCalculationTestsPI(CalcusLiveServer):
+    @classmethod
+    def setUpClass(cls):
+        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
+        cls.patcher.start()
+        super().setUpClass()
 
     def setUp(self):
         super().setUp()
@@ -3091,6 +3109,11 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.assertIn("Hirshfeld:", prop.charges)
 
 class GaussianCalculationTestsPI(CalcusLiveServer):
+    @classmethod
+    def setUpClass(cls):
+        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
+        cls.patcher.start()
+        super().setUpClass()
 
     def setUp(self):
         super().setUp()
@@ -3509,7 +3532,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
-
     def test_scan_distance_SE(self):
         params = {
                 'mol_name': 'test',
@@ -3885,6 +3907,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         specs = self.get_confirmed_specifications()
         self.assertEqual(specs, 'pop(nbo)')
 
+    @mock.patch.dict(os.environ, {'CAN_USE_CACHED_CALCULATIONS': 'false'})
     def test_parse_cancelled_calc(self):
         params = {
                 'mol_name': 'test',
