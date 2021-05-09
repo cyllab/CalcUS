@@ -337,13 +337,18 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     return ErrorCodes.UNKNOWN_TERMINATION
 
             if calc_id != -1 and res.is_aborted() == True:
+                if calc.parameters.software == "xtb":
+                    signal_to_send = signal.SIGINT
+                else:
+                    signal_to_send = signal.SIGTERM
+
                 parent = psutil.Process(t.pid)
                 children = parent.children(recursive=True)
                 for process in children:
-                    process.send_signal(signal.SIGTERM)
+                    process.send_signal(signal_to_send)
 
                 #t.kill()
-                t.terminate()
+                t.send_signal(signal_to_send)
                 t.wait()
 
                 return ErrorCodes.JOB_CANCELLED
@@ -2718,32 +2723,36 @@ def run_calc(calc_id):
     except Exception as e:
         ret = ErrorCodes.UNKNOWN_TERMINATION
         traceback.print_exc()
+
+        calc = Calculation.objects.get(pk=calc_id)
+        calc.date_finished = timezone.now()
+
         calc.status = 3
         calc.error_message = "Incorrect termination ({})".format(str(e))
         calc.save()
+    else:
+        calc = Calculation.objects.get(pk=calc_id)
+        calc.date_finished = timezone.now()
 
+        if ret == ErrorCodes.JOB_CANCELLED:
+            pid = int(threading.get_ident())
+            if pid in kill_sig:
+                kill_sig.remove(pid)
+            calc.status = 3
+            calc.error_message = "Job cancelled"
+            logger.info("Job {} cancelled".format(calc.id))
+        elif ret == ErrorCodes.SERVER_DISCONNECTED:
+            return ret
+        elif ret == ErrorCodes.SUCCESS:
+            calc.status = 2
+        else:
+            calc.status = 3
+            calc.error_message = "Unknown termination"
 
-    if ret == ErrorCodes.SERVER_DISCONNECTED:
-        return ret
+        calc.save()
 
     if calc.step.creates_ensemble:
         analyse_opt(calc.id)
-
-    calc = Calculation.objects.get(pk=calc_id)
-    calc.date_finished = timezone.now()
-    if ret == ErrorCodes.JOB_CANCELLED:
-        pid = int(threading.get_ident())
-        if pid in kill_sig:
-            kill_sig.remove(pid)
-        calc.status = 3
-        calc.error_message = "Job cancelled"
-        calc.save()
-        logger.info("Job {} cancelled".format(calc.id))
-        return ret
-
-    if ret == ErrorCodes.SUCCESS:
-        calc.status = 2
-        calc.save()
 
     #just calc.out/calc.log?
     for f in glob.glob("{}/*.out".format(workdir)):

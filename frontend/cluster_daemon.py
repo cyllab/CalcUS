@@ -203,12 +203,14 @@ class ClusterDaemon:
         logger.info("Disconnected cluster access {}".format(access_id))
 
     def resume_calc(self, c):
+
         pid = threading.get_ident()
         tasks.connections[pid] = self.connections
         self.calculations[c.id] = pid
         retval = self.job(c)
 
-        del self.calculations[c.id]
+        if c.id in self.calculations:
+            del self.calculations[c.id]
 
         try:
             del tasks.connections[pid]
