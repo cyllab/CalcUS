@@ -15,6 +15,7 @@ import shlex
 import glob
 import ssh2
 import sys
+import shutil
 
 import threading
 from threading import Lock
@@ -52,6 +53,10 @@ import periodictable
 import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s")
 logger = logging.getLogger(__name__)
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
+
 
 REMOTE = False
 connections = {}
@@ -325,6 +330,9 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         else:
             stream = open("/dev/null", 'w')
 
+        if calc_id != -1 and is_test and setup_cached_calc(calc):
+            return ErrorCodes.SUCCESS
+
         t = subprocess.Popen(shlex.split(command), stdout=stream, stderr=stream)
         while True:
             poll = t.poll()
@@ -354,6 +362,59 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                 return ErrorCodes.JOB_CANCELLED
 
             sleep(1)
+
+def files_are_equal(f, input_file):
+    with open(f) as ff:
+        lines = ff.readlines()
+
+    sinput = input_file.split('\n')
+
+    if len(lines) != len(sinput):
+        return False
+
+    for l1, l2 in zip(lines, sinput):
+        if l1.strip() != l2:
+            return False
+
+    return True
+
+def get_cache_index(calc, cache_path):
+    inputs = glob.glob(cache_path + '/*.input')
+    for f in inputs:
+        if files_are_equal(f, calc.input_file):
+            ind = f.split('/')[-1].split('.')[0]
+            return ind
+    else:
+        return -1
+
+def calc_is_cached(calc):
+    if os.getenv("USE_CACHED_LOGS") == "true" and os.getenv("CAN_USE_CACHED_LOGS") == "true":
+        cache_path = os.path.join(tests_dir, "cache")
+        if not os.path.isdir(cache_path):
+            os.mkdir(cache_path)
+            return False
+        index = get_cache_index(calc, cache_path)
+
+        if index == -1:
+            return False
+
+        return index
+    else:
+        return False
+
+def setup_cached_calc(calc):
+    index = calc_is_cached(calc)
+    if not index:
+        return False
+
+    if os.path.isdir(os.path.join(tests_dir, "scr", str(calc.id))):
+        rmtree(os.path.join(tests_dir, "scr", str(calc.id)))
+
+    #shutil.copytree(os.path.join(tests_dir, "cache", index), os.path.join(tests_dir, "scr", str(calc.id)))
+
+    os.symlink(os.path.join(tests_dir, "cache", index), os.path.join(tests_dir, "scr", str(calc.id)))
+    logger.info("Using cache ({})".format(index))
+    return True
 
 def generate_xyz_structure(drawing, structure):
     if structure.xyz_structure == "":
@@ -2753,6 +2814,12 @@ def run_calc(calc_id):
 
     if calc.step.creates_ensemble:
         analyse_opt(calc.id)
+
+    if is_test and os.getenv("CAN_USE_CACHED_LOGS") == "true" and os.getenv("USE_CACHED_LOGS") == "true" and not calc_is_cached(calc):
+        index = str(time()).replace('.', '_')
+        shutil.copytree(os.path.join(tests_dir, "scr", str(calc.id)), os.path.join(tests_dir, "cache", index))
+        with open(os.path.join(tests_dir, "cache", index+'.input'), 'w') as out:
+            out.write(calc.input_file)
 
     #just calc.out/calc.log?
     for f in glob.glob("{}/*.out".format(workdir)):

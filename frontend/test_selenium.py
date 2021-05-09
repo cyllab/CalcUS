@@ -25,6 +25,7 @@ from django.core.management import call_command
 from .calcusliveserver import CalcusLiveServer
 
 from selenium.webdriver.support.select import Select
+from unittest import mock
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -1411,6 +1412,12 @@ class UserPermissionsTests(CalcusLiveServer):
 
 class XtbCalculationTestsPI(CalcusLiveServer):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
+        cls.patcher.start()
+        super().setUpClass()
+
     def setUp(self):
         super().setUp()
 
@@ -1420,7 +1427,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.profile.save()
 
         self.login(self.username, self.password)
-
 
     def test_opt(self):
         params = {
@@ -1830,6 +1836,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'aux_structure': ['elimination_substrate', 'test', 4],
                 'in_file': 'elimination_substrate.xyz',
                 'specifications': '--nimages 3',
+                'charge': '-1',
                 }
 
         self.calc_input_params(params)
