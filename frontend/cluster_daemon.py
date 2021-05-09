@@ -38,12 +38,12 @@ CONNECTION_CODE = {
         }
 try:
     is_test = os.environ['CALCUS_TEST']
+    if is_test.lower() == "false":
+        is_test = False
 except:
     is_test = False
 
-if is_test:
-    pass
-else:
+if not is_test:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calcus.settings")
     django.setup()
