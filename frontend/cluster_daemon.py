@@ -350,7 +350,7 @@ class ClusterDaemon:
         connection.subscribe('cluster')
 
         logger.info("Starting to listen to cluster commands")
-        for msg in connection.blpop():
+        for msg in connection.listen():
             if isinstance(msg['data'], int):
                 continue
             self.process_command(msg['data'])

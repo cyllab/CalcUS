@@ -161,6 +161,6 @@ INTERNAL_IPS = [
 
 ALLOW_LOCAL_CALC = True
 
-PING_HOME = True
+PING_HOME = False
 with open("/etc/machine-id") as f:
     MACHINE_ID = f.readlines()[0].strip()
