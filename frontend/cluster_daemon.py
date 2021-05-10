@@ -36,7 +36,7 @@ class ConnectionCodes:
     SOCKET_RECEIVE_ERROR = 7
 
 CONNECTION_MESSAGES = {
-            ConnectionCodes.SUCESS: "Connected",
+            ConnectionCodes.SUCCESS: "Connected",
             ConnectionCodes.ALREADY_CONNECTED: "Already connected",
             ConnectionCodes.INVALID_CLUSTER_ACCESS: "Invalid cluster access",
             ConnectionCodes.INVALID_HOST: "Invalid host",
@@ -189,8 +189,8 @@ class ClusterDaemon:
                 t = threading.Thread(target=self.resume_calc, args=(c,))
                 t.start()
         else:
-            logger.warning("Error with cluster access {}: {}".format(access_id, CONNECTION_CODE[c]))
-            access.status = CONNECTION_CODE[c]
+            logger.warning("Error with cluster access {}: {}".format(access_id, CONNECTION_MESSAGES[c]))
+            access.status = CONNECTION_MESSAGES[c]
 
         access.save()
 
@@ -253,7 +253,7 @@ class ClusterDaemon:
             password = lines[2]
             r = self.connect(access_id, password)
             if r in [1, 2, 3, 4, 5]:
-                logger.warning("Error with connection {}: {}".format(access_id, CONNECTION_CODE[r]))
+                logger.warning("Error with connection {}: {}".format(access_id, CONNECTION_MESSAGES[r]))
             else:
                 logger.info("Connection successful ({})".format(access_id))
         elif cmd == "disconnect":
