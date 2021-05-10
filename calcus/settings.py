@@ -139,9 +139,6 @@ if is_test:
 
 MEDIA_URL = '/media/'
 
-RABBITMQ_USERNAME = os.environ['CALCUS_RABBITMQ_USERNAME']
-RABBITMQ_PASSWORD = os.environ['CALCUS_RABBITMQ_PASSWORD']
-
 AXES_LOCKOUT_TEMPLATE = 'registration/lockout.html'
 
 THROTTLE_ZONES = {

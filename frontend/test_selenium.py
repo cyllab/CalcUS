@@ -25,6 +25,7 @@ from django.core.management import call_command
 from .calcusliveserver import CalcusLiveServer
 
 from selenium.webdriver.support.select import Select
+from unittest import mock
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -33,6 +34,12 @@ SCR_DIR = os.path.join(tests_dir, "scr")
 RESULTS_DIR = os.path.join(tests_dir, "results")
 
 class InterfaceTests(CalcusLiveServer):
+    @classmethod
+    def setUpClass(cls):
+        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
+        cls.patcher.start()
+        super().setUpClass()
+
     def test_default_login_page(self):
         self.assertTrue(self.is_on_page_projects())
 
@@ -1411,6 +1418,12 @@ class UserPermissionsTests(CalcusLiveServer):
 
 class XtbCalculationTestsPI(CalcusLiveServer):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
+        cls.patcher.start()
+        super().setUpClass()
+
     def setUp(self):
         super().setUp()
 
@@ -1420,7 +1433,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.profile.save()
 
         self.login(self.username, self.password)
-
 
     def test_opt(self):
         params = {
@@ -1830,6 +1842,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'aux_structure': ['elimination_substrate', 'test', 4],
                 'in_file': 'elimination_substrate.xyz',
                 'specifications': '--nimages 3',
+                'charge': '-1',
                 }
 
         self.calc_input_params(params)
@@ -1866,6 +1879,12 @@ class XtbCalculationTestsPI(CalcusLiveServer):
 
 
 class XtbCalculationTestsStudent(CalcusLiveServer):
+    @classmethod
+    def setUpClass(cls):
+        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
+        cls.patcher.start()
+        super().setUpClass()
+
     def setUp(self):
         super().setUp()
 
@@ -2193,6 +2212,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
+    @mock.patch.dict(os.environ, {'CAN_USE_CACHED_CALCULATIONS': 'false'})
     def test_parse_cancelled_calc(self):
         params = {
                 'mol_name': 'test',
@@ -2320,6 +2340,11 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.assertEqual(software.get_attribute('value'), params['software'])
 
 class OrcaCalculationTestsPI(CalcusLiveServer):
+    @classmethod
+    def setUpClass(cls):
+        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
+        cls.patcher.start()
+        super().setUpClass()
 
     def setUp(self):
         super().setUp()
@@ -3084,6 +3109,11 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.assertIn("Hirshfeld:", prop.charges)
 
 class GaussianCalculationTestsPI(CalcusLiveServer):
+    @classmethod
+    def setUpClass(cls):
+        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
+        cls.patcher.start()
+        super().setUpClass()
 
     def setUp(self):
         super().setUp()
@@ -3502,7 +3532,6 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
-
     def test_scan_distance_SE(self):
         params = {
                 'mol_name': 'test',
@@ -3878,6 +3907,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         specs = self.get_confirmed_specifications()
         self.assertEqual(specs, 'pop(nbo)')
 
+    @mock.patch.dict(os.environ, {'CAN_USE_CACHED_CALCULATIONS': 'false'})
     def test_parse_cancelled_calc(self):
         params = {
                 'mol_name': 'test',

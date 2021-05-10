@@ -5,11 +5,6 @@ services:
                 image: redis:latest
                 hostname: redis
 
-        rabbit:
-                build: ./docker/rabbit
-                hostname: rabbit
-                env_file:
-                        - ./.env
         web:
                 build:
                         context: .
@@ -23,7 +18,6 @@ services:
                         - .:/calcus 
                         - ${CALCUS_INCHI}:/binaries/other
                 links:
-                        - rabbit
                         - redis
                 env_file:
                         - ./.env
@@ -49,10 +43,9 @@ services:
                 env_file:
                         - ./.env
                 links:
-                        - rabbit
                         - redis
                 depends_on:
-                        - rabbit
+                        - redis
         celery_comp:
                 build:
                         context: .
@@ -70,10 +63,9 @@ services:
                 env_file:
                         - ./.env
                 links:
-                        - rabbit
                         - redis
                 depends_on:
-                        - rabbit
+                        - redis
         cluster:
                 build:
                         context: .
@@ -87,6 +79,6 @@ services:
                 links:
                         - web
                 depends_on:
-                        - rabbit
+                        - redis
 
 
