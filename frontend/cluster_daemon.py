@@ -25,13 +25,25 @@ logger = logging.getLogger(__name__)
 
 GRIMME_SUITE = ['xtb', 'crest', 'xtb4stda', 'stda', 'enso.py', 'anmr']
 
-CONNECTION_CODE = {
-            0: "Already connected",
-            1: "Invalid cluster access",
-            2: "Invalid host",
-            3: "Could not connect to the server",
-            4: "No calcus folder found",
-            5: "Invalid key password",
+class ConnectionCodes:
+    SUCCESS = 0
+    ALREADY_CONNECTED = 1
+    INVALID_CLUSTER_ACCESS = 2
+    INVALID_HOST = 3
+    COULD_NOT_CONNECT = 4
+    NO_CALCUS_FOLDER = 5
+    INVALID_KEY_PASSWORD = 6
+    SOCKET_RECEIVE_ERROR = 7
+
+CONNECTION_MESSAGES = {
+            ConnectionCodes.SUCESS: "Connected",
+            ConnectionCodes.ALREADY_CONNECTED: "Already connected",
+            ConnectionCodes.INVALID_CLUSTER_ACCESS: "Invalid cluster access",
+            ConnectionCodes.INVALID_HOST: "Invalid host",
+            ConnectionCodes.COULD_NOT_CONNECT: "Could not connect to the server",
+            ConnectionCodes.NO_CALCUS_FOLDER: "No calcus folder found",
+            ConnectionCodes.INVALID_KEY_PASSWORD: "Invalid key password",
+            ConnectionCodes.SOCKET_RECEIVE_ERROR: "Unknown connection error",
         }
 try:
     is_test = os.environ['CALCUS_TEST']
@@ -63,12 +75,12 @@ class ClusterDaemon:
 
     def access_test(self, id, password):
         if id in self.connections.keys():
-            return 0
+            return ConnectionCodes.ALREADY_CONNECTED
 
         try:
             conn = ClusterAccess.objects.get(pk=id)
         except ClusterAccess.DoesNotExist:
-            return 1
+            return ConnectionCodes.INVALID_CLUSTER_ACCESS
 
         a = self.setup_connection(conn, password)
 
@@ -89,7 +101,7 @@ class ClusterDaemon:
         ls_home = tasks.direct_command("ls ~", conn, lock)
 
         if "calcus" not in ls_home:
-            return 4
+            return ConnectionCodes.NO_CALCUS_FOLDER
 
         return ""
 
@@ -106,10 +118,14 @@ class ClusterDaemon:
             sock.connect((addr, 22))
         except socket.gaierror:
             logger.warning("Invalid host")
-            return 2
+            return ConnectionCodes.INVALID_HOST
 
         session = Session()
-        session.handshake(sock)
+        try:
+            session.handshake(sock)
+        except ssh2.exceptions.SocketRecvError:
+            logger.warning("Socket reception error ({})".format(conn.id))
+
         session.set_timeout(20*1000)
         session.keepalive_config(True, 60)
 
@@ -117,10 +133,10 @@ class ClusterDaemon:
             session.userauth_publickey_fromfile(username, keypath, passphrase=password)
         except ssh2.exceptions.AuthenticationError:
             logger.warning("Could not connect to cluster {} with username {}".format(addr, username))
-            return 3
+            return ConnectionCodes.COULD_NOT_CONNECT
         except ssh2.exceptions.FileError:
             logger.warning("Invalid password for cluster {} with username {}".format(addr, username))
-            return 5
+            return ConnectionCodes.INVALID_KEY_PASSWORD
 
         sftp = session.sftp_init()
         return [conn, sock, session, sftp]
