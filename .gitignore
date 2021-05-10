@@ -9,3 +9,6 @@ static/CACHE/
 frontend/migrations/
 *.sqlite3
 .*
+htmlcov/
+frontend/tests/cache/
+old/
