@@ -36,7 +36,7 @@ class Command(BaseCommand):
 
     def add_step(self, name, short_name, creates_ensemble=False, avail_xtb=False, avail_Gaussian=False, avail_ORCA=False):
         if self.is_absent(BasicStep, name):
-            BasicStep.objects.create(name=name, short_name=short_name, creates_ensemble=creates_ensemble, avail_xtb=avail_xtb, avail_Gaussian=avail_xtb, avail_ORCA=avail_ORCA)
+            BasicStep.objects.create(name=name, short_name=short_name, creates_ensemble=creates_ensemble, avail_xtb=avail_xtb, avail_Gaussian=avail_Gaussian, avail_ORCA=avail_ORCA)
 
     def handle(self, *args, **options):
         ###BasicStep creations

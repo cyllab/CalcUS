@@ -2360,10 +2360,11 @@ def analyse_opt_Gaussian(calc):
     else:
         return None
 
-    _calc = Calculation.objects.prefetch_related('calculationframe_set').get(pk=calc.id)
-    frames = _calc.calculationframe_set
     if not os.path.isfile(calc_path):
         return
+
+    _calc = Calculation.objects.prefetch_related('calculationframe_set').get(pk=calc.id)
+    frames = _calc.calculationframe_set
 
     with open(calc_path, encoding="utf8", errors='ignore') as f:
         lines = f.readlines()
@@ -2810,15 +2811,6 @@ def run_calc(calc_id):
 
         calc.save()
 
-    if calc.step.creates_ensemble:
-        analyse_opt(calc.id)
-
-    if is_test and os.getenv("CAN_USE_CACHED_LOGS") == "true" and os.getenv("USE_CACHED_LOGS") == "true" and not calc_is_cached(calc):
-        index = str(time()).replace('.', '_')
-        shutil.copytree(os.path.join(tests_dir, "scr", str(calc.id)), os.path.join(tests_dir, "cache", index))
-        with open(os.path.join(tests_dir, "cache", index+'.input'), 'w') as out:
-            out.write(calc.input_file)
-
     #just calc.out/calc.log?
     for f in glob.glob("{}/*.out".format(workdir)):
         fname = f.split('/')[-1]
@@ -2827,6 +2819,15 @@ def run_calc(calc_id):
     for f in glob.glob("{}/*.log".format(workdir)):
         fname = f.split('/')[-1].replace('.log', '.out')
         copyfile(f, "{}/{}".format(res_dir, fname))
+
+    if calc.step.creates_ensemble:
+        analyse_opt(calc.id)
+
+    if is_test and os.getenv("CAN_USE_CACHED_LOGS") == "true" and os.getenv("USE_CACHED_LOGS") == "true" and not calc_is_cached(calc):
+        index = str(time()).replace('.', '_')
+        shutil.copytree(os.path.join(tests_dir, "scr", str(calc.id)), os.path.join(tests_dir, "cache", index))
+        with open(os.path.join(tests_dir, "cache", index+'.input'), 'w') as out:
+            out.write(calc.input_file)
 
     return ret
 
@@ -2920,6 +2921,9 @@ def kill_calc(calc):
             if calc.status == 1:
                 res = AbortableAsyncResult(calc.task_id)
                 res.abort()
+            elif calc.status == 2:
+                logger.warning("Cannot cancel calculation which is already done")
+                return
             else:
                 app.control.revoke(calc.task_id)
                 calc.status = 3

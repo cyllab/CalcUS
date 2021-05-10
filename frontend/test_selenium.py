@@ -1649,350 +1649,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(100)
         self.assertTrue(self.latest_calc_successful())
 
-    def test_ensemble_second_step(self):
-        params = {
-                'mol_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'carbo_cation.xyz',
-                'charge': '+1'
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(10)
-        self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.launch_ensemble_next_step()
-
-        params2 = {
-                'type': 'Frequency Calculation',
-                #project and charge implicit
-                }
-        self.calc_input_params(params2)
-
-        charge = Select(self.driver.find_element_by_name('calc_charge'))
-        self.assertEqual(charge.first_selected_option.text, params['charge'])
-
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(10)
-        self.assertTrue(self.latest_calc_successful())
-
-    def test_structure_second_step(self):
-        params = {
-                'mol_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'carbo_cation.xyz',
-                'charge': '+1',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(10)
-        self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.launch_structure_next_step()
-
-        params2 = {
-                'type': 'Frequency Calculation',
-                #project and charge implicit
-                }
-
-        charge = Select(self.driver.find_element_by_name('calc_charge'))
-        self.assertEqual(charge.first_selected_option.text, params['charge'])
-
-        self.calc_input_params(params2)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(10)
-        self.assertTrue(self.latest_calc_successful())
-
-    def test_multiple_structures_second_step(self):
-        in_files = ["batch/benzene{:02d}.xyz".format(i) for i in range(1, 5)]
-        params = {
-                'mol_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_files': in_files,
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(100)
-        self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-
-        self.select_conformers([2, 3])
-
-        self.launch_structure_next_step()
-
-        params2 = {
-                'type': 'Single-Point Energy',
-                }
-
-        self.calc_input_params(params2)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(100)
-
-        self.details_latest_order()
-        num = self.get_number_calc_in_order()
-        self.assertEqual(num, 2)
-
-        order = CalculationOrder.objects.latest('id')
-        calcs = order.calculation_set.all()
-        self.assertIn(calcs[0].structure.number, [2, 3])
-        self.assertIn(calcs[1].structure.number, [2, 3])
-        self.assertNotEqual(calcs[0].structure.number, calcs[1].structure.number)
-
-
-    def test_NEB_from_file(self):
-        params = {
-                'mol_name': 'test',
-                'type': 'Minimum Energy Path',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'software': 'xtb',
-                'in_file': 'elimination_substrate.xyz',
-                'aux_file': 'elimination_product.xyz',
-                'charge': '-1',
-                'specifications': '--nimages 3',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(1200)
-        self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertEqual(self.get_number_conformers(), 5)
-
-    def test_NEB_from_structure(self):
-        params = {
-                'mol_name': 'elimination_substrate',
-                'type': 'Constrained Optimisation',
-                'constraints': [['Scan', 'Distance', [1, 4], [1.1, 3.5, 10]]],
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'software': 'xtb',
-                'in_file': 'elimination_substrate.xyz',
-                'charge': '-1',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(1200)
-        self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.launch_structure_next_step()
-
-        params = {
-                'name': 'test',
-                'type': 'Minimum Energy Path',
-                'project': 'SeleniumProject',
-                'software': 'xtb',
-                'aux_structure': ['elimination_substrate', 'test', 4],
-                'specifications': '--nimages 3',
-                }
-
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.wait_latest_calc_done(1200)
-        self.assertTrue(self.latest_calc_successful())
-
-    def test_NEB_hybrid(self):
-        params = {
-                'mol_name': 'elimination_substrate',
-                'type': 'Constrained Optimisation',
-                'constraints': [['Scan', 'Distance', [1, 4], [1.1, 3.5, 10]]],
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'software': 'xtb',
-                'in_file': 'elimination_substrate.xyz',
-                'charge': '-1',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(1200)
-        self.assertTrue(self.latest_calc_successful())
-
-        self.lget("/launch/")
-        params = {
-                'name': 'test',
-                'type': 'Minimum Energy Path',
-                'project': 'SeleniumProject',
-                'software': 'xtb',
-                'aux_structure': ['elimination_substrate', 'test', 4],
-                'in_file': 'elimination_substrate.xyz',
-                'specifications': '--nimages 3',
-                'charge': '-1',
-                }
-
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.wait_latest_calc_done(1200)
-        self.assertTrue(self.latest_calc_successful())
-
-    def test_constrained_conf_search(self):
-        params = {
-                'mol_name': 'test',
-                'type': 'Constrained Conformational Search',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'pentane.mol',
-                'constraints': [['Freeze', 'Angle', [1, 5, 8]]],
-                }
-
-        self.lget("/launch/")
-
-        xyz = parse_xyz_from_file(os.path.join(tests_dir, 'pentane.xyz'))
-        ang0 = get_angle(xyz, 1, 5, 8)
-
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(1200)
-        self.assertTrue(self.latest_calc_successful())
-
-        e = Ensemble.objects.latest('id')
-        for s in e.structure_set.all():
-            s_xyz = parse_xyz_from_text(s.xyz_structure)
-            ang = get_angle(xyz, 1, 5, 8)
-            self.assertTrue(np.isclose(ang, ang0, atol=0.5))
-
-
-class XtbCalculationTestsStudent(CalcusLiveServer):
-    @classmethod
-    def setUpClass(cls):
-        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
-        cls.patcher.start()
-        super().setUpClass()
-
-    def setUp(self):
-        super().setUp()
-
-        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
-        g.save()
-
-        u = User.objects.create_user(username="Student", password=self.password)
-        u.save()
-
-        p = Profile.objects.get(user__username="Student")
-        p.member_of = g
-        p.save()
-
-        self.profile.is_PI = True
-        self.profile.save()
-
-        self.login("Student", self.password)
-
-    def test_opt(self):
-        params = {
-                'mol_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'CH4.mol',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(10)
-        self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertEqual(self.get_number_conformers(), 1)
-
-    def test_proj(self):
-        student = Profile.objects.get(user__username="Student")
-        proj = Project.objects.create(author=student, name="TestProj")
-        proj.save()
-
-        params = {
-                'mol_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'TestProj',
-                'in_file': 'CH4.mol',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(10)
-        self.assertTrue(self.latest_calc_successful())
-
-    def test_freq(self):
-        params = {
-                'mol_name': 'test',
-                'type': 'Frequency Calculation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'carbo_cation.mol',
-                'charge': '+1',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(10)
-        self.assertTrue(self.latest_calc_successful())
-
-    def test_conf_search(self):
-        params = {
-                'mol_name': 'test',
-                'type': 'Conformational Search',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'ethanol.sdf',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(240)
-        self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertGreater(self.get_number_conformers(), 0)
-
-    def test_ts(self):
-        params = {
-                'mol_name': 'test',
-                'type': 'TS Optimisation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'small_ts.xyz',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(100)
-        self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertEqual(self.get_number_conformers(), 1)
-
     def test_scan_distance(self):
         params = {
                 'mol_name': 'test',
@@ -2128,32 +1784,14 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
-    def test_uvvis(self):
-        params = {
-                'mol_name': 'test',
-                'type': 'UV-Vis Calculation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(150)
-        self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-
-        #test if it loads
-
     def test_ensemble_second_step(self):
         params = {
                 'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
-                'in_file': 'CH4.mol',
+                'in_file': 'carbo_cation.xyz',
+                'charge': '+1'
                 }
 
         self.lget("/launch/")
@@ -2163,21 +1801,21 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertEqual(self.get_number_conformers(), 1)
-
         self.launch_ensemble_next_step()
 
         params2 = {
                 'type': 'Frequency Calculation',
-                #project implicit
+                #project and charge implicit
                 }
         self.calc_input_params(params2)
+
+        charge = Select(self.driver.find_element_by_name('calc_charge'))
+        self.assertEqual(charge.first_selected_option.text, params['charge'])
+
         self.calc_launch()
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertEqual(self.get_number_conformers(), 1)
 
     def test_structure_second_step(self):
         params = {
@@ -2185,6 +1823,227 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'type': 'Geometrical Optimisation',
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
+                'in_file': 'carbo_cation.xyz',
+                'charge': '+1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.launch_structure_next_step()
+
+        params2 = {
+                'type': 'Frequency Calculation',
+                #project and charge implicit
+                }
+
+        charge = Select(self.driver.find_element_by_name('calc_charge'))
+        self.assertEqual(charge.first_selected_option.text, params['charge'])
+
+        self.calc_input_params(params2)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+
+    def test_multiple_structures_second_step(self):
+        in_files = ["batch/benzene{:02d}.xyz".format(i) for i in range(1, 5)]
+        params = {
+                'mol_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_files': in_files,
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+
+        self.select_conformers([2, 3])
+
+        self.launch_structure_next_step()
+
+        params2 = {
+                'type': 'Single-Point Energy',
+                }
+
+        self.calc_input_params(params2)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(100)
+
+        self.details_latest_order()
+        num = self.get_number_calc_in_order()
+        self.assertEqual(num, 2)
+
+        order = CalculationOrder.objects.latest('id')
+        calcs = order.calculation_set.all()
+        self.assertIn(calcs[0].structure.number, [2, 3])
+        self.assertIn(calcs[1].structure.number, [2, 3])
+        self.assertNotEqual(calcs[0].structure.number, calcs[1].structure.number)
+
+    def test_NEB_from_file(self):
+        params = {
+                'mol_name': 'test',
+                'type': 'Minimum Energy Path',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'xtb',
+                'in_file': 'elimination_substrate.xyz',
+                'aux_file': 'elimination_product.xyz',
+                'charge': '-1',
+                'specifications': '--nimages 3',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(1200)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 5)
+
+    def test_NEB_from_structure(self):
+        params = {
+                'mol_name': 'elimination_substrate',
+                'name': 'start',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Distance', [1, 4], [1.1, 3.5, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'xtb',
+                'in_file': 'elimination_substrate.xyz',
+                'charge': '-1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(1200)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.launch_structure_next_step()
+
+        params = {
+                'name': 'test',
+                'type': 'Minimum Energy Path',
+                'project': 'SeleniumProject',
+                'software': 'xtb',
+                'aux_structure': ['elimination_substrate', 'elimination_substrate', 4],
+                'specifications': '--nimages 3',
+                }
+
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.wait_latest_calc_done(1200)
+        self.assertTrue(self.latest_calc_successful())
+
+    def test_NEB_hybrid(self):
+        params = {
+                'mol_name': 'elimination_substrate',
+                'type': 'Constrained Optimisation',
+                'constraints': [['Scan', 'Distance', [1, 4], [1.1, 3.5, 10]]],
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'software': 'xtb',
+                'in_file': 'elimination_substrate.xyz',
+                'charge': '-1',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(1200)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.lget("/launch/")
+        params = {
+                'name': 'test',
+                'type': 'Minimum Energy Path',
+                'project': 'SeleniumProject',
+                'software': 'xtb',
+                'aux_structure': ['elimination_substrate', 'elimination_substrate', 4],
+                'in_file': 'elimination_substrate.xyz',
+                'specifications': '--nimages 3',
+                'charge': '-1',
+                }
+
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.wait_latest_calc_done(1200)
+        self.assertTrue(self.latest_calc_successful())
+
+    def test_constrained_conf_search(self):
+        params = {
+                'mol_name': 'test',
+                'type': 'Constrained Conformational Search',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'pentane.mol',
+                'constraints': [['Freeze', 'Angle', [1, 5, 8]]],
+                }
+
+        self.lget("/launch/")
+
+        xyz = parse_xyz_from_file(os.path.join(tests_dir, 'pentane.xyz'))
+        ang0 = get_angle(xyz, 1, 5, 8)
+
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(1200)
+        self.assertTrue(self.latest_calc_successful())
+
+        e = Ensemble.objects.latest('id')
+        for s in e.structure_set.all():
+            s_xyz = parse_xyz_from_text(s.xyz_structure)
+            ang = get_angle(xyz, 1, 5, 8)
+            self.assertTrue(np.isclose(ang, ang0, atol=0.5))
+
+
+class XtbCalculationTestsStudent(CalcusLiveServer):
+    @classmethod
+    def setUpClass(cls):
+        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
+        cls.patcher.start()
+        super().setUpClass()
+
+    def setUp(self):
+        super().setUp()
+
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g.save()
+
+        u = User.objects.create_user(username="Student", password=self.password)
+        u.save()
+
+        p = Profile.objects.get(user__username="Student")
+        p.member_of = g
+        p.save()
+
+        self.profile.is_PI = True
+        self.profile.save()
+
+        self.login("Student", self.password)
+
+    def test_opt(self):
+        params = {
+                'mol_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
                 'in_file': 'CH4.mol',
                 }
 
@@ -2197,20 +2056,24 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
-        self.launch_structure_next_step()
+    def test_proj(self):
+        student = Profile.objects.get(user__username="Student")
+        proj = Project.objects.create(author=student, name="TestProj")
+        proj.save()
 
-
-        params2 = {
-                'type': 'Frequency Calculation',
-                #project implicit
+        params = {
+                'mol_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'TestProj',
+                'in_file': 'CH4.mol',
                 }
-        self.calc_input_params(params2)
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertEqual(self.get_number_conformers(), 1)
 
     @mock.patch.dict(os.environ, {'CAN_USE_CACHED_CALCULATIONS': 'false'})
     def test_parse_cancelled_calc(self):

@@ -1582,3 +1582,24 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def click_folder(self, folder_name):
         folder = self.get_folder(folder_name)
         folder.click()
+
+    def send_slurm_command(self, cmd):
+        if docker:
+            child = pexpect.spawn('ssh slurm@slurm')
+            choice = child.expect(["(yes/no)", "password"])
+            if choice == 0:
+                child.sendline('yes')
+                child.expect("password")
+                child.sendline('clustertest')
+            elif choice == 1:
+                child.sendline('clustertest')
+
+            child.expect("\$")
+            child.sendline(cmd)
+        else:
+            child = pexpect.spawn('su - calcus')
+            child.expect ('Password:')
+            child.sendline('clustertest')
+            child.expect('\$')
+            child.sendline(cmd)
+

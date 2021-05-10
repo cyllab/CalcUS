@@ -48,30 +48,13 @@ KEYS_DIR = os.path.join(tests_dir, "keys")
 class ClusterTests(CalcusLiveServer):
     @classmethod
     def setUpClass(cls):
-        if docker:
-            child = pexpect.spawn('ssh slurm@slurm')
-            choice = child.expect(["(yes/no)", "password"])
-            if choice == 0:
-                child.sendline('yes')
-                child.expect("password")
-                child.sendline('clustertest')
-            elif choice == 1:
-                child.sendline('clustertest')
-
-            child.expect("\$")
-            child.sendline("rm -r /home/slurm/scratch")
-        else:
-            child = pexpect.spawn('su - calcus')
-            child.expect ('Password:')
-            child.sendline('clustertest')
-            child.expect('\$')
-            child.sendline("rm -r /home/calcus/scratch")
-
-
+        super().send_slurm_command(cls, "rm -r /home/calcus/scratch")
         super().setUpClass()
 
     def setUp(self):
         super().setUp()
+
+        self.send_slurm_command("scancel -u slurm")
 
         if docker:
             connection = redis.Redis(host='redis', port=6379, db=2)
