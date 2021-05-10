@@ -85,6 +85,7 @@ class ClusterTests(CalcusLiveServer):
 
     def tearDown(self):
         send_cluster_command("stop\n")
+        time.sleep(0.5)# Give time to the daemon to disconnect cleanly
         super().tearDown()
 
     def run_daemon(self):
@@ -262,29 +263,6 @@ class ClusterTests(CalcusLiveServer):
             s_xyz = parse_xyz_from_text(s.xyz_structure)
             ang = get_angle(xyz, 1, 5, 8)
             self.assertTrue(np.isclose(ang, ang0, atol=0.5))
-
-    def test_cluster_NEB_from_file(self):
-        self.setup_cluster()
-        params = {
-                'mol_name': 'test',
-                'type': 'Minimum Energy Path',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'software': 'xtb',
-                'in_file': 'elimination_substrate.xyz',
-                'aux_file': 'elimination_product.xyz',
-                'charge': '-1',
-                'specifications': '--nimages 3',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(600)
-        self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertEqual(self.get_number_conformers(), 5)
 
     def test_cluster_xtb_sp(self):
         self.setup_cluster()

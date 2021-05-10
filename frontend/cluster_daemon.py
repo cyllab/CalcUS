@@ -241,6 +241,7 @@ class ClusterDaemon:
             for conn_id in list(self.connections.keys()):
                 self.disconnect(conn_id)
 
+            self.stopped = True
             return
         t = threading.Thread(target=self._process_command, args=(lines,))
         t.start()
@@ -360,18 +361,19 @@ class ClusterDaemon:
         tasks.REMOTE = True
 
         if docker:
-            connection = redis.Redis(host='redis', port=6379, db=2).pubsub()
+            connection = redis.Redis(host='redis', port=6379, db=2)
         else:
-            connection = redis.Redis(host='localhost', port=6379, db=2).pubsub()
-        connection.subscribe('cluster')
+            connection = redis.Redis(host='localhost', port=6379, db=2)
+        #connection.subscribe('cluster')
 
         logger.info("Starting to listen to cluster commands")
-        for msg in connection.listen():
-            if isinstance(msg['data'], int):
-                continue
-            self.process_command(msg['data'])
+        while not self.stopped:
+            msg = connection.blpop('cluster', 30)
+            if msg:
+                if isinstance(msg[1], int):
+                    continue
+                self.process_command(msg[1])
 
-        self.stopped = True
         logger.info("Daemon closed")
 
 if __name__ == "__main__":
