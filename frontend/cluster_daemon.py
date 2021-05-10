@@ -5,7 +5,7 @@ import time
 import glob
 import subprocess
 import shlex
-import pika
+import redis
 from shutil import copyfile
 
 import ssh2
@@ -17,9 +17,6 @@ from threading import Lock
 from django.utils.timezone import now
 
 from django.conf import settings
-
-RABBITMQ_USERNAME = os.environ["CALCUS_RABBITMQ_USERNAME"]
-RABBITMQ_PASSWORD = os.environ["CALCUS_RABBITMQ_PASSWORD"]
 
 import code, traceback, signal, logging
 
@@ -220,15 +217,14 @@ class ClusterDaemon:
         except KeyError:#already deleted when disconnnected from cluster
             pass
 
-    def process_command(self, ch, method, properties, body):
-        lines = body.decode('UTF-8').split('\n')
+    def process_command(self, body):
+        lines = body.decode('UTF-8').split('&')
 
         if lines[0].strip() == "stop":
             logger.info("Stopping the daemon")
             for conn_id in list(self.connections.keys()):
                 self.disconnect(conn_id)
 
-            ch.stop_consuming()
             return
         t = threading.Thread(target=self._process_command, args=(lines,))
         t.start()
@@ -348,20 +344,17 @@ class ClusterDaemon:
         tasks.REMOTE = True
 
         if docker:
-            if not is_test:
-                time.sleep(10)
-            credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
-            connection = pika.BlockingConnection(pika.ConnectionParameters('rabbit', credentials=credentials))
+            connection = redis.Redis(host='redis', port=6379, db=2).pubsub()
         else:
-            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-        chan = connection.channel()
-        chan.queue_declare(queue='cluster')
-        chan.basic_consume(queue='cluster', auto_ack=True, on_message_callback=self.process_command)
+            connection = redis.Redis(host='localhost', port=6379, db=2).pubsub()
+        connection.subscribe('cluster')
+
         logger.info("Starting to listen to cluster commands")
-        chan.start_consuming()
-        chan.cancel()
-        chan.close()
-        connection.close()
+        for msg in connection.blpop():
+            if isinstance(msg['data'], int):
+                continue
+            self.process_command(msg['data'])
+
         self.stopped = True
         logger.info("Daemon closed")
 

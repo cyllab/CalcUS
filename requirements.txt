@@ -1,7 +1,6 @@
 basis-set-exchange==0.8.12
 bleach==3.1.5
-celery==4.4.7
-redis
+celery[redis]
 coverage==5.3
 cryptography==3.1
 Django==3.1.1

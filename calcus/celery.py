@@ -18,13 +18,10 @@ else:
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'calcus.settings')
 
-username = settings.RABBITMQ_USERNAME
-password = settings.RABBITMQ_PASSWORD
-
 if docker:
-    app = Celery('calcus', backend="amqp", broker='amqp://{}:{}@rabbit//'.format(username, password))
+    app = Celery('calcus', backend='redis://redis:6379/1', broker='redis://redis:6379/0')
 else:
-    app = Celery('calcus', backend="amqp", broker='amqp://{}:{}@localhost//'.format(username, password))
+    app = Celery('calcus', backend='redis://localhost:6379/1', broker='redis://localhost:6379/0')
 
 app.autodiscover_tasks()
 

@@ -6,7 +6,7 @@ import signal
 import selenium
 import pexpect
 import psutil
-import pika
+import redis
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import datetime
@@ -74,16 +74,10 @@ class ClusterTests(CalcusLiveServer):
         super().setUp()
 
         if docker:
-            credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
-            connection = pika.BlockingConnection(pika.ConnectionParameters('rabbit', credentials=credentials))
+            connection = redis.Redis(host='redis', port=6379, db=2)
         else:
-            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-        chan = connection.channel()
-        try:
-            chan.queue_purge('cluster')
-            chan.close()
-        except pika.exceptions.ChannelClosedByBroker:
-            pass
+            connection = redis.Redis(host='localhost', port=6379, db=2)
+        connection.flushdb()
         connection.close()
 
         p = Process(target=self.run_daemon)

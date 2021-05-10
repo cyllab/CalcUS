@@ -4,7 +4,7 @@ from calcus.celery import app
 import string
 import signal
 import psutil
-import pika
+import redis
 import requests
 import os
 import numpy as np
@@ -43,9 +43,6 @@ from .calculation_helper import *
 from .environment_variables import *
 
 from django.conf import settings
-
-RABBITMQ_USERNAME = settings.RABBITMQ_USERNAME
-RABBITMQ_PASSWORD = settings.RABBITMQ_PASSWORD
 
 import traceback
 import periodictable
@@ -2902,15 +2899,13 @@ def _del_structure(s):
 
 def send_cluster_command(cmd):
     if docker:
-        credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
-        conn = pika.BlockingConnection(pika.ConnectionParameters('rabbit', credentials=credentials))
+        connection = redis.Redis(host='redis', port=6379, db=2)
     else:
-        conn = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    chan = conn.channel()
+        connection = redis.Redis(host='localhost', port=6379, db=2)
 
-    chan.queue_declare(queue='cluster')
-    chan.basic_publish(exchange='', routing_key='cluster', body=cmd)
-    conn.close()
+    _cmd = cmd.replace('\n', '&')
+    connection.publish('cluster', _cmd)
+    connection.close()
 
 @app.task
 def cancel(calc_id):

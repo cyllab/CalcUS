@@ -28,3 +28,4 @@ RUN apt update && apt install openbabel sshpass -y
 
 RUN adduser --disabled-password --gecos '' calcus  
 
+RUN pip install -U "celery[redis]"
