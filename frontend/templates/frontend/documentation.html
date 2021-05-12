@@ -2339,8 +2339,48 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	<h3 class="title is-3">Server Admin Guide</h3>
 	<h4 class="title is-4">Minimal Setup</h4>
 	<p>
-		Firstly, set the environment variables for the		
+		Firstly, install and configure Docker. On Linux, it is necessary to create a <code>docker</code> group and to add yourself to it:
+		<code class="bash">
+		sudo groupadd docker
+		sudo usermod -aG docker $USER
+		</code>
+
+		You will need to log out and log back in for the changes to be effective.
+
+		Then, clone the repository. In that repository create a file named <code>.env</code> which will be used to set the necessary environment variables. A typical <code>.env</code> will look something like this:
+
+		<code>
+			CALCUS_SECRET_KEY='de^%k+mia@*%fxl*n6zp^vghxnj4))30q9+h8e3_no-xb0*k40'
+			CALCUS_GAUSSIAN=/home/user/softwares/g16
+			CALCUS_ORCA=/home/user/softwares/orca
+			CALCUS_OPENMPI=/home/user/.openmpi/
+			CALCUS_XTB=/home/user/softwares/xtb/bin
+			CALCUS_INCHI=/home/user/.local/bin
+			OMP_NUM_THREADS=8,1
+			NUM_CPU=8
+			OMP_STACKSIZE=1G
+			USE_CACHED_LOGS=true
+		</code>
+
+		<code>CALCUS_SECRET_KEY</code> is the Django secret key that will be used as salt for cryptographic hash generation (<a href="https://docs.djangoproject.com/en/dev/ref/settings/#secret-key">See more details in the Django documentation</a>). Note that it is not used to encrypt the users' password, so changing this key will not cause the loss of encrypted logins in the database. This should be generated during the setup; this can be done using Django itself:
+		<code>
+			from django.core.management.utils import get_random_secret_key  
+			get_random_secret_key()
+		</code>
+
+		The next five variables are paths to directories containing the relevant software packages. If you do not have some of the packages, simply input a bogus or empty path. Note that the InChI package is used for every new structure and has to be installed (it is available free of charge <a href="https://www.inchi-trust.org/downloads/">here</a>).
+
+		<code>OMP_NUM_THREADS</code> and <code>NUM_CPU</code> specify the number of processors available for calculations (eight in the example above). For the moment, every calculation uses all available processors.
+
+		<code>OMP_STACKSIZE</code> specifies the memory available per processor.
+
+		<code>USE_CACHED_LOGS</code> is a flag regarding the use of calculation caching during the automated tests. If enabled, CalcUS will save the results of calculations performed during the tests in <code>calcus/frontend/tests/cache</code>. When the tests are run again, CalcUS will detect input files that have been used in the past and directly yield the result without calculating it again.
 	</p>
+	<h4 class="title is-4">Running CalcUS</h4>
+	<p>
+		Once the setup is complete, build the docker image using <code>docker-compose build</code>, and launch it using <code>docker-compose up</code>. CalcUS is now available in your web browser at the adress <a href="http://0.0.0.0:8080">0.0.0.0:8080</a>.
+	</p>
+
 	<h3 class="title is-3">Developer Guide</h3>
 	<h4 class="title is-4">Contributing</h4>
 	<h4 class="title is-4">Tests</h4>
