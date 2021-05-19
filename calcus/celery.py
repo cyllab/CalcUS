@@ -8,13 +8,18 @@ from django.conf import settings
 from celery.schedules import crontab
 
 docker = False
-try:
-    a = os.environ["CALCUS_DOCKER"]
-except KeyError:
-    pass
+
+a = os.getenv("CALCUS_DOCKER")
+if a is not None and a.lower() == "true":
+    docker = True
 else:
-    if a.lower() == "true":
-        docker = True
+    docker = False
+
+b = os.getenv("CALCUS_TEST")
+if b is not None and b.lower() == "true":
+    is_test = True
+else:
+    is_test = False
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'calcus.settings')
 
@@ -30,11 +35,27 @@ app.autodiscover_tasks()
 def debug_task(self):
     print('Request: {0!r}'.format(self.request))
 
-if settings.PING_HOME:
+if not is_test and settings.PING_HOME:
     app.conf.beat_schedule = {
             'ping-home': {
                 'task': 'frontend.tasks.ping_home',
                 'schedule': crontab(minute=((datetime.now().minute + 1) % 60)),
+                'options': {
+                    'expires': 3600,
+                }
             },
     }
+
+if not is_test:
+    app.conf.beat_schedule = {
+            'backup-db': {
+                'task': 'frontend.tasks.backup_db',
+                'schedule': crontab(hour=16, minute=30),
+                #'schedule': int(settings.DBBACKUP_INTERVAL*24*3600),
+                'options': {
+                    'expires': int(settings.DBBACKUP_INTERVAL*24*3600),
+                    },
+            },
+    }
+
 

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'axes',
+    'dbbackup',
     #'debug_toolbar',
 ]
 
@@ -130,6 +131,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
+DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE_OPTIONS = {'location': 'backups/'}
 LOGIN_REDIRECT_URL = '/home'
 
 DEFAULT_FROM_EMAIL = 'bot@CalcUS'
@@ -160,6 +163,9 @@ INTERNAL_IPS = [
 ]
 
 ALLOW_LOCAL_CALC = True
+
+DBBACKUP_CLEANUP_KEEP = 10 # Number of old DBs to keep
+DBBACKUP_INTERVAL = 1 # In days (can be a float)
 
 PING_HOME = False
 with open("/etc/machine-id") as f:
