@@ -43,6 +43,7 @@ from .calculation_helper import *
 from .environment_variables import *
 
 from django.conf import settings
+from django.core import management
 
 import traceback
 import periodictable
@@ -2943,4 +2944,10 @@ def ping():
 @app.task
 def ping_home():
     requests.post("http://minotaurr.org/calcus", data={'id': settings.MACHINE_ID})
+
+@app.task
+def backup_db():
+    logger.info("Backup up database")
+    management.call_command('dbbackup', clean=True, interactive=False)
+
 

@@ -3710,6 +3710,50 @@ def see(request, pk):
 
     return HttpResponse(status=200)
 
+@login_required
+def see_all(request):
+    profile = request.user.profile
+
+    calcs = CalculationOrder.objects.filter(author=profile, hidden=False)
+
+    for c in calcs:
+        if c.new_status:
+            c.see()
+
+    return HttpResponse(status=200)
+
+@login_required
+def clean_all_successful(request):
+    profile = request.user.profile
+
+    to_update = []
+    calcs = CalculationOrder.objects.filter(author=profile, hidden=False)
+    for c in calcs:
+        if c.status == 2:
+            c.hidden = True
+            c.see()
+            to_update.append(c)
+
+    CalculationOrder.objects.bulk_update(to_update, ['hidden', 'last_seen_status'])
+
+    return HttpResponse(status=200)
+
+@login_required
+def clean_all_completed(request):
+    profile = request.user.profile
+
+    to_update = []
+    calcs = CalculationOrder.objects.filter(author=profile, hidden=False)
+    for c in calcs:
+        if c.status in [2, 3]:
+            c.hidden = True
+            c.see()
+            to_update.append(c)
+
+    CalculationOrder.objects.bulk_update(to_update, ['hidden', 'last_seen_status'])
+
+    return HttpResponse(status=200)
+
 def handler404(request, *args, **argv):
     return render(request, 'error/404.html', {
             })

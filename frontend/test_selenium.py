@@ -1013,6 +1013,187 @@ class InterfaceTests(CalcusLiveServer):
                 break
         self.assertEqual(self.get_number_unseen_calcs(), 0)
 
+    def test_see_all_unseen(self):
+        self.setup_test_group()
+
+        o1 = CalculationOrder.objects.create(author=self.profile, last_seen_status=1)
+        c1a = Calculation.objects.create(order=o1, status=2)
+        c1b = Calculation.objects.create(order=o1, status=2)
+
+        o2 = CalculationOrder.objects.create(author=self.profile, last_seen_status=1)
+        c2a = Calculation.objects.create(order=o2, status=2)
+
+        o1.save()
+        c1a.save()
+        c1b.save()
+        o2.save()
+        c2a.save()
+        self.profile.unseen_calculations = 2
+        self.profile.save()
+
+        for i in range(3):
+            self.lget("/calculations/")
+            if self.get_number_unseen_calcs() == 2:
+                break
+            time.sleep(1)
+        else:
+            raise Exception("No unseen calculations")
+
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
+
+        self.see_all()
+
+        for i in range(3):
+            self.lget("/calculations/")
+            if self.get_number_unseen_calcs() == 0:
+                break
+            time.sleep(1)
+        else:
+            raise Exception("Remaining calculations")
+
+        self.assertEqual(self.get_number_unseen_calcs(), 0)
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 0)
+
+    def test_clean_all_successful(self):
+        self.setup_test_group()
+
+        o1 = CalculationOrder.objects.create(author=self.profile)
+        c1 = Calculation.objects.create(order=o1, status=1)
+
+        o2 = CalculationOrder.objects.create(author=self.profile, last_seen_status=1)
+        c2 = Calculation.objects.create(order=o2, status=2)
+
+        o3 = CalculationOrder.objects.create(author=self.profile, last_seen_status=0)
+        c3 = Calculation.objects.create(order=o3, status=0)
+
+        o4 = CalculationOrder.objects.create(author=self.profile, last_seen_status=2)
+        c4 = Calculation.objects.create(order=o4, status=2)
+
+        o5 = CalculationOrder.objects.create(author=self.profile)
+        c5 = Calculation.objects.create(order=o5, status=3)
+
+        o6 = CalculationOrder.objects.create(author=self.profile, last_seen_status=2)
+        c6 = Calculation.objects.create(order=o6, status=3)
+
+        o1.save()
+        c1.save()
+        o2.save()
+        c2.save()
+        o3.save()
+        c3.save()
+        o4.save()
+        c4.save()
+        o5.save()
+        c5.save()
+        o6.save()
+        c6.save()
+        o1.last_seen_status = 1
+        o5.last_seen_status = 3
+        o1.save()
+        o5.save()
+
+        self.profile.unseen_calculations = 2
+        self.profile.save()
+
+        for i in range(3):
+            self.lget("/calculations/")
+            if self.get_number_unseen_calcs() == 2:
+                break
+            time.sleep(1)
+        else:
+            raise Exception("No unseen calculations")
+
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
+        self.assertEqual(self.get_number_calc_orders(), 6)
+
+        self.clean_all_successful()
+
+        #Check for frontend removal
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 1)
+        self.assertEqual(self.get_number_calc_orders(), 4)
+
+        #Check for backend removal
+        for i in range(3):
+            self.lget("/calculations/")
+            if self.get_number_unseen_calcs() == 1:
+                break
+            time.sleep(1)
+        else:
+            raise Exception("Remaining calculations")
+
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 1)
+        self.assertEqual(self.get_number_calc_orders(), 4)
+
+    def test_clean_all_completed(self):
+        self.setup_test_group()
+
+        o1 = CalculationOrder.objects.create(author=self.profile)
+        c1 = Calculation.objects.create(order=o1, status=1)
+
+        o2 = CalculationOrder.objects.create(author=self.profile, last_seen_status=1)
+        c2 = Calculation.objects.create(order=o2, status=2)
+
+        o3 = CalculationOrder.objects.create(author=self.profile, last_seen_status=0)
+        c3 = Calculation.objects.create(order=o3, status=0)
+
+        o4 = CalculationOrder.objects.create(author=self.profile, last_seen_status=2)
+        c4 = Calculation.objects.create(order=o4, status=2)
+
+        o5 = CalculationOrder.objects.create(author=self.profile)
+        c5 = Calculation.objects.create(order=o5, status=3)
+
+        o6 = CalculationOrder.objects.create(author=self.profile, last_seen_status=2)
+        c6 = Calculation.objects.create(order=o6, status=3)
+
+        o1.save()
+        c1.save()
+        o2.save()
+        c2.save()
+        o3.save()
+        c3.save()
+        o4.save()
+        c4.save()
+        o5.save()
+        c5.save()
+        o6.save()
+        c6.save()
+        o1.last_seen_status = 1
+        o5.last_seen_status = 3
+        o1.save()
+        o5.save()
+
+        self.profile.unseen_calculations = 2
+        self.profile.save()
+
+        for i in range(3):
+            self.lget("/calculations/")
+            if self.get_number_unseen_calcs() == 2:
+                break
+            time.sleep(1)
+        else:
+            raise Exception("No unseen calculations")
+
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
+        self.assertEqual(self.get_number_calc_orders(), 6)
+
+        self.clean_all_completed()
+
+        #Check for frontend removal
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 0)
+        self.assertEqual(self.get_number_calc_orders(), 2)
+
+        #Check for backend removal
+        for i in range(3):
+            self.lget("/calculations/")
+            if self.get_number_unseen_calcs() == 0:
+                break
+            time.sleep(1)
+        else:
+            raise Exception("Remaining calculations")
+
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 0)
+        self.assertEqual(self.get_number_calc_orders(), 2)
+
     def test_delete_unseen_calc(self):
         self.setup_test_group()
         params = {

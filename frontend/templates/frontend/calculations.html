@@ -43,27 +43,30 @@
 				method: "POST",
 				url: '/see/' + o_id,
 				success: function () {
-					if (art.classList.contains("new")) {
-						$("#order_" + o_id).removeClass("new");	
-						badge = document.getElementById("unseen_calculations_badge");
-						old_num = badge.textContent;
-						new_num = parseInt(old_num)-1;
-						if (new_num > 0) {
-							badge.textContent = new_num;
-						}
-						else {
-							$("#unseen_calculations_badge").remove();
-						}
-					}
-					else {
-
-						if (mode != "All orders" && art.firstElementChild.classList.contains("has-background-success") || art.firstElementChild.classList.contains("has-background-danger") ) {
-							$grid.masonry('remove', art).masonry();
-						}
-					}
+					_see(art);
 				},
 			    });
 
+		}
+		function _see(art) {
+			if (art.classList.contains("new")) {
+				$(art).removeClass("new");	
+				badge = document.getElementById("unseen_calculations_badge");
+				old_num = badge.textContent;
+				new_num = parseInt(old_num)-1;
+				if (new_num > 0) {
+					badge.textContent = new_num;
+				}
+				else {
+					$("#unseen_calculations_badge").remove();
+				}
+			}
+			else {
+
+				if (mode != "All orders" && art.firstElementChild.classList.contains("has-background-success") || art.firstElementChild.classList.contains("has-background-danger") ) {
+					$grid.masonry('remove', art).masonry();
+				}
+			}
 		}
 
 		function refresh_list(mode) {
@@ -155,6 +158,61 @@
 				}
 			    }
 		}
+		
+		function see_all() {
+			$.ajax({
+				type: "POST",
+				url: "/see_all/", 
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+					}
+				}
+			);
+
+			calcs = document.getElementById("calculations_list").querySelectorAll("article.new");
+			for(i=0; i<calcs.length; i++) {
+				_see(calcs[i]);
+			}
+		}
+
+		function clean_all_successful() {
+			calcs = document.getElementById("calculations_list").querySelectorAll("article > .has-background-success");
+			for(i=0; i<calcs.length; i++) {
+				calcs[i].parentElement.remove();
+			}
+
+			$.ajax({
+				type: "POST",
+				url: "/clean_all_successful/", 
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+					}
+				}
+			);
+
+		}
+
+		function clean_all_completed() {
+			calcs = document.getElementById("calculations_list").querySelectorAll("article > .has-background-danger");
+			
+			for(i=0; i<calcs.length; i++) {
+				calcs[i].parentElement.remove();
+			}
+
+			calcs = document.getElementById("calculations_list").querySelectorAll("article > .has-background-success");
+			for(i=0; i<calcs.length; i++) {
+				calcs[i].parentElement.remove();
+			}
+			$.ajax({
+				type: "POST",
+				url: "/clean_all_completed/", 
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+					}
+				}
+			);
+
+		}
 	</script>
 {% endblock %}
 
@@ -208,7 +266,11 @@
 			</div>
 
 		</div>
-		
+		<div id="actions">
+			<button onclick="see_all();" class="button is-success" id="see_all_btn">See all</button>
+			<button onclick="clean_all_successful();" class="button is-success" id="clean_all_successful_btn">Clean all successful</button>
+			<button onclick="clean_all_completed();" class="button is-info" id="clean_all_completed_btn">Clean all completed</button>
+		</div>
 		<div class="grid" id="calculations_list">
 
 		</div>

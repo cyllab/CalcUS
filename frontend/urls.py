@@ -66,6 +66,10 @@ urlpatterns = [
     path('ensemble_table_body/<int:pk>', views.ensemble_table_body, name='ensemble_table_body'),
 
     path('see/<int:pk>', views.see, name='see'),
+    path('see_all/', views.see_all, name='see_all'),
+    path('clean_all_successful/', views.clean_all_successful, name='clean_all_successful'),
+    path('clean_all_completed/', views.clean_all_completed, name='clean_all_completed'),
+
     path('update_preferences/', views.update_preferences, name='update_preferences'),
 
     path('set_project_default/', views.set_project_default, name='set_project_default'),

@@ -1603,3 +1603,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             child.expect('\$')
             child.sendline(cmd)
 
+    def see_all(self):
+        btn = self.driver.find_element_by_id("see_all_btn")
+        btn.click()
+
+    def clean_all_successful(self):
+        btn = self.driver.find_element_by_id("clean_all_successful_btn")
+        btn.click()
+
+    def clean_all_completed(self):
+        btn = self.driver.find_element_by_id("clean_all_completed_btn")
+        btn.click()
