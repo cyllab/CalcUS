@@ -1106,7 +1106,9 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
         self.assertEqual(self.get_number_calc_orders(), 6)
 
+        self.wait_for_ajax()
         self.clean_all_successful()
+        self.wait_for_ajax()
 
         #Check for frontend removal
         self.assertEqual(self.get_number_unseen_calcs_manually(), 1)
@@ -1176,7 +1178,9 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
         self.assertEqual(self.get_number_calc_orders(), 6)
 
+        self.wait_for_ajax()
         self.clean_all_completed()
+        self.wait_for_ajax()
 
         #Check for frontend removal
         self.assertEqual(self.get_number_unseen_calcs_manually(), 0)

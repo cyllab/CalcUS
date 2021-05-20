@@ -178,7 +178,8 @@
 		function clean_all_successful() {
 			calcs = document.getElementById("calculations_list").querySelectorAll("article > .has-background-success");
 			for(i=0; i<calcs.length; i++) {
-				calcs[i].parentElement.remove();
+				art = calcs[i].parentElement;
+				$grid.masonry('remove', art).masonry();
 			}
 
 			$.ajax({
@@ -196,12 +197,14 @@
 			calcs = document.getElementById("calculations_list").querySelectorAll("article > .has-background-danger");
 			
 			for(i=0; i<calcs.length; i++) {
-				calcs[i].parentElement.remove();
+				art = calcs[i].parentElement;
+				$grid.masonry('remove', art).masonry();
 			}
 
 			calcs = document.getElementById("calculations_list").querySelectorAll("article > .has-background-success");
 			for(i=0; i<calcs.length; i++) {
-				calcs[i].parentElement.remove();
+				art = calcs[i].parentElement;
+				$grid.masonry('remove', art).masonry();
 			}
 			$.ajax({
 				type: "POST",
