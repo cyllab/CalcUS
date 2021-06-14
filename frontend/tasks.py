@@ -343,15 +343,12 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     return ErrorCodes.UNKNOWN_TERMINATION
 
             if calc_id != -1 and res.is_aborted() == True:
-                if calc.parameters.software == "xtb":
-                    signal_to_send = signal.SIGINT
-                else:
-                    signal_to_send = signal.SIGTERM
+                signal_to_send = signal.SIGTERM
 
                 parent = psutil.Process(t.pid)
                 children = parent.children(recursive=True)
                 for process in children:
-                    process.send_signal(signal_to_send)
+                    process.send_signal(signal.SIGTERM)
 
                 #t.kill()
                 t.send_signal(signal_to_send)
@@ -2936,6 +2933,9 @@ def kill_calc(calc):
             if calc.status == 1:
                 res = AbortableAsyncResult(calc.task_id)
                 res.abort()
+                calc.status = 3
+                calc.error_message = "Job cancelled"
+                calc.save()
             elif calc.status == 2:
                 logger.warning("Cannot cancel calculation which is already done")
                 return
