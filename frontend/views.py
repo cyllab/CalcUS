@@ -1259,7 +1259,6 @@ def submit_calculation(request):
         unique_names = []
         in_structs = []
         if len(request.FILES) > 0:
-
             combine = ""
             if 'calc_combine_files' in request.POST.keys():
                 combine = clean(request.POST['calc_combine_files'])

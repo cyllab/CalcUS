@@ -925,7 +925,6 @@ def crest(in_file, calc):
             sline = lines[ind].strip().split()
             if len(sline) == 8:
                 energy = float(sline[2])
-                #weight = float(sline[4])
                 number = int(sline[5])
                 degeneracy = int(sline[6])
 

@@ -94,6 +94,25 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         os.chdir(base_cwd)#Prevent coverage.py crash
         super().tearDownClass()
 
+    def run(self, result=None):
+        self.m_name = self._testMethodName
+        self._testMethodName = "_test_wrapper"
+        super(StaticLiveServerTestCase, self).run(result)
+        self._testMethodName = self.m_name
+
+    def _test_wrapper(self):
+        m = getattr(self, self.m_name)
+        num = 3
+
+        while True:
+            try:
+                m()
+                break
+            except:
+                if num == 0:
+                    raise
+                else:
+                    num -= 1
 
     def setUp(self):
         self.addCleanup(self.cleanupCalculations)
