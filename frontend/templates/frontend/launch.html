@@ -651,8 +651,19 @@
 					<div class="column">
 						<div class="field">
 							<label class="label">Draw a structure or choose a file</label>
-							<div class="control">
-								<input type="file" name="file_structure" id="file_structure" multiple="multiple">
+
+							<div class="file">
+								<label class="file-label">
+									<input class="file-input" type="file" name="file_structure" id="file_structure" multiple="multiple">
+										<span class="file-cta">
+										<span class="file-icon">
+											<i class="fas fa-upload"></i>
+										</span>
+										<span class="file-label">
+										File upload
+										</span>
+									</span>
+								</label>
 							</div>
 						</div>
 					</div>
@@ -665,9 +676,18 @@
 				</div>
 
 				<div class="field type_specific avail_Minimum_Energy_Path" style="display: none;">
-					<label class="label">Upload auxiliary structure</label>
-					<div class="control">
-						<input type="file" name="aux_file_structure" id="aux_file_structure">
+					<div class="file">
+						<label class="file-label">
+							<input class="file-input" type="file" name="aux_file_structure" id="aux_file_structure">
+								<span class="file-cta">
+								<span class="file-icon">
+									<i class="fas fa-upload"></i>
+								</span>
+								<span class="file-label">
+								Upload auxiliary structure
+								</span>
+							</span>
+						</label>
 					</div>
 				</div>
 
