@@ -4149,7 +4149,7 @@ class MiscCalculationTests(CalcusLiveServer):
         self.calc_launch()
         self.lget("/calculations/")
         self.assertEqual(self.get_number_calc_orders(), 3)
-        self.wait_latest_calc_done(150)
+        self.wait_all_calc_done(150)
         self.assertTrue(self.latest_calc_successful())
 
         calcs = Calculation.objects.all()
@@ -4215,7 +4215,7 @@ class MiscCalculationTests(CalcusLiveServer):
         self.calc_launch()
         self.lget("/calculations/")
         self.assertEqual(self.get_number_calc_orders(), 1)
-        self.wait_latest_calc_done(600)
+        self.wait_all_calc_done(600)
         self.assertTrue(self.latest_calc_successful())
 
         calcs = Calculation.objects.all()

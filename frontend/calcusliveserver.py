@@ -102,7 +102,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def _test_wrapper(self):
         m = getattr(self, self.m_name)
-        num = 3
+        num = 0
 
         while True:
             try:
@@ -1080,6 +1080,23 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
             header = calculations[0].find_element_by_class_name("message-header")
             if "has-background-success" in header.get_attribute("class") or "has-background-danger" in header.get_attribute("class"):
+                return
+            time.sleep(2)
+            self.driver.refresh()
+        raise Exception("Calculation did not finish")
+
+    def wait_all_calc_done(self, timeout):
+        assert self.is_on_page_calculations()
+        assert self.get_number_calc_orders() > 0
+
+        for i in range(0, timeout, 2):
+            calculations = self.get_calc_orders()
+
+            for calc in calculations:
+                header = calculations[0].find_element_by_class_name("message-header")
+                if not "has-background-success" in header.get_attribute("class") and not "has-background-danger" in header.get_attribute("class"):
+                    break
+            else:
                 return
             time.sleep(2)
             self.driver.refresh()
