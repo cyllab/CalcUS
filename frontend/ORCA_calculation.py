@@ -309,7 +309,9 @@ class OrcaCalculation:
         if self.calc.parameters.solvent != "Vacuum":
             solvent_keyword = get_solvent(self.calc.parameters.solvent, self.calc.parameters.software, solvation_model=self.calc.parameters.solvation_model)
 
-            if self.calc.parameters.solvation_model == "SMD" or self.calc.parameters.software == 'xtb':
+            if self.calc.parameters.software == 'xtb':
+                self.command_line += " ALPB({})".format(solvent_keyword)
+            elif self.calc.parameters.solvation_model == "SMD":
                 if self.calc.parameters.solvation_radii == "Default":
                     smd_block = '''%cpcm
                     smd true

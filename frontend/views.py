@@ -354,13 +354,6 @@ def project_details(request, username, proj):
         if can_view_project(project, request.user.profile):
             molecules = []
             for m in project.molecule_set.prefetch_related('ensemble_set').all().order_by(Lower('name')):
-                ### To fully implement
-                '''
-                for e in m.ensemble_set.all():
-                    if e.flagged:
-                        molecules.append(m)
-                        break
-                '''
                 molecules.append(m)
 
             return render(request, 'frontend/project_details.html', {
@@ -727,21 +720,6 @@ def details_structure(request):
             'structure': s, 'property': prop, 'ensemble': e})
 
     return HttpResponse(status=403)
-
-'''
-@login_required
-def details(request, pk):
-    try:
-        calc = Calculation.objects.get(pk=pk)
-    except Calculation.DoesNotExist:
-        return redirect('/home/')
-
-    if not can_view_calculation(calc, request.user.profile):
-        return redirect('/home/')
-
-    return render(request, 'frontend/details.html', {'profile': request.user.profile,
-        'calculation': calc})
-'''
 
 def learn(request):
     exercises = Exercise.objects.all()

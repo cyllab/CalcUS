@@ -136,6 +136,9 @@ class XtbCalculation:
                         'gfn1-xtb': 0,
                         'gfn0-xtb': 0,
                         'gfn-ff': 0,
+                        'quick': 0,
+                        'squick': 0,
+                        'mquick': 0,
                     },
                     'Geometrical Optimisation': {
                         'opt(crude)': 0,
@@ -182,6 +185,12 @@ class XtbCalculation:
                         method = ss[0]
                 elif ss[0] == 'nci':
                     self.cmd_arguments += "--nci "
+                elif ss[0] == 'quick':
+                    self.cmd_arguments += "--quick "
+                elif ss[0] == 'squick':
+                    self.cmd_arguments += "--squick "
+                elif ss[0] == 'mquick':
+                    self.cmd_arguments += "--mquick "
                 else:
                     self.raise_error("Invalid specification")
             elif len(ss) == 2:

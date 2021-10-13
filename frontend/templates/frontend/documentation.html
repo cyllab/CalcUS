@@ -49,9 +49,18 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		li > a, p > a {
 			color: green;
 		}
+
+		@media (max-width: 1024px) {
+		.content {
+			width: 80%; 
+			margin-left: 10%;
+		}
+		}
+		@media (min-width: 1201px) {
 		.content {
 			width: 50%; 
 			margin-left: 25%;
+		}
 		}
 	</style>
 {% endblock %}
