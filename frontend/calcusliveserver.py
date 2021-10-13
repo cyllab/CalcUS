@@ -125,7 +125,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         u.save()
         self.login(self.username, self.password)
         self.profile = Profile.objects.get(user__username=self.username)
-        print(self._testMethodName)
+        #print(self._testMethodName)
         time.sleep(0.1)#Reduces glitches (I think?)
 
     def cleanupCalculations(self):

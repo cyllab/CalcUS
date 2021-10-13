@@ -1181,7 +1181,7 @@ def orca_freq(in_file, calc):
 
     assert ind > 0
 
-    ind += 5
+    ind += 6
 
     nums = []
     vibs = []
