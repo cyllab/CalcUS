@@ -35,3 +35,5 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN mkdir -p /calcus/logs
 RUN mkdir -p /calcus/keys
+RUN mkdir -p /calcus/scr
+RUN mkdir -p /calcus/results
