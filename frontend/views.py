@@ -831,16 +831,20 @@ def parse_parameters(request):
         return "No calculation project"
 
     if 'calc_charge' in request.POST.keys():
-        charge = clean(request.POST['calc_charge'])
-        if charge.strip() == '':
-            return "No calculation charge"
+        try:
+            charge = int(clean(request.POST['calc_charge']).replace('+', ''))
+        except ValueError:
+            return "Invalid calculation charge"
     else:
         return "No calculation charge"
 
     if 'calc_multiplicity' in request.POST.keys():
-        mult = clean(request.POST['calc_multiplicity'])
-        if mult.strip() == '':
-            return "No calculation multiplicity"
+        try:
+            mult = int(clean(request.POST['calc_multiplicity']))
+        except ValueError:
+            return "Invalid multiplicity"
+        if mult < 1:
+            return "Invalid multiplicity"
     else:
         return "No calculation multiplicity"
 
@@ -974,12 +978,6 @@ def parse_parameters(request):
 
     if len(project) > 100:
         return "The chosen project name is too long"
-
-    if charge not in ["-2", "-1", "0", "+1", "+2"]:
-        return "Invalid charge (-2 to +2)"
-
-    if mult not in ["1", "2", "3"]:
-        return "Invalid multiplicity (1 to 3)"
 
     if step.name not in BASICSTEP_TABLE[software].keys():
         return "Invalid calculation type"

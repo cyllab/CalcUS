@@ -782,7 +782,7 @@ class InterfaceTests(CalcusLiveServer):
         params = {
                 'software': 'Gaussian',
                 'type': 'Frequency Calculation',
-                'charge': '+1',
+                'charge': '1',
                 'solvent': 'Chloroform',
                 'software': 'ORCA',
                 'theory': 'DFT',
@@ -802,7 +802,7 @@ class InterfaceTests(CalcusLiveServer):
         params = {
                 'software': 'Gaussian',
                 'type': 'Frequency Calculation',
-                'charge': '+1',
+                'charge': '1',
                 'solvent': 'Chloroform',
                 'software': 'ORCA',
                 'theory': 'DFT',
@@ -823,7 +823,7 @@ class InterfaceTests(CalcusLiveServer):
         params = {
                 'software': 'Gaussian',
                 'type': 'Frequency Calculation',
-                'charge': '+1',
+                'charge': '1',
                 'solvent': 'Chloroform',
                 'software': 'ORCA',
                 'theory': 'DFT',
@@ -862,7 +862,7 @@ class InterfaceTests(CalcusLiveServer):
         params = {
                 'software': 'Gaussian',
                 'type': 'Frequency Calculation',
-                'charge': '+1',
+                'charge': '1',
                 'solvent': 'Chloroform',
                 'theory': 'DFT',
                 'functional': 'M062X',
@@ -906,7 +906,7 @@ class InterfaceTests(CalcusLiveServer):
         params = {
                 'software': 'Gaussian',
                 'type': 'Frequency Calculation',
-                'charge': '+1',
+                'charge': '1',
                 'solvent': 'Chloroform',
                 'theory': 'DFT',
                 'functional': 'M062X',
@@ -940,7 +940,7 @@ class InterfaceTests(CalcusLiveServer):
 
         params = {
                 'type': 'Frequency Calculation',
-                'charge': '+1',
+                'charge': '1',
                 'solvent': 'Chloroform',
                 'software': 'ORCA',
                 'theory': 'DFT',
@@ -1676,7 +1676,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
-                'charge': '+1',
+                'charge': '1',
                 }
 
         self.lget("/launch/")
@@ -1694,7 +1694,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
-                'charge': '+1',
+                'charge': '1',
                 'solvent': 'Chloroform',
                 'solvation_model': 'GBSA',
                 }
@@ -1714,7 +1714,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
-                'charge': '+1',
+                'charge': '1',
                 'solvent': 'Chloroform',
                 'solvation_model': 'ALPB',
                 }
@@ -1976,7 +1976,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.xyz',
-                'charge': '+1'
+                'charge': '1'
                 }
 
         self.lget("/launch/")
@@ -1994,8 +1994,8 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 }
         self.calc_input_params(params2)
 
-        charge = Select(self.driver.find_element_by_name('calc_charge'))
-        self.assertEqual(charge.first_selected_option.text, params['charge'])
+        charge = self.driver.find_element_by_name('calc_charge')
+        self.assertEqual(charge.get_attribute("value"), params['charge'])
 
         self.calc_launch()
         self.lget("/calculations/")
@@ -2009,7 +2009,7 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.xyz',
-                'charge': '+1',
+                'charge': '1',
                 }
 
         self.lget("/launch/")
@@ -2026,8 +2026,8 @@ class XtbCalculationTestsPI(CalcusLiveServer):
                 #project and charge implicit
                 }
 
-        charge = Select(self.driver.find_element_by_name('calc_charge'))
-        self.assertEqual(charge.first_selected_option.text, params['charge'])
+        charge = self.driver.find_element_by_name('calc_charge')
+        self.assertEqual(charge.get_attribute("value"), params['charge'])
 
         self.calc_input_params(params2)
         self.calc_launch()
@@ -2269,7 +2269,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'Ph2I_cation.mol',
-                'charge': '+1',
+                'charge': '1',
                 }
 
         self.lget("/launch/")
@@ -2294,7 +2294,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'in_file': 'Ph2I_cation.xyz',
                 'software': 'xtb',
                 'type': 'Geometrical Optimisation',
-                'charge': '+1',
+                'charge': '1',
                 'solvent': 'dcm',
                 'solvation_model': 'GBSA',
                 'project': 'New Project',
@@ -2327,7 +2327,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'in_file': 'Ph2I_cation.xyz',
                 'software': 'xtb',
                 'type': 'Geometrical Optimisation',
-                'charge': '+1',
+                'charge': '1',
                 'solvent': 'dcm',
                 'solvation_model': 'GBSA',
                 'project': 'New Project',
@@ -2360,7 +2360,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
                 'in_file': 'Ph2I_cation.xyz',
                 'software': 'xtb',
                 'type': 'Geometrical Optimisation',
-                'charge': '+1',
+                'charge': '1',
                 'solvent': 'dcm',
                 'solvation_model': 'GBSA',
                 'project': 'New Project',
@@ -2651,7 +2651,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
-                'charge': '+1',
+                'charge': '1',
                 'software': 'ORCA',
                 'theory': 'Semi-empirical',
                 'method': 'PM3',
@@ -2676,7 +2676,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
-                'charge': '+1',
+                'charge': '1',
                 'software': 'ORCA',
                 'theory': 'HF',
                 'basis_set': 'Def2-SVP',
@@ -2702,7 +2702,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
-                'charge': '+1',
+                'charge': '1',
                 'software': 'ORCA',
                 'theory': 'DFT',
                 'functional': 'PW92',
@@ -2845,7 +2845,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
-                'charge': '+1',
+                'charge': '1',
                 'software': 'ORCA',
                 'theory': 'HF',
                 'basis_set': 'Def2-SVP',
@@ -2869,7 +2869,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
-                'charge': '+1',
+                'charge': '1',
                 'software': 'ORCA',
                 'theory': 'DFT',
                 'functional': 'M062X',
@@ -3428,7 +3428,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
-                'charge': '+1',
+                'charge': '1',
                 'software': 'Gaussian',
                 'theory': 'Semi-empirical',
                 'method': 'PM3',
@@ -3452,7 +3452,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
-                'charge': '+1',
+                'charge': '1',
                 'software': 'Gaussian',
                 'theory': 'HF',
                 'basis_set': 'Def2-SVP',
@@ -3476,7 +3476,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'in_file': 'carbo_cation.mol',
-                'charge': '+1',
+                'charge': '1',
                 'software': 'Gaussian',
                 'theory': 'DFT',
                 'functional': 'M062X',

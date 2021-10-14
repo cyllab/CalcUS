@@ -190,6 +190,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         solvent_input = self.driver.find_element_by_name('calc_solvent')
         charge_input = self.driver.find_element_by_name('calc_charge')
+        mult_input = self.driver.find_element_by_name('calc_multiplicity')
         project_input = self.driver.find_element_by_id('calc_project')
         new_project_input = self.driver.find_element_by_name('new_project_name')
         calc_type_input = self.driver.find_element_by_id('calc_type')
@@ -203,7 +204,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             solvent_input.send_keys(params['solvent'])
 
         if 'charge' in params.keys():
-            self.driver.find_element_by_xpath("//*[@id='calc_charge']/option[text()='{}']".format(params['charge'])).click()
+            charge_input.clear()
+            charge_input.send_keys(params['charge'])
+
+        if 'multiplicity' in params.keys():
+            mult_input.clear()
+            mult_input.send_keys(params['multiplicity'])
 
         if 'software' in params.keys():
             select = self.driver.find_element_by_id("calc_software")
@@ -267,7 +273,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     time.sleep(1)
                 else:
                     break
-
 
         if 'constraints' in params.keys():
             assert params['type'] in ['Constrained Optimisation', 'Constrained Conformational Search']
@@ -932,6 +937,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         calculations = self.get_calc_orders()
         calculations[0].click()
+        self.wait_for_ajax()
 
     def see_latest_calc(self):
         assert self.is_on_page_calculations()

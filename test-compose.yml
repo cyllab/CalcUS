@@ -15,7 +15,7 @@ services:
                         - 8000
                 volumes:
                         - .:/calcus 
-                        - ${CALCUS_INCHI}:/binaries/other
+                        - ./docker/inchi:/binaries/other
                         - ${CALCUS_GAUSSIAN}:/binaries/g16
                         - ${CALCUS_ORCA}:/binaries/orca
                         - ${CALCUS_XTB}:/binaries/xtb
@@ -40,7 +40,7 @@ services:
                 volumes:
                         - .:/calcus 
                         - ./docker/slurm/calcus:/home/slurm/calcus 
-                        - ${CALCUS_INCHI}:/home/slurm/other
+                        - ./docker/inchi:/home/slurm/other
                         - ${CALCUS_GAUSSIAN}:/home/slurm/g16
                         - ${CALCUS_ORCA}:/home/slurm/orca
                         - ${CALCUS_XTB}:/home/slurm/xtb
@@ -55,7 +55,7 @@ services:
                 image: selenium/standalone-chrome-debug:latest
                 #user: calcus
                 volumes:
-                        - ${CALCUS_INCHI}:/binaries/other
+                        - ./docker/inchi:/binaries/other
                 ports:
                         - "4444:4444"
                         - "5900:5900"

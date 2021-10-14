@@ -31,21 +31,25 @@
 		margin-bottom: 5px;
 	}
 	.close_btn {
-	  float: right; 
-	  color: lightgray; 
-	  font-size: 24px;  
-	  font-weight: bold;
+		float: right; 
+		color: lightgray; 
+		font-size: 24px;  
+		font-weight: bold;
 	}
-	  .close_btn:hover {
-	  color: darkgray;
+	.close_btn:hover {
+		color: darkgray;
 	}
-	  @-webkit-keyframes animatetop {
-	  from {top:-300px; opacity:0} 
-	  to {top:0; opacity:1}
+	#calc_charge, #calc_multiplicity {
+		width: 50px;
 	}
-	  @keyframes animatetop {
-	  from {top:-300px; opacity:0}
-	  to {top:0; opacity:1}
+
+	@-webkit-keyframes animatetop {
+		from {top:-300px; opacity:0} 
+		to {top:0; opacity:1}
+	}
+	@keyframes animatetop {
+		from {top:-300px; opacity:0}
+		to {top:0; opacity:1}
 	}
 	</style>
 
@@ -716,15 +720,7 @@
 						<div class="field">
 							<label class="label">Charge</label>
 							<div class="control" >
-								<div class="select">
-								  <select name="calc_charge" id="calc_charge">
-								    <option>+2</option>
-								    <option>+1</option>
-								    <option selected="selected">0</option>
-								    <option>-1</option>
-								    <option>-2</option>
-								  </select>
-								</div>
+								<input class="input" name="calc_charge" id="calc_charge" type="text" value="0">
 							</div>
 						</div>
 					</div>
@@ -732,13 +728,7 @@
 						<div class="field">
 							<label class="label">Multiplicity</label>
 							<div class="control" >
-								<div class="select">
-								  <select name="calc_multiplicity" id="calc_multiplicity">
-								    <option selected="selected">1</option>
-								    <option>2</option>
-								    <option>3</option>
-								  </select>
-								</div>
+								<input class="input" name="calc_multiplicity" id="calc_multiplicity" type="text" value="1">
 							</div>
 						</div>
 					</div>
