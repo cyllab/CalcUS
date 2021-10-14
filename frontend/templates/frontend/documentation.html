@@ -2347,6 +2347,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	</details>
 	<h3 class="title is-3">Server Admin Guide</h3>
 	<h4 class="title is-4">Minimal Setup</h4>
+	<h5 class="title is-5">Quickstart</h5>
 	<p>
 		Firstly, install and configure Docker. On Linux, it is necessary to create a <code>docker</code> group and to add yourself to it:
 		<code class="bash">
@@ -2356,7 +2357,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 		You will need to log out and log back in for the changes to be effective.
 
-		Then, clone the repository. In that repository create a file named <code>.env</code> which will be used to set the necessary environment variables. A typical <code>.env</code> will look something like this:
+		Then, clone the repository. In that repository, a file named <code>.env</code> will be needed to set the necessary environment variables. The script <code>generate_env.py</code> can be used to interactively create that file. Simply run it with the command <code>python3 generate_env.py</code> and answer the questions. If everything runs successfully, feel free the skip the next subsection.
+		
+	<h5 class="title is-5">Additional Details</h5>
+		A typical <code>.env</code> will look something like this:
 
 		<code>
 			CALCUS_SECRET_KEY='de^%k+mia@*%fxl*n6zp^vghxnj4))30q9+h8e3_no-xb0*k40'
