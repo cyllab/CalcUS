@@ -153,6 +153,17 @@
 						</div>
 					</div>
 					{% endif %}
+					{% if user.profile.clusteraccess_owner.count > 0 %}
+					<div class="navbar-item has-dropdown is-hoverable">
+						<a class="navbar-link">Cluster Accesses</a>
+						<div class="navbar-dropdown">
+							{% for a in user.profile.clusteraccess_owner.all %}
+								<a class="navbar-item" href="/manage_access/{{ a.id }}">{{ a.cluster_address }}</a>
+							{% endfor %}
+						</div>
+					</div>
+
+					{% endif %}
 
 					{% if user.is_superuser %}
 						<a class="navbar-item" href="/manage_pi_requests/">
