@@ -39,7 +39,7 @@ services:
                 command: ./scripts/run_celery_main.sh
                 volumes:
                         - .:/calcus
-                        - ${CALCUS_INCHI}:/binaries/other
+                        - ./docker/inchi:/binaries/other
                 env_file:
                         - ./.env
                 links:

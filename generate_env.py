@@ -10,12 +10,13 @@ CALCUS_GAUSSIAN={}
 CALCUS_ORCA={}
 CALCUS_OPENMPI={}
 CALCUS_XTB={}
-CALCUS_INCHI={}
 OMP_NUM_THREADS={},1
 NUM_CPU={}
 OMP_STACKSIZE={}G
 USE_CACHED_LOGS=true
 """
+
+cwd = os.getcwd()
 
 def gen_key():
     length = 50
@@ -75,28 +76,13 @@ print("Generating secret key...")
 secret_key = gen_key()
 print("Secret key generated")
 
-ret = which("inchi-1")
-if ret is None:
-    while True:
-        inchi_path = input("CalcUS requires the package InChI package (available for free at https://www.inchi-trust.org/downloads/). The binary 'inchi-1' was not found. Please provide the full path to the directory containing this binary.")
-        if not os.path.isdir(inchi_path):
-            print("Invalid path")
-        else:
-            if not os.path.isfile(os.path.join(inchi_path, "inchi-1")):
-                print("No binary called 'inchi-1' found in the provided directory")
-            else:
-                break
-else:
-    inchi_path = os.path.dirname(ret)
-    print("InChI package found in $PATH ({})".format(inchi_path))
-
 software_list = ["g16", "orca", "xtb", "mpirun"]
 software_paths = {}
 local_calc = False
 for s in software_list:
     path = find_software(s)
     if path == "":
-        software_paths[s] = inchi_path
+        software_paths[s] = cwd
     else:
         if s == "mpirun":
             software_paths[s] = os.path.dirname(path)
@@ -133,5 +119,5 @@ else:
 
 print("Writing .env file...")
 with open(".env", 'w') as out:
-    out.write(ENV_TEMPLATE.format(secret_key, software_paths["g16"], software_paths["orca"], software_paths["mpirun"], software_paths["xtb"], inchi_path, num_cpu, num_cpu, mem))
+    out.write(ENV_TEMPLATE.format(secret_key, software_paths["g16"], software_paths["orca"], software_paths["mpirun"], software_paths["xtb"], num_cpu, num_cpu, mem))
 print("Done!")
