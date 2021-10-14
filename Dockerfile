@@ -32,3 +32,6 @@ RUN pip install -U "celery[redis]"
 
 ENV TZ=America/New_York
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN mkdir -p /calcus/logs
+RUN mkdir -p /calcus/keys
