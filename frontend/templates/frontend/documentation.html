@@ -2357,7 +2357,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 		You will need to log out and log back in for the changes to be effective.
 
-		Then, clone the repository. In that repository, a file named <code>.env</code> will be needed to set the necessary environment variables. The script <code>generate_env.py</code> can be used to interactively create that file. Simply run it with the command <code>python3 generate_env.py</code> and answer the questions. If everything runs successfully, feel free the skip the next subsection.
+		Then, clone the repository. In that repository, a file named <code>.env</code> will be needed to set the necessary environment variables. The script <code>generate_env.py</code> can be used to interactively create that file. Simply run it with the command <code>python3 generate_env.py</code> and answer the questions. When you will run CalcUS, a superuser account will be created with the username specified in the <code>.env</code> file. You can use this account as main account, but make sure to change the password if the server is accessible to others.
+
+		Also note that the <code>.env</code> contains <b>sensitive information</b> and should only be accessible by the server administrator.
+		
+		If everything runs successfully, feel free the skip the next subsection.
 		
 	<h5 class="title is-5">Additional Details</h5>
 		A typical <code>.env</code> will look something like this:
@@ -2373,6 +2377,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
 			NUM_CPU=8
 			OMP_STACKSIZE=1G
 			USE_CACHED_LOGS=true
+			POSTGRES_PASSWORD=7ho74kgeysywg0xw953rhpi5wg5tpg4oi1e1x1bbgwiruon6w5
+			UID=1000
+			GID=1000
+			CALCUS_SU_NAME=SU
 		</code>
 
 		<code>CALCUS_SECRET_KEY</code> is the Django secret key that will be used as salt for cryptographic hash generation (<a href="https://docs.djangoproject.com/en/dev/ref/settings/#secret-key">See more details in the Django documentation</a>). Note that it is not used to encrypt the users' password, so changing this key will not cause the loss of encrypted logins in the database. This should be generated during the setup; this can be done using Django itself:
@@ -2381,13 +2389,20 @@ document.addEventListener('DOMContentLoaded', (event) => {
 			get_random_secret_key()
 		</code>
 
-		The next five variables are paths to directories containing the relevant software packages. Note that the InChI package is used for every new structure and has to be installed (it is available free of charge <a href="https://www.inchi-trust.org/downloads/">here</a>). If you do not have some of the other packages, simply input the path to the directory containing the InChI package again. 
+		The next five variables are paths to directories containing the relevant software packages. Note that the InChI package is used for every new structure and has to be accessible (it is available free of charge <a href="https://www.inchi-trust.org/downloads/">here</a>). For convenience, the appropriate InChI binary (the Linux 64 bit version), the corresponding full source code as well as the project's license are provided in <code>docker/inchi</code>. You should not need to change anything.
+		If you do not have some of the other packages, simply input the path to the directory containing the InChI package again. Note that this bogus path needs to exist and be accessible by the user, as the directory will be mounted to the Docker virtual machine.
 
 		<code>OMP_NUM_THREADS</code> and <code>NUM_CPU</code> specify the number of processors available for calculations (eight in the example above). For the moment, every calculation uses all available processors.
 
 		<code>OMP_STACKSIZE</code> specifies the memory available per processor.
 
 		<code>USE_CACHED_LOGS</code> is a flag regarding the use of calculation caching during the automated tests. If enabled, CalcUS will save the results of calculations performed during the tests in <code>calcus/frontend/tests/cache</code>. When the tests are run again, CalcUS will detect input files that have been used in the past and directly yield the result without calculating it again.
+
+		<code>POSTGRES_PASSWORD</code> is the password used for the PostgreSQL database.
+
+		<code>UID</code> and <code>GID</code> are the user and group ids used by the PostgreSQL service. These should correspond to the ids of the user running CalcUS in order to store the database with the correct ownership.
+
+		<code>CALCUS_SU_NAME</code> is the username of the superuser account in CalcUS. At each startup, a command is ran to verify if this user exists. If it doesn't, it will be created with the password <code>calcus_default_password</code>.
 	</p>
 	<h4 class="title is-4">Running CalcUS</h4>
 	<p>
