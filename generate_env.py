@@ -14,9 +14,14 @@ OMP_NUM_THREADS={},1
 NUM_CPU={}
 OMP_STACKSIZE={}G
 USE_CACHED_LOGS=true
+UID={}
+GID={}
 """
 
 cwd = os.getcwd()
+
+if not os.path.isdir("data"):
+    os.mkdir("data")
 
 def gen_key():
     length = 50
@@ -119,5 +124,5 @@ else:
 
 print("Writing .env file...")
 with open(".env", 'w') as out:
-    out.write(ENV_TEMPLATE.format(secret_key, software_paths["g16"], software_paths["orca"], software_paths["mpirun"], software_paths["xtb"], num_cpu, num_cpu, mem))
+    out.write(ENV_TEMPLATE.format(secret_key, software_paths["g16"], software_paths["orca"], software_paths["mpirun"], software_paths["xtb"], num_cpu, num_cpu, mem, os.getuid(), os.getgid()))
 print("Done!")

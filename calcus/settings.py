@@ -14,6 +14,7 @@ if is_test:
 else:
     SECRET_KEY = os.environ['CALCUS_SECRET_KEY']
 
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 
 DEBUG = False
 PROD = False
@@ -84,19 +85,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'calcus.wsgi.application'
 
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        'OPTIONS': {
-            'timeout': 150,
-            },
-        'TEST': {
-            'NAME': '/tmp/testdb.sqlite3',
-            }
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'calcus',
+        'USER': 'calcus',
+        'PASSWORD': POSTGRES_PASSWORD,
+        'HOST': 'postgres',
+        'PORT': '5432',
     }
 }
+
 
 
 AUTH_PASSWORD_VALIDATORS = [

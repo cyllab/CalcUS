@@ -1,4 +1,6 @@
 #!/bin/sh
+
+python scripts/wait_for_postgres.py
 python manage.py makemigrations
 python manage.py makemigrations frontend
 python manage.py migrate

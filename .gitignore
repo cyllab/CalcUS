@@ -12,3 +12,5 @@ frontend/migrations/
 htmlcov/
 frontend/tests/cache/
 old/
+data/
+test_run

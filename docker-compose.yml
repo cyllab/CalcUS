@@ -16,11 +16,13 @@ services:
                         - 8000
                 volumes:
                         - .:/calcus 
-                        - ${CALCUS_INCHI}:/binaries/other
+                        - ./docker/inchi:/binaries/other
                 links:
                         - redis
                 env_file:
                         - ./.env
+                depends_on:
+                        - postgres
         nginx:
                 image: nginx:latest
                 ports:
@@ -54,10 +56,10 @@ services:
                 command: ./scripts/run_celery_comp.sh
                 volumes:
                         - .:/calcus
+                        - ./docker/inchi:/binaries/other
                         - ${CALCUS_GAUSSIAN}:/binaries/g16
                         - ${CALCUS_ORCA}:/binaries/orca
                         - ${CALCUS_XTB}:/binaries/xtb
-                        - ${CALCUS_INCHI}:/binaries/other
                         - ${CALCUS_OPENMPI}/bin:/binaries/openmpi
                         - ${CALCUS_OPENMPI}/lib:/usr/lib/openmpi
                 env_file:
@@ -80,5 +82,14 @@ services:
                         - web
                 depends_on:
                         - redis
-
+        postgres:
+                image: postgres
+                restart: always
+                user: "${UID}:${GID}"
+                volumes:
+                        - ./data:/var/lib/postgresql/data/:rw
+                env_file:
+                        - ./.env
+                environment:
+                        - PGDATA=./var/lib/postgresql/data/
 
