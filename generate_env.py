@@ -14,8 +14,10 @@ OMP_NUM_THREADS={},1
 NUM_CPU={}
 OMP_STACKSIZE={}G
 USE_CACHED_LOGS=true
+POSTGRES_PASSWORD={}
 UID={}
 GID={}
+CALCUS_SU_NAME={}
 """
 
 cwd = os.getcwd()
@@ -26,6 +28,12 @@ if not os.path.isdir("data"):
 def gen_key():
     length = 50
     chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
+
+    return ''.join(secrets.choice(chars) for i in range(length))
+
+def gen_pass():
+    length = 50
+    chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
 
     return ''.join(secrets.choice(chars) for i in range(length))
 
@@ -80,7 +88,21 @@ if os.path.isfile(".env"):
 print("Generating secret key...")
 secret_key = gen_key()
 print("Secret key generated")
+print("")
 
+print("Generating PostgreSQL password...")
+postgres = gen_pass()
+print("PostgreSQL password generated")
+print("")
+
+while True:
+    su_name = input("Choose a username for the superuser account. This account will have the password 'calcus_default_password'. Make sure to change this password in the profile.")
+    if su_name.strip() == "":
+        print("Invalid username")
+    else:
+        break
+
+print("")
 software_list = ["g16", "orca", "xtb", "mpirun"]
 software_paths = {}
 local_calc = False
@@ -107,6 +129,7 @@ if local_calc:
                 print("Invalid number of cores")
             else:
                 break
+    print("")
     while True:
         n = input("How many GB of RAM per core do you want CalcUS to use for local calculations? (e.g. 1)")
         try:
@@ -118,11 +141,12 @@ if local_calc:
                 print("Invalid number of GB")
             else:
                 break
+    print("")
 else:
     num_cpu = 1
     mem = 1
 
 print("Writing .env file...")
 with open(".env", 'w') as out:
-    out.write(ENV_TEMPLATE.format(secret_key, software_paths["g16"], software_paths["orca"], software_paths["mpirun"], software_paths["xtb"], num_cpu, num_cpu, mem, os.getuid(), os.getgid()))
+    out.write(ENV_TEMPLATE.format(secret_key, software_paths["g16"], software_paths["orca"], software_paths["mpirun"], software_paths["xtb"], num_cpu, num_cpu, mem, postgres, os.getuid(), os.getgid(), su_name))
 print("Done!")

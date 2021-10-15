@@ -92,4 +92,7 @@ services:
                         - ./.env
                 environment:
                         - PGDATA=./var/lib/postgresql/data/
+                        - POSTGRES_USER=calcus
+                        - POSTGRES_DB=calcus
+
 

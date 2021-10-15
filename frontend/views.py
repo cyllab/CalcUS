@@ -21,11 +21,12 @@ from django.views import generic
 from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import AnonymousUser
-from django.contrib.auth import login
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AnonymousUser, User
+from django.contrib.auth import login, update_session_auth_hash
 from django.utils.datastructures import MultiValueDictKeyError
 from django.db.models import Prefetch
+from django.contrib import messages
+from django.contrib.auth.forms import PasswordChangeForm
 
 from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe, Folder, CalculationFrame
@@ -3728,6 +3729,20 @@ def clean_all_completed(request):
     CalculationOrder.objects.bulk_update(to_update, ['hidden', 'last_seen_status'])
 
     return HttpResponse(status=200)
+
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Your password was updated.')
+            return HttpResponseRedirect("/change_password/")
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'frontend/change_password.html', {
+        'form': form
+    })
 
 def handler404(request, *args, **argv):
     return render(request, 'error/404.html', {

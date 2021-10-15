@@ -3,6 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
+
 from . import views
 
 app_name = 'frontend'
@@ -155,6 +156,7 @@ urlpatterns = [
     path('delete_molecule/', views.delete_molecule, name='delete_molecule'),
     path('delete_ensemble/', views.delete_ensemble, name='delete_ensemble'),
     path('delete_folder/', views.delete_folder, name='delete_folder'),
+    path('change_password/', views.change_password, name='change_password'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
