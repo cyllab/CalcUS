@@ -17,11 +17,11 @@ else:
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 
 DEBUG = False
-PROD = False
+SSL = False
 
 ALLOWED_HOSTS = '*.*.*.*'
 
-if not DEBUG and PROD:
+if not DEBUG and SSL:
     ALLOWED_HOSTS = '*.*.*.*'
     SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 3600
@@ -31,7 +31,6 @@ if not DEBUG and PROD:
     SECURE_BROWSER_XSS_FILTER = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    #SECURE_REFERRER_POLICY = origin
     X_FRAME_OPTIONS = 'DENY'
 
 INSTALLED_APPS = [
@@ -168,6 +167,3 @@ ALLOW_LOCAL_CALC = True
 DBBACKUP_CLEANUP_KEEP = 10 # Number of old DBs to keep
 DBBACKUP_INTERVAL = 1 # In days (can be a float)
 
-PING_HOME = False
-with open("/etc/machine-id") as f:
-    MACHINE_ID = f.readlines()[0].strip()

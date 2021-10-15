@@ -35,17 +35,6 @@ app.autodiscover_tasks()
 def debug_task(self):
     print('Request: {0!r}'.format(self.request))
 
-if not is_test and settings.PING_HOME:
-    app.conf.beat_schedule = {
-            'ping-home': {
-                'task': 'frontend.tasks.ping_home',
-                'schedule': crontab(minute=((datetime.now().minute + 1) % 60)),
-                'options': {
-                    'expires': 3600,
-                }
-            },
-    }
-
 if not is_test:
     app.conf.beat_schedule = {
             'backup-db': {

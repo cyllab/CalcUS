@@ -9,6 +9,7 @@ services:
                 build:
                         context: .
                         dockerfile: Dockerfile
+                restart: always
                 hostname: web
                 user: calcus
                 command: ./scripts/run_web.sh

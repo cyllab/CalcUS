@@ -25,7 +25,11 @@ WORKDIR /calcus/
 
 RUN pip install -r requirements.txt
 RUN apt update && apt install openbabel sshpass -y
-
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main" >>  /etc/apt/sources.list.d/pgdg.list
+RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+RUN apt install wget ca-certificates -y
+RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+RUN apt update && apt install postgresql-client -y
 RUN adduser --disabled-password --gecos '' calcus  
 
 RUN pip install -U "celery[redis]"

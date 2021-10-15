@@ -2955,10 +2955,6 @@ def ping():
     return 'pong'
 
 @app.task
-def ping_home():
-    requests.post("http://minotaurr.org/calcus", data={'id': settings.MACHINE_ID})
-
-@app.task
 def backup_db():
     logger.info("Backup up database")
     management.call_command('dbbackup', clean=True, interactive=False)

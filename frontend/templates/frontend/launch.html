@@ -30,6 +30,12 @@
 		margin-top: 5px;
 		margin-bottom: 5px;
 	}
+	.constraint_btn {
+		margin-top: 0;
+		margin-bottom: 0;
+		width: 40px;
+		height: 40px;
+	}
 	.close_btn {
 		float: right; 
 		color: lightgray; 
@@ -66,7 +72,7 @@
 	  	};
 	})(ChemDoodle);
 
-	let constraint_num = 1;
+	let constraint_num = 0;
 	String.prototype.format = function() {
   		a = this;
 		for (i=0; i < 30; i++) {
@@ -326,10 +332,11 @@
 			});
 		}
 
-		function add_constraint() {
+		function add_constraint(first) {
 			constraint_num += 1;
-			$("#constraint_list").append(`
-			<div class="control" id="constraint_1"> \
+
+			_line = `
+			<div class="control" id="constraint_{}"> \
 				<div class="columns"> \
 					<div class="column"> \
 						<div class="select"> \
@@ -361,7 +368,7 @@
 						<input class="input" type="text" width="5" name="calc_constraint_{}_4" id="calc_constraint_{}_4" style="display: none;"> \
 					</div> \
 					<div class="column"> \
-				<button type="button" class="button is-danger" onclick="$('#calc_scan_div_{}').remove(); $(this).parent().parent().parent().remove();">-</button> \
+				<button type="button" class="button is-danger constraint_btn" onclick="$('#calc_scan_div_{}').remove(); $(this).parent().parent().parent().remove();">-</button> \
 					</div> \
 				</div> \
 			</div> \
@@ -380,7 +387,12 @@
 				<input class="input" type="text" width="5" name="calc_scan_{}_3" id="calc_scan_{}_3"> \
 				</div> \
 			</div> \
-			</div>`.format(constraint_num));
+			</div>`.format(constraint_num);
+			if(first) {
+				_line = _line.replace(`<button type="button" class="button is-danger constraint_btn" onclick="$('#calc_scan_div_{}').remove(); $(this).parent().parent().parent().remove();">-</button>`.format(constraint_num), `<button type="button" class="button is-primary constraint_btn" id="add_constraint_btn" onclick="add_constraint();">+</button>`);
+			}
+
+			$("#constraint_list").append(_line);
 		}
 		
 		function get_3D() {
@@ -866,59 +878,6 @@
 					<div class="field">
 						<label class="label">Constraints and scan coordinates</label>
 						<div id="constraint_list">
-							<div class="control" id="constraint_1">
-								<div class="columns">
-									<div class="column">
-										<div class="select">
-											<select name="constraint_mode_1" id="constraint_mode_1" onchange="constraint_mode_changed(1)">
-											<option selected="selected">Freeze</option>
-											<option class="type_specific avail_Constrained_Optimisation">Scan</option>
-											</select>
-										</div>
-									</div>
-
-									<div class="column">
-										<div class="select">
-											<select name="constraint_type_1" id="constraint_type_1" onchange="constraint_type_selection_changed(1);">
-											<option selected="selected">Distance</option>
-											<option>Angle</option>
-											<option>Dihedral</option>
-											</select>
-										</div>
-									</div>
-									<div class="column">
-										<input class="input" type="text" width="5" name="calc_constraint_1_1" id="calc_constraint_1_1">
-									</div>
-									<div class="column">
-										<input class="input" type="text" width="5" name="calc_constraint_1_2" id="calc_constraint_1_2">
-									</div>
-									<div class="column">
-										<input class="input" type="text" width="5" name="calc_constraint_1_3" id="calc_constraint_1_3" style="display: none;">
-									</div>
-									<div class="column">
-										<input class="input" type="text" width="5" name="calc_constraint_1_4" id="calc_constraint_1_4" style="display: none;">
-									</div>
-									<div class="column">
-										<button type="button" class="button is-primary" id="add_constraint_btn" onclick="add_constraint();">+</button>
-									</div>
-								</div>
-								<div style="display: none;" id="calc_scan_div_1">
-								<div class="columns" >
-									<div class="column">
-										<p id="calc_label_from_1"> From (Å)</p>
-										<input class="input software_specific avail_xtb avail_ORCA scan_from" type="text" width="5" name="calc_scan_1_1" id="calc_scan_1_1">
-									</div>
-									<div class="column">
-										<p id="calc_label_to_1"> To (Å)</p>
-										<input class="input" type="text" width="5" name="calc_scan_1_2" id="calc_scan_1_2">
-									</div>
-									<div class="column">
-										# Steps
-										<input class="input" type="text" width="5" name="calc_scan_1_3" id="calc_scan_1_3">
-									</div>
-								</div>
-								</div>
-							</div>
 						</div>
 					</div>
 				</div>
@@ -1269,6 +1228,8 @@
 
 		$(this).data('software', $(this).val());
 	})
+
+	add_constraint(true);	
 
 	{% if not ensemble and not structure and not calc %}
 		const inputElement = document.getElementById("file_structure");
