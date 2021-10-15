@@ -86,20 +86,6 @@ class Recipe(models.Model):
     title = models.CharField(max_length=100)
     page_path = models.CharField(max_length=100)
 
-class Exercise(models.Model):
-    title = models.CharField(max_length=100)
-    page_path = models.CharField(max_length=100)
-
-class Question(models.Model):
-    exercise = models.ForeignKey(Exercise, on_delete=models.SET_NULL, blank=True, null=True)
-    question = models.CharField(max_length=2000)
-    answer = models.FloatField()
-    tolerance = models.FloatField()
-
-class CompletedExercise(models.Model):
-    exercise = models.ForeignKey(Exercise, on_delete=models.SET_NULL, blank=True, null=True)
-    completed_by = models.ForeignKey(Profile, on_delete=models.SET_NULL, blank=True, null=True)
-
 class ResearchGroup(Group):
     PI = models.ForeignKey(Profile, on_delete=models.SET_NULL, blank=True, null=True, related_name="researchgroup_PI")
 

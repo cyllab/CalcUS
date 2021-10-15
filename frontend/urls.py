@@ -16,7 +16,6 @@ urlpatterns = [
     path('documentation/', TemplateView.as_view(template_name="frontend/documentation.html"), name='documentation'),
     path('calculations/', views.calculations, name='calculations'),
 
-    path('answer/', views.answer, name='answer'),
     path('cancel_calc/', views.cancel_calc, name='cancel_calc'),
     path('relaunch_calc/', views.relaunch_calc, name='relaunch_calc'),
     path('refetch_calc/', views.refetch_calc, name='refetch_calc'),
@@ -78,7 +77,6 @@ urlpatterns = [
 
     #Documentation
     path('learn/', views.learn, name='learn'),
-    path('learn/exercise/<int:pk>', views.exercise, name='exercise'),
     path('learn/example/<int:pk>', views.example, name='example'),
     path('learn/recipe/<int:pk>', views.recipe, name='recipe'),
 

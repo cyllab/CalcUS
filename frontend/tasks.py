@@ -539,7 +539,7 @@ def launch_xtb_calc(in_file, calc, files):
                 if line.find("[WARNING] Runtime exception occurred") != -1:
                     return 1
         '''
-        #Frequency calculations on unoptimized geometries give an error
+        #Frequency calculations on unoptimized geometries (or TSs) give an error
         if calc.step.creates_ensemble:
             analyse_opt(calc.id)
 

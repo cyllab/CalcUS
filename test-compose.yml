@@ -61,4 +61,17 @@ services:
                         - "5900:5900"
                 links:
                         - web
+        postgres:
+                image: postgres
+                restart: always
+                user: "${UID}:${GID}"
+                volumes:
+                        - ./data:/var/lib/postgresql/data/:rw
+                env_file:
+                        - ./.env
+                environment:
+                        - PGDATA=./var/lib/postgresql/data/
+                        - POSTGRES_USER=calcus
+                        - POSTGRES_DB=calcus
+
 

@@ -29,7 +29,7 @@ from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
 
 from .forms import UserCreateForm
-from .models import Calculation, Profile, Project, ClusterAccess, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, BasicStep, CalculationOrder, Molecule, Property, Filter, Exercise, CompletedExercise, Preset, Recipe, Folder, CalculationFrame
+from .models import Calculation, Profile, Project, ClusterAccess, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, BasicStep, CalculationOrder, Molecule, Property, Filter, Preset, Recipe, Folder, CalculationFrame
 from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc, send_cluster_command
 from .decorators import superuser_required
 from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint, get_Gaussian_xyz
@@ -728,59 +728,6 @@ def learn(request):
     recipes = Recipe.objects.all()
 
     return render(request, 'frontend/learn.html', {'exercises': exercises, 'examples': examples, 'recipes': recipes})
-
-def is_close(ans, question):
-    if ans >= question.answer - question.tolerance and ans <= question.answer + question.tolerance:
-        return True
-    else:
-        return False
-
-def answer(request):
-    if request.method != "POST":
-        return HttpResponse(status=404)
-
-    if 'exercise' not in request.POST.keys():
-        return HttpResponse("Error")
-
-    try:
-        ex_id = int(clean(request.POST['exercise']))
-    except ValueError:
-        return HttpResponse("Error")
-
-    try:
-        ex = Exercise.objects.get(pk=ex_id)
-    except Exercise.DoesNotExist:
-        return HttpResponse("Error")
-
-    questions = ex.question_set.all()
-    for q in questions:
-        try:
-            answer = float(clean(request.POST['answer_{}'.format(q.id)]))
-        except KeyError:
-            return HttpResponse("Error")
-        except ValueError:
-            return HttpResponse("Please enter numbers")
-
-        if not is_close(answer, q):
-            return HttpResponse("Not all answers are correct")
-
-    profile = request.user.profile
-
-    try:
-        c = CompletedExercise.objects.get(exercise=ex, completed_by=profile)
-    except CompletedExercise.DoesNotExist:
-        c = CompletedExercise.objects.create(exercise=ex, completed_by=profile)
-        c.save()
-
-    return HttpResponse("Correct!")
-
-def exercise(request, pk):
-    try:
-        ex = Exercise.objects.get(pk=pk)
-    except Exercise.DoesNotExist:
-        pass
-
-    return render(request, 'exercises/' + ex.page_path, {'questions': ex.question_set.all(), 'exercise': ex})
 
 def example(request, pk):
     try:
@@ -2028,11 +1975,6 @@ def get_calc_frame(request, cid, fid):
     if calc.status == 0:
         return HttpResponse(status=204)
 
-    #multi_xyz, RMSD = analyse_opt(calc.id)
-    #s_xyz = multi_xyz.split('\n')
-    #natoms = int(s_xyz[0])
-    #xyz = '\n'.join(s_xyz[(fid-1)*(natoms+2):fid*(natoms+2)])
-    #return HttpResponse(xyz)
     xyz = calc.calculationframe_set.get(number=fid).xyz_structure
     return HttpResponse(xyz)
 
@@ -2068,27 +2010,6 @@ def get_cube(request):
             return HttpResponse(status=204)
     return HttpResponse(status=204)
 
-@login_required
-def enso_nmr(request, pk):
-    id = str(pk)
-    calc = Calculation.objects.get(pk=id)
-
-    profile = request.user.profile
-
-    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
-        return HttpResponse(status=403)
-
-    if not calc.has_nmr:
-        return HttpResponse(status=403)
-    spectrum_file = os.path.join(CALCUS_RESULTS_HOME, id, "nmr.csv")
-
-    if os.path.isfile(spectrum_file):
-        with open(spectrum_file, 'rb') as f:
-            response = HttpResponse(f, content_type='text/csv')
-            response['Content-Disposition'] = 'attachment; filename={}.csv'.format(id)
-            return response
-    else:
-        return HttpResponse(status=204)
 @login_required
 def nmr(request):
     if request.method != 'POST':
