@@ -723,11 +723,10 @@ def details_structure(request):
     return HttpResponse(status=403)
 
 def learn(request):
-    exercises = Exercise.objects.all()
     examples = Example.objects.all()
     recipes = Recipe.objects.all()
 
-    return render(request, 'frontend/learn.html', {'exercises': exercises, 'examples': examples, 'recipes': recipes})
+    return render(request, 'frontend/learn.html', {'examples': examples, 'recipes': recipes})
 
 def example(request, pk):
     try:
