@@ -2406,15 +2406,23 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	</p>
 	<h4 class="title is-4">Running CalcUS</h4>
 	<p>
-		Once the setup is complete, build the docker image using <code>docker-compose build</code>, and launch it using <code>docker-compose up</code>. CalcUS is now available in your web browser at the adress <a href="http://0.0.0.0:8080">0.0.0.0:8080</a>.
+		Once the setup is complete, build the docker image using <code>docker-compose build</code>, and launch it using <code>docker-compose up</code>. CalcUS is now available in your web browser at the adress <a href="http://0.0.0.0:8080">0.0.0.0:8080</a>. You might need to manually start the docker service if you've just installed it. It will start automatically at boot in the future.
 	</p>
 
 	<h3 class="title is-3">Developer Guide</h3>
 	<h4 class="title is-4">Contributing</h4>
-	<h4 class="title is-4">Tests</h4>
-	The entire test suite should be run before submitting any pull request. If you do not have access to all the supported software, simply ignore the errors involving running the missing software.
+	Contributions to the project in the form of feedback or pull requests are welcome. For code contributions, please make sure to provide good quality code with similar formatting as the rest of the project. Notably, this means:
+	<ul>
+		<li>Variable names and comments should be in English</li>
+		<li>Use tabs for indentation</li>
+		<li>Use proper whitespace (for example, after commas)</li>
+		<li>Comment complex or unintuitive lines of code</li>
+	</ul>
 
-	To run the test suite, first start the development environment:
+	<h4 class="title is-4">Tests</h4>
+	All the relevant tests should be ran before submitting a pull request.
+
+	To run the entire test suite, first start the development environment:
 	<sh>
 		<code class="bash">
 			docker-compose -f test-compose.yml up
@@ -2435,6 +2443,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		</code>
 	</sh>
 
+	Note that, despite our best efforts, some tests are prone to giving variable outcomes. If a test fails and appears unrelated to changes you have made, try running the test again. Further debugging can make use of Virtual Network Computing (VNC). In particular, you can connect to the virtual machine running Selenium, and thus view exactly what is happening. To do so, connect with any VNC client to <code>localhost</code> and use the password <code>secret</code>.
+
+	New functionalities must be minimally tested. When submitting your pull request, make sure that it contains at least a few tests that will fail if the functionality stops working. Depending on the nature of the functionality, integration tests or unit tests can be used. The main purpose of this is the ensure a certain stability of all the functionalities.
+
+	Bug fixes must also contain enough tests to ensure that the bug could not occur again unnoticed.
 </div>
 {% endblock %}
 

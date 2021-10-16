@@ -716,11 +716,11 @@ def xtb_scan(in_file, calc):
     if preparse.has_scan:
         if not os.path.isfile("{}/xtbscan.log".format(local_folder)):
             return 1
-
         with open(os.path.join(local_folder, 'xtbscan.log')) as f:
             lines = f.readlines()
             if len(lines) == 0:
                 if failed:
+                    print("no lines")
                     return ret
 
                 return ErrorCodes.INVALID_FILE
@@ -740,7 +740,6 @@ def xtb_scan(in_file, calc):
                 Since we can't get the keys of items created in bulk and we can't set a reference without first creating the objects, I haven't found a way to create both the structures and properties using bulk_update. This is still >2.5 times faster than the naive approach.
             '''
             properties = []
-
 
             for metaind, mol in enumerate(inds[:-1]):
                 r = Structure.objects.get_or_create(parent_ensemble=calc.result_ensemble, number=metaind+1)[0]

@@ -102,17 +102,23 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def _test_wrapper(self):
         m = getattr(self, self.m_name)
-        num = 0
+        num = 3
+
+        exc = None
 
         while True:
             try:
                 m()
-                break
-            except:
+            except Exception as e:
+                if exc is None:
+                    exc = e
                 if num == 0:
-                    raise
+                    raise exc
                 else:
                     num -= 1
+                time.sleep(3)
+            else:
+                break
 
     def setUp(self):
         self.addCleanup(self.cleanupCalculations)
@@ -125,7 +131,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         u.save()
         self.login(self.username, self.password)
         self.profile = Profile.objects.get(user__username=self.username)
-        #print(self._testMethodName)
         time.sleep(0.1)#Reduces glitches (I think?)
 
     def cleanupCalculations(self):
@@ -343,7 +348,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             specs = self.driver.find_element_by_id("calc_specifications")
             specs.clear()
             specs.send_keys(params['specifications'])
-            self.driver.find_element_by_css_selector("summary").click()
+            #self.driver.find_element_by_css_selector("summary").click()
 
         if 'filter' in params.keys():
             assert 'filter_value' in params.keys()

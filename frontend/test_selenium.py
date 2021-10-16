@@ -2694,7 +2694,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_calc_method(2)
         self.assertTrue(self.is_loaded_frequencies())
 
-    '''
     def test_freq_DFT(self):
         params = {
                 'mol_name': 'test',
@@ -2705,9 +2704,8 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'charge': '1',
                 'software': 'ORCA',
                 'theory': 'DFT',
-                'functional': 'PW92',
+                'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': 'NUMFREQ',
                 }
 
         self.lget("/launch/")
@@ -2717,13 +2715,11 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
-        self.assertEqual(self.get_number_conformers(), 0)
+        self.assertEqual(self.get_number_conformers(), 1)
         self.click_calc_method(2)
         self.assertEqual(self.get_number_conformers(), 1)
 
+    '''
     def test_freq_RIMP2(self):
         params = {
                 'mol_name': 'test',
@@ -2744,10 +2740,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(60)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
-        self.assertTrue(self.is_on_page_molecule())
-
-        self.click_ensemble("File Upload")
-        self.assertEqual(self.get_number_conformers(), 0)
+        self.assertEqual(self.get_number_conformers(), 1)
         self.click_calc_method(2)
         self.assertEqual(self.get_number_conformers(), 1)
     '''
@@ -3982,6 +3975,7 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_error(10)
 
         self.click_latest_calc()
+        self.click_tab(1)
         self.assertGreaterEqual(self.get_number_conformers(), 1)
 
 class MiscCalculationTests(CalcusLiveServer):
@@ -4587,7 +4581,7 @@ class ComplexCalculationTests(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': 'Def2/JK',
+                'specifications': 'Def2/J',
                 }
 
         self.lget("/launch/")
