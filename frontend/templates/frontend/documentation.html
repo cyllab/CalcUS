@@ -49,6 +49,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		li > a, p > a {
 			color: green;
 		}
+		code {
+			padding: 0.25em 0em 0.25em 0em;
+		}
 
 		@media (max-width: 1024px) {
 		.content {
@@ -2354,7 +2357,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		sudo groupadd docker
 		sudo usermod -aG docker $USER
 		</code>
-
 		You will need to log out and log back in for the changes to be effective.
 
 		Then, clone the repository. In that repository, a file named <code>.env</code> will be needed to set the necessary environment variables. The script <code>generate_env.py</code> can be used to interactively create that file. Simply run it with the command <code>python3 generate_env.py</code> and answer the questions. When you will run CalcUS, a superuser account will be created with the username specified in the <code>.env</code> file. You can use this account as main account, but make sure to change the password if the server is accessible to others.
@@ -2362,32 +2364,30 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		Also note that the <code>.env</code> contains <b>sensitive information</b> and should only be accessible by the server administrator.
 		
 		If everything runs successfully, feel free the skip the next subsection.
-		
+	</p>		
 	<h5 class="title is-5">Additional Details</h5>
+	<p>		
 		A typical <code>.env</code> will look something like this:
-
 		<code>
-			CALCUS_SECRET_KEY='de^%k+mia@*%fxl*n6zp^vghxnj4))30q9+h8e3_no-xb0*k40'
-			CALCUS_GAUSSIAN=/home/user/softwares/g16
-			CALCUS_ORCA=/home/user/softwares/orca
-			CALCUS_OPENMPI=/home/user/.openmpi/
-			CALCUS_XTB=/home/user/softwares/xtb/bin
-			CALCUS_INCHI=/home/user/.local/bin
-			OMP_NUM_THREADS=8,1
-			NUM_CPU=8
-			OMP_STACKSIZE=1G
-			USE_CACHED_LOGS=true
-			POSTGRES_PASSWORD=7ho74kgeysywg0xw953rhpi5wg5tpg4oi1e1x1bbgwiruon6w5
-			UID=1000
-			GID=1000
-			CALCUS_SU_NAME=SU
+		CALCUS_SECRET_KEY='de^%k+mia@*%fxl*n6zp^vghxnj4))30q9+h8e3_no-xb0*k40'
+		CALCUS_GAUSSIAN=/home/user/softwares/g16
+		CALCUS_ORCA=/home/user/softwares/orca
+		CALCUS_OPENMPI=/home/user/.openmpi/
+		CALCUS_XTB=/home/user/softwares/xtb/bin
+		CALCUS_INCHI=/home/user/.local/bin
+		OMP_NUM_THREADS=8,1
+		NUM_CPU=8
+		OMP_STACKSIZE=1G
+		USE_CACHED_LOGS=true
+		POSTGRES_PASSWORD=7ho74kgeysywg0xw953rhpi5wg5tpg4oi1e1x1bbgwiruon6w5
+		UID=1000
+		GID=1000
+		CALCUS_SU_NAME=SU
 		</code>
 
 		<code>CALCUS_SECRET_KEY</code> is the Django secret key that will be used as salt for cryptographic hash generation (<a href="https://docs.djangoproject.com/en/dev/ref/settings/#secret-key">See more details in the Django documentation</a>). Note that it is not used to encrypt the users' password, so changing this key will not cause the loss of encrypted logins in the database. This should be generated during the setup; this can be done using Django itself:
-		<code>
-			from django.core.management.utils import get_random_secret_key  
-			get_random_secret_key()
-		</code>
+		<code>from django.core.management.utils import get_random_secret_key  
+		get_random_secret_key()</code>
 
 		The next five variables are paths to directories containing the relevant software packages. Note that the InChI package is used for every new structure and has to be accessible (it is available free of charge <a href="https://www.inchi-trust.org/downloads/">here</a>). For convenience, the appropriate InChI binary (the Linux 64 bit version), the corresponding full source code as well as the project's license are provided in <code>docker/inchi</code>. You should not need to change anything.
 		If you do not have some of the other packages, simply input the path to the directory containing the InChI package again. Note that this bogus path needs to exist and be accessible by the user, as the directory will be mounted to the Docker virtual machine.
@@ -2406,7 +2406,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	</p>
 	<h4 class="title is-4">Running CalcUS</h4>
 	<p>
-		Once the setup is complete, build the docker image using <code>docker-compose build</code>, and launch it using <code>docker-compose up</code>. CalcUS is now available in your web browser at the adress <a href="http://0.0.0.0:8080">0.0.0.0:8080</a>. You might need to manually start the docker service if you've just installed it. It will start automatically at boot in the future.
+		Once the setup is complete, build the docker image using <code>docker-compose build</code>, and launch it using <code>docker-compose up</code>. CalcUS is now available in your web browser at the address <a href="http://0.0.0.0:8080">0.0.0.0:8080</a>. You might need to manually start the docker service if you've just installed it. It will start automatically at boot in the future.
 	</p>
 
 	<h3 class="title is-3">Developer Guide</h3>
