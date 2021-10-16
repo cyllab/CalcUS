@@ -40,7 +40,6 @@ if not is_test:
             'backup-db': {
                 'task': 'frontend.tasks.backup_db',
                 'schedule': crontab(hour=16, minute=30),
-                #'schedule': int(settings.DBBACKUP_INTERVAL*24*3600),
                 'options': {
                     'expires': int(settings.DBBACKUP_INTERVAL*24*3600),
                     },

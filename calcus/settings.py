@@ -95,8 +95,6 @@ DATABASES = {
     }
 }
 
-
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -122,7 +120,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
@@ -134,6 +131,7 @@ DBBACKUP_STORAGE_OPTIONS = {'location': 'backups/'}
 LOGIN_REDIRECT_URL = '/home'
 
 DEFAULT_FROM_EMAIL = 'bot@CalcUS'
+
 if is_test:
     EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
     EMAIL_FILE_PATH = os.path.join(BASE_DIR, "frontend", "tests", "sent_emails")

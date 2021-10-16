@@ -13,4 +13,6 @@ htmlcov/
 frontend/tests/cache/
 old/
 data/
+logs/
+backups/
 test_run
