@@ -20,6 +20,16 @@ Once the setup is complete, build the docker image using `docker-compose build`,
 
 Further documentation is available in CalcUS itself.
 
+## Contributors
+**Project lead and main contributor**: Raphaël Robidas
+**Contributor to the conception and beta-testing*: Prof. Claude Y. Legault
+**Beta-testers**:
++ Léo Hall
++ Joanick Bourret
++ David Lemire
++ Tommy Lussier
++ Louis Schutz
+
 ## Dependencies
 CalcUS makes use of several third-party softwares. For convenience, all the non-Python packages are redistributed in this repository, along with their license and/or links to their homepage. These packages are however not part of CalcUS itself.
 
