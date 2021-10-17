@@ -22,8 +22,11 @@ Further documentation is available in CalcUS itself.
 
 ## Contributors
 **Project lead and main contributor**: Raphaël Robidas
+
 **Contributor to the conception and beta-testing*: Prof. Claude Y. Legault
+
 **Beta-testers**:
+
 + Léo Hall
 + Joanick Bourret
 + David Lemire
