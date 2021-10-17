@@ -7,11 +7,8 @@
 
 {% block extrahead %}
 	<title>CalcUS - NMR Analysis</title>
-	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
-	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
 	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
-	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
-	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+	<script src="{% static 'frontend/jquery.min.js' %}"></script>
 
 	<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
 	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
@@ -135,7 +132,7 @@
 			<form id="fileinfo" enctype="multipart/form-data" method="post" name="fileinfo">
 				<input type="file" name="exp_spectrum_dir" webkitdirectory mozdirectory>
 </form>
-			<button class="button is-info" onclick="load_exp_spectrum();">Compare</button>
+			<button class="button is-info" onclick="load_exp_spectrum();">Compare with experiment</button>
 		</center>
 		<script>
 
@@ -207,7 +204,6 @@
 
 			function load_exp_spectrum() {
 				scaling_factors = parse_shifts();
-				//exp_dir = new FormData($("#fileinfo"));
 				var exp_dir = new FormData();
 				for(i=0; i < $('input[type=file]')[0].files.length; i++) {
 					exp_dir.append('file', $('input[type=file]')[0].files[i]);

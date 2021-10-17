@@ -165,7 +165,6 @@ urlpatterns = [
     path('get_scan_animation/', views.get_scan_animation, name='get_scan_animation'),
     path('download_structures/<int:ee>', views.download_structures, name='download_structures'),
     path('download_structures/<int:ee>/<int:num>', views.download_structure, name='download_structure'),
-    path('status/<int:pk>', views.status, name='status'),
     path('icon/<int:pk>', views.icon, name='icon'),
     path('uvvis/<int:pk>', views.uvvis, name='uvvis'),
     path('nmr/', views.nmr, name='nmr'),

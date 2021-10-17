@@ -2209,20 +2209,6 @@ def info_table(request, pk):
         })
 
 @login_required
-def status(request, pk):
-    id = str(pk)
-    calc = Calculation.objects.get(pk=id)
-
-    profile = request.user.profile
-
-    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
-        return HttpResponse(status=403)
-
-    return render(request, 'frontend/dynamic/status.html', {
-            'calculation': calc,
-        })
-
-@login_required
 def next_step(request, pk):
     id = str(pk)
     calc = Calculation.objects.get(pk=id)
