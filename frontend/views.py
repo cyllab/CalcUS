@@ -1073,7 +1073,7 @@ def submit_calculation(request):
         if access.owner != profile:
             return error(request, "You do not have the right to use this cluster access")
     else:
-        if not profile.is_PI and profile.group == None:
+        if not profile.is_PI and profile.group == None and not request.user.is_superuser:
             return error(request, "You have no computing resource")
 
     orders = []

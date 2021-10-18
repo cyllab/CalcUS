@@ -1007,7 +1007,7 @@
 						<div class="select">
 						<select name="calc_ressource">
 							{% if allow_local_calc %}
-								{% if profile.group or profile.is_PI %}
+								{% if profile.group or profile.is_PI or request.user.is_superuser %}
 									<option>Local</option>
 								{% endif %}
 							{% endif %}

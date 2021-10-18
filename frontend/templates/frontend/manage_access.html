@@ -6,7 +6,12 @@
 {% block extrahead %}
 	<title>CalcUS - Manage Access</title>
 	<script src="{% static 'frontend/jquery.min.js' %}"></script>
-
+	<style>
+		#content_container > .box {
+			max-width: 30%;
+			margin: 20px auto;
+		}
+	</style>
 	<script>
 		function connect_access() {
 			password = document.getElementById("ssh_password").value;
@@ -108,8 +113,8 @@
 {% block content %}
 {% csrf_token %}
 
-<div class="columns">
-	<div class="column is-narrow">
+<div class="box">
+	<center>
 		<table class="table">
 			<tbody>
 				<tr>
@@ -130,38 +135,31 @@
 				</tr>
 			</tbody>
 		</table>
-	</div>
-	<div class="column is-narrow has-text-centered">
-		<label class="label">Status</label>
-		<div class="box" id="status_box">
-
+	</center>
+</div>
+<div class="box">
+	<center>
+		<div>
+			<label class="label">Status</label>
+			<div class="box" id="status_box"></div>
 		</div>
-	</div>
-
-	<div class="column">
-		<div class="box">
-			<div class="columns">
-				<div class="column is-narrow">
-					<div class="field">
-						<label class="label">Password for Access</label>
-						<div class="control">
-							<input class="input" type="password" id="ssh_password" style="width: 100%;">
-						</div>
-					</div>
-
-					<button class="button is-primary" id="connect_button" onclick="connect_access();">Connect to cluster</button>
-					<button class="button is-danger" id="disconnect_button" onclick="disconnect_access();">Disconnect</button>
-					<div id="test_msg">
-					</div>
-				</div>
-				<div class="column">
-					<a class="button is-danger" onclick="delete_access();" id="delete_access_button" >Delete this access</a>
-				</div>
+		<br />
+		<div class="field">
+			<label class="label">Password for Access</label>
+			<div class="control">
+				<input class="input" type="password" id="ssh_password" style="width: 100%;">
 			</div>
 		</div>
-	</div>
-</div>
 
+		<button class="button is-primary" id="connect_button" onclick="connect_access();">Connect to cluster</button>
+		<button class="button is-danger" id="disconnect_button" onclick="disconnect_access();">Disconnect</button>
+		<div id="test_msg">
+		</div>
+	</center>
+</div>
+<div class="box has-text-centered">
+	<a class="button is-danger" onclick="delete_access();" id="delete_access_button" >Delete this access</a>
+</div>
 
 
 {% endblock content %}
