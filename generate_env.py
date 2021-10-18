@@ -149,4 +149,10 @@ else:
 print("Writing .env file...")
 with open(".env", 'w') as out:
     out.write(ENV_TEMPLATE.format(secret_key, software_paths["g16"], software_paths["orca"], software_paths["mpirun"], software_paths["xtb"], num_cpu, num_cpu, mem, postgres, os.getuid(), os.getgid(), su_name))
+
+print("Creating necessary folders")
+for d in ["scr", "results", "keys", "logs"]:
+    if not os.path.isdir(d):
+        os.mkdir(d)
+
 print("Done!")

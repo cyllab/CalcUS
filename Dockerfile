@@ -25,19 +25,14 @@ WORKDIR /calcus/
 
 RUN pip install -r requirements.txt
 RUN apt update && apt install openbabel sshpass -y
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main" >>  /etc/apt/sources.list.d/pgdg.list
-RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main 13" >>  /etc/apt/sources.list.d/pgdg.list
+RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main 13" > /etc/apt/sources.list.d/pgdg.list'
 RUN apt install wget ca-certificates -y
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-RUN apt update && apt install postgresql-client -y
+RUN apt update && apt install postgresql-client-13 -y
 RUN adduser --disabled-password --gecos '' calcus  
 
 RUN pip install -U "celery[redis]"
 
 ENV TZ=America/New_York
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-RUN mkdir -p /calcus/logs
-RUN mkdir -p /calcus/keys
-RUN mkdir -p /calcus/scr
-RUN mkdir -p /calcus/results

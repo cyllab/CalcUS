@@ -36,7 +36,7 @@ else:
 
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 
-DEBUG = True
+DEBUG = False
 SSL = False
 
 ALLOWED_HOSTS = '*.*.*.*'
