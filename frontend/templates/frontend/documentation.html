@@ -2348,6 +2348,47 @@
 	    </tbody>
 	</table>	
 	</details>
+	<h4 class="title is-4">Specifications</h4>
+	<p>
+	Specifications are modifiers or additional keywords that will change the input file. Common specifications are listed below for Gaussian and ORCA. Any valid additional keyword for these softwares can be used, even if not present below. In the case of xtb, only the recognized specifications listed below can be used for security reasons.
+	</p>
+
+	<h5 class="title is-5">Gaussian</h5>
+	<p>
+	When performing geometrical optimisations (constrained or not), multiple options can be specified to affect the optimisation procedure. Most commonly, the convergence criterion can be change with <code>opt(loose)</code> or <code>opt(tight)</code>. If a system has the tendency to "wiggle" a lot without converging to a minimum, the option <code>opt(maxstep=X)</code> code be used, where <code>X</code> is an integer, typically from 5 to 30. This prevents the system from making optimisation steps that are too big, which might endlessly overshoot past the minimum.
+
+	Frequency calculations calculations involving Hartree-Fock and that do not make use of Raman intensities can be sped up by using <code>freq(noraman)</code>.
+
+	Multiple options can be combined. For example:
+	<ul>
+		<li><code>opt(loose, maxstep=10)</code></li>
+		<li><code>opt(loose, maxstep=10) EmpiricalDispersion=GD3</code></li>
+	</ul>
+
+	Additional options related to another calculation type than the one performed are ignored. For example, specifying <code>opt(maxstep=10)</code> when performing a frequency calculation (<code>freq</code>) will not do anything.
+	</p>
+
+	<h5 class="title is-5">ORCA</h5>
+	<p>
+	Hirshfeld charges can be calculated by using the specification <code>phirshfeld</code>. Note that this is not an ORCA keyword; CalcUS instead adds the appropriate block to the input.
+	
+	The geometrical optimisation convergence criterion can be modified with <code>LOOSEOPT</code>, <code>TIGHTOPT</code> or <code>VERYTIGHTOPT</code>.
+	</p>
+	<h5 class="title is-5">xtb</h5>
+	<p>
+	As many options are given on the command line, no unknown specification is allowed. All the possible specifications are listed here.	
+
+	The accuracy and the number of iterations can be specified with <code>--acc X</code> and <code>--iterations X</code>, where <code>X</code> is the desired parameter.
+
+	The Hamiltonian can be chosen with <code>--gfn 2</code> (default), <code>--gfn 1</code>, <code>--gfn 0</code> or <code>--gfnff</code>. These options are valid for all calculations, except TS optimisations (which use ORCA use calculation driver).
+
+	The convergence criteria of geometrical optimisations can be chosen with <code>--opt level</code>, where level is </code>crude</code>, </code>sloppy</code>, </code>loose</code>, </code>lax</code>, </code>normal</code>, </code>tight</code> (default), </code>vtight</code> or <code>extreme</code>.
+	
+	Conformational searches (constrained or not) have several particular options. Faster/cruder sampling procedures can be requested with <code>--quick</code>, <code>--squick</code> and <code>--mquick</code>. The RMSD threshold for considering conformers as different can be set with <code>--rthr X</code>, where <code>X</code> is the threshold in Ångström (default of 0.6 in CalcUS). Furthermore, the energy window to consider can be set with <code>--ewin X</code>, where <code>X</code> is the treshold in kcal/mol (default of 6 in CalcUS).
+	
+	Constrained geometrical optimisations and constrained conformational searches employ a harmonic potential to constrain coordinates (distances, angles, dihedral angles). The force constant of this potential can be chosen with </code>--forceconstant X</code>, where <code>X</code> is the force constant in Hartree/Bohr². By default, CalcUS uses a force constant of 1.0, which corresponds to a very stiff potential well. In most cases, this high value forces the use of small timesteps in meta-dynamic and molecular dynamic simulations (for constrained conformational searches). If the constrained coordinates do not need to remain exactly constant, the simulations can be accelerated by a smaller force constant.
+	</p>
+
 	<h3 class="title is-3">Server Admin Guide</h3>
 	<h4 class="title is-4">Minimal Setup</h4>
 	<h5 class="title is-5">Quickstart</h5>

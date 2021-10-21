@@ -20,6 +20,9 @@ Once the setup is complete, build the docker image using `docker-compose build`,
 
 Further documentation is available in CalcUS itself.
 
+## Citation
+If you use CalcUS in your research, please cite it: `Raphaël Robidas and Claude Y. Legault, "CalcUS: An Open Source Computational Chemistry Web Platform", 2021, manuscript in preparation.`
+
 ## Contributors
 **Project lead and main contributor**: Raphaël Robidas
 

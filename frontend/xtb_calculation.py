@@ -156,9 +156,6 @@ class XtbCalculation:
                         'gfn1-xtb': 0,
                         'gfn0-xtb': 0,
                         'gfn-ff': 0,
-                        'quick': 0,
-                        'squick': 0,
-                        'mquick': 0,
                     },
                     'Geometrical Optimisation': {
                         'opt(crude)': 0,
@@ -174,6 +171,9 @@ class XtbCalculation:
                         'gfn2-xtb//gfn-ff': 0,
                         'rthr': 1,
                         'ewin': 1,
+                        'quick': 0,
+                        'squick': 0,
+                        'mquick': 0,
                     },
         }
 
