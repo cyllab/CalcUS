@@ -84,7 +84,7 @@ services:
                 depends_on:
                         - redis
         postgres:
-                image: postgres
+                image: postgres:11-bullseye
                 restart: always
                 user: "${UID}:${GID}"
                 volumes:
