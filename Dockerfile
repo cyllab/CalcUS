@@ -24,7 +24,7 @@ ADD requirements.txt /calcus/requirements.txt
 WORKDIR /calcus/
 
 RUN pip install -r requirements.txt
-RUN apt update && apt install openbabel sshpass postgresql-client-11 -y
+RUN apt update && apt install openbabel sshpass postgresql-client -y
 
 RUN adduser --disabled-password --gecos '' calcus  
 
