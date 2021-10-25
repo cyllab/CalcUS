@@ -1,3 +1,7 @@
+<p align="center">
+	<img src="static/frontend/calcus.svg">
+</p>
+
 # CalcUS - Computational Chemistry Web Platform
 CalcUS is a computational chemistry plateform. It strives for simplicity, clarity and efficiency. It brings all the necessary tools to perform computational chemistry in a user-friendly web interface. 
 
