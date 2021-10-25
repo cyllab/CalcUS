@@ -1005,7 +1005,7 @@
 					<label class="label">Resource</label>
 					<div class="control" >
 						<div class="select">
-						<select name="calc_ressource">
+						<select name="calc_ressource" id="calc_ressource">
 							{% if allow_local_calc %}
 								{% if profile.group or profile.is_PI or request.user.is_superuser %}
 									<option>Local</option>
@@ -1143,6 +1143,10 @@
 
 				},
 			});
+		{% endif %}
+		{% if resource %}
+		resource = document.getElementById("calc_ressource");
+		resource.value = "{{ resource }}";
 		{% endif %}
 		{% if ensemble and not structure %}
 			$("#calc_project").val("{{ ensemble.parent_molecule.project.name }}");
