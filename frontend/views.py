@@ -2788,7 +2788,9 @@ def launch(request):
             return HttpResponse(status=403)
 
         if e.result_of.first() is not None:
-            params['resource'] = e.result_of.first().resource.cluster_address
+            o = e.result_of.first()
+            if o.resource is not None:
+                params['resource'] = o.resource.cluster_address
 
         params['ensemble'] = e
         if 'structures' in request.POST.keys():
@@ -2831,7 +2833,8 @@ def launch(request):
         if not can_view_calculation(calc, profile):
             return HttpResponse(status=403)
 
-        params['resource'] = calc.order.resource.cluster_address
+        if calc.order.resource is not None:
+            params['resource'] = calc.order.resource.cluster_address
 
         try:
             frame = calc.calculationframe_set.get(number=frame_num)
