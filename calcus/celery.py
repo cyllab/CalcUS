@@ -29,17 +29,10 @@ from celery.schedules import crontab
 
 docker = False
 
-a = os.getenv("CALCUS_DOCKER")
-if a is not None and a.lower() == "true":
+if os.getenv("CALCUS_DOCKER", "false").lower() == "true":
     docker = True
 else:
     docker = False
-
-b = os.getenv("CALCUS_TEST")
-if b is not None and b.lower() == "true":
-    is_test = True
-else:
-    is_test = False
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'calcus.settings')
 
@@ -55,7 +48,7 @@ app.autodiscover_tasks()
 def debug_task(self):
     print('Request: {0!r}'.format(self.request))
 
-if not is_test:
+if not settings.IS_TEST:
     app.conf.beat_schedule = {
             'backup-db': {
                 'task': 'frontend.tasks.backup_db',
@@ -67,3 +60,13 @@ if not is_test:
     }
 
 
+if not settings.IS_TEST and settings.PING_SATELLITE.lower() == "true":
+    app.conf.beat_schedule = {
+            'ping-satellite': {
+                'task': 'frontend.tasks.ping_satellite',
+                'schedule': crontab(minute=datetime.now().minute+1%60),
+                'options': {
+                    'expires': 3600,
+                }
+            },
+    }

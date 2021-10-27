@@ -45,6 +45,7 @@ from time import time, sleep
 from celery.signals import task_prerun, task_postrun
 from django.utils import timezone
 from django.conf import settings
+from django.core import management
 from django.db.utils import IntegrityError
 from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
 from celery import group
@@ -62,8 +63,6 @@ from .xtb_calculation import XtbCalculation
 from .calculation_helper import *
 from .environment_variables import *
 
-from django.conf import settings
-from django.core import management
 
 import traceback
 import periodictable
@@ -2977,5 +2976,9 @@ def ping():
 def backup_db():
     logger.info("Backup up database")
     management.call_command('dbbackup', clean=True, interactive=False)
+
+@app.task
+def ping_satellite():
+    r = requests.post("https://calcus-satellite-tg3y3xrnxq-uc.a.run.app/ping", data={'code': settings.PING_CODE})
 
 

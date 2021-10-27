@@ -23,13 +23,13 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 try:
-    is_test = os.environ['CALCUS_TEST']
+    IS_TEST = os.environ['CALCUS_TEST']
 except:
-    is_test = False
+    IS_TEST = False
 else:
-    is_test = True
+    IS_TEST = True
 
-if is_test:
+if IS_TEST:
     SECRET_KEY = "testkey"
 else:
     SECRET_KEY = os.environ['CALCUS_SECRET_KEY']
@@ -152,7 +152,7 @@ LOGIN_REDIRECT_URL = '/home'
 
 DEFAULT_FROM_EMAIL = 'bot@CalcUS'
 
-if is_test:
+if IS_TEST:
     EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
     EMAIL_FILE_PATH = os.path.join(BASE_DIR, "frontend", "tests", "sent_emails")
 
@@ -185,3 +185,5 @@ ALLOW_LOCAL_CALC = True
 DBBACKUP_CLEANUP_KEEP = 10 # Number of old DBs to keep
 DBBACKUP_INTERVAL = 1 # In days (can be a float)
 
+PING_SATELLITE = os.getenv("CALCUS_PING_SATELLITE", "False")
+PING_CODE = os.getenv("CALCUS_PING_CODE", "default")

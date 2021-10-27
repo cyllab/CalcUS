@@ -18,6 +18,8 @@ POSTGRES_PASSWORD={}
 UID={}
 GID={}
 CALCUS_SU_NAME={}
+CALCUS_PING_SATELLITE={}
+CALCUS_PING_CODE={}
 """
 
 cwd = os.getcwd()
@@ -31,7 +33,7 @@ def gen_key():
 
     return ''.join(secrets.choice(chars) for i in range(length))
 
-def gen_pass():
+def gen_chars():
     length = 50
     chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
 
@@ -54,7 +56,7 @@ def find_software(name):
 
     ans = ""
     while True:
-        ans = input("{} has not been found in $PATH. Will you use this software locally? (Y/N)".format(name))
+        ans = input("{} has not been found in $PATH. Will you use this software locally? (Y/N)\n".format(name))
         if ans.lower() in ['y', 'n']:
             break
         print("Invalid option")
@@ -65,7 +67,7 @@ def find_software(name):
 
     path = ""
     while True:
-        path = input("What is the full path to the directory containing this software?")
+        path = input("What is the full path to the directory containing this software?\n")
         if not valid_dir(path, name):
             print("The specified path is invalid or does not contain the software {}".format(name))
         else:
@@ -85,24 +87,22 @@ if os.path.isfile(".env"):
     print("The local directory already contains a .env file. Delete it if you want to create a new one.")
     exit(0)
 
-print("Generating secret key...")
 secret_key = gen_key()
 print("Secret key generated")
-print("")
+print("\n")
 
-print("Generating PostgreSQL password...")
-postgres = gen_pass()
+postgres = gen_chars()
 print("PostgreSQL password generated")
-print("")
+print("\n")
 
 while True:
-    su_name = input("Choose a username for the superuser account. This account will have the password 'calcus_default_password'. Make sure to change this password in the profile.")
+    su_name = input("Choose a username for the superuser account. This account will have the password 'calcus_default_password'. Make sure to change this password in the profile.\n")
     if su_name.strip() == "":
-        print("Invalid username")
+        print("Invalid username\n")
     else:
         break
 
-print("")
+print("\n")
 software_list = ["g16", "orca", "xtb", "mpirun"]
 software_paths = {}
 local_calc = False
@@ -119,36 +119,52 @@ for s in software_list:
 
 if local_calc:
     while True:
-        n = input("How many CPU cores do you want CalcUS to use for local calculations? (e.g. 8)")
+        n = input("How many CPU cores do you want CalcUS to use for local calculations? (e.g. 8)\n")
         try:
             num_cpu = int(n)
         except ValueError:
-            print("Invalid number of cores")
+            print("Invalid number of cores\n")
         else:
             if num_cpu < 1:
-                print("Invalid number of cores")
+                print("Invalid number of cores\n")
             else:
                 break
-    print("")
+    print("\n")
     while True:
-        n = input("How many GB of RAM per core do you want CalcUS to use for local calculations? (e.g. 1)")
+        n = input("How many GB of RAM per core do you want CalcUS to use for local calculations? (e.g. 1)\n")
         try:
             mem = int(n)
         except ValueError:
-            print("Invalid number of GB")
+            print("Invalid number of GB\n")
         else:
             if mem < 1:
-                print("Invalid number of GB")
+                print("Invalid number of GB\n")
             else:
                 break
-    print("")
+    print("\n")
 else:
     num_cpu = 1
     mem = 1
 
-print("Writing .env file...")
+while True:
+        ans = input("Do you accept to send anonymous signals to indicate that you are using CalcUS? (Y/N)\n\nThis will allow us to estimate how many users are benefiting from this project and report this number to funding agencies. If enabled, CalcUS will send a signal every hour to our server. You will only be identified by a randomly generated code in order to differentiate unique instances. This is optional, but helps the project.\n")
+        if ans.lower() in ['y', 'n']:
+            break
+        print("Invalid option\n")
+
+if ans.lower() == 'y':
+    print("Anonymous signals enabled\n")
+    ping = "True"
+    ping_code = gen_chars()
+    print("Code generated")
+else:
+    print("Anonymous signals disabled\n")
+    ping = "False"
+    ping_code = "empty"
+
+print("Writing .env file...\n")
 with open(".env", 'w') as out:
-    out.write(ENV_TEMPLATE.format(secret_key, software_paths["g16"], software_paths["orca"], software_paths["mpirun"], software_paths["xtb"], num_cpu, num_cpu, mem, postgres, os.getuid(), os.getgid(), su_name))
+    out.write(ENV_TEMPLATE.format(secret_key, software_paths["g16"], software_paths["orca"], software_paths["mpirun"], software_paths["xtb"], num_cpu, num_cpu, mem, postgres, os.getuid(), os.getgid(), su_name, ping, ping_code))
 
 print("Creating necessary folders")
 for d in ["scr", "results", "keys", "logs"]:
