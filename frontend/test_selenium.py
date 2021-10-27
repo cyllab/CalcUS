@@ -2303,6 +2303,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
         self.lget("/calculations/")
         self.wait_latest_calc_error(10)
+        time.sleep(2)
 
         self.click_latest_calc()
         self.wait_for_ajax()
@@ -2686,7 +2687,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
-        self.click_calc_method(2)
+        self.click_calc_method_not_geom()
         self.assertTrue(self.is_loaded_frequencies())
 
     def test_freq_HF(self):
@@ -2711,7 +2712,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
-        self.click_calc_method(2)
+        self.click_calc_method_not_geom()
         self.assertTrue(self.is_loaded_frequencies())
 
     def test_freq_DFT(self):
@@ -2735,8 +2736,10 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
+
+        self.click_calc_method_geom()
         self.assertEqual(self.get_number_conformers(), 1)
-        self.click_calc_method(2)
+        self.click_calc_method_not_geom()
         self.assertEqual(self.get_number_conformers(), 1)
 
     '''
@@ -2897,7 +2900,9 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
-        self.click_calc_method(2)
+
+        self.click_calc_method_not_geom()
+
         self.assertTrue(self.is_loaded_mo())
 
     def test_scan_distance_SE(self):
@@ -3455,7 +3460,8 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
-        self.click_calc_method(2)
+        self.click_calc_method_not_geom()
+
         self.assertTrue(self.is_loaded_frequencies())
 
     def test_freq_HF(self):
@@ -3993,9 +3999,9 @@ class GaussianCalculationTestsPI(CalcusLiveServer):
 
         self.lget("/calculations/")
         self.wait_latest_calc_error(10)
+        time.sleep(2)
 
         self.click_latest_calc()
-        self.click_tab(1)
         self.assertGreaterEqual(self.get_number_conformers(), 1)
 
 class MiscCalculationTests(CalcusLiveServer):

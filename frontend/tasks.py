@@ -226,7 +226,7 @@ def wait_until_done(calc, conn, lock):
     logger.info("Waiting for job {} to finish".format(job_id))
 
     if is_test:
-        DELAY = [5]
+        DELAY = [2]
     else:
         DELAY = [5, 20, 30, 60, 120, 240, 600]
 

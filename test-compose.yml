@@ -62,7 +62,7 @@ services:
                 links:
                         - web
         postgres:
-                image: postgres
+                image: postgres:11-bullseye
                 restart: always
                 user: "${UID}:${GID}"
                 volumes:

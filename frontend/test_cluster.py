@@ -35,6 +35,7 @@ from multiprocessing import Process
 
 from django.contrib.auth.models import User, Group
 
+from selenium.webdriver.common.alert import Alert
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -107,10 +108,17 @@ class ClusterTests(CalcusLiveServer):
     def setup_cluster(self):
         self.lget("/profile")
 
+        try:
+            access = self.driver.find_element_by_css_selector("#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a")
+        except selenium.common.exceptions.NoSuchElementException:
+            pass
+        else:
+            return
+
         self.add_cluster()
 
         element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "#owned_accesses > center > table > tbody > tr > th:nth-child(5) > a"))
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a"))
         )
 
         self.select_cluster(1)
@@ -129,9 +137,8 @@ class ClusterTests(CalcusLiveServer):
         delete_access = self.driver.find_element_by_id("delete_access_button")
         delete_access.click()
 
-        alert = self.driver.switch_to_alert()
+        alert = Alert(self.driver)
         alert.accept()
-        self.driver.switch_to_default_content()
 
         ind = 0
         while len(glob.glob("{}/*".format(KEYS_DIR))) == initial_keys and ind < 5:
@@ -213,7 +220,7 @@ class ClusterTests(CalcusLiveServer):
         self.assertEqual(msg, "Connected")
 
         self.lget("/profile/")
-        manage = self.driver.find_element_by_css_selector("#owned_accesses > center > table > tbody > tr > th:nth-child(5) > a")
+        manage = self.driver.find_element_by_css_selector("#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a")
         manage.send_keys(Keys.RETURN)
 
         element = WebDriverWait(self.driver, 10).until(
@@ -416,7 +423,7 @@ class ClusterTests(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
-        self.click_calc_method(2)
+        self.click_calc_method_not_geom()
         self.assertTrue(self.is_loaded_mo())
 
     def test_cluster_orca_opt(self):
@@ -507,7 +514,7 @@ class ClusterTests(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
-        self.click_calc_method(2)
+        self.click_calc_method_not_geom()
         self.assertTrue(self.is_loaded_frequencies())
 
     def test_cluster_orca_scan(self):
@@ -693,7 +700,7 @@ class ClusterTests(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
-        self.click_calc_method(2)
+        self.click_calc_method_not_geom()
         self.assertTrue(self.is_loaded_frequencies())
 
     def test_cluster_gaussian_scan(self):

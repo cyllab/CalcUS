@@ -29,6 +29,7 @@ import pexpect
 import socket
 
 from selenium import webdriver
+from selenium.webdriver.common.alert import Alert
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -147,7 +148,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.username = "Selenium"
         self.password = "test1234"
 
-        u = User.objects.create_superuser(username=self.username, password=self.password)#Weird things happen if the user is not superuser...
+        u = User.objects.create_user(username=self.username, password=self.password)
         u.save()
         self.login(self.username, self.password)
         self.profile = Profile.objects.get(user__username=self.username)
@@ -458,6 +459,41 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         tabs[num-1].click()
         self.wait_for_ajax()
 
+    def click_calc_method_not_geom(self):
+        assert self.is_on_page_ensemble()
+
+        self.wait_for_ajax()
+        tabs_list = self.driver.find_element_by_css_selector("#tabs")
+        tabs = tabs_list.find_elements_by_css_selector("li")
+
+        not_geom = None
+        for t in tabs:
+            if '(GEOMETRY)' not in t.text:
+                if not_geom is None:
+                    not_geom = t
+                else:
+                    raise Exception("More than one tab of properties")
+
+        not_geom.click()
+        self.wait_for_ajax()
+
+    def click_calc_method_geom(self):
+        assert self.is_on_page_ensemble()
+
+        self.wait_for_ajax()
+        tabs_list = self.driver.find_element_by_css_selector("#tabs")
+        tabs = tabs_list.find_elements_by_css_selector("li")
+
+        not_geom = None
+        for t in tabs:
+            if '(GEOMETRY)' in t.text:
+                t.click()
+                break
+        else:
+            raise Exception("No tab for the geometry")
+
+        self.wait_for_ajax()
+
     def click_advanced_nmr_analysis(self):
         assert self.is_on_page_ensemble()
 
@@ -614,6 +650,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def connect_cluster(self):
         assert self.is_on_page_access()
 
+        status = self.driver.find_element_by_id("status_box")
+
+        if 'has-background-success' in status.get_attribute("class"):#Already connected
+            return
+
         password = self.driver.find_element_by_id("ssh_password")
         password.clear()
         password.send_keys("Selenium")
@@ -625,7 +666,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             time.sleep(1)
             try:
                 msg = self.driver.find_element_by_id("test_msg").text
-                if msg == "Connected":
+                if msg == "Connected" or msg == "Already connected":
                     return
             except:
                 pass
@@ -644,7 +685,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         clusters = self.driver.find_elements_by_css_selector("#owned_accesses > center > table > tbody > tr")
         cluster = clusters[num-1]
         cluster.find_element_by_css_selector("th > a.button").click()
-
 
     def is_user(self, username):
         try:
@@ -1282,9 +1322,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 trash = proj.find_element_by_css_selector("a > i.fa-trash-alt")
                 trash.click()
 
-                alert = self.driver.switch_to_alert()
+                alert = Alert(self.driver)
                 alert.accept()
-                self.driver.switch_to_default_content()
                 return
 
     def get_molecules(self):
@@ -1338,9 +1377,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 trash = mol.find_element_by_css_selector("i.fa-trash-alt")
                 trash.click()
 
-                alert = self.driver.switch_to_alert()
+                alert = Alert(self.driver)
                 alert.accept()
-                self.driver.switch_to_default_content()
                 return
         else:
             raise Exception("Could not delete molecule")
@@ -1394,9 +1432,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 trash = e.find_element_by_css_selector("i.fa-trash-alt")
                 trash.click()
 
-                alert = self.driver.switch_to_alert()
+                alert = Alert(self.driver)
                 alert.accept()
-                self.driver.switch_to_default_content()
                 self.wait_for_ajax()
                 return
         else:
@@ -1481,10 +1518,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         button = self.driver.find_element_by_css_selector("a.button:nth-child(4)")
         button.click()
 
-        alert = self.driver.switch_to_alert()
+        alert = Alert(self.driver)
         alert.send_keys(name)
         alert.accept()
-        self.driver.switch_to_default_content()
 
     def load_preset(self, name):
         self.select_preset(name)
