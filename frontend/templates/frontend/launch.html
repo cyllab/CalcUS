@@ -48,6 +48,16 @@
 	#calc_charge, #calc_multiplicity {
 		width: 50px;
 	}
+	.file-name {
+		max-width: 100%;
+		width: 100%;
+	}
+	.file-label  {
+		width: 100%;
+	}
+	#calc_combine_files {
+		margin: auto 0;
+	}
 
 	@-webkit-keyframes animatetop {
 		from {top:-300px; opacity:0} 
@@ -459,6 +469,14 @@
 			add_file_name();	
 			preview_upload(file_list);
 
+			ff = file_list[0].name;
+			fname = ff.replace('C:\\fakepath\\', '');
+			if(file_list.length > 1) {
+				fname += ', ...';
+			}
+			console.log(fname);
+			$("#file_upload_name").html(fname);
+
 			combine = document.getElementById("calc_combine_files_column");
 			if (file_list.length > 1) {
 				combine.style.display = "block";	
@@ -667,11 +685,10 @@
 					<div class="column">
 						<div class="field">
 							<label class="label">Draw a structure or choose a file</label>
-
-							<div class="file">
+							<div class="file has-name">
 								<label class="file-label">
 									<input class="file-input" type="file" name="file_structure" id="file_structure" multiple="multiple">
-										<span class="file-cta">
+									<span class="file-cta">
 										<span class="file-icon">
 											<i class="fas fa-upload"></i>
 										</span>
@@ -679,14 +696,17 @@
 										File upload
 										</span>
 									</span>
+									<span class="file-name" id="file_upload_name">
+									No input file selected
+									</span>
 								</label>
 							</div>
 						</div>
 					</div>
-					<div class="column is-narrow" id="calc_combine_files_column" style="display: none;">
+					<div class="column is-narrow has-text-centered" id="calc_combine_files_column" style="display: none;">
 						<label class="label">Single ensemble</label>
 						<div class="control">
-							<input type="checkbox" id="calc_combine_files" name="calc_combine_files">
+							<input type="checkbox" class="checkbox" id="calc_combine_files" name="calc_combine_files">
 						</div>
 					</div>
 				</div>
