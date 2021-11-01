@@ -1930,7 +1930,7 @@ def format_frames(calc, profile):
     scan_frames = []
     scan_energies = []
 
-    for f in calc.calculationframe_set.values('xyz_structure', 'number', 'RMSD', 'converged', 'energy').all():
+    for f in calc.calculationframe_set.values('xyz_structure', 'number', 'RMSD', 'converged', 'energy').order_by('number').all():
         multi_xyz += f['xyz_structure']
         RMSD += "{},{}\n".format(f['number'], f['RMSD'])
         if f['converged'] == True:
