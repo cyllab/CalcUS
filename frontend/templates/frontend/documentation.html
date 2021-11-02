@@ -180,6 +180,8 @@
 
 		You will be given a public key to add to your authorized keys (in <code>/home/&lt;username&gt;/.ssh/authorized_keys</code>) on the remote server. Once that is done, click "Manage" on the corresponding entry in the "Owned accesses" table. Click "Test connection" to initiate the connection between CalcUS and the cluster. If everything goes well, the status of the access will become "Connected". You will then be able to use this resource when launching calculations.
 
+		You may observe a small delay between the completion of remote jobs on the cluster and the job appearing as such in CalcUS (around 10 minutes at most). This is because CalcUS must periodically check the status of submitted jobs, which is done every couple minutes. It may take some additional time to download and analyze the results, especially if many calculations finish at the same time.
+
 	<h3 class="title is-3">Detailed Documentation</h3>
 	<h4 class="title is-4">Basis Sets</h4>
 	These basis sets are integrated by default. Basis sets not integrated in the software can be used using the custom basis set manager on the launch page.
