@@ -220,7 +220,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         project_input = self.driver.find_element_by_id('calc_project')
         new_project_input = self.driver.find_element_by_name('new_project_name')
         calc_type_input = self.driver.find_element_by_id('calc_type')
-        ressource_input = self.driver.find_element_by_name('calc_ressource')
+        resource_input = self.driver.find_element_by_name('calc_resource')
         try:
             upload_input = self.driver.find_element_by_name('file_structure')
         except selenium.common.exceptions.NoSuchElementException:

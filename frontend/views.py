@@ -1057,16 +1057,16 @@ def submit_calculation(request):
 
     params, project_obj, step = ret
 
-    if 'calc_ressource' in request.POST.keys():
-        ressource = clean(request.POST['calc_ressource'])
-        if ressource.strip() == '':
+    if 'calc_resource' in request.POST.keys():
+        resource = clean(request.POST['calc_resource'])
+        if resource.strip() == '':
             return error(request, "No computing resource chosen")
     else:
         return error(request, "No computing resource chosen")
 
-    if ressource != "Local":
+    if resource != "Local":
         try:
-            access = ClusterAccess.objects.get(cluster_address=ressource, owner=profile)
+            access = ClusterAccess.objects.get(cluster_address=resource, owner=profile)
         except ClusterAccess.DoesNotExist:
             return error(request, "No such cluster access")
 
@@ -1342,7 +1342,7 @@ def submit_calculation(request):
     for o in orders:
         o.constraints = constraints
 
-        if ressource != "Local":
+        if resource != "Local":
             o.resource = access
 
         o.save()

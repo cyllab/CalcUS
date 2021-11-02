@@ -58,7 +58,7 @@ basic_params = {
                 'calc_scan_1_1': [''],
                 'calc_scan_1_2': [''],
                 'calc_scan_1_3': [''],
-                'calc_ressource': ['Local'],
+                'calc_resource': ['Local'],
                 'constraint_num': ['1'],
                 'structure': ['Molecule from ChemDoodle Web Components\r\n\r\nhttp://www.ichemlabs.com\r\n  6  6  0  0  0  0            999 V2000\r\n    0.0000    1.0000    0.0000 C   0  0  0  0  0  0\r\n    0.8660    0.5000    0.0000 C   0  0  0  0  0  0\r\n    0.8660   -0.5000    0.0000 C   0  0  0  0  0  0\r\n    0.0000   -1.0000    0.0000 C   0  0  0  0  0  0\r\n   -0.8660   -0.5000    0.0000 C   0  0  0  0  0  0\r\n   -0.8660    0.5000    0.0000 C   0  0  0  0  0  0\r\n  1  2  1  0  0  0  0\r\n  2  3  2  0  0  0  0\r\n  3  4  1  0  0  0  0\r\n  4  5  2  0  0  0  0\r\n  5  6  1  0  0  0  0\r\n  6  1  2  0  0  0  0\r\nM  END'],
                 'test': ['true'],
@@ -141,7 +141,7 @@ class LaunchTests(TestCase):
 
     def test_submit_empty_resource(self):
         params = basic_params.copy()
-        params['calc_ressource'] = ''
+        params['calc_resource'] = ''
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
@@ -177,13 +177,13 @@ class LaunchTests(TestCase):
 
     def test_submit_no_resource(self):
         params = basic_params.copy()
-        del params['calc_ressource']
+        del params['calc_resource']
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_no_resource(self):
         params = basic_params.copy()
-        del params['calc_ressource']
+        del params['calc_resource']
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
