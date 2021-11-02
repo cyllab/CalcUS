@@ -214,26 +214,22 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             EC.presence_of_element_located((By.NAME, "calc_project"))
         )
 
-        solvent_input = self.driver.find_element_by_name('calc_solvent')
-        charge_input = self.driver.find_element_by_name('calc_charge')
-        mult_input = self.driver.find_element_by_name('calc_multiplicity')
-        project_input = self.driver.find_element_by_id('calc_project')
-        new_project_input = self.driver.find_element_by_name('new_project_name')
-        calc_type_input = self.driver.find_element_by_id('calc_type')
-        resource_input = self.driver.find_element_by_name('calc_resource')
         try:
             upload_input = self.driver.find_element_by_name('file_structure')
         except selenium.common.exceptions.NoSuchElementException:
             pass
 
         if 'solvent' in params.keys():
+            solvent_input = self.driver.find_element_by_name('calc_solvent')
             solvent_input.send_keys(params['solvent'])
 
         if 'charge' in params.keys():
+            charge_input = self.driver.find_element_by_name('calc_charge')
             charge_input.clear()
             charge_input.send_keys(params['charge'])
 
         if 'multiplicity' in params.keys():
+            mult_input = self.driver.find_element_by_name('calc_multiplicity')
             mult_input.clear()
             mult_input.send_keys(params['multiplicity'])
 
@@ -258,6 +254,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             self.driver.find_element_by_xpath("//*[@id='calc_solvation_radii']/option[text()='{}']".format(params['solvation_radii'])).click()
 
         if 'new_project_name' in params.keys():
+            new_project_input = self.driver.find_element_by_name('new_project_name')
             new_project_input.send_keys(params['new_project_name'])
 
         if 'in_file' in params.keys():
@@ -379,6 +376,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
             filter_value = self.driver.find_element_by_id("filter_value_input")
             filter_value.send_keys(params['filter_value'])
+
+        if 'resource' in params.keys():
+            self.driver.find_element_by_xpath("//*[@id='calc_resource']/option[text()='{}']".format(params['resource'])).click()
 
     def calc_launch(self):
         submit = self.driver.find_element_by_id('submit_button')

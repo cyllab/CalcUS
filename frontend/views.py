@@ -2860,10 +2860,14 @@ def launch(request):
         if not can_view_ensemble(e, profile):
             return HttpResponse(status=403)
 
+        o = False
         if e.result_of.first() is not None:
             o = e.result_of.first()
-            if o.resource is not None:
-                params['resource'] = o.resource.cluster_address
+        elif e.calculationorder_set.first() is not None:# e.g. SP on uploaded file
+            o = e.calculationorder_set.first()
+
+        if o and o.resource is not None:
+            params['resource'] = o.resource.cluster_address
 
         params['ensemble'] = e
         if 'structures' in request.POST.keys():

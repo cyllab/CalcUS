@@ -59,6 +59,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 
+from unittest import mock
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
@@ -69,6 +71,8 @@ KEYS_DIR = os.path.join(tests_dir, "keys")
 class ClusterTests(CalcusLiveServer):
     @classmethod
     def setUpClass(cls):
+        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
+        cls.patcher.start()
         super().send_slurm_command(cls, "rm -r /home/calcus/scratch")
         super().setUpClass()
 
@@ -228,6 +232,111 @@ class ClusterTests(CalcusLiveServer):
         )
         self.assertNotEqual(self.driver.find_element_by_id("status_box").text.find("Connected"), -1)
 
+    def test_autoselect_resource_remote(self):
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g.save()
+        self.profile.is_PI = True
+        self.profile.save()
+
+        self.setup_cluster()
+        params = {
+                'mol_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.sdf',
+                'resource': 'slurm',
+                }
+
+        self.lget("/launch/")
+
+        resources = self.driver.find_elements_by_css_selector('#calc_resource > option')
+        self.assertEqual(len(resources), 2)
+        self.assertEqual(resources[0].text, "Local")
+        self.assertTrue(resources[0].is_selected())
+
+        self.assertEqual(resources[1].text, "slurm")
+        self.assertFalse(resources[1].is_selected())
+
+        self.calc_input_params(params)
+
+        resources = self.driver.find_elements_by_css_selector('#calc_resource > option')
+        self.assertEqual(len(resources), 2)
+        self.assertEqual(resources[0].text, "Local")
+        self.assertFalse(resources[0].is_selected())
+
+        self.assertEqual(resources[1].text, "slurm")
+        self.assertTrue(resources[1].is_selected())
+
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.click_latest_calc()
+        self.launch_ensemble_next_step()
+        self.wait_for_ajax()
+
+        resources = self.driver.find_elements_by_css_selector('#calc_resource > option')
+        self.assertEqual(len(resources), 2)
+        self.assertEqual(resources[0].text, "Local")
+        self.assertFalse(resources[0].is_selected())
+
+        self.assertEqual(resources[1].text, "slurm")
+        self.assertTrue(resources[1].is_selected())
+
+    def test_autoselect_resource_local(self):
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g.save()
+        self.profile.is_PI = True
+        self.profile.save()
+
+        self.setup_cluster()
+        params = {
+                'mol_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'ethanol.sdf',
+                'resource': 'Local',
+                }
+
+        self.lget("/launch/")
+
+        resources = self.driver.find_elements_by_css_selector('#calc_resource > option')
+        self.assertEqual(len(resources), 2)
+        self.assertEqual(resources[0].text, "Local")
+        self.assertTrue(resources[0].is_selected())
+
+        self.assertEqual(resources[1].text, "slurm")
+        self.assertFalse(resources[1].is_selected())
+
+        self.calc_input_params(params)
+
+        resources = self.driver.find_elements_by_css_selector('#calc_resource > option')
+        self.assertEqual(len(resources), 2)
+        self.assertEqual(resources[0].text, "Local")
+        self.assertTrue(resources[0].is_selected())
+
+        self.assertEqual(resources[1].text, "slurm")
+        self.assertFalse(resources[1].is_selected())
+
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+
+        self.click_latest_calc()
+        self.launch_ensemble_next_step()
+        self.wait_for_ajax()
+
+        resources = self.driver.find_elements_by_css_selector('#calc_resource > option')
+        self.assertEqual(len(resources), 2)
+        self.assertEqual(resources[0].text, "Local")
+        self.assertTrue(resources[0].is_selected())
+
+        self.assertEqual(resources[1].text, "slurm")
+        self.assertFalse(resources[1].is_selected())
 
     def test_cluster_xtb_crest(self):
         self.setup_cluster()
