@@ -1638,7 +1638,10 @@ def get_command_status(request):
 
 @login_required
 def delete_access(request, pk):
-    access = ClusterAccess.objects.get(pk=pk)
+    try:
+        access = ClusterAccess.objects.get(pk=pk)
+    except ClusterAccess.DoesNotExist:
+        return HttpResponse(status=403)
 
     profile = request.user.profile
 
@@ -1650,6 +1653,74 @@ def delete_access(request, pk):
     send_cluster_command("delete_access\n{}\n".format(pk))
 
     return HttpResponseRedirect("/profile")
+
+@login_required
+def load_pub_key(request, pk):
+    try:
+        access = ClusterAccess.objects.get(pk=pk)
+    except ClusterAccess.DoesNotExist:
+        return HttpResponse(status=403)
+
+    profile = request.user.profile
+
+    if access.owner != profile:
+        return HttpResponse(status=403)
+
+    key_path = os.path.join(CALCUS_KEY_HOME, '{}.pub'.format(access.id))
+
+    if not os.path.isfile(key_path):
+        return HttpResponse(status=404)
+
+    with open(key_path) as f:
+        pub_key = f.readlines()[0]
+
+    return HttpResponse(pub_key)
+
+@login_required
+def update_access(request):
+    vals = {}
+    for param in ['access_id', 'pal', 'mem']:
+        if param not in request.POST.keys():
+            return HttpResponse(status=400)
+
+        try:
+            vals[param] = int(clean(request.POST[param]))
+        except ValueError:
+            return HttpResponse("Invalid value", status=400)
+    print(vals)
+    try:
+        access = ClusterAccess.objects.get(pk=vals['access_id'])
+    except ClusterAccess.DoesNotExist:
+        return HttpResponse(status=403)
+
+    profile = request.user.profile
+
+    if access.owner != profile:
+        return HttpResponse(status=403)
+
+    if vals['pal'] < 1:
+        return HttpResponse("Invalid number of cores", status=400)
+
+    if vals['mem'] < 1:
+        return HttpResponse("Invalid amount of memory", status=400)
+
+    msg = ""
+    curr_mem = access.memory
+    curr_pal = access.pal
+
+    if vals['pal'] != curr_pal:
+        access.pal = vals['pal']
+        msg += "Number of cores set to {}\n".format(vals['pal'])
+
+    if vals['mem'] != curr_mem:
+        access.memory = vals['mem']
+        msg += "Amount of memory set to {} MB\n".format(vals['mem'])
+
+    access.save()
+    if msg == "":
+        msg = "No change detected"
+
+    return HttpResponse(msg)
 
 @login_required
 @superuser_required

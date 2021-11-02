@@ -169,18 +169,21 @@
 			cd $SLURM_SUBMIT_DIR
 			</code>
 		</sh>
-
+		<p>
 		CalcUS will automatically append the correct command to this file when submitting a calculation.
 
-		The final step is adding the access on CalcUS. To do that, go on your profile page and enter the correct information about the remote resource you want to add, then click "Submit". 
+		The final step is adding the access on CalcUS. To do that, go on your profile page and enter the correct information about the remote resource you want to add, then click "Submit". Note that you should enter the number of cores and memory that you want to use for remote calculations, not necessarily the number of cores and memory that are available per node. For example, on nodes that have 32 cores and 128000 MB of memory, you might want to only use 16 cores and 64000 MB of memory. These parameters will be used in the input files to calculation softwares (Gaussian, ORCA, xtb). You still need to specify the appropriate values in the submission scripts (see above). When performing Gaussian calculations, it can be useful to specify a lower amount of memory in the input file than is actually available to you in order to prevent out of memory crashes. This can be done by requesting the maximum amount of memory in the bash input script, but choosing a value 1000 MB or 2000 MB lower in the access parameters in CalcUS.
+		</p>
 		
 		<center>
 			<img src="{% static 'documentation/cluster_access.png' %}" />
 		</center>
 
+		<p>
 		You will be given a public key to add to your authorized keys (in <code>/home/&lt;username&gt;/.ssh/authorized_keys</code>) on the remote server. Once that is done, click "Manage" on the corresponding entry in the "Owned accesses" table. Click "Test connection" to initiate the connection between CalcUS and the cluster. If everything goes well, the status of the access will become "Connected". You will then be able to use this resource when launching calculations.
 
 		You may observe a small delay between the completion of remote jobs on the cluster and the job appearing as such in CalcUS (around 10 minutes at most). This is because CalcUS must periodically check the status of submitted jobs, which is done every couple minutes. It may take some additional time to download and analyze the results, especially if many calculations finish at the same time.
+		</p>
 
 	<h3 class="title is-3">Detailed Documentation</h3>
 	<h4 class="title is-4">Basis Sets</h4>
@@ -2388,7 +2391,7 @@
 	
 	Conformational searches (constrained or not) have several particular options. Faster/cruder sampling procedures can be requested with <code>--quick</code>, <code>--squick</code> and <code>--mquick</code>. The RMSD threshold for considering conformers as different can be set with <code>--rthr X</code>, where <code>X</code> is the threshold in Ångström (default of 0.6 in CalcUS). Furthermore, the energy window to consider can be set with <code>--ewin X</code>, where <code>X</code> is the treshold in kcal/mol (default of 6 in CalcUS).
 	
-	Constrained geometrical optimisations and constrained conformational searches employ a harmonic potential to constrain coordinates (distances, angles, dihedral angles). The force constant of this potential can be chosen with </code>--forceconstant X</code>, where <code>X</code> is the force constant in Hartree/Bohr². By default, CalcUS uses a force constant of 1.0, which corresponds to a very stiff potential well. In most cases, this high value forces the use of small timesteps in meta-dynamic and molecular dynamic simulations (for constrained conformational searches). If the constrained coordinates do not need to remain exactly constant, the simulations can be accelerated by a smaller force constant.
+	Constrained geometrical optimisations and constrained conformational searches employ a harmonic potential to constrain coordinates (distances, angles, dihedral angles). The force constant of this potential can be chosen with <code>--forceconstant X</code>, where <code>X</code> is the force constant in Hartree/Bohr². By default, CalcUS uses a force constant of 1.0, which corresponds to a very stiff potential well. In most cases, this high value forces the use of small timesteps in meta-dynamic and molecular dynamic simulations (for constrained conformational searches). If the constrained coordinates do not need to remain exactly constant, the simulations can be accelerated by a smaller force constant.
 	</p>
 
 	<h3 class="title is-3">Server Admin Guide</h3>

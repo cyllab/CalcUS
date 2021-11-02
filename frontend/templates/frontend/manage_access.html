@@ -11,6 +11,13 @@
 			max-width: 30%;
 			margin: 20px auto;
 		}
+		#delete_access_box {
+			margin-top: 50px !important;
+		}
+		td > .button {
+			height: 21px;
+			float: right;
+		}
 	</style>
 	<script>
 		function connect_access() {
@@ -104,6 +111,79 @@
 			}
 			
 		}
+		function load_pub_key(btn) {
+			$(btn).addClass("is-loading");
+			$.ajax({
+					method: "GET",
+					url: "/load_pub_key/{{ access.id }}",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					success: function(data) {
+						$(btn).remove();
+						div = $("#load_pub_key_box");
+						key = "<textarea style='width: 100%; word-break: break-all;' rows='12' readonly>"+ data + "</textarea>";
+						div.html(key);
+					},
+				});
+		}
+
+		function selectText(node) {
+		    	if (document.body.createTextRange) {
+				const range = document.body.createTextRange();
+				range.moveToElementText(node);
+				range.select();
+		    	} else if (window.getSelection) {
+				const selection = window.getSelection();
+				const range = document.createRange();
+				range.selectNodeContents(node);
+				selection.removeAllRanges();
+				selection.addRange(range);
+			} else {
+				console.warn("Could not select text in node: Unsupported browser.");
+			}
+		}
+
+		function adjust(btn) {
+			span = $(btn).parent().find("span");			
+			if($(btn).hasClass("is-info")) {
+				span.attr("contenteditable", "true");
+				selectText(span.get(0));
+				$(btn).removeClass("is-info");
+				$(btn).addClass("is-success");
+				$(btn).text("Done");
+				$('[contenteditable=true]').on('keypress', function(e) {
+					if (e.keyCode == 13 && $(btn).hasClass("is-success")) {
+						e.preventDefault();
+						adjust(btn);
+					}
+				});
+
+			}
+			else {
+				span.attr("contenteditable", "false");
+				$(btn).removeClass("is-success");
+				$(btn).addClass("is-info");
+				$(btn).text("Adjust");
+				pal = $("#pal_span").text();
+				mem = $("#mem_span").text();
+				$.ajax({
+					method: "POST",
+					url: "/update_access/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					data: {
+						'access_id': "{{ access.id }}",
+						'pal': pal,
+						'mem': mem,
+					},
+					complete: function(xhr, stat) {
+						$("#cluster_specs_msg").html(xhr.responseText);	
+					},
+				});
+			}
+		}
 
 		$(document).ready(function() {
 			refresh_status();
@@ -127,14 +207,15 @@
 				</tr>
 				<tr>
 					<th>CPU</th>
-					<td>{{ access.pal }}</td>
+					<td><span id="pal_span">{{ access.pal }}</span> <button class="button is-info" onclick="adjust(this);">Adjust</button></td>
 				</tr>
 				<tr>
 					<th>Memory (MB)</th>
-					<td>{{ access.memory }}</td>
+					<td><span id="mem_span">{{ access.memory }}</span> <button class="button is-info" onclick="adjust(this);">Adjust</button></td>
 				</tr>
 			</tbody>
 		</table>
+		<span id="cluster_specs_msg"></span>
 	</center>
 </div>
 <div class="box">
@@ -157,7 +238,10 @@
 		</div>
 	</center>
 </div>
-<div class="box has-text-centered">
+<div class="box has-text-centered" id="load_pub_key_box">
+	<button class="button is-info" onclick="load_pub_key(this);">View public key</button>
+</div>
+<div class="box has-text-centered" id="delete_access_box">
 	<a class="button is-danger" onclick="delete_access();" id="delete_access_button" >Delete this access</a>
 </div>
 

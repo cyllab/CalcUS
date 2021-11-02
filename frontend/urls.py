@@ -125,6 +125,9 @@ urlpatterns = [
     path('disconnect_access/', views.disconnect_access, name='disconnect_access'),
     path('get_command_status/', views.get_command_status, name='get_command_status'),
     path('delete_access/<int:pk>', views.delete_access, name='delete_access'),
+    path('load_pub_key/<int:pk>', views.load_pub_key, name='load_pub_key'),
+    path('update_access/', views.update_access, name='update_access'),
+
     path('status_access/', views.status_access, name='status_access'),
 
     #Calculations
