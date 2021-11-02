@@ -1687,7 +1687,7 @@ def update_access(request):
             vals[param] = int(clean(request.POST[param]))
         except ValueError:
             return HttpResponse("Invalid value", status=400)
-    print(vals)
+
     try:
         access = ClusterAccess.objects.get(pk=vals['access_id'])
     except ClusterAccess.DoesNotExist:

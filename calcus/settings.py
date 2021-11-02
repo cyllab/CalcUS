@@ -36,7 +36,13 @@ else:
 
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 
-DEBUG = True
+try:
+    DEBUG = os.environ['CALCUS_DEBUG']
+except:
+    DEBUG = False
+else:
+    DEBUG = True
+
 SSL = False
 
 ALLOWED_HOSTS = '*.*.*.*'

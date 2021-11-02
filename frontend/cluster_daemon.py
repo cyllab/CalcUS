@@ -368,6 +368,7 @@ class ClusterDaemon:
                     logger.warning("Could not keep connection {} alive".format(conn_name))
                     tasks.send_cluster_command("disconnect\n{}\n".format(access.id))
                 else:
+                    access.refresh_from_db()
                     access.last_connected = timezone.now()
                     access.status = "Connected"
                     access.save()

@@ -271,6 +271,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         assert calc_id != -1
 
         calc = Calculation.objects.get(pk=calc_id)
+        job_name = "CalcUS-{}".format(calc.id)
 
         pid = int(threading.get_ident())
         #Get the variables based on thread ID
@@ -281,9 +282,9 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
 
         if calc.status == 0 and calc.remote_id == 0:
             if log_file != "":
-                output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{} | tee {}' >> submit_{}.sh; sbatch submit_{}.sh | tee calcus".format(remote_dir, conn[0].cluster_username, software, command, log_file, software, software), conn, lock)
+                output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{} | tee {}' >> submit_{}.sh; sbatch --job-name={} submit_{}.sh | tee calcus".format(remote_dir, conn[0].cluster_username, software, command, log_file, software, job_name, software), conn, lock)
             else:
-                output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{}' >> submit_{}.sh; sbatch submit_{}.sh | tee calcus".format(remote_dir, conn[0].cluster_username, software, command, software, software), conn, lock)
+                output = direct_command("cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{}' >> submit_{}.sh; sbatch --job-name={} submit_{}.sh | tee calcus".format(remote_dir, conn[0].cluster_username, software, command, software, job_name, software), conn, lock)
 
             if output == ErrorCodes.CHANNEL_TIMED_OUT:
                 if calc_id != -1:

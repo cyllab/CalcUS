@@ -64,7 +64,7 @@ if not settings.IS_TEST and settings.PING_SATELLITE.lower() == "true":
     app.conf.beat_schedule = {
             'ping-satellite': {
                 'task': 'frontend.tasks.ping_satellite',
-                'schedule': crontab(minute=datetime.now().minute+1%60),
+                'schedule': crontab(minute=(datetime.now().minute+1)%60),
                 'options': {
                     'expires': 3600,
                 }
