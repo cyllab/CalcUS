@@ -1918,13 +1918,15 @@ def conformer_table_post(request):
 
             fms = profile.pref_units_format_string
 
-            rel_energies = [fms.format(i) for i in np.array(summary[4])*profile.unit_conversion_factor]
-            data = zip(e.structure_set.all(), summary[2], rel_energies, summary[5])
+            rel_energies = [fms.format(i) for i in np.array(summary[5])*profile.unit_conversion_factor]
+            structures = [e.structure_set.get(pk=i) for i in summary[4]]
+            data = zip(structures, summary[2], rel_energies, summary[6])
             data = sorted(data, key=lambda i: i[0].number)
 
         else:
             blank = ['-' for i in range(e.structure_set.count())]
-            data = zip(e.structure_set.all(), blank, blank, blank)
+            structures = [e.structure_set.get(pk=i) for i in summary[4]]
+            data = zip(structures, blank, blank, blank)
             data = sorted(data, key=lambda i: i[0].number)
         return render(request, 'frontend/dynamic/conformer_table.html', {
                 'profile': request.user.profile,
@@ -3074,7 +3076,7 @@ def get_csv(proj, profile, scope="flagged", details="full", folders=True):
             _str = ""
             for ename, edata in sorted(ensemble_data.items(), key=lambda a: a[0]):
                 if hash in edata.keys():
-                    nums, degens, energies, free_energies, rel_energies, weights, w_e, w_f_e  = edata[hash]
+                    nums, degens, energies, free_energies, ids, rel_energies, weights, w_e, w_f_e  = edata[hash]
                     if isinstance(w_f_e, float):
                         _w_f_e = ensemble_str.format(w_f_e*CONVERSION)
                     else:
@@ -3158,7 +3160,7 @@ def get_csv(proj, profile, scope="flagged", details="full", folders=True):
                     csv += ",,,Number,Degeneracy,Energy,Relative Energy,Weight,Free Energy,\n"
                     for e in mol.ensembles.values():
                         csv += ",,{},\n".format(e.name)
-                        nums, degens, energies, free_energies, rel_energies, weights, w_e, w_f_e = e.data
+                        nums, degens, energies, free_energies, ids, rel_energies, weights, w_e, w_f_e = e.data
                         for n, d, en, f_en, r_el, w in zip(nums, degens, energies, free_energies, rel_energies, weights):
                             csv += structure_str.format(n, d, en*CONVERSION, r_el*CONVERSION, w, f_en*CONVERSION)
         csv += "\n\n"

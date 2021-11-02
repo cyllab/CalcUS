@@ -316,6 +316,7 @@ class Ensemble(models.Model):
                         [degeneracies],
                         [energies],
                         [free energies],
+                        [structure id],
                         [relative energies],
                         [weights],
                         weighted_energy,
@@ -327,7 +328,7 @@ class Ensemble(models.Model):
 
         ret = {}
         hashes = {}
-        for s in self.structure_set.prefetch_related('properties').all():
+        for s in self.structure_set.prefetch_related('properties').order_by('number').all():
             for prop in s.properties.all():
                 if prop.energy == 0:
                     continue
@@ -339,11 +340,12 @@ class Ensemble(models.Model):
                     hashes[p_name] = p.long_name
 
                 if p_name not in ret.keys():
-                    ret[p_name] = [[], [], [], []]
+                    ret[p_name] = [[], [], [], [], []]
                 ret[p_name][0].append(s.number)
                 ret[p_name][1].append(s.degeneracy)
                 ret[p_name][2].append(prop.energy)
                 ret[p_name][3].append(prop.free_energy)
+                ret[p_name][4].append(s.id)
 
         for p_name in ret.keys():
             ret[p_name] += self.calc_array_properties(ret[p_name])

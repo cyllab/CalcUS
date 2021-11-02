@@ -313,6 +313,13 @@
 			
 			$("#tab_" + p_id).addClass("is-active");
 
+			first_conf_num = 0;
+
+			selected_confs = document.getElementById("conf_table").getElementsByClassName("is-selected");
+			if(selected_confs.length > 0) {
+				first_conf_num = selected_confs[0].getAttribute("data-num");
+			}	
+
 			$.ajax({
 				method: "POST",	 	 
 				url: "/conformer_table/",
@@ -327,7 +334,29 @@
 					if (xhr.status != 204) {
 						$("#conf_table").html(data);
 						conf_length = document.getElementById("conf_table").rows.length;
-						document.getElementById("conf_table").rows[num].classList.add("is-selected");
+						num = -1;
+
+						if(first_conf_num == 0) {
+							document.getElementById("conf_table").rows[0].classList.add("is-selected");
+							num = 0;
+							refresh();
+						}
+						else {
+							confs = document.getElementById("conf_table").getElementsByTagName("tr");
+							for(i=0; i<confs.length; i++) {
+								c = confs[i];
+								if(c.getAttribute("data-num") == first_conf_num) {
+									c.classList.add("is-selected");
+									num = i;
+									break;
+								}
+							}
+							if(num == -1) {
+								document.getElementById("conf_table").rows[0].classList.add("is-selected");
+								num = 0;
+								refresh();
+							}
+						}
 						refresh_ensemble();
 						refresh_structure();
 					}
