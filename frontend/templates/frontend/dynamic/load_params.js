@@ -8,9 +8,6 @@ if ("{{ params.program }}" != "Unknown" && "{{ params.program}}" != "Open Babel"
 	solvation_radii = document.getElementById("calc_solvation_radii");
 	solvation_radii.value = "{{ params.solvation_radii }}";
 
-	mult = document.getElementById("calc_multiplicity");
-	mult.value = "{{ params.multiplicity }}";
-
 	software = document.getElementById("calc_software");
 	software.value = "{{ params.software }}";
 
@@ -30,7 +27,6 @@ if ("{{ params.program }}" != "Unknown" && "{{ params.program}}" != "Open Babel"
 		func = document.getElementById("calc_functional");
 		func.value = "{{ params.method }}";
 	{% endif %}
-
 	
 	{% if load_charge %}
 		charge = document.getElementById("calc_charge");

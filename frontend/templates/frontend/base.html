@@ -43,10 +43,26 @@
 			</script>
 		{% endif %}
 		<style>
+			@media screen and (min-width: 1408px) {
 			.main_content {
 				width: 70%;
 				flex: 1;
 				margin-left: 15%;
+			}
+			}
+			@media screen and (min-width: 1024px) and (max-width: 1407px) {
+			.main_content {
+				width: 90%;
+				flex: 1;
+				margin-left: 5%;
+			}
+			}
+			@media screen and (max-width: 1023px) {
+			.main_content {
+				width: 98%;
+				flex: 1;
+				margin-left: 1%;
+			}
 			}
 
 			nav {

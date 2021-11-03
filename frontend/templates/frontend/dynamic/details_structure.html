@@ -4,8 +4,10 @@
 <span class="tag is-danger is-large">Partial Charges</span>
 <div class="columns box is-desktop" id="charges_structure_details">
 	<div>
+		<center>
 		<div id="charges_viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
 		<div id="charges_buttons_div"><button class="button is-info" onclick="get_charges_struct(); this.remove();">Load partial charges</button></div>
+		</center>
 	</div>
 	<script>
 		var charges = {};
@@ -54,7 +56,7 @@
 			charges_viewer.removeAllLabels();
 			all_charges = charges[name];
 			for(ind = 0; ind < all_charges.length; ind++) {
-				charges_viewer.addLabel(all_charges[ind], {}, {'serial': ind});
+				charges_viewer.addLabel(all_charges[ind], {'fontSize': 14}, {'serial': ind});
 			}
 
 		}
@@ -63,37 +65,30 @@
 {% endif %}
 {% if property.freq != 0 %}
 	<span class="tag is-danger is-large">Frequencies</span>
-	<div class="columns box is-desktop is-centered" id="frequency_structure_details" >
-		<div class="column">
-			<center>
+	<div class="box is-centered" id="frequency_structure_details" >
+		<div class="columns has-text-centered is-desktop">
+			<div class="column">
+				<center>
 				<div id="vib_animation" style="width: 400px; height: 400px; position: relative;"></div>
-			</center>
-			<div class="slidecontainer">
-				<input type="range" min="1" max="10" value="4" class="slider" id="vib_calibration" onchange="animate_vib(-1);" style="width: 100%;">
-			</div>
-
-		</div>
-		<div class="column">
-			<center>
-				Free Energy: {{ property.free_energy|floatformat:-8 }}
-				<br />
-				<table class="table">
-					<thead>
-						<tr>
-							<th>Vibration (cm^-1)</th>
-							<th>Vibration (cm^-1)</th>
-							<th>Vibration (cm^-1)</th>
-						</tr>
-					</thead>
-					<tbody id="vib_table">
-
-					</tbody>
-				</table>
-
-				<div id="ir_spectrum" style="width:600px; height:400px; margin-bottom: 30px;">
+				<div class="slidecontainer">
+					<input type="range" min="1" max="10" value="4" class="slider" id="vib_calibration" onchange="animate_vib(-1);" style="width: 100%;">
 				</div>
-			</center>
+				</center>
+
+			</div>
+			<div class="column">
+				<center>
+				<div id="ir_spectrum" style="width:500px; height:400px; margin-bottom: 30px;">
+				</div>
+				<a class="button is-info" href="/ir_spectrum/{{ property.freq }}">Download IR spectrum</a>
+				</center>
+			</div>
 		</div>
+		<div>
+			<div class="columns is-multiline is-centered" id="vib_table">
+			</div>
+		</div>
+
 	</div>
 	<script>
 		var past_num = -1

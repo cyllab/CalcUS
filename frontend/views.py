@@ -2209,6 +2209,11 @@ def vib_table(request, pk):
                 vib = float(line[20:33].strip())
                 vibs.append(vib)
 
+        response = ""
+        for ind, vib in enumerate(vibs):
+            response += '<div class="column is-narrow"><a class="button" id="vib_mode_{}" onclick="animate_vib({});">{}</a></div>'.format(ind, ind, vib)
+
+        return HttpResponse(response)###
         formatted_vibs = []
 
         for ind in range(math.ceil(len(vibs)/3)):
@@ -2229,6 +2234,11 @@ def vib_table(request, pk):
         vibs = []
         for line in lines:
             vibs.append(line.strip())
+
+        response = ""
+        for ind, vib in enumerate(vibs):
+            response += '<div class="column is-narrow"><a class="button" id="vib_mode_{}" onclick="animate_vib({});">{}</a></div>'.format(ind, ind, vib)
+        return HttpResponse(response)###
 
         formatted_vibs = []
 

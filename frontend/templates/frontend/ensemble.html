@@ -23,9 +23,11 @@
 		}
 		.button_full {
 			width: 100%;
+			max-width: 380px;
 		}
 		.button_half {
 			width: 50%;
+			max-width: 190px;
 		}
 
 		ul.tree, ul.tree ul {
@@ -92,6 +94,9 @@
 		.modal-card {
 			max-width: 850px;
 			width: 100%;
+		}
+		#charges_viewer_div > canvas, #vib_animation > canvas {
+			border: 1px solid black;
 		}
 
 		@-webkit-keyframes animatetop {
@@ -538,6 +543,7 @@
 	<span class="tag is-danger is-large">Geometries</span>
 	<div class="columns box is-desktop">
 		<div class="column is-narrow">
+			<center>
 			<script>
 				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {useServices: false});
 				editor.styles.set3DRepresentation('Stick');
@@ -564,6 +570,7 @@
 				<input type="hidden" name="ensemble" value="{{ ensemble.id }}"></input>
 				<button class="button button_full is-info" id="next_step_structure">Launch calculation on selected structure(s) <i class="fas fa-external-link-alt" ></i></button>
 			</form>
+			</center>
 
 		</div>
 		<div class="column">
