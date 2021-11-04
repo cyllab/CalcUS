@@ -6,7 +6,9 @@ services:
                 hostname: redis
 
         web:
-                image: raphaelrobidas/calcus:latest
+                build:
+                        context: .
+                        dockerfile: Dockerfile
                 restart: always
                 hostname: web
                 user: calcus
@@ -33,7 +35,9 @@ services:
                 depends_on: 
                         - web        
         celery_main:
-                image: raphaelrobidas/calcus:latest
+                build:
+                        context: .
+                        dockerfile: Dockerfile
                 user: calcus
                 command: ./scripts/run_celery_main.sh
                 volumes:
@@ -46,7 +50,9 @@ services:
                 depends_on:
                         - redis
         celery_comp:
-                image: raphaelrobidas/calcus:latest
+                build:
+                        context: .
+                        dockerfile: Dockerfile
                 user: calcus
                 command: ./scripts/run_celery_comp.sh
                 volumes:
@@ -64,7 +70,9 @@ services:
                 depends_on:
                         - redis
         cluster:
-                image: raphaelrobidas/calcus:latest
+                build:
+                        context: .
+                        dockerfile: Dockerfile
                 user: calcus
                 command: ./scripts/run_cluster_daemon.sh
                 env_file:
