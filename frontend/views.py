@@ -1913,6 +1913,7 @@ def conformer_table_post(request):
             return HttpResponse(status=403)
 
         full_summary, hashes = e.ensemble_summary
+
         if p.md5 in full_summary.keys():
             summary = full_summary[p.md5]
 
@@ -1925,7 +1926,7 @@ def conformer_table_post(request):
 
         else:
             blank = ['-' for i in range(e.structure_set.count())]
-            structures = [e.structure_set.get(pk=i) for i in summary[4]]
+            structures = e.structure_set.all()
             data = zip(structures, blank, blank, blank)
             data = sorted(data, key=lambda i: i[0].number)
         return render(request, 'frontend/dynamic/conformer_table.html', {
