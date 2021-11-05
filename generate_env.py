@@ -2,6 +2,7 @@
 
 import secrets
 import os
+import sys
 from shutil import which
 
 ENV_TEMPLATE = """
@@ -162,13 +163,20 @@ else:
     ping = "False"
     ping_code = "empty"
 
+if sys.platform == "win32":
+    uid = ""
+    gid = ""
+else:
+    uid = os.getuid()
+    gid = os.getgid()
+
 print("Writing .env file...\n")
 with open(".env", 'w') as out:
-    out.write(ENV_TEMPLATE.format(secret_key, software_paths["g16"], software_paths["orca"], software_paths["mpirun"], software_paths["xtb"], num_cpu, num_cpu, mem, postgres, os.getuid(), os.getgid(), su_name, ping, ping_code))
+    out.write(ENV_TEMPLATE.format(secret_key, software_paths["g16"], software_paths["orca"], software_paths["mpirun"], software_paths["xtb"], num_cpu, num_cpu, mem, postgres, uid, gid, su_name, ping, ping_code))
 
 print("Creating necessary folders")
 for d in ["scr", "results", "keys", "logs"]:
     if not os.path.isdir(d):
         os.mkdir(d)
 
-print("Done!")
+print("Done! You can now start CalcUS.")
