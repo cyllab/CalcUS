@@ -3,7 +3,7 @@
 			<div class="message-header {% if order.status == 1 %} has-background-warning {% elif order.status == 2 %} has-background-success {% elif order.status == 3 %} has-background-danger{% endif %}" style="padding-right: 0;">
 				<div class="columns is-vcentered" style="width: 100%;">
 					<div class="column" style="text-align: left;">
-					{% if order.status == 0 %} <i class="fas fa-hourglass"></i> {% elif order.status == 1 %} <i class="fas fa-spinner"></i> {% elif order.status == 2 %} 
+					{% if order.status == 0 %} <i class="fas fa-hourglass-half"></i> {% elif order.status == 1 %} <i class="fas fa-spinner"></i> {% elif order.status == 2 %} 
 					<i class="fas fa-check"></i>{% elif order.status == 3 %} <i class="fas fa-times"></i>{% endif %}
 						{{ order.label }}
 					</div>
