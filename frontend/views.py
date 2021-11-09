@@ -732,9 +732,10 @@ def details_structure(request):
         except Parameters.DoesNotExist:
             return HttpResponse(status=403)
 
-        try:
-            prop = s.properties.get(parameters=p)
-        except Property.DoesNotExist:
+        for prop in s.properties.all():
+            if prop.parameters == p:
+                break
+        else:
             return HttpResponse(status=404)
 
         return render(request, 'frontend/dynamic/details_structure.html', {'profile': request.user.profile,
