@@ -3719,6 +3719,11 @@ def see_all(request):
         if c.new_status:
             c.see()
 
+    # This should be true if everything works.
+    # If a glitch happens and the counter is off, this will reset it.
+    profile.unseen_calculations = 0
+    profile.save()
+
     return HttpResponse(status=200)
 
 @login_required

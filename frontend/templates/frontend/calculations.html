@@ -34,6 +34,7 @@
 	<script>
 		let page = 1;
 		let loading = false;
+		let req = null;
 		
 		$(document).ready(function(){
 			refresh_list('add');
@@ -101,7 +102,11 @@
 				if (msg) { msg.remove() }
 			}
 
-			$.ajax({
+			if(req) {
+				req.abort();
+			}
+
+			req = $.ajax({
 				data: {
 					csrfmiddlewaretoken: ('{{csrf_token}}'),
 					project: opt,	
@@ -119,9 +124,10 @@
 						$grid.append(items).masonry('appended', items);	
 						$grid.masonry();
    						$(window).bind('scroll', scroll_test);
+						req = null;
 					}
 				},
-			    });
+			});
 		}
 		
 		function refresh_project_list() {
@@ -230,7 +236,6 @@
 
 {% block content %}
 <div class="container">
-	{% if user.is_authenticated %}
 	<center>
 		<div class="box">
 			<div class="select" >
@@ -287,10 +292,8 @@
 
 		</div>
 	</center>
-		<br>
-	{% else %}
-		Please login to access the Sandbox
-	{% endif %}
+
+	<br>
 	<script>
 		var $grid = $('.grid').masonry({
 			  itemSelector: '.grid-item',
