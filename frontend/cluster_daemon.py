@@ -40,6 +40,8 @@ from django.conf import settings
 
 import code, traceback, signal, logging
 
+MAX_RESUME_CALC_ATTEMPT_COUNT = 3
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -237,12 +239,20 @@ class ClusterDaemon:
 
         logger.info("Disconnected cluster access {}".format(access_id))
 
-    def resume_calc(self, c):
+    def resume_calc(self, c, attempt_count=1):
 
         pid = threading.get_ident()
         tasks.connections[pid] = self.connections
         self.calculations[c.id] = pid
-        retval = self.job(c)
+        try:
+            retval = self.job(c)
+        except AttributeError:
+            if attempt_count >= MAX_RESUME_CALC_ATTEMPT_COUNT:
+                logger.warning("Maximum number of resume attempts reached!")
+                return
+            else:
+                time.sleep(1)
+                return self.resume_calc(c, attempt_count+1)
 
         if c.id in self.calculations:
             del self.calculations[c.id]

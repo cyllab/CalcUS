@@ -157,7 +157,7 @@ class ClusterAccess(models.Model):
 
     status = models.CharField(max_length=500, default='')
 
-    last_connected = models.DateTimeField('date', default=timezone.now() - timezone.timedelta(1))
+    last_connected = models.DateTimeField('date', default=timezone.datetime(year=2000, month=1, day=1, hour=1, minute=1))
 
     @property
     def connected(self):

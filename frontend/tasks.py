@@ -81,31 +81,37 @@ locks = {}
 remote_dirs = {}
 kill_sig = []
 
-def direct_command(command, conn, lock):
+def direct_command(command, conn, lock, attempt_count=1):
     lock.acquire()
     sess = conn[2]
+
+    def retry():
+        if attempt_count >= MAX_COMMAND_ATTEMPT_COUNT:
+            logger.warning("Maximum number of command execution attempts reached!")
+            return ErrorCodes.FAILED_TO_EXECUTE_COMMAND
+        else:
+            print("Trying again to execute the command... (attempt {}/{})".format(attempt_count, MAX_COMMAND_ATTEMPT_COUNT))
+            sleep(2)
+            return direct_command(command, conn, lock, attempt_count+1)
 
     try:
         chan = sess.open_session()
         if isinstance(chan, int):
-            logger.warning("Failed to open channel, trying again")
+            logger.warning("Failed to open channel")
             lock.release()
-            sleep(1)
-            return direct_command(command, conn, lock)
+            return retry()
     except ssh2.exceptions.Timeout:
         logger.warning("Command timed out")
         lock.release()
-        return ErrorCodes.SUCCESS
+        return retry()
     except ssh2.exceptions.ChannelFailure:
         logger.warning("Channel failure")
         lock.release()
-        sleep(1)
-        return direct_command(command, conn, lock)
+        return retry()
     except ssh2.exceptions.SocketSendError:
-        logger.warning("Socket send error, trying again")
+        logger.warning("Socket send error")
         lock.release()
-        sleep(1)
-        return direct_command(command, conn, lock)
+        return retry()
 
     chan.execute("source ~/.bashrc; " + command)
 
@@ -115,6 +121,8 @@ def direct_command(command, conn, lock):
         chan.wait_closed()
         size, data = chan.read()
     except ssh2.exceptions.Timeout:
+        # I am not sure that the command has been necessarily successful if this occurs
+        # Trying again could lead to duplicate command execution, which is undesirable
         logger.warning("Channel timed out")
         lock.release()
         return ErrorCodes.CHANNEL_TIMED_OUT
@@ -129,18 +137,17 @@ def direct_command(command, conn, lock):
     if total != None:
         return total.decode('utf-8').split('\n')
 
-def sftp_get(src, dst, conn, lock):
+def sftp_get(src, dst, conn, lock, attempt_count=1):
+
     _src = str(src).replace('//', '/')
     _dst = str(dst).replace('//', '/')
 
+    if _src.strip() == "":
+        return ErrorCodes.INVALID_COMMAND
     sftp = conn[3]
     lock.acquire()
 
     system("mkdir -p {}".format('/'.join(_dst.split('/')[:-1])), force_local=True)
-
-    if _src.strip() == "":
-        lock.release()
-        return ErrorCodes.INVALID_COMMAND
 
     try:
         with sftp.open(_src, LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IRUSR) as f:
@@ -156,20 +163,37 @@ def sftp_get(src, dst, conn, lock):
         lock.release()
         return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
     except ssh2.exceptions.Timeout:
-        logger.warning("Timeout")
+        logger.warning("Timeout while downloading {}".format(src))
         lock.release()
-        return sftp_get(_src, dst, conn, lock)
+
+        if attempt_count >= MAX_SFTP_ATTEMPT_COUNT:
+            logger.warning("Maximum number of download attempts reached!")
+            return ErrorCodes.FAILED_TO_DOWNLOAD_FILE
+        else:
+            print("Trying again to download the file... (attempt {}/{})".format(attempt_count, MAX_SFTP_ATTEMPT_COUNT))
+            sleep(2)
+            return sftp_get(_src, dst, conn, lock, attempt_count+1)
 
     lock.release()
     return ErrorCodes.SUCCESS
 
 
-def sftp_put(src, dst, conn, lock):
+def sftp_put(src, dst, conn, lock, attempt_count=1):
 
     if not os.path.exists(src):
         return
 
-    direct_command("mkdir -p {}".format('/'.join(dst.split('/')[:-1])), conn, lock)
+    ret = direct_command("mkdir -p {}".format('/'.join(dst.split('/')[:-1])), conn, lock)
+
+    if ret != ErrorCodes.SUCCESS:
+        logger.info("Failed to create remote directory")
+        if attempt_count >= MAX_SFTP_ATTEMPT_COUNT:
+            logger.warning("Maximum number of upload attempts reached! The remote directory could not be created.")
+            return ErrorCodes.FAILED_TO_UPLOAD_FILE
+        else:
+            logger.info("Retrying to create directory in 5 seconds... (attempt {}/{})".format(attempt_count+1, MAX_SFTP_ATTEMPT_COUNT))
+            sleep(5)
+            return sftp_put(src, dst, conn, lock, attempt_count=attempt_count+1)
 
     sftp = conn[3]
 
@@ -189,9 +213,14 @@ def sftp_put(src, dst, conn, lock):
                 else:
                     remote.write(data)
     except ssh2.exceptions.Timeout:
-        logger.warning("Timeout while uploading, retrying...")
-        lock.release()
-        return sftp_put(src, dst, conn, lock)
+        if attempt_count >= MAX_SFTP_ATTEMPT_COUNT:
+            logger.warning("Maximum number of upload attempts reached! The file could not be uploaded.")
+            return ErrorCodes.FAILED_TO_UPLOAD_FILE
+        else:
+            logger.warning("Timeout while uploading, retrying... (attempt {}/{})".format(attempt_count+1, MAX_SFTP_ATTEMPT_COUNT))
+            lock.release()
+            sleep(1)
+            return sftp_put(src, dst, conn, lock, attempt_count=attempt_count+1)
 
     lock.release()
     return ErrorCodes.SUCCESS
@@ -220,7 +249,7 @@ def wait_until_logfile(remote_dir, conn, lock):
     logger.warning("Failed to find a job log")
     return ErrorCodes.NO_JOB_LOG
 
-def wait_until_done(calc, conn, lock):
+def wait_until_done(calc, conn, lock, ind=0):
     job_id = calc.remote_id
     logger.info("Waiting for job {} to finish".format(job_id))
 
@@ -229,23 +258,9 @@ def wait_until_done(calc, conn, lock):
     else:
         DELAY = [5, 20, 30, 60, 120, 240, 600]
 
-    ind = 0
-
     pid = int(threading.get_ident())
 
     while True:
-        for i in range(DELAY[ind]):
-            if pid in kill_sig:
-                direct_command("scancel {}".format(job_id), conn, lock)
-                return ErrorCodes.JOB_CANCELLED
-
-            if pid not in connections.keys():
-                logger.info("Thread aborted for calculation {}".format(calc.id))
-                return ErrorCodes.SERVER_DISCONNECTED
-            sleep(1)
-
-        if ind < len(DELAY)-1:
-            ind += 1
         output = direct_command("squeue -j {}".format(job_id), conn, lock)
         if not isinstance(output, int):
             if len(output) == 1 and output[0].strip() == '':
@@ -265,7 +280,18 @@ def wait_until_done(calc, conn, lock):
                         calc.status = 1
                         calc.save()
 
+        for i in range(DELAY[ind]):
+            if pid in kill_sig:
+                direct_command("scancel {}".format(job_id), conn, lock)
+                return ErrorCodes.JOB_CANCELLED
 
+            if pid not in connections.keys():
+                logger.info("Thread aborted for calculation {}".format(calc.id))
+                return ErrorCodes.SERVER_DISCONNECTED
+            sleep(1)
+
+        if ind < len(DELAY)-1:
+            ind += 1
 def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
     if REMOTE and not force_local:
         assert calc_id != -1
@@ -333,7 +359,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                 else:
                     return ErrorCodes.FAILED_SUBMISSION
         else:
-            ret = wait_until_done(calc, conn, lock)
+            ret = wait_until_done(calc, conn, lock, ind=6)
             return ret
     else:#Local
         if calc_id != -1:
