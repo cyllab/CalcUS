@@ -14,11 +14,11 @@ Your group code is {{ profile.code }}. Give this to your PI to be added to a res
 					{% csrf_token %}
 					<div class="field">
 						<label class="label">Username</label>
-						<input type="text" id="user_to_add"></input>
+						<input type="text" class="input" id="user_to_add"></input>
 					</div>
 					<div class="field">
 						<label class="label">Individual Code</label>
-						<input type="text" id="code"></input>
+						<input type="text" class="input" id="code"></input>
 					</div>
 
 					<button class="button is-primary" onclick="add_user({{ group.id }});">Add user to group</button>

@@ -74,13 +74,13 @@
 		}
 	</script>
 	<style>
-		.container {
-			width: 80%;
-		}
+	#pref_center {
+		max-width: 400px;
+		margin: 10px auto;
+	}
 	</style>
-
-
 {% endblock %}
+
 {% block content %}
 {% csrf_token %}
 
@@ -90,6 +90,7 @@
 		<h5 class="title is-5">Preferences</h5>
 		<form onsubmit="update_pref(); return false;" id="pref_form">
 			{% csrf_token %}
+			<center id="pref_center">
 			<div class="field">
 				<label class="label">Units</label>
 				<div class="control">
@@ -104,11 +105,11 @@
 			</div>
 			<div class="field">
 				<label class="label">Default options for Gaussian</label>
-				<input type="text" value="{{ profile.default_gaussian }}" name="default_gaussian">
+				<input type="text" class="input" value="{{ profile.default_gaussian }}" name="default_gaussian">
 			</div>
 			<div class="field">
 				<label class="label">Default options for ORCA</label>
-				<input type="text" value="{{ profile.default_orca }}" name="default_orca">
+				<input type="text" class="input" value="{{ profile.default_orca }}" name="default_orca">
 			</div>
 
 			<div class="field">
@@ -116,6 +117,7 @@
 					<button class="button is-primary" id="submit_button">Update</button>
 				</div>
 			</div>
+			</center>
 		</form>
 		<div id="pref_msg_box">
 		</div>
