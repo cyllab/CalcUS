@@ -617,7 +617,8 @@
 	<br />	
 	<div class="tabs is-boxed" id="tabs">
 	  	<ul>
-			{% for p in ensemble.unique_parameters %}
+			{% get_sorted_params ensemble as sorted_params %}
+			{% for p in sorted_params %}
 			<li id="tab_{{ p.id }}"><a onclick="refresh_details({{ p.id }})">{{ p }}{% get_geom_flag ensemble p %}</a></li>
 			{% endfor %}
 	  	</ul>

@@ -659,7 +659,7 @@ def link_order(request, pk):
     if profile == o.author:
         if o.new_status:
             o.last_seen_status = o.status
-            o.author.unseen_calculations -= 1
+            o.author.unseen_calculations = max(o.author.unseen_calculations-1, 0)
             o.author.save()
             o.save()
 
@@ -1047,6 +1047,21 @@ def handle_file_upload(ff, params):
     s.save()
     return s, filename
 
+def process_filename(filename):
+    if filename.find("_conf") != -1:
+        sname = filename.split("_conf")
+        if len(sname) > 2:
+            return filename, 0
+        filename = sname[0]
+        try:
+            num = int(sname[1])
+        except ValueError:
+            return filename, 0
+        else:
+            return filename, num
+    else:
+        return filename, 0
+
 @login_required
 def submit_calculation(request):
     ret = parse_parameters(request)
@@ -1197,81 +1212,173 @@ def submit_calculation(request):
         if mol_name == '':
             return error(request, "Missing molecule name")
 
-        fingerprints = {}
-        unique_fingerprints = []
-        unique_structures = []
-        unique_names = []
-        in_structs = []
         if len(request.FILES) > 0:
             combine = ""
             if 'calc_combine_files' in request.POST.keys():
                 combine = clean(request.POST['calc_combine_files'])
 
-            for ind, ff in enumerate(request.FILES.getlist("file_structure")):
+            parse_filenames = ""
+            if 'calc_parse_filenames' in request.POST.keys():
+                parse_filenames = clean(request.POST['calc_parse_filenames'])
+
+            files = request.FILES.getlist("file_structure")
+            if len(files) > 1:
+                if combine == "on" and parse_filenames != "on":
+                    mol = Molecule.objects.create(name=mol_name, project=project_obj)
+                    e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+                    for ind, ff in enumerate(files):
+                        ss = handle_file_upload(ff, params)
+                        if isinstance(ss, HttpResponse):
+                            e.structure_set.all().delete()
+                            e.delete()
+                            mol.delete()
+                            return ss
+                        struct, filename = ss
+
+                        if ind == 0:
+                            fing = gen_fingerprint(struct)
+                            mol.inchi = fing
+                            mol.save()
+
+                        struct.parent_ensemble = e
+                        struct.save()
+
+                    obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj, ensemble=e)
+                    orders.append(obj)
+                elif combine != "on" and parse_filenames == "on":
+                    unique_molecules = {}
+                    for ff in files:
+                        ss = handle_file_upload(ff, params)
+                        if isinstance(ss, HttpResponse):
+                            for _mol_name, arr_structs in unique_molecules.items():
+                                for struct in arr_structs:
+                                    struct.delete()
+                            return ss
+                        struct, filename = ss
+
+                        _mol_name, num = process_filename(filename)
+                        print(_mol_name, num)
+
+                        struct.number = num
+                        struct.save()
+                        if _mol_name in unique_molecules.keys():
+                            unique_molecules[_mol_name].append(struct)
+                        else:
+                            unique_molecules[_mol_name] = [struct]
+
+                    for _mol_name, arr_structs in unique_molecules.items():
+                        used_numbers = []
+                        fing = gen_fingerprint(arr_structs[0])
+                        mol = Molecule.objects.create(name=_mol_name, inchi=fing, project=project_obj)
+                        mol.save()
+
+                        e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+                        for struct in arr_structs:
+                            if struct.number == 0:
+                                num = 1
+                                while num in used_numbers:
+                                    num += 1
+                                struct.number = num
+                                used_numbers.append(num)
+                            else:
+                                used_numbers.append(struct.number)
+
+                            struct.parent_ensemble = e
+                            struct.save()
+                        obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj, ensemble=e)
+
+                        orders.append(obj)
+                elif combine == "on" and parse_filenames == "on":
+                    ss = handle_file_upload(files[0], params)
+                    if isinstance(ss, HttpResponse):
+                        return ss
+
+                    struct, filename = ss
+                    _mol_name, num = process_filename(filename)
+                    fing = gen_fingerprint(struct)
+
+                    mol = Molecule.objects.create(name=_mol_name, project=project_obj, inchi=fing)
+                    e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+                    struct.parent_ensemble = e
+                    struct.save()
+
+                    for ind, ff in enumerate(files[1:]):
+                        ss = handle_file_upload(ff, params)
+                        if isinstance(ss, HttpResponse):
+                            e.structure_set.all().delete()
+                            e.delete()
+                            mol.delete()
+                            return ss
+                        struct, filename = ss
+
+                        struct.parent_ensemble = e
+                        struct.save()
+                    obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj, ensemble=e)
+                    orders.append(obj)
+                else:
+                    unique_molecules = {}
+                    for ff in files:
+                        ss = handle_file_upload(ff, params)
+                        if isinstance(ss, HttpResponse):
+                            for _mol_name, arr_structs in unique_molecules.items():
+                                for struct in arr_structs:
+                                    struct.delete()
+                            return ss
+                        struct, filename = ss
+
+                        fing = gen_fingerprint(struct)
+                        if fing in unique_molecules.keys():
+                            unique_molecules[fing].append(struct)
+                        else:
+                            unique_molecules[fing] = [struct]
+
+                    for ind, (fing, arr_struct) in enumerate(unique_molecules.items()):
+                        if len(unique_molecules.keys()) > 1:
+                            mol = Molecule.objects.create(name="{} set {}".format(mol_name, ind+1), inchi=fing, project=project_obj)
+                        else:
+                            mol = Molecule.objects.create(name=mol_name, inchi=fing, project=project_obj)
+                        e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+
+                        for s_num, struct in enumerate(arr_struct):
+                            struct.parent_ensemble = e
+                            struct.number = s_num + 1
+                            struct.save()
+
+                        obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj, ensemble=e)
+                        orders.append(obj)
+            elif len(files) == 1:
+                ff = files[0]
                 ss = handle_file_upload(ff, params)
                 if isinstance(ss, HttpResponse):
                     return ss
-                s, filename = ss
+                struct, filename = ss
 
-                unique_structures.append(s.id)
-                fing = gen_fingerprint(s)
-
-                if fing in fingerprints.keys():
-                    fingerprints[fing].append(s.id)
+                num = 1
+                if parse_filenames == "on":
+                    _mol_name, num = process_filename(names[struct.id]) # Disable mol_name
                 else:
-                    fingerprints[fing] = [s.id]
+                    _mol_name = mol_name
 
-                if fing not in unique_fingerprints:
-                    unique_fingerprints.append(fing)
-                    unique_names.append(filename)
-
-            if combine == "on":
                 obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
-                try:
-                    mol = Molecule.objects.get(project=project_obj, name=mol_name)
-                    #Inchi might not match
-                except Molecule.DoesNotExist:
-                    mol = Molecule.objects.create(name=mol_name, inchi=unique_fingerprints[0], project=project_obj)#"Random" Inchi
-                    mol.save()
+
+                fing = gen_fingerprint(struct)
+                mol = Molecule.objects.create(name=_mol_name, inchi=fing, project=project_obj)
+                mol.save()
 
                 e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+                struct.parent_ensemble = e
+                struct.number = num
+                struct.save()
 
-                for s_num, s_id in enumerate(unique_structures):
-                    s = Structure.objects.get(pk=s_id)
-                    s.parent_ensemble = e
-                    s.number = s_num + 1
-                    s.save()
-
-                e.save()
                 obj.ensemble = e
                 obj.save()
                 orders.append(obj)
-            else:
-                for fname, fing in zip(unique_names, unique_fingerprints):
-                    obj = CalculationOrder.objects.create(name=fname, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
-                    try:
-                        mol = Molecule.objects.get(project=project_obj, inchi=fing)
-                        #Inchi might not match
-                    except Molecule.DoesNotExist:
-                        mol = Molecule.objects.create(name=mol_name, inchi=fing, project=project_obj)
-                        mol.save()
-
-
-                    e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
-                    for s_num, s_id in enumerate(fingerprints[fing]):
-                        s = Structure.objects.get(pk=s_id)
-                        s.parent_ensemble = e
-                        s.number = s_num + 1
-                        s.save()
-                    e.save()
-                    obj.ensemble = e
-                    obj.save()
-                    orders.append(obj)
-        else:
+        else:# No file upload
             if 'structure' in request.POST.keys():
-                obj = CalculationOrder.objects.create(name=mol_name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
+                obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj)
                 drawing = True
-                e = Ensemble.objects.create(name="Drawn Structure")
+                mol_obj = Molecule.objects.create(name=mol_name, project=project_obj)
+                e = Ensemble.objects.create(name="Drawn Structure", parent_molecule=mol_obj)
                 obj.ensemble = e
 
                 s = Structure.objects.create(parent_ensemble=e, number=1)
@@ -1285,9 +1392,6 @@ def submit_calculation(request):
                 orders.append(obj)
             else:
                 return error(request, "No input structure")
-
-        e.save()
-        s.save()
 
     if step.name == "Minimum Energy Path":
         if len(orders) != 1:
@@ -2194,11 +2298,12 @@ def vib_table(request, pk):
     vib_file = os.path.join(CALCUS_RESULTS_HOME, id, "vibspectrum")
     orca_file = os.path.join(CALCUS_RESULTS_HOME, id, "orcaspectrum")
 
+    vibs = []
+
     if os.path.isfile(vib_file):
         with open(vib_file) as f:
             lines = f.readlines()
 
-        vibs = []
         for line in lines:
             if len(line.split()) > 4 and line[0] != '#':
                 sline = line.split()
@@ -2211,53 +2316,20 @@ def vib_table(request, pk):
                 vib = float(line[20:33].strip())
                 vibs.append(vib)
 
-        response = ""
-        for ind, vib in enumerate(vibs):
-            response += '<div class="column is-narrow"><a class="button" id="vib_mode_{}" onclick="animate_vib({});">{}</a></div>'.format(ind, ind, vib)
-
-        return HttpResponse(response)###
-        formatted_vibs = []
-
-        for ind in range(math.ceil(len(vibs)/3)):
-            formatted_vibs.append([
-                [vibs[3*ind], 3*ind],
-                [vibs[3*ind+1] if 3*ind+1 < len(vibs) else '', 3*ind+1],
-                [vibs[3*ind+2] if 3*ind+2 < len(vibs) else '', 3*ind+2]
-                    ])
-
-        return render(request, 'frontend/dynamic/vib_table.html', {
-                    'profile': request.user.profile,
-                    'vibs': formatted_vibs
-                })
     elif os.path.isfile(orca_file):
         with open(orca_file) as f:
             lines = f.readlines()
 
-        vibs = []
         for line in lines:
             vibs.append(line.strip())
-
-        response = ""
-        for ind, vib in enumerate(vibs):
-            response += '<div class="column is-narrow"><a class="button" id="vib_mode_{}" onclick="animate_vib({});">{}</a></div>'.format(ind, ind, vib)
-        return HttpResponse(response)###
-
-        formatted_vibs = []
-
-        for ind in range(math.ceil(len(vibs)/3)):
-            formatted_vibs.append([
-                [vibs[3*ind], 3*ind],
-                [vibs[3*ind+1] if 3*ind+1 < len(vibs) else '', 3*ind+1],
-                [vibs[3*ind+2] if 3*ind+2 < len(vibs) else '', 3*ind+2]
-                    ])
-
-        return render(request, 'frontend/dynamic/vib_table.html', {
-                    'profile': request.user.profile,
-                    'vibs': formatted_vibs
-                })
-
     else:
         return HttpResponse(status=204)
+
+    response = ""
+    for ind, vib in enumerate(vibs):
+        response += '<div class="column is-narrow"><a class="button" id="vib_mode_{}" onclick="animate_vib({});">{}</a></div>'.format(ind, ind, vib)
+
+    return HttpResponse(response)
 
 @login_required
 def apply_pi(request):
@@ -3189,7 +3261,7 @@ def get_csv(proj, profile, scope="flagged", details="full", folders=True):
                 csv += ",{},\n".format(mol.name)
                 for e in mol.ensembles.values():
                     if details == "full":
-                        arr_ind = 6
+                        arr_ind = 7
                     else:
                         arr_ind = 0
 

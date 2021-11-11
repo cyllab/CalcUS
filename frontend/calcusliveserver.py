@@ -78,7 +78,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     command_executor='http://selenium:4444/wd/hub',
                     desired_capabilities=DesiredCapabilities.CHROME,
             )
-            cls.driver.implicitly_wait(5)
             cls.driver.set_window_size(1920, 1080)
         else:
             chrome_options = Options()
@@ -188,7 +187,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.driver.get('{}{}'.format(self.live_server_url, url))
 
     def calc_input_params(self, params):
-        self.driver.implicitly_wait(10)
+        self.wait_for_ajax()
 
         if 'mol_name' in params.keys():
             element = WebDriverWait(self.driver, 1).until(
@@ -239,7 +238,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             time.sleep(0.1)
             select.find_element_by_xpath("option[text()='{}']".format(params['software'])).click()
 
-            self.driver.implicitly_wait(5)
+            self.wait_for_ajax()
 
         if 'type' in params.keys():
             self.driver.find_element_by_xpath("//*[@id='calc_type']/option[text()='{}']".format(params['type'])).click()
@@ -985,6 +984,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def get_calc_orders(self):
         assert self.is_on_page_calculations()
+        self.wait_for_ajax()
 
         try:
             calculations_div = WebDriverWait(self.driver, 1).until(
@@ -1481,6 +1481,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_loaded_frequencies(self):
         assert self.is_on_page_ensemble()
 
+        self.wait_for_ajax()
+
         try:
             table = WebDriverWait(self.driver, 5).until(
                 EC.presence_of_element_located((By.ID, "vib_table"))
@@ -1488,14 +1490,16 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         except selenium.common.exceptions.TimeoutException:
             return False
 
-        rows = table.find_elements_by_css_selector("tr")
+        freqs = table.find_elements_by_css_selector("div.column")
 
-        if len(rows) > 0:
+        if len(freqs) > 0:
             return True
         return False
 
     def is_loaded_mo(self):
         assert self.is_on_page_ensemble()
+
+        self.wait_for_ajax()
 
         try:
             mo_div = self.driver.find_element_by_id("mo_structure_details")
@@ -1521,20 +1525,24 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         alert = Alert(self.driver)
         alert.send_keys(name)
         alert.accept()
+        self.wait_for_ajax()
 
     def load_preset(self, name):
         self.select_preset(name)
         button = self.driver.find_element_by_css_selector("a.button:nth-child(3)")
         button.click()
+        self.wait_for_ajax()
 
     def delete_preset(self, name):
         self.select_preset(name)
         button = self.driver.find_element_by_css_selector("a.button:nth-child(5)")
         button.click()
+        self.wait_for_ajax()
 
     def set_project_preset(self):
         button = self.driver.find_element_by_css_selector("a.button:nth-child(7)")
         button.click()
+        self.wait_for_ajax()
 
     def get_name_presets(self):
         select = self.driver.find_element_by_css_selector("#presets")

@@ -591,7 +591,7 @@ class Parameters(models.Model):
 
 class Molecule(models.Model):
     name = models.CharField(max_length=100)
-    inchi = models.CharField(max_length=1000)
+    inchi = models.CharField(max_length=1000, default="", blank=True, null=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
 
     @property
@@ -633,7 +633,7 @@ class CalculationOrder(models.Model):
 
             with transaction.atomic():
                 p = Profile.objects.select_for_update().get(id=self.author.id)
-                p.unseen_calculations -= 1
+                p.unseen_calculations = max(p.unseen_calculations-1, 0) # Glitches may screw up the count...
                 p.save()
         else:
             if not self.hidden and self.status in [2, 3]:
@@ -646,8 +646,14 @@ class CalculationOrder(models.Model):
 
     @property
     def label(self):
-        if self.result_ensemble:
-            return self.result_ensemble.name
+        if not self.step:
+            return "Unknown"
+
+        if self.step.creates_ensemble:
+            if self.result_ensemble:
+                return self.result_ensemble.name
+            else:
+                return "Processing..."
         else:
             if self.ensemble:
                 return self.ensemble.name

@@ -78,7 +78,8 @@
 		}
 
 		function del(proj_id) {
-			var res = confirm("Delete the entire project?");	
+			proj_name = $("#proj_name_"+proj_id).text();
+			var res = confirm('Delete the entire project called "' + proj_name + '"?');	
 			if (res) {
 				$.ajax({
 					method: "POST",	 	 

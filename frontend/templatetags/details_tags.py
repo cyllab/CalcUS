@@ -25,6 +25,12 @@ register = template.Library()
 
 @register.simple_tag
 def get_geom_flag(ensemble, param):
+    if verify_geom(ensemble, param):
+        return ' (GEOMETRY)'
+    else:
+        return ''
+
+def verify_geom(ensemble, param):
     s = ensemble.structure_set.all()[0]
     try:
         p = s.properties.get(parameters=param)
@@ -32,9 +38,14 @@ def get_geom_flag(ensemble, param):
         return ''
 
     if p.geom:
-        return ' (GEOMETRY)'
-    else:
-        return ''
+        return True
+    return False
+
+@register.simple_tag
+def get_sorted_params(ensemble):
+    # Could be optimized to stop when the parameters linking to the geometry are found
+    params = sorted(ensemble.unique_parameters, key=lambda i: verify_geom(ensemble, i), reverse=True)
+    return params
 
 @register.simple_tag
 def get_ensemble_weighted_energy(param, ensemble):

@@ -259,7 +259,7 @@ class LaunchTests(TestCase):
         self.assertNotContains(response, "Error while submitting your calculation")
 
         o = CalculationOrder.objects.latest('id')
-        self.assertEqual(o.name, 'name')
+        self.assertEqual(o.ensemble.parent_molecule.name, 'name')
 
     def test_clean_name2(self):
         params = basic_params.copy()
@@ -268,7 +268,7 @@ class LaunchTests(TestCase):
 
         self.assertNotContains(response, "Error while submitting your calculation")
         o = CalculationOrder.objects.latest('id')
-        self.assertEqual(o.name, '&lt;br&gt;name')
+        self.assertEqual(o.ensemble.parent_molecule.name, '&lt;br&gt;name')
 
     def test_clean_name3(self):
         params = basic_params.copy()
@@ -277,7 +277,7 @@ class LaunchTests(TestCase):
 
         self.assertNotContains(response, "Error while submitting your calculation")
         o = CalculationOrder.objects.latest('id')
-        self.assertEqual(o.name, 'name/details-.')
+        self.assertEqual(o.ensemble.parent_molecule.name, 'name/details-.')
 
 class PermissionTestsStudent(TestCase):
     def setUp(self):

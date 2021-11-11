@@ -2591,11 +2591,11 @@ def filter(order, input_structures):
 
     def get_weight(s):
         ind = summary_data[0].index(s.number)
-        return summary_data[5][ind]
+        return summary_data[6][ind]
 
     def get_rel_energy(s):
         ind = summary_data[0].index(s.number)
-        return summary_data[4][ind]
+        return summary_data[5][ind]
 
 
     if order.filter.type == "By Boltzmann Weight":
@@ -2629,7 +2629,6 @@ def dispatcher(drawing, order_id):
 
     mode = "e"#Mode for input structure (Ensemble/Structure)
     input_structures = None
-    created_molecule = False
     if order.structure != None:
         mode = "s"
         generate_xyz_structure(drawing, order.structure)
@@ -2655,6 +2654,8 @@ def dispatcher(drawing, order_id):
         ensemble.save()
 
         if ensemble.parent_molecule is None:
+            raise Exception("Ensemble {} has no parent molecule".format(ensemble.id))
+        elif ensemble.parent_molecule.inchi == "":
             fingerprint = ""
             for s in ensemble.structure_set.all():
                 generate_xyz_structure(drawing, s)
@@ -2667,11 +2668,15 @@ def dispatcher(drawing, order_id):
             try:
                 molecule = Molecule.objects.get(inchi=fingerprint, project=order.project)
             except Molecule.DoesNotExist:
-                molecule = Molecule.objects.create(name=order.name, inchi=fingerprint, project=order.project)
-                created_molecule = True
-                molecule.save()
-            ensemble.parent_molecule = molecule
-            ensemble.save()
+                ensemble.parent_molecule.inchi = fingerprint
+                ensemble.parent_molecule.save()
+                molecule = ensemble.parent_molecule
+            else:
+                _mol = ensemble.parent_molecule
+                ensemble.parent_molecule = molecule
+                ensemble.save()
+                _mol.delete()
+
             input_structures = ensemble.structure_set.all()
         else:
             if ensemble.parent_molecule.project == order.project:
@@ -2717,15 +2722,13 @@ def dispatcher(drawing, order_id):
 
     input_structures = filter(order, input_structures)
     if step.creates_ensemble:
-        if order.name.strip() == "" or created_molecule:
-            e = Ensemble.objects.create(name="{} Result".format(order.step.name), origin=ensemble)
+        if order.name.strip() == "":
+            e = Ensemble.objects.create(name="{} Result".format(order.step.name), origin=ensemble, parent_molecule=molecule)
         else:
-            e = Ensemble.objects.create(name=order.name, origin=ensemble)
+            e = Ensemble.objects.create(name=order.name, origin=ensemble, parent_molecule=molecule)
+
         order.result_ensemble = e
         order.save()
-        molecule.ensemble_set.add(e)
-        molecule.save()
-        e.save()
 
         for s in input_structures:
             c = Calculation.objects.create(structure=s, order=order, date_submitted=timezone.now(), step=step, parameters=order.parameters, result_ensemble=e, constraints=order.constraints, aux_structure=order.aux_structure)
