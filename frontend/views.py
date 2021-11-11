@@ -1257,7 +1257,6 @@ def submit_calculation(request):
                         struct, filename = ss
 
                         _mol_name, num = process_filename(filename)
-                        print(_mol_name, num)
 
                         struct.number = num
                         struct.save()
@@ -3400,6 +3399,7 @@ def download_project_post(request):
     else:
         return error(request, "No details level given")
 
+    folders = False
     if 'folders' in request.POST.keys():
         folders = clean(request.POST['folders'])
         if folders.lower() == "false":
@@ -3732,7 +3732,7 @@ def analyse(request, project_id):
     if not can_view_project(proj, profile):
         return HttpResponse(status=403)
 
-    csv = get_csv(proj, profile)
+    csv = get_csv(proj, profile, folders=False)
     js_csv = []
     for ind1, line in enumerate(csv.split('\n')):
         for ind2, el in enumerate(line.split(',')):
