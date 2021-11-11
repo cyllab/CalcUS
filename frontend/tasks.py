@@ -185,7 +185,7 @@ def sftp_put(src, dst, conn, lock, attempt_count=1):
 
     ret = direct_command("mkdir -p {}".format('/'.join(dst.split('/')[:-1])), conn, lock)
 
-    if ret != ErrorCodes.SUCCESS:
+    if isinstance(ret, int):
         logger.info("Failed to create remote directory")
         if attempt_count >= MAX_SFTP_ATTEMPT_COUNT:
             logger.warning("Maximum number of upload attempts reached! The remote directory could not be created.")
