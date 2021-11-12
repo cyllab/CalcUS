@@ -35,7 +35,7 @@ def verify_geom(ensemble, param):
     try:
         p = s.properties.get(parameters=param)
     except Property.DoesNotExist:
-        return ''
+        return False
 
     if p.geom:
         return True
