@@ -2260,6 +2260,12 @@ def write_mol(xyz):
     content.append('M  END\n')
     return content
 
+def write_xyz(xyz, path):
+    with open(path, 'w') as out:
+        out.write("{}\n\n".format(len(xyz)))
+        for line in xyz:
+            out.write("{} {:.4f} {:.4f} {:.4f}\n".format(line[0], *line[1]))
+
 def gen_fingerprint(structure):
     if structure.xyz_structure == '':
         logger.error("No xyz structure!")
@@ -2273,23 +2279,22 @@ def gen_fingerprint(structure):
             a, x, y, z = line.strip().split()
             xyz.append([a, float(x), float(y), float(z)])
 
-    mol = write_mol(xyz)
     t = "{}_{}".format(time(), structure.id)
-    mol_file = "/tmp/{}.mol".format(t)
-    with open(mol_file, 'w') as out:
-        for line in mol:
-            out.write(line)
+    mol = write_mol(xyz)
+
+    with open("/tmp/{}.mol".format(t), 'w') as out:
+        for l in mol:
+            out.write(l)
 
     with open("/dev/null", 'w') as stream:
-        t = subprocess.run(shlex.split("inchi-1 -DoNotAddH {}".format(mol_file)), stdout=stream, stderr=stream)
+        out = subprocess.check_output(shlex.split("obabel /tmp/{}.mol -oinchi -xX 'DoNotAddH'".format(t)), stderr=stream).decode('utf-8')
 
-    try:
-        with open(mol_file + '.txt') as f:
-            lines = f.readlines()
-        inchi = lines[2][6:]
-    except IndexError:
-        inchi = str(time())
-    return inchi
+    inchi = out.split('\n')[-2]
+    if inchi[:6] != "InChI=":
+        logger.warning("Invalid InChI key obtained for structure {}".format(structure.id))
+        return ''
+    else:
+        return inchi[6:]
 
 def analyse_opt(calc_id):
     funcs = {

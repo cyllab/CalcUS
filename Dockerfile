@@ -27,8 +27,3 @@ RUN pip install -r requirements.txt
 RUN apt update && apt install openbabel sshpass postgresql-client -y
 
 RUN adduser --disabled-password --gecos '' calcus  
-
-RUN pip install -U "celery[redis]"
-
-ENV TZ=America/New_York
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
