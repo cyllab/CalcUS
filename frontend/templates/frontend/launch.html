@@ -321,6 +321,8 @@
 
 			});
 
+			set_availables();
+
 		}
 
 		function set_availables() {
@@ -799,7 +801,7 @@
 							<div class="control" >
 								<div class="select" >
 								  <select name="calc_solvation_model" id="calc_solvation_model" onchange="refresh_availabilities();">
-								    <option class="software_specific avail_xtb">GBSA</option>
+								    <option class="software_specific avail_xtb type_specific avail_Constrained_Optimisation avail_Constrained_Conformational_Search avail_Geometrical_Optimisation avail_Frequency_Calculation avail_UV-Vis_Calculation avail_Single-Point_Energy avail_Conformational_Search">GBSA</option>
 								    <option class="software_specific avail_xtb">ALPB</option>
 								    <option class="software_specific avail_Gaussian avail_ORCA">SMD</option>
 								    <option class="software_specific avail_Gaussian">PCM</option>
@@ -816,7 +818,7 @@
 								<div class="select">
 									<select name="calc_solvation_radii" id="calc_solvation_radii">
 										<option class="solvation_model_specific avail_SMD">SMD18</option>
-									    	<option class="solvation_model_specific avail_SMD avail_GBSA">Default</option>
+									    	<option class="solvation_model_specific avail_SMD">Default</option>
 									    	<option class="solvation_model_specific avail_PCM avail_CPCM">UFF</option>
 									    	<option class="solvation_model_specific avail_PCM avail_CPCM">UA0</option>
 									    	<option class="solvation_model_specific avail_PCM avail_CPCM">UAHF</option>
