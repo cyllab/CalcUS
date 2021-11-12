@@ -440,6 +440,15 @@
 			}
 		}
 
+		function toggle_visibility_molname(check) {
+			if(check.checked) {
+				$("#calc_mol_name_field").hide();
+			}
+			else{
+				$("#calc_mol_name_field").show();
+			}
+		}
+
 		function preview_upload(file_list) {
 			if(file_list.length == 1 && file_list[0].type == "chemical/x-xyz") {
 				var reader = new FileReader();
@@ -478,11 +487,14 @@
 			$("#file_upload_name").html(fname);
 
 			combine = document.getElementById("calc_combine_files_column");
+			parse  = document.getElementById("calc_parse_filenames_column");
 			if (file_list.length > 1) {
 				combine.style.display = "block";	
+				parse.style.display = "block";	
 			}
 			else {
 				combine.style.display = "none";	
+				parse.style.display = "none";	
 			}
 		}
 
@@ -703,10 +715,10 @@
 							</div>
 						</div>
 					</div>
-					<div class="column is-narrow has-text-centered" id="calc_parse_filenames_column">
-						<label class="label">Order using filename(s)</label>
+					<div class="column is-narrow has-text-centered" id="calc_parse_filenames_column" style="display: none;">
+						<label class="label">Use filename(s)</label>
 						<div class="control">
-							<input type="checkbox" class="checkbox" id="calc_parse_filenames" name="calc_parse_filenames">
+							<input type="checkbox" class="checkbox" id="calc_parse_filenames" name="calc_parse_filenames" onchange="toggle_visibility_molname(this);">
 						</div>
 					</div>
 

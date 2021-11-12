@@ -1298,6 +1298,7 @@ def submit_calculation(request):
 
                     mol = Molecule.objects.create(name=_mol_name, project=project_obj, inchi=fing)
                     e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+                    struct.number = 1
                     struct.parent_ensemble = e
                     struct.save()
 
@@ -1309,7 +1310,7 @@ def submit_calculation(request):
                             mol.delete()
                             return ss
                         struct, filename = ss
-
+                        struct.number = ind+2
                         struct.parent_ensemble = e
                         struct.save()
                     obj = CalculationOrder.objects.create(name=name, date=timezone.now(), parameters=params, author=profile, step=step, project=project_obj, ensemble=e)
