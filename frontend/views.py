@@ -1389,6 +1389,7 @@ def submit_calculation(request):
 
                 mol = clean(request.POST['structure'])
                 s.mol_structure = mol
+                s.save()
                 orders.append(obj)
             else:
                 return error(request, "No input structure")

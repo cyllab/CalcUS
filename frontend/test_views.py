@@ -579,7 +579,7 @@ class AnalysisTests(TestCase):
         self.client = Client()
         self.client.force_login(u)
 
-    def test_boltzmann_weighing_Ha(self):
+    def test_boltzmann_weighting_Ha(self):
         self.profile.pref_units = 2#Hartree
         self.profile.save()
 
@@ -619,7 +619,7 @@ class AnalysisTests(TestCase):
             self.assertEqual(float(free_energy), 0.0)
             ind += 1
 
-    def test_boltzmann_weighing_Ha2(self):
+    def test_boltzmann_weighting_Ha2(self):
         self.profile.pref_units = 2#Hartree
         self.profile.save()
 
@@ -659,7 +659,7 @@ class AnalysisTests(TestCase):
             self.assertEqual(float(free_energy), 0.0)
             ind += 1
 
-    def test_boltzmann_weighing_kJ(self):
+    def test_boltzmann_weighting_kJ(self):
         self.profile.pref_units = 0#kJ/mol
         self.profile.save()
 
@@ -700,7 +700,7 @@ class AnalysisTests(TestCase):
 
             ind += 1
 
-    def test_boltzmann_weighing_kcal(self):
+    def test_boltzmann_weighting_kcal(self):
         self.profile.pref_units = 1#kcal/mol
         self.profile.save()
 
@@ -741,7 +741,7 @@ class AnalysisTests(TestCase):
 
             ind += 1
 
-    def test_boltzmann_weighing_missing_structures(self):
+    def test_boltzmann_weighting_missing_structures(self):
         self.profile.pref_units = 2#Hartree
         self.profile.save()
 

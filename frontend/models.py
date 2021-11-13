@@ -243,7 +243,7 @@ class Ensemble(models.Model):
                 return True
         return False
 
-    def boltzmann_weighing_full(self, values, degeneracies):
+    def boltzmann_weighting_full(self, values, degeneracies):
         if len(values) == 1:
             return [[0.0], [1.0], values[0]]
 
@@ -267,7 +267,7 @@ class Ensemble(models.Model):
 
         return [relative_energies, weights, float(w_energy)]
 
-    def boltzmann_weighing_lite(self, values, degeneracies):
+    def boltzmann_weighting_lite(self, values, degeneracies):
         if len(values) == 1:
             return values[0]
 
@@ -293,12 +293,12 @@ class Ensemble(models.Model):
         if 0 in in_arr[2]:
             w_e = '-'
         else:
-            rel_e, weights, w_e = self.boltzmann_weighing_full(in_arr[2], in_arr[1])
+            rel_e, weights, w_e = self.boltzmann_weighting_full(in_arr[2], in_arr[1])
 
         if 0 in in_arr[3]:
             w_f_e = '-'
         else:
-            w_f_e = self.boltzmann_weighing_lite(in_arr[3], in_arr[1])
+            w_f_e = self.boltzmann_weighting_lite(in_arr[3], in_arr[1])
 
         return [rel_e, weights, w_e, w_f_e]
 
@@ -395,7 +395,7 @@ class Ensemble(models.Model):
                 arr_f_e[p_name][1].append(s.degeneracy)
 
         for p_name in arr_e.keys():
-            ret[p_name] = [self.boltzmann_weighing_lite(*arr_e[p_name]), self.boltzmann_weighing_lite(*arr_f_e[p_name])]
+            ret[p_name] = [self.boltzmann_weighting_lite(*arr_e[p_name]), self.boltzmann_weighting_lite(*arr_f_e[p_name])]
         return ret, hashes
 
     def weighted_free_energy(self, params):
@@ -410,7 +410,7 @@ class Ensemble(models.Model):
             energies.append(p.free_energy)
             degeneracies.append(s.degeneracy)
 
-        return self.boltzmann_weighing_lite(energies, degeneracies)
+        return self.boltzmann_weighting_lite(energies, degeneracies)
 
     def weighted_energy(self, params):
         energies = []
@@ -424,7 +424,7 @@ class Ensemble(models.Model):
             energies.append(p.energy)
             degeneracies.append(s.degeneracy)
 
-        return self.boltzmann_weighing_lite(energies, degeneracies)
+        return self.boltzmann_weighting_lite(energies, degeneracies)
 
     def weighted_nmr_shifts(self, params):
         summary, hashes = self.ensemble_summary
@@ -432,7 +432,7 @@ class Ensemble(models.Model):
         if params.md5 not in summary:
             return []
 
-        weights = [decimal.Decimal(i) for i in summary[params.md5][5]]
+        weights = [decimal.Decimal(i) for i in summary[params.md5][6]]
 
         shifts = []
         for ind, s in enumerate(self.structure_set.all()):
