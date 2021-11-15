@@ -56,6 +56,7 @@ from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint,
 from .constants import *
 from .libxyz import parse_xyz_from_text, equivalent_atoms
 from .environment_variables import *
+from .calculation_helper import get_abs_method, get_abs_basis_set, get_abs_solvent
 
 from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
@@ -3043,6 +3044,56 @@ def launch_project(request, pk):
             })
 
 @login_required
+def check_functional(request):
+    if 'functional' not in request.POST.keys():
+        return HttpResponse(status=400)
+
+    func = clean(request.POST['functional'])
+
+    if func.strip() == "":
+        return HttpResponse("")
+
+    ret = get_abs_method(func)
+    if ret == -1:
+        return HttpResponse("Unknown functional")
+    else:
+        return HttpResponse("")
+
+@login_required
+def check_basis_set(request):
+    if 'basis_set' not in request.POST.keys():
+        return HttpResponse(status=400)
+
+    bs = clean(request.POST['basis_set'])
+
+    if bs.strip() == "":
+        return HttpResponse("")
+
+    ret = get_abs_basis_set(bs)
+
+    if ret == -1:
+        return HttpResponse("Unknown basis set")
+    else:
+        return HttpResponse("")
+
+@login_required
+def check_solvent(request):
+    if 'solvent' not in request.POST.keys():
+        return HttpResponse(status=400)
+
+    solv = clean(request.POST['solvent'])
+
+    if solv.strip() == "":
+        return HttpResponse("")
+
+    ret = get_abs_solvent(solv)
+
+    if ret == -1:
+        return HttpResponse("Unknown solvent")
+    else:
+        return HttpResponse("")
+
+@login_required
 def delete_preset(request, pk):
     try:
         p = Preset.objects.get(pk=pk)
@@ -3846,6 +3897,7 @@ def change_password(request):
         'form': form
     })
 
+'''
 def handler404(request, *args, **argv):
     return render(request, 'error/404.html', {
             })
@@ -3861,3 +3913,4 @@ def handler400(request, *args, **argv):
 def handler500(request, *args, **argv):
     return render(request, 'error/500.html', {
             })
+'''

@@ -54,6 +54,9 @@ urlpatterns = [
     path('specifications/', views.specifications, name='specifications'),
     path('get_available_bs/', views.get_available_bs, name='get_available_bs'),
     path('get_available_elements/', views.get_available_elements, name='get_available_elements'),
+    path('check_functional/', views.check_functional, name='check_functional'),
+    path('check_basis_set/', views.check_basis_set, name='check_basis_set'),
+    path('check_solvent/', views.check_solvent, name='check_solvent'),
 
     path('aux_molecule/', views.aux_molecule, name='aux_molecule'),
     path('aux_ensemble/', views.aux_ensemble, name='aux_ensemble'),

@@ -58,6 +58,11 @@
 	#calc_combine_files {
 		margin: auto 0;
 	}
+	.check_msg {
+		color: red;
+		font-size: 10pt;
+		padding-left: 5px;
+	}
 
 	@-webkit-keyframes animatetop {
 		from {top:-300px; opacity:0} 
@@ -74,6 +79,16 @@
 	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
 
 	<script>
+	function debounce(callback, wait) {
+		let timeout;
+		return (...args) => {
+			const context = this;
+			clearTimeout(timeout);
+			timeout = setTimeout(() => callback.apply(context, args), wait);
+		};
+	}
+
+	/* Sets atomic labels as the atomic numbers in the xyz structure */
 	(function(ChemDoodle) {
 		ChemDoodle.relabel = function(molecule){
 	    		for(let i = 0, ii = molecule.atoms.length; i<ii; i++){
@@ -92,6 +107,30 @@
 	}
 	</script>
 	<script>
+		function check(param) {
+			val = $("#calc_" + param).val();
+			data = {};
+			data[param] = val;
+			$.ajax({
+				method: "POST",	 	 
+				url: "/check_" + param + "/",
+				data: data,
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				success: function(msg) {
+					is_red = $("#calc_" + param).hasClass("is-danger");
+					if(msg == "" && is_red) {
+						$("#calc_" + param).removeClass("is-danger");
+					}
+					else if(msg != "" && !is_red){
+						$("#calc_" + param).addClass("is-danger");
+					}
+					$("#" + param + "_check_msg").html(msg);
+				},
+			});
+
+		}
 		var project_presets = {
 			{% for proj in profile.project_set.all %}
 			'{{ proj.name }}': {% if proj.preset %}{{ proj.preset.id }} {% else %} -1 {% endif %},
@@ -110,7 +149,6 @@
 					refresh_availabilities();
 				},
 			});
-
 		}
 
 		{% if ensemble and not structures %}
@@ -485,7 +523,7 @@
 			if(file_list.length > 1) {
 				fname += ', ...';
 			}
-			console.log(fname);
+
 			$("#file_upload_name").html(fname);
 
 			combine = document.getElementById("calc_combine_files_column");
@@ -790,25 +828,26 @@
 					<div class="column is-narrow">
 						<div class="field">
 							<label class="label">Solvent</label>
-							<div class="control" >
+							<div class="control">
 								<input class="input" name="calc_solvent" id="calc_solvent" type="text" oninput="refresh_availabilities();">
 							</div>
+							<p class="check_msg is-danger" id="solvent_check_msg"></p>
 						</div>
 					</div>
 					<div class="column is-narrow">
 						<div class="field" id="calc_solvation_model_field">
 							<label class="label">Solvation Model</label>
-							<div class="control" >
-								<div class="select" >
-								  <select name="calc_solvation_model" id="calc_solvation_model" onchange="refresh_availabilities();">
-								    <option class="software_specific avail_xtb type_specific avail_Constrained_Optimisation avail_Constrained_Conformational_Search avail_Geometrical_Optimisation avail_Frequency_Calculation avail_UV-Vis_Calculation avail_Single-Point_Energy avail_Conformational_Search">GBSA</option>
-								    <option class="software_specific avail_xtb">ALPB</option>
-								    <option class="software_specific avail_Gaussian avail_ORCA">SMD</option>
-								    <option class="software_specific avail_Gaussian">PCM</option>
-								    <option class="software_specific avail_Gaussian avail_ORCA">CPCM</option>
-								  </select>
+								<div class="control">
+									<div class="select">
+									<select name="calc_solvation_model" id="calc_solvation_model" onchange="refresh_availabilities();">
+										<option class="software_specific avail_xtb type_specific avail_Constrained_Optimisation avail_Constrained_Conformational_Search avail_Geometrical_Optimisation avail_Frequency_Calculation avail_UV-Vis_Calculation avail_Single-Point_Energy avail_Conformational_Search">GBSA</option>
+										<option class="software_specific avail_xtb">ALPB</option>
+										<option class="software_specific avail_Gaussian avail_ORCA">SMD</option>
+										<option class="software_specific avail_Gaussian">PCM</option>
+										<option class="software_specific avail_Gaussian avail_ORCA">CPCM</option>
+									</select>
+									</div>
 								</div>
-							</div>
 						</div>
 					</div>
 					<div class="column is-narrow">
@@ -983,6 +1022,7 @@
 								<div class="control">
 									<input class="input" name="calc_functional" id="calc_functional" type="text" list="functional_options">
 								</div>
+								<p class="check_msg is-danger" id="functional_check_msg"></p>
 							</div>
 						</div>
 						<div class="column method_specific avail_DFT avail_RI-MP2 avail_HF">
@@ -991,6 +1031,7 @@
 								<div class="control">
 									<input class="input" name="calc_basis_set" id="calc_basis_set" type="text" list="basis_sets_options">
 								</div>
+								<p class="check_msg is-danger" id="basis_set_check_msg"></p>
 							</div>
 						</div>
 
@@ -1280,6 +1321,10 @@
 		const inputElement = document.getElementById("file_structure");
 		inputElement.addEventListener("change", file_upload_changed, false);
 	{% endif %}
+
+	$("#calc_functional").keyup(debounce(function() {check("functional")}, 500));
+	$("#calc_basis_set").keyup(debounce(function() {check("basis_set")}, 500));
+	$("#calc_solvent").keyup(debounce(function() {check("solvent")}, 500));
 
 	</script>
 

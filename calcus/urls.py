@@ -29,10 +29,12 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
 ]
 
+'''
 handler404 = 'frontend.views.handler404'
 handler400 = 'frontend.views.handler400'
 handler403 = 'frontend.views.handler403'
 handler500 = 'frontend.views.handler500'
+'''
 
 from django.conf import settings
 from django.urls import include, path
