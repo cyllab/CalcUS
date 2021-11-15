@@ -122,20 +122,24 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def _test_wrapper(self):
         m = getattr(self, self.m_name)
-        num = 3
+
+        num = 1
+        MAX_ATTEMPTS = 3
 
         exc = None
 
+        print("Running {}".format(self.m_name))
         while True:
             try:
                 m()
             except Exception as e:
                 if exc is None:
                     exc = e
-                if num == 0:
+                if num == MAX_ATTEMPTS:
                     raise exc
                 else:
-                    num -= 1
+                    num += 1
+                print("Test failed, trying again (attempt {}/{})".format(num, MAX_ATTEMPTS))
                 time.sleep(3)
             else:
                 break
@@ -444,6 +448,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def get_nmr_shifts(self):
         assert self.is_on_page_nmr_analysis()
+        self.wait_for_ajax()
+
         tbody = self.driver.find_element_by_id("shifts_body")
         lines = tbody.find_elements_by_css_selector("tr")
         shifts = [line.find_element_by_css_selector("td:nth-child(3)").text for line in lines]
@@ -1280,7 +1286,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def launch_ensemble_next_step(self):
         assert self.is_on_page_ensemble()
-        button = WebDriverWait(self.driver, 0.5).until(
+        button = WebDriverWait(self.driver, 1).until(
             EC.presence_of_element_located((By.ID, "next_step_ensemble"))
         )
         button.send_keys(Keys.RETURN)
@@ -1288,10 +1294,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def launch_structure_next_step(self):
         assert self.is_on_page_ensemble()
 
-        button = WebDriverWait(self.driver, 0.5).until(
+        button = WebDriverWait(self.driver, 1).until(
             EC.presence_of_element_located((By.ID, "next_step_structure"))
         )
-        table = WebDriverWait(self.driver, 0.5).until(
+        table = WebDriverWait(self.driver, 1).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "#conf_table > tr"))
         )
 

@@ -359,7 +359,10 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                 else:
                     return ErrorCodes.FAILED_SUBMISSION
         else:
-            ret = wait_until_done(calc, conn, lock, ind=6)
+            if is_test:
+                ret = wait_until_done(calc, conn, lock)
+            else:
+                ret = wait_until_done(calc, conn, lock, ind=6)
             return ret
     else:#Local
         if calc_id != -1:

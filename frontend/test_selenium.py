@@ -2303,7 +2303,7 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
 
         self.lget("/calculations/")
         self.wait_latest_calc_error(10)
-        time.sleep(2)
+        time.sleep(5)
 
         self.click_latest_calc()
         self.wait_for_ajax()
@@ -4624,6 +4624,7 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.click_get_shifts()
 
         shifts = self.get_nmr_shifts()
+
         self.assertEqual(shifts[1], shifts[2])
         self.assertEqual(shifts[1], shifts[3])
         self.assertNotEqual(shifts[1], shifts[4])

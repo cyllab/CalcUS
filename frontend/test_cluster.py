@@ -531,6 +531,8 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
+        self.wait_for_ajax()
+
         self.assertEqual(self.get_number_conformers(), 1)
         self.click_calc_method_not_geom()
         self.assertTrue(self.is_loaded_mo())
@@ -1028,6 +1030,7 @@ class ClusterTests(CalcusLiveServer):
         self.wait_latest_calc_running(20)
 
         self.lget("/profile/")
+        self.wait_for_ajax()
         self.select_cluster(1)
         self.disconnect_cluster()
 
@@ -1041,6 +1044,7 @@ class ClusterTests(CalcusLiveServer):
             self.driver.refresh()
 
         self.lget("/profile/")
+        self.wait_for_ajax()
         self.select_cluster(1)
         self.connect_cluster()
 
