@@ -200,10 +200,20 @@ class Ensemble(models.Model):
         statuses = [i.status for i in orders]
         orders2 = self.calculationorder_set.all()
         statuses += [i.status for i in orders2 if not i.step.creates_ensemble]
-        if 3 in statuses:
-            return STATUS_COLORS[3]
-        else:
-            return STATUS_COLORS[min(statuses)]
+
+        if len(statuses) == 0:
+            return STATUS_COLORS[0]
+
+        if 1 in statuses:
+            return STATUS_COLORS[1]
+
+        if 0 not in statuses:
+            if 3 in statuses and 2 not in statuses:
+                return STATUS_COLORS[3]
+            else:
+                return STATUS_COLORS[2]
+
+        return STATUS_COLORS[0]
 
 
     @property
@@ -702,7 +712,7 @@ class CalculationOrder(models.Model):
             return 1
 
         if num_queued == 0:
-            if num_error > 0:
+            if num_error > 0 and num_done == 0:
                 return 3
             else:
                 return 2
