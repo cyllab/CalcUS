@@ -61,7 +61,6 @@ if not DEBUG and SSL:
 
 INSTALLED_APPS = [
     'frontend',
-    'bulma',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

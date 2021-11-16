@@ -31,6 +31,8 @@ if ("{{ params.program }}" != "Unknown" && "{{ params.program}}" != "Open Babel"
 	{% if load_charge %}
 		charge = document.getElementById("calc_charge");
 		charge.value = "{{ params.charge }}";
+		mult = document.getElementById("calc_multiplicity");
+		mult.value = "{{ params.multiplicity }}";
 	{% endif %}
 
 	df = document.getElementById("calc_df");

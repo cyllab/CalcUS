@@ -2022,6 +2022,35 @@ class XtbCalculationTestsPI(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
 
+    def test_ensemble_second_step_mult(self):
+        params = {
+                'mol_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'Cl.xyz',
+                'charge': '0',
+                'multiplicity': '2',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.launch_ensemble_next_step()
+
+        params2 = {
+                'type': 'Frequency Calculation',
+                #project and multiplicity implicit
+                }
+        self.calc_input_params(params2)
+
+        mult = self.driver.find_element_by_name('calc_multiplicity')
+        self.assertEqual(mult.get_attribute("value"), params['multiplicity'])
+
     def test_structure_second_step(self):
         params = {
                 'mol_name': 'test',
