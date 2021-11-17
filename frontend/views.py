@@ -2738,22 +2738,6 @@ def get_scan_animation(request):
             return HttpResponse(status=204)
 
 @login_required
-def get_details_sections(request, pk):
-    try:
-        calc = Calculation.objects.get(pk=pk)
-    except Calculation.DoesNotExist:
-        return HttpResponse(status=404)
-
-    profile = request.user.profile
-
-    if not can_view_calculation(calc, profile):
-        return HttpResponse(status=403)
-
-    return render(request, 'frontend/dynamic/details_sections.html', {
-            'calculation': calc
-        })
-
-@login_required
 def download_log(request, pk):
     try:
         calc = Calculation.objects.get(pk=pk)

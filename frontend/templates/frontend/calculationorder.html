@@ -88,7 +88,7 @@
 				<tbody>
 					{% for calc in order.calculation_set.all %}
 					<tr>
-						<th><a class="button" href="/calculation/{{ calc.id}}">{{ calc.id }}</a></th>
+						<th><a class="button is-warning" href="/calculation/{{ calc.id}}">{{ calc.id }}</a></th>
 						<th>{{ calc.text_status }}{% if calc.status == 3%} - {{ calc.error_message }}{% endif %}</th>
 						<th>{{ calc.execution_time }}</th>
 						<th>{% if request.user.profile == order.author %}<a class="button is-danger" id="cancel_button_{{ calc.id }}" onclick="cancel({{ calc.id }});">Kill</a> {% if not calc.local %} <a class="button" id="relaunch_button_{{ calc.id }}" onclick="relaunch({{ calc.id }});">Relaunch</a><a class="button" id="refetch_button_{{ calc.id }}" onclick="refetch({{ calc.id }});">Refetch</a> {% endif %}{% endif %}</th>
@@ -96,8 +96,8 @@
 					{% endfor %}
 				</tbody>
 			</table>
+			<a class="button is-primary" href="/download_all_logs/{{ order.id }}">Download all logs</a>	
 		</center>
-		<a class="button is-primary" href="/download_all_logs/{{ order.id }}">Download all logs</a>	
 	</div>
 </div>
 <br />

@@ -93,7 +93,7 @@
 	</nav>
 	<div class="grid">
 		{% for mol in molecules %}
-			<div class="box has-background-info" id="mol_box_{{ mol.id }}">
+			<div class="box has-background-blue-light" id="mol_box_{{ mol.id }}">
 				{% if mol.project.author == request.user.profile %}
 				<p style="float: right;">
 					<a onclick="edit_field({{ mol.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}" title="Rename"></i></a>

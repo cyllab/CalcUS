@@ -34,7 +34,7 @@ from .constants import *
 
 register = template.Library()
 
-STATUS_COLORS = {0: '#aaaaaa', 1: '#ffdd57', 2: '#23d160', 3: '#ff3860'}
+STATUS_COLORS = {0: '#AAAAAA', 1: '#FFE515', 2: '#1EE000', 3: '#FD1425'}
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
