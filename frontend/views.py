@@ -1044,7 +1044,7 @@ def handle_file_upload(ff, params):
     elif ext == 'log':
         s.xyz_structure = get_Gaussian_xyz(in_file)
     else:
-        return error(request, "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf)")
+        "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf)"
     s.save()
     return s, filename
 
@@ -1229,11 +1229,11 @@ def submit_calculation(request):
                     e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
                     for ind, ff in enumerate(files):
                         ss = handle_file_upload(ff, params)
-                        if isinstance(ss, HttpResponse):
+                        if isinstance(ss, str):
                             e.structure_set.all().delete()
                             e.delete()
                             mol.delete()
-                            return ss
+                            return error(request, ss)
                         struct, filename = ss
 
                         if ind == 0:
@@ -1250,11 +1250,11 @@ def submit_calculation(request):
                     unique_molecules = {}
                     for ff in files:
                         ss = handle_file_upload(ff, params)
-                        if isinstance(ss, HttpResponse):
+                        if isinstance(ss, str):
                             for _mol_name, arr_structs in unique_molecules.items():
                                 for struct in arr_structs:
                                     struct.delete()
-                            return ss
+                            return error(request, ss)
                         struct, filename = ss
 
                         _mol_name, num = process_filename(filename)
