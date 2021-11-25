@@ -4045,6 +4045,37 @@ class MiscCalculationTests(CalcusLiveServer):
 
         self.login(self.username, self.password)
 
+    def test_file_com(self):
+        params = {
+                'mol_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.com',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+
+    def test_file_gjf(self):
+        params = {
+                'mol_name': 'test',
+                'type': 'Single-Point Energy',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.gjf',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
 
     def test_cancel_calc(self):
         params = {
@@ -4662,5 +4693,4 @@ class ComplexCalculationTests(CalcusLiveServer):
         prop = Property.objects.latest('id')
         calc_shifts = [float(i.split()[2]) for i in prop.simple_nmr.split('\n') if i.strip() != '']
         self.assertEqual(shifts[1], "{:.3f}".format(np.mean(calc_shifts[1:4])))
-
 

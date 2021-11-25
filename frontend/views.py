@@ -56,7 +56,7 @@ from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint,
 from .constants import *
 from .libxyz import parse_xyz_from_text, equivalent_atoms
 from .environment_variables import *
-from .calculation_helper import get_abs_method, get_abs_basis_set, get_abs_solvent
+from .calculation_helper import get_abs_method, get_abs_basis_set, get_abs_solvent, get_xyz_from_Gaussian_input
 
 from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
@@ -1043,8 +1043,10 @@ def handle_file_upload(ff, params):
         generate_xyz_structure(False, s)
     elif ext == 'log':
         s.xyz_structure = get_Gaussian_xyz(in_file)
+    elif ext in ['com', 'gjf']:
+        s.xyz_structure = get_xyz_from_Gaussian_input(in_file)
     else:
-        "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf)"
+        "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf, .com, .gjf)"
     s.save()
     return s, filename
 
@@ -1187,13 +1189,11 @@ def submit_calculation(request):
 
         orders.append(obj)
     elif 'starting_calc' in request.POST.keys():
-
         if not 'starting_frame' in request.POST.keys():
             return error(request, "Missing starting frame number")
-        ###
+
         c_id = int(clean(request.POST['starting_calc']))
         frame_num = int(clean(request.POST['starting_frame']))
-        ###
 
         try:
             start_c = Calculation.objects.get(pk=c_id)
