@@ -57,6 +57,8 @@ class Command(BaseCommand):
     def add_step(self, name, short_name, creates_ensemble=False, avail_xtb=False, avail_Gaussian=False, avail_ORCA=False):
         if self.is_absent(BasicStep, name):
             BasicStep.objects.create(name=name, short_name=short_name, creates_ensemble=creates_ensemble, avail_xtb=avail_xtb, avail_Gaussian=avail_Gaussian, avail_ORCA=avail_ORCA)
+        else:
+            BasicStep.objects.filter(name=name).update(short_name=short_name, creates_ensemble=creates_ensemble, avail_xtb=avail_xtb, avail_Gaussian=avail_Gaussian, avail_ORCA=avail_ORCA)
 
     def handle(self, *args, **options):
         ###BasicStep creations
@@ -71,7 +73,7 @@ class Command(BaseCommand):
 
         self.add_step("TS Optimisation", "optts", creates_ensemble=True, avail_xtb=True, avail_Gaussian=True, avail_ORCA=True)
 
-        self.add_step("UV-Vis Calculation", "uvvis", creates_ensemble=False, avail_xtb=True, avail_Gaussian=False, avail_ORCA=False)
+        self.add_step("UV-Vis Calculation", "uvvis", creates_ensemble=False, avail_xtb=True, avail_Gaussian=True, avail_ORCA=False)
 
         self.add_step("NMR Prediction", "nmr", creates_ensemble=False, avail_xtb=False, avail_Gaussian=True, avail_ORCA=True)
 

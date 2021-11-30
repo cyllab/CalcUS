@@ -326,7 +326,7 @@ class OrcaCalculation:
         self.blocks.append(pal_block)
 
     def handle_solvation(self):
-        if self.calc.parameters.solvent != "Vacuum":
+        if self.calc.parameters.solvent.lower() != "vacuum":
             solvent_keyword = get_solvent(self.calc.parameters.solvent, self.calc.parameters.software, solvation_model=self.calc.parameters.solvation_model)
 
             if self.calc.parameters.software == 'xtb':

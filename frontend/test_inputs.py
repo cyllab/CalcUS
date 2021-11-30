@@ -1155,6 +1155,32 @@ class GaussianTests(TestCase):
 
         #combination tests
 
+    def test_td_DFT(self):
+        params = {
+                'type': 'UV-Vis Calculation',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p td M062X/Def2SVP
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
+
     def test_gen_bs(self):
         params = {
                 'type': 'Geometrical Optimisation',
@@ -2267,6 +2293,33 @@ class GaussianTests(TestCase):
         gaussian = GaussianCalculation(calc)
 
         self.assertEqual(gaussian.confirmed_specifications, 'pop(nbo)')
+
+    def test_cmd_specification_td(self):
+        params = {
+                'type': 'UV-Vis Calculation',
+                'in_file': 'Cl.xyz',
+                'software': 'Gaussian',
+                'theory_level': 'DFT',
+                'method': 'M06-2X',
+                'basis_set': 'Def2-SVP',
+                'charge': '-1',
+                'specifications': 'td(NStates=5)',
+                }
+
+        calc = gen_calc(params, self.profile)
+        gaussian = GaussianCalculation(calc)
+
+        REF = """
+        #p td(nstates=5) M062X/Def2SVP
+
+        CalcUS
+
+        -1 1
+        Cl 0.0 0.0 0.0
+
+        """
+
+        self.assertTrue(self.is_equivalent(REF, gaussian.input_file))
 
 
 class OrcaTests(TestCase):

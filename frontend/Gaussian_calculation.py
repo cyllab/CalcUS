@@ -58,6 +58,7 @@ class GaussianCalculation:
                 'Frequency Calculation': 'freq',
                 'NMR Prediction': 'nmr',
                 'Single-Point Energy': 'sp',
+                'UV-Vis Calculation': 'td',
             }
 
     #Number of processors
@@ -150,6 +151,8 @@ class GaussianCalculation:
         base_specs = []
         if self.calc.step.name == 'NMR Prediction':
             cmd = "nmr"
+        elif self.calc.step.name == 'UV-Vis Calculation':
+            cmd = "td"
         elif self.calc.step.name == 'Geometrical Optimisation':
             cmd = "opt"
         elif self.calc.step.name == 'TS Optimisation':
@@ -338,7 +341,7 @@ class GaussianCalculation:
         self.xyz_structure = ''.join(lines)
 
     def handle_solvation(self):
-        if self.calc.parameters.solvent != "Vacuum":
+        if self.calc.parameters.solvent.lower() != "vacuum":
             solvent_keyword = get_solvent(self.calc.parameters.solvent, self.calc.parameters.software, solvation_model=self.calc.parameters.solvation_model)
             if self.calc.parameters.solvation_model == "SMD":
                 if self.calc.parameters.solvation_radii == "Default":

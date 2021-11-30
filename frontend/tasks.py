@@ -1853,6 +1853,68 @@ def gaussian_sp(in_file, calc):
 
     return ErrorCodes.SUCCESS
 
+def gaussian_td(in_file, calc):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+
+    ret = launch_gaussian_calc(in_file, calc, ['calc.log'])
+
+    if ret != ErrorCodes.SUCCESS:
+        return ret
+
+    wavenumbers = []
+    intensities = []
+    with open("{}/calc.log".format(local_folder)) as f:
+        lines = f.readlines()
+        ind = len(lines)-1
+
+        while lines[ind].find("SCF Done") == -1:
+            ind -= 1
+        E = float(lines[ind].split()[4])
+
+        while lines[ind].find("Excitation energies and oscillator strengths:") == -1:
+            ind += 1
+
+        def parse_td_dft(lines, ind):
+            while lines[ind].find("Leave Link  914") == -1:
+                while lines[ind].find("<S**2>=") == -1:
+                    ind += 1
+                    if lines[ind].find("Leave Link  914") != -1:
+                        return
+                sline = lines[ind].split()
+                ev = sline[4]
+                intensity = sline[8][3:]
+                try:
+                    ev = float(ev)
+                    intensity = float(intensity)
+                except ValueError:
+                    logging.warning("Gaussian TD-DFT output does not have the expected format! Got excitation energy '{}' and intensity '{}'".format(ev, intensity))
+                    continue
+                wavenumbers.append(1240/ev)
+                intensities.append(intensity)
+                ind += 1
+
+    parse_td_dft(lines, ind)
+
+    parse_gaussian_charges(calc, calc.structure)
+
+    f_x = np.arange(120.0, 1200.0, 1.0)
+
+    PP = sorted(zip(wavenumbers, intensities), key=lambda i: i[1], reverse=True)
+    yy = plot_peaks(f_x, PP)
+    yy = np.array(yy)/max(yy)
+
+    with open("{}/uvvis.csv".format(os.path.join(CALCUS_RESULTS_HOME, str(calc.id))), 'w') as out:
+        out.write("Wavelength (nm), Absorbance\n")
+        for ind, x in enumerate(f_x):
+            out.write("{},{:.8f}\n".format(x, yy[ind]))
+
+    prop = get_or_create(calc.parameters, calc.structure)
+    prop.energy = E
+    prop.uvvis = calc.id
+    prop.save()
+
+    return ErrorCodes.SUCCESS
+
 def gaussian_opt(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
@@ -2569,6 +2631,7 @@ BASICSTEP_TABLE = {
                 'Frequency Calculation': gaussian_freq,
                 'Constrained Optimisation': gaussian_scan,
                 'Single-Point Energy': gaussian_sp,
+                'UV-Vis Calculation': gaussian_td,
             }
 
         }
