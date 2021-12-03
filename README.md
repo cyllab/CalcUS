@@ -11,10 +11,11 @@ This project is developed by the Legault group at the Université de Sherbrooke 
 ### Linux and Mac
 Firstly, install and configure [Docker](https://www.docker.com/). On Linux, it is necessary to create a docker group and to add yourself to it:
 
-`sudo groupadd docker
-sudo usermod -aG docker $USER`
-
-You will need to log out and log back in for the changes to be effective.
+<pre>
+sudo groupadd docker
+sudo usermod -aG docker $USER
+newgrp docker
+</pre>
 
 Then, clone the repository. In that repository, a file named `.env` will be needed to set the necessary environment variables. The script `generate_env.py` can be used to interactively create that file. Simply run it with the command `python3 generate_env.py` and answer the questions.
 
