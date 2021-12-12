@@ -2437,7 +2437,7 @@ def gen_3D(request):
         with open("/tmp/{}.mol".format(t), 'w') as out:
             out.write(clean_mol)
 
-        system("babel -imol /tmp/{}.mol -oxyz /tmp/{}.xyz -h --gen3D".format(t, t), force_local=True)
+        system("obabel /tmp/{}.mol -O /tmp/{}.xyz -h --gen3D".format(t, t), force_local=True)
         with open("/tmp/{}.xyz".format(t)) as f:
             lines = f.readlines()
         if ''.join(lines).strip() == '':

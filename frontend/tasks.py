@@ -1454,7 +1454,7 @@ def save_to_results(f, calc_obj, multiple=False, out_name=""):
         name, ext = s
         if ext == 'xyz':
             if multiple:
-                a = system("babel -ixyz {}/{} -oxyz {}/conf.xyz -m".format(os.path.join(CALCUS_SCR_HOME, str(calc_obj.id)), f, os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id))), force_local=True)
+                a = system("obabel {}/{} -O {}/conf.xyz -m".format(os.path.join(CALCUS_SCR_HOME, str(calc_obj.id)), f, os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id))), force_local=True)
             else:
                 copyfile(os.path.join(CALCUS_SCR_HOME, str(calc_obj.id), fname), os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id), out_name))
         else:
