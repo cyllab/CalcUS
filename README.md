@@ -1,5 +1,5 @@
 <p align="center">
-	<img src="static/frontend/calcus.svg">
+	<img width="300" src="static/frontend/calcus.png">
 </p>
 
 # CalcUS - Computational Chemistry Web Platform

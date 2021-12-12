@@ -10,6 +10,32 @@
 		<script src="https://kit.fontawesome.com/55d0fd4831.js" crossorigin="anonymous"></script>
 		<link rel="stylesheet" href="{% static 'frontend/bulma-badge.min.css' %}">
 
+		<style>
+			#calcus_logo {
+				margin-top: 20px;
+			}
+			@media screen and (min-width: 1408px) {
+			#calcus_logo {
+				width: 400px;
+			}
+			}
+			@media screen and (min-width: 1024px) and (max-width: 1407px) {
+			#calcus_logo {
+				width: 300px;
+			}
+			}
+			@media screen and (min-width: 769px) and (max-width: 1023px) {
+			#calcus_logo {
+				width: 250px;
+			}
+			}
+			@media screen and (max-width: 768px) {
+			#calcus_logo {
+				width: 200px;
+			}
+			}
+
+		</style>
 		{% block extrahead %}
 		{% endblock %}
 		{% if user.is_superuser %}
@@ -224,7 +250,7 @@
 			{% endblock %}
 		</div>
 		<section class="footer is-success has-text-centered" style="clear: both;">  
-				<img src="{% static 'frontend/calcus.svg' %}" />
+				<img id="calcus_logo" src="{% static 'frontend/calcus.png' %}" />
 		</section>
 	</div>
 </body>
