@@ -9,7 +9,7 @@ This project is developed by the Legault group at the Université de Sherbrooke 
 
 ## Installation
 ### Linux and Mac
-Firstly, install and configure [Docker](https://www.docker.com/). On Linux, it is necessary to create a docker group and to add yourself to it:
+Firstly, install and configure [Docker Engine](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/). On Linux, it is necessary to create a docker group and to add yourself to it:
 
 <pre>
 sudo groupadd docker
@@ -51,7 +51,7 @@ docker-compose -f dev-compose.yml up
 Further documentation is available in CalcUS itself.
 
 ## Citation
-If you use CalcUS in your research, please cite it: `Raphaël Robidas and Claude Y. Legault, "CalcUS: An Open Source Computational Chemistry Web Platform", 2021, manuscript in preparation.`
+If you use CalcUS in your research, please cite it: `Raphaël Robidas and Claude Y. Legault, "CalcUS: An Open-Source Computational Chemistry Web Platform", 2021, manuscript in preparation.`
 
 ## Contributors
 **Project lead and main contributor**: Raphaël Robidas
