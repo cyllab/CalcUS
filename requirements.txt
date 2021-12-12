@@ -1,14 +1,13 @@
-basis-set-exchange==0.8.12
+basis-set-exchange
 bleach
 celery[redis]
 coverage
 cryptography
-Django==3.1.1
+Django==3.2.10
 django-appconf==1.0.4
-django-axes==5.6.0
+django-axes==5.27.0
 django-dbbackup
 django-pipeline==2.0.5
-django-debug-toolbar==2.2
 django-ipware==3.0.1
 django-throttle-requests==0.5.9
 gunicorn

@@ -108,6 +108,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'calcus.wsgi.application'
+DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 
 DATABASES = {
     'default': {
