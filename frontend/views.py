@@ -2045,26 +2045,6 @@ def conformer_table_post(request):
         return HttpResponse(status=403)
 
 @login_required
-def icon(request, pk):
-    id = str(pk)
-    calc = Calculation.objects.get(pk=id)
-
-    profile = request.user.profile
-
-    if calc not in profile.calculation_set.all() and not profile_intersection(profile, calc.author):
-        return HttpResponse(status=403)
-
-    icon_file = os.path.join(CALCUS_RESULTS_HOME, id, "icon.svg")
-
-    if os.path.isfile(icon_file):
-        with open(icon_file, 'rb') as f:
-            response = HttpResponse(content=f)
-            response['Content-Type'] = 'image/svg+xml'
-            return response
-    else:
-        return HttpResponse(status=204)
-
-@login_required
 def uvvis(request, pk):
     calc = Calculation.objects.get(pk=pk)
 
@@ -2073,7 +2053,7 @@ def uvvis(request, pk):
     if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
         return HttpResponse(status=403)
 
-    spectrum_file = os.path.join(CALCUS_RESULTS_HOME, str(pk), "uvvis.csv")
+    spectrum_file = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "uvvis.csv")
 
     if os.path.isfile(spectrum_file):
         with open(spectrum_file, 'rb') as f:
@@ -2286,9 +2266,8 @@ def ir_spectrum(request, pk):
 
 @login_required
 def vib_table(request, pk):
-    id = str(pk)
     try:
-        calc = Calculation.objects.get(pk=id)
+        calc = Calculation.objects.get(pk=pk)
     except Calculation.DoesNotExist:
         return HttpResponse(status=404)
 
@@ -2297,8 +2276,8 @@ def vib_table(request, pk):
     if calc.order.author != profile and not profile_intersection(profile, calc.order.author):
         return HttpResponse(status=403)
 
-    vib_file = os.path.join(CALCUS_RESULTS_HOME, id, "vibspectrum")
-    orca_file = os.path.join(CALCUS_RESULTS_HOME, id, "orcaspectrum")
+    vib_file = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "vibspectrum")
+    orca_file = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "orcaspectrum")
 
     vibs = []
 
@@ -2680,7 +2659,7 @@ def get_vib_animation(request):
         if not can_view_calculation(calc, profile):
             return HttpResponse(status=403)
 
-        num = request.POST['num']
+        num = int(clean(request.POST['num']))
         expected_file = os.path.join(CALCUS_RESULTS_HOME, str(id), "freq_{}.xyz".format(num))
         if os.path.isfile(expected_file):
             with open(expected_file) as f:
