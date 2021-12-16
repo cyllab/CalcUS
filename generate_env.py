@@ -103,6 +103,16 @@ def find_software(name):
 
     return path
 
+def get_env_backup_path():
+    for i in range(1, 51):
+        path = os.path.join("backups", "env.backup.{}".format(i))
+        if not os.path.isfile(path):
+            return path
+    else:
+        path = "env.backup.latest"
+        print("Too many backup environment files! Writing to {}".format(path))
+        return path
+
 HEADER = """
 ******************************
 CalcUS parameters file creator
@@ -222,8 +232,13 @@ with open("docker-compose.override.yml", 'w') as out:
     out.write(OVERRIDE_TEMPLATE.format(override_content))
 
 print("Creating necessary folders")
-for d in ["scr", "results", "keys", "logs"]:
+for d in ["scr", "results", "keys", "logs", "backups"]:
     if not os.path.isdir(d):
         os.mkdir(d)
+
+env_backup_path = get_env_backup_path()
+print("Creating .env backup ({})".format(env_backup_path))
+with open(env_backup_path, 'w') as out:
+    out.write(ENV_TEMPLATE.format(secret_key, software_paths, num_cpu, num_cpu, mem, postgres, uid, gid, su_name, ping, ping_code))
 
 print("Done! You can now start CalcUS.")
