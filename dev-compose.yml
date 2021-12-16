@@ -17,7 +17,6 @@ services:
                         - 8000
                 volumes:
                         - .:/calcus 
-                        - ./docker/inchi:/binaries/other
                 links:
                         - redis
                 env_file:
@@ -42,7 +41,6 @@ services:
                 command: ./scripts/run_celery_main.sh
                 volumes:
                         - .:/calcus
-                        - ./docker/inchi:/binaries/other
                 env_file:
                         - ./.env
                 links:
@@ -57,12 +55,6 @@ services:
                 command: ./scripts/run_celery_comp.sh
                 volumes:
                         - .:/calcus
-                        - ./docker/inchi:/binaries/other
-                        - ${CALCUS_GAUSSIAN}:/binaries/g16
-                        - ${CALCUS_ORCA}:/binaries/orca
-                        - ${CALCUS_XTB}:/binaries/xtb
-                        - ${CALCUS_OPENMPI}/bin:/binaries/openmpi
-                        - ${CALCUS_OPENMPI}/lib:/usr/lib/openmpi
                 env_file:
                         - ./.env
                 links:

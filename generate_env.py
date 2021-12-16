@@ -6,22 +6,49 @@ import sys
 from shutil import which
 
 ENV_TEMPLATE = """
+# Django cryptographic salt
 CALCUS_SECRET_KEY='{}'
-CALCUS_GAUSSIAN={}
-CALCUS_ORCA={}
-CALCUS_OPENMPI={}
-CALCUS_XTB={}
+
+{}
+# Number of OpenMPI threads to use (xTB)
 OMP_NUM_THREADS={},1
+
+# Number of cores to use for local calculations
 NUM_CPU={}
+
+# Amount of memory allocated per core/thread in Gb (must be whole number)
 OMP_STACKSIZE={}G
+
+# Use cached calculation logs during testing (for developers)
 USE_CACHED_LOGS=true
+
+# Password of the PostgreSQL database (SENSITIVE)
 POSTGRES_PASSWORD={}
+
+# User ID to use (Linux/Mac only)
 UID={}
+
+# Group ID to use (Linux/Mac only)
 GID={}
+
+# Username of the superuser account (automatically created on startup if does not already exist)
 CALCUS_SU_NAME={}
+
+# Ping server to participate in user statistics (True/False)
 CALCUS_PING_SATELLITE={}
+
+# Randomly generated user code to identify this instance of CalcUS
 CALCUS_PING_CODE={}
 """
+
+OVERRIDE_TEMPLATE = """
+version: "3"
+
+services:
+        celery_comp:
+                volumes:
+                        - .:/calcus
+{}"""
 
 cwd = os.getcwd()
 
@@ -97,25 +124,42 @@ print("PostgreSQL password generated")
 print("\n")
 
 while True:
-    su_name = input("Choose a username for the superuser account. This account will have the password 'calcus_default_password'. Make sure to change this password in the profile.\n")
+    su_name = input("Choose a username for the superuser account. This account will have the password 'default'. Make sure to change this password in the profile.\n")
     if su_name.strip() == "":
         print("Invalid username\n")
     else:
         break
 
 print("\n")
-software_list = ["g16", "orca", "xtb", "mpirun"]
-software_paths = {}
+
+software_list = {
+        "g16": "# Path to the directory directly containing g16 (e.g. /home/user/software/gaussian)\nCALCUS_GAUSSIAN={}\n",
+        "orca": "# Path to the directory directly containing orca\nCALCUS_ORCA={}\n",
+        "xtb": "# Path to the directory directly containing xtb, crest, stda, xtb4stda\nCALCUS_XTB={}\n",
+        "mpirun": "# OpenMPI main directory (e.g. /home/user/.openmpi)\nCALCUS_OPENMPI={}\n",
+        }
+
+override_list = {
+        "g16": ["                        - ${CALCUS_GAUSSIAN}:/binaries/g16"],
+        "orca": ["                        - ${CALCUS_ORCA}:/binaries/orca"],
+        "xtb": ["                        - ${CALCUS_XTB}:/binaries/xtb"],
+        "mpirun": ["                        - ${CALCUS_OPENMPI}/bin:/binaries/openmpi",
+                "                        - ${CALCUS_OPENMPI}/lib:/usr/lib/openmpi"]
+        }
+
+software_paths = ""
+override_content = ""
+
 local_calc = False
-for s in software_list:
+for s, path_template in software_list.items():
     path = find_software(s)
-    if path == "":
-        software_paths[s] = cwd
-    else:
+    if path != "":
         if s == "mpirun":
-            software_paths[s] = os.path.dirname(path)
+            software_paths += path_template.format(os.path.dirname(path))
         else:
-            software_paths[s] = path
+            software_paths += path_template.format(path)
+        for p in override_list[s]:
+            override_content += p + '\n'
         local_calc = True
 
 if local_calc:
@@ -170,9 +214,12 @@ else:
     uid = os.getuid()
     gid = os.getgid()
 
-print("Writing .env file...\n")
+print("Writing .env and docker override files...\n")
 with open(".env", 'w') as out:
-    out.write(ENV_TEMPLATE.format(secret_key, software_paths["g16"], software_paths["orca"], software_paths["mpirun"], software_paths["xtb"], num_cpu, num_cpu, mem, postgres, uid, gid, su_name, ping, ping_code))
+    out.write(ENV_TEMPLATE.format(secret_key, software_paths, num_cpu, num_cpu, mem, postgres, uid, gid, su_name, ping, ping_code))
+
+with open("docker-compose.override.yml", 'w') as out:
+    out.write(OVERRIDE_TEMPLATE.format(override_content))
 
 print("Creating necessary folders")
 for d in ["scr", "results", "keys", "logs"]:

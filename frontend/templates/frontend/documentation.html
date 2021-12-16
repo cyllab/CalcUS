@@ -117,8 +117,6 @@
 			<li><a href="https://github.com/grimme-lab/crest/releases">crest</a></li>
 			<li><a href="https://github.com/grimme-lab/stda/releases">xtb4stda</a></li>
 			<li><a href="https://github.com/grimme-lab/stda/releases">stda</a></li>
-			<li><a href="https://github.com/grimme-lab/enso/releases">enso.py</a></li>
-			<li><a href="https://github.com/grimme-lab/enso/releases">anmr</a></li>
 		</ul>
 
 	<p>
@@ -2419,7 +2417,6 @@
 		CALCUS_ORCA=/home/user/softwares/orca
 		CALCUS_OPENMPI=/home/user/.openmpi/
 		CALCUS_XTB=/home/user/softwares/xtb/bin
-		CALCUS_INCHI=/home/user/.local/bin
 		OMP_NUM_THREADS=8,1
 		NUM_CPU=8
 		OMP_STACKSIZE=1G
@@ -2428,14 +2425,15 @@
 		UID=1000
 		GID=1000
 		CALCUS_SU_NAME=SU
+		CALCUS_PING_SATELLITE=True
+		CALCUS_PING_CODE='vdv820s5i1j3eb6ztx5ldk6m0k5fbt9hefdr8mkttcz4fvm481'
 		</code>
 
 		<code>CALCUS_SECRET_KEY</code> is the Django secret key that will be used as salt for cryptographic hash generation (<a href="https://docs.djangoproject.com/en/dev/ref/settings/#secret-key">See more details in the Django documentation</a>). Note that it is not used to encrypt the users' password, so changing this key will not cause the loss of encrypted logins in the database. This should be generated during the setup; this can be done using Django itself:
 		<code>from django.core.management.utils import get_random_secret_key  
 		get_random_secret_key()</code>
 
-		The next five variables are paths to directories containing the relevant software packages. Note that the InChI package is used for every new structure and has to be accessible (it is available free of charge <a href="https://www.inchi-trust.org/downloads/">here</a>). For convenience, the appropriate InChI binary (the Linux 64 bit version), the corresponding full source code as well as the project's license are provided in <code>docker/inchi</code>. You should not need to change anything.
-		If you do not have some of the other packages, simply input the path to the directory containing the InChI package again. Note that this bogus path needs to exist and be accessible by the user, as the directory will be mounted to the Docker virtual machine.
+		The next four variables are paths to directories containing the relevant software packages. If you do not have some of the other packages, the corresponding lines should not appear in the <code>.env</code> file nor in <code>docker-compose.override.yml</code> - this is automatically handled by the script <code>generate_env.py</code>.
 
 		<code>OMP_NUM_THREADS</code> and <code>NUM_CPU</code> specify the number of processors available for calculations (eight in the example above). For the moment, every calculation uses all available processors.
 
@@ -2443,7 +2441,7 @@
 
 		<code>USE_CACHED_LOGS</code> is a flag regarding the use of calculation caching during the automated tests. If enabled, CalcUS will save the results of calculations performed during the tests in <code>calcus/frontend/tests/cache</code>. When the tests are run again, CalcUS will detect input files that have been used in the past and directly yield the result without calculating it again.
 
-		<code>POSTGRES_PASSWORD</code> is the password used for the PostgreSQL database.
+		<code>POSTGRES_PASSWORD</code> is the password used for the PostgreSQL database. This information is sensitive and critical.
 
 		<code>UID</code> and <code>GID</code> are the user and group ids used by the PostgreSQL service. These should correspond to the ids of the user running CalcUS in order to store the database with the correct ownership.
 
