@@ -124,7 +124,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         m = getattr(self, self.m_name)
 
         num = 1
-        MAX_ATTEMPTS = 3
+        MAX_ATTEMPTS = 1
 
         exc = None
 
@@ -1306,9 +1306,19 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def launch_frame_next_step(self):
         assert self.is_on_page_calculation()
 
-        button = WebDriverWait(self.driver, 0.5).until(
-            EC.presence_of_element_located((By.ID, "launch_from_frame"))
-        )
+        for i in range(3):
+            try:
+                button = self.driver.find_element_by_id("launch_from_frame")
+            except selenium.common.exceptions.NoSuchElementException:
+                pass
+            else:
+                break
+            time.sleep(0.1)
+
+            self.driver.get(self.driver.current_url)
+            self.wait_for_ajax()
+        else:
+            raise Exception("Could not get the button to launch calculation from frame")
 
         button.send_keys(Keys.RETURN)
 

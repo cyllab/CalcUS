@@ -9,6 +9,7 @@ static/CACHE/
 frontend/migrations/
 *.sqlite3
 .*
+*.override.yml
 htmlcov/
 frontend/tests/cache/
 old/

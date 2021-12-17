@@ -858,6 +858,8 @@ class CalculationTests(TestCase):
         calc = gen_calc(params, self.profile)
         calc.status = 1
         calc.save()
+        if os.path.isdir(os.path.join(SCR_DIR, str(calc.id))):
+            rmtree(os.path.join(SCR_DIR, str(calc.id)))
         os.mkdir(os.path.join(SCR_DIR, str(calc.id)))
         copyfile(os.path.join(tests_dir, "Gaussian_scan1.log"), os.path.join(SCR_DIR, str(calc.id), 'calc.log'))
 

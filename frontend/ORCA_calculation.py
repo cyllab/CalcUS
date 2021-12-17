@@ -288,16 +288,15 @@ class OrcaCalculation:
             except KeyError:
                 raise Exception("Invalid atom in custom basis set string")
 
-            bs = basis_set_exchange.get_basis(bs_keyword, fmt='ORCA', elements=[el_num], header=False)
+            bs = basis_set_exchange.get_basis(bs_keyword, fmt='ORCA', elements=[el_num], header=False).strip()
             sbs = bs.split('\n')
             if bs.find("ECP") != -1:
-                clean_bs = '\n'.join(sbs[3:]) + '\n'
-                clean_bs = clean_bs.replace("$END", 'end')
+                clean_bs = '\n'.join(sbs[3:]).strip() + '\n'
+                clean_bs = clean_bs.replace("\n$END", '$END').replace('$END', 'end')
                 custom_bs += "newgto {}\n".format(el)
                 custom_bs += clean_bs
-
             else:
-                clean_bs = '\n'.join(sbs[3:-1]) + '\n'
+                clean_bs = '\n'.join(sbs[3:-1]).strip() + '\n'
                 custom_bs += "newgto {}\n".format(el)
                 custom_bs += clean_bs
                 custom_bs += "end"
