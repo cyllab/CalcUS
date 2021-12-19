@@ -14,6 +14,8 @@ Contents
 
 .. toctree::
 
+   overview
    installation
    usage
+   troubleshooting
    developer-guide
