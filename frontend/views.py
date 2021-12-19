@@ -2898,6 +2898,7 @@ def launch(request):
             'profile': profile,
             'procs': BasicStep.objects.all(),
             'allow_local_calc': settings.ALLOW_LOCAL_CALC,
+            'packages': settings.PACKAGES,
         }
 
     if 'ensemble' in request.POST.keys():
@@ -2997,6 +2998,7 @@ def launch_project(request, pk):
                 'procs': BasicStep.objects.all(),
                 'init_params_id': init_params_id,
                 'allow_local_calc': settings.ALLOW_LOCAL_CALC,
+                'packages': settings.PACKAGES,
             })
     else:
         return render(request, 'frontend/launch.html', {
@@ -3004,6 +3006,7 @@ def launch_project(request, pk):
                 'profile': request.user.profile,
                 'procs': BasicStep.objects.all(),
                 'allow_local_calc': settings.ALLOW_LOCAL_CALC,
+                'packages': settings.PACKAGES,
             })
 
 @login_required

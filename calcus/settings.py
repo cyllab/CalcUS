@@ -58,6 +58,14 @@ if CALCUS_VERSION_HASH == "unknown":
 else:
     print("CalcUS version based on commit {}".format(CALCUS_VERSION_HASH))
 
+PACKAGES = []
+if "CALCUS_XTB" in os.environ:
+    PACKAGES.append("xtb")
+if "CALCUS_ORCA" in os.environ:
+    PACKAGES.append("ORCA")
+if "CALCUS_GAUSSIAN" in os.environ:
+    PACKAGES.append("Gaussian")
+
 SSL = False
 
 ALLOWED_HOSTS = '*.*.*.*'

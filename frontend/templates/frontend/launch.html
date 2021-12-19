@@ -903,9 +903,9 @@
 					<div class="control" >
 						<div class="select">
 							<select name="calc_software" id="calc_software" onchange="refresh_availabilities();">
-								<option>xtb</option>
-								<option>ORCA</option>
-								<option>Gaussian</option>
+								{% for package in packages %}
+									<option>{{ package }}</option>
+								{% endfor %}
 							</select>
 						</div>
 					</div>
