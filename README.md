@@ -7,6 +7,8 @@ CalcUS is a computational chemistry plateform. It strives for simplicity, clarit
 
 This project is developed by the Legault group at the Université de Sherbrooke (Sherbrooke, Canada).
 
+Documentation and an overview of the platform are available on [ReadTheDocs](https://calcus.readthedocs.io/).
+
 ## Installation
 ### Linux and Mac
 Firstly, install and configure [Docker Engine](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/). On Linux, it is necessary to create a docker group and to add yourself to it:

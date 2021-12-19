@@ -292,6 +292,7 @@ def wait_until_done(calc, conn, lock, ind=0):
 
         if ind < len(DELAY)-1:
             ind += 1
+
 def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
     if REMOTE and not force_local:
         assert calc_id != -1
@@ -380,7 +381,15 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         if calc_id != -1 and is_test and setup_cached_calc(calc):
             return ErrorCodes.SUCCESS
 
-        t = subprocess.Popen(shlex.split(command), stdout=stream, stderr=stream)
+        try:
+            t = subprocess.Popen(shlex.split(command), stdout=stream, stderr=stream)
+        except FileNotFoundError:
+            logger.error('Could not run command "{}" - executable not found'.format(command))
+            calc.error_message = "{} is not found".format(command.split()[0])
+            calc.date_finished = timezone.now()
+            calc.save()
+            return ErrorCodes.FAILED_TO_RUN_LOCAL_SOFTWARE
+
         while True:
             poll = t.poll()
 
@@ -2914,14 +2923,14 @@ def run_calc(calc_id):
         ret = ErrorCodes.UNKNOWN_TERMINATION
         traceback.print_exc()
 
-        calc = Calculation.objects.get(pk=calc_id)
+        calc.refresh_from_db()
         calc.date_finished = timezone.now()
 
         calc.status = 3
         calc.error_message = "Incorrect termination ({})".format(str(e))
         calc.save()
     else:
-        calc = Calculation.objects.get(pk=calc_id)
+        calc.refresh_from_db()
         calc.date_finished = timezone.now()
 
         if ret == ErrorCodes.JOB_CANCELLED:
@@ -2935,6 +2944,10 @@ def run_calc(calc_id):
             return ret
         elif ret == ErrorCodes.SUCCESS:
             calc.status = 2
+        elif ret == ErrorCodes.FAILED_TO_RUN_LOCAL_SOFTWARE:
+            calc.status = 3
+            if calc.error_message == "":
+                calc.error_message = "Failed to execute the relevant command"
         else:
             calc.status = 3
             calc.error_message = "Unknown termination"

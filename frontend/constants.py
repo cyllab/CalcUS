@@ -71,6 +71,8 @@ class ErrorCodes(IntEnum):
     FAILED_TO_DOWNLOAD_FILE = 19
     FAILED_TO_EXECUTE_COMMAND = 20
 
+    FAILED_TO_RUN_LOCAL_SOFTWARE = 30
+
 #Software->Method/Functional->Basis set->Atom->[m, b, R2]
 NMR_REGRESSIONS = {
     'ORCA': {
