@@ -1,0 +1,83 @@
+version: "3"
+
+services:  
+        redis:
+                image: redis:latest
+                hostname: redis
+
+        web:
+                image: raphaelrobidas/calcus:latest
+                restart: always
+                hostname: web
+                user: calcus
+                command: ./scripts/run_web.sh
+                expose:
+                        - 8000
+                volumes:
+                        - .:/calcus 
+                links:
+                        - redis
+                env_file:
+                        - ./.env
+                depends_on:
+                        - postgres
+        nginx:
+                image: nginx:latest
+                ports:
+                        - "8080:8080"
+                volumes:
+                        - ./docker/nginx/:/etc/nginx/conf.d
+                        - ./static:/static
+                        - .:/calcus
+                depends_on: 
+                        - web        
+        celery_main:
+                image: raphaelrobidas/calcus:latest
+                user: calcus
+                command: ./scripts/run_celery_main.sh
+                volumes:
+                        - .:/calcus
+                env_file:
+                        - ./.env
+                links:
+                        - redis
+                depends_on:
+                        - redis
+        celery_comp:
+                image: raphaelrobidas/calcus:latest
+                user: calcus
+                command: ./scripts/run_celery_comp.sh
+                volumes:
+                        - .:/calcus
+                env_file:
+                        - ./.env
+                links:
+                        - redis
+                depends_on:
+                        - redis
+        cluster:
+                image: raphaelrobidas/calcus:latest
+                user: calcus
+                command: ./scripts/run_cluster_daemon.sh
+                env_file:
+                        - ./.env
+                volumes:
+                        - .:/calcus
+                links:
+                        - web
+                depends_on:
+                        - redis
+        postgres:
+                image: postgres:11-bullseye
+                restart: always
+                user: "${UID}:${GID}"
+                volumes:
+                        - ./data:/var/lib/postgresql/data/:rw
+                env_file:
+                        - ./.env
+                environment:
+                        - PGDATA=./var/lib/postgresql/data/
+                        - POSTGRES_USER=calcus
+                        - POSTGRES_DB=calcus
+
+

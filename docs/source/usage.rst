@@ -1,0 +1,135 @@
+Usage
+=====
+
+Calculation Structure
+---------------------
+CalcUS uses a hierarchy to sort the calculations and their results in a chemically meaningful way.
+
+The topmost level is composed of projects, which should be completely independant. All the results from a project can be downloaded as a single CSV file from the main page. Projects are created when creating a new molecule. You can also pick an existing project to put that molecule into.
+
+Molecules are defined by their atoms and bonds, without considering the exact 3D orientation. When a new molecule is created, its InChI code is determined as to have a unique tag for each molecule. If you create a new molecule which already exists in the project, the results will be merged.
+
+Molecules contain ensembles, which are groups of structures stemming from the same source. If you perform a conformational search, every conformer will be in the same ensemble. In this case, the ensemble represents the true and complete picture of how the molecule will be oriented in space at equilibrium. Here, the ensemble has a thermodynamic meaning. On the other hand, if you performed a constrained optimisation, like scanning a bond distance, an ensemble will be generated to hold all the structures of that scan. In this case, the ensemble itself has no thermodynamic meaning and is just a way of keeping the results organized. Ensembles will also be generated to hold the input structures, either for uploaded structures or drawn structures. These can often be deleted if not needed for further calculations.
+
+Structures are unique positionings of the molecule in space. If a structure is reoptimized at a different theory level, it will generate another structure (as the exact coordinates will change slightly), which will be held in a new ensemble. An entire ensemble can be reoptimized to generated a single new ensemble. Every calculation that changes the coordinates (geometrical optimisation, constrained optimisation, conformer search, transition state optimisation) will generate new structures.
+
+The other calculations which don't change the coordinates will create properties. These are attached to a structure and a particular computational method. On CalcUS, different computational methods will create new tabs on the ensemble page and can be browser through that way. All the properties calculated will appear when you choose a set of parameters. The ensemble properties are calculated from all the structural properties (for example, the Boltzmann-weighted free energy). Structural properties also appear below the ensemble properties and will be updated if you select another structure. The properties do not have to be calculated with the same computational method as the geometries were obtained (although make sure you are interpreting the results correctly!)
+
+Quickstart
+----------
+You can quickly get started by going to ``New Molecule`` and drawing the molecule you want to study. After choosing a molecule name and new project name, you can choose the type of calculation you want to perform. The fields should generally be filled from the top to the bottom, as choices you make might change the number of options to choose. Make sure you have at least once computing resource to carry out the calculation (see below). After submitting your calculation, you will be taken back to the home page, where your new project will be created. You can view the calculation's status by going to ``Calculations``. Once it is done, you can click directly on the calculation order to be taken to the molecule's page and browse through the results.
+
+Local Calculations
+------------------
+
+To launch calculations directly on the server, you must either be the Principal Investigator (PI) of a research group,  belong to such a group, or be a superuser. Once one of these conditions are met, you will have access to the "Local" resource on the calculation launching page.
+
+If you are a newly registered PI, you can make a request to create your group in your profile. The site's administrator will have to approve your request, so contact him or her to validate your identity and accelerate the process. You will then be able to add members with their username and unique code (which is generated upon account creation.) 
+
+If you are a newly registered student, send your username and unique code to your PI to be added to their group.
+
+Remote Calculations
+-------------------
+
+CalcUS can also use external computing resources. The process of launching calculations is exactly the same as for local calculations, except that the external computing resource must be selected in the "Resource" field. Once the calculations are done, the results will be parsed from the remote server, analysed and added to your project. Local calculations can also be used as starting points for calculations on other resources, as every calculation is independant of the resource used.
+
+Before launching calculations, you will need to configure the resource a bit. Firstly, create a folder named "calcus" in your remote home on the cluster via SSH (the full path should be ``/home/<username>/calcus``). 
+
+If you plan to run xtb calculations, make sure you the following programs in that folder:
+
+* `xtb <https://github.com/grimme-lab/xtb/releases>`_
+* `crest <https://github.com/grimme-lab/crest/releases>`_
+* `xtb4stda <https://github.com/grimme-lab/stda/releases>`_
+* `stda <https://github.com/grimme-lab/stda/releases>`_
+
+The easiest way to get the files is to use the ``wget`` command directly from the cluster. While in the ``calcus`` directory, run ``wget <link>`` to download each archive. Make sure that you use the direct URL to the archive or program (*e.g.* it should end in ``.tar.xz`` or ``.tgz`` for the archives.) Afterwards, unpack the archives (*e.g.* ``tar xvf <archive.tar.xz>`` or ``tar zxvf <archive.tgz>``). You might have to move some programs from their subfolder to the ``calcus`` folder directly (*e.g.* ``mv xtb-X.Y.Z/bin/xtb ~/calcus/``).
+
+Make sure that every file is executable. If they are not, you can make them executable by executing the command ``chmod 700 *`` in the calcus folder. Then, add ``/home/<username>/calcus`` to your path variable, in your ``.bashrc`` file. This will ensure that CalcUS will be able to find and use these programs. You will also need the parameter files for xtb and xtb4stda (named ``.param_...``). You will find them in the Github repositories (`here <https://github.com/grimme-lab/xtb4stda>`_ and `here <https://github.com/grimme-lab/xtb>`_); they can be simply dropped in your home directory.
+
+Then, for any software, you will need to supply sample submission scripts. As of right now, only the SLURM cluster manager is supported. You need to provide one submission script per software, named ``submit_<software>.sh`` (be careful of the capitalization in the software name) and located in your calcus folder. For xtb and other related programs, the script might look like this:
+
+.. code-block:: bash
+        :caption: submit_xtb.sh
+
+        #!/bin/bash
+        #SBATCH --output=%x-%j.log
+        #SBATCH --account=def-mygroup
+        #SBATCH --time=168:00:00
+        #SBATCH --nodes=1
+        #SBATCH --ntasks=24
+        #SBATCH --mem=31000M
+
+        export OMP_NUM_THREADS=24.1
+        export OMP_STACKSIZE=1G
+
+        cd $SLURM_SUBMIT_DIR
+
+
+And for ORCA, it might look like this:
+
+.. code-block:: bash
+        :caption: submit_ORCA.sh
+
+        #!/bin/bash
+        #SBATCH --output=%x-%j.log
+        #SBATCH --account=def-mygroup
+        #SBATCH --time=168:00:00
+        #SBATCH --nodes=1
+        #SBATCH --ntasks=24
+        #SBATCH --mem=31000M
+
+        module load nixpkgs/16.09  gcc/7.3.0  openmpi/3.1.2 orca/4.2.0
+
+        cd $SLURM_SUBMIT_DIR
+
+CalcUS will automatically append the correct command to this file when submitting a calculation. The job name will be set to ``CalcUS-XXXX``, where ``XXXX`` is the job id in CalcUS.
+
+The final step is adding the access on CalcUS. To do that, go on your profile page and enter the correct information about the remote resource you want to add, then click "Submit". Note that you should enter the number of cores and memory that you want to use for remote calculations, not necessarily the number of cores and memory that are available per node. For example, on nodes that have 32 cores and 128000 MB of memory, you might want to only use 16 cores and 64000 MB of memory. These parameters will be used in the input files to calculation softwares (Gaussian, ORCA, xtb). You still need to specify the appropriate values in the submission scripts (see above). When performing Gaussian calculations, it can be useful to specify a lower amount of memory in the input file than is actually available to you in order to prevent out of memory crashes. This can be done by requesting the maximum amount of memory in the bash input script, but choosing a value 1000 MB or 2000 MB lower in the access parameters in CalcUS.
+
+.. image:: figures/cluster_access.png
+   :align: center
+
+You will be given a public key to add to your authorized keys (in ``/home/<username>/.ssh/authorized_keys``) on the remote server. Once that is done, click "Manage" on the corresponding entry in the "Owned accesses" table. Click "Test connection" to initiate the connection between CalcUS and the cluster. If everything goes well, the status of the access will become "Connected". You will then be able to use this resource when launching calculations.
+
+You may observe a small delay between the completion of remote jobs on the cluster and the job appearing as such in CalcUS (around 10 minutes at most). This is because CalcUS must periodically check the status of submitted jobs, which is done every couple minutes. It may take some additional time to download and analyze the results, especially if many calculations finish at the same time.
+
+Specifications
+--------------
+
+Specifications are modifiers or additional keywords that will change the input file. Common specifications are listed below for Gaussian and ORCA. Any valid additional keyword for these softwares can be used, even if not present below. In the case of xtb, only the recognized specifications listed below can be used for security reasons.
+
+Gaussian
+^^^^^^^^
+
+When performing geometrical optimisations (constrained or not), multiple options can be specified to affect the optimisation procedure. Most commonly, the convergence criterion can be change with ``opt(loose)`` or ``opt(tight)``. If a system has the tendency to "wiggle" a lot without converging to a minimum, the option ``opt(maxstep=X)`` code be used, where ``X`` is an integer, typically from 5 to 30. This prevents the system from making optimisation steps that are too big, which might endlessly overshoot past the minimum.
+
+Frequency calculations calculations involving Hartree-Fock and that do not make use of Raman intensities can be sped up by using ``freq(noraman)``.
+
+Multiple options can be combined. For example:
+* ``opt(loose, maxstep=10)``
+* ``opt(loose, maxstep=10) EmpiricalDispersion=GD3``
+
+Additional options related to another calculation type than the one performed are ignored. For example, specifying ``opt(maxstep=10)`` when performing a frequency calculation (``freq``) will not do anything.
+
+ORCA
+^^^^
+
+Hirshfeld charges can be calculated by using the specification ``phirshfeld``. Note that this is not an ORCA keyword; CalcUS instead adds the appropriate block to the input.
+
+The geometrical optimisation convergence criterion can be modified with ``LOOSEOPT``, ``TIGHTOPT`` or ``VERYTIGHTOPT``.
+
+xtb
+^^^
+
+As many options are given on the command line, no unknown specification is allowed. All the possible specifications are listed here.	
+
+The accuracy and the number of iterations can be specified with ``--acc X`` and ``--iterations X``, where ``X`` is the desired value.
+
+The Hamiltonian can be chosen with ``--gfn 2`` (default), ``--gfn 1``, ``--gfn 0`` or ``--gfnff``. These options are valid for all calculations, except TS optimisations (which use ORCA use calculation driver).
+
+The convergence criteria of geometrical optimisations can be chosen with ``--opt level``, where level is ``crude``, ``sloppy``, ``loose``, ``lax``, ``normal``, ``tight`` (default), ``vtight`` or ``extreme``.
+
+Conformational searches (constrained or not) have several particular options. Faster/cruder sampling procedures can be requested with ``--quick``, ``--squick`` and ``--mquick``. The RMSD threshold for considering conformers as different can be set with ``--rthr X``, where ``X`` is the threshold in Ångström (default of 0.6 in CalcUS). Furthermore, the energy window to consider can be set with ``--ewin X``, where ``X`` is the treshold in kcal/mol (default of 6 in CalcUS).
+
+Constrained geometrical optimisations and constrained conformational searches employ a harmonic potential to constrain coordinates (distances, angles, dihedral angles). The force constant of this potential can be chosen with ``--forceconstant X``, where ``X`` is the force constant in Hartree/Bohr². By default, CalcUS uses a force constant of 1.0, which corresponds to a very stiff potential well. In most cases, this high value forces the use of small timesteps in meta-dynamic and molecular dynamic simulations (for constrained conformational searches). If the constrained coordinates do not need to remain exactly constant, the simulations can be accelerated by a smaller force constant.
+
