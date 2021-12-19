@@ -33,7 +33,6 @@ urlpatterns = [
     path('home/', views.home, name='home'),
 
     path('list/', views.IndexView.as_view(), name='list'),
-    path('documentation/', TemplateView.as_view(template_name="frontend/documentation.html"), name='documentation'),
     path('calculations/', views.calculations, name='calculations'),
 
     path('cancel_calc/', views.cancel_calc, name='cancel_calc'),
