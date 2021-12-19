@@ -147,6 +147,9 @@
 				success: function(data) {
 					eval(data);
 					refresh_availabilities();
+					check("functional");
+					check("basis_set");
+					check("solvent");
 				},
 			});
 		}
@@ -346,6 +349,20 @@
 			}
 
 			set_availables();
+
+			solvent = document.getElementById("calc_solvent").value;
+			if(solvent.toLowerCase() == "vacuum" || solvent.trim() == "") {
+				document.getElementById("calc_solvation_model_field").style.display = "none";
+				document.getElementById("calc_solvation_radii_field").style.display = "none";
+			}
+			else {
+				document.getElementById("calc_solvation_model_field").style.display = "block";
+				radii_field = document.getElementById("calc_solvation_radii_field");
+				if(radii_field.querySelectorAll("option:not(.unavailable)").length > 0) {
+					radii_field.style.display = "block";
+				}
+			}
+
 
 			choice = document.getElementById("calc_type");
 
@@ -666,18 +683,30 @@
 
 {% csrf_token %}
 	<datalist id="basis_sets_options">
-	    <option value="6-31+G(d,p)">6-31+G(d,p)</option>
-	    <option value="Def2SVP">Def2SVP</option>
-	    <option value="Def2TZVP">Def2TZVP</option>
-	    <option value="aug-cc-pVDZ">aug-cc-pVDZ</option>
-	    <option value="aug-cc-pVTZ">aug-cc-pVTZ</option>
+		<option value="6-31+G(d,p)">6-31+G(d,p)</option>
+		<option value="Def2SVP">Def2SVP</option>
+		<option value="Def2TZVP">Def2TZVP</option>
+		<option value="aug-cc-pVDZ">aug-cc-pVDZ</option>
+		<option value="aug-cc-pVTZ">aug-cc-pVTZ</option>
 	</datalist>
 	<datalist id="functional_options">
-	    <option value="M06">M06</option>
-	    <option value="M062X">M062X</option>
-	    <option value="PBE0">PBE0</option>
-	    <option value="B3LYP">B3LYP</option>
-	    <option value="wB97XD">wB97XD</option>
+		<option value="M06">M06</option>
+		<option value="M062X">M062X</option>
+		<option value="PBE0">PBE0</option>
+		<option value="B3LYP">B3LYP</option>
+		<option value="wB97XD">wB97XD</option>
+	</datalist>
+	<datalist id="solvent_options">
+		<option value="Acetone">Acetone</option>
+		<option value="Acetonitrile">Acetonitrile</option>
+		<option value="Chloroform">Chloroform</option>
+		<option value="Dichloromethane">Dichloromethane</option>
+		<option value="Dimethylsulfoxide">Dimethylsulfoxide</option>
+		<option value="Hexane">Hexane</option>
+		<option value="Methanol">Methanol</option>
+		<option value="Toluene">Toluene</option>
+		<option value="Vacuum">Vacuum</option>
+		<option value="Water">Water</option>
 	</datalist>
 
 
@@ -829,7 +858,7 @@
 						<div class="field">
 							<label class="label">Solvent</label>
 							<div class="control">
-								<input class="input" name="calc_solvent" id="calc_solvent" type="text" oninput="refresh_availabilities();">
+								<input class="input" name="calc_solvent" id="calc_solvent" type="text" oninput="refresh_availabilities();" list="solvent_options">
 							</div>
 							<p class="check_msg is-danger" id="solvent_check_msg"></p>
 						</div>
@@ -1322,9 +1351,9 @@
 		inputElement.addEventListener("change", file_upload_changed, false);
 	{% endif %}
 
-	$("#calc_functional").keyup(debounce(function() {check("functional")}, 500));
-	$("#calc_basis_set").keyup(debounce(function() {check("basis_set")}, 500));
-	$("#calc_solvent").keyup(debounce(function() {check("solvent")}, 500));
+	$("#calc_functional").keyup(debounce(function() {check("functional")}, 250));
+	$("#calc_basis_set").keyup(debounce(function() {check("basis_set")}, 250));
+	$("#calc_solvent").keyup(debounce(function() {check("solvent")}, 250));
 
 	</script>
 

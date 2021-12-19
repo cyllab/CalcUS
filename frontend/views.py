@@ -3049,7 +3049,7 @@ def check_solvent(request):
 
     solv = clean(request.POST['solvent'])
 
-    if solv.strip() == "":
+    if solv.strip() == "" or solv.strip().lower() == "vacuum":
         return HttpResponse("")
 
     ret = get_abs_solvent(solv)
