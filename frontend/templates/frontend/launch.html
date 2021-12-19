@@ -111,6 +111,7 @@
 			val = $("#calc_" + param).val();
 			data = {};
 			data[param] = val;
+			data['software'] = $("#calc_software").val();
 			$.ajax({
 				method: "POST",	 	 
 				url: "/check_" + param + "/",
@@ -378,6 +379,9 @@
 
 			set_availables();
 
+			check("functional");
+			check("basis_set");
+			check("solvent");
 		}
 
 		function set_availables() {

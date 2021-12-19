@@ -3052,9 +3052,17 @@ def check_solvent(request):
     if solv.strip() == "" or solv.strip().lower() == "vacuum":
         return HttpResponse("")
 
+    if 'software' not in request.POST.keys():
+        return HttpResponse(status=400)
+
+    software = clean(request.POST['software'])
+
+    if software.strip() == "" or software not in SOFTWARE_SOLVENTS.keys():
+        return HttpResponse(status=400)
+
     ret = get_abs_solvent(solv)
 
-    if ret == -1:
+    if ret == -1 or ret not in SOFTWARE_SOLVENTS[software].keys():
         return HttpResponse("Unknown solvent")
     else:
         return HttpResponse("")
