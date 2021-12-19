@@ -43,6 +43,21 @@ except:
 else:
     DEBUG = True
 
+if 'CALCUS_VERSION_HASH' in os.environ.keys():
+    CALCUS_VERSION_HASH = os.environ['CALCUS_VERSION_HASH']
+else:
+    import subprocess
+
+    try:
+        CALCUS_VERSION_HASH = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('utf-8').strip()
+    except FileNotFoundError:
+        CALCUS_VERSION_HASH = "unknown"
+
+if CALCUS_VERSION_HASH == "unknown":
+    print("Could not find the CalcUS commit hash")
+else:
+    print("CalcUS version based on commit {}".format(CALCUS_VERSION_HASH))
+
 SSL = False
 
 ALLOWED_HOSTS = '*.*.*.*'

@@ -1,5 +1,7 @@
 
 {% load static %}
+{% load global_tags %}
+
 
 <html>
 	<head>
@@ -13,6 +15,10 @@
 		<style>
 			#calcus_logo {
 				margin-top: 20px;
+			}
+			#version_label {
+				font-variant: small-caps;
+				font-weight: bold;
 			}
 			@media screen and (min-width: 1408px) {
 			#calcus_logo {
@@ -251,6 +257,8 @@
 		</div>
 		<section class="footer is-success has-text-centered" style="clear: both;">  
 				<img id="calcus_logo" src="{% static 'frontend/calcus.png' %}" />
+				<br />
+				<span id="version_label">Version {% get_calcus_version %}</span>
 		</section>
 	</div>
 </body>
