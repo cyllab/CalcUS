@@ -877,7 +877,7 @@
 							<div class="control">
 								<div class="select" >
 								  <select name="calc_project" onchange="project_selection_changed()" id="calc_project">
-									  {% for proj in profile.project_set.all %}
+									  {% for proj in profile.project_set.all|dictsort:"name" %}
 									  <option name="{{ proj }}">{{ proj }}</option>
 									  {% endfor %}
 									  <option name="new_project">New Project</option>

@@ -3078,7 +3078,7 @@ def delete_preset(request, pk):
 def launch_presets(request):
     profile = request.user.profile
 
-    presets = profile.preset_set.all()
+    presets = profile.preset_set.all().order_by("name")
     return render(request, 'frontend/dynamic/launch_presets.html', { 'presets': presets })
 
 @login_required
