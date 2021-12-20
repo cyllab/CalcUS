@@ -20,11 +20,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          
+      - name: Set short hash
+        run: echo "SHORT_HASH=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
         with:
           push: true
           tags: raphaelrobidas/calcus:latest
-          build-args: CALCUS_VERSION_HASH=${GITHUB_SHA::7}
+          build-args: CALCUS_VERSION_HASH=${{env.SHORT_HASH}}
