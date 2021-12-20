@@ -27,4 +27,4 @@ jobs:
         with:
           push: true
           tags: raphaelrobidas/calcus:latest
-          build-args: CALCUS_VERSION_HASH=$(git rev-parse --short HEAD)
+          build-args: CALCUS_VERSION_HASH=${GITHUB_SHA::7}
