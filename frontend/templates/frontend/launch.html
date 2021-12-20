@@ -284,6 +284,18 @@
 				element.style.display = 'block';
 			});
 
+			full_options = document.querySelectorAll(".resource_specific");
+			choice = document.getElementById("calc_resource");
+
+			full_options.forEach(element => {
+				if((element.classList.contains('avail_local') && choice.value != "Local") || (element.classList.contains('avail_remote') && choice.value == "Local")) {
+					element.style.display = 'none';
+					element.classList.add("unavailable");
+				}
+			});
+
+			set_availables();
+
 			full_options = document.querySelectorAll(".software_specific");
 			choice = document.getElementById("calc_software");
 
@@ -936,9 +948,9 @@
 					<div class="control" >
 						<div class="select">
 							<select name="calc_software" id="calc_software" onchange="refresh_availabilities();">
-								{% for package in packages %}
-									<option>{{ package }}</option>
-								{% endfor %}
+								<option {% if 'xtb' not in packages %}class="resource_specific avail_remote"{% endif %}>xtb</option>
+								<option {% if 'ORCA' not in packages %}class="resource_specific avail_remote"{% endif %}>ORCA</option>
+								<option {% if 'Gaussian' not in packages %}class="resource_specific avail_remote"{% endif %}>Gaussian</option>
 							</select>
 						</div>
 					</div>
@@ -1120,7 +1132,7 @@
 					<label class="label">Resource</label>
 					<div class="control" >
 						<div class="select">
-						<select name="calc_resource" id="calc_resource">
+						<select name="calc_resource" id="calc_resource" onchange="refresh_availabilities();">
 							{% if allow_local_calc %}
 								{% if profile.group or profile.is_PI or request.user.is_superuser %}
 									<option>Local</option>
