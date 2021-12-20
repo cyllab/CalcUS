@@ -1,0 +1,15 @@
+results
+scr
+old
+keys
+logs
+data
+backups
+test_run
+*.override.yml
+*__pycache__*
+frontend/migrations/
+frontend/tests/keys
+frontend/tests/cache
+frontend/tests/scr
+frontend/tests/results

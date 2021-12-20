@@ -246,7 +246,7 @@ with open("docker-compose.override.yml", 'w') as out:
     out.write(OVERRIDE_TEMPLATE.format(override_content))
 
 with open("test-compose.override.yml", 'w') as out:
-    out.write(TEST_OVERRIDE_TEMPLATE.format(override_content, override_content))
+    out.write(TEST_OVERRIDE_TEMPLATE.format(override_content, override_content.replace('binaries', 'home/slurm')))
 
 print("Creating necessary folders")
 for d in ["scr", "results", "keys", "logs", "backups"]:

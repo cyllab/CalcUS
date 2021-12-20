@@ -18,3 +18,4 @@ logs/
 backups/
 test_run
 docs/build/
+celerybeat-schedule

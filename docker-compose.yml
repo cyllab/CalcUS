@@ -14,7 +14,11 @@ services:
                 expose:
                         - 8000
                 volumes:
-                        - .:/calcus 
+                        - ./scr:/calcus/scr
+                        - ./results:/calcus/results
+                        - ./keys:/calcus/keys
+                        - ./backups:/calcus/backups
+                        - ./logs:/calcus/logs
                 links:
                         - redis
                 env_file:
@@ -36,7 +40,9 @@ services:
                 user: calcus
                 command: ./scripts/run_celery_main.sh
                 volumes:
-                        - .:/calcus
+                        - ./scr:/calcus/scr
+                        - ./results:/calcus/results
+                        - ./keys:/calcus/keys
                 env_file:
                         - ./.env
                 links:
@@ -48,7 +54,9 @@ services:
                 user: calcus
                 command: ./scripts/run_celery_comp.sh
                 volumes:
-                        - .:/calcus
+                        - ./scr:/calcus/scr
+                        - ./results:/calcus/results
+                        - ./keys:/calcus/keys
                 env_file:
                         - ./.env
                 links:
@@ -62,7 +70,9 @@ services:
                 env_file:
                         - ./.env
                 volumes:
-                        - .:/calcus
+                        - ./scr:/calcus/scr
+                        - ./results:/calcus/results
+                        - ./keys:/calcus/keys
                 links:
                         - web
                 depends_on:
@@ -73,6 +83,8 @@ services:
                 user: "${UID}:${GID}"
                 volumes:
                         - ./data:/var/lib/postgresql/data/:rw
+                        - ./backups:/calcus/backups
+                        - ./logs:/calcus/logs
                 env_file:
                         - ./.env
                 environment:

@@ -4203,6 +4203,7 @@ class MiscCalculationTests(CalcusLiveServer):
         self.wait_latest_calc_done(150)
 
         self.lget("/projects")
+        self.wait_for_ajax()
         self.click_project("SeleniumProject")
         self.click_molecule("CH4")
         self.click_ensemble("Extracted frame 1")

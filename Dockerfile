@@ -15,16 +15,22 @@ ENV XTBHOME "/binaries/xtb"
 ENV XTB4STDAHOME "/binaries/xtb"
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/binaries/orca"
 ENV CALCUS_DOCKER "True"
-ENV CALCUS_VERSION_HASH=${CALCUS_VERSION_HASH}
 
 ENV PATH=$PATH:"/binaries/xtb:/binaries/g16:/binaries/orca:/binaries/other:/binaries/openmpi"
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/binaries/orca:/usr/lib/openmpi/
 
-ADD requirements.txt /calcus/requirements.txt
+COPY requirements.txt /calcus/requirements.txt
+COPY calcus /calcus/calcus
+COPY scripts /calcus/scripts
+COPY static /calcus/static
+COPY frontend /calcus/frontend
+COPY docker /calcus/docker
+COPY manage.py /calcus/manage.py
 
 WORKDIR /calcus/
 
 RUN pip install -r requirements.txt
-RUN apt update && apt install openbabel sshpass postgresql-client -y
+RUN apt update && apt install openbabel sshpass postgresql-client dos2unix -y
+RUN dos2unix scripts/*
 
 RUN adduser --disabled-password --gecos '' calcus  
