@@ -1,12 +1,13 @@
 Installation
 ============
 
-.. _installation:
-
 Quickstart
 ----------
 
-Firstly, install and configure Docker. On Linux, it is necessary to create a ``docker`` group if it does not already exist and to add yourself to it:
+Linux and Mac
+^^^^^^^^^^^^^
+
+Firstly, install and configure `Docker Engine <https://docs.docker.com/engine/install/>`_ and `Docker Compose <https://docs.docker.com/compose/install/>`_. On Linux, it is necessary to create a docker group if it does not already exist and to add yourself to it:
 
 .. code-block:: console
 
@@ -14,13 +15,32 @@ Firstly, install and configure Docker. On Linux, it is necessary to create a ``d
         $ sudo usermod -aG docker $USER
         $ newgrp docker
 
-You will need to log out and log back in for the changes to be effective.
+Then, clone the repository. In that repository, a file named ``.env`` will be needed to set the necessary environment variables. The script ``generate_env.py`` can be used to interactively create that file. Simply run it with the command ``python3 generate_env.py`` and answer the questions.
 
-Then, clone the repository. In that repository, a file named ``.env`` will be needed to set the necessary environment variables. The script ``generate_env.py`` can be used to interactively create that file. Simply run it with the command ``python3 generate_env.py`` and answer the questions. When you will run CalcUS, a superuser account will be created with the username specified in the ``.env`` file. You can use this account as main account, but make sure to change the password if the server is accessible to others.
+Windows
+^^^^^^^
+You will need to install `Docker <https://www.docker.com/>`_. You might also need to install WSL2 when prompted by Docker. Note that Windows 7 (and older versions of Windows) are not supported.
 
-Also note that the ``.env`` contains **sensitive information** and should only be accessible by the server administrator.
+Further configuration of WSL2 is recommended, as it acquires a large amount of RAM by default (much more than necessary). To do so, go to your user profile home (accessible by entering ``%USERPROFILE%`` in the file explorer) and create a file called ``.wslconfig``. This file has the following format:
 
-Once the setup is complete launch CalcUS using ``start.sh`` (Linux/Mac) or ``start.bat`` (Windows). CalcUS is now available in your web browser at the address `0.0.0.0:8080 <http://0.0.0.0:8080>`_ (or equivalently `127.0.0.1:8080 <http://127.0.0.1:8080>`_ and `localhost:8080 <http://localhost:8080>`_). You might need to manually start the docker service if you've just installed it. It will start automatically at boot in the future.
+.. code-block:: 
+
+        [wsl2]
+        memory=2GB
+        processors=2
+
+You can of course tweak the parameters to your liking. It will be necessary to restart the Docker service to apply the change.
+
+Then, clone the repository. In that repository, a file named ``.env`` will be needed to set the necessary environment variables. The script ``generate_env.py`` can be used to interactively create that file. For convenience, you can simply execute ``generate_env.bat`` to call this script. You will need `Python <https://www.python.org/downloads/>`_ to execute the script (any version of Python 3 will work). Simply answer the questions to create the environment file. 
+
+First launch
+^^^^^^^^^^^^
+When you will run CalcUS, a superuser account will be created with the username specified in the ``.env`` file. You can use this account as main account, but make sure to change the password if the server is accessible to others. Also note that the ``.env`` contains **sensitive information** and should only be accessible by the server administrator.
+
+Once the setup is complete launch CalcUS using ``start.sh`` (Linux/Mac) or ``start.bat`` (Windows). CalcUS is now available in your web browser at the address `0.0.0.0:8080 <http://0.0.0.0:8080>`_ (or equivalently `127.0.0.1:8080 <http://127.0.0.1:8080>`_ and `localhost:8080 <http://localhost:8080>`_). You might need to manually start the Docker service if you've just installed it. It will start automatically at boot in the future.
+
+The first startup might take several minutes, as the different services used within CalcUS are being downloaded. The database must also be created and configured. Subsequent startups will be considerably faster. A superuser account will be created with the username specified in the `.env` file. You can use this account as main account, but make sure to change the password if the server is accessible to others.
+
 
 Manual Configuration
 --------------------

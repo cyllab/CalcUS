@@ -17,5 +17,7 @@ Contents
    overview
    installation
    usage
+   software-packages
    troubleshooting
    developer-guide
+   citation
