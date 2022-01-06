@@ -2896,7 +2896,7 @@ def launch(request):
     profile = request.user.profile
     params = {
             'profile': profile,
-            'procs': BasicStep.objects.all(),
+            'procs': BasicStep.objects.all().order_by(Lower('name')),
             'allow_local_calc': settings.ALLOW_LOCAL_CALC,
             'packages': settings.PACKAGES,
         }

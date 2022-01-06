@@ -389,6 +389,16 @@
 
 			});
 
+			full_options = document.querySelectorAll(".type_exclusion:not(unavailable)");
+
+			full_options.forEach(element => {
+				if(element.classList.contains('not_avail_' + choice.value.replace(/ /g, '_'))) {
+					element.style.display = 'none';
+					element.classList.add("unavailable");
+				}
+
+			});
+
 			set_availables();
 
 			check("functional");
@@ -1013,7 +1023,7 @@
 						<div class="control" >
 							<div class="select">
 								<select name="calc_theory_level" id="calc_theory_level" onchange="refresh_availabilities();">
-									<option>Semi-empirical</option>
+									<option class="type_exclusion not_avail_UV-Vis_Calculation">Semi-empirical</option>
 									<option>HF</option>
 									<option>DFT</option>
 									<option class="software_specific avail_ORCA">RI-MP2</option>
