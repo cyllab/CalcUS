@@ -10,6 +10,9 @@ This project is developed by the Legault group at the Université de Sherbrooke 
 Documentation and an overview of the platform are available on [ReadTheDocs](https://calcus.readthedocs.io/).
 
 ## Installation
+
+For licensing reasons, **no QM software package is included with CalcUS.** In order to use CalcUS, you will need either to install the Linux version of a package locally or use the packages on remote clusters. Note however that [xtb](https://github.com/grimme-lab/xtb) is freely available and can be used with CalcUS for fast semi-empirical tight-binding calculations.
+
 ### Linux and Mac
 Firstly, install and configure [Docker Engine](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/). On Linux, it is necessary to create a docker group and to add yourself to it:
 
@@ -50,7 +53,7 @@ docker-compose -f dev-compose.yml build
 docker-compose -f dev-compose.yml up
 </pre>
 
-Further documentation is available in CalcUS itself.
+Further documentation is available [here](https://calcus.readthedocs.io/).
 
 ## Citation
 If you use CalcUS in your research, please cite it:
