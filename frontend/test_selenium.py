@@ -2649,29 +2649,6 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
-    def test_opt_DFT_single_atom(self):
-        params = {
-                'mol_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'Cl.xyz',
-                'software': 'ORCA',
-                'theory': 'DFT',
-                'functional': 'M062X',
-                'basis_set': 'Def2-SVP',
-                'charge': '-1',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(150)
-        self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertEqual(self.get_number_conformers(), 1)
-
     def test_opt_RIMP2(self):
         params = {
                 'mol_name': 'test',

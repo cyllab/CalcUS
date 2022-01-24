@@ -50,6 +50,9 @@ from django.db.utils import IntegrityError
 from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
 from celery import group
 
+from ccinput.wrapper import generate_calculation
+from ccinput.exceptions import CCInputException
+
 from ssh2.sftp import LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IWGRP, LIBSSH2_SFTP_S_IRWXU
 from ssh2.sftp import LIBSSH2_FXF_CREAT, LIBSSH2_FXF_WRITE, \
     LIBSSH2_SFTP_S_IRUSR, LIBSSH2_SFTP_S_IRGRP, LIBSSH2_SFTP_S_IWUSR, \
@@ -57,12 +60,9 @@ from ssh2.sftp import LIBSSH2_FXF_CREAT, LIBSSH2_FXF_WRITE, \
 
 from .libxyz import *
 from .models import *
-from .ORCA_calculation import OrcaCalculation
-from .Gaussian_calculation import GaussianCalculation
 from .xtb_calculation import XtbCalculation
 from .calculation_helper import *
 from .environment_variables import *
-
 
 import traceback
 import periodictable
@@ -755,9 +755,9 @@ def xtb_ts(in_file, calc):
 def xtb_scan(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    preparse = XtbCalculation(calc)
+    has_scan = 'scan' in calc.constraints.lower()
 
-    if preparse.has_scan:
+    if has_scan:
         ret = launch_xtb_calc(in_file, calc, ['calc.out', 'xtbscan.log'])
     else:
         ret = launch_xtb_calc(in_file, calc, ['calc.out', 'xtbopt.xyz'])
@@ -766,12 +766,12 @@ def xtb_scan(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         if ret == ErrorCodes.SERVER_DISCONNECTED:
             return ret
-        if preparse.has_scan:
+        if has_scan:
             failed = True
         else:
             return ret
 
-    if preparse.has_scan:
+    if has_scan:
         if not os.path.isfile("{}/xtbscan.log".format(local_folder)):
             return 1
         with open(os.path.join(local_folder, 'xtbscan.log')) as f:
@@ -1033,12 +1033,8 @@ def launch_orca_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     folder = 'scratch/calcus/{}'.format(calc.id)
 
-    orca = OrcaCalculation(calc)
-    calc.input_file = orca.input_file
-    calc.save()
-
     with open(os.path.join(local_folder, 'calc.inp'), 'w') as out:
-        out.write(orca.input_file)
+        out.write(calc.input_file)
 
     if not calc.local:
         pid = int(threading.get_ident())
@@ -1354,8 +1350,9 @@ def orca_freq(in_file, calc):
 def orca_scan(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    preparse = OrcaCalculation(calc)
-    if preparse.has_scan:
+    has_scan = 'scan' in calc.constraints.lower()
+
+    if has_scan:
         ret = launch_orca_calc(in_file, calc, ['calc.out', 'calc.relaxscanact.dat', 'calc.allxyz'])
     else:
         ret = launch_orca_calc(in_file, calc, ['calc.out', 'calc.xyz'])
@@ -1363,7 +1360,7 @@ def orca_scan(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    if preparse.has_scan:
+    if has_scan:
         properties = []
         energies = []
         with open(os.path.join(local_folder, 'calc.relaxscanact.dat')) as f:
@@ -1581,18 +1578,68 @@ def xtb_stda(in_file, calc):#TO OPTIMIZE
 
     return ErrorCodes.SUCCESS
 
+def calc_to_ccinput(calc):
+    global PAL
+    global MEM
+
+    if calc.parameters.method != "":
+        _method = calc.parameters.method
+    elif calc.parameters.theory_level.lower() == "hf":
+        _method = "HF"
+    elif calc.parameters.theory_level.lower() == "ri-mp2":
+        _method = "RI-MP2"
+    else:
+        raise Exception("No method specified; theory level is {}".format(calc.parameters.theory_level))
+
+    _specifications = calc.parameters.specifications
+    software = calc.parameters.software.lower()
+    if software in ['gaussian', 'orca']:
+        _specifications += getattr(calc.order.author, "default_" + software)
+
+    if is_test:
+        _nproc = PAL
+        _mem = 2000
+    else:
+        if calc.local:
+            _nproc = PAL
+            _mem = MEM
+        else:
+            _nproc = calc.order.resource.pal
+            _mem = calc.order.resource.mem
+
+    params = {
+            "software": calc.parameters.software,
+            "type": calc.step.name,
+            "method": _method,
+            "basis_set": calc.parameters.basis_set,
+            "solvent": calc.parameters.solvent,
+            "solvation_model": calc.parameters.solvation_model,
+            "solvation_radii": calc.parameters.solvation_radii,
+            "specifications": _specifications,
+            "density_fitting": calc.parameters.density_fitting,
+            "custom_basis_sets": calc.parameters.custom_basis_sets,
+            "xyz": calc.structure.xyz_structure,
+            "constraints": calc.constraints,
+            "nproc": _nproc,
+            "mem": _mem,
+            "charge": calc.parameters.charge,
+            "multiplicity": calc.parameters.multiplicity,
+            "aux_name": "struct2",
+            "name": "calc",
+    }
+    try:
+        inp = generate_calculation(**params)
+    except CCInputException as e:
+        return e
+
+    return inp
+
 def launch_gaussian_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     folder = 'scratch/calcus/{}'.format(calc.id)
 
-    gaussian = GaussianCalculation(calc)
-    calc.input_file = gaussian.input_file
-    calc.parameters.specifications = gaussian.confirmed_specifications
-    calc.save()
-    calc.parameters.save()
-
-    with open(os.path.join(local_folder, 'calc.com'), 'w') as out:
-        out.write(gaussian.input_file)
+    with open(os.path.join(local_folder, 'calc.com'), 'w') as out:###
+        out.write(calc.input_file)
 
     if not calc.local:
         pid = int(threading.get_ident())
@@ -2134,14 +2181,15 @@ def gaussian_ts(in_file, calc):
 def gaussian_scan(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    preparse = GaussianCalculation(calc)
     ret = launch_gaussian_calc(in_file, calc, ['calc.log'])
+
+    has_scan = 'scan' in calc.constraints.lower()
 
     failed = False
     if ret != ErrorCodes.SUCCESS:
         if ret == ErrorCodes.SERVER_DISCONNECTED:
             return ret
-        if preparse.has_scan:
+        if has_scan:
             failed = True
         else:
             return ret
@@ -2149,7 +2197,7 @@ def gaussian_scan(in_file, calc):
     with open(os.path.join(local_folder, 'calc.log')) as f:
         lines = f.readlines()
 
-    if preparse.has_scan:
+    if has_scan:
         s_ind = 1
         ind = 0
         done = False
@@ -2590,22 +2638,6 @@ def get_Gaussian_xyz(text):
         xyz += "{} {} {} {}\n".format(*l)
     return clean_xyz(xyz)
 
-def verify_charge_mult(xyz, charge, mult):
-    electrons = 0
-    for line in xyz.split('\n')[2:]:
-        if line.strip() == "":
-            continue
-        el = line.split()[0]
-        electrons += ATOMIC_NUMBER[el]
-
-    electrons -= charge
-    odd_e = electrons % 2
-    odd_m = mult % 2
-
-    if odd_e == odd_m:
-        return ErrorCodes.INVALID_CHARGE_MULTIPLICITY
-
-    return ErrorCodes.SUCCESS
 
 
 SPECIAL_FUNCTIONALS = ['HF-3c', 'PBEh-3c']
@@ -2881,14 +2913,20 @@ def run_calc(calc_id):
     if calc.status == 3:#Already revoked:
         return
 
-    ret = verify_charge_mult(calc.structure.xyz_structure, calc.parameters.charge, calc.parameters.multiplicity)
-    if ret == ErrorCodes.INVALID_CHARGE_MULTIPLICITY:
-        calc.error_message = "Impossible charge/multiplicity"
-        calc.status = 3
+    if calc.parameters.software != "xtb": # xtb currently not supported by ccinput
+        inp = calc_to_ccinput(calc)
+        if isinstance(inp, CCInputException):
+            calc.error_message = f"CCInput error: {str(inp)}"
+            calc.status = 3
+            calc.save()
+            return ErrorCodes.FAILED_TO_CREATE_INPUT
+
+        calc.input_file = inp.input_file
+        calc.parameters.specifications = inp.confirmed_specifications
         calc.save()
-        return ret
-    elif ret != ErrorCodes.SUCCESS:
-        return ret
+        calc.parameters.save()
+
+    # xtb calculations won't get the check for correct charge/multiplicity...
 
     in_file = os.path.join(workdir, 'in.xyz')
 

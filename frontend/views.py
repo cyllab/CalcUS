@@ -30,6 +30,7 @@ from os.path import basename
 from io import BytesIO
 import basis_set_exchange
 import numpy as np
+import ccinput
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -56,7 +57,7 @@ from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint,
 from .constants import *
 from .libxyz import parse_xyz_from_text, equivalent_atoms
 from .environment_variables import *
-from .calculation_helper import get_abs_method, get_abs_basis_set, get_abs_solvent, get_xyz_from_Gaussian_input
+from .calculation_helper import get_xyz_from_Gaussian_input
 
 from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
@@ -1439,9 +1440,12 @@ def submit_calculation(request):
                     constraints += "{}/{};".format(mode, ids)
                 elif mode == "Scan":
                     obj.has_scan = True
-                    begin = clean(request.POST['calc_scan_{}_1'.format(ind)])
-                    end = float(clean(request.POST['calc_scan_{}_2'.format(ind)]))
-                    steps = float(clean(request.POST['calc_scan_{}_3'.format(ind)]))
+                    try:
+                        begin = float(clean(request.POST['calc_scan_{}_1'.format(ind)]))
+                        end = float(clean(request.POST['calc_scan_{}_2'.format(ind)]))
+                        steps = int(clean(request.POST['calc_scan_{}_3'.format(ind)]))
+                    except ValueError:
+                        return error(request, "Invalid scan parameters")
                     constraints += "{}_{}_{}_{}/{};".format(mode, begin, end, steps, ids)
                 else:
                     return error(request, "Invalid constrained optimisation")
@@ -3019,11 +3023,12 @@ def check_functional(request):
     if func.strip() == "":
         return HttpResponse("")
 
-    ret = get_abs_method(func)
-    if ret == -1:
+    try:
+        ccinput.utilities.get_abs_method(func)
+    except ccinput.exceptions.InvalidParameter:
         return HttpResponse("Unknown functional")
-    else:
-        return HttpResponse("")
+
+    return HttpResponse("")
 
 @login_required
 def check_basis_set(request):
@@ -3035,12 +3040,12 @@ def check_basis_set(request):
     if bs.strip() == "":
         return HttpResponse("")
 
-    ret = get_abs_basis_set(bs)
+    try:
+        ccinput.utilities.get_abs_basis_set(bs)
+    except ccinput.exceptions.InvalidParameter:
+        return HttpResponse("Unknown functional")
 
-    if ret == -1:
-        return HttpResponse("Unknown basis set")
-    else:
-        return HttpResponse("")
+    return HttpResponse("")
 
 @login_required
 def check_solvent(request):
@@ -3057,12 +3062,17 @@ def check_solvent(request):
 
     software = clean(request.POST['software'])
 
-    if software.strip() == "" or software not in SOFTWARE_SOLVENTS.keys():
+    try:
+        software = ccinput.utilities.get_abs_software(software)
+    except ccinput.exceptions.InvalidParameter:
         return HttpResponse(status=400)
 
-    ret = get_abs_solvent(solv)
+    try:
+        solvent = ccinput.utilities.get_abs_solvent(solv)
+    except ccinput.exceptions.InvalidParameter:
+        return HttpResponse("Unknown solvent")
 
-    if ret == -1 or ret not in SOFTWARE_SOLVENTS[software].keys():
+    if solvent not in ccinput.constants.SOFTWARE_SOLVENTS[software]:
         return HttpResponse("Unknown solvent")
     else:
         return HttpResponse("")
