@@ -33,7 +33,8 @@ COPY manage.py /calcus/manage.py
 WORKDIR /calcus/
 
 RUN pip install -r requirements.txt
-RUN apt update && apt install openbabel sshpass postgresql-client dos2unix -y
+RUN ls /calcus/
+RUN apt update && apt install openbabel sshpass postgresql-client dos2unix openmpi-bin -y
 RUN dos2unix scripts/*
 
 RUN adduser --disabled-password --gecos '' calcus  

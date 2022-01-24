@@ -160,15 +160,12 @@ software_list = {
         "g16": "# Path to the directory directly containing g16 (e.g. /home/user/software/gaussian)\nCALCUS_GAUSSIAN={}\n",
         "orca": "# Path to the directory directly containing orca\nCALCUS_ORCA={}\n",
         "xtb": "# Path to the directory directly containing xtb, crest, stda, xtb4stda\nCALCUS_XTB={}\n",
-        "mpirun": "# OpenMPI main directory (e.g. /home/user/.openmpi)\nCALCUS_OPENMPI={}\n",
         }
 
 override_list = {
         "g16": ["                        - ${CALCUS_GAUSSIAN}:/binaries/g16"],
         "orca": ["                        - ${CALCUS_ORCA}:/binaries/orca"],
         "xtb": ["                        - ${CALCUS_XTB}:/binaries/xtb"],
-        "mpirun": ["                        - ${CALCUS_OPENMPI}/bin:/binaries/openmpi",
-                "                        - ${CALCUS_OPENMPI}/lib:/usr/lib/openmpi"]
         }
 
 software_paths = ""
@@ -178,10 +175,7 @@ local_calc = False
 for s, path_template in software_list.items():
     path = find_software(s)
     if path != "":
-        if s == "mpirun":
-            software_paths += path_template.format(os.path.dirname(path))
-        else:
-            software_paths += path_template.format(path)
+        software_paths += path_template.format(path)
         for p in override_list[s]:
             override_content += p + '\n'
         local_calc = True

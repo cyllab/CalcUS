@@ -51,7 +51,6 @@ A typical ``.env`` will look something like this:
         CALCUS_SECRET_KEY='de^%k+mia@*%fxl*n6zp^vghxnj4))30q9+h8e3_no-xb0*k40'
         CALCUS_GAUSSIAN=/home/user/softwares/g16
         CALCUS_ORCA=/home/user/softwares/orca
-        CALCUS_OPENMPI=/home/user/.openmpi/
         CALCUS_XTB=/home/user/softwares/xtb/bin
         OMP_NUM_THREADS=8,1
         NUM_CPU=8
@@ -71,7 +70,7 @@ A typical ``.env`` will look something like this:
         from django.core.management.utils import get_random_secret_key  
         get_random_secret_key()
 
-The next four variables are paths to directories containing the relevant software packages. If you do not have some of the other packages, the corresponding lines should not appear in the ``.env`` file nor in ``docker-compose.override.yml`` - this is automatically handled by the script ``generate_env.py``.
+The next three variables are paths to directories containing the relevant software packages. If you do not have some of the other packages, the corresponding lines should not appear in the ``.env`` file nor in ``docker-compose.override.yml`` - this is automatically handled by the script ``generate_env.py``.
 
 ``OMP_NUM_THREADS`` and ``NUM_CPU`` specify the number of processors available for calculations (eight in the example above). For the moment, every calculation uses all available processors.
 
