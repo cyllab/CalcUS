@@ -3111,7 +3111,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
-    def test_opt_DFT_grid6(self):
+    def test_opt_DFT_tightscf(self):
         params = {
                 'mol_name': 'test',
                 'type': 'Geometrical Optimisation',
@@ -3122,7 +3122,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': 'grid6',
+                'specifications': 'tightscf',
                 }
 
         self.lget("/launch/")
@@ -3168,7 +3168,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': 'P_Hirshfeld',
+                'specifications': '--phirshfeld',
                 }
 
         self.lget("/launch/")

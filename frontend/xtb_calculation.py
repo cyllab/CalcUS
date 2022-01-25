@@ -105,7 +105,7 @@ class XtbCalculation:
         for cmd in constraints:
             _cmd, ids = cmd.split('/')
             _cmd = _cmd.split('_')
-            ids = ids.split('_')
+            ids = [i for i in ids.split('_') if i.strip() != '']
             type = len(ids)
             if type == 2:
                 self.option_file += "distance: {}, {}, auto\n".format(*ids)
@@ -113,6 +113,8 @@ class XtbCalculation:
                 self.option_file += "angle: {}, {}, {}, auto\n".format(*ids)
             elif type == 4:
                 self.option_file += "dihedral: {}, {}, {}, {}, auto\n".format(*ids)
+            else:
+                raise Exception("Invalid constraint: {}".format(cmd))
             constr_atoms += ids
         self.option_file += "atoms: {}\n".format(','.join([str(i) for i in constr_atoms]))
 

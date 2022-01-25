@@ -7,6 +7,7 @@
 
 export PATH=$PATH:/home/slurm/g16
 export GAUSS_EXEDIR=/home/slurm/g16
+export PGI_FASTMATH_CPU=sandybridge
 
 cd $SLURM_SUBMIT_DIR
 

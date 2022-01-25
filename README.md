@@ -2,8 +2,8 @@
 	<img width="300" src="static/frontend/calcus.png">
 </p>
 
-# CalcUS - Computational Chemistry Web Platform
-CalcUS is a computational chemistry plateform. It strives for simplicity, clarity and efficiency. It brings all the necessary tools to perform computational chemistry in a user-friendly web interface. 
+# CalcUS - Quantum Chemistry Web Platform
+CalcUS is a quantum chemistry plateform. It strives for simplicity, clarity and efficiency. It brings all the necessary tools to perform quantum chemistry in a user-friendly web interface.
 
 This project is developed by the Legault group at the Université de Sherbrooke (Sherbrooke, Canada).
 
@@ -90,7 +90,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see https://www.gnu.org/licenses/.
 
-CalcUS - Computational Chemistry Web Platform
+CalcUS - Quantum Chemistry Web Platform
 
 Copyright (C) 2021 Raphaël Robidas
 

@@ -340,6 +340,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     self.driver.find_element_by_id("add_constraint_btn").click()
                     time.sleep(0.1)
                     handle_constraint(c, ind)
+                    time.sleep(0.1)
                     ind += 1
 
 

@@ -73,7 +73,7 @@ class ClusterTests(CalcusLiveServer):
     def setUpClass(cls):
         cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
         cls.patcher.start()
-        super().send_slurm_command(cls, "rm -r /home/calcus/scratch")
+        super().send_slurm_command(cls, "rm -r /home/slurm/scratch")
         super().setUpClass()
 
     def setUp(self):
