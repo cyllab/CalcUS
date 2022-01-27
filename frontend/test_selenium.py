@@ -1621,7 +1621,7 @@ class UserPermissionsTests(CalcusLiveServer):
 
         self.assertEqual(self.get_number_projects(), 0)
 
-class XtbCalculationTestsPI(CalcusLiveServer):
+class XtbCalculationTests(CalcusLiveServer):
 
     @classmethod
     def setUpClass(cls):
@@ -2246,69 +2246,6 @@ class XtbCalculationTestsPI(CalcusLiveServer):
             ang = get_angle(xyz, 1, 5, 8)
             self.assertTrue(np.isclose(ang, ang0, atol=0.5))
 
-
-class XtbCalculationTestsStudent(CalcusLiveServer):
-    @classmethod
-    def setUpClass(cls):
-        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
-        cls.patcher.start()
-        super().setUpClass()
-
-    def setUp(self):
-        super().setUp()
-
-        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
-        g.save()
-
-        u = User.objects.create_user(username="Student", password=self.password)
-        u.save()
-
-        p = Profile.objects.get(user__username="Student")
-        p.member_of = g
-        p.save()
-
-        self.profile.is_PI = True
-        self.profile.save()
-
-        self.login("Student", self.password)
-
-    def test_opt(self):
-        params = {
-                'mol_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'CH4.mol',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(10)
-        self.assertTrue(self.latest_calc_successful())
-        self.click_latest_calc()
-        self.assertEqual(self.get_number_conformers(), 1)
-
-    def test_proj(self):
-        student = Profile.objects.get(user__username="Student")
-        proj = Project.objects.create(author=student, name="TestProj")
-        proj.save()
-
-        params = {
-                'mol_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'TestProj',
-                'in_file': 'CH4.mol',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(10)
-        self.assertTrue(self.latest_calc_successful())
-
     @mock.patch.dict(os.environ, {'CAN_USE_CACHED_CALCULATIONS': 'false'})
     def test_parse_cancelled_calc(self):
         params = {
@@ -2437,7 +2374,69 @@ class XtbCalculationTestsStudent(CalcusLiveServer):
         self.assertEqual(solvation_model.first_selected_option.text, params['solvation_model'])
         self.assertEqual(software.get_attribute('value'), params['software'])
 
-class OrcaCalculationTestsPI(CalcusLiveServer):
+class StudentTests(CalcusLiveServer):
+    @classmethod
+    def setUpClass(cls):
+        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
+        cls.patcher.start()
+        super().setUpClass()
+
+    def setUp(self):
+        super().setUp()
+
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g.save()
+
+        u = User.objects.create_user(username="Student", password=self.password)
+        u.save()
+
+        p = Profile.objects.get(user__username="Student")
+        p.member_of = g
+        p.save()
+
+        self.profile.is_PI = True
+        self.profile.save()
+
+        self.login("Student", self.password)
+
+    def test_opt(self):
+        params = {
+                'mol_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_file': 'CH4.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_proj(self):
+        student = Profile.objects.get(user__username="Student")
+        proj = Project.objects.create(author=student, name="TestProj")
+        proj.save()
+
+        params = {
+                'mol_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'TestProj',
+                'in_file': 'CH4.mol',
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+
+class OrcaCalculationTests(CalcusLiveServer):
     @classmethod
     def setUpClass(cls):
         cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
@@ -3180,7 +3179,7 @@ class OrcaCalculationTestsPI(CalcusLiveServer):
         prop = Property.objects.latest('id')
         self.assertIn("Hirshfeld:", prop.charges)
 
-class GaussianCalculationTestsPI(CalcusLiveServer):
+class GaussianCalculationTests(CalcusLiveServer):
     @classmethod
     def setUpClass(cls):
         cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
