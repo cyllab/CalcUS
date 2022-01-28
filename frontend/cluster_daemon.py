@@ -184,6 +184,7 @@ class ClusterDaemon:
             logger.warning("No lock for connection with id {} in memory".format(access_id))
 
     def job(self, calc):
+
         access_id = calc.order.resource.id
         tasks.connections[threading.get_ident()] = self.connections[access_id]
         tasks.locks[threading.get_ident()] = self.locks[access_id]

@@ -462,7 +462,7 @@ class ClusterTests(CalcusLiveServer):
                 'project': 'New Project',
                 'new_project_name': 'SeleniumProject',
                 'software': 'Gaussian',
-                'in_file': 'CH4.mol',
+                'in_file': 'CH4.xyz',
                 'theory': 'Semi-empirical',
                 'method': 'AM1',
                 }

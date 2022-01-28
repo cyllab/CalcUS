@@ -1747,30 +1747,6 @@ class XtbCalculationTests(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         self.click_latest_calc()
 
-    def test_invalid_solvent(self):
-        params = {
-                'mol_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'ethanol.sdf',
-                'solvent': 'dichloroethane',
-                'solvation_model': 'ALPB',
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(120)
-        self.assertFalse(self.latest_calc_successful())
-
-        self.details_latest_order()
-        msg = self.get_error_messages()
-        self.assertEqual(len(msg), 1)
-        self.assertTrue("invalid solvent" in msg[0].lower())
-
-
     def test_conf_search(self):
         params = {
                 'mol_name': 'test',
@@ -3075,7 +3051,7 @@ class OrcaCalculationTests(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'specifications': 'Def2/JK',
+                'specifications': 'Def2/J',
                 }
 
         self.lget("/launch/")

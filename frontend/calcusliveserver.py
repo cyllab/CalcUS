@@ -124,7 +124,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         m = getattr(self, self.m_name)
 
         num = 1
-        MAX_ATTEMPTS = 1
+        MAX_ATTEMPTS = 3
 
         exc = None
 
@@ -189,6 +189,17 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def lget(self, url):
         self.driver.get('{}{}'.format(self.live_server_url, url))
+
+        # Try to wait until everything is loaded
+        # This hopefully reduces the overall flakiness of Selenium integration tests
+        for i in range(10):
+            try:
+                self.wait_for_ajax()
+            except selenium.common.exceptions.JavascriptException:
+                # JQuery not loaded
+                time.sleep(0.1)
+            else:
+                break
 
     def calc_input_params(self, params):
         self.wait_for_ajax()

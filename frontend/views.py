@@ -1440,8 +1440,15 @@ def submit_calculation(request):
                     constraints += "{}/{};".format(mode, ids)
                 elif mode == "Scan":
                     obj.has_scan = True
+
+                    if params.software != "Gaussian":
+                        try:
+                            begin = float(clean(request.POST['calc_scan_{}_1'.format(ind)]))
+                        except ValueError:
+                            return error(request, "Invalid scan parameters")
+                    else:
+                        begin = 42.0
                     try:
-                        begin = float(clean(request.POST['calc_scan_{}_1'.format(ind)]))
                         end = float(clean(request.POST['calc_scan_{}_2'.format(ind)]))
                         steps = int(clean(request.POST['calc_scan_{}_3'.format(ind)]))
                     except ValueError:

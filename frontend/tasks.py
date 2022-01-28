@@ -227,7 +227,7 @@ def sftp_put(src, dst, conn, lock, attempt_count=1):
 
 def wait_until_logfile(remote_dir, conn, lock):
     if is_test:
-        DELAY = [5]
+        DELAY = [2]
     else:
         DELAY = [5, 30, 60, 180, 300, 600]
 
@@ -1690,7 +1690,7 @@ def parse_orca_charges(calc, s):
 
     parse_default_orca_charges(calc, s)
 
-    if calc.parameters.specifications.lower().replace('_', '').find("phirshfeld") != -1:
+    if calc.parameters.specifications.lower().replace('_', '').find("hirshfeld") != -1:
         parse_hirshfeld_orca_charges(calc, s)
 
 def parse_hirshfeld_orca_charges(calc, s):
@@ -2922,7 +2922,10 @@ def run_calc(calc_id):
             return ErrorCodes.FAILED_TO_CREATE_INPUT
 
         calc.input_file = inp.input_file
-        calc.parameters.specifications = inp.confirmed_specifications
+
+        if inp.confirmed_specifications != '':
+            calc.parameters.specifications = inp.confirmed_specifications
+
         calc.save()
         calc.parameters.save()
 
