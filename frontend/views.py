@@ -939,7 +939,7 @@ def parse_parameters(request):
             if step.name == "Conformational Search":
                 if 'calc_conf_option' in request.POST.keys():
                     conf_option = clean(request.POST['calc_conf_option'])
-                    if conf_option not in ['GFN2-xTB', 'GFN-FF', 'GFN2-xTB//GFN-FF']:########
+                    if conf_option not in ['GFN2-xTB', 'GFN-FF', 'GFN2-xTB//GFN-FF']:
                         return "Error in the option for the conformational search"
                     functional = conf_option
         else:
@@ -3056,7 +3056,7 @@ def check_basis_set(request):
 
 @login_required
 def check_solvent(request):
-    if 'solvent' not in request.POST.keys():
+    if 'solvent' not in request.POST:
         return HttpResponse(status=400)
 
     solv = clean(request.POST['solvent'])
@@ -3064,15 +3064,16 @@ def check_solvent(request):
     if solv.strip() == "" or solv.strip().lower() == "vacuum":
         return HttpResponse("")
 
-    if 'software' not in request.POST.keys():
+    if 'software' not in request.POST:
         return HttpResponse(status=400)
 
-    software = clean(request.POST['software'])
+    software = clean(request.POST['software']).lower()
 
-    try:
-        software = ccinput.utilities.get_abs_software(software)
-    except ccinput.exceptions.InvalidParameter:
-        return HttpResponse(status=400)
+    if software != 'xtb': # To change once xtb is supported by ccinput
+        try:
+            software = ccinput.utilities.get_abs_software(software)
+        except ccinput.exceptions.InvalidParameter:
+            return HttpResponse(status=400)
 
     try:
         solvent = ccinput.utilities.get_abs_solvent(solv)

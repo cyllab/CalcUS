@@ -715,7 +715,6 @@ def get_or_create(params, struct):
     return Property.objects.create(parameters=params, parent_structure=struct)
 
 def xtb_ts(in_file, calc):
-
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
@@ -2913,7 +2912,7 @@ def run_calc(calc_id):
     if calc.status == 3:#Already revoked:
         return
 
-    if calc.parameters.software != "xtb": # xtb currently not supported by ccinput
+    def add_input_to_calc(calc):
         inp = calc_to_ccinput(calc)
         if isinstance(inp, CCInputException):
             calc.error_message = f"CCInput error: {str(inp)}"
@@ -2928,6 +2927,16 @@ def run_calc(calc_id):
 
         calc.save()
         calc.parameters.save()
+
+    if calc.parameters.software != "xtb": # xtb currently not directly supported by ccinput
+        add_input_to_calc(calc)
+    else:
+        if calc.step.short_name in ['mep', 'optts']:
+            calc.parameters.software = "ORCA"
+            add_input_to_calc(calc)
+            calc.parameters.software = "xtb"
+        else:
+            pass # Input generated later
 
     # xtb calculations won't get the check for correct charge/multiplicity...
 

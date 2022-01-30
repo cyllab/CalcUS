@@ -51,7 +51,7 @@ class Profile(models.Model):
     pref_units = models.PositiveIntegerField(default=0)
     unseen_calculations = models.PositiveIntegerField(default=0)
 
-    UNITS = {0: 'kJ/mol', 1: 'kcal/mol', 2: 'Ha'}
+    UNITS = {0: 'kJ/mol', 1: 'kcal/mol', 2: 'Eh'}
     UNITS_PRECISION = {0: 0, 1: 1, 2: 6}
     UNITS_FORMAT_STRING = {0: "{:.1f}", 1: "{:.1f}", 2: "{:.6f}"}
 

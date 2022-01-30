@@ -23,6 +23,8 @@ import periodictable
 from .constants import *
 from .calculation_helper import *
 
+from ccinput.utilities import get_solvent
+
 class XtbCalculation:
 
     def __init__(self, calc):
