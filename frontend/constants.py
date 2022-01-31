@@ -59,6 +59,7 @@ class ErrorCodes(IntEnum):
     INVALID_FILE = 5
     FAILED_TO_CREATE_INPUT = 6
     SERVER_DISCONNECTED = 7#Not a fatal error (will not end the calculation)
+    MISSING_FILE = 8
     CHANNEL_TIMED_OUT = 10
     INVALID_COMMAND = 11
     COULD_NOT_GET_REMOTE_FILE = 12

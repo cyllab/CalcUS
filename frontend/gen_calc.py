@@ -19,6 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 from .models import *
+from .tasks import generate_xyz_structure
+from .libxyz import parse_xyz_from_file
 
 TESTS_DIR = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
 
@@ -108,13 +110,24 @@ def gen_calc(params, profile):
             raise Exception("Unknown file format")
         xyz_structure = ''.join(lines)
 
+    s.save()
 
     proj = Project.objects.create()
     dummy = CalculationOrder.objects.create(project=proj, author=profile)
     calc = Calculation.objects.create(structure=s, step=step, parameters=p, order=dummy)
 
-    if 'constraints' in params.keys():
+    if step.creates_ensemble:
+        calc.result_ensemble = Ensemble.objects.create(parent_molecule=mol)
+
+    if 'constraints' in params:
         calc.constraints = params['constraints']
+
+    if 'aux_file' in params:
+        aux_xyz = parse_xyz_from_file(os.path.join(TESTS_DIR, params['aux_file']))
+        aux_s = Structure.objects.create(parent_ensemble=e, number=2)
+        calc.aux_structure = aux_s
+
+    calc.save()
 
     return calc
 

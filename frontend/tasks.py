@@ -772,7 +772,7 @@ def xtb_scan(in_file, calc):
 
     if has_scan:
         if not os.path.isfile("{}/xtbscan.log".format(local_folder)):
-            return 1
+            return ErrorCodes.MISSING_FILE
         with open(os.path.join(local_folder, 'xtbscan.log')) as f:
             lines = f.readlines()
             if len(lines) == 0:
@@ -2884,7 +2884,8 @@ def dispatcher(drawing, order_id):
 
 @app.task(base=AbortableTask)
 def run_calc(calc_id):
-    logger.info("Processing calc {}".format(calc_id))
+    if not is_test:
+        logger.info("Processing calc {}".format(calc_id))
 
     def get_calc(calc_id):
         for i in range(5):
@@ -2893,7 +2894,7 @@ def run_calc(calc_id):
             except Calculation.DoesNotExist:
                 sleep(1)
             else:
-                if calc.task_id == '' and calc.local:
+                if not is_test and calc.task_id == '' and calc.local:
                     sleep(1)
                 else:
                     return calc
@@ -2902,7 +2903,7 @@ def run_calc(calc_id):
     try:
         calc = get_calc(calc_id)
     except Exception:
-        return ErrorCodes.UNKNOWN_CALCULATION
+        return ErrorCodes.UNKNOWN_TERMINATION
 
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
 
@@ -2910,12 +2911,15 @@ def run_calc(calc_id):
     workdir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     if calc.status == 3:#Already revoked:
-        return
+        return ErrorCodes.JOB_CANCELLED
 
     def add_input_to_calc(calc):
         inp = calc_to_ccinput(calc)
         if isinstance(inp, CCInputException):
-            calc.error_message = f"CCInput error: {str(inp)}"
+            msg = f"CCInput error: {str(inp)}"
+            if is_test:
+                print(msg)
+            calc.error_message = msg
             calc.status = 3
             calc.save()
             return ErrorCodes.FAILED_TO_CREATE_INPUT
@@ -2929,12 +2933,16 @@ def run_calc(calc_id):
         calc.parameters.save()
 
     if calc.parameters.software != "xtb": # xtb currently not directly supported by ccinput
-        add_input_to_calc(calc)
+        ret = add_input_to_calc(calc)
+        if isinstance(ret, ErrorCodes):
+            return ret
     else:
         if calc.step.short_name in ['mep', 'optts']:
             calc.parameters.software = "ORCA"
-            add_input_to_calc(calc)
+            ret = add_input_to_calc(calc)
             calc.parameters.software = "xtb"
+            if isinstance(ret, ErrorCodes):
+                return ret
         else:
             pass # Input generated later
 
