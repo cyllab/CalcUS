@@ -4,7 +4,7 @@ ccinput
 celery[redis]
 coverage
 cryptography
-Django==3.2.10
+Django==3.2.12
 django-appconf==1.0.4
 django-axes==5.27.0
 django-bulma
