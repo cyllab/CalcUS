@@ -1435,6 +1435,9 @@ def submit_calculation(request):
                         id = int(id_txt)
                         ids.append(id)
 
+                if len(ids) == 0:
+                    return error(request, "Invalid or missing constraints")
+
                 ids = '_'.join([str(i) for i in ids])
                 if mode == "Freeze":
                     constraints += "{}/{};".format(mode, ids)
@@ -1456,6 +1459,10 @@ def submit_calculation(request):
                     constraints += "{}_{}_{}_{}/{};".format(mode, begin, end, steps, ids)
                 else:
                     return error(request, "Invalid constrained optimisation")
+
+        if constraints == "":
+            return error(request, "No constraint specified for constrained calculation")
+
     obj.save()
     for o in orders:
         o.constraints = constraints
@@ -3050,7 +3057,7 @@ def check_basis_set(request):
     try:
         ccinput.utilities.get_abs_basis_set(bs)
     except ccinput.exceptions.InvalidParameter:
-        return HttpResponse("Unknown functional")
+        return HttpResponse("Unknown basis set")
 
     return HttpResponse("")
 

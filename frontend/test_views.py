@@ -92,7 +92,6 @@ class LaunchTests(TestCase):
         assert response.content.decode('utf-8').find("Please login to see this page") == -1
         self.assertContains(response, "Error while submitting your calculation")
 
-
     def test_submit_correct(self):
         response = self.client.post("/submit_calculation/", data=basic_params, follow=True)
         self.assertNotContains(response, "Error while submitting your calculation")
@@ -203,6 +202,13 @@ class LaunchTests(TestCase):
 
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertNotContains(response, "Error while submitting your calculation")
+
+    def test_constrained_opt_no_constraint(self):
+        params = basic_params.copy()
+        params['calc_type'] = 'Constrained Optimisation'
+
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
 
     def test_submit_ORCA_empty_theory(self):
         params = basic_params.copy()
