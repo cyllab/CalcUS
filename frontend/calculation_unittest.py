@@ -47,6 +47,10 @@ class CalculationUnitTest(TestCase):
         self.profile.is_PI = True
         self.profile.save()
 
+        self.name_patcher = mock.patch.dict(os.environ, {"TEST_NAME": self.id()})
+        self.name_patcher.start()
+
+
     def get_params(self, **modifications):
         params = self.params.copy()
 

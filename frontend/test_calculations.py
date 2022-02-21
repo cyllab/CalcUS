@@ -207,8 +207,7 @@ class OrcaCalculationTests(CalculationUnitTest):
 
     def test_freq_DFT_single_atom(self):
         self.assertTrue(self.run_test(type="Frequency Calculation", theory_level="DFT",
-                method="M062X", in_file="Cl.xyz", charge=-1,
-                callback=partial(self.cb_has_n_conformers, 1)))
+                method="M062X", in_file="Cl.xyz", charge=-1))
 
     def test_ts_SE(self):
         self.assertTrue(self.run_test(theory_level="Semi-empirical", method="AM1",

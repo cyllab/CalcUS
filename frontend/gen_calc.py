@@ -114,7 +114,7 @@ def gen_calc(params, profile):
 
     proj = Project.objects.create()
     dummy = CalculationOrder.objects.create(project=proj, author=profile)
-    calc = Calculation.objects.create(structure=s, step=step, parameters=p, order=dummy)
+    calc = Calculation.objects.create(structure=s, step=step, parameters=p, order=dummy, task_id=1)
 
     if step.creates_ensemble:
         calc.result_ensemble = Ensemble.objects.create(parent_molecule=mol)
@@ -123,8 +123,9 @@ def gen_calc(params, profile):
         calc.constraints = params['constraints']
 
     if 'aux_file' in params:
-        aux_xyz = parse_xyz_from_file(os.path.join(TESTS_DIR, params['aux_file']))
-        aux_s = Structure.objects.create(parent_ensemble=e, number=2)
+        with open(os.path.join(TESTS_DIR, params['aux_file'])) as f:
+            aux_xyz = ''.join(f.readlines())
+        aux_s = Structure.objects.create(parent_ensemble=e, number=2, xyz_structure=aux_xyz)
         calc.aux_structure = aux_s
 
     calc.save()

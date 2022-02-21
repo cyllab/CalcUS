@@ -22,11 +22,11 @@ import os
 import time
 import sys
 import glob
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 import selenium
 import datetime
 import pexpect
 import socket
+from unittest import mock
 
 from selenium import webdriver
 from selenium.webdriver.common.alert import Alert
@@ -43,6 +43,7 @@ from shutil import copyfile, rmtree
 from celery.contrib.testing.worker import start_worker
 from celery.contrib.abortable import AbortableAsyncResult
 
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.management import call_command
 from django.contrib.auth.models import User, Group
 from .models import *
@@ -115,6 +116,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         super().tearDownClass()
 
     def run(self, result=None):
+        self.full_test_name = self.id()
         self.m_name = self._testMethodName
         self._testMethodName = "_test_wrapper"
         super(StaticLiveServerTestCase, self).run(result)
@@ -156,6 +158,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.login(self.username, self.password)
         self.profile = Profile.objects.get(user__username=self.username)
         time.sleep(0.1)#Reduces glitches (I think?)
+
+        self.name_patcher = mock.patch.dict(os.environ, {"TEST_NAME": self.full_test_name})
+        self.name_patcher.start()
+
 
     def cleanupCalculations(self):
         for c in Calculation.objects.all():
@@ -1137,6 +1143,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def apply_PI(self, group_name):
         assert self.is_on_page_profile()
+        self.wait_for_ajax()
         group_name = self.driver.find_element_by_name('group_name')
         submit = self.driver.find_element_by_css_selector("button.button:nth-child(3)")
         group_name.send_keys("Test group")
@@ -1163,6 +1170,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def wait_latest_calc_done(self, timeout):
         assert self.is_on_page_calculations()
+        self.wait_for_ajax()
         assert self.get_number_calc_orders() > 0
 
         for i in range(0, timeout, 2):
@@ -1580,6 +1588,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         return names
 
     def select_preset(self, name):
+        self.wait_for_ajax()
         element = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located((By.XPATH, "//*[@id='presets']/option[text()='{}']".format(name)))
         )

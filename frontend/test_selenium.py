@@ -954,7 +954,7 @@ class InterfaceTests(CalcusLiveServer):
         param_count = Parameters.objects.count()
         self.assertEqual(param_count, 2)
 
-    def test_project_preset_independance(self):
+    def test_project_preset_independence(self):
         proj = Project.objects.create(name="My Project", author=self.profile)
         proj.save()
 

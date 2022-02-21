@@ -315,6 +315,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     return ErrorCodes.UNKNOWN_TERMINATION
 
             if calc_id != -1 and res.is_aborted() == True:
+                logger.info(f"Stopping calculation {calc_id}")
                 signal_to_send = signal.SIGTERM
 
                 parent = psutil.Process(t.pid)
@@ -349,7 +350,7 @@ def get_cache_index(calc, cache_path):
     inputs = glob.glob(cache_path + '/*.input')
     for f in inputs:
         if files_are_equal(f, calc.input_file):
-            ind = f.split('/')[-1].split('.')[0]
+            ind = '.'.join(f.split('/')[-1].split('.')[:-1])
             return ind
     else:
         return -1
@@ -1031,6 +1032,7 @@ def orca_opt(in_file, calc):
         calc.structure = s
         calc.step = BasicStep.objects.get(name="Single-Point Energy")
         calc.save()
+        add_input_to_calc(calc)
         return orca_sp(in_file, calc)
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
@@ -1168,9 +1170,10 @@ def orca_freq(in_file, calc):
 
     with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "IR.csv"), 'w') as out:
         out.write("Wavenumber,Intensity\n")
-        intensities = 1000*np.array(intensities)/max(intensities)
-        for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
-            out.write("-{:.1f},{:.5f}\n".format(_x, i))
+        if len(intensities) > 0:
+            intensities = 1000*np.array(intensities)/max(intensities)
+            for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
+                out.write("-{:.1f},{:.5f}\n".format(_x, i))
 
     prop = get_or_create(calc.parameters, calc.structure)
     prop.energy = E
@@ -1192,6 +1195,11 @@ def orca_freq(in_file, calc):
         if line.strip() != '':
             a, x, y, z = line.strip().split()
             struct.append([a, float(x), float(y), float(z)])
+
+    parse_orca_charges(calc, calc.structure)
+
+    if num_atoms == 1:
+        return ErrorCodes.SUCCESS
 
     while lines[ind].find("VIBRATIONAL FREQUENCIES") == -1 and ind > 0:
         ind -= 1
@@ -1255,8 +1263,6 @@ def orca_freq(in_file, calc):
             out.write("CalcUS\n")
             for ind2, (a, x, y, z) in enumerate(struct):
                 out.write("{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(a, x, y, z, *vibs[ind][3*ind2:3*ind2+3]))
-
-    parse_orca_charges(calc, calc.structure)
 
     return ErrorCodes.SUCCESS
 
@@ -1663,8 +1669,7 @@ def parse_default_orca_charges(calc, s):
 
 def parse_gaussian_charges(calc, s):
     parse_default_gaussian_charges(calc, s)
-
-    for spec in calc.parameters.specifications.split(' '):#The specifications have been cleaned/formatted already
+    for spec in calc.parameters.specifications.replace(', ', ',').split(' '):#The specifications have been cleaned/formatted already
         if spec.strip() == '':
             continue
         if spec.find('(') != -1:
@@ -2796,6 +2801,24 @@ def dispatcher(drawing, order_id):
         c.task_id = res
         c.save()
 
+def add_input_to_calc(calc):
+    inp = calc_to_ccinput(calc)
+    if isinstance(inp, CCInputException):
+        msg = f"CCInput error: {str(inp)}"
+        if is_test:
+            print(msg)
+        calc.error_message = msg
+        calc.status = 3
+        calc.save()
+        return ErrorCodes.FAILED_TO_CREATE_INPUT
+
+    calc.input_file = inp.input_file
+
+    calc.parameters.specifications = inp.confirmed_specifications
+
+    calc.save()
+    calc.parameters.save()
+
 @app.task(base=AbortableTask)
 def run_calc(calc_id):
     if not is_test:
@@ -2828,25 +2851,6 @@ def run_calc(calc_id):
     if calc.status == 3:#Already revoked:
         logger.info(f"Calc {calc_id} already revoked")
         return ErrorCodes.JOB_CANCELLED
-
-    def add_input_to_calc(calc):
-        inp = calc_to_ccinput(calc)
-        if isinstance(inp, CCInputException):
-            msg = f"CCInput error: {str(inp)}"
-            if is_test:
-                print(msg)
-            calc.error_message = msg
-            calc.status = 3
-            calc.save()
-            return ErrorCodes.FAILED_TO_CREATE_INPUT
-
-        calc.input_file = inp.input_file
-
-        if inp.confirmed_specifications != '':
-            calc.parameters.specifications = inp.confirmed_specifications
-
-        calc.save()
-        calc.parameters.save()
 
     if calc.parameters.software != "xtb": # xtb currently not directly supported by ccinput
         ret = add_input_to_calc(calc)
@@ -2946,9 +2950,9 @@ def run_calc(calc_id):
         analyse_opt(calc.id)
 
     if is_test and os.getenv("CAN_USE_CACHED_LOGS") == "true" and os.getenv("USE_CACHED_LOGS") == "true" and not calc_is_cached(calc):
-        index = str(time()).replace('.', '_')
-        shutil.copytree(os.path.join(tests_dir, "scr", str(calc.id)), os.path.join(tests_dir, "cache", index))
-        with open(os.path.join(tests_dir, "cache", index+'.input'), 'w') as out:
+        test_name = os.environ['TEST_NAME']
+        shutil.copytree(os.path.join(tests_dir, "scr", str(calc.id)), os.path.join(tests_dir, "cache", test_name), dirs_exist_ok=True)
+        with open(os.path.join(tests_dir, "cache", test_name+'.input'), 'w') as out:
             out.write(calc.input_file)
 
     return ret
