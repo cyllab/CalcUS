@@ -113,7 +113,12 @@ def sftp_get(src, dst, conn, lock, attempt_count=1):
 
     lock.acquire()
 
-    conn[1].get(src, local=dst)
+    try:
+        conn[1].get(src, local=dst)
+    except FileNotFoundError:
+        logger.info(f"Could not download {src}: no such remote file")
+        lock.release()
+        return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
 
     lock.release()
 

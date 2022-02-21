@@ -46,8 +46,6 @@ MAX_RESUME_CALC_ATTEMPT_COUNT = 3
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-GRIMME_SUITE = ['xtb', 'crest', 'xtb4stda', 'stda', 'enso.py', 'anmr']
-
 class ConnectionCodes:
     SUCCESS = 0
     ALREADY_CONNECTED = 1
@@ -82,11 +80,9 @@ if not is_test:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calcus.settings")
     django.setup()
 
-
 from frontend.models import *
 from frontend.environment_variables import *
 from frontend import tasks
-
 
 class ClusterDaemon:
 
@@ -288,14 +284,32 @@ class ClusterDaemon:
                 logger.warning("Could not find calculation {}".format(calc_id))
                 return
 
+            if cmd == "kill":
+                logger.info("Killing calculation {}".format(calc.id))
+                if calc.order.resource is not None:
+                    if calc.id in self.calculations.keys():
+                        pid = self.calculations[calc.id]
+                        if pid not in tasks.kill_sig:
+                            tasks.kill_sig.append(pid)
+                    else:
+                        self.cancelled.append(calc.id)
+                else:
+                    # Special case where the resource has been deleted.
+                    # As such, no thread will ever process the kill signal.
+                    logger.info(f"Resource is null for calculation {calc.id}, cancelling directly")
+                    calc.status = 3
+                    calc.error_message = "Job cancelled"
+                    calc.save()
+                    return
+
             access = calc.order.resource
 
             if access is None:
-                logger.warning("Cannot load log: resource is null for calculation {}".format(calc.id))
+                logger.warning(f"Cannot load log: resource is null for calculation {calc.id}")
                 return
 
             if access.id not in self.connections.keys():
-                logger.warning("Cannot execute command: access {} not connected".format(access.id))
+                logger.warning(f"Cannot execute command: access {access.id} not connected")
                 return
 
             if cmd == "launch":
@@ -313,14 +327,6 @@ class ClusterDaemon:
 
                 if pid in tasks.connections.keys():
                     del tasks.connections[pid]
-            elif cmd == "kill":
-                logger.info("Killing calculation {}".format(calc.id))
-                if calc.id in self.calculations.keys():
-                    pid = self.calculations[calc.id]
-                    if pid not in tasks.kill_sig:
-                        tasks.kill_sig.append(pid)
-                else:
-                    self.cancelled.append(calc.id)
             elif cmd == "load_log":
                 if calc.id in self.calculations:
                     try:
