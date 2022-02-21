@@ -65,7 +65,7 @@ from django.conf import settings
 
 from throttle.decorators import throttle
 
-import nmrglue as ng
+#import nmrglue as ng
 
 import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s")

@@ -12,9 +12,11 @@ django-dbbackup
 django-pipeline==2.0.5
 django-ipware==3.0.1
 django-throttle-requests==0.5.9
+fabric
 gunicorn
-nmrglue==0.7
+nmrglue==0.8
 numpy
+paramiko==2.9.2
 periodictable
 pexpect==4.8.0
 pika==1.1.0
@@ -24,5 +26,4 @@ pyvirtualdisplay
 requests
 scipy
 selenium
-ssh2-python
 wheel

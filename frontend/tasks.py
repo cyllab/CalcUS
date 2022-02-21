@@ -33,9 +33,10 @@ import math
 import subprocess
 import shlex
 import glob
-import ssh2
 import sys
 import shutil
+
+import invoke
 
 import threading
 from threading import Lock
@@ -52,11 +53,6 @@ from celery import group
 
 from ccinput.wrapper import generate_calculation
 from ccinput.exceptions import CCInputException
-
-from ssh2.sftp import LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IWGRP, LIBSSH2_SFTP_S_IRWXU
-from ssh2.sftp import LIBSSH2_FXF_CREAT, LIBSSH2_FXF_WRITE, \
-    LIBSSH2_SFTP_S_IRUSR, LIBSSH2_SFTP_S_IRGRP, LIBSSH2_SFTP_S_IWUSR, \
-    LIBSSH2_SFTP_S_IROTH
 
 from .libxyz import *
 from .models import *
@@ -83,59 +79,27 @@ kill_sig = []
 
 def direct_command(command, conn, lock, attempt_count=1):
     lock.acquire()
-    sess = conn[2]
-
     def retry():
         if attempt_count >= MAX_COMMAND_ATTEMPT_COUNT:
             logger.warning("Maximum number of command execution attempts reached!")
+            lock.release()
             return ErrorCodes.FAILED_TO_EXECUTE_COMMAND
         else:
-            print("Trying again to execute the command... (attempt {}/{})".format(attempt_count, MAX_COMMAND_ATTEMPT_COUNT))
+            logger.warning("Trying again to execute the command... (attempt {}/{})".format(attempt_count, MAX_COMMAND_ATTEMPT_COUNT))
+            lock.release()
             sleep(2)
             return direct_command(command, conn, lock, attempt_count+1)
 
     try:
-        chan = sess.open_session()
-        if isinstance(chan, int):
-            logger.warning("Failed to open channel")
-            lock.release()
-            return retry()
-    except ssh2.exceptions.Timeout:
-        logger.warning("Command timed out")
+        response = conn[1].run("source ~/.bashrc; " + command, hide='both')
+    except invoke.exceptions.UnexpectedExit:
+        logger.info("Got exit code {response.returncode()} for command {command}")
         lock.release()
-        return retry()
-    except ssh2.exceptions.ChannelFailure:
-        logger.warning("Channel failure")
-        lock.release()
-        return retry()
-    except ssh2.exceptions.SocketSendError:
-        logger.warning("Socket send error")
-        lock.release()
-        return retry()
-
-    chan.execute("source ~/.bashrc; " + command)
-
-    try:
-        chan.wait_eof()
-        chan.close()
-        chan.wait_closed()
-        size, data = chan.read()
-    except ssh2.exceptions.Timeout:
-        # I am not sure that the command has been necessarily successful if this occurs
-        # Trying again could lead to duplicate command execution, which is undesirable
-        logger.warning("Channel timed out")
-        lock.release()
-        return ErrorCodes.CHANNEL_TIMED_OUT
-
-    total = b''
-    while size > 0:
-        total += data
-        size, data = chan.read()
+        return []
 
     lock.release()
 
-    if total != None:
-        return total.decode('utf-8').split('\n')
+    return response.stdout.split('\n')
 
 def sftp_get(src, dst, conn, lock, attempt_count=1):
 
@@ -144,37 +108,15 @@ def sftp_get(src, dst, conn, lock, attempt_count=1):
 
     if _src.strip() == "":
         return ErrorCodes.INVALID_COMMAND
-    sftp = conn[3]
-    lock.acquire()
 
     system("mkdir -p {}".format('/'.join(_dst.split('/')[:-1])), force_local=True)
 
-    try:
-        with sftp.open(_src, LIBSSH2_FXF_READ, LIBSSH2_SFTP_S_IRUSR) as f:
-            with open(_dst, 'wb') as local:
-                for size, data in f:
-                    if data[-1:] == b'\x00':
-                        local.write(data[:-1])
-                        break
-                    else:
-                        local.write(data)
-    except ssh2.exceptions.SFTPProtocolError:
-        logger.info("Could not get remote file {}".format(_src))
-        lock.release()
-        return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
-    except ssh2.exceptions.Timeout:
-        logger.warning("Timeout while downloading {}".format(src))
-        lock.release()
+    lock.acquire()
 
-        if attempt_count >= MAX_SFTP_ATTEMPT_COUNT:
-            logger.warning("Maximum number of download attempts reached!")
-            return ErrorCodes.FAILED_TO_DOWNLOAD_FILE
-        else:
-            print("Trying again to download the file... (attempt {}/{})".format(attempt_count, MAX_SFTP_ATTEMPT_COUNT))
-            sleep(2)
-            return sftp_get(_src, dst, conn, lock, attempt_count+1)
+    conn[1].get(src, local=dst)
 
     lock.release()
+
     return ErrorCodes.SUCCESS
 
 
@@ -185,42 +127,9 @@ def sftp_put(src, dst, conn, lock, attempt_count=1):
 
     ret = direct_command("mkdir -p {}".format('/'.join(dst.split('/')[:-1])), conn, lock)
 
-    if isinstance(ret, int):
-        logger.info("Failed to create remote directory")
-        if attempt_count >= MAX_SFTP_ATTEMPT_COUNT:
-            logger.warning("Maximum number of upload attempts reached! The remote directory could not be created.")
-            return ErrorCodes.FAILED_TO_UPLOAD_FILE
-        else:
-            logger.info("Retrying to create directory in 5 seconds... (attempt {}/{})".format(attempt_count+1, MAX_SFTP_ATTEMPT_COUNT))
-            sleep(5)
-            return sftp_put(src, dst, conn, lock, attempt_count=attempt_count+1)
-
-    sftp = conn[3]
-
     lock.acquire()
-    mode = LIBSSH2_SFTP_S_IRUSR | \
-               LIBSSH2_SFTP_S_IWUSR
 
-    f_flags = LIBSSH2_FXF_CREAT | LIBSSH2_FXF_WRITE
-
-    try:
-        with open(src, 'rb') as local, \
-                sftp.open(dst, f_flags, mode) as remote:
-            for data in local:
-                if data[-1:] == b'\x00' or data[-1:] == b'\x04' or data[-1:] == b'\x03':
-                    remote.write(data[:-1])
-                    break
-                else:
-                    remote.write(data)
-    except ssh2.exceptions.Timeout:
-        if attempt_count >= MAX_SFTP_ATTEMPT_COUNT:
-            logger.warning("Maximum number of upload attempts reached! The file could not be uploaded.")
-            return ErrorCodes.FAILED_TO_UPLOAD_FILE
-        else:
-            logger.warning("Timeout while uploading, retrying... (attempt {}/{})".format(attempt_count+1, MAX_SFTP_ATTEMPT_COUNT))
-            lock.release()
-            sleep(1)
-            return sftp_put(src, dst, conn, lock, attempt_count=attempt_count+1)
+    conn[1].put(src, remote=dst)
 
     lock.release()
     return ErrorCodes.SUCCESS
@@ -1593,7 +1502,7 @@ def calc_to_ccinput(calc):
     _specifications = calc.parameters.specifications
     software = calc.parameters.software.lower()
     if software in ['gaussian', 'orca']:
-        _specifications += getattr(calc.order.author, "default_" + software)
+        _specifications += ' ' + getattr(calc.order.author, "default_" + software)
 
     if is_test:
         _nproc = PAL
@@ -1604,7 +1513,7 @@ def calc_to_ccinput(calc):
             _mem = MEM
         else:
             _nproc = calc.order.resource.pal
-            _mem = calc.order.resource.mem
+            _mem = calc.order.resource.memory
 
     params = {
             "software": calc.parameters.software,
@@ -2903,6 +2812,7 @@ def run_calc(calc_id):
     try:
         calc = get_calc(calc_id)
     except Exception:
+        logger.info(f"Could not get calculation {calc_id}")
         return ErrorCodes.UNKNOWN_TERMINATION
 
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
@@ -2911,6 +2821,7 @@ def run_calc(calc_id):
     workdir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     if calc.status == 3:#Already revoked:
+        logger.info(f"Calc {calc_id} already revoked")
         return ErrorCodes.JOB_CANCELLED
 
     def add_input_to_calc(calc):
@@ -2964,6 +2875,7 @@ def run_calc(calc_id):
             out.write(clean_xyz(calc.structure.xyz_structure))
 
     if not calc.local and calc.remote_id == 0:
+        logger.debug(f"Preparing remote folder for calc {calc_id}")
         pid = int(threading.get_ident())
         conn = connections[pid]
         lock = locks[pid]
@@ -2975,6 +2887,7 @@ def run_calc(calc_id):
 
         in_file = os.path.join(remote_dir, "in.xyz")
 
+    logger.info(f"Launching calc {calc_id}")
     try:
         ret = f(in_file, calc)
     except Exception as e:
@@ -2987,6 +2900,7 @@ def run_calc(calc_id):
         calc.status = 3
         calc.error_message = "Incorrect termination ({})".format(str(e))
         calc.save()
+        logger.info(f"Error while running calc {calc_id}: '{str(e)}'")
     else:
         calc.refresh_from_db()
         calc.date_finished = timezone.now()
@@ -3011,6 +2925,8 @@ def run_calc(calc_id):
             calc.error_message = "Unknown termination"
 
         calc.save()
+
+    logger.info(f"Calc {calc_id} finished")
 
     #just calc.out/calc.log?
     for f in glob.glob("{}/*.out".format(workdir)):

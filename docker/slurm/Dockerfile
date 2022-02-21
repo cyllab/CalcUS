@@ -20,6 +20,7 @@ ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/binaries/orca:/usr/lib/openmpi/
 
 ADD slurm.conf /etc/slurm-llnl/
 ADD cgroup.conf /etc/slurm-llnl/
+ADD sshd_config /etc/ssh/
 ADD run_slurm.sh /home/slurm
 
 RUN mkdir -p /var/spool/slurmd

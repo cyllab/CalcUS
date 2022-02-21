@@ -22,7 +22,10 @@ ENV CALCUS_DOCKER "True"
 ENV PATH=$PATH:"/binaries/xtb:/binaries/g16:/binaries/orca:/binaries/other:/binaries/openmpi"
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/binaries/orca:/usr/lib/openmpi/
 
-COPY requirements.txt /calcus/requirements.txt
+ADD ./requirements.txt /calcus/requirements.txt
+RUN pip install -r /calcus/requirements.txt
+RUN apt update && apt install openbabel sshpass postgresql-client dos2unix openmpi-bin -y
+
 COPY calcus /calcus/calcus
 COPY scripts /calcus/scripts
 COPY static /calcus/static
@@ -32,9 +35,7 @@ COPY manage.py /calcus/manage.py
 
 WORKDIR /calcus/
 
-RUN pip install -r requirements.txt
 RUN ls /calcus/
-RUN apt update && apt install openbabel sshpass postgresql-client dos2unix openmpi-bin -y
 RUN dos2unix scripts/*
 
 RUN adduser --disabled-password --gecos '' calcus  

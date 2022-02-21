@@ -28,8 +28,9 @@ import shlex
 import redis
 from shutil import copyfile
 
-import ssh2
-from ssh2.session import Session
+from fabric import Connection
+import paramiko
+
 import socket
 import threading
 from threading import Lock
@@ -135,33 +136,16 @@ class ClusterDaemon:
         keypath = os.path.join(CALCUS_KEY_HOME, str(conn.id))
         username = conn.cluster_username
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            sock.connect((addr, 22))
-        except socket.gaierror:
-            logger.warning("Invalid host")
-            return ConnectionCodes.INVALID_HOST
-
-        session = Session()
-        try:
-            session.handshake(sock)
-        except ssh2.exceptions.SocketRecvError:
-            logger.warning("Socket reception error ({})".format(conn.id))
-
-        session.set_timeout(20*1000)
-        session.keepalive_config(True, 60)
-
-        try:
-            session.userauth_publickey_fromfile(username, keypath, passphrase=password)
-        except ssh2.exceptions.AuthenticationError:
+            _conn = Connection(addr, user=username, port=22, connect_kwargs={'key_filename': keypath, 'passphrase': password})
+        except paramiko.ssh_exception.AuthenticationException:
             logger.warning("Could not connect to cluster {} with username {}".format(addr, username))
             return ConnectionCodes.COULD_NOT_CONNECT
-        except ssh2.exceptions.FileError:
-            logger.warning("Invalid password for cluster {} with username {}".format(addr, username))
-            return ConnectionCodes.INVALID_KEY_PASSWORD
+        except Exception as e:
+            logger.warning("Could not connect to cluster {} with username {}: exception {}".format(addr, username, e))
+            return ConnectionCodes.COULD_NOT_CONNECT
 
-        sftp = session.sftp_init()
-        return [conn, sock, session, sftp]
+        return [conn, _conn]
 
     def delete_access(self, access_id):
         try:
@@ -354,49 +338,13 @@ class ClusterDaemon:
                 logger.warning("Unknown command: {}".format(cmd))
                 return
 
-    def keep_alive(self):
-        logger.info("Starting the keepalive daemon")
-        while True:
-            for i in range(60):
-                if self.stopped:
-                    return
-                time.sleep(1)
-
-            for conn_name in list(self.connections.keys()):
-                access, sock, session, sftp = self.connections[conn_name]
-                success = False
-                for i in range(5):
-                    try:
-                        session.keepalive_send()
-                    except ssh2.exceptions.SocketSendError:
-                        logger.info("Could not send keepalive signal, trying again")
-                        time.sleep(1)
-                    else:
-                        success = True
-                        break
-
-                if not success:
-                    logger.warning("Could not keep connection {} alive".format(conn_name))
-                    tasks.send_cluster_command("disconnect\n{}\n".format(access.id))
-                else:
-                    access.refresh_from_db()
-                    access.last_connected = timezone.now()
-                    access.status = "Connected"
-                    access.save()
-
-
     def __init__(self):
-        if not is_test:
-            t = threading.Thread(target=self.keep_alive)
-            t.start()
-
         tasks.REMOTE = True
 
         if docker:
             connection = redis.Redis(host='redis', port=6379, db=2)
         else:
             connection = redis.Redis(host='localhost', port=6379, db=2)
-        #connection.subscribe('cluster')
 
         logger.info("Starting to listen to cluster commands")
         while not self.stopped:
