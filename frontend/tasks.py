@@ -92,8 +92,8 @@ def direct_command(command, conn, lock, attempt_count=1):
 
     try:
         response = conn[1].run("source ~/.bashrc; " + command, hide='both')
-    except invoke.exceptions.UnexpectedExit:
-        logger.info("Got exit code {response.returncode()} for command {command}")
+    except invoke.exceptions.UnexpectedExit as e:
+        logger.info(f"Got exception {e} for command {command}")
         lock.release()
         return []
 

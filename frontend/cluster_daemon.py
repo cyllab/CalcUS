@@ -29,6 +29,7 @@ import redis
 from shutil import copyfile
 
 from fabric import Connection
+
 import paramiko
 
 import socket
@@ -344,8 +345,29 @@ class ClusterDaemon:
                 logger.warning("Unknown command: {}".format(cmd))
                 return
 
+
+    def ping_daemon(self):
+        logger.info("Starting the ping daemon")
+        while True:
+            for i in range(300):
+                if self.stopped:
+                    return
+                time.sleep(1)
+
+            for conn_name in list(self.connections.keys()):
+                access, conn = self.connections[conn_name]
+
+                access.refresh_from_db()
+                access.last_connected = timezone.now()
+                access.status = "Connected"
+                access.save()
+
     def __init__(self):
         tasks.REMOTE = True
+
+        if not is_test:
+            t = threading.Thread(target=self.ping_daemon)
+            t.start()
 
         if docker:
             connection = redis.Redis(host='redis', port=6379, db=2)

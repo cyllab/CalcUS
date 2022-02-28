@@ -32,6 +32,7 @@ COPY static /calcus/static
 COPY frontend /calcus/frontend
 COPY docker /calcus/docker
 COPY manage.py /calcus/manage.py
+COPY docker/cluster/config /etc/ssh/ssh_config
 
 WORKDIR /calcus/
 
