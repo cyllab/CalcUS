@@ -9,6 +9,10 @@ This project is developed by the Legault group at the Université de Sherbrooke 
 
 Documentation and an overview of the platform are available on [ReadTheDocs](https://calcus.readthedocs.io/).
 
+<p align="center">
+	<img width="600" src="https://calcus.readthedocs.io/en/latest/_images/new_molecule_overview.png">
+</p>
+
 ## Installation
 
 For licensing reasons, **no QM software package is included with CalcUS.** In order to use CalcUS, you will need either to install the Linux version of a package locally or use the packages on remote clusters. Note however that [xtb](https://github.com/grimme-lab/xtb) is freely available and can be used with CalcUS for fast semi-empirical tight-binding calculations.
@@ -58,7 +62,7 @@ Further documentation is available [here](https://calcus.readthedocs.io/).
 ## Citation
 If you use CalcUS in your research, please cite it:
 
-> Raphaël Robidas and Claude Y. Legault, "CalcUS: An Open-Source Computational Chemistry Web Platform", *ChemRxiv*. DOI: 10.26434/chemrxiv-2021-jw10x
+> Raphaël Robidas and Claude Y. Legault, "CalcUS: An Open-Source Quantum Chemistry Web Platform", *J. Chem. Inf. Model.*, 2022, ASAP. DOI: 10.1021/acs.jcim.1c01502
 
 ## Contributors
 **Project lead and main contributor**: Raphaël Robidas
@@ -92,5 +96,5 @@ along with this program. If not, see https://www.gnu.org/licenses/.
 
 CalcUS - Quantum Chemistry Web Platform
 
-Copyright (C) 2021 Raphaël Robidas
+Copyright (C) 2022 Raphaël Robidas
 
