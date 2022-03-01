@@ -3,7 +3,7 @@ Citation
 
 If you use CalcUS in your research, please cite it:
 
-- Raphaël Robidas and Claude Y. Legault, "CalcUS: An Open-Source Computational Chemistry Web Platform", *ChemRxiv*. DOI: 10.26434/chemrxiv-2021-jw10x
+- Raphaël Robidas and Claude Y. Legault, "CalcUS: An Open-Source Quantum Chemistry Web Platform", *J. Chem. Inf. Model.*, 2022, ASAP. DOI: 10.1021/acs.jcim.1c01502
 
 Contributors
 ------------

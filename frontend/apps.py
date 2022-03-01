@@ -1,7 +1,7 @@
 '''
 This file of part of CalcUS.
 
-Copyright (C) 2020-2021 Raphaël Robidas
+Copyright (C) 2020-2022 Raphaël Robidas
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
