@@ -10,8 +10,5 @@ sphinx:
   fail_on_warning: true
 
 python:
-  system_packages: true
   install:
     - requirements: docs/requirements.txt
-    - method: setuptools
-      path: .    
