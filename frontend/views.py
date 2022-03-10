@@ -1242,6 +1242,7 @@ def submit_calculation(request):
                             mol.inchi = fing
                             mol.save()
 
+                        struct.number = ind+1
                         struct.parent_ensemble = e
                         struct.save()
 

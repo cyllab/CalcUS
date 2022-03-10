@@ -4255,6 +4255,41 @@ class MiscCalculationTests(CalcusLiveServer):
         for c in calcs:
             self.assertEqual(c.status, 2)
 
+        self.click_latest_calc()
+
+        conf_data = self.get_conformer_data()
+        for i in range(len(conf_data)):
+            self.assertEqual(conf_data[i][0], str(i+1))
+
+    def test_combine_different_files(self):
+        params = {
+                'mol_name': 'test',
+                'type': 'Geometrical Optimisation',
+                'project': 'New Project',
+                'new_project_name': 'SeleniumProject',
+                'in_files': ['CH4.mol', 'H2.mol2', 'H2.sdf', 'ethanol.xyz'],
+                'software': 'xtb',
+                'combine': True,
+                }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.assertEqual(self.get_number_calc_orders(), 1)
+        self.wait_all_calc_done(600)
+        self.assertTrue(self.latest_calc_successful())
+
+        calcs = Calculation.objects.all()
+        for c in calcs:
+            self.assertEqual(c.status, 2)
+
+        self.click_latest_calc()
+
+        conf_data = self.get_conformer_data()
+        for i in range(len(conf_data)):
+            self.assertEqual(conf_data[i][0], str(i+1))
+
     def test_conformer_table1(self):
         proj = Project.objects.create(name="TestProj", author=self.profile)
         mol = Molecule.objects.create(project=proj, name="TestMol")
