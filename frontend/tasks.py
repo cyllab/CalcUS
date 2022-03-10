@@ -1504,9 +1504,6 @@ def xtb_stda(in_file, calc):#TO OPTIMIZE
     return ErrorCodes.SUCCESS
 
 def calc_to_ccinput(calc):
-    global PAL
-    global MEM
-
     if calc.parameters.method != "":
         _method = calc.parameters.method
     elif calc.parameters.theory_level.lower() == "hf":
@@ -1520,6 +1517,9 @@ def calc_to_ccinput(calc):
     software = calc.parameters.software.lower()
     if software in ['gaussian', 'orca']:
         _specifications += ' ' + getattr(calc.order.author, "default_" + software)
+
+    PAL = int(os.environ.get("NUM_CPU", 1))
+    MEM = int(os.environ.get("OMP_STACKSIZE", "1G")[:-1])*1024*PAL
 
     if is_test:
         _nproc = PAL
