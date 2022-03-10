@@ -93,9 +93,15 @@ def direct_command(command, conn, lock, attempt_count=1):
     try:
         response = conn[1].run("source ~/.bashrc; " + command, hide='both')
     except invoke.exceptions.UnexpectedExit as e:
-        logger.info(f"Got exception {e} for command {command}")
         lock.release()
+        if e.result.exited == 1 and e.result.stderr.find("Invalid job id specified") != -1:
+            return []
+
+        logger.info(f"Command {command} terminated with exception: {e}")
         return []
+    except ConnectionResetError as e:
+        logger.debug("Connection reset")
+        return self.retry()
 
     lock.release()
 
@@ -2499,7 +2505,7 @@ def analyse_opt_Gaussian(calc):
             s_ind += 1
             xyz += "{}\n\n".format(num_atoms)
             ind += 5
-            while lines[ind].find("---------") == -1:
+            while ind < len(lines) - 2 and lines[ind].find("---------") == -1:
                 try:
                     n, z, T, X, Y, Z = lines[ind].strip().split()
                 except ValueError:
@@ -2958,6 +2964,10 @@ def run_calc(calc_id):
     return ret
 
 @app.task
+def del_order(order_id):
+    _del_order(order_id)
+
+@app.task
 def del_project(proj_id):
     _del_project(proj_id)
 
@@ -2968,6 +2978,16 @@ def del_molecule(mol_id):
 @app.task
 def del_ensemble(ensemble_id):
     _del_ensemble(ensemble_id)
+
+def _del_order(id):
+    o = CalculationOrder.objects.get(pk=id)
+    for c in o.calculation_set.all():
+        _del_calculation(c)
+
+    if o.result_ensemble:
+        _del_ensemble(o.result_ensemble.id)
+
+    # The order is automatically deleted with the last calculation
 
 def _del_project(id):
     proj = Project.objects.get(pk=id)
@@ -2983,6 +3003,20 @@ def _del_molecule(id):
         _del_ensemble(e.id)
     mol.delete()
 
+def _del_calculation(calc):
+    if calc.status == 1 or calc.status == 2:
+            kill_calc(calc)
+
+    calc.delete()
+    try:
+        rmtree(os.path.join(CALCUS_SCR_HOME, str(calc.id)))
+    except OSError:
+        pass
+    try:
+        rmtree(os.path.join(CALCUS_RESULTS_HOME, str(calc.id)))
+    except OSError:
+        pass
+
 def _del_ensemble(id):
     try:
         e = Ensemble.objects.get(pk=id)
@@ -2993,35 +3027,14 @@ def _del_ensemble(id):
         _del_structure(s)
 
     for c in e.calculation_set.all():
-        if c.status == 1 or c.status == 2:
-            kill_calc(c)
+        _del_calculation(c)
 
-        c.delete()
-        try:
-            rmtree(os.path.join(CALCUS_SCR_HOME, str(c.id)))
-        except OSError:
-            pass
-        try:
-            rmtree(os.path.join(CALCUS_RESULTS_HOME, str(c.id)))
-        except OSError:
-            pass
     e.delete()
 
 def _del_structure(s):
     calcs = s.calculation_set.all()
     for c in calcs:
-        if c.status == 1 or c.status == 2:
-            kill_calc(c)
-
-        c.delete()
-        try:
-            rmtree(os.path.join(CALCUS_SCR_HOME, str(c.id)))
-        except OSError:
-            pass
-        try:
-            rmtree(os.path.join(CALCUS_RESULTS_HOME, str(c.id)))
-        except OSError:
-            pass
+        _del_calculation(c)
 
     s.delete()
 

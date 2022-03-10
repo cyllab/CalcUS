@@ -5,56 +5,47 @@
 {% block extrahead %}
 	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
 	<script src="{% static 'frontend/jquery.min.js' %}"></script>
-
+	<style>
+		#delete_order_button {
+			margin: 50 auto;
+			margin-bottom: 10px;
+			display: block;
+		}
+	</style>
 	<script>
-		function cancel(id) {
-			$("#cancel_button_" + id).addClass("is-loading");
+		function calc_action(action, id) {
+			$("#" + action + "_button_" + id).addClass("is-loading");
 			$.ajax({
 				method: "POST",	 	 
-				url: "/cancel_calc/",
+				url: "/" + action + "_calc/",
 				headers: {
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 				data: {'id': id},
 				success: function() {
-					$("#cancel_button_" + id).removeClass("is-loading");
-					$("#cancel_button_" + id).addClass("has-background-success");
-				}
-			});
-
-		}
-		function relaunch(id) {
-			$("#relaunch_button_" + id).addClass("is-loading");
-			$.ajax({
-				method: "POST",	 	 
-				url: "/relaunch_calc/",
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				data: {'id': id},
-				success: function() {
-					$("#relaunch_button_" + id).removeClass("is-loading");
-					$("#relaunch_button_" + id).addClass("has-background-success");
+					$("#" + action + "_button_" + id).removeClass("is-loading");
+					$("#" + action + "_button_" + id).addClass("has-background-success");
 				}
 			});
 
 		}
 
-		function refetch(id) {
-			$("#refetch_button_" + id).addClass("is-loading");
-			$.ajax({
-				method: "POST",	 	 
-				url: "/refetch_calc/",
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				data: {'id': id},
-				success: function() {
-					$("#refetch_button_" + id).removeClass("is-loading");
-					$("#refetch_button_" + id).addClass("has-background-success");
-				}
-			});
-
+		function delete_order(id) {
+			var res = confirm('Delete this calculation order and all its calculations (including resulting structures and ensembles)"?');	
+			if (res) {
+				$("#delete_order_button_").addClass("is-loading");
+				$.ajax({
+					method: "POST",	 	 
+					url: "/delete_order/",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					data: {'id': {{ order.pk }}},
+					success: function() {
+						window.location.replace("/calculations/");
+					}
+				});
+			}
 		}
 
 	</script>
@@ -91,7 +82,7 @@
 						<th><a class="button is-warning" href="/calculation/{{ calc.id}}">{{ calc.id }}</a></th>
 						<th>{{ calc.text_status }}{% if calc.status == 3%} - {{ calc.error_message }}{% endif %}</th>
 						<th>{{ calc.execution_time }}</th>
-						<th>{% if request.user.profile == order.author %}<a class="button is-danger" id="cancel_button_{{ calc.id }}" onclick="cancel({{ calc.id }});">Kill</a> {% if not calc.local %} <a class="button" id="relaunch_button_{{ calc.id }}" onclick="relaunch({{ calc.id }});">Relaunch</a><a class="button" id="refetch_button_{{ calc.id }}" onclick="refetch({{ calc.id }});">Refetch</a> {% endif %}{% endif %}</th>
+						<th>{% if request.user.profile == order.author %}<a class="button is-danger" id="cancel_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'cancel');">Kill</a> {% if not calc.local %} <a class="button" id="relaunch_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'relaunch');">Relaunch</a><a class="button" id="refetch_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'refetch');">Refetch</a> {% endif %}{% endif %}</th>
 					</tr>
 					{% endfor %}
 				</tbody>
@@ -99,6 +90,7 @@
 			<a class="button is-primary" href="/download_all_logs/{{ order.id }}">Download all logs</a>	
 		</center>
 	</div>
+	<button class="button is-danger" id="delete_order_button" onclick="delete_order()">Delete this calculation order</button>
 </div>
 <br />
 {% endblock %}

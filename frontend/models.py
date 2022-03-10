@@ -754,7 +754,7 @@ class CalculationOrder(models.Model):
         if self.new_status:
             with transaction.atomic():
                 p = Profile.objects.select_for_update().get(id=self.author.id)
-                p.unseen_calculations -= 1
+                p.unseen_calculations = max(0, p.unseen_calculations-1)
                 p.save()
         super(CalculationOrder, self).delete(*args, **kwargs)
 

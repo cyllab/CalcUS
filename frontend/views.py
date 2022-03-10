@@ -51,7 +51,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 
 from .forms import UserCreateForm
 from .models import Calculation, Profile, Project, ClusterAccess, Example, PIRequest, ResearchGroup, Parameters, Structure, Ensemble, BasicStep, CalculationOrder, Molecule, Property, Filter, Preset, Recipe, Folder, CalculationFrame
-from .tasks import dispatcher, del_project, del_molecule, del_ensemble, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc, send_cluster_command
+from .tasks import dispatcher, del_project, del_molecule, del_ensemble, del_order, BASICSTEP_TABLE, SPECIAL_FUNCTIONALS, cancel, run_calc, send_cluster_command
 from .decorators import superuser_required
 from .tasks import system, analyse_opt, generate_xyz_structure, gen_fingerprint, get_Gaussian_xyz
 from .constants import *
@@ -1583,6 +1583,27 @@ def delete_project(request):
             return HttpResponse(status=403)
 
         del_project.delay(proj_id)
+        return HttpResponse(status=204)
+    else:
+        return HttpResponse(status=403)
+
+@login_required
+def delete_order(request):
+    if request.method == 'POST':
+        if 'id' in request.POST.keys():
+            order_id = int(clean(request.POST['id']))
+        else:
+            return HttpResponse(status=403)
+
+        try:
+            to_delete = CalculationOrder.objects.get(pk=order_id)
+        except Project.DoesNotExist:
+            return HttpResponse(status=403)
+
+        if to_delete.author != request.user.profile:
+            return HttpResponse(status=403)
+
+        del_order.delay(order_id)
         return HttpResponse(status=204)
     else:
         return HttpResponse(status=403)
