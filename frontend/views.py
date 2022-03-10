@@ -1029,7 +1029,9 @@ def handle_file_upload(ff, params):
 
     drawing = False
     in_file = clean(ff.read().decode('utf-8'))
-    filename, ext = ff.name.split('.')
+    fname = clean(ff.name)
+    filename = '.'.join(fname.split('.')[:-1])
+    ext = fname.split('.')[-1]
 
     if ext == 'mol':
         s.mol_structure = in_file
