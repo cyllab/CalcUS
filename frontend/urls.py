@@ -175,6 +175,7 @@ urlpatterns = [
     path('delete_project/', views.delete_project, name='delete_project'),
     path('delete_molecule/', views.delete_molecule, name='delete_molecule'),
     path('delete_ensemble/', views.delete_ensemble, name='delete_ensemble'),
+    path('delete_order/', views.delete_order, name='delete_order'),
     path('delete_folder/', views.delete_folder, name='delete_folder'),
     path('change_password/', views.change_password, name='change_password'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

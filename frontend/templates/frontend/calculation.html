@@ -303,9 +303,9 @@
 	</script>
 	{% endif %}
 	<script>
-		frame_num = document.getElementById("opt_scroll").value;
 
 		$('#launch_frame_form').submit(function(){
+			frame_num = document.getElementById("opt_scroll").value;
 			$('<input />').attr('type', 'hidden')
 				.attr('name', "frame_num")
 				.attr('value', frame_num)

@@ -50,11 +50,6 @@ def gen_param(params):
         solvation_model = params['solvation_model']
         if 'solvation_radii' in params.keys():
             solvation_radii = params['solvation_radii']
-        else:
-            if solvation_model == "SMD":
-                solvation_radii = "Default"
-            if solvation_model in ["PCM", "CPCM"]:
-                solvation_radii = "UFF"
 
     if 'basis_set' in params.keys():
         basis_set = params['basis_set']

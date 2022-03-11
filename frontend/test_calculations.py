@@ -298,6 +298,8 @@ class OrcaCalculationTests(CalculationUnitTest):
         self.assertIn("Mulliken:", prop.charges)
         self.assertIn("Loewdin:", prop.charges)
 
+    '''
+    # Not valid with ccinput v1.3.2
     def test_DFT_hirshfeld_pop(self):
         self.assertTrue(self.run_test(type="Geometrical Optimisation", theory_level="DFT",
                 method="M062X", specifications="--phirshfeld",
@@ -305,6 +307,7 @@ class OrcaCalculationTests(CalculationUnitTest):
 
         prop = Property.objects.latest('id')
         self.assertIn("Hirshfeld:", prop.charges)
+    '''
 
 class GaussianCalculationTests(CalculationUnitTest):
     @classmethod
@@ -469,14 +472,6 @@ class GaussianCalculationTests(CalculationUnitTest):
 
         prop = Property.objects.latest('id')
         self.assertIn("HLY:", prop.charges)
-
-    def test_DFT_max_step(self):
-        self.assertTrue(self.run_test(type="Geometrical Optimisation", theory_level="DFT",
-                method="M062X", specifications="opt(maxstep=5)",
-                callback=partial(self.cb_has_n_conformers, 1)))
-
-        calc = Calculation.objects.latest('id')
-        self.assertEqual(calc.parameters.specifications.strip(), 'opt(maxstep=5)')
 
     def test_scan_pop(self):
         self.assertTrue(self.run_test(theory_level="HF", type="Constrained Optimisation",

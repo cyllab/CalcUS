@@ -301,7 +301,7 @@ class ClusterDaemon:
                     calc.status = 3
                     calc.error_message = "Job cancelled"
                     calc.save()
-                    return
+                return
 
             access = calc.order.resource
 
