@@ -13,7 +13,7 @@
 		}
 	</style>
 	<script>
-		function calc_action(action, id) {
+		function calc_action(id, action) {
 			$("#" + action + "_button_" + id).addClass("is-loading");
 			$.ajax({
 				method: "POST",	 	 

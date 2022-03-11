@@ -3132,6 +3132,8 @@ class OrcaCalculationTests(CalcusLiveServer):
         self.assertIn("Mulliken:", prop.charges)
         self.assertIn("Loewdin:", prop.charges)
 
+    '''
+    # Not valid with ccinput v1.3.2
     def test_DFT_hirshfeld_pop(self):
         params = {
                 'mol_name': 'test',
@@ -3154,6 +3156,7 @@ class OrcaCalculationTests(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
         prop = Property.objects.latest('id')
         self.assertIn("Hirshfeld:", prop.charges)
+    '''
 
 class GaussianCalculationTests(CalcusLiveServer):
     @classmethod
@@ -3899,33 +3902,6 @@ class GaussianCalculationTests(CalcusLiveServer):
 
         prop = Property.objects.latest('id')
         self.assertIn("HLY:", prop.charges)
-
-    def test_DFT_max_step(self):
-        params = {
-                'mol_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'CH4.mol',
-                'software': 'Gaussian',
-                'theory': 'DFT',
-                'functional': 'M062X',
-                'basis_set': 'Def2-SVP',
-                'specifications': 'opt(maxstep=5)'
-                }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.wait_latest_calc_done(120)
-        self.assertTrue(self.latest_calc_successful())
-
-        self.click_latest_calc()
-        self.click_calc_method(1)
-
-        specs = self.get_confirmed_specifications()
-        self.assertEqual(specs, 'opt(maxstep=5)')
 
     def test_scan_distance_pop(self):
         params = {

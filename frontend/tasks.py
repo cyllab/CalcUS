@@ -1522,7 +1522,7 @@ def calc_to_ccinput(calc):
     MEM = int(os.environ.get("OMP_STACKSIZE", "1G")[:-1])*1024*PAL
 
     if is_test:
-        _nproc = PAL
+        _nproc = min(4, PAL)
         _mem = 2000
     else:
         if calc.local:

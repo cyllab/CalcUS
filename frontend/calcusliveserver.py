@@ -142,6 +142,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 else:
                     num += 1
                 print("Test failed, trying again (attempt {}/{})".format(num, MAX_ATTEMPTS))
+                self.cleanupCalculations()
+                self.lget("/home/")
                 time.sleep(3)
             else:
                 break

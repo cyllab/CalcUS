@@ -1,6 +1,6 @@
 FROM ubuntu:latest
-
-RUN apt update && apt install slurmd slurmctld munge openssh-server -y
+ENV DEBIAN_FRONTEND "noninteractive"
+RUN apt update && apt install slurmd slurmctld munge openssh-server openmpi-bin -y
 RUN mkdir -p /home/slurm/
 RUN usermod --shell /bin/bash --home /home/slurm slurm
 RUN chown slurm:slurm /home/slurm
