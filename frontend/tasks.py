@@ -1653,7 +1653,7 @@ def parse_default_orca_charges(calc, s):
 
     charges = []
     while lines[ind].find("Sum of atomic charges:") == -1:
-        n, a, _, chrg = lines[ind].split()
+        chrg = lines[ind].split()[-1]
         charges.append("{:.2f}".format(float(chrg)))
         ind += 1
 
@@ -2988,6 +2988,10 @@ def _del_order(id):
         _del_ensemble(o.result_ensemble.id)
 
     # The order is automatically deleted with the last calculation
+    # If it has no calculation because of a bug:
+    o.refresh_from_db()
+    if o.pk:
+        o.delete()
 
 def _del_project(id):
     proj = Project.objects.get(pk=id)
