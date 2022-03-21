@@ -8394,3 +8394,8 @@ a.has-text-blue-light-dark:hover, a.has-text-blue-light-dark:focus {
 .footer {
   background-color: #fafafa;
   padding: 3rem 1.5rem 6rem; }
+/*Our Custom CSS*/
+.text_wrap{
+  word-wrap:break-word; 
+  word-break: break-all; 
+}
