@@ -5,7 +5,7 @@
 					<div class="column" style="text-align: left;">
 					{% if order.status == 0 %} <i class="fas fa-hourglass-half"></i> {% elif order.status == 1 %} <i class="fas fa-spinner"></i> {% elif order.status == 2 %} 
 					<i class="fas fa-check"></i>{% elif order.status == 3 %} <i class="fas fa-times"></i>{% endif %}
-						{{ order.label }}
+						<span class="text_wrap"> {{ order.label }}</span>
 					</div>
 					<div class="column is-narrow" style="text-align: right;">
 						<p><a onclick="see({{ order.id }});"><i class="fas fa-eye" title="Mark as seen"></i></a><a href="/calculationorder/{{ order.id }}"><i class="fas fa-list" title="Go to calculation list"></i></a>
@@ -18,7 +18,7 @@
 				<center>
 					<strong>{{ order.step.name }}</strong> <br />
 					Project: {{ order.project.name }} <br />
-					Molecule: {{ order.molecule_name }} <br />
+					Molecule: <span class="text_wrap"> {{ order.molecule_name }} </span> <br />
 					{{ order.date }} <br />
 					<table class="table">
 						<tr>
