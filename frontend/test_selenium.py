@@ -2481,7 +2481,7 @@ class OrcaCalculationTests(CalcusLiveServer):
                 'software': 'ORCA',
                 'theory': 'HF',
                 'basis_set': 'Def2-SVP',
-                'solvation_method': 'CPCM',
+                'solvation_model': 'CPCM',
                 'solvent': 'Methanol',
                 }
 
@@ -3250,7 +3250,7 @@ class GaussianCalculationTests(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'solvation_method': 'SMD',
+                'solvation_model': 'SMD',
                 'solvation_radii': 'SMD18',
                 'solvent': 'Methanol',
                 }
@@ -3275,7 +3275,7 @@ class GaussianCalculationTests(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'solvation_method': 'PCM',
+                'solvation_model': 'PCM',
                 'solvent': 'Methanol',
                 }
 
@@ -3299,7 +3299,7 @@ class GaussianCalculationTests(CalcusLiveServer):
                 'theory': 'DFT',
                 'functional': 'M062X',
                 'basis_set': 'Def2-SVP',
-                'solvation_method': 'CPCM',
+                'solvation_model': 'CPCM',
                 'solvent': 'Methanol',
                 }
 
