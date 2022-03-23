@@ -54,7 +54,6 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
 SCR_DIR = os.path.join(tests_dir, "scr")
 RESULTS_DIR = os.path.join(tests_dir, "results")
-CLUSTER_DIR = os.path.join(tests_dir, "cluster")
 KEYS_DIR = os.path.join(tests_dir, "keys")
 
 HEADLESS = os.getenv("CALCUS_HEADLESS")
@@ -241,10 +240,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         except selenium.common.exceptions.NoSuchElementException:
             pass
 
-        if 'solvent' in params.keys():
-            solvent_input = self.driver.find_element_by_name('calc_solvent')
-            solvent_input.send_keys(params['solvent'])
-
         if 'charge' in params.keys():
             charge_input = self.driver.find_element_by_name('calc_charge')
             charge_input.clear()
@@ -263,14 +258,18 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
             self.wait_for_ajax()
 
+        if 'solvent' in params.keys():
+            solvent_input = self.driver.find_element_by_name('calc_solvent')
+            solvent_input.send_keys(params['solvent'])
+
         if 'type' in params.keys():
             self.driver.find_element_by_xpath("//*[@id='calc_type']/option[text()='{}']".format(params['type'])).click()
 
         if 'project' in params.keys():
             self.driver.find_element_by_xpath("//*[@id='calc_project']/option[text()='{}']".format(params['project'])).click()
 
-        if 'solvation_method' in params.keys():
-            self.driver.find_element_by_xpath("//*[@id='calc_solvation_model']/option[text()='{}']".format(params['solvation_method'])).click()
+        if 'solvation_model' in params.keys():
+            self.driver.find_element_by_xpath("//*[@id='calc_solvation_model']/option[text()='{}']".format(params['solvation_model'])).click()
 
         if 'solvation_radii' in params.keys():
             self.driver.find_element_by_xpath("//*[@id='calc_solvation_radii']/option[text()='{}']".format(params['solvation_radii'])).click()
@@ -336,7 +335,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 select.find_element_by_xpath("option[text()='{}']".format(c_type)).click()
 
                 atoms = constraint[2]
-                self.driver.find_element_by_id("calc_constraint_{}_1".format(ind)).send_keys(str(atoms[0]))
+
+                # Although not elegant, it reduces flakiness
+                while self.driver.find_element_by_id("calc_constraint_{}_1".format(ind)).get_attribute("value") == "":
+                    self.driver.find_element_by_id("calc_constraint_{}_1".format(ind)).send_keys(str(atoms[0]))
+                    time.sleep(1)
+
                 self.driver.find_element_by_id("calc_constraint_{}_2".format(ind)).send_keys(str(atoms[1]))
                 if c_type == 'Angle':
                     self.driver.find_element_by_id("calc_constraint_{}_3".format(ind)).send_keys(str(atoms[2]))

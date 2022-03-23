@@ -65,8 +65,6 @@ from django.conf import settings
 
 from throttle.decorators import throttle
 
-#import nmrglue as ng
-
 import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -777,6 +775,8 @@ def please_register(request):
         return render(request, 'frontend/please_register.html', {})
 
 def error(request, msg):
+    if is_test:
+        print("VIEWS ERROR: " + msg)
     return render(request, 'frontend/error.html', {
         'profile': request.user.profile,
         'error_message': msg,
@@ -1423,6 +1423,7 @@ def submit_calculation(request):
 
     TYPE_LENGTH = {'Distance' : 2, 'Angle' : 3, 'Dihedral' : 4}
     constraints = ""
+
     if step.name in ["Constrained Optimisation", "Constrained Conformational Search"] and 'constraint_num' in request.POST.keys():
         for ind in range(1, int(request.POST['constraint_num'])+1):
             try:
@@ -1476,7 +1477,6 @@ def submit_calculation(request):
         o.save()
 
     profile.save()
-
     if 'test' not in request.POST.keys():
         for o in orders:
             dispatcher.delay(drawing, o.id)
@@ -3387,7 +3387,7 @@ def cancel_calc(request):
     if profile != calc.order.author:
         return HttpResponse(status=403)
 
-    if is_test:
+    if is_test:###
         cancel(calc.id)
     else:
         cancel.delay(calc.id)

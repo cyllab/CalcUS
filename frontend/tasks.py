@@ -56,7 +56,6 @@ from ccinput.exceptions import CCInputException
 
 from .libxyz import *
 from .models import *
-from .xtb_calculation import XtbCalculation
 from .calculation_helper import *
 from .environment_variables import *
 
@@ -80,13 +79,12 @@ kill_sig = []
 def direct_command(command, conn, lock, attempt_count=1):
     lock.acquire()
     def retry():
+        lock.release()
         if attempt_count >= MAX_COMMAND_ATTEMPT_COUNT:
             logger.warning("Maximum number of command execution attempts reached!")
-            lock.release()
             return ErrorCodes.FAILED_TO_EXECUTE_COMMAND
         else:
             logger.warning("Trying again to execute the command... (attempt {}/{})".format(attempt_count, MAX_COMMAND_ATTEMPT_COUNT))
-            lock.release()
             sleep(2)
             return direct_command(command, conn, lock, attempt_count+1)
 
@@ -460,15 +458,9 @@ def launch_xtb_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     folder = 'scratch/calcus/{}'.format(calc.id)
 
-    xtb = XtbCalculation(calc)
-    calc.input_file = xtb.command
-    calc.parameters.custom_basis_sets = ''
-    calc.parameters.save()
-    calc.save()
-
-    if xtb.option_file != "":
+    if calc.input_file != "":
         with open(os.path.join(local_folder, "input"), 'w') as out:
-            out.write(xtb.option_file)
+            out.write(calc.input_file)
 
     os.chdir(local_folder)
 
@@ -482,11 +474,10 @@ def launch_xtb_calc(in_file, calc, files):
             sftp_put("{}/in.xyz".format(local_folder), os.path.join(folder, "in.xyz"), conn, lock)
         if xtb.option_file != "":
             sftp_put("{}/input".format(local_folder), os.path.join(folder, "input"), conn, lock)
-
-        ret = system(xtb.command, 'calc.out', software='xtb', calc_id=calc.id)
     else:
         os.chdir(local_folder)
-        ret = system(xtb.command, 'calc.out', software='xtb', calc_id=calc.id)
+
+    ret = system(calc.command, 'calc.out', software='xtb', calc_id=calc.id)
 
     cancelled = False
     if ret != ErrorCodes.SUCCESS:
@@ -1550,7 +1541,7 @@ def calc_to_ccinput(calc):
             "charge": calc.parameters.charge,
             "multiplicity": calc.parameters.multiplicity,
             "aux_name": "struct2",
-            "name": "calc",
+            "name": "in",
     }
     try:
         inp = generate_calculation(**params)
@@ -2819,8 +2810,10 @@ def add_input_to_calc(calc):
         return ErrorCodes.FAILED_TO_CREATE_INPUT
 
     calc.input_file = inp.input_file
-
     calc.parameters.specifications = inp.confirmed_specifications
+
+    if hasattr(inp, 'command'):
+        calc.command = inp.command
 
     calc.save()
     calc.parameters.save()
@@ -2858,21 +2851,15 @@ def run_calc(calc_id):
         logger.info(f"Calc {calc_id} already revoked")
         return ErrorCodes.JOB_CANCELLED
 
-    if calc.parameters.software != "xtb": # xtb currently not directly supported by ccinput
+    if calc.parameters.software == "xtb" and calc.step.short_name in ['mep', 'optts']:
+        calc.parameters.software = "ORCA"
         ret = add_input_to_calc(calc)
-        if isinstance(ret, ErrorCodes):
-            return ret
+        calc.parameters.software = "xtb"
     else:
-        if calc.step.short_name in ['mep', 'optts']:
-            calc.parameters.software = "ORCA"
-            ret = add_input_to_calc(calc)
-            calc.parameters.software = "xtb"
-            if isinstance(ret, ErrorCodes):
-                return ret
-        else:
-            pass # Input generated later
+        ret = add_input_to_calc(calc)
 
-    # xtb calculations won't get the check for correct charge/multiplicity...
+    if isinstance(ret, ErrorCodes):
+        return ret
 
     in_file = os.path.join(workdir, 'in.xyz')
 

@@ -53,13 +53,6 @@ else:
     except (FileNotFoundError, subprocess.CalledProcessError):
         CALCUS_VERSION_HASH = "unknown"
 
-'''
-if CALCUS_VERSION_HASH == "unknown":
-    print("Could not find the CalcUS commit hash")
-else:
-    print("CalcUS version based on commit {}".format(CALCUS_VERSION_HASH))
-'''
-
 PACKAGES = []
 if "CALCUS_XTB" in os.environ:
     PACKAGES.append("xtb")
