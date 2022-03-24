@@ -99,7 +99,7 @@ def direct_command(command, conn, lock, attempt_count=1):
         return []
     except ConnectionResetError as e:
         logger.debug("Connection reset")
-        return self.retry()
+        return retry()
 
     lock.release()
 
