@@ -13,7 +13,6 @@ ENV EBROOTORCA "/home/slurm/orca"
 ENV GAUSS_EXEDIR "/home/slurm/g16"
 ENV XTB4STDAHOME "/binaries/xtb/"
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/home/slurm/orca"
-ENV CALCUS_DOCKER "True"
 
 ENV PATH=$PATH:"/home/slurm/xtb:/home/slurm/g16:/home/slurm/orca:/home/slurm/other:/home/slurm/openmpi"
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/binaries/orca:/usr/lib/openmpi/

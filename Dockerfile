@@ -17,7 +17,6 @@ ENV GAUSS_EXEDIR "/binaries/g16"
 ENV XTBHOME "/binaries/xtb"
 ENV XTB4STDAHOME "/binaries/xtb"
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/binaries/orca"
-ENV CALCUS_DOCKER "True"
 
 ENV PATH=$PATH:"/binaries/xtb:/binaries/g16:/binaries/orca:/binaries/other:/binaries/openmpi"
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/binaries/orca:/usr/lib/openmpi/

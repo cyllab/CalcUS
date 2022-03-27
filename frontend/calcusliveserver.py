@@ -74,22 +74,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         cls.host = socket.gethostbyname(socket.gethostname())
 
-        if docker:
-            cls.driver = webdriver.Remote(
-                command_executor="http://selenium:4444/wd/hub",
+        cls.driver = webdriver.Remote(
+                command_executor='http://selenium:4444/wd/hub',
                 desired_capabilities=DesiredCapabilities.CHROME,
-            )
-            cls.driver.set_window_size(1920, 1080)
-        else:
-            chrome_options = Options()
-            if HEADLESS is not None and HEADLESS.lower() == "true":
-                from pyvirtualdisplay import Display
-
-                display = Display(visible=0, size=(1920, 1080))
-                display.start()
-
-            cls.driver = webdriver.Chrome(chrome_options=chrome_options)
-            cls.driver.set_window_size(1920, 1080)
+        )
+        cls.driver.set_window_size(1920, 1080)
 
         tasks.REMOTE = False
         app.loader.import_module("celery.contrib.testing.tasks")
@@ -699,12 +688,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         address = self.driver.find_element_by_name("cluster_address")
         username = self.driver.find_element_by_name("cluster_username")
-        if docker:
-            address.send_keys("slurm")
-            username.send_keys("slurm")
-        else:
-            address.send_keys("localhost")
-            username.send_keys("calcus")
+
+        address.send_keys("slurm")
+        username.send_keys("slurm")
 
         pal = self.driver.find_element_by_name("cluster_cores")
         pal.clear()
@@ -730,36 +716,26 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 break
             time.sleep(1)
 
-        if docker:
-            child = pexpect.spawn("ssh slurm@slurm")
-            # child.logfile = open("/calcus/pexpect.log", 'wb')
-            choice = child.expect(["(yes/no)", "password"])
-            if choice == 0:
-                child.sendline("yes")
-                child.expect("password")
-                child.sendline("clustertest")
-            elif choice == 1:
-                child.sendline("clustertest")
+        child = pexpect.spawn('ssh slurm@slurm')
+        #child.logfile = open("/calcus/pexpect.log", 'wb')
+        choice = child.expect(["(yes/no)", "password"])
+        if choice == 0:
+            child.sendline('yes')
+            child.expect("password")
+            child.sendline('clustertest')
+        elif choice == 1:
+            child.sendline('clustertest')
 
-            child.expect("\$")
-            child.sendline("mkdir -p .ssh/".format(public_key))
-            child.expect("\$")
-            child.sendline(f"echo '{public_key}' > .ssh/authorized_keys")
-            child.expect("\$")
-            child.sendline("chmod 700 .ssh/authorized_keys")
-            child.expect("\$")
-            child.sendline("chown slurm:slurm .ssh/authorized_keys")
-            child.expect("\$")
-            child.sendline("exit")
-        else:
-            child = pexpect.spawn("su - calcus")
-            child.expect("Password:")
-            child.sendline("clustertest")
-            child.expect("\$")
-            child.sendline(
-                f"echo '{public_key}' > /home/calcus/.ssh/authorized_keys"
-            )
-            time.sleep(0.1)
+        child.expect("\$")
+        child.sendline("mkdir -p .ssh/".format(public_key))
+        child.expect("\$")
+        child.sendline("echo '{}' > .ssh/authorized_keys".format(public_key))
+        child.expect("\$")
+        child.sendline("chmod 700 .ssh/authorized_keys")
+        child.expect("\$")
+        child.sendline("chown slurm:slurm .ssh/authorized_keys")
+        child.expect("\$")
+        child.sendline("exit")
 
     def connect_cluster(self):
         assert self.is_on_page_access()
@@ -1861,24 +1837,17 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         folder.click()
 
     def send_slurm_command(self, cmd):
-        if docker:
-            child = pexpect.spawn("ssh slurm@slurm")
-            choice = child.expect(["(yes/no)", "password"])
-            if choice == 0:
-                child.sendline("yes")
-                child.expect("password")
-                child.sendline("clustertest")
-            elif choice == 1:
-                child.sendline("clustertest")
+        child = pexpect.spawn('ssh slurm@slurm')
+        choice = child.expect(["(yes/no)", "password"])
+        if choice == 0:
+            child.sendline('yes')
+            child.expect("password")
+            child.sendline('clustertest')
+        elif choice == 1:
+            child.sendline('clustertest')
 
-            child.expect("\$")
-            child.sendline(cmd)
-        else:
-            child = pexpect.spawn("su - calcus")
-            child.expect("Password:")
-            child.sendline("clustertest")
-            child.expect("\$")
-            child.sendline(cmd)
+        child.expect("\$")
+        child.sendline(cmd)
 
     def see_all(self):
         btn = self.driver.find_element_by_id("see_all_btn")
