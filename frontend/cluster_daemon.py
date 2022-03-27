@@ -164,9 +164,7 @@ class ClusterDaemon:
         try:
             conn = self.connections[access_id]
         except KeyError:
-            logger.warning(
-                f"Cannot delete connection {access_id}: no such connection"
-            )
+            logger.warning(f"Cannot delete connection {access_id}: no such connection")
             return
 
         conn = self.connections[access_id][0]
@@ -180,9 +178,7 @@ class ClusterDaemon:
         try:
             del self.locks[access_id]
         except KeyError:
-            logger.warning(
-                f"No lock for connection with id {access_id} in memory"
-            )
+            logger.warning(f"No lock for connection with id {access_id} in memory")
 
     def job(self, calc):
 

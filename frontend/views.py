@@ -813,9 +813,7 @@ def link_order(request, pk):
         if o.ensemble is not None:
             return HttpResponseRedirect(f"/ensemble/{o.ensemble.id}")
         elif o.structure:
-            return HttpResponseRedirect(
-                f"/ensemble/{o.structure.parent_ensemble.id}"
-            )
+            return HttpResponseRedirect(f"/ensemble/{o.structure.parent_ensemble.id}")
         else:
             return HttpResponseRedirect("/calculations/")
 
@@ -1781,9 +1779,7 @@ def submit_calculation(request):
 
                     if params.software != "Gaussian":
                         try:
-                            begin = float(
-                                clean(request.POST[f"calc_scan_{ind}_1"])
-                            )
+                            begin = float(clean(request.POST[f"calc_scan_{ind}_1"]))
                         except ValueError:
                             return error(request, "Invalid scan parameters")
                     else:
@@ -2141,9 +2137,7 @@ def status_access(request):
 
     dt = timezone.now() - access.last_connected
     if dt.total_seconds() < 600:
-        return HttpResponse(
-            f"Connected as of {int(dt.total_seconds())} seconds ago"
-        )
+        return HttpResponse(f"Connected as of {int(dt.total_seconds())} seconds ago")
     else:
         return HttpResponse("Disconnected")
 
@@ -2606,9 +2600,7 @@ def get_calc_data_remote(request, pk):
         except OSError:
             pass
 
-        send_cluster_command(
-            f"load_log\n{calc.id}\n{calc.order.resource.id}\n"
-        )
+        send_cluster_command(f"load_log\n{calc.id}\n{calc.order.resource.id}\n")
 
         ind = 0
         while (
@@ -3194,9 +3186,7 @@ def get_vib_animation(request):
             return HttpResponse(status=403)
 
         num = int(clean(request.POST["num"]))
-        expected_file = os.path.join(
-            CALCUS_RESULTS_HOME, str(id), f"freq_{num}.xyz"
-        )
+        expected_file = os.path.join(CALCUS_RESULTS_HOME, str(id), f"freq_{num}.xyz")
         if os.path.isfile(expected_file):
             with open(expected_file) as f:
                 lines = f.readlines()
@@ -4122,9 +4112,7 @@ def project_folders(request, username, proj, folder_path):
 
     # Make trailing slashes mandatory
     if path[-1].strip() != "":
-        return HttpResponseRedirect(
-            f"/projects/{username}/{proj}/{folder_path + '/'}"
-        )
+        return HttpResponseRedirect(f"/projects/{username}/{proj}/{folder_path + '/'}")
 
     target_project = clean(proj)
     target_username = clean(username)

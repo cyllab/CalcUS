@@ -75,8 +75,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         cls.host = socket.gethostbyname(socket.gethostname())
 
         cls.driver = webdriver.Remote(
-                command_executor='http://selenium:4444/wd/hub',
-                desired_capabilities=DesiredCapabilities.CHROME,
+            command_executor="http://selenium:4444/wd/hub",
+            desired_capabilities=DesiredCapabilities.CHROME,
         )
         cls.driver.set_window_size(1920, 1080)
 
@@ -130,9 +130,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     raise exc
                 else:
                     num += 1
-                print(
-                    f"Test failed, trying again (attempt {num}/{MAX_ATTEMPTS})"
-                )
+                print(f"Test failed, trying again (attempt {num}/{MAX_ATTEMPTS})")
                 self.cleanupCalculations()
                 self.lget("/home/")
                 time.sleep(3)
@@ -305,18 +303,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if "aux_structure" in params.keys():
             aux_mol, aux_e, aux_s = params["aux_structure"]
             mol_select = self.driver.find_element_by_id("aux_mol")
-            mol_select.find_element_by_xpath(
-                f"option[text()='{aux_mol}']"
-            ).click()
+            mol_select.find_element_by_xpath(f"option[text()='{aux_mol}']").click()
 
             self.wait_for_ajax()
 
             for i in range(2):
                 try:
                     e_select = self.driver.find_element_by_id("aux_ensemble")
-                    e_select.find_element_by_xpath(
-                        f"option[text()='{aux_e}']"
-                    ).click()
+                    e_select.find_element_by_xpath(f"option[text()='{aux_e}']").click()
                 except selenium.common.exceptions.NoSuchElementException:
                     time.sleep(1)
                 else:
@@ -326,9 +320,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             for i in range(2):
                 try:
                     s_select = self.driver.find_element_by_id("aux_struct")
-                    s_select.find_element_by_xpath(
-                        f"option[text()='{aux_s}']"
-                    ).click()
+                    s_select.find_element_by_xpath(f"option[text()='{aux_s}']").click()
                 except selenium.common.exceptions.NoSuchElementException:
                     time.sleep(1)
                 else:
@@ -342,30 +334,22 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
             def handle_constraint(constraint, ind):
                 c_mode = constraint[0]
-                select = self.driver.find_element_by_id(
-                    f"constraint_mode_{ind}"
-                )
+                select = self.driver.find_element_by_id(f"constraint_mode_{ind}")
                 self.driver.execute_script(
                     "showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",
                     select,
                 )
                 time.sleep(0.1)
-                select.find_element_by_xpath(
-                    f"option[text()='{c_mode}']"
-                ).click()
+                select.find_element_by_xpath(f"option[text()='{c_mode}']").click()
 
                 c_type = constraint[1]
-                select = self.driver.find_element_by_id(
-                    f"constraint_type_{ind}"
-                )
+                select = self.driver.find_element_by_id(f"constraint_type_{ind}")
                 self.driver.execute_script(
                     "showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",
                     select,
                 )
                 time.sleep(0.1)
-                select.find_element_by_xpath(
-                    f"option[text()='{c_type}']"
-                ).click()
+                select.find_element_by_xpath(f"option[text()='{c_type}']").click()
 
                 atoms = constraint[2]
 
@@ -381,9 +365,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     ).send_keys(str(atoms[0]))
                     time.sleep(1)
 
-                self.driver.find_element_by_id(
-                    f"calc_constraint_{ind}_2"
-                ).send_keys(str(atoms[1]))
+                self.driver.find_element_by_id(f"calc_constraint_{ind}_2").send_keys(
+                    str(atoms[1])
+                )
                 if c_type == "Angle":
                     self.driver.find_element_by_id(
                         f"calc_constraint_{ind}_3"
@@ -401,15 +385,15 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                         not "software" in params.keys()
                         or params["software"] != "Gaussian"
                     ):
-                        self.driver.find_element_by_id(
-                            f"calc_scan_{ind}_1"
-                        ).send_keys(str(scan[0]))
-                    self.driver.find_element_by_id(
-                        f"calc_scan_{ind}_2"
-                    ).send_keys(str(scan[1]))
-                    self.driver.find_element_by_id(
-                        f"calc_scan_{ind}_3"
-                    ).send_keys(str(scan[2]))
+                        self.driver.find_element_by_id(f"calc_scan_{ind}_1").send_keys(
+                            str(scan[0])
+                        )
+                    self.driver.find_element_by_id(f"calc_scan_{ind}_2").send_keys(
+                        str(scan[1])
+                    )
+                    self.driver.find_element_by_id(f"calc_scan_{ind}_3").send_keys(
+                        str(scan[2])
+                    )
 
             constr = params["constraints"]
             handle_constraint(constr[0], 1)
@@ -716,15 +700,15 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 break
             time.sleep(1)
 
-        child = pexpect.spawn('ssh slurm@slurm')
-        #child.logfile = open("/calcus/pexpect.log", 'wb')
+        child = pexpect.spawn("ssh slurm@slurm")
+        # child.logfile = open("/calcus/pexpect.log", 'wb')
         choice = child.expect(["(yes/no)", "password"])
         if choice == 0:
-            child.sendline('yes')
+            child.sendline("yes")
             child.expect("password")
-            child.sendline('clustertest')
+            child.sendline("clustertest")
         elif choice == 1:
-            child.sendline('clustertest')
+            child.sendline("clustertest")
 
         child.expect("\$")
         child.sendline("mkdir -p .ssh/".format(public_key))
@@ -1369,9 +1353,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
             if not successful:
                 latest_order = CalculationOrder.objects.latest("id")
-                print(
-                    f"Error messages of calculations in order {latest_order.id}"
-                )
+                print(f"Error messages of calculations in order {latest_order.id}")
                 for c in latest_order.calculation_set.all():
                     print(c.error_message)
                 return False
@@ -1734,9 +1716,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 tree = t
                 break
         else:
-            raise Exception(
-                f"Order {order_id} is not related to this ensemble!"
-            )
+            raise Exception(f"Order {order_id} is not related to this ensemble!")
 
         calc_tree = tree.find_elements_by_css_selector("ul > li")
 
@@ -1837,14 +1817,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         folder.click()
 
     def send_slurm_command(self, cmd):
-        child = pexpect.spawn('ssh slurm@slurm')
+        child = pexpect.spawn("ssh slurm@slurm")
         choice = child.expect(["(yes/no)", "password"])
         if choice == 0:
-            child.sendline('yes')
+            child.sendline("yes")
             child.expect("password")
-            child.sendline('clustertest')
+            child.sendline("clustertest")
         elif choice == 1:
-            child.sendline('clustertest')
+            child.sendline("clustertest")
 
         child.expect("\$")
         child.sendline(cmd)

@@ -147,9 +147,7 @@ def sftp_put(src, dst, conn, lock, attempt_count=1):
     if not os.path.exists(src):
         return
 
-    ret = direct_command(
-        f"mkdir -p {'/'.join(dst.split('/')[:-1])}", conn, lock
-    )
+    ret = direct_command(f"mkdir -p {'/'.join(dst.split('/')[:-1])}", conn, lock)
 
     lock.acquire()
 
@@ -349,9 +347,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         try:
             t = subprocess.Popen(shlex.split(command), stdout=stream, stderr=stream)
         except FileNotFoundError:
-            logger.error(
-                f'Could not run command "{command}" - executable not found'
-            )
+            logger.error(f'Could not run command "{command}" - executable not found')
             calc.error_message = f"{command.split()[0]} is not found"
             calc.date_finished = timezone.now()
             calc.save()
@@ -985,9 +981,7 @@ def xtb_freq(in_file, calc):
 
         for ind in range(len(vibs)):
             with open(
-                os.path.join(
-                    CALCUS_RESULTS_HOME, str(calc.id), f"freq_{ind}.xyz"
-                ),
+                os.path.join(CALCUS_RESULTS_HOME, str(calc.id), f"freq_{ind}.xyz"),
                 "w",
             ) as out:
                 out.write(f"{num_atoms}\n")
@@ -1846,9 +1840,7 @@ def launch_gaussian_calc(in_file, calc, files):
 
     if not calc.local:
         for f in files:
-            a = sftp_get(
-                f"{folder}/{f}", os.path.join(local_folder, f), conn, lock
-            )
+            a = sftp_get(f"{folder}/{f}", os.path.join(local_folder, f), conn, lock)
             if not cancelled and a != ErrorCodes.SUCCESS:
                 return a
 
@@ -2705,9 +2697,7 @@ def gen_fingerprint(structure):
 
     inchi = out.split("\n")[-2]
     if inchi[:6] != "InChI=":
-        logger.warning(
-            f"Invalid InChI key obtained for structure {structure.id}"
-        )
+        logger.warning(f"Invalid InChI key obtained for structure {structure.id}")
         return ""
     else:
         return inchi[6:]

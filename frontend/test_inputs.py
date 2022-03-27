@@ -52,9 +52,7 @@ class XtbTests(TestCase):
         res_lines = [i.strip() for i in res.split("\n")]
 
         if len(ref_lines) != len(res_lines):
-            print(
-                f"Different number of lines: {len(ref_lines)} and {len(res_lines)}"
-            )
+            print(f"Different number of lines: {len(ref_lines)} and {len(res_lines)}")
             print("----")
             blue(ref)
             print("----")
