@@ -2,7 +2,6 @@ basis-set-exchange
 bleach
 ccinput
 celery[redis]
-coverage
 cryptography
 Django==3.2.12
 django-appconf==1.0.4
@@ -18,11 +17,9 @@ nmrglue==0.8
 numpy
 paramiko==2.9.2
 periodictable
-pexpect==4.8.0
 pika==1.1.0
 psutil==5.7.2
 psycopg2
 requests
 scipy
-selenium
 wheel

@@ -409,10 +409,7 @@ class ClusterDaemon:
             t = threading.Thread(target=self.ping_daemon)
             t.start()
 
-        if docker:
-            connection = redis.Redis(host="redis", port=6379, db=2)
-        else:
-            connection = redis.Redis(host="localhost", port=6379, db=2)
+        connection = redis.Redis(host="redis", port=6379, db=2)
 
         logger.info("Starting to listen to cluster commands")
         while not self.stopped:

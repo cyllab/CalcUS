@@ -27,23 +27,9 @@ from celery import Celery
 from django.conf import settings
 from celery.schedules import crontab
 
-docker = False
-
-if os.getenv("CALCUS_DOCKER", "false").lower() == "true":
-    docker = True
-else:
-    docker = False
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calcus.settings")
 
-if docker:
-    app = Celery(
-        "calcus", backend="redis://redis:6379/1", broker="redis://redis:6379/0"
-    )
-else:
-    app = Celery(
-        "calcus", backend="redis://localhost:6379/1", broker="redis://localhost:6379/0"
-    )
+app = Celery("calcus", backend="redis://redis:6379/1", broker="redis://redis:6379/0")
 
 app.autodiscover_tasks()
 

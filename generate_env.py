@@ -42,7 +42,7 @@ CALCUS_PING_CODE={}
 """
 
 OVERRIDE_TEMPLATE = """
-version: "3"
+version: "3.4"
 
 services:
         celery_comp:
@@ -51,7 +51,7 @@ services:
 {}"""
 
 TEST_OVERRIDE_TEMPLATE = """
-version: "3"
+version: "3.4"
 
 services:
         web:

@@ -1,4 +1,4 @@
-version: "3"
+version: "3.4"
 
 services:  
         redis:
@@ -9,17 +9,7 @@ services:
                 build:
                         context: .
                         dockerfile: Dockerfile
-version: "3"
-
-services:  
-        redis:
-                image: redis:latest
-                hostname: redis
-
-        web:
-                build:
-                        context: .
-                        dockerfile: Dockerfile
+                        target: calcus_user
                 restart: always
                 hostname: web
                 user: calcus
@@ -53,6 +43,7 @@ services:
                 build:
                         context: .
                         dockerfile: Dockerfile
+                        target: calcus_user
                 user: calcus
                 command: ./scripts/run_celery_main.sh
                 volumes:
@@ -69,6 +60,7 @@ services:
                 build:
                         context: .
                         dockerfile: Dockerfile
+                        target: calcus_user
                 user: calcus
                 command: ./scripts/run_celery_comp.sh
                 volumes:
@@ -85,6 +77,7 @@ services:
                 build:
                         context: .
                         dockerfile: Dockerfile
+                        target: calcus_user
                 user: calcus
                 command: ./scripts/run_cluster_daemon.sh
                 env_file:

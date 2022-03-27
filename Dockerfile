@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.9 AS calcus_user
 
 ARG CALCUS_VERSION_HASH
 ENV CALCUS_VERSION_HASH=${CALCUS_VERSION_HASH}
@@ -39,3 +39,8 @@ RUN ls /calcus/
 RUN dos2unix scripts/*
 
 RUN adduser --disabled-password --gecos '' calcus  
+
+FROM calcus_user as calcus_dev
+
+ADD ./test-requirements.txt /calcus/test-requirements.txt
+RUN pip install -r /calcus/test-requirements.txt

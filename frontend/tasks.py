@@ -3511,10 +3511,7 @@ def _del_structure(s):
 
 
 def send_cluster_command(cmd):
-    if docker:
-        connection = redis.Redis(host="redis", port=6379, db=2)
-    else:
-        connection = redis.Redis(host="localhost", port=6379, db=2)
+    connection = redis.Redis(host="redis", port=6379, db=2)
 
     _cmd = cmd.replace("\n", "&")
     connection.rpush("cluster", _cmd)

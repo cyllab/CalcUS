@@ -1,0 +1,3 @@
+coverage
+pexpect==4.8.0
+selenium

@@ -1,4 +1,4 @@
-version: "3"
+version: "3.4"
 
 services:  
         redis:
@@ -9,6 +9,7 @@ services:
                 build:
                         context: .
                         dockerfile: Dockerfile
+                        target: calcus_dev
                 hostname: web
                 user: calcus
                 expose:
@@ -27,6 +28,7 @@ services:
                 build:
                         context: ./docker/slurm
                         dockerfile: Dockerfile
+                        target: calcus_dev
                 hostname: slurm
                 command: /home/slurm/run_slurm.sh
                 env_file:

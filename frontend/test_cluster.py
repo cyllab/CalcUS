@@ -82,10 +82,7 @@ class ClusterTests(CalcusLiveServer):
 
         self.send_slurm_command("scancel -u slurm")
 
-        if docker:
-            connection = redis.Redis(host="redis", port=6379, db=2)
-        else:
-            connection = redis.Redis(host="localhost", port=6379, db=2)
+        connection = redis.Redis(host="redis", port=6379, db=2)
         connection.flushdb()
         connection.close()
 
