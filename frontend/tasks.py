@@ -126,7 +126,7 @@ def sftp_get(src, dst, conn, lock, attempt_count=1):
     if _src.strip() == "":
         return ErrorCodes.INVALID_COMMAND
 
-    system("mkdir -p {}".format("/".join(_dst.split("/")[:-1])), force_local=True)
+    system(f"mkdir -p {'/'.join(_dst.split('/')[:-1])}", force_local=True)
 
     lock.acquire()
 
@@ -148,7 +148,7 @@ def sftp_put(src, dst, conn, lock, attempt_count=1):
         return
 
     ret = direct_command(
-        "mkdir -p {}".format("/".join(dst.split("/")[:-1])), conn, lock
+        f"mkdir -p {'/'.join(dst.split('/')[:-1])}", conn, lock
     )
 
     lock.acquire()
@@ -167,7 +167,7 @@ def wait_until_logfile(remote_dir, conn, lock):
 
     ind = 0
     while ind < len(DELAY):
-        output = direct_command("ls {}".format(remote_dir), conn, lock)
+        output = direct_command(f"ls {remote_dir}", conn, lock)
         if not isinstance(output, int):
             if len(output) == 1 and output[0].strip() == "":
                 logger.info("Received nothing, ignoring")
@@ -176,7 +176,7 @@ def wait_until_logfile(remote_dir, conn, lock):
                 for i in _output:
                     if i.find("CalcUS-") != -1 and i.find(".log") != -1:
                         job_id = i.replace("CalcUS-", "").replace(".log", "")
-                        logger.debug("Log found: {}".format(job_id))
+                        logger.debug(f"Log found: {job_id}")
                         return job_id
         sleep(DELAY[ind])
         ind += 1
@@ -186,7 +186,7 @@ def wait_until_logfile(remote_dir, conn, lock):
 
 def wait_until_done(calc, conn, lock, ind=0):
     job_id = calc.remote_id
-    logger.info("Waiting for job {} to finish".format(job_id))
+    logger.info(f"Waiting for job {job_id} to finish")
 
     if is_test:
         DELAY = [2]
@@ -196,17 +196,17 @@ def wait_until_done(calc, conn, lock, ind=0):
     pid = int(threading.get_ident())
 
     while True:
-        output = direct_command("squeue -j {}".format(job_id), conn, lock)
+        output = direct_command(f"squeue -j {job_id}", conn, lock)
         if not isinstance(output, int):
             if len(output) == 1 and output[0].strip() == "":
                 # Not sure
-                logger.info("Job done ({})".format(job_id))
+                logger.info(f"Job done ({job_id})")
                 return ErrorCodes.SUCCESS
             else:
                 _output = [i for i in output if i.strip() != ""]
-                logger.info("Waiting ({})".format(job_id))
+                logger.info(f"Waiting ({job_id})")
                 if _output != None and len(_output) < 2:
-                    logger.info("Job done ({})".format(job_id))
+                    logger.info(f"Job done ({job_id})")
                     return ErrorCodes.SUCCESS
                 else:
                     status = _output[1].split()[4]
@@ -217,11 +217,11 @@ def wait_until_done(calc, conn, lock, ind=0):
 
         for i in range(DELAY[ind]):
             if pid in kill_sig:
-                direct_command("scancel {}".format(job_id), conn, lock)
+                direct_command(f"scancel {job_id}", conn, lock)
                 return ErrorCodes.JOB_CANCELLED
 
             if pid not in connections.keys():
-                logger.info("Thread aborted for calculation {}".format(calc.id))
+                logger.info(f"Thread aborted for calculation {calc.id}")
                 return ErrorCodes.SERVER_DISCONNECTED
             sleep(1)
 
@@ -234,7 +234,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         assert calc_id != -1
 
         calc = Calculation.objects.get(pk=calc_id)
-        job_name = "CalcUS-{}".format(calc.id)
+        job_name = f"CalcUS-{calc.id}"
 
         pid = int(threading.get_ident())
         # Get the variables based on thread ID
@@ -280,7 +280,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
 
                     while ind < 20:
                         output = direct_command(
-                            "cd {}; cat calcus".format(remote_dir), conn, lock
+                            f"cd {remote_dir}; cat calcus", conn, lock
                         )
                         if isinstance(output, int):
                             ind += 1
@@ -350,9 +350,9 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
             t = subprocess.Popen(shlex.split(command), stdout=stream, stderr=stream)
         except FileNotFoundError:
             logger.error(
-                'Could not run command "{}" - executable not found'.format(command)
+                f'Could not run command "{command}" - executable not found'
             )
-            calc.error_message = "{} is not found".format(command.split()[0])
+            calc.error_message = f"{command.split()[0]} is not found"
             calc.date_finished = timezone.now()
             calc.save()
             return ErrorCodes.FAILED_TO_RUN_LOCAL_SOFTWARE
@@ -364,7 +364,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                 if t.returncode == 0:
                     return ErrorCodes.SUCCESS
                 else:
-                    logger.info("Got returncode {}".format(t.returncode))
+                    logger.info(f"Got returncode {t.returncode}")
                     return ErrorCodes.UNKNOWN_TERMINATION
 
             if calc_id != -1 and res.is_aborted() == True:
@@ -444,7 +444,7 @@ def setup_cached_calc(calc):
         os.path.join(tests_dir, "cache", index),
         os.path.join(tests_dir, "scr", str(calc.id)),
     )
-    logger.info("Using cache ({})".format(index))
+    logger.info(f"Using cache ({index})")
     return True
 
 
@@ -452,15 +452,15 @@ def generate_xyz_structure(drawing, structure):
     if structure.xyz_structure == "":
         if structure.mol_structure != "":
             t = time()
-            fname = "{}_{}".format(t, structure.id)
+            fname = f"{t}_{structure.id}"
             if drawing:
-                with open("/tmp/{}.mol".format(fname), "w") as out:
+                with open(f"/tmp/{fname}.mol", "w") as out:
                     out.write(structure.mol_structure)
                 a = system(
-                    "obabel /tmp/{}.mol -O /tmp/{}.xyz -h --gen3D".format(fname, fname),
+                    f"obabel /tmp/{fname}.mol -O /tmp/{fname}.xyz -h --gen3D",
                     force_local=True,
                 )
-                with open("/tmp/{}.xyz".format(fname)) as f:
+                with open(f"/tmp/{fname}.xyz") as f:
                     lines = f.readlines()
                     structure.xyz_structure = clean_xyz("".join(lines))
                     structure.save()
@@ -483,7 +483,7 @@ def generate_xyz_structure(drawing, structure):
                     else:
                         break
                 num = len(to_print)
-                _xyz = "{}\n".format(num)
+                _xyz = f"{num}\n"
                 _xyz += "CalcUS\n"
                 for line in to_print:
                     _xyz += line
@@ -492,34 +492,34 @@ def generate_xyz_structure(drawing, structure):
                 return ErrorCodes.SUCCESS
         elif structure.sdf_structure != "":
             t = time()
-            fname = "{}_{}".format(t, structure.id)
+            fname = f"{t}_{structure.id}"
 
-            with open("/tmp/{}.sdf".format(fname), "w") as out:
+            with open(f"/tmp/{fname}.sdf", "w") as out:
                 out.write(structure.sdf_structure)
             a = system(
-                "obabel /tmp/{}.sdf -O /tmp/{}.xyz".format(fname, fname),
+                f"obabel /tmp/{fname}.sdf -O /tmp/{fname}.xyz",
                 force_local=True,
             )
 
-            with open("/tmp/{}.xyz".format(fname)) as f:
+            with open(f"/tmp/{fname}.xyz") as f:
                 lines = f.readlines()
             structure.xyz_structure = clean_xyz("\n".join([i.strip() for i in lines]))
             structure.save()
             return ErrorCodes.SUCCESS
         elif structure.mol2_structure != "":
             t = time()
-            fname = "{}_{}".format(t, structure.id)
+            fname = f"{t}_{structure.id}"
 
-            with open("/tmp/{}.mol2".format(fname), "w") as out:
+            with open(f"/tmp/{fname}.mol2", "w") as out:
                 out.write(
                     structure.mol2_structure.replace("&lt;", "<").replace("&gt;", ">")
                 )
             a = system(
-                "obabel /tmp/{}.mol2 -O /tmp/{}.xyz".format(fname, fname),
+                f"obabel /tmp/{fname}.mol2 -O /tmp/{fname}.xyz",
                 force_local=True,
             )
 
-            with open("/tmp/{}.xyz".format(fname)) as f:
+            with open(f"/tmp/{fname}.xyz") as f:
                 lines = f.readlines()
             structure.xyz_structure = clean_xyz("\n".join([i.strip() for i in lines]))
             structure.save()
@@ -534,7 +534,7 @@ def generate_xyz_structure(drawing, structure):
 
 def launch_xtb_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    folder = "scratch/calcus/{}".format(calc.id)
+    folder = f"scratch/calcus/{calc.id}"
 
     if calc.input_file != "":
         with open(os.path.join(local_folder, "input"), "w") as out:
@@ -550,14 +550,14 @@ def launch_xtb_calc(in_file, calc, files):
 
         if calc.remote_id == 0:
             sftp_put(
-                "{}/in.xyz".format(local_folder),
+                f"{local_folder}/in.xyz",
                 os.path.join(folder, "in.xyz"),
                 conn,
                 lock,
             )
         if xtb.option_file != "":
             sftp_put(
-                "{}/input".format(local_folder),
+                f"{local_folder}/input",
                 os.path.join(folder, "input"),
                 conn,
                 lock,
@@ -577,7 +577,7 @@ def launch_xtb_calc(in_file, calc, files):
     if not calc.local:
         for f in files:
             a = sftp_get(
-                "{}/{}".format(folder, f),
+                f"{folder}/{f}",
                 os.path.join(CALCUS_SCR_HOME, str(calc.id), f),
                 conn,
                 lock,
@@ -586,7 +586,7 @@ def launch_xtb_calc(in_file, calc, files):
                 return a
         if not cancelled:
             a = sftp_get(
-                "{}/NOT_CONVERGED".format(folder),
+                f"{folder}/NOT_CONVERGED",
                 os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"),
                 conn,
                 lock,
@@ -597,7 +597,7 @@ def launch_xtb_calc(in_file, calc, files):
 
     if not cancelled:
         for f in files:
-            if not os.path.isfile("{}/{}".format(local_folder, f)):
+            if not os.path.isfile(f"{local_folder}/{f}"):
                 return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
 
         """
@@ -624,12 +624,12 @@ def xtb_opt(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    with open("{}/xtbopt.xyz".format(local_folder)) as f:
+    with open(f"{local_folder}/xtbopt.xyz") as f:
         lines = f.readlines()
 
     xyz_structure = clean_xyz("".join(lines))
 
-    with open("{}/calc.out".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.out") as f:
         lines = f.readlines()
         ind = len(lines) - 1
 
@@ -667,7 +667,7 @@ def xtb_mep(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    with open("{}/calc_MEP_trj.xyz".format(local_folder)) as f:
+    with open(f"{local_folder}/calc_MEP_trj.xyz") as f:
         lines = f.readlines()
 
     save_to_results(os.path.join(local_folder, "calc_MEP_trj.xyz"), calc)
@@ -713,7 +713,7 @@ def xtb_sp(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    with open("{}/calc.out".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.out") as f:
         lines = f.readlines()
         ind = len(lines) - 1
 
@@ -797,7 +797,7 @@ def xtb_scan(in_file, calc):
             return ret
 
     if has_scan:
-        if not os.path.isfile("{}/xtbscan.log".format(local_folder)):
+        if not os.path.isfile(f"{local_folder}/xtbscan.log"):
             return ErrorCodes.MISSING_FILE
         with open(os.path.join(local_folder, "xtbscan.log")) as f:
             lines = f.readlines()
@@ -891,7 +891,7 @@ def xtb_freq(in_file, calc):
 
     a = save_to_results(os.path.join(local_folder, "vibspectrum"), calc)
 
-    with open("{}/calc.out".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.out") as f:
         lines = f.readlines()
         ind = len(lines) - 1
 
@@ -935,7 +935,7 @@ def xtb_freq(in_file, calc):
                 out.write("Wavenumber,Intensity\n")
                 intensities = 1000 * np.array(intensities) / max(intensities)
                 for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
-                    out.write("-{:.1f},{:.5f}\n".format(_x, i))
+                    out.write(f"-{_x:.1f},{i:.5f}\n")
 
     prop = get_or_create(calc.parameters, calc.structure)
     prop.energy = E
@@ -986,11 +986,11 @@ def xtb_freq(in_file, calc):
         for ind in range(len(vibs)):
             with open(
                 os.path.join(
-                    CALCUS_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)
+                    CALCUS_RESULTS_HOME, str(calc.id), f"freq_{ind}.xyz"
                 ),
                 "w",
             ) as out:
-                out.write("{}\n".format(num_atoms))
+                out.write(f"{num_atoms}\n")
                 assert len(struct) == num_atoms
                 out.write("CalcUS\n")
                 for ind2, (a, x, y, z) in enumerate(struct):
@@ -1074,12 +1074,12 @@ def crest(in_file, calc):
 
 def clean_struct_line(line):
     a, x, y, z = line.split()
-    return "{} {} {} {}\n".format(LOWERCASE_ATOMIC_SYMBOLS[a.lower()], x, y, z)
+    return f"{LOWERCASE_ATOMIC_SYMBOLS[a.lower()]} {x} {y} {z}\n"
 
 
 def launch_orca_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    folder = "scratch/calcus/{}".format(calc.id)
+    folder = f"scratch/calcus/{calc.id}"
 
     with open(os.path.join(local_folder, "calc.inp"), "w") as out:
         out.write(calc.input_file)
@@ -1091,14 +1091,14 @@ def launch_orca_calc(in_file, calc, files):
         remote_dir = remote_dirs[pid]
         if calc.remote_id == 0:
             sftp_put(
-                "{}/calc.inp".format(local_folder),
+                f"{local_folder}/calc.inp",
                 os.path.join(folder, "calc.inp"),
                 conn,
                 lock,
             )
             if calc.step.name == "Minimum Energy Path":
                 sftp_put(
-                    "{}/struct2.xyz".format(local_folder),
+                    f"{local_folder}/struct2.xyz",
                     os.path.join(folder, "struct2.xyz"),
                     conn,
                     lock,
@@ -1110,7 +1110,7 @@ def launch_orca_calc(in_file, calc, files):
     else:
         os.chdir(local_folder)
         ret = system(
-            "{}/orca calc.inp".format(EBROOTORCA),
+            f"{EBROOTORCA}/orca calc.inp",
             "calc.out",
             software="ORCA",
             calc_id=calc.id,
@@ -1126,7 +1126,7 @@ def launch_orca_calc(in_file, calc, files):
     if not calc.local:
         for f in files:
             a = sftp_get(
-                "{}/{}".format(folder, f),
+                f"{folder}/{f}",
                 os.path.join(CALCUS_SCR_HOME, str(calc.id), f),
                 conn,
                 lock,
@@ -1136,7 +1136,7 @@ def launch_orca_calc(in_file, calc, files):
 
         if not cancelled and calc.parameters.software == "xtb":
             a = sftp_get(
-                "{}/NOT_CONVERGED".format(folder),
+                f"{folder}/NOT_CONVERGED",
                 os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"),
                 conn,
                 lock,
@@ -1146,7 +1146,7 @@ def launch_orca_calc(in_file, calc, files):
 
     if not cancelled:
         for f in files:
-            if not os.path.isfile("{}/{}".format(local_folder, f)):
+            if not os.path.isfile(f"{local_folder}/{f}"):
                 return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
 
         return ErrorCodes.SUCCESS
@@ -1166,7 +1166,7 @@ def orca_mo_gen(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    with open("{}/calc.out".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.out") as f:
         lines = f.readlines()
         ind = len(lines) - 1
 
@@ -1174,10 +1174,10 @@ def orca_mo_gen(in_file, calc):
             ind -= 1
         E = float(lines[ind].split()[4])
 
-    save_to_results("{}/in-HOMO.cube".format(local_folder), calc)
-    save_to_results("{}/in-LUMO.cube".format(local_folder), calc)
-    save_to_results("{}/in-LUMOA.cube".format(local_folder), calc)
-    save_to_results("{}/in-LUMOB.cube".format(local_folder), calc)
+    save_to_results(f"{local_folder}/in-HOMO.cube", calc)
+    save_to_results(f"{local_folder}/in-LUMO.cube", calc)
+    save_to_results(f"{local_folder}/in-LUMOA.cube", calc)
+    save_to_results(f"{local_folder}/in-LUMOB.cube", calc)
 
     prop = get_or_create(calc.parameters, calc.structure)
     prop.mo = calc.id
@@ -1217,12 +1217,12 @@ def orca_opt(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    with open("{}/calc.xyz".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.xyz") as f:
         lines = f.readlines()
 
     xyz_structure = clean_xyz("\n".join([i.strip() for i in lines]))
 
-    with open("{}/calc.out".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.out") as f:
         lines = f.readlines()
         ind = len(lines) - 1
 
@@ -1255,7 +1255,7 @@ def orca_sp(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    with open("{}/calc.out".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.out") as f:
         lines = f.readlines()
         ind = len(lines) - 1
 
@@ -1280,10 +1280,10 @@ def orca_ts(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    with open("{}/calc.xyz".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.xyz") as f:
         lines = f.readlines()
     xyz_structure = clean_xyz("\n".join([i.strip() for i in lines]))
-    with open("{}/calc.out".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.out") as f:
         lines = f.readlines()
         ind = len(lines) - 1
 
@@ -1316,7 +1316,7 @@ def orca_freq(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    with open("{}/calc.out".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.out") as f:
         lines = f.readlines()
         ind = len(lines) - 1
 
@@ -1359,7 +1359,7 @@ def orca_freq(in_file, calc):
         if len(intensities) > 0:
             intensities = 1000 * np.array(intensities) / max(intensities)
             for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
-                out.write("-{:.1f},{:.5f}\n".format(_x, i))
+                out.write(f"-{_x:.1f},{i:.5f}\n")
 
     prop = get_or_create(calc.parameters, calc.structure)
     prop.energy = E
@@ -1404,10 +1404,10 @@ def orca_freq(in_file, calc):
         ind += 1
 
     with open(
-        "{}/orcaspectrum".format(os.path.join(CALCUS_RESULTS_HOME, str(calc.id))), "w"
+        f"{os.path.join(CALCUS_RESULTS_HOME, str(calc.id))}/orcaspectrum", "w"
     ) as out:
         for vib in vibs:
-            out.write("{}\n".format(vib))
+            out.write(f"{vib}\n")
 
     while lines[ind].find("NORMAL MODES") == -1 and ind < len(lines) - 1:
         ind += 1
@@ -1446,10 +1446,10 @@ def orca_freq(in_file, calc):
 
     for ind in range(len(vibs)):
         with open(
-            os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)),
+            os.path.join(CALCUS_RESULTS_HOME, str(calc.id), f"freq_{ind}.xyz"),
             "w",
         ) as out:
-            out.write("{}\n".format(num_atoms))
+            out.write(f"{num_atoms}\n")
             assert len(struct) == num_atoms
             out.write("CalcUS\n")
             for ind2, (a, x, y, z) in enumerate(struct):
@@ -1564,7 +1564,7 @@ def orca_nmr(in_file, calc):
     ind += 6
     while lines[ind].strip() != "":
         n, a, iso, an = lines[ind].strip().split()
-        nmr += "{} {} {}\n".format(int(n) + 1, a, iso)
+        nmr += f"{int(n) + 1} {a} {iso}\n"
         ind += 1
 
     prop = get_or_create(calc.parameters, calc.structure)
@@ -1660,13 +1660,13 @@ def xtb_stda(in_file, calc):  # TO OPTIMIZE
     local = calc.local
 
     if calc.parameters.solvent != "Vacuum":
-        solvent_add = "-g {}".format(SOLVENT_TABLE[calc.parameters.solvent])
+        solvent_add = f"-g {SOLVENT_TABLE[calc.parameters.solvent]}"
     else:
         solvent_add = ""
 
     os.chdir(local_folder)
     ret1 = system(
-        "xtb4stda {} -chrg {} {}".format(in_file, calc.parameters.charge, solvent_add),
+        f"xtb4stda {in_file} -chrg {calc.parameters.charge} {solvent_add}",
         "calc.out",
         calc_id=calc.id,
     )
@@ -1690,19 +1690,19 @@ def xtb_stda(in_file, calc):  # TO OPTIMIZE
         remote_dir = remote_dirs[pid]
 
         a = sftp_get(
-            "{}/tda.dat".format(folder),
+            f"{folder}/tda.dat",
             os.path.join(CALCUS_SCR_HOME, str(calc.id), "tda.dat"),
             conn,
             lock,
         )
         b = sftp_get(
-            "{}/calc.out".format(folder),
+            f"{folder}/calc.out",
             os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"),
             conn,
             lock,
         )
         c = sftp_get(
-            "{}/calc2.out".format(folder),
+            f"{folder}/calc2.out",
             os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc2.out"),
             conn,
             lock,
@@ -1719,10 +1719,10 @@ def xtb_stda(in_file, calc):  # TO OPTIMIZE
 
     f_x = np.arange(120.0, 1200.0, 1.0)
 
-    if not os.path.isfile("{}/tda.dat".format(local_folder)):
+    if not os.path.isfile(f"{local_folder}/tda.dat"):
         return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
 
-    with open("{}/tda.dat".format(local_folder)) as f:
+    with open(f"{local_folder}/tda.dat") as f:
         lines = f.readlines()
 
     ind = 0
@@ -1740,11 +1740,11 @@ def xtb_stda(in_file, calc):  # TO OPTIMIZE
     yy = np.array(yy) / max(yy)
 
     with open(
-        "{}/uvvis.csv".format(os.path.join(CALCUS_RESULTS_HOME, str(calc.id))), "w"
+        f"{os.path.join(CALCUS_RESULTS_HOME, str(calc.id))}/uvvis.csv", "w"
     ) as out:
         out.write("Wavelength (nm), Absorbance\n")
         for ind, x in enumerate(f_x):
-            out.write("{},{:.8f}\n".format(x, yy[ind]))
+            out.write(f"{x},{yy[ind]:.8f}\n")
 
     prop = get_or_create(calc.parameters, calc.structure)
     prop.uvvis = calc.id
@@ -1762,9 +1762,7 @@ def calc_to_ccinput(calc):
         _method = "RI-MP2"
     else:
         raise Exception(
-            "No method specified; theory level is {}".format(
-                calc.parameters.theory_level
-            )
+            f"No method specified; theory level is {calc.parameters.theory_level}"
         )
 
     _specifications = calc.parameters.specifications
@@ -1816,7 +1814,7 @@ def calc_to_ccinput(calc):
 
 def launch_gaussian_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    folder = "scratch/calcus/{}".format(calc.id)
+    folder = f"scratch/calcus/{calc.id}"
 
     with open(os.path.join(local_folder, "calc.com"), "w") as out:  ###
         out.write(calc.input_file)
@@ -1829,7 +1827,7 @@ def launch_gaussian_calc(in_file, calc, files):
 
         if calc.remote_id == 0:
             sftp_put(
-                "{}/calc.com".format(local_folder),
+                f"{local_folder}/calc.com",
                 os.path.join(folder, "calc.com"),
                 conn,
                 lock,
@@ -1849,14 +1847,14 @@ def launch_gaussian_calc(in_file, calc, files):
     if not calc.local:
         for f in files:
             a = sftp_get(
-                "{}/{}".format(folder, f), os.path.join(local_folder, f), conn, lock
+                f"{folder}/{f}", os.path.join(local_folder, f), conn, lock
             )
             if not cancelled and a != ErrorCodes.SUCCESS:
                 return a
 
     if not cancelled:
         for f in files:
-            if not os.path.isfile("{}/{}".format(local_folder, f)):
+            if not os.path.isfile(f"{local_folder}/{f}"):
                 return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
 
         with open(os.path.join(local_folder, "calc.log")) as f:
@@ -1897,10 +1895,10 @@ def parse_hirshfeld_orca_charges(calc, s):
     charges = []
     while lines[ind].strip() != "":
         n, a, chrg, spin = lines[ind].split()
-        charges.append("{:.2f}".format(float(chrg)))
+        charges.append(f"{float(chrg):.2f}")
         ind += 1
 
-    prop.charges += "Hirshfeld:{};".format(",".join(charges))
+    prop.charges += f"Hirshfeld:{','.join(charges)};"
     prop.save()
 
 
@@ -1919,10 +1917,10 @@ def parse_default_orca_charges(calc, s):
     charges = []
     while lines[ind].find("Sum of atomic charges:") == -1:
         chrg = lines[ind].split()[-1]
-        charges.append("{:.2f}".format(float(chrg)))
+        charges.append(f"{float(chrg):.2f}")
         ind += 1
 
-    prop.charges += "Mulliken:{};".format(",".join(charges))
+    prop.charges += f"Mulliken:{','.join(charges)};"
 
     while lines[ind].find("LOEWDIN ATOMIC CHARGES") == -1:
         ind -= 1
@@ -1932,10 +1930,10 @@ def parse_default_orca_charges(calc, s):
     charges = []
     while lines[ind].strip() != "":
         n, a, _, chrg = lines[ind].split()
-        charges.append("{:.2f}".format(float(chrg)))
+        charges.append(f"{float(chrg):.2f}")
         ind += 1
 
-    prop.charges += "Loewdin:{};".format(",".join(charges))
+    prop.charges += f"Loewdin:{','.join(charges)};"
     prop.save()
 
 
@@ -1976,10 +1974,10 @@ def parse_default_gaussian_charges(calc, s):
     charges = []
     while lines[ind].find("Sum of Mulliken charges") == -1:
         n, a, chrg = lines[ind].split()
-        charges.append("{:.2f}".format(float(chrg)))
+        charges.append(f"{float(chrg):.2f}")
         ind += 1
 
-    prop.charges += "Mulliken:{};".format(",".join(charges))
+    prop.charges += f"Mulliken:{','.join(charges)};"
 
     try:
         while lines[ind].find("APT charges:") == -1:
@@ -1991,9 +1989,9 @@ def parse_default_gaussian_charges(calc, s):
         charges = []
         while lines[ind].find("Sum of APT charges") == -1:
             n, a, chrg = lines[ind].split()
-            charges.append("{:.2f}".format(float(chrg)))
+            charges.append(f"{float(chrg):.2f}")
             ind += 1
-        prop.charges += "APT:{};".format(",".join(charges))
+        prop.charges += f"APT:{','.join(charges)};"
 
     prop.save()
 
@@ -2010,10 +2008,10 @@ def parse_ESP_gaussian_charges(calc, s):
     charges = []
     while lines[ind].find("Sum of ESP charges") == -1:
         a, n, chrg, *_ = lines[ind].split()
-        charges.append("{:.2f}".format(float(chrg)))
+        charges.append(f"{float(chrg):.2f}")
         ind += 1
 
-    prop.charges += "ESP:{};".format(",".join(charges))
+    prop.charges += f"ESP:{','.join(charges)};"
     prop.save()
 
 
@@ -2038,10 +2036,10 @@ def parse_HLY_gaussian_charges(calc, s):
     charges = []
     while lines[ind].find("Sum of ESP charges") == -1:
         a, n, chrg, *_ = lines[ind].split()
-        charges.append("{:.2f}".format(float(chrg)))
+        charges.append(f"{float(chrg):.2f}")
         ind += 1
 
-    prop.charges += "HLY:{};".format(",".join(charges))
+    prop.charges += f"HLY:{','.join(charges)};"
     prop.save()
 
 
@@ -2057,10 +2055,10 @@ def parse_NPA_gaussian_charges(calc, s):
     charges = []
     while lines[ind].find("===========") == -1:
         a, n, chrg, *_ = lines[ind].split()
-        charges.append("{:.2f}".format(float(chrg)))
+        charges.append(f"{float(chrg):.2f}")
         ind += 1
 
-    prop.charges += "NBO:{};".format(",".join(charges))
+    prop.charges += f"NBO:{','.join(charges)};"
     prop.save()
 
 
@@ -2080,12 +2078,12 @@ def parse_Hirshfeld_gaussian_charges(calc, s):
     charges_CM5 = []
     while lines[ind].find("Tot") == -1:
         a, n, hirshfeld, _, _, _, _, CM5 = lines[ind].split()
-        charges_hirshfeld.append("{:.2f}".format(float(hirshfeld)))
-        charges_CM5.append("{:.2f}".format(float(CM5)))
+        charges_hirshfeld.append(f"{float(hirshfeld):.2f}")
+        charges_CM5.append(f"{float(CM5):.2f}")
         ind += 1
 
-    prop.charges += "Hirshfeld:{};".format(",".join(charges_hirshfeld))
-    prop.charges += "CM5:{};".format(",".join(charges_CM5))
+    prop.charges += f"Hirshfeld:{','.join(charges_hirshfeld)};"
+    prop.charges += f"CM5:{','.join(charges_CM5)};"
     prop.save()
 
 
@@ -2097,7 +2095,7 @@ def gaussian_sp(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    with open("{}/calc.log".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.log") as f:
         lines = f.readlines()
         ind = len(lines) - 1
 
@@ -2124,7 +2122,7 @@ def gaussian_td(in_file, calc):
 
     wavenumbers = []
     intensities = []
-    with open("{}/calc.log".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.log") as f:
         lines = f.readlines()
         ind = len(lines) - 1
 
@@ -2169,11 +2167,11 @@ def gaussian_td(in_file, calc):
     yy = np.array(yy) / max(yy)
 
     with open(
-        "{}/uvvis.csv".format(os.path.join(CALCUS_RESULTS_HOME, str(calc.id))), "w"
+        f"{os.path.join(CALCUS_RESULTS_HOME, str(calc.id))}/uvvis.csv", "w"
     ) as out:
         out.write("Wavelength (nm), Absorbance\n")
         for ind, x in enumerate(f_x):
-            out.write("{},{:.8f}\n".format(x, yy[ind]))
+            out.write(f"{x},{yy[ind]:.8f}\n")
 
     prop = get_or_create(calc.parameters, calc.structure)
     prop.energy = E
@@ -2191,7 +2189,7 @@ def gaussian_opt(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    with open("{}/calc.log".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.log") as f:
         lines = f.readlines()
         ind = len(lines) - 1
 
@@ -2213,7 +2211,7 @@ def gaussian_opt(in_file, calc):
             xyz.append([ATOMIC_SYMBOL[int(a)], x, y, z])
             ind += 1
 
-        xyz_structure = "{}\nCalcUS\n".format(len(xyz))
+        xyz_structure = f"{len(xyz)}\nCalcUS\n"
         for el in xyz:
             xyz_structure += "{} {} {} {}\n".format(*el)
 
@@ -2243,7 +2241,7 @@ def gaussian_freq(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    with open("{}/calc.log".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.log") as f:
         outlines = f.readlines()
         ind = len(outlines) - 1
 
@@ -2336,10 +2334,10 @@ def gaussian_freq(in_file, calc):
 
     for ind in range(len(vibs)):
         with open(
-            os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "freq_{}.xyz".format(ind)),
+            os.path.join(CALCUS_RESULTS_HOME, str(calc.id), f"freq_{ind}.xyz"),
             "w",
         ) as out:
-            out.write("{}\n".format(num_atoms))
+            out.write(f"{num_atoms}\n")
             # assert len(struct) == num_atoms
             out.write("CalcUS\n")
             for ind2, (a, x, y, z) in enumerate(struct):
@@ -2350,10 +2348,10 @@ def gaussian_freq(in_file, calc):
                 )
 
     with open(
-        "{}/orcaspectrum".format(os.path.join(CALCUS_RESULTS_HOME, str(calc.id))), "w"
+        f"{os.path.join(CALCUS_RESULTS_HOME, str(calc.id))}/orcaspectrum", "w"
     ) as out:
         for vib in wavenumbers:
-            out.write("{:.1f}\n".format(vib))
+            out.write(f"{vib:.1f}\n")
 
     x = np.arange(500, 4000, 1)  # Wave number in cm^-1
     spectrum = plot_vibs(x, zip(wavenumbers, intensities))
@@ -2362,7 +2360,7 @@ def gaussian_freq(in_file, calc):
         out.write("Wavenumber,Intensity\n")
         intensities = 1000 * np.array(intensities) / max(intensities)
         for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
-            out.write("-{:.1f},{:.5f}\n".format(_x, i))
+            out.write(f"-{_x:.1f},{i:.5f}\n")
 
     parse_gaussian_charges(calc, calc.structure)
     return ErrorCodes.SUCCESS
@@ -2376,7 +2374,7 @@ def gaussian_ts(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    with open("{}/calc.log".format(local_folder)) as f:
+    with open(f"{local_folder}/calc.log") as f:
         lines = f.readlines()
         ind = len(lines) - 1
 
@@ -2398,7 +2396,7 @@ def gaussian_ts(in_file, calc):
             xyz.append([ATOMIC_SYMBOL[int(a)], x, y, z])
             ind += 1
 
-        xyz_structure = "{}\nCalcUS\n".format(len(xyz))
+        xyz_structure = f"{len(xyz)}\nCalcUS\n"
         for el in xyz:
             xyz_structure += "{} {} {} {}\n".format(*el)
 
@@ -2469,7 +2467,7 @@ def gaussian_scan(in_file, calc):
                 xyz.append([ATOMIC_SYMBOL[int(a)], x, y, z])
                 ind += 1
 
-            xyz_structure = "{}\nCalcUS\n".format(len(xyz))
+            xyz_structure = f"{len(xyz)}\nCalcUS\n"
             for el in xyz:
                 xyz_structure += "{} {} {} {}\n".format(*el)
 
@@ -2523,7 +2521,7 @@ def gaussian_scan(in_file, calc):
             xyz.append([ATOMIC_SYMBOL[int(a)], x, y, z])
             ind += 1
 
-        xyz_structure = "{}\nCalcUS\n".format(len(xyz))
+        xyz_structure = f"{len(xyz)}\nCalcUS\n"
         for el in xyz:
             xyz_structure += "{} {} {} {}\n".format(*el)
 
@@ -2572,7 +2570,7 @@ def gaussian_nmr(in_file, calc):
     ind += 1
     while lines[ind].find("End of Minotr") == -1:
         sline = lines[ind].strip().split()
-        nmr += "{} {} {}\n".format(int(sline[0]), sline[1], sline[4])
+        nmr += f"{int(sline[0])} {sline[1]} {sline[4]}\n"
         ind += 5
 
     while lines[ind].find("SCF Done") == -1:
@@ -2625,7 +2623,7 @@ def find_bonds(xyz):
         for ind2, j in enumerate(xyz):
             if ind1 > ind2:
                 d = dist(i, j)
-                btype = "{}{}".format(i[0], j[0])
+                btype = f"{i[0]}{j[0]}"
                 cov = (
                     periodictable.elements[ATOMIC_NUMBER[i[0]]].covalent_radius
                     + periodictable.elements[ATOMIC_NUMBER[j[0]]].covalent_radius
@@ -2674,7 +2672,7 @@ def write_mol(xyz):
 
 def write_xyz(xyz, path):
     with open(path, "w") as out:
-        out.write("{}\n\n".format(len(xyz)))
+        out.write(f"{len(xyz)}\n\n")
         for line in xyz:
             out.write("{} {:.4f} {:.4f} {:.4f}\n".format(line[0], *line[1]))
 
@@ -2692,23 +2690,23 @@ def gen_fingerprint(structure):
             a, x, y, z = line.strip().split()
             xyz.append([a, float(x), float(y), float(z)])
 
-    t = "{}_{}".format(time(), structure.id)
+    t = f"{time()}_{structure.id}"
     mol = write_mol(xyz)
 
-    with open("/tmp/{}.mol".format(t), "w") as out:
+    with open(f"/tmp/{t}.mol", "w") as out:
         for l in mol:
             out.write(l)
 
     with open("/dev/null", "w") as stream:
         out = subprocess.check_output(
-            shlex.split("obabel /tmp/{}.mol -oinchi -xX 'DoNotAddH'".format(t)),
+            shlex.split(f"obabel /tmp/{t}.mol -oinchi -xX 'DoNotAddH'"),
             stderr=stream,
         ).decode("utf-8")
 
     inchi = out.split("\n")[-2]
     if inchi[:6] != "InChI=":
         logger.warning(
-            "Invalid InChI key obtained for structure {}".format(structure.id)
+            f"Invalid InChI key obtained for structure {structure.id}"
         )
         return ""
     else:
@@ -2881,7 +2879,7 @@ def analyse_opt_Gaussian(calc):
         while lines[ind].find("Symbolic Z-matrix:") == -1:
             ind += 1
     except IndexError:
-        logger.error("Could not parse Gaussian log for calc {}".format(calc.id))
+        logger.error(f"Could not parse Gaussian log for calc {calc.id}")
         return
     ind += 2
 
@@ -2899,7 +2897,7 @@ def analyse_opt_Gaussian(calc):
     while ind < len(lines) - 2:
         if lines[ind].find(orientation_str) != -1:
             s_ind += 1
-            xyz += "{}\n\n".format(num_atoms)
+            xyz += f"{num_atoms}\n\n"
             ind += 5
             while ind < len(lines) - 2 and lines[ind].find("---------") == -1:
                 try:
@@ -2907,7 +2905,7 @@ def analyse_opt_Gaussian(calc):
                 except ValueError:
                     return
                 A = ATOMIC_SYMBOL[int(z)]
-                xyz += "{} {} {} {}\n".format(A, X, Y, Z)
+                xyz += f"{A} {X} {Y} {Z}\n"
                 ind += 1
         elif lines[ind].find("SCF Done:") != -1:
             E = float(lines[ind].split()[4])
@@ -2970,7 +2968,7 @@ def get_Gaussian_xyz(text):
             _, n, _, x, y, z = lines[ind].split()
             s.append((ATOMIC_SYMBOL[int(n)], x, y, z))
         ind += 1
-    xyz = "{}\n\n".format(len(s))
+    xyz = f"{len(s)}\n\n"
     for l in s:
         xyz += "{} {} {} {}\n".format(*l)
     return clean_xyz(xyz)
@@ -3107,7 +3105,7 @@ def dispatcher(drawing, order_id):
         ensemble.save()
 
         if ensemble.parent_molecule is None:
-            raise Exception("Ensemble {} has no parent molecule".format(ensemble.id))
+            raise Exception(f"Ensemble {ensemble.id} has no parent molecule")
         elif ensemble.parent_molecule.inchi == "":
             fingerprint = ""
             for s in ensemble.structure_set.all():
@@ -3172,7 +3170,7 @@ def dispatcher(drawing, order_id):
         ensemble = Ensemble.objects.create(
             parent_molecule=molecule,
             origin=calc.result_ensemble,
-            name="Extracted frame {}".format(fid),
+            name=f"Extracted frame {fid}",
         )
         f = calc.calculationframe_set.get(number=fid)
         s = Structure.objects.get_or_create(
@@ -3189,7 +3187,7 @@ def dispatcher(drawing, order_id):
         s.save()
         input_structures = [s]
     else:
-        logger.error("Invalid calculation order: {}".format(order.id))
+        logger.error(f"Invalid calculation order: {order.id}")
         return
 
     group_order = []
@@ -3199,7 +3197,7 @@ def dispatcher(drawing, order_id):
     if step.creates_ensemble:
         if order.name.strip() == "":
             e = Ensemble.objects.create(
-                name="{} Result".format(order.step.name),
+                name=f"{order.step.name} Result",
                 origin=ensemble,
                 parent_molecule=molecule,
             )
@@ -3233,7 +3231,7 @@ def dispatcher(drawing, order_id):
                 calculations.append(c)
                 c.local = False
                 c.save()
-                cmd = "launch\n{}\n".format(c.id)
+                cmd = f"launch\n{c.id}\n"
                 send_cluster_command(cmd)
 
     else:
@@ -3261,7 +3259,7 @@ def dispatcher(drawing, order_id):
                 c.local = False
                 c.save()
 
-                cmd = "launch\n{}\n".format(c.id)
+                cmd = f"launch\n{c.id}\n"
                 send_cluster_command(cmd)
 
     for task, c in zip(group_order, calculations):
@@ -3294,7 +3292,7 @@ def add_input_to_calc(calc):
 @app.task(base=AbortableTask)
 def run_calc(calc_id):
     if not is_test:
-        logger.info("Processing calc {}".format(calc_id))
+        logger.info(f"Processing calc {calc_id}")
 
     def get_calc(calc_id):
         for i in range(5):
@@ -3340,11 +3338,11 @@ def run_calc(calc_id):
         try:
             os.mkdir(res_dir)
         except OSError:
-            logger.info("Directory already exists: {}".format(res_dir))
+            logger.info(f"Directory already exists: {res_dir}")
         try:
             os.mkdir(workdir)
         except OSError:
-            logger.info("Directory already exists: {}".format(res_dir))
+            logger.info(f"Directory already exists: {res_dir}")
 
         with open(in_file, "w") as out:
             out.write(clean_xyz(calc.structure.xyz_structure))
@@ -3357,7 +3355,7 @@ def run_calc(calc_id):
         remote_dir = remote_dirs[pid]
 
         if calc.status == 0:
-            direct_command("mkdir -p {}".format(remote_dir), conn, lock)
+            direct_command(f"mkdir -p {remote_dir}", conn, lock)
             sftp_put(in_file, os.path.join(remote_dir, "in.xyz"), conn, lock)
 
         in_file = os.path.join(remote_dir, "in.xyz")
@@ -3373,7 +3371,7 @@ def run_calc(calc_id):
         calc.date_finished = timezone.now()
 
         calc.status = 3
-        calc.error_message = "Incorrect termination ({})".format(str(e))
+        calc.error_message = f"Incorrect termination ({str(e)})"
         calc.save()
         logger.info(f"Error while running calc {calc_id}: '{str(e)}'")
     else:
@@ -3386,7 +3384,7 @@ def run_calc(calc_id):
                 kill_sig.remove(pid)
             calc.status = 3
             calc.error_message = "Job cancelled"
-            logger.info("Job {} cancelled".format(calc.id))
+            logger.info(f"Job {calc.id} cancelled")
         elif ret == ErrorCodes.SERVER_DISCONNECTED:
             return ret
         elif ret == ErrorCodes.SUCCESS:
@@ -3404,13 +3402,13 @@ def run_calc(calc_id):
     logger.info(f"Calc {calc_id} finished")
 
     # just calc.out/calc.log?
-    for f in glob.glob("{}/*.out".format(workdir)):
+    for f in glob.glob(f"{workdir}/*.out"):
         fname = f.split("/")[-1]
-        copyfile(f, "{}/{}".format(res_dir, fname))
+        copyfile(f, f"{res_dir}/{fname}")
 
-    for f in glob.glob("{}/*.log".format(workdir)):
+    for f in glob.glob(f"{workdir}/*.log"):
         fname = f.split("/")[-1].replace(".log", ".out")
-        copyfile(f, "{}/{}".format(res_dir, fname))
+        copyfile(f, f"{res_dir}/{fname}")
 
     if calc.step.creates_ensemble:
         analyse_opt(calc.id)
@@ -3535,7 +3533,7 @@ def send_cluster_command(cmd):
 
 @app.task
 def cancel(calc_id):
-    logger.info("Cancelling calc {}".format(calc_id))
+    logger.info(f"Cancelling calc {calc_id}")
     calc = Calculation.objects.get(pk=calc_id)
     kill_calc(calc)
 
@@ -3560,7 +3558,7 @@ def kill_calc(calc):
         else:
             logger.error("Cannot cancel calculation without task id")
     else:
-        cmd = "kill\n{}\n".format(calc.id)
+        cmd = f"kill\n{calc.id}\n"
         send_cluster_command(cmd)
 
 

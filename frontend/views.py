@@ -195,7 +195,7 @@ def get_available_bs(request):
     response = ""
     for k in basis_sets.keys():
         name = basis_sets[k]["display_name"]
-        response += """<option value="{}">{}</option>\n""".format(k, name)
+        response += f"""<option value="{k}">{name}</option>\n"""
     return HttpResponse(response)
 
 
@@ -409,7 +409,7 @@ def create_project(request):
         proj = Project.objects.create(name="My Project", author=profile)
         proj.save()
 
-        return HttpResponse("{};{}".format(proj.id, proj.name))
+        return HttpResponse(f"{proj.id};{proj.name}")
     else:
         return HttpResponse(status=404)
 
@@ -437,21 +437,21 @@ def create_folder(request):
 
         for i in range(1, 6):
             try:
-                existing_folder = Folder.objects.get(name="My Folder {}".format(i))
+                existing_folder = Folder.objects.get(name=f"My Folder {i}")
             except Folder.DoesNotExist:
                 break
         else:
             return HttpResponse(status=403)
 
         folder = Folder.objects.create(
-            name="My Folder {}".format(i),
+            name=f"My Folder {i}",
             project=current_folder.project,
             parent_folder=current_folder,
         )
         folder.depth = current_folder.depth + 1
         folder.save()
 
-        return HttpResponse("{};{}".format(folder.id, folder.name))
+        return HttpResponse(f"{folder.id};{folder.name}")
     else:
         return HttpResponse(status=404)
 
@@ -687,7 +687,7 @@ def _get_shifts(request):
             if el in scaling_factors.keys():
                 slope, intercept = scaling_factors[el]
                 s = shifts[shift][1]
-                shifts[shift][2] = "{:.3f}".format((s - intercept) / slope)
+                shifts[shift][2] = f"{(s - intercept) / slope:.3f}"
     return shifts
 
 
@@ -717,7 +717,7 @@ def get_shifts(request):
 @login_required
 def get_exp_spectrum(request):
     t = time.time()
-    d = "/tmp/nmr_{}".format(t)
+    d = f"/tmp/nmr_{t}"
     os.mkdir(d)
     for ind, f in enumerate(request.FILES.getlist("file")):
         in_file = f.read()  # not cleaned
@@ -763,7 +763,7 @@ def get_exp_spectrum(request):
     if shifts == "":
         response = "PPM,Signal\n"
         for x, y in zip(ppms[0::10], fid[0, 0::10]):
-            response += "{},{}\n".format(-x, np.real(y))
+            response += f"{-x},{np.real(y)}\n"
 
         return HttpResponse(response)
     else:
@@ -784,7 +784,7 @@ def get_exp_spectrum(request):
         pred = plot_peaks(_ppms, l_shifts)
         response = "PPM,Signal,Prediction\n"
         for x, y, z in zip(_ppms, _fid, pred):
-            response += "{:.3f},{:.3f},{:.3f}\n".format(-x, np.real(y), z)
+            response += f"{-x:.3f},{np.real(y):.3f},{z:.3f}\n"
         return HttpResponse(response)
 
 
@@ -808,13 +808,13 @@ def link_order(request, pk):
             o.save()
 
     if o.result_ensemble:
-        return HttpResponseRedirect("/ensemble/{}".format(o.result_ensemble.id))
+        return HttpResponseRedirect(f"/ensemble/{o.result_ensemble.id}")
     else:
         if o.ensemble is not None:
-            return HttpResponseRedirect("/ensemble/{}".format(o.ensemble.id))
+            return HttpResponseRedirect(f"/ensemble/{o.ensemble.id}")
         elif o.structure:
             return HttpResponseRedirect(
-                "/ensemble/{}".format(o.structure.parent_ensemble.id)
+                f"/ensemble/{o.structure.parent_ensemble.id}"
             )
         else:
             return HttpResponseRedirect("/calculations/")
@@ -1206,7 +1206,7 @@ def set_project_default(request):
     params, project_obj, step = ret
 
     preset = Preset.objects.create(
-        name="{} Default".format(project_obj.name),
+        name=f"{project_obj.name} Default",
         author=request.user.profile,
         params=params,
     )
@@ -1448,7 +1448,7 @@ def submit_calculation(request):
         if step.creates_ensemble:
             order_name = name
         else:
-            order_name = start_c.result_ensemble.name + " - Frame {}".format(frame_num)
+            order_name = start_c.result_ensemble.name + f" - Frame {frame_num}"
 
         obj = CalculationOrder.objects.create(
             name=order_name,
@@ -1619,7 +1619,7 @@ def submit_calculation(request):
                     for ind, (fing, arr_struct) in enumerate(unique_molecules.items()):
                         if len(unique_molecules.keys()) > 1:
                             mol = Molecule.objects.create(
-                                name="{} set {}".format(mol_name, ind + 1),
+                                name=f"{mol_name} set {ind + 1}",
                                 inchi=fing,
                                 project=project_obj,
                             )
@@ -1758,14 +1758,14 @@ def submit_calculation(request):
     ):
         for ind in range(1, int(request.POST["constraint_num"]) + 1):
             try:
-                mode = clean(request.POST["constraint_mode_{}".format(ind)])
+                mode = clean(request.POST[f"constraint_mode_{ind}"])
             except MultiValueDictKeyError:
                 pass
             else:
-                _type = clean(request.POST["constraint_type_{}".format(ind)])
+                _type = clean(request.POST[f"constraint_type_{ind}"])
                 ids = []
                 for i in range(1, TYPE_LENGTH[_type] + 1):
-                    id_txt = clean(request.POST["calc_constraint_{}_{}".format(ind, i)])
+                    id_txt = clean(request.POST[f"calc_constraint_{ind}_{i}"])
                     if id_txt != "":
                         id = int(id_txt)
                         ids.append(id)
@@ -1775,27 +1775,25 @@ def submit_calculation(request):
 
                 ids = "_".join([str(i) for i in ids])
                 if mode == "Freeze":
-                    constraints += "{}/{};".format(mode, ids)
+                    constraints += f"{mode}/{ids};"
                 elif mode == "Scan":
                     obj.has_scan = True
 
                     if params.software != "Gaussian":
                         try:
                             begin = float(
-                                clean(request.POST["calc_scan_{}_1".format(ind)])
+                                clean(request.POST[f"calc_scan_{ind}_1"])
                             )
                         except ValueError:
                             return error(request, "Invalid scan parameters")
                     else:
                         begin = 42.0
                     try:
-                        end = float(clean(request.POST["calc_scan_{}_2".format(ind)]))
-                        steps = int(clean(request.POST["calc_scan_{}_3".format(ind)]))
+                        end = float(clean(request.POST[f"calc_scan_{ind}_2"]))
+                        steps = int(clean(request.POST[f"calc_scan_{ind}_3"]))
                     except ValueError:
                         return error(request, "Invalid scan parameters")
-                    constraints += "{}_{}_{}_{}/{};".format(
-                        mode, begin, end, steps, ids
-                    )
+                    constraints += f"{mode}_{begin}_{end}_{steps}/{ids};"
                 else:
                     return error(request, "Invalid constrained optimisation")
 
@@ -2109,7 +2107,7 @@ def connect_access(request):
     access.status = "Pending"
     access.save()
 
-    send_cluster_command("connect\n{}\n{}\n".format(pk, password))
+    send_cluster_command(f"connect\n{pk}\n{password}\n")
 
     return HttpResponse("")
 
@@ -2125,7 +2123,7 @@ def disconnect_access(request):
     if access.owner != profile:
         return HttpResponse(status=403)
 
-    send_cluster_command("disconnect\n{}\n".format(pk))
+    send_cluster_command(f"disconnect\n{pk}\n")
 
     return HttpResponse("")
 
@@ -2144,7 +2142,7 @@ def status_access(request):
     dt = timezone.now() - access.last_connected
     if dt.total_seconds() < 600:
         return HttpResponse(
-            "Connected as of {} seconds ago".format(int(dt.total_seconds()))
+            f"Connected as of {int(dt.total_seconds())} seconds ago"
         )
     else:
         return HttpResponse("Disconnected")
@@ -2181,7 +2179,7 @@ def delete_access(request, pk):
 
     access.delete()
 
-    send_cluster_command("delete_access\n{}\n".format(pk))
+    send_cluster_command(f"delete_access\n{pk}\n")
 
     return HttpResponseRedirect("/profile")
 
@@ -2198,7 +2196,7 @@ def load_pub_key(request, pk):
     if access.owner != profile:
         return HttpResponse(status=403)
 
-    key_path = os.path.join(CALCUS_KEY_HOME, "{}.pub".format(access.id))
+    key_path = os.path.join(CALCUS_KEY_HOME, f"{access.id}.pub")
 
     if not os.path.isfile(key_path):
         return HttpResponse(status=404)
@@ -2243,11 +2241,11 @@ def update_access(request):
 
     if vals["pal"] != curr_pal:
         access.pal = vals["pal"]
-        msg += "Number of cores set to {}\n".format(vals["pal"])
+        msg += f"Number of cores set to {vals['pal']}\n"
 
     if vals["mem"] != curr_mem:
         access.memory = vals["mem"]
-        msg += "Amount of memory set to {} MB\n".format(vals["mem"])
+        msg += f"Amount of memory set to {vals['mem']} MB\n"
 
     access.save()
     if msg == "":
@@ -2529,7 +2527,7 @@ def uvvis(request, pk):
     if os.path.isfile(spectrum_file):
         with open(spectrum_file, "rb") as f:
             response = HttpResponse(f, content_type="text/csv")
-            response["Content-Disposition"] = "attachment; filename={}.csv".format(id)
+            response["Content-Disposition"] = f"attachment; filename={id}.csv"
             return response
     else:
         return HttpResponse(status=204)
@@ -2574,7 +2572,7 @@ def format_frames(calc, profile):
         .all()
     ):
         multi_xyz += f["xyz_structure"]
-        RMSD += "{},{}\n".format(f["number"], f["RMSD"])
+        RMSD += f"{f['number']},{f['RMSD']}\n"
         if f["converged"] == True:
             scan_frames.append(f["number"])
             scan_energies.append(f["energy"])
@@ -2582,9 +2580,7 @@ def format_frames(calc, profile):
     if len(scan_frames) > 0:
         scan_min = min(scan_energies)
         for n, E in zip(scan_frames, scan_energies):
-            scan_energy += "{},{}\n".format(
-                n, (E - scan_min) * profile.unit_conversion_factor
-            )
+            scan_energy += f"{n},{(E - scan_min) * profile.unit_conversion_factor}\n"
     return HttpResponse(multi_xyz + ";" + RMSD + ";" + scan_energy)
 
 
@@ -2611,7 +2607,7 @@ def get_calc_data_remote(request, pk):
             pass
 
         send_cluster_command(
-            "load_log\n{}\n{}\n".format(calc.id, calc.order.resource.id)
+            f"load_log\n{calc.id}\n{calc.order.resource.id}\n"
         )
 
         ind = 0
@@ -2727,12 +2723,12 @@ def nmr(request):
     for shift in shifts:
         if shift[1] == nucleus:
             if len(shift) == 4:
-                content += "{},{}\n".format(-(shift[3] - 0.001), 0)
-                content += "{},{}\n".format(-shift[3], 1)
-                content += "{},{}\n".format(-(shift[3] + 0.001), 0)
+                content += f"{-(shift[3] - 0.001)},{0}\n"
+                content += f"{-shift[3]},{1}\n"
+                content += f"{-(shift[3] + 0.001)},{0}\n"
 
     response = HttpResponse(content, content_type="text/csv")
-    response["Content-Disposition"] = "attachment; filename={}.csv".format(id)
+    response["Content-Disposition"] = f"attachment; filename={id}.csv"
     return response
 
 
@@ -2756,7 +2752,7 @@ def ir_spectrum(request, pk):
     if os.path.isfile(spectrum_file):
         with open(spectrum_file, "rb") as f:
             response = HttpResponse(f, content_type="text/csv")
-            response["Content-Disposition"] = "attachment; filename={}.csv".format(id)
+            response["Content-Disposition"] = f"attachment; filename={id}.csv"
             return response
     else:
         return HttpResponse(status=204)
@@ -2904,12 +2900,12 @@ def download_structures(request, ee):
     for s in e.structure_set.all():
         if s.xyz_structure == "":
             structs += "1\nMissing Structure\nC 0 0 0"
-            logger.warning("Missing structure! ({}, {})".format(profile.username, ee))
+            logger.warning(f"Missing structure! ({profile.username}, {ee})")
         structs += s.xyz_structure
 
     response = HttpResponse(structs)
     response["Content-Type"] = "text/plain"
-    response["Content-Disposition"] = "attachment; filename={}.xyz".format(ee)
+    response["Content-Disposition"] = f"attachment; filename={ee}.xyz"
     return response
 
 
@@ -2932,9 +2928,7 @@ def download_structure(request, ee, num):
 
     response = HttpResponse(s.xyz_structure)
     response["Content-Type"] = "text/plain"
-    response["Content-Disposition"] = "attachment; filename={}_conf{}.xyz".format(
-        ee, num
-    )
+    response["Content-Disposition"] = f"attachment; filename={ee}_conf{num}.xyz"
     return response
 
 
@@ -2944,14 +2938,14 @@ def gen_3D(request):
         clean_mol = clean(mol)
 
         t = time.time()
-        with open("/tmp/{}.mol".format(t), "w") as out:
+        with open(f"/tmp/{t}.mol", "w") as out:
             out.write(clean_mol)
 
         system(
-            "obabel /tmp/{}.mol -O /tmp/{}.xyz -h --gen3D".format(t, t),
+            f"obabel /tmp/{t}.mol -O /tmp/{t}.xyz -h --gen3D",
             force_local=True,
         )
-        with open("/tmp/{}.xyz".format(t)) as f:
+        with open(f"/tmp/{t}.xyz") as f:
             lines = f.readlines()
         if "".join(lines).strip() == "":
             return HttpResponse(status=404)
@@ -3201,7 +3195,7 @@ def get_vib_animation(request):
 
         num = int(clean(request.POST["num"]))
         expected_file = os.path.join(
-            CALCUS_RESULTS_HOME, str(id), "freq_{}.xyz".format(num)
+            CALCUS_RESULTS_HOME, str(id), f"freq_{num}.xyz"
         )
         if os.path.isfile(expected_file):
             with open(expected_file) as f:
@@ -3286,12 +3280,10 @@ def download_log(request, pk):
         mem = BytesIO()
         with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zip:
             for f in logs:
-                zip.write(f, "{}_".format(calc.id) + basename(f))
+                zip.write(f, f"{calc.id}_" + basename(f))
 
         response = HttpResponse(mem.getvalue(), content_type="application/zip")
-        response["Content-Disposition"] = 'attachment; filename="calc_{}.zip"'.format(
-            calc.id
-        )
+        response["Content-Disposition"] = f'attachment; filename="calc_{calc.id}.zip"'
         return response
     elif len(logs) == 1:
         with open(logs[0]) as f:
@@ -3299,10 +3291,10 @@ def download_log(request, pk):
             response = HttpResponse("".join(lines), content_type="text/plain")
             response[
                 "Content-Disposition"
-            ] = 'attachment; filename="calc_{}.log"'.format(calc.id)
+            ] = f'attachment; filename="calc_{calc.id}.log"'
             return response
     else:
-        logger.warning("No log to download! (Calculation {})".format(pk))
+        logger.warning(f"No log to download! (Calculation {pk})")
         return HttpResponse(status=404)
 
 
@@ -3336,10 +3328,10 @@ def download_all_logs(request, pk):
     with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zip:
         for c in order_logs.keys():
             for f in order_logs[c]:
-                zip.write(f, "{}_".format(c) + basename(f))
+                zip.write(f, f"{c}_" + basename(f))
 
     response = HttpResponse(mem.getvalue(), content_type="application/zip")
-    response["Content-Disposition"] = 'attachment; filename="order_{}.zip"'.format(pk)
+    response["Content-Disposition"] = f'attachment; filename="order_{pk}.zip"'
     return response
 
 
@@ -3774,7 +3766,7 @@ def get_csv(proj, profile, scope="flagged", details="full", folders=True):
                 for hash, long_name in ehashes.items():
                     if hash not in hashes.keys():
                         hashes[hash] = long_name
-                ensemble_data["{} - {}".format(e.parent_molecule.name, e.name)] = summ
+                ensemble_data[f"{e.parent_molecule.name} - {e.name}"] = summ
 
             for f in subfolders:
                 folder_data[f.name] = get_folder_data(f)
@@ -3783,7 +3775,7 @@ def get_csv(proj, profile, scope="flagged", details="full", folders=True):
 
         main_folder = proj.main_folder
         if main_folder is None:
-            raise Exception("Main folder of project {} is null!".format(proj.id))
+            raise Exception(f"Main folder of project {proj.id} is null!")
 
         data = get_folder_data(main_folder)
 
@@ -3807,10 +3799,10 @@ def get_csv(proj, profile, scope="flagged", details="full", folders=True):
                     else:
                         _w_f_e = w_f_e
                     _w_e = ensemble_str.format(w_e * CONVERSION)
-                    _str += "{},{},{}\n".format(ename, _w_e, _w_f_e)
+                    _str += f"{ename},{_w_e},{_w_f_e}\n"
 
             for fname, f in sorted(folder_data.items(), key=lambda a: a[0]):
-                _str += "\n,{},Energy,Free Energy\n".format(fname)
+                _str += f"\n,{fname},Energy,Free Energy\n"
 
                 f_str = format_data(*f, hash)
                 _str += "\n".join(["," + i for i in f_str.split("\n")])
@@ -3818,7 +3810,7 @@ def get_csv(proj, profile, scope="flagged", details="full", folders=True):
 
         main_str = ""
         for i, n in hashes.items():
-            main_str += "{}\n".format(n)
+            main_str += f"{n}\n"
             main_str += format_data(*data, i)
             main_str += "\n\n"
         return main_str
@@ -3879,12 +3871,12 @@ def get_csv(proj, profile, scope="flagged", details="full", folders=True):
             csv += "Parameters,Molecule,Ensemble,Structure\n"
             for p_name in summary.keys():
                 p = summary[p_name]
-                csv += "{},\n".format(hashes[p_name])
+                csv += f"{hashes[p_name]},\n"
                 for mol in p.molecules.values():
-                    csv += ",{},\n".format(mol.name)
+                    csv += f",{mol.name},\n"
                     csv += ",,,Number,Degeneracy,Energy,Relative Energy,Weight,Free Energy,\n"
                     for e in mol.ensembles.values():
-                        csv += ",,{},\n".format(e.name)
+                        csv += f",,{e.name},\n"
                         (
                             nums,
                             degens,
@@ -3914,9 +3906,9 @@ def get_csv(proj, profile, scope="flagged", details="full", folders=True):
         )
         for p_name in summary.keys():
             p = summary[p_name]
-            csv += "{},\n".format(hashes[p_name])
+            csv += f"{hashes[p_name]},\n"
             for mol in p.molecules.values():
-                csv += ",{},\n".format(mol.name)
+                csv += f",{mol.name},\n"
                 for e in mol.ensembles.values():
                     if details == "full":
                         arr_ind = 7
@@ -3935,7 +3927,7 @@ def get_csv(proj, profile, scope="flagged", details="full", folders=True):
                     else:
                         w_f_e = _w_f_e
 
-                    csv += ",,{},{},{}\n".format(e.name, w_e, w_f_e)
+                    csv += f",,{e.name},{w_e},{w_f_e}\n"
 
     return csv
 
@@ -3946,7 +3938,7 @@ def download_project_csv(proj, profile, scope, details, folders):
 
     proj_name = proj.name.replace(" ", "_")
     response = HttpResponse(csv, content_type="text/csv")
-    response["Content-Disposition"] = "attachment; filename={}.csv".format(proj_name)
+    response["Content-Disposition"] = f"attachment; filename={proj_name}.csv"
     return response
 
 
@@ -3983,9 +3975,7 @@ def cancel_calc(request):
 def download_project_logs(proj, profile, scope, details, folders):
     # folders options makes this somewhat duplicate code
 
-    tmp_dir = "/tmp/{}_{}_{}".format(
-        profile.username, proj.author.username, time.time()
-    )
+    tmp_dir = f"/tmp/{profile.username}_{proj.author.username}_{time.time()}"
     os.mkdir(tmp_dir)
     for mol in sorted(proj.molecule_set.all(), key=lambda l: l.name):
         for e in mol.ensemble_set.all():
@@ -4007,7 +3997,7 @@ def download_project_logs(proj, profile, scope, details, folders):
                             e.name
                             + "_"
                             + calc.parameters.file_name
-                            + "_conf{}".format(s.number)
+                            + f"_conf{s.number}"
                         )
                     elif details == "full":
                         log_name = (
@@ -4016,7 +4006,7 @@ def download_project_logs(proj, profile, scope, details, folders):
                             + calc.step.name
                             + "_"
                             + calc.parameters.file_name
-                            + "_conf{}".format(s.number)
+                            + f"_conf{s.number}"
                         )
 
                     log_name = log_name.replace(" ", "_")
@@ -4026,21 +4016,21 @@ def download_project_logs(proj, profile, scope, details, folders):
                             os.path.join(e_dir, log_name + ".log"),
                         )
                     except FileNotFoundError:
-                        logger.warning("Calculation not found: {}".format(calc.id))
+                        logger.warning(f"Calculation not found: {calc.id}")
                     if (
                         calc.parameters.software == "xtb"
                     ):  # xtb logs don't contain the structure
                         with open(os.path.join(e_dir, log_name + ".xyz"), "w") as out:
                             out.write(s.xyz_structure)
 
-    for d in glob.glob("{}/*/".format(tmp_dir)):
+    for d in glob.glob(f"{tmp_dir}/*/"):
         if len(os.listdir(d)) == 0:
             os.rmdir(d)
 
     mem = BytesIO()
     with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zip:
-        for d in glob.glob("{}/*/".format(tmp_dir)):
-            for f in glob.glob("{}*".format(d)):
+        for d in glob.glob(f"{tmp_dir}/*/"):
+            for f in glob.glob(f"{d}*"):
                 zip.write(
                     f, os.path.join(proj.name.replace(" ", "_"), *f.split("/")[3:])
                 )
@@ -4133,7 +4123,7 @@ def project_folders(request, username, proj, folder_path):
     # Make trailing slashes mandatory
     if path[-1].strip() != "":
         return HttpResponseRedirect(
-            "/projects/{}/{}/{}".format(username, proj, folder_path + "/")
+            f"/projects/{username}/{proj}/{folder_path + '/'}"
         )
 
     target_project = clean(proj)
@@ -4208,7 +4198,7 @@ def download_folder(request, pk):
         ensembles = folder.ensemble_set.filter(flagged=True)
 
         for e in ensembles:
-            prefix = "{}.{}_".format(e.parent_molecule.name, e.name)
+            prefix = f"{e.parent_molecule.name}.{e.name}_"
             related_orders = _get_related_calculations(e)
             # Verify if the user can view the ensemble?
             # The ensembles should be in the project which he can view, so probably not necessary
@@ -4356,7 +4346,7 @@ def relaunch_calc(request):
         calc.task_id = res
         calc.save()
     else:
-        send_cluster_command("launch\n{}\n{}\n".format(calc.id, calc.order.resource_id))
+        send_cluster_command(f"launch\n{calc.id}\n{calc.order.resource_id}\n")
 
     return HttpResponse(status=200)
 
@@ -4391,7 +4381,7 @@ def refetch_calc(request):
     calc.status = 1
     calc.save()
 
-    send_cluster_command("launch\n{}\n{}\n".format(calc.id, calc.order.resource_id))
+    send_cluster_command(f"launch\n{calc.id}\n{calc.order.resource_id}\n")
 
     return HttpResponse(status=200)
 

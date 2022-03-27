@@ -185,12 +185,12 @@ class Command(BaseCommand):
 
         title = "NHC-Catalysed Condensation"
         if self.is_absent_title(Example, title):
-            self.print("Adding Example: {}".format(title))
+            self.print(f"Adding Example: {title}")
             a = Example.objects.create(title=title, page_path="nhc_condensation.html")
 
         title = "NMR Prediction (Quick)"
         if self.is_absent_title(Recipe, title):
-            self.print("Adding Recipe: {}".format(title))
+            self.print(f"Adding Recipe: {title}")
             a = Recipe.objects.create(
                 title=title, page_path="nmr_prediction_quick.html"
             )

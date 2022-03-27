@@ -39,7 +39,7 @@ def basis_sets():
     basis_sets = []
     header = ""
     for software in softwares:
-        header += "<th>{}</th>".format(software)
+        header += f"<th>{software}</th>"
         for bs in SOFTWARE_BASIS_SETS[software].keys():
             if bs not in basis_sets:
                 basis_sets.append(bs)
@@ -55,13 +55,11 @@ def basis_sets():
             else:
                 availabilities += "<td></td>\n"
 
-        body += """
+        body += f"""
             <tr>
-                <td>{}</td>
-                {}
-            </tr>""".format(
-            name, availabilities
-        )
+                <td>{name}</td>
+                {availabilities}
+            </tr>"""
 
     print(TABLE_TEMPLATE.format("Basis Set", header, body))
 
@@ -71,7 +69,7 @@ def functionals():
     functionals = []
     header = ""
     for software in softwares:
-        header += "<th>{}</th>".format(software)
+        header += f"<th>{software}</th>"
         for f in SOFTWARE_METHODS[software].keys():
             if f not in functionals:
                 functionals.append(f)
@@ -87,13 +85,11 @@ def functionals():
             else:
                 availabilities += "<td></td>\n"
 
-        body += """
+        body += f"""
             <tr>
-                <td>{}</td>
-                {}
-            </tr>""".format(
-            name, availabilities
-        )
+                <td>{name}</td>
+                {availabilities}
+            </tr>"""
 
     print(TABLE_TEMPLATE.format("Functionals", header, body))
 

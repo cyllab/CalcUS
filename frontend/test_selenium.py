@@ -1515,7 +1515,7 @@ class InterfaceTests(CalcusLiveServer):
         folder_name = self.get_name_folders()[0]
 
         self.drag_ensemble_to_folder(
-            "{} -{}".format(params["mol_name"], params["name"]), folder_name
+            f"{params['mol_name']} -{params['name']}", folder_name
         )
 
         self.assertEqual(self.get_number_folders(), 1)
@@ -1617,7 +1617,7 @@ class UserPermissionsTests(CalcusLiveServer):
         self.logout()
         self.login("Student", self.password)
 
-        self.lget("/projects/{}".format(self.username))
+        self.lget(f"/projects/{self.username}")
 
         self.assertEqual(self.get_number_projects(), 0)
 
@@ -2085,7 +2085,7 @@ class XtbCalculationTests(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
 
     def test_multiple_structures_second_step(self):
-        in_files = ["batch/benzene{:02d}.xyz".format(i) for i in range(1, 5)]
+        in_files = [f"batch/benzene{i:02d}.xyz" for i in range(1, 5)]
         params = {
             "mol_name": "test",
             "type": "Geometrical Optimisation",
@@ -4250,7 +4250,7 @@ class MiscCalculationTests(CalcusLiveServer):
         self.assertTrue(self.all_calc_successful())
 
     def test_many_same_files(self):
-        files = ["batch/benzene{:02d}.xyz".format(i) for i in range(1, 11)]
+        files = [f"batch/benzene{i:02d}.xyz" for i in range(1, 11)]
         params = {
             "mol_name": "test",
             "type": "Geometrical Optimisation",
@@ -4343,14 +4343,14 @@ class MiscCalculationTests(CalcusLiveServer):
 
         ref_weights = [0.34724, 0.53361, 0.03796, 0.04880, 0.01082, 0.02125, 0.00033]
 
-        self.lget("/ensemble/{}".format(e.id))
+        self.lget(f"/ensemble/{e.id}")
         data = self.get_conformer_data()
 
         for ind, line in enumerate(data):
             self.assertEqual(line[0], str(ind + 1))
-            self.assertEqual(line[1], "{:.6f}".format(structs[ind][0]))
+            self.assertEqual(line[1], f"{structs[ind][0]:.6f}")
             self.assertEqual(line[3], str(structs[ind][1]))
-            self.assertEqual(line[4], "{:.2f}".format(ref_weights[ind]))
+            self.assertEqual(line[4], f"{ref_weights[ind]:.2f}")
 
     def test_conformer_table2(self):
         proj = Project.objects.create(name="TestProj", author=self.profile)
@@ -4388,14 +4388,14 @@ class MiscCalculationTests(CalcusLiveServer):
 
         ref_weights = [0.34724, 0.53361, 0.03796, 0.04880, 0.01082, 0.02125, 0.00033]
 
-        self.lget("/ensemble/{}".format(e.id))
+        self.lget(f"/ensemble/{e.id}")
         data = self.get_conformer_data()
 
         for ind, line in enumerate(data):
             self.assertEqual(line[0], str(ind + 1))
-            self.assertEqual(line[1], "{:.6f}".format(structs[ind][0]))
+            self.assertEqual(line[1], f"{structs[ind][0]:.6f}")
             self.assertEqual(line[3], str(structs[ind][1]))
-            self.assertEqual(line[4], "{:.2f}".format(ref_weights[ind]))
+            self.assertEqual(line[4], f"{ref_weights[ind]:.2f}")
 
     def test_confirmed_specifications(self):
         params = {
@@ -4737,4 +4737,4 @@ class ComplexCalculationTests(CalcusLiveServer):
         calc_shifts = [
             float(i.split()[2]) for i in prop.simple_nmr.split("\n") if i.strip() != ""
         ]
-        self.assertEqual(shifts[1], "{:.3f}".format(np.mean(calc_shifts[1:4])))
+        self.assertEqual(shifts[1], f"{np.mean(calc_shifts[1:4]):.3f}")

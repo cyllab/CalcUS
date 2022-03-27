@@ -337,16 +337,16 @@ class PermissionTestsStudent(TestCase):
         response = self.client.get("/projects/PI/Public Project")
         self.assertEqual(response.status_code, 302)
 
-        response = self.client.get("/molecule/{}".format(m.id))
+        response = self.client.get(f"/molecule/{m.id}")
         self.assertEqual(response.status_code, 302)
 
-        response = self.client.get("/ensemble/{}".format(e.id))
+        response = self.client.get(f"/ensemble/{e.id}")
         self.assertEqual(response.status_code, 302)
 
-        response = self.client.get("/download_structures/{}".format(e.id))
+        response = self.client.get(f"/download_structures/{e.id}")
         self.assertEqual(response.status_code, 404)
 
-        response = self.client.get("/download_structures/{}/0".format(e.id))
+        response = self.client.get(f"/download_structures/{e.id}/0")
         self.assertEqual(response.status_code, 404)
 
     def test_project_public(self):
@@ -368,16 +368,16 @@ class PermissionTestsStudent(TestCase):
         response = self.client.get("/projects/PI/Public Project")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/molecule/{}".format(m.id))
+        response = self.client.get(f"/molecule/{m.id}")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/ensemble/{}".format(e.id))
+        response = self.client.get(f"/ensemble/{e.id}")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/download_structures/{}".format(e.id))
+        response = self.client.get(f"/download_structures/{e.id}")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/download_structures/{}/0".format(e.id))
+        response = self.client.get(f"/download_structures/{e.id}/0")
         self.assertEqual(response.status_code, 200)
 
     def test_project_private(self):
@@ -399,16 +399,16 @@ class PermissionTestsStudent(TestCase):
         response = self.client.get("/projects/PI/Public Project")
         self.assertEqual(response.status_code, 302)
 
-        response = self.client.get("/molecule/{}".format(m.id))
+        response = self.client.get(f"/molecule/{m.id}")
         self.assertEqual(response.status_code, 302)
 
-        response = self.client.get("/ensemble/{}".format(e.id))
+        response = self.client.get(f"/ensemble/{e.id}")
         self.assertEqual(response.status_code, 302)
 
-        response = self.client.get("/download_structures/{}".format(e.id))
+        response = self.client.get(f"/download_structures/{e.id}")
         self.assertEqual(response.status_code, 404)
 
-        response = self.client.get("/download_structures/{}/0".format(e.id))
+        response = self.client.get(f"/download_structures/{e.id}/0")
         self.assertEqual(response.status_code, 404)
 
 
@@ -454,16 +454,16 @@ class PermissionTestsPI(TestCase):
         response = self.client.get("/projects/Student/Public Project")
         self.assertEqual(response.status_code, 302)
 
-        response = self.client.get("/molecule/{}".format(m.id))
+        response = self.client.get(f"/molecule/{m.id}")
         self.assertEqual(response.status_code, 302)
 
-        response = self.client.get("/ensemble/{}".format(e.id))
+        response = self.client.get(f"/ensemble/{e.id}")
         self.assertEqual(response.status_code, 302)
 
-        response = self.client.get("/download_structures/{}".format(e.id))
+        response = self.client.get(f"/download_structures/{e.id}")
         self.assertEqual(response.status_code, 404)
 
-        response = self.client.get("/download_structures/{}/0".format(e.id))
+        response = self.client.get(f"/download_structures/{e.id}/0")
         self.assertEqual(response.status_code, 404)
 
     def test_project_public(self):
@@ -487,16 +487,16 @@ class PermissionTestsPI(TestCase):
         response = self.client.get("/projects/Student/Public Project")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/molecule/{}".format(m.id))
+        response = self.client.get(f"/molecule/{m.id}")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/ensemble/{}".format(e.id))
+        response = self.client.get(f"/ensemble/{e.id}")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/download_structures/{}".format(e.id))
+        response = self.client.get(f"/download_structures/{e.id}")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/download_structures/{}/0".format(e.id))
+        response = self.client.get(f"/download_structures/{e.id}/0")
         self.assertEqual(response.status_code, 200)
 
     def test_project_private(self):
@@ -520,16 +520,16 @@ class PermissionTestsPI(TestCase):
         response = self.client.get("/projects/Student/Public Project")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/molecule/{}".format(m.id))
+        response = self.client.get(f"/molecule/{m.id}")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/ensemble/{}".format(e.id))
+        response = self.client.get(f"/ensemble/{e.id}")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/download_structures/{}".format(e.id))
+        response = self.client.get(f"/download_structures/{e.id}")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/download_structures/{}/0".format(e.id))
+        response = self.client.get(f"/download_structures/{e.id}/0")
         self.assertEqual(response.status_code, 200)
 
     def test_delete_project_user(self):
@@ -1078,7 +1078,7 @@ class CalculationTests(TestCase):
             os.path.join(SCR_DIR, str(calc.id), "calc.log"),
         )
 
-        response = self.client.post("/get_calc_data/{}".format(calc.id))
+        response = self.client.post(f"/get_calc_data/{calc.id}")
 
         data = response.content.decode("utf-8")
         xyz, rmsd, opt = data.split(";")
@@ -1117,7 +1117,7 @@ class CalculationTests(TestCase):
             os.path.join(SCR_DIR, str(calc.id), "calc.log"),
         )
 
-        response = self.client.post("/get_calc_data/{}".format(calc.id))
+        response = self.client.post(f"/get_calc_data/{calc.id}")
 
         data = response.content.decode("utf-8")
         xyz, rmsd, opt = data.split(";")
@@ -1156,7 +1156,7 @@ class CalculationTests(TestCase):
             os.path.join(SCR_DIR, str(calc.id), "calc.log"),
         )
 
-        response = self.client.post("/get_calc_data/{}".format(calc.id))
+        response = self.client.post(f"/get_calc_data/{calc.id}")
 
         data = response.content.decode("utf-8")
         xyz, rmsd, opt = data.split(";")

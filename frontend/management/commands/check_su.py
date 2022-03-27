@@ -35,6 +35,6 @@ class Command(BaseCommand):
             su = User.objects.get(username=su_name)
         except User.DoesNotExist:
             su = User.objects.create_superuser(username=su_name, password="default")
-            print("Superuser with name '{}' created".format(su_name))
+            print(f"Superuser with name '{su_name}' created")
         else:
             print("Superuser account found, creation aborted")

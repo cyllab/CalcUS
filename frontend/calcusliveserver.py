@@ -130,7 +130,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         exc = None
 
-        print("Running {}".format(self.m_name))
+        print(f"Running {self.m_name}")
         while True:
             try:
                 m()
@@ -142,9 +142,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 else:
                     num += 1
                 print(
-                    "Test failed, trying again (attempt {}/{})".format(
-                        num, MAX_ATTEMPTS
-                    )
+                    f"Test failed, trying again (attempt {num}/{MAX_ATTEMPTS})"
                 )
                 self.cleanupCalculations()
                 self.lget("/home/")
@@ -198,10 +196,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         )
 
     def logout(self):
-        self.driver.get("{}/accounts/logout/?next=/".format(self.live_server_url))
+        self.driver.get(f"{self.live_server_url}/accounts/logout/?next=/")
 
     def lget(self, url):
-        self.driver.get("{}{}".format(self.live_server_url, url))
+        self.driver.get(f"{self.live_server_url}{url}")
 
         # Try to wait until everything is loaded
         # This hopefully reduces the overall flakiness of Selenium integration tests
@@ -264,7 +262,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             )
             time.sleep(0.1)
             select.find_element_by_xpath(
-                "option[text()='{}']".format(params["software"])
+                f"option[text()='{params['software']}']"
             ).click()
 
             self.wait_for_ajax()
@@ -275,12 +273,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         if "type" in params.keys():
             self.driver.find_element_by_xpath(
-                "//*[@id='calc_type']/option[text()='{}']".format(params["type"])
+                f"//*[@id='calc_type']/option[text()='{params['type']}']"
             ).click()
 
         if "project" in params.keys():
             self.driver.find_element_by_xpath(
-                "//*[@id='calc_project']/option[text()='{}']".format(params["project"])
+                f"//*[@id='calc_project']/option[text()='{params['project']}']"
             ).click()
 
         if "solvation_model" in params.keys():
@@ -302,24 +300,24 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             new_project_input.send_keys(params["new_project_name"])
 
         if "in_file" in params.keys():
-            upload_input.send_keys("{}/tests/{}".format(dir_path, params["in_file"]))
+            upload_input.send_keys(f"{dir_path}/tests/{params['in_file']}")
 
         if "in_files" in params.keys():
             for f in params["in_files"]:
-                upload_input.send_keys("{}/tests/{}".format(dir_path, f))
+                upload_input.send_keys(f"{dir_path}/tests/{f}")
             if "combine" in params.keys() and params["combine"] == True:
                 combine_box = self.driver.find_element_by_id("calc_combine_files")
                 combine_box.click()
 
         if "aux_file" in params.keys():
             aux_upload = self.driver.find_element_by_name("aux_file_structure")
-            aux_upload.send_keys("{}/tests/{}".format(dir_path, params["aux_file"]))
+            aux_upload.send_keys(f"{dir_path}/tests/{params['aux_file']}")
 
         if "aux_structure" in params.keys():
             aux_mol, aux_e, aux_s = params["aux_structure"]
             mol_select = self.driver.find_element_by_id("aux_mol")
             mol_select.find_element_by_xpath(
-                "option[text()='{}']".format(aux_mol)
+                f"option[text()='{aux_mol}']"
             ).click()
 
             self.wait_for_ajax()
@@ -328,7 +326,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 try:
                     e_select = self.driver.find_element_by_id("aux_ensemble")
                     e_select.find_element_by_xpath(
-                        "option[text()='{}']".format(aux_e)
+                        f"option[text()='{aux_e}']"
                     ).click()
                 except selenium.common.exceptions.NoSuchElementException:
                     time.sleep(1)
@@ -340,7 +338,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 try:
                     s_select = self.driver.find_element_by_id("aux_struct")
                     s_select.find_element_by_xpath(
-                        "option[text()='{}']".format(aux_s)
+                        f"option[text()='{aux_s}']"
                     ).click()
                 except selenium.common.exceptions.NoSuchElementException:
                     time.sleep(1)
@@ -356,7 +354,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             def handle_constraint(constraint, ind):
                 c_mode = constraint[0]
                 select = self.driver.find_element_by_id(
-                    "constraint_mode_{}".format(ind)
+                    f"constraint_mode_{ind}"
                 )
                 self.driver.execute_script(
                     "showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",
@@ -364,12 +362,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 )
                 time.sleep(0.1)
                 select.find_element_by_xpath(
-                    "option[text()='{}']".format(c_mode)
+                    f"option[text()='{c_mode}']"
                 ).click()
 
                 c_type = constraint[1]
                 select = self.driver.find_element_by_id(
-                    "constraint_type_{}".format(ind)
+                    f"constraint_type_{ind}"
                 )
                 self.driver.execute_script(
                     "showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",
@@ -377,7 +375,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 )
                 time.sleep(0.1)
                 select.find_element_by_xpath(
-                    "option[text()='{}']".format(c_type)
+                    f"option[text()='{c_type}']"
                 ).click()
 
                 atoms = constraint[2]
@@ -385,28 +383,28 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 # Although not elegant, it reduces flakiness
                 while (
                     self.driver.find_element_by_id(
-                        "calc_constraint_{}_1".format(ind)
+                        f"calc_constraint_{ind}_1"
                     ).get_attribute("value")
                     == ""
                 ):
                     self.driver.find_element_by_id(
-                        "calc_constraint_{}_1".format(ind)
+                        f"calc_constraint_{ind}_1"
                     ).send_keys(str(atoms[0]))
                     time.sleep(1)
 
                 self.driver.find_element_by_id(
-                    "calc_constraint_{}_2".format(ind)
+                    f"calc_constraint_{ind}_2"
                 ).send_keys(str(atoms[1]))
                 if c_type == "Angle":
                     self.driver.find_element_by_id(
-                        "calc_constraint_{}_3".format(ind)
+                        f"calc_constraint_{ind}_3"
                     ).send_keys(str(atoms[2]))
                 elif c_type == "Dihedral":
                     self.driver.find_element_by_id(
-                        "calc_constraint_{}_3".format(ind)
+                        f"calc_constraint_{ind}_3"
                     ).send_keys(str(atoms[2]))
                     self.driver.find_element_by_id(
-                        "calc_constraint_{}_4".format(ind)
+                        f"calc_constraint_{ind}_4"
                     ).send_keys(str(atoms[3]))
                 if c_mode == "Scan":
                     scan = constraint[3]
@@ -415,13 +413,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                         or params["software"] != "Gaussian"
                     ):
                         self.driver.find_element_by_id(
-                            "calc_scan_{}_1".format(ind)
+                            f"calc_scan_{ind}_1"
                         ).send_keys(str(scan[0]))
                     self.driver.find_element_by_id(
-                        "calc_scan_{}_2".format(ind)
+                        f"calc_scan_{ind}_2"
                     ).send_keys(str(scan[1]))
                     self.driver.find_element_by_id(
-                        "calc_scan_{}_3".format(ind)
+                        f"calc_scan_{ind}_3"
                     ).send_keys(str(scan[2]))
 
             constr = params["constraints"]
@@ -443,14 +441,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             )
             time.sleep(0.1)
             self.driver.find_element_by_xpath(
-                "//*[@id='calc_theory_level']/option[text()='{}']".format(
-                    params["theory"]
-                )
+                f"//*[@id='calc_theory_level']/option[text()='{params['theory']}']"
             ).click()
 
         if "method" in params.keys():
             self.driver.find_element_by_xpath(
-                "//*[@id='calc_method']/option[text()='{}']".format(params["method"])
+                f"//*[@id='calc_method']/option[text()='{params['method']}']"
             ).click()
 
         if "functional" in params.keys():
@@ -478,7 +474,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
             filter_select = self.driver.find_element_by_id("calc_filter")
             filter_select.find_element_by_xpath(
-                "option[text()='{}']".format(params["filter"])
+                f"option[text()='{params['filter']}']"
             ).click()
 
             filter_value = self.driver.find_element_by_id("filter_value_input")
@@ -486,9 +482,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         if "resource" in params.keys():
             self.driver.find_element_by_xpath(
-                "//*[@id='calc_resource']/option[text()='{}']".format(
-                    params["resource"]
-                )
+                f"//*[@id='calc_resource']/option[text()='{params['resource']}']"
             ).click()
 
     def calc_launch(self):
@@ -750,7 +744,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             child.expect("\$")
             child.sendline("mkdir -p .ssh/".format(public_key))
             child.expect("\$")
-            child.sendline("echo '{}' > .ssh/authorized_keys".format(public_key))
+            child.sendline(f"echo '{public_key}' > .ssh/authorized_keys")
             child.expect("\$")
             child.sendline("chmod 700 .ssh/authorized_keys")
             child.expect("\$")
@@ -763,7 +757,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             child.sendline("clustertest")
             child.expect("\$")
             child.sendline(
-                "echo '{}' > /home/calcus/.ssh/authorized_keys".format(public_key)
+                f"echo '{public_key}' > /home/calcus/.ssh/authorized_keys"
             )
             time.sleep(0.1)
 
@@ -1382,7 +1376,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         if not successful:
             latest_order = CalculationOrder.objects.latest("id")
-            print("Error messages of calculations in order {}".format(latest_order.id))
+            print(f"Error messages of calculations in order {latest_order.id}")
             for c in latest_order.calculation_set.all():
                 print(c.error_message)
         return successful
@@ -1400,7 +1394,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             if not successful:
                 latest_order = CalculationOrder.objects.latest("id")
                 print(
-                    "Error messages of calculations in order {}".format(latest_order.id)
+                    f"Error messages of calculations in order {latest_order.id}"
                 )
                 for c in latest_order.calculation_set.all():
                     print(c.error_message)
@@ -1717,12 +1711,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.wait_for_ajax()
         element = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located(
-                (By.XPATH, "//*[@id='presets']/option[text()='{}']".format(name))
+                (By.XPATH, f"//*[@id='presets']/option[text()='{name}']")
             )
         )
 
         self.driver.find_element_by_xpath(
-            "//*[@id='presets']/option[text()='{}']".format(name)
+            f"//*[@id='presets']/option[text()='{name}']"
         ).click()
 
     def try_assert_number_unseen_calcs(self, num, timeout):
@@ -1765,7 +1759,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 break
         else:
             raise Exception(
-                "Order {} is not related to this ensemble!".format(order_id)
+                f"Order {order_id} is not related to this ensemble!"
             )
 
         calc_tree = tree.find_elements_by_css_selector("ul > li")
@@ -1778,7 +1772,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         for proj in projects:
             name = proj.find_element_by_css_selector("a > strong > p").text
             if name == proj_name:
-                icon = proj.find_element_by_css_selector(".fa-{}".format(icon))
+                icon = proj.find_element_by_css_selector(f".fa-{icon}")
                 icon.click()
                 return
         else:

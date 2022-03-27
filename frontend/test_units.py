@@ -45,7 +45,7 @@ H       2.857594      -2.183310      -1.540327"""
         self.xyz = "{}\n\n{}".format(len(self.raw_xyz.split("\n")), self.raw_xyz)
 
     def test_parse_gaussian_com_space(self):
-        inp = """%chk=test.chk
+        inp = f"""%chk=test.chk
                 %mem=15000MB
                 %nproc=8
                 #p opt freq(NoRaman) M062X/Def2TZVP
@@ -53,16 +53,14 @@ H       2.857594      -2.183310      -1.540327"""
                 Unnecessary header
 
                 0 1
-                {}
+                {self.raw_xyz}
 
-                """.format(
-            self.raw_xyz
-        )
+                """
         parsed_xyz = get_xyz_from_Gaussian_input(inp)
         self.assertEqual(parsed_xyz, self.xyz)
 
     def test_parse_gaussian_com_nospace(self):
-        inp = """%chk=test.chk
+        inp = f"""%chk=test.chk
                 %mem=15000MB
                 %nproc=8
                 #p opt freq(NoRaman) M062X/Def2TZVP
@@ -70,15 +68,13 @@ H       2.857594      -2.183310      -1.540327"""
                 Unnecessary header
 
                 0 1
-                {}
-                """.format(
-            self.raw_xyz
-        )
+                {self.raw_xyz}
+                """
         parsed_xyz = get_xyz_from_Gaussian_input(inp)
         self.assertEqual(parsed_xyz, self.xyz)
 
     def test_parse_gaussian_com_nonewline(self):
-        inp = """%chk=test.chk
+        inp = f"""%chk=test.chk
                 %mem=15000MB
                 %nproc=8
                 #p opt freq(NoRaman) M062X/Def2TZVP
@@ -86,30 +82,26 @@ H       2.857594      -2.183310      -1.540327"""
                 Unnecessary header
 
                 0 1
-                {}""".format(
-            self.raw_xyz
-        )
+                {self.raw_xyz}"""
         parsed_xyz = get_xyz_from_Gaussian_input(inp)
         self.assertEqual(parsed_xyz, self.xyz)
 
     def test_parse_gaussian_com_short_link0(self):
-        inp = """%chk=test.chk
+        inp = f"""%chk=test.chk
                 %nproc=8
                 #p opt freq(NoRaman) M062X/Def2TZVP
 
                 Unnecessary header
 
                 0 1
-                {}
+                {self.raw_xyz}
 
-                """.format(
-            self.raw_xyz
-        )
+                """
         parsed_xyz = get_xyz_from_Gaussian_input(inp)
         self.assertEqual(parsed_xyz, self.xyz)
 
     def test_parse_gaussian_com_long_link0(self):
-        inp = """%chk=test.chk
+        inp = f"""%chk=test.chk
                 %mem=15000MB
                 %nproc=8
                 %schk=test.chk
@@ -118,10 +110,8 @@ H       2.857594      -2.183310      -1.540327"""
                 Unnecessary header
 
                 0 1
-                {}
+                {self.raw_xyz}
 
-                """.format(
-            self.raw_xyz
-        )
+                """
         parsed_xyz = get_xyz_from_Gaussian_input(inp)
         self.assertEqual(parsed_xyz, self.xyz)

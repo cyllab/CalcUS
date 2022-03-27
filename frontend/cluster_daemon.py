@@ -147,9 +147,7 @@ class ClusterDaemon:
             )
         except paramiko.ssh_exception.AuthenticationException:
             logger.warning(
-                "Could not connect to cluster {} with username {}".format(
-                    addr, username
-                )
+                f"Could not connect to cluster {addr} with username {username}"
             )
             return ConnectionCodes.COULD_NOT_CONNECT
         except Exception as e:
@@ -167,7 +165,7 @@ class ClusterDaemon:
             conn = self.connections[access_id]
         except KeyError:
             logger.warning(
-                "Cannot delete connection {}: no such connection".format(access_id)
+                f"Cannot delete connection {access_id}: no such connection"
             )
             return
 
@@ -178,12 +176,12 @@ class ClusterDaemon:
         try:
             del self.connections[access_id]
         except KeyError:
-            logger.warning("No connection with id {} in memory".format(access_id))
+            logger.warning(f"No connection with id {access_id} in memory")
         try:
             del self.locks[access_id]
         except KeyError:
             logger.warning(
-                "No lock for connection with id {} in memory".format(access_id)
+                f"No lock for connection with id {access_id} in memory"
             )
 
     def job(self, calc):
@@ -198,7 +196,7 @@ class ClusterDaemon:
         return tasks.run_calc(calc.id)
 
     def connect(self, access_id, password):
-        logger.info("Connecting ({})".format(access_id))
+        logger.info(f"Connecting ({access_id})")
 
         c = self.access_test(access_id, password)
 
@@ -206,7 +204,7 @@ class ClusterDaemon:
         if not isinstance(c, int):
             self.connections[access_id] = c
             self.locks[access_id] = Lock()
-            logger.info("Connected to cluster access {}".format(access_id))
+            logger.info(f"Connected to cluster access {access_id}")
 
             access.last_connected = timezone.now()
             access.status = "Connected"
@@ -224,16 +222,14 @@ class ClusterDaemon:
                 t.start()
         else:
             logger.warning(
-                "Error with cluster access {}: {}".format(
-                    access_id, CONNECTION_MESSAGES[c]
-                )
+                f"Error with cluster access {access_id}: {CONNECTION_MESSAGES[c]}"
             )
             access.status = CONNECTION_MESSAGES[c]
 
         access.save()
 
     def disconnect(self, access_id):
-        logger.info("Disconnecting cluster access {}".format(access_id))
+        logger.info(f"Disconnecting cluster access {access_id}")
         if access_id in self.connections.keys():
             del self.connections[access_id]
         if access_id in self.locks.keys():
@@ -253,7 +249,7 @@ class ClusterDaemon:
         access.status = ""
         access.save()
 
-        logger.info("Disconnected cluster access {}".format(access_id))
+        logger.info(f"Disconnected cluster access {access_id}")
 
     def resume_calc(self, c, attempt_count=1):
 
@@ -301,18 +297,16 @@ class ClusterDaemon:
             r = self.connect(access_id, password)
             if r in [1, 2, 3, 4, 5]:
                 logger.warning(
-                    "Error with connection {}: {}".format(
-                        access_id, CONNECTION_MESSAGES[r]
-                    )
+                    f"Error with connection {access_id}: {CONNECTION_MESSAGES[r]}"
                 )
             else:
-                logger.info("Connection successful ({})".format(access_id))
+                logger.info(f"Connection successful ({access_id})")
         elif cmd == "disconnect":
             access_id = int(lines[1])
             self.disconnect(access_id)
         elif cmd == "delete_access":
             access_id = int(lines[1])
-            logger.info("Deleting connection {}".format(access_id))
+            logger.info(f"Deleting connection {access_id}")
             self.delete_access(access_id)
         else:
             calc_id = int(lines[1].strip())
@@ -320,11 +314,11 @@ class ClusterDaemon:
             try:
                 calc = Calculation.objects.get(pk=calc_id)
             except Calculation.DoesNotExist:
-                logger.warning("Could not find calculation {}".format(calc_id))
+                logger.warning(f"Could not find calculation {calc_id}")
                 return
 
             if cmd == "kill":
-                logger.info("Killing calculation {}".format(calc.id))
+                logger.info(f"Killing calculation {calc.id}")
                 if calc.order.resource is not None:
                     if calc.id in self.calculations.keys():
                         pid = self.calculations[calc.id]
@@ -390,10 +384,10 @@ class ClusterDaemon:
 
                 else:
                     logger.warning("Cannot load log: unknown calculation")
-                    logger.debug("Known calculations: \n {}".format(self.calculations))
+                    logger.debug(f"Known calculations: \n {self.calculations}")
                     return
             else:
-                logger.warning("Unknown command: {}".format(cmd))
+                logger.warning(f"Unknown command: {cmd}")
                 return
 
     def ping_daemon(self):

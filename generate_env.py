@@ -93,25 +93,25 @@ def valid_dir(path, name):
 def find_software(name):
     ret = which(name)
     if ret is not None:
-        print("{} found in $PATH ({})".format(name, ret))
+        print(f"{name} found in $PATH ({ret})")
         return os.path.dirname(ret)
 
     ans = ""
     while True:
-        ans = input("{} has not been found in $PATH. Will you use this software locally? (Y/N)\n".format(name))
+        ans = input(f"{name} has not been found in $PATH. Will you use this software locally? (Y/N)\n")
         if ans.lower() in ['y', 'n']:
             break
         print("Invalid option")
 
     if ans.lower() == 'n':
-        print("{} skipped".format(name))
+        print(f"{name} skipped")
         return ""
 
     path = ""
     while True:
         path = input("What is the full path to the directory containing this software?\n")
         if not valid_dir(path, name):
-            print("The specified path is invalid or does not contain the software {}".format(name))
+            print(f"The specified path is invalid or does not contain the software {name}")
         else:
             break
 
@@ -119,12 +119,12 @@ def find_software(name):
 
 def get_env_backup_path():
     for i in range(1, 51):
-        path = os.path.join("backups", "env.backup.{}".format(i))
+        path = os.path.join("backups", f"env.backup.{i}")
         if not os.path.isfile(path):
             return path
     else:
         path = "env.backup.latest"
-        print("Too many backup environment files! Writing to {}".format(path))
+        print(f"Too many backup environment files! Writing to {path}")
         return path
 
 HEADER = """
@@ -248,7 +248,7 @@ for d in ["scr", "results", "keys", "logs", "backups"]:
         os.mkdir(d)
 
 env_backup_path = get_env_backup_path()
-print("Creating .env backup ({})".format(env_backup_path))
+print(f"Creating .env backup ({env_backup_path})")
 with open(env_backup_path, 'w') as out:
     out.write(ENV_TEMPLATE.format(secret_key, software_paths, num_cpu, num_cpu, mem, postgres, uid, gid, su_name, ping, ping_code))
 

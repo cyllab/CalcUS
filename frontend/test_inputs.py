@@ -34,11 +34,11 @@ END = "\033[0m"
 
 
 def blue(msg):
-    print("{}{} {}".format(BLUE, msg, END))
+    print(f"{BLUE}{msg} {END}")
 
 
 def green(msg):
-    print("{}{} {}".format(GREEN, msg, END))
+    print(f"{GREEN}{msg} {END}")
 
 
 class XtbTests(TestCase):
@@ -53,9 +53,7 @@ class XtbTests(TestCase):
 
         if len(ref_lines) != len(res_lines):
             print(
-                "Different number of lines: {} and {}".format(
-                    len(ref_lines), len(res_lines)
-                )
+                f"Different number of lines: {len(ref_lines)} and {len(res_lines)}"
             )
             print("----")
             blue(ref)

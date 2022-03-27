@@ -623,38 +623,36 @@ class Parameters(models.Model):
     custom_basis_sets = models.CharField(max_length=1000, default="")
 
     def __repr__(self):
-        return "{} - {} ({})".format(self.software, self.method, self.solvent)
+        return f"{self.software} - {self.method} ({self.solvent})"
 
     @property
     def file_name(self):
-        name = "{}_".format(self.software)
+        name = f"{self.software}_"
         if (
             self.theory_level == "DFT"
             or self.theory_level == "RI-MP2"
             or self.theory_level == "HF"
         ):
-            name += "{}_{}".format(self.method, self.basis_set)
+            name += f"{self.method}_{self.basis_set}"
         else:
-            name += "{}".format(self.method)
+            name += f"{self.method}"
         if self.solvent.lower() != "vacuum":
-            name += "_{}_{}".format(self.solvation_model, self.solvent)
+            name += f"_{self.solvation_model}_{self.solvent}"
         return name
 
     @property
     def long_name(self):
-        name = "{} - ".format(self.software)
+        name = f"{self.software} - "
         if (
             self.theory_level == "DFT"
             or self.theory_level == "RI-MP2"
             or self.theory_level == "HF"
         ):
-            name += "{}/{} ".format(self.method, self.basis_set)
+            name += f"{self.method}/{self.basis_set} "
         else:
-            name += "{} ".format(self.method)
+            name += f"{self.method} "
         if self.solvent.lower() != "vacuum":
-            name += "({}; {})".format(
-                self.solvation_model, self.solvent.replace(",", "_")
-            )
+            name += f"({self.solvation_model}; {self.solvent.replace(',', '_')})"
         return name
 
     def __str__(self):
@@ -682,9 +680,9 @@ class Parameters(models.Model):
         params_str = ""
         for k, v in values:
             if isinstance(v, int):
-                params_str += "{}={};".format(k, v)
+                params_str += f"{k}={v};"
             elif isinstance(v, str):
-                params_str += "{}={};".format(k, v.lower())
+                params_str += f"{k}={v.lower()};"
             else:
                 raise Exception("Unknown value type")
         hash = hashlib.md5(bytes(params_str, "UTF-8"))

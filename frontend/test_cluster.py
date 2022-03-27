@@ -139,7 +139,7 @@ class ClusterTests(CalcusLiveServer):
 
     def test_delete_access(self):
         self.setup_cluster()
-        keys = glob.glob("{}/*".format(KEYS_DIR))
+        keys = glob.glob(f"{KEYS_DIR}/*")
         initial_keys = len(keys)
 
         main_window_handle = None
@@ -153,11 +153,11 @@ class ClusterTests(CalcusLiveServer):
         alert.accept()
 
         ind = 0
-        while len(glob.glob("{}/*".format(KEYS_DIR))) == initial_keys and ind < 5:
+        while len(glob.glob(f"{KEYS_DIR}/*")) == initial_keys and ind < 5:
             time.sleep(1)
             ind += 1
 
-        keys = glob.glob("{}/*".format(KEYS_DIR))
+        keys = glob.glob(f"{KEYS_DIR}/*")
         self.assertEqual(len(keys), initial_keys - 2)
 
     def test_cluster_settings(self):
@@ -658,7 +658,7 @@ class ClusterTests(CalcusLiveServer):
 
     def test_stress_num_calcs(self):
         self.setup_cluster()
-        files = ["batch/benzene{:02d}.xyz".format(i) for i in range(1, 11)]
+        files = [f"batch/benzene{i:02d}.xyz" for i in range(1, 11)]
         params = {
             "mol_name": "test",
             "type": "Geometrical Optimisation",

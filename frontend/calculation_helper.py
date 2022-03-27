@@ -37,6 +37,6 @@ def get_xyz_from_Gaussian_input(txt):
         xyz_lines.append(lines[ind].strip())
         ind += 1
 
-    xyz = "{}\n\n".format(len(xyz_lines))
+    xyz = f"{len(xyz_lines)}\n\n"
     xyz += "\n".join(xyz_lines)
     return xyz
