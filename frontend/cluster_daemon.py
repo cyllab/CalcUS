@@ -1,4 +1,4 @@
-'''
+"""
 This file of part of CalcUS.
 
 Copyright (C) 2020-2022 Raphaël Robidas
@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-'''
+"""
 
 
 import django
@@ -44,8 +44,11 @@ import code, traceback, signal, logging
 
 MAX_RESUME_CALC_ATTEMPT_COUNT = 3
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s"
+)
 logger = logging.getLogger(__name__)
+
 
 class ConnectionCodes:
     SUCCESS = 0
@@ -57,18 +60,19 @@ class ConnectionCodes:
     INVALID_KEY_PASSWORD = 6
     SOCKET_RECEIVE_ERROR = 7
 
+
 CONNECTION_MESSAGES = {
-            ConnectionCodes.SUCCESS: "Connected",
-            ConnectionCodes.ALREADY_CONNECTED: "Already connected",
-            ConnectionCodes.INVALID_CLUSTER_ACCESS: "Invalid cluster access",
-            ConnectionCodes.INVALID_HOST: "Invalid host",
-            ConnectionCodes.COULD_NOT_CONNECT: "Could not connect to the server",
-            ConnectionCodes.NO_CALCUS_FOLDER: "No calcus folder found",
-            ConnectionCodes.INVALID_KEY_PASSWORD: "Invalid key password",
-            ConnectionCodes.SOCKET_RECEIVE_ERROR: "Unknown connection error",
-        }
+    ConnectionCodes.SUCCESS: "Connected",
+    ConnectionCodes.ALREADY_CONNECTED: "Already connected",
+    ConnectionCodes.INVALID_CLUSTER_ACCESS: "Invalid cluster access",
+    ConnectionCodes.INVALID_HOST: "Invalid host",
+    ConnectionCodes.COULD_NOT_CONNECT: "Could not connect to the server",
+    ConnectionCodes.NO_CALCUS_FOLDER: "No calcus folder found",
+    ConnectionCodes.INVALID_KEY_PASSWORD: "Invalid key password",
+    ConnectionCodes.SOCKET_RECEIVE_ERROR: "Unknown connection error",
+}
 try:
-    is_test = os.environ['CALCUS_TEST']
+    is_test = os.environ["CALCUS_TEST"]
     if is_test.lower() == "false":
         is_test = False
     else:
@@ -84,6 +88,7 @@ if not is_test:
 from frontend.models import *
 from frontend.environment_variables import *
 from frontend import tasks
+
 
 class ClusterDaemon:
 
@@ -134,12 +139,25 @@ class ClusterDaemon:
         username = conn.cluster_username
 
         try:
-            _conn = Connection(addr, user=username, port=22, connect_kwargs={'key_filename': keypath, 'passphrase': password})
+            _conn = Connection(
+                addr,
+                user=username,
+                port=22,
+                connect_kwargs={"key_filename": keypath, "passphrase": password},
+            )
         except paramiko.ssh_exception.AuthenticationException:
-            logger.warning("Could not connect to cluster {} with username {}".format(addr, username))
+            logger.warning(
+                "Could not connect to cluster {} with username {}".format(
+                    addr, username
+                )
+            )
             return ConnectionCodes.COULD_NOT_CONNECT
         except Exception as e:
-            logger.warning("Could not connect to cluster {} with username {}: exception {}".format(addr, username, e))
+            logger.warning(
+                "Could not connect to cluster {} with username {}: exception {}".format(
+                    addr, username, e
+                )
+            )
             return ConnectionCodes.COULD_NOT_CONNECT
 
         return [conn, _conn]
@@ -148,11 +166,13 @@ class ClusterDaemon:
         try:
             conn = self.connections[access_id]
         except KeyError:
-            logger.warning("Cannot delete connection {}: no such connection".format(access_id))
+            logger.warning(
+                "Cannot delete connection {}: no such connection".format(access_id)
+            )
             return
 
         conn = self.connections[access_id][0]
-        os.remove(os.path.join(CALCUS_KEY_HOME, str(conn.id) + '.pub'))
+        os.remove(os.path.join(CALCUS_KEY_HOME, str(conn.id) + ".pub"))
         os.remove(os.path.join(CALCUS_KEY_HOME, str(conn.id)))
 
         try:
@@ -162,14 +182,18 @@ class ClusterDaemon:
         try:
             del self.locks[access_id]
         except KeyError:
-            logger.warning("No lock for connection with id {} in memory".format(access_id))
+            logger.warning(
+                "No lock for connection with id {} in memory".format(access_id)
+            )
 
     def job(self, calc):
 
         access_id = calc.order.resource.id
         tasks.connections[threading.get_ident()] = self.connections[access_id]
         tasks.locks[threading.get_ident()] = self.locks[access_id]
-        tasks.remote_dirs[threading.get_ident()] = "/home/{}/scratch/calcus/{}".format(self.connections[access_id][0].cluster_username, calc.id)
+        tasks.remote_dirs[threading.get_ident()] = "/home/{}/scratch/calcus/{}".format(
+            self.connections[access_id][0].cluster_username, calc.id
+        )
 
         return tasks.run_calc(calc.id)
 
@@ -189,11 +213,21 @@ class ClusterDaemon:
 
             profile = access.owner
 
-            for c in Calculation.objects.filter(local=False,order__resource=access,order__author=profile).exclude(status=3).exclude(status=2):
+            for c in (
+                Calculation.objects.filter(
+                    local=False, order__resource=access, order__author=profile
+                )
+                .exclude(status=3)
+                .exclude(status=2)
+            ):
                 t = threading.Thread(target=self.resume_calc, args=(c,))
                 t.start()
         else:
-            logger.warning("Error with cluster access {}: {}".format(access_id, CONNECTION_MESSAGES[c]))
+            logger.warning(
+                "Error with cluster access {}: {}".format(
+                    access_id, CONNECTION_MESSAGES[c]
+                )
+            )
             access.status = CONNECTION_MESSAGES[c]
 
         access.save()
@@ -234,7 +268,7 @@ class ClusterDaemon:
                 return
             else:
                 time.sleep(1)
-                return self.resume_calc(c, attempt_count+1)
+                return self.resume_calc(c, attempt_count + 1)
 
         if c.id in self.calculations:
             del self.calculations[c.id]
@@ -242,11 +276,11 @@ class ClusterDaemon:
         try:
             del tasks.connections[pid]
             del tasks.locks[pid]
-        except KeyError:#already deleted when disconnnected from cluster
+        except KeyError:  # already deleted when disconnnected from cluster
             pass
 
     def process_command(self, body):
-        lines = body.decode('UTF-8').split('&')
+        lines = body.decode("UTF-8").split("&")
 
         if lines[0].strip() == "stop":
             logger.info("Stopping the daemon")
@@ -266,7 +300,11 @@ class ClusterDaemon:
             password = lines[2]
             r = self.connect(access_id, password)
             if r in [1, 2, 3, 4, 5]:
-                logger.warning("Error with connection {}: {}".format(access_id, CONNECTION_MESSAGES[r]))
+                logger.warning(
+                    "Error with connection {}: {}".format(
+                        access_id, CONNECTION_MESSAGES[r]
+                    )
+                )
             else:
                 logger.info("Connection successful ({})".format(access_id))
         elif cmd == "disconnect":
@@ -297,7 +335,9 @@ class ClusterDaemon:
                 else:
                     # Special case where the resource has been deleted.
                     # As such, no thread will ever process the kill signal.
-                    logger.info(f"Resource is null for calculation {calc.id}, cancelling directly")
+                    logger.info(
+                        f"Resource is null for calculation {calc.id}, cancelling directly"
+                    )
                     calc.status = 3
                     calc.error_message = "Job cancelled"
                     calc.save()
@@ -306,11 +346,15 @@ class ClusterDaemon:
             access = calc.order.resource
 
             if access is None:
-                logger.warning(f"Cannot load log: resource is null for calculation {calc.id}")
+                logger.warning(
+                    f"Cannot load log: resource is null for calculation {calc.id}"
+                )
                 return
 
             if access.id not in self.connections.keys():
-                logger.warning(f"Cannot execute command: access {access.id} not connected")
+                logger.warning(
+                    f"Cannot execute command: access {access.id} not connected"
+                )
                 return
 
             if cmd == "launch":
@@ -335,7 +379,14 @@ class ClusterDaemon:
                     except KeyError:
                         logger.warning("Cannot load log: invalid access")
 
-                    tasks.sftp_get("/home/{}/scratch/calcus/{}/calc.log".format(access.cluster_username, calc.id), os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"), remote_conn, self.locks[access.id])
+                    tasks.sftp_get(
+                        "/home/{}/scratch/calcus/{}/calc.log".format(
+                            access.cluster_username, calc.id
+                        ),
+                        os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"),
+                        remote_conn,
+                        self.locks[access.id],
+                    )
 
                 else:
                     logger.warning("Cannot load log: unknown calculation")
@@ -344,7 +395,6 @@ class ClusterDaemon:
             else:
                 logger.warning("Unknown command: {}".format(cmd))
                 return
-
 
     def ping_daemon(self):
         logger.info("Starting the ping daemon")
@@ -370,13 +420,13 @@ class ClusterDaemon:
             t.start()
 
         if docker:
-            connection = redis.Redis(host='redis', port=6379, db=2)
+            connection = redis.Redis(host="redis", port=6379, db=2)
         else:
-            connection = redis.Redis(host='localhost', port=6379, db=2)
+            connection = redis.Redis(host="localhost", port=6379, db=2)
 
         logger.info("Starting to listen to cluster commands")
         while not self.stopped:
-            msg = connection.blpop('cluster', 30)
+            msg = connection.blpop("cluster", 30)
             if msg:
                 if isinstance(msg[1], int):
                     continue
@@ -384,6 +434,6 @@ class ClusterDaemon:
 
         logger.info("Daemon closed")
 
+
 if __name__ == "__main__":
     a = ClusterDaemon()
-

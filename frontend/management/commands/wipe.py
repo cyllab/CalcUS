@@ -1,4 +1,4 @@
-'''
+"""
 This file of part of CalcUS.
 
 Copyright (C) 2020-2022 Raphaël Robidas
@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-'''
+"""
 
 
 import glob
@@ -24,19 +24,19 @@ from django.core.management.base import BaseCommand
 from frontend.models import *
 
 try:
-    os.environ['CALCUS_TEST']
+    os.environ["CALCUS_TEST"]
 except:
     is_test = False
 else:
     is_test = True
 
-class Command(BaseCommand):
-    help = 'Wipes the database of calculations and projects'
 
+class Command(BaseCommand):
+    help = "Wipes the database of calculations and projects"
 
     def handle(self, *args, **options):
         a = input("Are you sure you want to wipe the database?")
-        if a == 'yes':
+        if a == "yes":
             for m in Molecule.objects.all():
                 m.delete()
             for c in Calculation.objects.all():

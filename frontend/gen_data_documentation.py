@@ -1,4 +1,4 @@
-'''
+"""
 This file of part of CalcUS.
 
 Copyright (C) 2020-2022 Raphaël Robidas
@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-'''
+"""
 
 
 from constants import *
@@ -32,6 +32,7 @@ TABLE_TEMPLATE = """
         {}
     </tbody>
 </table>"""
+
 
 def basis_sets():
     softwares = SOFTWARE_BASIS_SETS.keys()
@@ -58,9 +59,12 @@ def basis_sets():
             <tr>
                 <td>{}</td>
                 {}
-            </tr>""".format(name, availabilities)
+            </tr>""".format(
+            name, availabilities
+        )
 
     print(TABLE_TEMPLATE.format("Basis Set", header, body))
+
 
 def functionals():
     softwares = SOFTWARE_METHODS.keys()
@@ -87,10 +91,13 @@ def functionals():
             <tr>
                 <td>{}</td>
                 {}
-            </tr>""".format(name, availabilities)
+            </tr>""".format(
+            name, availabilities
+        )
 
     print(TABLE_TEMPLATE.format("Functionals", header, body))
 
+
 if __name__ == "__main__":
     basis_sets()
-    #functionals()
+    # functionals()

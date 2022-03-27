@@ -15,9 +15,10 @@ from .tasks import run_calc
 dir_path = os.path.dirname(os.path.realpath(__file__))
 base_cwd = os.getcwd()
 
-tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
+tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 SCR_DIR = os.path.join(tests_dir, "scr")
 RESULTS_DIR = os.path.join(tests_dir, "results")
+
 
 class CalculationUnitTest(TestCase):
     @classmethod
@@ -37,7 +38,7 @@ class CalculationUnitTest(TestCase):
 
     def setUp(self):
         os.chdir(base_cwd)
-        call_command('init_static_obj')
+        call_command("init_static_obj")
         self.username = "TestRunner"
         self.password = "test1234"
 
@@ -49,7 +50,6 @@ class CalculationUnitTest(TestCase):
 
         self.name_patcher = mock.patch.dict(os.environ, {"TEST_NAME": self.id()})
         self.name_patcher.start()
-
 
     def get_params(self, **modifications):
         params = self.params.copy()
@@ -106,4 +106,3 @@ class CalculationUnitTest(TestCase):
                 print(f"Angle value of {ang:.2f} instead of around {value:.2f}")
                 return False
         return True
-

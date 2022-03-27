@@ -1,4 +1,4 @@
-'''
+"""
 This file of part of CalcUS.
 
 Copyright (C) 2020-2022 Raphaël Robidas
@@ -15,57 +15,64 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-'''
+"""
 
 
 import numpy as np
 import periodictable
 from .constants import *
 
-#Structure of xyz:
-#[<EL>, [x, y, z]]
-#Atom indices are given starting at 1
-#Angles in degrees
+# Structure of xyz:
+# [<EL>, [x, y, z]]
+# Atom indices are given starting at 1
+# Angles in degrees
+
 
 def get_distance(xyz, a, b):
-    return np.linalg.norm(xyz[a-1][1] - xyz[b-1][1])
+    return np.linalg.norm(xyz[a - 1][1] - xyz[b - 1][1])
+
 
 def get_angle(xyz, a, b, c):
-    v1 = xyz[a-1][1] - xyz[b-1][1]
-    v2 = xyz[c-1][1] - xyz[b-1][1]
+    v1 = xyz[a - 1][1] - xyz[b - 1][1]
+    v2 = xyz[c - 1][1] - xyz[b - 1][1]
 
-    return np.arccos(v1.dot(v2)/(np.linalg.norm(v1)*np.linalg.norm(v2)))*180/np.pi
+    return (
+        np.arccos(v1.dot(v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))) * 180 / np.pi
+    )
+
 
 def get_dihedral(xyz, a, b, c, d):
-    v1 = xyz[b-1][1] - xyz[a-1][1]
-    v2 = xyz[c-1][1] - xyz[b-1][1]
-    v3 = xyz[d-1][1] - xyz[c-1][1]
+    v1 = xyz[b - 1][1] - xyz[a - 1][1]
+    v2 = xyz[c - 1][1] - xyz[b - 1][1]
+    v3 = xyz[d - 1][1] - xyz[c - 1][1]
 
     n1 = np.cross(v1, v2)
-    n1 = n1/np.linalg.norm(n1)
+    n1 = n1 / np.linalg.norm(n1)
 
     n2 = np.cross(v2, v3)
-    n2 = n2/np.linalg.norm(n2)
+    n2 = n2 / np.linalg.norm(n2)
 
-    m1 = np.cross(n1, v2/np.linalg.norm(v2))
+    m1 = np.cross(n1, v2 / np.linalg.norm(v2))
     x = n1.dot(n2)
     y = m1.dot(n2)
 
-    return np.arctan2(y, x)*180/np.pi
+    return np.arctan2(y, x) * 180 / np.pi
+
 
 def parse_xyz_from_text(raw_xyz):
     xyz = []
 
-    for line in raw_xyz.split('\n')[2:]:
-        if line.strip() == '':
+    for line in raw_xyz.split("\n")[2:]:
+        if line.strip() == "":
             continue
         a, x, y, z = line.split()
         xyz.append([a, np.array([float(x), float(y), float(z)])])
 
     return xyz
 
+
 def parse_xyz_from_file(f):
-    """ Parses a standard .xyz file into a suitable structure for calculations """
+    """Parses a standard .xyz file into a suitable structure for calculations"""
     with open(f) as ff:
         lines = ff.readlines()[2:]
     xyz = []
@@ -76,10 +83,12 @@ def parse_xyz_from_file(f):
 
     return xyz
 
+
 def get_connectivity(xyz):
-    """ Returns a list of pairs of bonded atoms """
+    """Returns a list of pairs of bonded atoms"""
     TOLERANCE = 1.1
     bonds = []
+
     def bond_unique(ind1, ind2):
         for bond in bonds:
             if bond[0] == ind1 and bond[1] == ind2:
@@ -91,15 +100,19 @@ def get_connectivity(xyz):
     for ind1, i in enumerate(xyz):
         for ind2, j in enumerate(xyz):
             if ind1 > ind2:
-                d = get_distance(xyz, ind1+1, ind2+1)
-                cov = (periodictable.elements[ATOMIC_NUMBER[i[0]]].covalent_radius + periodictable.elements[ATOMIC_NUMBER[j[0]]].covalent_radius)
+                d = get_distance(xyz, ind1 + 1, ind2 + 1)
+                cov = (
+                    periodictable.elements[ATOMIC_NUMBER[i[0]]].covalent_radius
+                    + periodictable.elements[ATOMIC_NUMBER[j[0]]].covalent_radius
+                )
 
-                if d < cov*TOLERANCE and bond_unique(ind1, ind2):
+                if d < cov * TOLERANCE and bond_unique(ind1, ind2):
                     bonds.append([ind1, ind2])
     return bonds
 
+
 def get_neighbors_lists(xyz):
-    """ Returns a list neighbors (bonded atoms) for each atom """
+    """Returns a list neighbors (bonded atoms) for each atom"""
     bonds = get_connectivity(xyz)
     neighbors = [[] for i in range(len(xyz))]
 
@@ -109,6 +122,7 @@ def get_neighbors_lists(xyz):
         neighbors[b].append(a)
 
     return neighbors
+
 
 def morgan_numbering(xyz):
     indices = np.zeros(len(xyz)) + 1
@@ -132,6 +146,7 @@ def morgan_numbering(xyz):
 
     return indices
 
+
 def equivalent_atoms(xyz, algorithm="morgan"):
     equivalent = []
     if algorithm == "morgan":
@@ -141,6 +156,7 @@ def equivalent_atoms(xyz, algorithm="morgan"):
             if len(eqs) > 1:
                 equivalent.append(eqs)
     return equivalent
+
 
 def get_networkx_graph_from_xyz(xyz):
     import networkx as nx
@@ -157,11 +173,10 @@ def get_networkx_graph_from_xyz(xyz):
 
     return G
 
+
 def reorder_xyz(ref, xyz):
-    """ Reorders the atoms in xyz to correspond to the order in ref """
+    """Reorders the atoms in xyz to correspond to the order in ref"""
 
     new_order = {i: -1 for i in range(len(xyz))}
 
     elements = {i: e[0] for i, e in enumerate(ref)}
-
-

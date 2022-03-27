@@ -1,4 +1,4 @@
-'''
+"""
 This file of part of CalcUS.
 
 Copyright (C) 2020-2022 Raphaël Robidas
@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-'''
+"""
 
 
 import os
@@ -24,6 +24,7 @@ from .models import *
 from .calculation_helper import get_xyz_from_Gaussian_input
 from django.core.management import call_command
 from django.test import TestCase, Client
+
 
 class FileProcessingTests(TestCase):
     def setUp(self):
@@ -41,7 +42,7 @@ H       0.750607      0.010442      -3.787893
 H       2.471929      0.055984      -3.390225
 N       1.864226      -2.327415      -1.719803
 H       2.857594      -2.183310      -1.540327"""
-        self.xyz = "{}\n\n{}".format(len(self.raw_xyz.split('\n')), self.raw_xyz)
+        self.xyz = "{}\n\n{}".format(len(self.raw_xyz.split("\n")), self.raw_xyz)
 
     def test_parse_gaussian_com_space(self):
         inp = """%chk=test.chk
@@ -54,7 +55,9 @@ H       2.857594      -2.183310      -1.540327"""
                 0 1
                 {}
 
-                """.format(self.raw_xyz)
+                """.format(
+            self.raw_xyz
+        )
         parsed_xyz = get_xyz_from_Gaussian_input(inp)
         self.assertEqual(parsed_xyz, self.xyz)
 
@@ -68,7 +71,9 @@ H       2.857594      -2.183310      -1.540327"""
 
                 0 1
                 {}
-                """.format(self.raw_xyz)
+                """.format(
+            self.raw_xyz
+        )
         parsed_xyz = get_xyz_from_Gaussian_input(inp)
         self.assertEqual(parsed_xyz, self.xyz)
 
@@ -81,7 +86,9 @@ H       2.857594      -2.183310      -1.540327"""
                 Unnecessary header
 
                 0 1
-                {}""".format(self.raw_xyz)
+                {}""".format(
+            self.raw_xyz
+        )
         parsed_xyz = get_xyz_from_Gaussian_input(inp)
         self.assertEqual(parsed_xyz, self.xyz)
 
@@ -95,7 +102,9 @@ H       2.857594      -2.183310      -1.540327"""
                 0 1
                 {}
 
-                """.format(self.raw_xyz)
+                """.format(
+            self.raw_xyz
+        )
         parsed_xyz = get_xyz_from_Gaussian_input(inp)
         self.assertEqual(parsed_xyz, self.xyz)
 
@@ -111,7 +120,8 @@ H       2.857594      -2.183310      -1.540327"""
                 0 1
                 {}
 
-                """.format(self.raw_xyz)
+                """.format(
+            self.raw_xyz
+        )
         parsed_xyz = get_xyz_from_Gaussian_input(inp)
         self.assertEqual(parsed_xyz, self.xyz)
-

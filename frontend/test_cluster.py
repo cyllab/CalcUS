@@ -1,4 +1,4 @@
-'''
+"""
 This file of part of CalcUS.
 
 Copyright (C) 2020-2022 Raphaël Robidas
@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-'''
+"""
 
 
 import os
@@ -63,10 +63,11 @@ from unittest import mock
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
+tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 SCR_DIR = os.path.join(tests_dir, "scr")
 RESULTS_DIR = os.path.join(tests_dir, "results")
 KEYS_DIR = os.path.join(tests_dir, "keys")
+
 
 class ClusterTests(CalcusLiveServer):
     @classmethod
@@ -82,9 +83,9 @@ class ClusterTests(CalcusLiveServer):
         self.send_slurm_command("scancel -u slurm")
 
         if docker:
-            connection = redis.Redis(host='redis', port=6379, db=2)
+            connection = redis.Redis(host="redis", port=6379, db=2)
         else:
-            connection = redis.Redis(host='localhost', port=6379, db=2)
+            connection = redis.Redis(host="localhost", port=6379, db=2)
         connection.flushdb()
         connection.close()
 
@@ -93,7 +94,7 @@ class ClusterTests(CalcusLiveServer):
 
     def tearDown(self):
         send_cluster_command("stop\n")
-        time.sleep(0.5)# Give time to the daemon to disconnect cleanly
+        time.sleep(0.5)  # Give time to the daemon to disconnect cleanly
         super().tearDown()
 
     def run_daemon(self):
@@ -113,7 +114,9 @@ class ClusterTests(CalcusLiveServer):
         self.lget("/profile")
 
         try:
-            access = self.driver.find_element_by_css_selector("#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a")
+            access = self.driver.find_element_by_css_selector(
+                "#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a"
+            )
         except selenium.common.exceptions.NoSuchElementException:
             pass
         else:
@@ -122,7 +125,12 @@ class ClusterTests(CalcusLiveServer):
         self.add_cluster()
 
         element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a"))
+            EC.presence_of_element_located(
+                (
+                    By.CSS_SELECTOR,
+                    "#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a",
+                )
+            )
         )
 
         self.select_cluster(1)
@@ -150,7 +158,7 @@ class ClusterTests(CalcusLiveServer):
             ind += 1
 
         keys = glob.glob("{}/*".format(KEYS_DIR))
-        self.assertEqual(len(keys), initial_keys-2)
+        self.assertEqual(len(keys), initial_keys - 2)
 
     def test_cluster_settings(self):
         self.lget("/profile")
@@ -224,13 +232,17 @@ class ClusterTests(CalcusLiveServer):
         self.assertEqual(msg, "Connected")
 
         self.lget("/profile/")
-        manage = self.driver.find_element_by_css_selector("#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a")
+        manage = self.driver.find_element_by_css_selector(
+            "#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a"
+        )
         manage.send_keys(Keys.RETURN)
 
         element = WebDriverWait(self.driver, 10).until(
             EC.text_to_be_present_in_element((By.ID, "status_box"), "Connected")
         )
-        self.assertNotEqual(self.driver.find_element_by_id("status_box").text.find("Connected"), -1)
+        self.assertNotEqual(
+            self.driver.find_element_by_id("status_box").text.find("Connected"), -1
+        )
 
     def test_autoselect_resource_remote(self):
         g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
@@ -240,17 +252,17 @@ class ClusterTests(CalcusLiveServer):
 
         self.setup_cluster()
         params = {
-                'mol_name': 'test',
-                'type': 'Single-Point Energy',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'ethanol.sdf',
-                'resource': 'slurm',
-                }
+            "mol_name": "test",
+            "type": "Single-Point Energy",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "ethanol.sdf",
+            "resource": "slurm",
+        }
 
         self.lget("/launch/")
 
-        resources = self.driver.find_elements_by_css_selector('#calc_resource > option')
+        resources = self.driver.find_elements_by_css_selector("#calc_resource > option")
         self.assertEqual(len(resources), 2)
         self.assertEqual(resources[0].text, "Local")
         self.assertTrue(resources[0].is_selected())
@@ -260,7 +272,7 @@ class ClusterTests(CalcusLiveServer):
 
         self.calc_input_params(params)
 
-        resources = self.driver.find_elements_by_css_selector('#calc_resource > option')
+        resources = self.driver.find_elements_by_css_selector("#calc_resource > option")
         self.assertEqual(len(resources), 2)
         self.assertEqual(resources[0].text, "Local")
         self.assertFalse(resources[0].is_selected())
@@ -277,7 +289,7 @@ class ClusterTests(CalcusLiveServer):
         self.launch_ensemble_next_step()
         self.wait_for_ajax()
 
-        resources = self.driver.find_elements_by_css_selector('#calc_resource > option')
+        resources = self.driver.find_elements_by_css_selector("#calc_resource > option")
         self.assertEqual(len(resources), 2)
         self.assertEqual(resources[0].text, "Local")
         self.assertFalse(resources[0].is_selected())
@@ -293,17 +305,17 @@ class ClusterTests(CalcusLiveServer):
 
         self.setup_cluster()
         params = {
-                'mol_name': 'test',
-                'type': 'Single-Point Energy',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'ethanol.sdf',
-                'resource': 'Local',
-                }
+            "mol_name": "test",
+            "type": "Single-Point Energy",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "ethanol.sdf",
+            "resource": "Local",
+        }
 
         self.lget("/launch/")
 
-        resources = self.driver.find_elements_by_css_selector('#calc_resource > option')
+        resources = self.driver.find_elements_by_css_selector("#calc_resource > option")
         self.assertEqual(len(resources), 2)
         self.assertEqual(resources[0].text, "Local")
         self.assertTrue(resources[0].is_selected())
@@ -313,7 +325,7 @@ class ClusterTests(CalcusLiveServer):
 
         self.calc_input_params(params)
 
-        resources = self.driver.find_elements_by_css_selector('#calc_resource > option')
+        resources = self.driver.find_elements_by_css_selector("#calc_resource > option")
         self.assertEqual(len(resources), 2)
         self.assertEqual(resources[0].text, "Local")
         self.assertTrue(resources[0].is_selected())
@@ -330,7 +342,7 @@ class ClusterTests(CalcusLiveServer):
         self.launch_ensemble_next_step()
         self.wait_for_ajax()
 
-        resources = self.driver.find_elements_by_css_selector('#calc_resource > option')
+        resources = self.driver.find_elements_by_css_selector("#calc_resource > option")
         self.assertEqual(len(resources), 2)
         self.assertEqual(resources[0].text, "Local")
         self.assertTrue(resources[0].is_selected())
@@ -341,12 +353,12 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_xtb_crest(self):
         self.setup_cluster()
         params = {
-                'mol_name': 'test',
-                'type': 'Conformational Search',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'ethanol.sdf',
-                }
+            "mol_name": "test",
+            "type": "Conformational Search",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "ethanol.sdf",
+        }
 
         self.lget("/launch/")
         self.calc_input_params(params)
@@ -358,16 +370,16 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_orca_mo(self):
         self.setup_cluster()
         params = {
-                'mol_name': 'test',
-                'type': 'MO Calculation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'carbo_cation.mol',
-                'charge': '+1',
-                'software': 'ORCA',
-                'theory': 'HF',
-                'basis_set': 'Def2-SVP',
-                }
+            "mol_name": "test",
+            "type": "MO Calculation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "carbo_cation.mol",
+            "charge": "+1",
+            "software": "ORCA",
+            "theory": "HF",
+            "basis_set": "Def2-SVP",
+        }
 
         self.lget("/launch/")
         self.calc_input_params(params)
@@ -395,12 +407,12 @@ class ClusterTests(CalcusLiveServer):
         self.setup_cluster()
 
         params = {
-                'mol_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'ethanol.sdf',
-                }
+            "mol_name": "test",
+            "type": "Geometrical Optimisation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "ethanol.sdf",
+        }
 
         self.lget("/launch/")
         self.calc_input_params(params)
@@ -417,12 +429,12 @@ class ClusterTests(CalcusLiveServer):
         self.setup_cluster()
 
         params = {
-                'mol_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'ethanol.sdf',
-                }
+            "mol_name": "test",
+            "type": "Geometrical Optimisation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "ethanol.sdf",
+        }
 
         self.lget("/launch/")
         self.calc_input_params(params)
@@ -434,15 +446,15 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_gaussian_sp(self):
         self.setup_cluster()
         params = {
-                'mol_name': 'test',
-                'type': 'Single-Point Energy',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'benzene.mol',
-                'software': 'Gaussian',
-                'theory': 'HF',
-                'basis_set': 'Def2-SVP',
-                }
+            "mol_name": "test",
+            "type": "Single-Point Energy",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "benzene.mol",
+            "software": "Gaussian",
+            "theory": "HF",
+            "basis_set": "Def2-SVP",
+        }
 
         self.lget("/launch/")
         self.calc_input_params(params)
@@ -456,16 +468,16 @@ class ClusterTests(CalcusLiveServer):
     def test_gaussian_parse_cancelled_calc(self):
         self.setup_cluster()
         params = {
-                'mol_name': 'test',
-                'type': 'Constrained Optimisation',
-                'constraints': [['Scan', 'Angle', [1, 2, 3], [120, 160, 1000]]],
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'software': 'Gaussian',
-                'in_file': 'CH4.xyz',
-                'theory': 'Semi-empirical',
-                'method': 'AM1',
-                }
+            "mol_name": "test",
+            "type": "Constrained Optimisation",
+            "constraints": [["Scan", "Angle", [1, 2, 3], [120, 160, 1000]]],
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "software": "Gaussian",
+            "in_file": "CH4.xyz",
+            "theory": "Semi-empirical",
+            "method": "AM1",
+        }
 
         self.lget("/launch/")
         self.calc_input_params(params)
@@ -486,12 +498,12 @@ class ClusterTests(CalcusLiveServer):
     def test_cancel_calc(self):
         self.setup_cluster()
         params = {
-                'mol_name': 'test',
-                'type': 'Conformational Search',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'pentane.mol',
-                }
+            "mol_name": "test",
+            "type": "Conformational Search",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "pentane.mol",
+        }
 
         self.lget("/launch/")
         self.calc_input_params(params)
@@ -517,15 +529,15 @@ class ClusterTests(CalcusLiveServer):
     def test_relaunch_calc(self):
         self.setup_cluster()
         params = {
-                'mol_name': 'test',
-                'type': 'Single-Point Energy',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'CH4.mol',
-                'software': 'Gaussian',
-                'theory': 'HF',
-                'basis_set': 'Def2-SVP',
-                }
+            "mol_name": "test",
+            "type": "Single-Point Energy",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "CH4.mol",
+            "software": "Gaussian",
+            "theory": "HF",
+            "basis_set": "Def2-SVP",
+        }
 
         self.lget("/launch/")
         self.calc_input_params(params)
@@ -553,19 +565,18 @@ class ClusterTests(CalcusLiveServer):
         self.assertEqual(self.get_number_unseen_calcs(), 1)
         self.assertTrue(self.latest_calc_successful())
 
-
     def test_cluster_unseen_calc(self):
         self.setup_cluster()
         params = {
-                'mol_name': 'test',
-                'type': 'Single-Point Energy',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'CH4.mol',
-                'software': 'Gaussian',
-                'theory': 'HF',
-                'basis_set': 'Def2-SVP',
-                }
+            "mol_name": "test",
+            "type": "Single-Point Energy",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "CH4.mol",
+            "software": "Gaussian",
+            "theory": "HF",
+            "basis_set": "Def2-SVP",
+        }
 
         self.lget("/launch/")
         self.assertEqual(self.get_number_unseen_calcs(), 0)
@@ -580,12 +591,12 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_refetch(self):
         self.setup_cluster()
         params = {
-                'mol_name': 'test',
-                'type': 'Conformational Search',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'pentane.xyz',
-                }
+            "mol_name": "test",
+            "type": "Conformational Search",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "pentane.xyz",
+        }
 
         self.lget("/launch/")
         self.calc_input_params(params)
@@ -609,12 +620,12 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_disconnect(self):
         self.setup_cluster()
         params = {
-                'mol_name': 'test',
-                'type': 'Conformational Search',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_file': 'pentane.mol',
-                }
+            "mol_name": "test",
+            "type": "Conformational Search",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "pentane.mol",
+        }
 
         self.lget("/launch/")
         self.calc_input_params(params)
@@ -649,13 +660,13 @@ class ClusterTests(CalcusLiveServer):
         self.setup_cluster()
         files = ["batch/benzene{:02d}.xyz".format(i) for i in range(1, 11)]
         params = {
-                'mol_name': 'test',
-                'type': 'Geometrical Optimisation',
-                'project': 'New Project',
-                'new_project_name': 'SeleniumProject',
-                'in_files': files,
-                'software': 'xtb',
-                }
+            "mol_name": "test",
+            "type": "Geometrical Optimisation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_files": files,
+            "software": "xtb",
+        }
 
         self.lget("/launch/")
         self.calc_input_params(params)
@@ -669,4 +680,3 @@ class ClusterTests(CalcusLiveServer):
         n_mol = self.get_number_calcs_in_project("SeleniumProject")
 
         self.assertEqual(n_mol, 1)
-

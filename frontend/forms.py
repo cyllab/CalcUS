@@ -1,4 +1,4 @@
-'''
+"""
 This file of part of CalcUS.
 
 Copyright (C) 2020-2022 Raphaël Robidas
@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-'''
+"""
 
 
 from django import forms
@@ -25,14 +25,13 @@ from django.core.exceptions import ValidationError
 
 
 class UserCreateForm(UserCreationForm):
-    email = forms.EmailField(required=True,
-                         label='Email',
-                         error_messages={'exists': 'Oops'})
+    email = forms.EmailField(
+        required=True, label="Email", error_messages={"exists": "Oops"}
+    )
 
     class Meta:
         model = User
         fields = ("username", "email", "password1", "password2")
-
 
     def save(self, commit=True):
         user = super(UserCreateForm, self).save(commit=False)
@@ -42,7 +41,6 @@ class UserCreateForm(UserCreationForm):
         return user
 
     def clean_email(self):
-        if User.objects.filter(email=self.cleaned_data['email']).exists():
-            raise ValidationError(self.fields['email'].error_messages['exists'])
-        return self.cleaned_data['email']
-
+        if User.objects.filter(email=self.cleaned_data["email"]).exists():
+            raise ValidationError(self.fields["email"].error_messages["exists"])
+        return self.cleaned_data["email"]

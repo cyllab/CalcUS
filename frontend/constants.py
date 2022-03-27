@@ -1,4 +1,4 @@
-'''
+"""
 This file of part of CalcUS.
 
 Copyright (C) 2020-2022 Raphaël Robidas
@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-'''
+"""
 
 
 import decimal
@@ -50,6 +50,7 @@ MAX_SFTP_ATTEMPT_COUNT = 3
 MAX_COMMAND_ATTEMPT_COUNT = 5
 MAX_RESUME_CALC_ATTEMPT_COUNT = 3
 
+
 class ErrorCodes(IntEnum):
     SUCCESS = 0
     UNKNOWN_TERMINATION = 1
@@ -58,7 +59,7 @@ class ErrorCodes(IntEnum):
     INVALID_CHARGE_MULTIPLICITY = 4
     INVALID_FILE = 5
     FAILED_TO_CREATE_INPUT = 6
-    SERVER_DISCONNECTED = 7#Not a fatal error (will not end the calculation)
+    SERVER_DISCONNECTED = 7  # Not a fatal error (will not end the calculation)
     MISSING_FILE = 8
     CHANNEL_TIMED_OUT = 10
     INVALID_COMMAND = 11
@@ -74,26 +75,23 @@ class ErrorCodes(IntEnum):
 
     FAILED_TO_RUN_LOCAL_SOFTWARE = 30
 
-#Software->Method/Functional->Basis set->Atom->[m, b, R2]
-NMR_REGRESSIONS = {
-    'ORCA': {
-            'PBEh-3c': {
-                    '': {
-                        'H': [-1.0758, 32.4963, 0.9957],
-                        'C': [-1.0126, 198.0555, 0.9970],
-                    },
-                },
-        },
-    'Gaussian': {
 
+# Software->Method/Functional->Basis set->Atom->[m, b, R2]
+NMR_REGRESSIONS = {
+    "ORCA": {
+        "PBEh-3c": {
+            "": {
+                "H": [-1.0758, 32.4963, 0.9957],
+                "C": [-1.0126, 198.0555, 0.9970],
+            },
         },
+    },
+    "Gaussian": {},
 }
 
-#Structure:
+# Structure:
 #   {
 #       step_name: {
 #           spec_name: [num_params, [software1, software2]]
 #       }
 #   }
-
-

@@ -1,4 +1,4 @@
-'''
+"""
 This file of part of CalcUS.
 
 Copyright (C) 2020-2022 Raphaël Robidas
@@ -15,18 +15,20 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-'''
+"""
 
 
 from django.core.management.base import BaseCommand
 from frontend.models import *
 
-su_name = os.environ.get("CALCUS_SU_NAME", '')
+su_name = os.environ.get("CALCUS_SU_NAME", "")
+
+
 class Command(BaseCommand):
-    help = 'Verifies if the default superuser account is created'
+    help = "Verifies if the default superuser account is created"
 
     def handle(self, *args, **options):
-        if su_name == '':
+        if su_name == "":
             print("No superuser name provided, creation aborted")
             return
         try:

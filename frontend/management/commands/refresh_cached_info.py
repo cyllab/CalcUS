@@ -1,4 +1,4 @@
-'''
+"""
 This file of part of CalcUS.
 
 Copyright (C) 2020-2022 Raphaël Robidas
@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-'''
+"""
 
 
 import glob
@@ -25,8 +25,7 @@ from frontend.models import *
 
 
 class Command(BaseCommand):
-    help = 'Refreshes the cached information about projects and molecules, such as the calculation statistics'
-
+    help = "Refreshes the cached information about projects and molecules, such as the calculation statistics"
 
     def handle(self, *args, **options):
         for profile in Profile.objects.all():
@@ -102,4 +101,3 @@ class Command(BaseCommand):
                 mol.num_calc_running = drunning[mol.id]
                 mol.num_calc_completed = dcompleted[mol.id]
                 mol.save()
-

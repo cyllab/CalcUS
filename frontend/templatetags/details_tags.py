@@ -1,4 +1,4 @@
-'''
+"""
 This file of part of CalcUS.
 
 Copyright (C) 2020-2022 Raphaël Robidas
@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-'''
+"""
 
 
 from django import template
@@ -23,12 +23,14 @@ from frontend.models import *
 
 register = template.Library()
 
+
 @register.simple_tag
 def get_geom_flag(ensemble, param):
     if verify_geom(ensemble, param):
-        return ' (GEOMETRY)'
+        return " (GEOMETRY)"
     else:
-        return ''
+        return ""
+
 
 def verify_geom(ensemble, param):
     s = ensemble.structure_set.all()[0]
@@ -41,28 +43,34 @@ def verify_geom(ensemble, param):
         return True
     return False
 
+
 @register.simple_tag
 def get_sorted_params(ensemble):
     # Could be optimized to stop when the parameters linking to the geometry are found
-    params = sorted(ensemble.unique_parameters, key=lambda i: verify_geom(ensemble, i), reverse=True)
+    params = sorted(
+        ensemble.unique_parameters, key=lambda i: verify_geom(ensemble, i), reverse=True
+    )
     return params
+
 
 @register.simple_tag
 def get_ensemble_weighted_energy(param, ensemble):
     ret = ensemble.weighted_energy(param)
     return ret
 
+
 @register.simple_tag
 def get_ensemble_weighted_free_energy(param, ensemble):
     ret = ensemble.weighted_free_energy(param)
     return ret
 
+
 @register.simple_tag
 def get_simple_nmr_shifts_structure(prop):
     nmr = prop.simple_nmr
-    if nmr == '':
-        return ''
+    if nmr == "":
+        return ""
     ret = []
-    for shift in nmr.split('\n'):
+    for shift in nmr.split("\n"):
         ret.append(shift.split())
     return ret

@@ -1,4 +1,4 @@
-'''
+"""
 This file of part of CalcUS.
 
 Copyright (C) 2020-2022 Raphaël Robidas
@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-'''
+"""
 
 
 from django.shortcuts import render
@@ -24,14 +24,15 @@ from django.views.generic import TemplateView
 from django.conf import settings
 from django.contrib.auth.models import User
 
+
 class LoginView(TemplateView):
 
-    template_name = 'registration/login.html'
+    template_name = "registration/login.html"
 
     def post(self, request, **kwargs):
 
-        username = request.POST.get('username', False)
-        password = request.POST.get('password', False)
+        username = request.POST.get("username", False)
+        password = request.POST.get("password", False)
         user = authenticate(username=username, password=password)
         if user is not None and user.is_active:
             login(request, user)
@@ -42,7 +43,7 @@ class LoginView(TemplateView):
 
 class LogoutView(TemplateView):
 
-    template_name = 'frontend/index.html'
+    template_name = "frontend/index.html"
 
     def get(self, request, **kwargs):
         logout(request)

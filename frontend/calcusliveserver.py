@@ -1,4 +1,4 @@
-'''
+"""
 This file of part of CalcUS.
 
 Copyright (C) 2020-2022 Raphaël Robidas
@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-'''
+"""
 
 
 import os
@@ -51,7 +51,7 @@ from .environment_variables import *
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-tests_dir = os.path.join('/'.join(__file__.split('/')[:-1]), "tests/")
+tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 SCR_DIR = os.path.join(tests_dir, "scr")
 RESULTS_DIR = os.path.join(tests_dir, "results")
 KEYS_DIR = os.path.join(tests_dir, "keys")
@@ -63,9 +63,10 @@ from frontend import tasks
 
 base_cwd = os.getcwd()
 
+
 class CalcusLiveServer(StaticLiveServerTestCase):
 
-    host = '0.0.0.0'
+    host = "0.0.0.0"
 
     @classmethod
     def setUpClass(cls):
@@ -75,8 +76,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         if docker:
             cls.driver = webdriver.Remote(
-                    command_executor='http://selenium:4444/wd/hub',
-                    desired_capabilities=DesiredCapabilities.CHROME,
+                command_executor="http://selenium:4444/wd/hub",
+                desired_capabilities=DesiredCapabilities.CHROME,
             )
             cls.driver.set_window_size(1920, 1080)
         else:
@@ -91,7 +92,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             cls.driver.set_window_size(1920, 1080)
 
         tasks.REMOTE = False
-        app.loader.import_module('celery.contrib.testing.tasks')
+        app.loader.import_module("celery.contrib.testing.tasks")
 
         cls.celery_worker = start_worker(app, perform_ping_check=False)
         cls.celery_worker.__enter__()
@@ -111,7 +112,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def tearDownClass(cls):
         cls.driver.quit()
         cls.celery_worker.__exit__(None, None, None)
-        os.chdir(base_cwd)#Prevent coverage.py crash
+        os.chdir(base_cwd)  # Prevent coverage.py crash
         super().tearDownClass()
 
     def run(self, result=None):
@@ -140,7 +141,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     raise exc
                 else:
                     num += 1
-                print("Test failed, trying again (attempt {}/{})".format(num, MAX_ATTEMPTS))
+                print(
+                    "Test failed, trying again (attempt {}/{})".format(
+                        num, MAX_ATTEMPTS
+                    )
+                )
                 self.cleanupCalculations()
                 self.lget("/home/")
                 time.sleep(3)
@@ -150,7 +155,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def setUp(self):
         self.addCleanup(self.cleanupCalculations)
         os.chdir(base_cwd)
-        call_command('init_static_obj')
+        call_command("init_static_obj")
         self.username = "Selenium"
         self.password = "test1234"
 
@@ -158,11 +163,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         u.save()
         self.login(self.username, self.password)
         self.profile = Profile.objects.get(user__username=self.username)
-        time.sleep(0.1)#Reduces glitches (I think?)
+        time.sleep(0.1)  # Reduces glitches (I think?)
 
-        self.name_patcher = mock.patch.dict(os.environ, {"TEST_NAME": self.full_test_name})
+        self.name_patcher = mock.patch.dict(
+            os.environ, {"TEST_NAME": self.full_test_name}
+        )
         self.name_patcher.start()
-
 
     def cleanupCalculations(self):
         for c in Calculation.objects.all():
@@ -170,7 +176,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             res.abort()
 
     def login(self, username, password):
-        self.lget('/accounts/login/')
+        self.lget("/accounts/login/")
 
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "id_username"))
@@ -179,9 +185,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             EC.presence_of_element_located((By.ID, "id_password"))
         )
 
-        username_f = self.driver.find_element_by_id('id_username')
-        password_f = self.driver.find_element_by_id('id_password')
-        submit = self.driver.find_element_by_css_selector('input.control')
+        username_f = self.driver.find_element_by_id("id_username")
+        password_f = self.driver.find_element_by_id("id_password")
+        submit = self.driver.find_element_by_css_selector("input.control")
         username_f.send_keys(username)
         password_f.send_keys(password)
         submit.send_keys(Keys.RETURN)
@@ -192,10 +198,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         )
 
     def logout(self):
-        self.driver.get('{}/accounts/logout/?next=/'.format(self.live_server_url))
+        self.driver.get("{}/accounts/logout/?next=/".format(self.live_server_url))
 
     def lget(self, url):
-        self.driver.get('{}{}'.format(self.live_server_url, url))
+        self.driver.get("{}{}".format(self.live_server_url, url))
 
         # Try to wait until everything is loaded
         # This hopefully reduces the overall flakiness of Selenium integration tests
@@ -211,21 +217,21 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def calc_input_params(self, params):
         self.wait_for_ajax()
 
-        if 'mol_name' in params.keys():
+        if "mol_name" in params.keys():
             element = WebDriverWait(self.driver, 1).until(
                 EC.presence_of_element_located((By.NAME, "calc_mol_name"))
             )
-            name_input = self.driver.find_element_by_name('calc_mol_name')
+            name_input = self.driver.find_element_by_name("calc_mol_name")
             name_input.clear()
-            name_input.send_keys(params['mol_name'])
+            name_input.send_keys(params["mol_name"])
 
-        if 'name' in params.keys():
+        if "name" in params.keys():
             element = WebDriverWait(self.driver, 1).until(
                 EC.presence_of_element_located((By.NAME, "calc_name"))
             )
-            name_input = self.driver.find_element_by_name('calc_name')
+            name_input = self.driver.find_element_by_name("calc_name")
             name_input.clear()
-            name_input.send_keys(params['name'])
+            name_input.send_keys(params["name"])
 
         element = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located((By.NAME, "calc_solvent"))
@@ -236,73 +242,94 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         )
 
         try:
-            upload_input = self.driver.find_element_by_name('file_structure')
+            upload_input = self.driver.find_element_by_name("file_structure")
         except selenium.common.exceptions.NoSuchElementException:
             pass
 
-        if 'charge' in params.keys():
-            charge_input = self.driver.find_element_by_name('calc_charge')
+        if "charge" in params.keys():
+            charge_input = self.driver.find_element_by_name("calc_charge")
             charge_input.clear()
-            charge_input.send_keys(params['charge'])
+            charge_input.send_keys(params["charge"])
 
-        if 'multiplicity' in params.keys():
-            mult_input = self.driver.find_element_by_name('calc_multiplicity')
+        if "multiplicity" in params.keys():
+            mult_input = self.driver.find_element_by_name("calc_multiplicity")
             mult_input.clear()
-            mult_input.send_keys(params['multiplicity'])
+            mult_input.send_keys(params["multiplicity"])
 
-        if 'software' in params.keys():
+        if "software" in params.keys():
             select = self.driver.find_element_by_id("calc_software")
-            self.driver.execute_script("showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",select)
+            self.driver.execute_script(
+                "showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",
+                select,
+            )
             time.sleep(0.1)
-            select.find_element_by_xpath("option[text()='{}']".format(params['software'])).click()
+            select.find_element_by_xpath(
+                "option[text()='{}']".format(params["software"])
+            ).click()
 
             self.wait_for_ajax()
 
-        if 'solvent' in params.keys():
-            solvent_input = self.driver.find_element_by_name('calc_solvent')
-            solvent_input.send_keys(params['solvent'])
+        if "solvent" in params.keys():
+            solvent_input = self.driver.find_element_by_name("calc_solvent")
+            solvent_input.send_keys(params["solvent"])
 
-        if 'type' in params.keys():
-            self.driver.find_element_by_xpath("//*[@id='calc_type']/option[text()='{}']".format(params['type'])).click()
+        if "type" in params.keys():
+            self.driver.find_element_by_xpath(
+                "//*[@id='calc_type']/option[text()='{}']".format(params["type"])
+            ).click()
 
-        if 'project' in params.keys():
-            self.driver.find_element_by_xpath("//*[@id='calc_project']/option[text()='{}']".format(params['project'])).click()
+        if "project" in params.keys():
+            self.driver.find_element_by_xpath(
+                "//*[@id='calc_project']/option[text()='{}']".format(params["project"])
+            ).click()
 
-        if 'solvation_model' in params.keys():
-            self.driver.find_element_by_xpath("//*[@id='calc_solvation_model']/option[text()='{}']".format(params['solvation_model'])).click()
+        if "solvation_model" in params.keys():
+            self.driver.find_element_by_xpath(
+                "//*[@id='calc_solvation_model']/option[text()='{}']".format(
+                    params["solvation_model"]
+                )
+            ).click()
 
-        if 'solvation_radii' in params.keys():
-            self.driver.find_element_by_xpath("//*[@id='calc_solvation_radii']/option[text()='{}']".format(params['solvation_radii'])).click()
+        if "solvation_radii" in params.keys():
+            self.driver.find_element_by_xpath(
+                "//*[@id='calc_solvation_radii']/option[text()='{}']".format(
+                    params["solvation_radii"]
+                )
+            ).click()
 
-        if 'new_project_name' in params.keys():
-            new_project_input = self.driver.find_element_by_name('new_project_name')
-            new_project_input.send_keys(params['new_project_name'])
+        if "new_project_name" in params.keys():
+            new_project_input = self.driver.find_element_by_name("new_project_name")
+            new_project_input.send_keys(params["new_project_name"])
 
-        if 'in_file' in params.keys():
-            upload_input.send_keys("{}/tests/{}".format(dir_path, params['in_file']))
+        if "in_file" in params.keys():
+            upload_input.send_keys("{}/tests/{}".format(dir_path, params["in_file"]))
 
-        if 'in_files' in params.keys():
-            for f in params['in_files']:
+        if "in_files" in params.keys():
+            for f in params["in_files"]:
                 upload_input.send_keys("{}/tests/{}".format(dir_path, f))
-            if 'combine' in params.keys() and params['combine'] == True:
-                combine_box = self.driver.find_element_by_id("calc_combine_files");
+            if "combine" in params.keys() and params["combine"] == True:
+                combine_box = self.driver.find_element_by_id("calc_combine_files")
                 combine_box.click()
 
-        if 'aux_file' in params.keys():
-            aux_upload = self.driver.find_element_by_name('aux_file_structure')
-            aux_upload.send_keys("{}/tests/{}".format(dir_path, params['aux_file']))
+        if "aux_file" in params.keys():
+            aux_upload = self.driver.find_element_by_name("aux_file_structure")
+            aux_upload.send_keys("{}/tests/{}".format(dir_path, params["aux_file"]))
 
-        if 'aux_structure' in params.keys():
-            aux_mol, aux_e, aux_s = params['aux_structure']
+        if "aux_structure" in params.keys():
+            aux_mol, aux_e, aux_s = params["aux_structure"]
             mol_select = self.driver.find_element_by_id("aux_mol")
-            mol_select.find_element_by_xpath("option[text()='{}']".format(aux_mol)).click()
+            mol_select.find_element_by_xpath(
+                "option[text()='{}']".format(aux_mol)
+            ).click()
 
             self.wait_for_ajax()
 
             for i in range(2):
                 try:
                     e_select = self.driver.find_element_by_id("aux_ensemble")
-                    e_select.find_element_by_xpath("option[text()='{}']".format(aux_e)).click()
+                    e_select.find_element_by_xpath(
+                        "option[text()='{}']".format(aux_e)
+                    ).click()
                 except selenium.common.exceptions.NoSuchElementException:
                     time.sleep(1)
                 else:
@@ -312,104 +339,160 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             for i in range(2):
                 try:
                     s_select = self.driver.find_element_by_id("aux_struct")
-                    s_select.find_element_by_xpath("option[text()='{}']".format(aux_s)).click()
+                    s_select.find_element_by_xpath(
+                        "option[text()='{}']".format(aux_s)
+                    ).click()
                 except selenium.common.exceptions.NoSuchElementException:
                     time.sleep(1)
                 else:
                     break
 
-        if 'constraints' in params.keys():
-            assert params['type'] in ['Constrained Optimisation', 'Constrained Conformational Search']
+        if "constraints" in params.keys():
+            assert params["type"] in [
+                "Constrained Optimisation",
+                "Constrained Conformational Search",
+            ]
 
             def handle_constraint(constraint, ind):
                 c_mode = constraint[0]
-                select = self.driver.find_element_by_id("constraint_mode_{}".format(ind))
-                self.driver.execute_script("showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",select)
+                select = self.driver.find_element_by_id(
+                    "constraint_mode_{}".format(ind)
+                )
+                self.driver.execute_script(
+                    "showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",
+                    select,
+                )
                 time.sleep(0.1)
-                select.find_element_by_xpath("option[text()='{}']".format(c_mode)).click()
+                select.find_element_by_xpath(
+                    "option[text()='{}']".format(c_mode)
+                ).click()
 
                 c_type = constraint[1]
-                select = self.driver.find_element_by_id("constraint_type_{}".format(ind))
-                self.driver.execute_script("showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",select)
+                select = self.driver.find_element_by_id(
+                    "constraint_type_{}".format(ind)
+                )
+                self.driver.execute_script(
+                    "showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",
+                    select,
+                )
                 time.sleep(0.1)
-                select.find_element_by_xpath("option[text()='{}']".format(c_type)).click()
+                select.find_element_by_xpath(
+                    "option[text()='{}']".format(c_type)
+                ).click()
 
                 atoms = constraint[2]
 
                 # Although not elegant, it reduces flakiness
-                while self.driver.find_element_by_id("calc_constraint_{}_1".format(ind)).get_attribute("value") == "":
-                    self.driver.find_element_by_id("calc_constraint_{}_1".format(ind)).send_keys(str(atoms[0]))
+                while (
+                    self.driver.find_element_by_id(
+                        "calc_constraint_{}_1".format(ind)
+                    ).get_attribute("value")
+                    == ""
+                ):
+                    self.driver.find_element_by_id(
+                        "calc_constraint_{}_1".format(ind)
+                    ).send_keys(str(atoms[0]))
                     time.sleep(1)
 
-                self.driver.find_element_by_id("calc_constraint_{}_2".format(ind)).send_keys(str(atoms[1]))
-                if c_type == 'Angle':
-                    self.driver.find_element_by_id("calc_constraint_{}_3".format(ind)).send_keys(str(atoms[2]))
-                elif c_type == 'Dihedral':
-                    self.driver.find_element_by_id("calc_constraint_{}_3".format(ind)).send_keys(str(atoms[2]))
-                    self.driver.find_element_by_id("calc_constraint_{}_4".format(ind)).send_keys(str(atoms[3]))
+                self.driver.find_element_by_id(
+                    "calc_constraint_{}_2".format(ind)
+                ).send_keys(str(atoms[1]))
+                if c_type == "Angle":
+                    self.driver.find_element_by_id(
+                        "calc_constraint_{}_3".format(ind)
+                    ).send_keys(str(atoms[2]))
+                elif c_type == "Dihedral":
+                    self.driver.find_element_by_id(
+                        "calc_constraint_{}_3".format(ind)
+                    ).send_keys(str(atoms[2]))
+                    self.driver.find_element_by_id(
+                        "calc_constraint_{}_4".format(ind)
+                    ).send_keys(str(atoms[3]))
                 if c_mode == "Scan":
                     scan = constraint[3]
-                    if not 'software' in params.keys() or params['software'] != "Gaussian":
-                        self.driver.find_element_by_id("calc_scan_{}_1".format(ind)).send_keys(str(scan[0]))
-                    self.driver.find_element_by_id("calc_scan_{}_2".format(ind)).send_keys(str(scan[1]))
-                    self.driver.find_element_by_id("calc_scan_{}_3".format(ind)).send_keys(str(scan[2]))
+                    if (
+                        not "software" in params.keys()
+                        or params["software"] != "Gaussian"
+                    ):
+                        self.driver.find_element_by_id(
+                            "calc_scan_{}_1".format(ind)
+                        ).send_keys(str(scan[0]))
+                    self.driver.find_element_by_id(
+                        "calc_scan_{}_2".format(ind)
+                    ).send_keys(str(scan[1]))
+                    self.driver.find_element_by_id(
+                        "calc_scan_{}_3".format(ind)
+                    ).send_keys(str(scan[2]))
 
-
-            constr = params['constraints']
+            constr = params["constraints"]
             handle_constraint(constr[0], 1)
             if len(constr) > 1:
                 ind = 2
-                for c in params['constraints'][1:]:
+                for c in params["constraints"][1:]:
                     self.driver.find_element_by_id("add_constraint_btn").click()
                     time.sleep(0.1)
                     handle_constraint(c, ind)
                     time.sleep(0.1)
                     ind += 1
 
-
-        if 'theory' in params.keys():
+        if "theory" in params.keys():
             select = self.driver.find_element_by_id("calc_theory_level")
-            self.driver.execute_script("showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",select)
+            self.driver.execute_script(
+                "showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",
+                select,
+            )
             time.sleep(0.1)
-            self.driver.find_element_by_xpath("//*[@id='calc_theory_level']/option[text()='{}']".format(params['theory'])).click()
+            self.driver.find_element_by_xpath(
+                "//*[@id='calc_theory_level']/option[text()='{}']".format(
+                    params["theory"]
+                )
+            ).click()
 
-        if 'method' in params.keys():
-            self.driver.find_element_by_xpath("//*[@id='calc_method']/option[text()='{}']".format(params['method'])).click()
+        if "method" in params.keys():
+            self.driver.find_element_by_xpath(
+                "//*[@id='calc_method']/option[text()='{}']".format(params["method"])
+            ).click()
 
-        if 'functional' in params.keys():
+        if "functional" in params.keys():
             element = WebDriverWait(self.driver, 5).until(
                 EC.presence_of_element_located((By.ID, "calc_functional"))
             )
             func = self.driver.find_element_by_id("calc_functional")
             func.clear()
-            func.send_keys(params['functional'])
+            func.send_keys(params["functional"])
 
-        if 'basis_set' in params.keys():
+        if "basis_set" in params.keys():
             bs = self.driver.find_element_by_id("calc_basis_set")
             bs.clear()
-            bs.send_keys(params['basis_set'])
+            bs.send_keys(params["basis_set"])
 
-        if 'specifications' in params.keys():
+        if "specifications" in params.keys():
             self.driver.find_element_by_css_selector("summary").click()
             specs = self.driver.find_element_by_id("calc_specifications")
             specs.clear()
-            specs.send_keys(params['specifications'])
-            #self.driver.find_element_by_css_selector("summary").click()
+            specs.send_keys(params["specifications"])
+            # self.driver.find_element_by_css_selector("summary").click()
 
-        if 'filter' in params.keys():
-            assert 'filter_value' in params.keys()
+        if "filter" in params.keys():
+            assert "filter_value" in params.keys()
 
             filter_select = self.driver.find_element_by_id("calc_filter")
-            filter_select.find_element_by_xpath("option[text()='{}']".format(params['filter'])).click()
+            filter_select.find_element_by_xpath(
+                "option[text()='{}']".format(params["filter"])
+            ).click()
 
             filter_value = self.driver.find_element_by_id("filter_value_input")
-            filter_value.send_keys(params['filter_value'])
+            filter_value.send_keys(params["filter_value"])
 
-        if 'resource' in params.keys():
-            self.driver.find_element_by_xpath("//*[@id='calc_resource']/option[text()='{}']".format(params['resource'])).click()
+        if "resource" in params.keys():
+            self.driver.find_element_by_xpath(
+                "//*[@id='calc_resource']/option[text()='{}']".format(
+                    params["resource"]
+                )
+            ).click()
 
     def calc_launch(self):
-        submit = self.driver.find_element_by_id('submit_button')
+        submit = self.driver.find_element_by_id("submit_button")
         submit.click()
 
     def get_confirmed_specifications(self):
@@ -444,7 +527,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             badge = self.driver.find_element_by_id("unseen_calculations_badge")
         except selenium.common.exceptions.NoSuchElementException:
             return 0
-        if badge is None or badge.text.strip() == '':
+        if badge is None or badge.text.strip() == "":
             return 0
         return int(badge.text)
 
@@ -468,8 +551,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def wait_for_ajax(self):
         wait = WebDriverWait(self.driver, 5)
 
-        wait.until(lambda driver: driver.execute_script('return jQuery.active') == 0)
-        wait.until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+        wait.until(lambda driver: driver.execute_script("return jQuery.active") == 0)
+        wait.until(
+            lambda driver: driver.execute_script("return document.readyState")
+            == "complete"
+        )
 
     def get_nmr_shifts(self):
         assert self.is_on_page_nmr_analysis()
@@ -477,7 +563,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         tbody = self.driver.find_element_by_id("shifts_body")
         lines = tbody.find_elements_by_css_selector("tr")
-        shifts = [line.find_element_by_css_selector("td:nth-child(3)").text for line in lines]
+        shifts = [
+            line.find_element_by_css_selector("td:nth-child(3)").text for line in lines
+        ]
         return shifts
 
     def click_calc_method(self, num):
@@ -486,7 +574,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.wait_for_ajax()
         tabs_list = self.driver.find_element_by_css_selector("#tabs")
         tabs = tabs_list.find_elements_by_css_selector("li")
-        tabs[num-1].click()
+        tabs[num - 1].click()
         self.wait_for_ajax()
 
     def click_calc_method_not_geom(self):
@@ -498,7 +586,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         not_geom = None
         for t in tabs:
-            if '(GEOMETRY)' not in t.text:
+            if "(GEOMETRY)" not in t.text:
                 if not_geom is None:
                     not_geom = t
                 else:
@@ -516,7 +604,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         not_geom = None
         for t in tabs:
-            if '(GEOMETRY)' in t.text:
+            if "(GEOMETRY)" in t.text:
                 t.click()
                 break
         else:
@@ -562,20 +650,21 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def select_conformer(self, num):
         conformers = self.get_conformers()
-        conformers[num-1].click()
+        conformers[num - 1].click()
 
     def select_conformers(self, nums):
         conformers = self.get_conformers()
-        first_conf = nums.pop(0)-1
+        first_conf = nums.pop(0) - 1
 
         conformers[first_conf].click()
 
         for n in nums:
-            ActionChains(self.driver).key_down(Keys.CONTROL).click(conformers[n-1]).key_up(Keys.CONTROL).perform()
-
+            ActionChains(self.driver).key_down(Keys.CONTROL).click(
+                conformers[n - 1]
+            ).key_up(Keys.CONTROL).perform()
 
     def get_split_url(self):
-        return self.driver.current_url.split('/')[3:]
+        return self.driver.current_url.split("/")[3:]
 
     def get_group_panel(self):
         return self.driver.find_element_by_css_selector(".navbar-start > div")
@@ -623,7 +712,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             address.send_keys("localhost")
             username.send_keys("calcus")
 
-
         pal = self.driver.find_element_by_name("cluster_cores")
         pal.clear()
         pal.send_keys("8")
@@ -649,15 +737,15 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             time.sleep(1)
 
         if docker:
-            child = pexpect.spawn('ssh slurm@slurm')
-            #child.logfile = open("/calcus/pexpect.log", 'wb')
+            child = pexpect.spawn("ssh slurm@slurm")
+            # child.logfile = open("/calcus/pexpect.log", 'wb')
             choice = child.expect(["(yes/no)", "password"])
             if choice == 0:
-                child.sendline('yes')
+                child.sendline("yes")
                 child.expect("password")
-                child.sendline('clustertest')
+                child.sendline("clustertest")
             elif choice == 1:
-                child.sendline('clustertest')
+                child.sendline("clustertest")
 
             child.expect("\$")
             child.sendline("mkdir -p .ssh/".format(public_key))
@@ -670,11 +758,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             child.expect("\$")
             child.sendline("exit")
         else:
-            child = pexpect.spawn('su - calcus')
-            child.expect ('Password:')
-            child.sendline('clustertest')
-            child.expect('\$')
-            child.sendline("echo '{}' > /home/calcus/.ssh/authorized_keys".format(public_key))
+            child = pexpect.spawn("su - calcus")
+            child.expect("Password:")
+            child.sendline("clustertest")
+            child.expect("\$")
+            child.sendline(
+                "echo '{}' > /home/calcus/.ssh/authorized_keys".format(public_key)
+            )
             time.sleep(0.1)
 
     def connect_cluster(self):
@@ -682,7 +772,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         status = self.driver.find_element_by_id("status_box")
 
-        if 'has-background-success' in status.get_attribute("class"):#Already connected
+        if "has-background-success" in status.get_attribute(
+            "class"
+        ):  # Already connected
             return
 
         password = self.driver.find_element_by_id("ssh_password")
@@ -712,8 +804,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def select_cluster(self, num):
         assert self.is_on_page_profile()
 
-        clusters = self.driver.find_elements_by_css_selector("#owned_accesses > center > table > tbody > tr")
-        cluster = clusters[num-1]
+        clusters = self.driver.find_elements_by_css_selector(
+            "#owned_accesses > center > table > tbody > tr"
+        )
+        cluster = clusters[num - 1]
         cluster.find_element_by_css_selector("th > a.button").click()
 
     def is_user(self, username):
@@ -731,7 +825,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             return False
         else:
             try:
-                p = Project.objects.get(name=project_name.replace('%20', ' '), author=u)
+                p = Project.objects.get(name=project_name.replace("%20", " "), author=u)
             except Project.DoesNotExist:
                 return False
             else:
@@ -756,7 +850,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_folders(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == 'projects' and self.is_user(url[1]) and self.is_user_project(url[1], url[2]) and url[3] == "folders":
+            if (
+                url[0] == "projects"
+                and self.is_user(url[1])
+                and self.is_user_project(url[1], url[2])
+                and url[3] == "folders"
+            ):
                 return True
             time.sleep(1)
 
@@ -765,7 +864,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_order_details(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == 'calculationorder' and url[1] != '':
+            if url[0] == "calculationorder" and url[1] != "":
                 return True
             time.sleep(1)
 
@@ -774,7 +873,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_projects(self):
         for i in range(3):
             url = self.get_split_url()
-            if (url[0] == 'projects' or url[0] == 'home') and (url[1] == '' or self.is_user(url[1])):
+            if (url[0] == "projects" or url[0] == "home") and (
+                url[1] == "" or self.is_user(url[1])
+            ):
                 return True
             time.sleep(1)
 
@@ -783,7 +884,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_user_project(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == 'projects' and self.is_user(url[1]) and self.is_user_project(url[1], url[2]):
+            if (
+                url[0] == "projects"
+                and self.is_user(url[1])
+                and self.is_user_project(url[1], url[2])
+            ):
                 return True
             time.sleep(1)
 
@@ -792,7 +897,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_calculations(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == 'calculations' and url[1] == '':
+            if url[0] == "calculations" and url[1] == "":
                 return True
             time.sleep(1)
 
@@ -801,7 +906,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_calculation(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == 'calculation' and url[1] != '':
+            if url[0] == "calculation" and url[1] != "":
                 return True
             time.sleep(1)
 
@@ -810,7 +915,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_profile(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == 'profile' and url[1] == '':
+            if url[0] == "profile" and url[1] == "":
                 return True
             time.sleep(1)
 
@@ -819,17 +924,16 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_access(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == 'manage_access' and url[1] != '':
+            if url[0] == "manage_access" and url[1] != "":
                 return True
             time.sleep(1)
 
         return False
 
-
     def is_on_page_managePI(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == 'manage_pi_requests' and url[1] == '':
+            if url[0] == "manage_pi_requests" and url[1] == "":
                 return True
             time.sleep(1)
 
@@ -843,7 +947,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             except ValueError:
                 pass
             else:
-                if url[0] == 'molecule' and self.is_molecule_id(mol_id):
+                if url[0] == "molecule" and self.is_molecule_id(mol_id):
                     return True
             time.sleep(1)
 
@@ -851,13 +955,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def is_on_page_ensemble(self):
         for i in range(3):
-            url = self.driver.current_url.split('/')[3:]
+            url = self.driver.current_url.split("/")[3:]
             try:
                 e_id = int(url[1])
             except ValueError:
                 pass
             else:
-                if url[0] == 'ensemble' and self.is_ensemble_id(e_id):
+                if url[0] == "ensemble" and self.is_ensemble_id(e_id):
                     return True
             time.sleep(1)
 
@@ -866,7 +970,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_nmr_analysis(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == 'nmr_analysis' and url[1] != '':
+            if url[0] == "nmr_analysis" and url[1] != "":
                 return True
             time.sleep(1)
 
@@ -936,14 +1040,18 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def get_name_projects(self):
         projects = self.get_projects()
-        names = [proj.find_element_by_css_selector("strong > p").text for proj in projects]
+        names = [
+            proj.find_element_by_css_selector("strong > p").text for proj in projects
+        ]
         return names
 
     def create_empty_project(self):
         assert self.is_on_page_projects()
         num_before = self.get_number_projects()
 
-        create_proj_box = self.driver.find_element_by_css_selector("#content_container > div > center > a")
+        create_proj_box = self.driver.find_element_by_css_selector(
+            "#content_container > div > center > a"
+        )
         create_proj_box.click()
         for i in range(5):
             num_projects = self.get_number_projects()
@@ -984,8 +1092,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         for mol in molecules:
             mol_name = mol.find_element_by_css_selector("a > strong > p").text
             if mol_name == name:
-                #link = mol.find_element_by_css_selector("a")
-                #link.click()
+                # link = mol.find_element_by_css_selector("a")
+                # link.click()
                 mol.click()
                 return
         else:
@@ -1060,7 +1168,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         calcs = self.get_calcs_in_order()
 
-        error_messages = [i.find_element_by_css_selector("th:nth-child(2)").text for i in calcs]
+        error_messages = [
+            i.find_element_by_css_selector("th:nth-child(2)").text for i in calcs
+        ]
         return error_messages
 
     def details_first_calc(self):
@@ -1150,7 +1260,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def apply_PI(self, group_name):
         assert self.is_on_page_profile()
         self.wait_for_ajax()
-        group_name = self.driver.find_element_by_name('group_name')
+        group_name = self.driver.find_element_by_name("group_name")
         submit = self.driver.find_element_by_css_selector("button.button:nth-child(3)")
         group_name.send_keys("Test group")
         submit.send_keys(Keys.RETURN)
@@ -1159,19 +1269,20 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             EC.presence_of_element_located((By.ID, "PI_application_message"))
         )
 
-
     def accept_PI_request(self):
         assert self.is_on_page_managePI()
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.CLASS_NAME, "table"))
         )
 
-        table = self.driver.find_element_by_class_name('table')
+        table = self.driver.find_element_by_class_name("table")
 
         self.assertTrue(table.text.find("Accept") != -1)
         self.assertTrue(table.text.find("Deny") != -1)
 
-        accept_button = self.driver.find_element_by_css_selector('#requests_table > table > tbody > tr > td:nth-child(1) > button')
+        accept_button = self.driver.find_element_by_css_selector(
+            "#requests_table > table > tbody > tr > td:nth-child(1) > button"
+        )
         accept_button.send_keys(Keys.RETURN)
 
     def wait_latest_calc_done(self, timeout):
@@ -1183,7 +1294,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             calculations = self.get_calc_orders()
 
             header = calculations[0].find_element_by_class_name("message-header")
-            if "has-background-success" in header.get_attribute("class") or "has-background-danger" in header.get_attribute("class"):
+            if "has-background-success" in header.get_attribute(
+                "class"
+            ) or "has-background-danger" in header.get_attribute("class"):
                 return
             time.sleep(2)
             self.driver.refresh()
@@ -1198,7 +1311,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
             for calc in calculations:
                 header = calculations[0].find_element_by_class_name("message-header")
-                if not "has-background-success" in header.get_attribute("class") and not "has-background-danger" in header.get_attribute("class"):
+                if not "has-background-success" in header.get_attribute(
+                    "class"
+                ) and not "has-background-danger" in header.get_attribute("class"):
                     break
             else:
                 return
@@ -1210,11 +1325,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_calculations()
         assert self.get_number_calc_orders() > 0
 
-
         def calc_done():
             for c in calculations:
                 header = c.find_element_by_class_name("message-header")
-                if not "has-background-success" in header.get_attribute("class") and not "has-background-danger" in header.get_attribute("class"):
+                if not "has-background-success" in header.get_attribute(
+                    "class"
+                ) and not "has-background-danger" in header.get_attribute("class"):
                     return False
             else:
                 return True
@@ -1227,7 +1343,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             self.driver.refresh()
         raise Exception("Calculation did not finish")
 
-
     def wait_latest_calc_running(self, timeout):
         assert self.is_on_page_calculations()
         assert self.get_number_calc_orders() > 0
@@ -1237,7 +1352,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
             header = calculations[0].find_element_by_class_name("message-header")
             if "has-background-warning" in header.get_attribute("class"):
-                    return
+                return
             time.sleep(1)
             self.driver.refresh()
         raise Exception("Calculation did not run")
@@ -1251,7 +1366,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
             header = calculations[0].find_element_by_class_name("message-header")
             if "has-background-danger" in header.get_attribute("class"):
-                    return
+                return
             time.sleep(1)
             self.driver.refresh()
         raise Exception("Calculation did not produce an error")
@@ -1260,14 +1375,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_calculations()
         assert self.get_number_calc_orders() > 0
 
-
         calculations_container = self.driver.find_element_by_id("calculations_list")
         calculations = calculations_container.find_elements_by_css_selector("article")
         header = calculations[0].find_element_by_class_name("message-header")
         successful = "has-background-success" in header.get_attribute("class")
 
         if not successful:
-            latest_order = CalculationOrder.objects.latest('id')
+            latest_order = CalculationOrder.objects.latest("id")
             print("Error messages of calculations in order {}".format(latest_order.id))
             for c in latest_order.calculation_set.all():
                 print(c.error_message)
@@ -1284,8 +1398,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             successful = "has-background-success" in header.get_attribute("class")
 
             if not successful:
-                latest_order = CalculationOrder.objects.latest('id')
-                print("Error messages of calculations in order {}".format(latest_order.id))
+                latest_order = CalculationOrder.objects.latest("id")
+                print(
+                    "Error messages of calculations in order {}".format(latest_order.id)
+                )
                 for c in latest_order.calculation_set.all():
                     print(c.error_message)
                 return False
@@ -1301,12 +1417,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             EC.presence_of_element_located((By.ID, "user_to_add"))
         )
 
-
         p = Profile.objects.get(user__username=username)
         code = p.code
         field_username = self.driver.find_element_by_id("user_to_add")
         field_code = self.driver.find_element_by_id("code")
-        button_submit = self.driver.find_element_by_css_selector("button.button:nth-child(4)")
+        button_submit = self.driver.find_element_by_css_selector(
+            "button.button:nth-child(4)"
+        )
         field_username.send_keys(username)
         field_code.send_keys(code)
         button_submit.send_keys(Keys.RETURN)
@@ -1434,7 +1551,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def get_name_ensembles(self):
         ensemble_rows = self.get_ensemble_rows()
-        names = [e.find_element_by_css_selector("td:nth-child(2) > a").text for e in ensemble_rows]
+        names = [
+            e.find_element_by_css_selector("td:nth-child(2) > a").text
+            for e in ensemble_rows
+        ]
 
         return names
 
@@ -1500,7 +1620,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             return False
 
     def setup_test_group(self):
-        self.lget('/profile/')
+        self.lget("/profile/")
 
         self.apply_PI("Test group")
         self.logout()
@@ -1511,7 +1631,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         p.save()
 
         self.login("SU", self.password)
-        self.lget('/manage_pi_requests/')
+        self.lget("/manage_pi_requests/")
 
         self.accept_PI_request()
         self.logout()
@@ -1596,10 +1716,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def select_preset(self, name):
         self.wait_for_ajax()
         element = WebDriverWait(self.driver, 2).until(
-            EC.presence_of_element_located((By.XPATH, "//*[@id='presets']/option[text()='{}']".format(name)))
+            EC.presence_of_element_located(
+                (By.XPATH, "//*[@id='presets']/option[text()='{}']".format(name))
+            )
         )
 
-        self.driver.find_element_by_xpath("//*[@id='presets']/option[text()='{}']".format(name)).click()
+        self.driver.find_element_by_xpath(
+            "//*[@id='presets']/option[text()='{}']".format(name)
+        ).click()
 
     def try_assert_number_unseen_calcs(self, num, timeout):
         for i in range(timeout):
@@ -1623,7 +1747,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def get_related_orders(self):
         related_calculations_div = self.get_related_calculations_div()
 
-        orders_links = related_calculations_div.find_elements_by_css_selector("ul.tree > li > a")
+        orders_links = related_calculations_div.find_elements_by_css_selector(
+            "ul.tree > li > a"
+        )
         orders = [i.text for i in orders_links]
         return orders
 
@@ -1638,7 +1764,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 tree = t
                 break
         else:
-            raise Exception("Order {} is not related to this ensemble!".format(order_id))
+            raise Exception(
+                "Order {} is not related to this ensemble!".format(order_id)
+            )
 
         calc_tree = tree.find_elements_by_css_selector("ul > li")
 
@@ -1699,7 +1827,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         for e in ensembles:
             pars = e.find_elements_by_css_selector("a > strong > p")
-            names.append(''.join([i.text for i in pars]))
+            names.append("".join([i.text for i in pars]))
 
         return names
 
@@ -1716,7 +1844,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         ensembles = self.get_folder_ensembles()
         for e in ensembles:
             pars = e.find_elements_by_css_selector("a > strong > p")
-            name = ''.join([i.text for i in pars])
+            name = "".join([i.text for i in pars])
             if name == ensemble_name:
                 return e
         else:
@@ -1740,22 +1868,22 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def send_slurm_command(self, cmd):
         if docker:
-            child = pexpect.spawn('ssh slurm@slurm')
+            child = pexpect.spawn("ssh slurm@slurm")
             choice = child.expect(["(yes/no)", "password"])
             if choice == 0:
-                child.sendline('yes')
+                child.sendline("yes")
                 child.expect("password")
-                child.sendline('clustertest')
+                child.sendline("clustertest")
             elif choice == 1:
-                child.sendline('clustertest')
+                child.sendline("clustertest")
 
             child.expect("\$")
             child.sendline(cmd)
         else:
-            child = pexpect.spawn('su - calcus')
-            child.expect ('Password:')
-            child.sendline('clustertest')
-            child.expect('\$')
+            child = pexpect.spawn("su - calcus")
+            child.expect("Password:")
+            child.sendline("clustertest")
+            child.expect("\$")
             child.sendline(cmd)
 
     def see_all(self):
