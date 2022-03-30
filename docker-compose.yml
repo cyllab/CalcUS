@@ -9,7 +9,7 @@ services:
                 image: raphaelrobidas/calcus:latest
                 restart: always
                 hostname: web
-                user: calcus
+                user: "${UID}:${GID}"
                 command: ./scripts/run_web.sh
                 expose:
                         - 8000
