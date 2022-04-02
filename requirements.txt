@@ -15,7 +15,7 @@ fabric
 gunicorn
 nmrglue==0.8
 numpy
-paramiko==2.9.2
+paramiko==2.10.1
 periodictable
 pika==1.1.0
 psutil==5.7.2

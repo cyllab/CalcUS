@@ -11,7 +11,7 @@ services:
                         dockerfile: Dockerfile
                         target: calcus_dev
                 hostname: web
-                user: calcus
+                user: "${UID}:${GID}"
                 expose:
                         - 8000
                 depends_on:

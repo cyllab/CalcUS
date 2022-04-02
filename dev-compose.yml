@@ -12,7 +12,7 @@ services:
                         target: calcus_user
                 restart: always
                 hostname: web
-                user: calcus
+                user: "${UID}:${GID}"
                 command: ./scripts/run_web.sh
                 expose:
                         - 8000
