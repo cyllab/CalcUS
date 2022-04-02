@@ -551,7 +551,7 @@ def launch_xtb_calc(in_file, calc, files):
                 conn,
                 lock,
             )
-        if xtb.option_file != "":
+        if calc.input_file != "":
             sftp_put(
                 f"{local_folder}/input",
                 os.path.join(folder, "input"),
