@@ -110,7 +110,10 @@ def direct_command(command, conn, lock, attempt_count=1):
         logger.info(f"Command {command} terminated with exception: {e}")
         return []
     except ConnectionResetError as e:
-        logger.debug("Connection reset")
+        logger.debug("Connection reset while executing command")
+        return retry()
+    except TimeoutError as e:
+        logger.debug("Connection timed out while executing command")
         return retry()
 
     lock.release()
@@ -130,16 +133,27 @@ def sftp_get(src, dst, conn, lock, attempt_count=1):
 
     lock.acquire()
 
-    try:
-        conn[1].get(src, local=dst)
-    except FileNotFoundError:
-        logger.info(f"Could not download {src}: no such remote file")
-        lock.release()
-        return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
+    for i in range(3):
+        try:
+            conn[1].get(src, local=dst)
+        except FileNotFoundError:
+            logger.info(f"Could not download {src}: no such remote file")
+            lock.release()
+            return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
+        except ConnectionResetError as e:
+            logger.debug("Connection reset while transfering file")
+        except TimeoutError as e:
+            logger.debug("Connection timed out while transfering file")
+        else:
+            ret = ErrorCodes.SUCCESS
+            break
+        sleep(1)
+    else:
+        ret = ErrorCodes.CONNECTION_ERROR
 
     lock.release()
 
-    return ErrorCodes.SUCCESS
+    return ret
 
 
 def sftp_put(src, dst, conn, lock, attempt_count=1):
@@ -195,7 +209,7 @@ def wait_until_done(calc, conn, lock, ind=0):
 
     while True:
         output = direct_command(f"squeue -j {job_id}", conn, lock)
-        if not isinstance(output, int):
+        if not isinstance(output, list):
             if len(output) == 1 and output[0].strip() == "":
                 # Not sure
                 logger.info(f"Job done ({job_id})")
@@ -256,6 +270,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     ),
                     conn,
                     lock,
+                    attempt_count=MAX_COMMAND_ATTEMPT_COUNT,  # Do not retry, since it might submit multiple times
                 )
             else:
                 output = direct_command(
@@ -270,9 +285,10 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     ),
                     conn,
                     lock,
+                    attempt_count=MAX_COMMAND_ATTEMPT_COUNT,
                 )
 
-            if output == ErrorCodes.CHANNEL_TIMED_OUT:
+            if output == ErrorCodes.FAILED_TO_EXECUTE_COMMAND or len(output) < 2:
                 if calc_id != -1:
                     ind = 0
 
@@ -285,7 +301,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                             sleep(1)
                         else:
                             break
-                    if not isinstance(output, int):
+                    if not isinstance(output, list):
                         if len(output) == 1 and output[0].strip() == "":
                             logger.info("Calcus file empty, waiting for a log file")
                             job_id = wait_until_logfile(remote_dir, conn, lock)
@@ -310,9 +326,6 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                 else:
                     logger.warning("Channel timed out and no calculation id is set")
                     return output
-            elif output == ErrorCodes.COMMAND_TIMED_OUT:
-                logger.warning("Command timed out")
-                return ErrorCodes.COMMAND_TIMED_OUT
             else:
                 if output[-2].find("Submitted batch job") != -1:
                     job_id = output[-2].replace("Submitted batch job", "").strip()
