@@ -180,7 +180,7 @@ def wait_until_logfile(remote_dir, conn, lock):
     ind = 0
     while ind < len(DELAY):
         output = direct_command(f"ls {remote_dir}", conn, lock)
-        if not isinstance(output, int):
+        if not isinstance(output, ErrorCodes):
             if len(output) == 1 and output[0].strip() == "":
                 logger.info("Received nothing, ignoring")
             else:
@@ -209,23 +209,19 @@ def wait_until_done(calc, conn, lock, ind=0):
 
     while True:
         output = direct_command(f"squeue -j {job_id}", conn, lock)
-        if len(output) > 0:
-            if len(output) == 1 and output[0].strip() == "":
-                # Not sure
-                logger.info(f"Job done ({job_id})")
-                return ErrorCodes.SUCCESS
-            else:
-                _output = [i for i in output if i.strip() != ""]
-                logger.info(f"Waiting ({job_id})")
-                if _output != None and len(_output) < 2:
-                    logger.info(f"Job done ({job_id})")
-                    return ErrorCodes.SUCCESS
-                else:
-                    status = _output[1].split()[4]
-                    if status == "R" and calc.status == 0:
-                        calc.date_started = timezone.now()
-                        calc.status = 1
-                        calc.save()
+        if not isinstance(output, ErrorCodes) and len(output) > 0:
+            _output = [i for i in output if i.strip() != ""]
+            logger.info(f"Waiting ({job_id})")
+            status = _output[1].split()[4]
+            if status == "R" and calc.status == 0:
+                calc.date_started = timezone.now()
+                calc.status = 1
+                calc.save()
+        elif isinstance(output, ErrorCodes):
+            logger.warning(f"Could not check the status of job {job_id}")
+        else:
+            logger.info(f"Job done ({job_id})")
+            return ErrorCodes.SUCCESS
 
         for i in range(DELAY[ind]):
             if pid in kill_sig:
@@ -301,7 +297,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                             sleep(1)
                         else:
                             break
-                    if len(output) > 0:
+                    if not isinstance(output, ErrorCodes) and len(output) > 0:
                         if len(output) == 1 and output[0].strip() == "":
                             logger.info("Calcus file empty, waiting for a log file")
                             job_id = wait_until_logfile(remote_dir, conn, lock)
