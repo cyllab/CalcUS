@@ -127,6 +127,9 @@
 						req = null;
 					}
 				},
+				complete: function() {
+					loading = false
+				}
 			});
 		}
 		
@@ -169,7 +172,6 @@
 					$(window).unbind();
 					page += 1;
 					refresh_list('add');
-					loading = false;
 				}
 			    }
 		}

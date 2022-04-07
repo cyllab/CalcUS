@@ -1771,11 +1771,14 @@ def calc_to_ccinput(calc):
         raise Exception(
             f"No method specified; theory level is {calc.parameters.theory_level}"
         )
-
     _specifications = calc.parameters.specifications
     software = calc.parameters.software.lower()
+
     if software in ["gaussian", "orca"]:
         _specifications += " " + getattr(calc.order.author, "default_" + software)
+        _solvation_radii = calc.parameters.solvation_radii
+    else:
+        _solvation_radii = ""
 
     PAL = int(os.environ.get("NUM_CPU", 1))
     MEM = int(os.environ.get("OMP_STACKSIZE", "1G")[:-1]) * 1024 * PAL
@@ -1798,7 +1801,7 @@ def calc_to_ccinput(calc):
         "basis_set": calc.parameters.basis_set,
         "solvent": calc.parameters.solvent,
         "solvation_model": calc.parameters.solvation_model,
-        "solvation_radii": calc.parameters.solvation_radii,
+        "solvation_radii": _solvation_radii,
         "specifications": _specifications,
         "density_fitting": calc.parameters.density_fitting,
         "custom_basis_sets": calc.parameters.custom_basis_sets,
