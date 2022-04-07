@@ -28,7 +28,6 @@ services:
                 build:
                         context: ./docker/slurm
                         dockerfile: Dockerfile
-                        target: calcus_dev
                 hostname: slurm
                 command: /home/slurm/run_slurm.sh
                 env_file:
