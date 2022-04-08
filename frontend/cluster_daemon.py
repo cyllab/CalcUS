@@ -37,7 +37,7 @@ import threading
 from threading import Lock
 
 from django.utils.timezone import now
-
+from django.db import close_old_connections
 from django.conf import settings
 
 import code, traceback, signal, logging
@@ -246,6 +246,7 @@ class ClusterDaemon:
         access.save()
 
         logger.info(f"Disconnected cluster access {access_id}")
+        close_old_connections()
 
     def resume_calc(self, c, attempt_count=1):
 
@@ -270,6 +271,8 @@ class ClusterDaemon:
             del tasks.locks[pid]
         except KeyError:  # already deleted when disconnnected from cluster
             pass
+
+        close_old_connections()
 
     def process_command(self, body):
         lines = body.decode("UTF-8").split("&")

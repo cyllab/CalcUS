@@ -3362,7 +3362,7 @@ def run_calc(calc_id):
 
         in_file = os.path.join(remote_dir, "in.xyz")
 
-    logger.info(f"Launching calc {calc_id}")
+    logger.info(f"Running calc {calc_id}")
     try:
         ret = f(in_file, calc)
     except Exception as e:
