@@ -115,6 +115,9 @@ def direct_command(command, conn, lock, attempt_count=1):
     except TimeoutError as e:
         logger.debug("Connection timed out while executing command")
         return retry()
+    except OSError as e:
+        logger.debug("Socked closed while executing command")
+        return retry()
 
     lock.release()
 
@@ -141,9 +144,11 @@ def sftp_get(src, dst, conn, lock, attempt_count=1):
             lock.release()
             return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
         except ConnectionResetError as e:
-            logger.debug("Connection reset while transfering file")
+            logger.debug("Connection reset while transferring file")
         except TimeoutError as e:
-            logger.debug("Connection timed out while transfering file")
+            logger.debug("Connection timed out while transferring file")
+        except OSError as e:
+            logger.debug("Socked closed while transferring file")
         else:
             ret = ErrorCodes.SUCCESS
             break
@@ -1933,7 +1938,7 @@ def parse_default_orca_charges(calc, s):
 
     charges = []
     while lines[ind].strip() != "":
-        n, a, _, chrg = lines[ind].split()
+        chrg = lines[ind].split()[-1]
         charges.append(f"{float(chrg):.2f}")
         ind += 1
 
