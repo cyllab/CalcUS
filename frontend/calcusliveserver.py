@@ -198,6 +198,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 time.sleep(0.1)
             else:
                 break
+        try:
+            box = self.driver.find_element_by_id("error_box")
+        except selenium.common.exceptions.NoSuchElementException:
+            pass
+        else:
+            msg = box.text
+            print(f"Error message during the test: {msg}")
 
     def calc_input_params(self, params):
         self.wait_for_ajax()
