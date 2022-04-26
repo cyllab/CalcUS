@@ -1765,7 +1765,10 @@ def submit_calculation(request):
                 for i in range(1, TYPE_LENGTH[_type] + 1):
                     id_txt = clean(request.POST[f"calc_constraint_{ind}_{i}"])
                     if id_txt != "":
-                        id = int(id_txt)
+                        try:
+                            id = int(id_txt)
+                        except ValueError:
+                            return error(request, f"Invalid constraint: {id_txt}")
                         ids.append(id)
 
                 if len(ids) == 0:
