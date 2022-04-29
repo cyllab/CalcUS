@@ -5,3 +5,8 @@ li a {
   word-wrap:break-word; 
   word-break: break-all; 
 }
+@media screen and (max-width:1000px) {
+    #unseen_calculations_badge{
+         position: initial;
+    }
+ }
