@@ -643,10 +643,18 @@ def xtb_opt(in_file, calc):
         lines = f.readlines()
         ind = len(lines) - 1
 
-        while lines[ind].find("HOMO-LUMO GAP") == -1:
-            ind -= 1
-        hl_gap = float(lines[ind].split()[3])
-        E = float(lines[ind - 2].split()[3])
+        try:
+            while lines[ind].find("HOMO-LUMO GAP") == -1:
+                ind -= 1
+            hl_gap = float(lines[ind].split()[3])
+        except IndexError:
+            ind = len(lines) - 1
+            while lines[ind].find("TOTAL ENERGY") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[3])
+            hl_gap = 0.0
+        else:
+            E = float(lines[ind - 2].split()[3])
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
@@ -871,10 +879,19 @@ def xtb_scan(in_file, calc):
             lines = f.readlines()
             ind = len(lines) - 1
 
-            while lines[ind].find("HOMO-LUMO GAP") == -1:
-                ind -= 1
-            hl_gap = float(lines[ind].split()[3])
-            E = float(lines[ind - 2].split()[3])
+            try:
+                while lines[ind].find("HOMO-LUMO GAP") == -1:
+                    ind -= 1
+                hl_gap = float(lines[ind].split()[3])
+            except IndexError:
+                ind = len(lines) - 1
+                while lines[ind].find("TOTAL ENERGY") == -1:
+                    ind -= 1
+                E = float(lines[ind].split()[3])
+                hl_gap = 0.0
+            else:
+                E = float(lines[ind - 2].split()[3])
+
             prop = get_or_create(calc.parameters, r)
             prop.energy = E
             prop.homo_lumo_gap = hl_gap
@@ -3468,9 +3485,13 @@ def _del_order(id):
 
     # The order is automatically deleted with the last calculation
     # If it has no calculation because of a bug:
-    o.refresh_from_db()
-    if o.pk:
-        o.delete()
+    try:
+        o.refresh_from_db()
+    except CalculationOrder.DoesNotExist:
+        pass
+    else:
+        if o.pk:
+            o.delete()
 
 
 def _del_project(id):
