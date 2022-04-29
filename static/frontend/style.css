@@ -2,11 +2,12 @@ li a {
 	color: green;
 }
 .text_wrap{
-  word-wrap:break-word; 
-  word-break: break-all; 
+	word-wrap:break-word; 
+	word-break: break-all; 
 }
-@media screen and (max-width:1000px) {
-    #unseen_calculations_badge{
-         position: initial;
-    }
- }
+@media screen and (max-width: 1023px) {
+	#unseen_calculations_badge{
+		position: initial;
+		margin-left: 15px;
+	}
+}
