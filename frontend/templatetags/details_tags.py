@@ -33,13 +33,13 @@ def get_geom_flag(ensemble, param):
 
 
 def verify_geom(ensemble, param):
-    s = ensemble.structure_set.all()[0]
+    s = ensemble.structure_set.first()
     try:
-        p = s.properties.get(parameters=param)
+        p = s.properties.filter(parameters=param).first()
     except Property.DoesNotExist:
         return False
 
-    if p.geom:
+    if p and p.geom:
         return True
     return False
 

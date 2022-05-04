@@ -465,6 +465,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 f"//*[@id='calc_resource']/option[text()='{params['resource']}']"
             ).click()
 
+        self.wait_for_ajax()
+
     def calc_launch(self):
         submit = self.driver.find_element_by_id("submit_button")
         submit.click()

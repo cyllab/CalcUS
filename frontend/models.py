@@ -622,6 +622,8 @@ class Parameters(models.Model):
     density_fitting = models.CharField(max_length=1000, default="")
     custom_basis_sets = models.CharField(max_length=1000, default="")
 
+    _md5 = models.CharField(max_length=32, default="")
+
     def __repr__(self):
         return f"{self.software} - {self.method} ({self.solvent})"
 
@@ -674,19 +676,26 @@ class Parameters(models.Model):
 
     @property
     def md5(self):
-        values = [
-            (k, v) for k, v in self.__dict__.items() if k != "_state" and k != "id"
-        ]
-        params_str = ""
-        for k, v in values:
-            if isinstance(v, int):
-                params_str += f"{k}={v};"
-            elif isinstance(v, str):
-                params_str += f"{k}={v.lower()};"
-            else:
-                raise Exception("Unknown value type")
-        hash = hashlib.md5(bytes(params_str, "UTF-8"))
-        return hash.digest()
+        if self._md5 != "":
+            return self._md5
+
+        self._md5 = gen_params_md5(self)
+        self.save()
+
+        return self._md5
+
+
+def gen_params_md5(obj):
+    values = [(k, v) for k, v in obj.__dict__.items() if k != "_state" and k != "id"]
+    params_str = ""
+    for k, v in values:
+        if isinstance(v, int):
+            params_str += f"{k}={v};"
+        elif isinstance(v, str):
+            params_str += f"{k}={v.lower()};"
+        else:
+            raise Exception("Unknown value type")
+    return hashlib.md5(bytes(params_str, "UTF-8")).hexdigest()
 
 
 class Molecule(models.Model):
@@ -994,6 +1003,15 @@ class Filter(models.Model):
     type = models.CharField(max_length=500)
     parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, null=True)
     value = models.CharField(max_length=500)
+
+
+@receiver(post_save, sender=Parameters)
+def update_parameters_hash(sender, instance, **kwargs):
+    if kwargs["created"]:
+        hash = gen_params_md5(instance)
+        instance._md5 = hash
+    # Parameters are not really modified, but the case where they are updated could be handled
+    # Changing just to _md5 field should not trigger anything
 
 
 @receiver(post_save, sender=User)

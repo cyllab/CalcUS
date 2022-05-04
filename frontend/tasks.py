@@ -748,10 +748,10 @@ def xtb_sp(in_file, calc):
 
 
 def get_or_create(params, struct):
-    for p in struct.properties.all():
-        if p.parameters == params:
-            return p
-    return Property.objects.create(parameters=params, parent_structure=struct)
+    try:
+        return struct.properties.get(parameters___md5=params.md5)  # parameters._md5
+    except Property.DoesNotExist:
+        return Property.objects.create(parameters=params, parent_structure=struct)
 
 
 def xtb_ts(in_file, calc):
@@ -1083,16 +1083,15 @@ def crest(in_file, calc):
                 clean_lines.append(clean_struct_line(l))
 
             struct = clean_xyz("".join([i.strip() + "\n" for i in clean_lines]))
-            r = structures[metaind]
-            r.xyz_structure = struct
-            r.save()
+            structures[metaind].xyz_structure = struct
 
-            prop = Property(parameters=calc.parameters, parent_structure=r)
+            prop = get_or_create(calc.parameters, r)
             prop.energy = E
             prop.geom = True
             properties.append(prop)
 
-    Property.objects.bulk_create(properties)
+    Property.objects.bulk_update(properties, ["energy", "geom"])
+    Structure.objects.bulk_update(structures, ["xyz_structure"])
 
     return ErrorCodes.SUCCESS
 
