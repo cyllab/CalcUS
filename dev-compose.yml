@@ -62,6 +62,7 @@ services:
                         dockerfile: Dockerfile
                         target: calcus_user
                 user: calcus
+                shm_size: 1gb
                 command: ./scripts/run_celery_comp.sh
                 volumes:
                         - ./scr:/calcus/scr
