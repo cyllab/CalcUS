@@ -4363,7 +4363,7 @@ def refetch_calc(request):
     if profile != calc.order.author:
         return HttpResponse(status=403)
 
-    if calc.status != 3:
+    if calc.status < 2:
         return HttpResponse(status=204)
 
     if calc.local:

@@ -1085,7 +1085,7 @@ def crest(in_file, calc):
             struct = clean_xyz("".join([i.strip() + "\n" for i in clean_lines]))
             structures[metaind].xyz_structure = struct
 
-            prop = get_or_create(calc.parameters, r)
+            prop = get_or_create(calc.parameters, structures[metaind])
             prop.energy = E
             prop.geom = True
             properties.append(prop)
