@@ -28,6 +28,24 @@ Functionals, basis sets and solvents also benefit from error-checking. The input
 .. image:: figures/new_molecule_verification.png
    :align: center
 
+Viewing Results
+---------------
+
+Once a calculation is successful, the results can be viewed on the page of the corresponding ensemble. For example, after performing a conformational search on n-pentane, the ensemble produced with contain all the conformers that were found.
+
+.. image:: figures/ensemble_page.png
+   :align: center
+
+Depending on the type of calculation, other results will be presented in the appropriate widgets (see examples below).
+
+.. image:: figures/widget_partial_charges.png
+   :align: center
+   :scale: 50%
+
+.. image:: figures/widget_MO.png
+   :align: center
+   :scale: 50%
+
 Remote Access Management
 ------------------------
 
