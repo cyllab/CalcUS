@@ -960,7 +960,7 @@ def error(request, msg):
     )
 
 
-def parse_parameters(request):
+def parse_parameters(request, verify=False):
     profile = request.user.profile
 
     if "calc_type" in request.POST.keys():
@@ -1140,8 +1140,13 @@ def parse_parameters(request):
         try:
             project_obj = Project.objects.get(name=new_project_name, author=profile)
         except Project.DoesNotExist:
-            project_obj = Project.objects.create(name=new_project_name, author=profile)
-            project_obj.save()
+            if not verify:
+                project_obj = Project.objects.create(
+                    name=new_project_name, author=profile
+                )
+            else:
+                project_obj = Project(name=new_project_name, author=profile)
+                # project_obj.save(commit=False)
         else:
             logger.info("Project with that name already exists")
     else:
@@ -1155,21 +1160,26 @@ def parse_parameters(request):
         else:
             project_obj = project_set[0]
 
-    params = Parameters.objects.create(
-        charge=charge,
-        multiplicity=mult,
-        solvent=solvent,
-        method=functional,
-        basis_set=basis_set,
-        software=software,
-        theory_level=theory,
-        solvation_model=solvation_model,
-        solvation_radii=solvation_radii,
-        density_fitting=df,
-        custom_basis_sets=bs,
-        specifications=specifications,
-    )
-    params.save()
+    _params = {
+        "charge": charge,
+        "multiplicity": mult,
+        "solvent": solvent,
+        "method": functional,
+        "basis_set": basis_set,
+        "software": software,
+        "theory_level": theory,
+        "solvation_model": solvation_model,
+        "solvation_radii": solvation_radii,
+        "density_fitting": df,
+        "custom_basis_sets": bs,
+        "specifications": specifications,
+    }
+
+    if not verify:
+        params = Parameters.objects.create(**_params)
+    else:
+        params = Parameters(**_params)
+        # params.save(commit=False)
 
     return params, project_obj, step
 
@@ -1251,12 +1261,12 @@ def handle_file_upload(ff, params):
     elif ext == "mol2":
         s.mol2_structure = in_file
         generate_xyz_structure(False, s)
-    elif ext == "log":
+    elif ext in ["log", "out"]:
         s.xyz_structure = get_Gaussian_xyz(in_file)
     elif ext in ["com", "gjf"]:
         s.xyz_structure = get_xyz_from_Gaussian_input(in_file)
     else:
-        "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf, .com, .gjf)"
+        return "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf, .com, .gjf)"
     s.save()
     return s, filename
 
@@ -1278,11 +1288,26 @@ def process_filename(filename):
 
 
 @login_required
-def submit_calculation(request):
-    ret = parse_parameters(request)
+def verify_calculation(request):
+    ret = _submit_calculation(request, verify=True)
+    if isinstance(ret, str):
+        return HttpResponse(ret, status=400)
+    return HttpResponse(status=200)
 
+
+@login_required
+def submit_calculation(request):
+    ret = _submit_calculation(request, verify=False)
     if isinstance(ret, str):
         return error(request, ret)
+    return ret
+
+
+def _submit_calculation(request, verify=False):
+    ret = parse_parameters(request, verify=verify)
+
+    if isinstance(ret, str):
+        return ret
 
     profile = request.user.profile
 
@@ -1291,27 +1316,25 @@ def submit_calculation(request):
     if "calc_resource" in request.POST.keys():
         resource = clean(request.POST["calc_resource"])
         if resource.strip() == "":
-            return error(request, "No computing resource chosen")
+            return "No computing resource chosen"
     else:
-        return error(request, "No computing resource chosen")
+        return "No computing resource chosen"
 
     if resource != "Local":
         try:
             access = ClusterAccess.objects.get(cluster_address=resource, owner=profile)
         except ClusterAccess.DoesNotExist:
-            return error(request, "No such cluster access")
+            return "No such cluster access"
 
         if access.owner != profile:
-            return error(
-                request, "You do not have the right to use this cluster access"
-            )
+            return "You do not have the right to use this cluster access"
     else:
         if (
             not profile.is_PI
             and profile.group == None
             and not request.user.is_superuser
         ):
-            return error(request, "You have no computing resource")
+            return "You have no computing resource"
 
     orders = []
     drawing = True
@@ -1333,23 +1356,21 @@ def submit_calculation(request):
         mol_name = ""
 
     if len(name) > 100:
-        return error(request, "The chosen ensemble name is too long")
+        return "The chosen ensemble name is too long"
 
     if len(mol_name) > 100:
-        return error(request, "The chosen molecule name is too long")
+        return "The chosen molecule name is too long"
 
     if "starting_ensemble" in request.POST.keys():
         start_id = int(clean(request.POST["starting_ensemble"]))
         try:
             start_e = Ensemble.objects.get(pk=start_id)
         except Ensemble.DoesNotExist:
-            return error(request, "No starting ensemble found")
+            return "No starting ensemble found"
 
         start_author = start_e.parent_molecule.project.author
         if not can_view_ensemble(start_e, profile):
-            return error(
-                request, "You do not have permission to access the starting calculation"
-            )
+            return "You do not have permission to access the starting calculation"
 
         if step.creates_ensemble:
             order_name = name
@@ -1365,7 +1386,7 @@ def submit_calculation(request):
 
             for s_num in structs_nums:
                 if s_num not in avail_nums:
-                    return error(request, "Invalid starting structures")
+                    return "Invalid starting structures"
 
             filter = Filter.objects.create(type="By Number", value=structs_str)
         elif "calc_filter" in request.POST.keys():
@@ -1380,9 +1401,9 @@ def submit_calculation(request):
                     try:
                         filter_value = float(clean(request.POST["filter_value"]))
                     except ValueError:
-                        return error(request, "Invalid filter value")
+                        return "Invalid filter value"
                 else:
-                    return error(request, "No filter value")
+                    return "No filter value"
 
                 if "filter_parameters" in request.POST.keys():
                     try:
@@ -1390,46 +1411,46 @@ def submit_calculation(request):
                             clean(request.POST["filter_parameters"])
                         )
                     except ValueError:
-                        return error(request, "Invalid filter parameters")
+                        return "Invalid filter parameters"
 
                     try:
                         filter_parameters = Parameters.objects.get(
                             pk=filter_parameters_id
                         )
                     except Parameters.DoesNotExist:
-                        return error(request, "Invalid filter parameters")
+                        return "Invalid filter parameters"
 
                     if not can_view_parameters(filter_parameters, profile):
-                        return error(request, "Invalid filter parameters")
+                        return "Invalid filter parameters"
 
-                    filter = Filter.objects.create(
-                        type=filter_type,
-                        parameters=filter_parameters,
-                        value=filter_value,
-                    )
+                    if not verify:
+                        filter = Filter.objects.create(
+                            type=filter_type,
+                            parameters=filter_parameters,
+                            value=filter_value,
+                        )
                 else:
-                    return error(request, "No filter parameters")
-
+                    return "No filter parameters"
             else:
-                return error(request, "Invalid filter type")
+                return "Invalid filter type"
+        if not verify:
+            obj = CalculationOrder.objects.create(
+                name=order_name,
+                date=timezone.now(),
+                parameters=params,
+                author=profile,
+                step=step,
+                project=project_obj,
+                ensemble=start_e,
+            )
 
-        obj = CalculationOrder.objects.create(
-            name=order_name,
-            date=timezone.now(),
-            parameters=params,
-            author=profile,
-            step=step,
-            project=project_obj,
-            ensemble=start_e,
-        )
+            if filter is not None:
+                obj.filter = filter
 
-        if filter is not None:
-            obj.filter = filter
-
-        orders.append(obj)
+            orders.append(obj)
     elif "starting_calc" in request.POST.keys():
         if not "starting_frame" in request.POST.keys():
-            return error(request, "Missing starting frame number")
+            return "Missing starting frame number"
 
         c_id = int(clean(request.POST["starting_calc"]))
         frame_num = int(clean(request.POST["starting_frame"]))
@@ -1437,33 +1458,34 @@ def submit_calculation(request):
         try:
             start_c = Calculation.objects.get(pk=c_id)
         except Calculation.DoesNotExist:
-            return error(request, "No starting ensemble found")
+            return "No starting ensemble found"
         if not can_view_calculation(start_c, profile):
-            return error(
-                request, "You do not have permission to access the starting calculation"
-            )
+            return "You do not have permission to access the starting calculation"
 
         if step.creates_ensemble:
             order_name = name
         else:
             order_name = start_c.result_ensemble.name + f" - Frame {frame_num}"
 
-        obj = CalculationOrder.objects.create(
-            name=order_name,
-            date=timezone.now(),
-            parameters=params,
-            author=profile,
-            step=step,
-            project=project_obj,
-            start_calc=start_c,
-            start_calc_frame=frame_num,
-        )
-        orders.append(obj)
+        if not verify:
+            obj = CalculationOrder.objects.create(
+                name=order_name,
+                date=timezone.now(),
+                parameters=params,
+                author=profile,
+                step=step,
+                project=project_obj,
+                start_calc=start_c,
+                start_calc_frame=frame_num,
+            )
+            orders.append(obj)
     else:
         if mol_name == "":
-            return error(request, "Missing molecule name")
+            return "Missing molecule name"
 
-        if len(request.FILES) > 0:
+        if (
+            not verify and len(request.FILES) > 0
+        ):  # Can't really verify file uploads before actually processing the files
             combine = ""
             if "calc_combine_files" in request.POST.keys():
                 combine = clean(request.POST["calc_combine_files"])
@@ -1483,7 +1505,7 @@ def submit_calculation(request):
                             e.structure_set.all().delete()
                             e.delete()
                             mol.delete()
-                            return error(request, ss)
+                            return ss
                         struct, filename = ss
 
                         if ind == 0:
@@ -1513,7 +1535,7 @@ def submit_calculation(request):
                             for _mol_name, arr_structs in unique_molecules.items():
                                 for struct in arr_structs:
                                     struct.delete()
-                            return error(request, ss)
+                            return ss
                         struct, filename = ss
 
                         _mol_name, num = process_filename(filename)
@@ -1684,68 +1706,73 @@ def submit_calculation(request):
                 orders.append(obj)
         else:  # No file upload
             if "structure" in request.POST.keys():
-                obj = CalculationOrder.objects.create(
-                    name=name,
-                    date=timezone.now(),
-                    parameters=params,
-                    author=profile,
-                    step=step,
-                    project=project_obj,
-                )
-                drawing = True
-                mol_obj = Molecule.objects.create(name=mol_name, project=project_obj)
-                e = Ensemble.objects.create(
-                    name="Drawn Structure", parent_molecule=mol_obj
-                )
-                obj.ensemble = e
+                if not verify:
+                    obj = CalculationOrder.objects.create(
+                        name=name,
+                        date=timezone.now(),
+                        parameters=params,
+                        author=profile,
+                        step=step,
+                        project=project_obj,
+                    )
+                    drawing = True
+                    mol_obj = Molecule.objects.create(
+                        name=mol_name, project=project_obj
+                    )
+                    e = Ensemble.objects.create(
+                        name="Drawn Structure", parent_molecule=mol_obj
+                    )
+                    obj.ensemble = e
 
-                s = Structure.objects.create(parent_ensemble=e, number=1)
-                params = Parameters.objects.create(
-                    software="Open Babel",
-                    method="Forcefield",
-                    basis_set="",
-                    solvation_model="",
-                    charge=params.charge,
-                    multiplicity="1",
-                )
-                p = Property.objects.create(
-                    parent_structure=s, parameters=params, geom=True
-                )
-                p.save()
-                params.save()
+                    s = Structure.objects.create(parent_ensemble=e, number=1)
+                    params = Parameters.objects.create(
+                        software="Open Babel",
+                        method="Forcefield",
+                        basis_set="",
+                        solvation_model="",
+                        charge=params.charge,
+                        multiplicity="1",
+                    )
+                    p = Property.objects.create(
+                        parent_structure=s, parameters=params, geom=True
+                    )
+                    p.save()
+                    params.save()
 
-                mol = clean(request.POST["structure"])
-                s.mol_structure = mol
-                s.save()
-                orders.append(obj)
+                    mol = clean(request.POST["structure"])
+                    s.mol_structure = mol
+                    s.save()
+                    orders.append(obj)
             else:
-                return error(request, "No input structure")
+                return "No input structure"
 
     if step.name == "Minimum Energy Path":
         if len(orders) != 1:
-            return error(request, "Only one initial structure can be used")
+            return "Only one initial structure can be used"
 
         if len(request.FILES.getlist("aux_file_structure")) == 1:
-            _aux_struct = handle_file_upload(
-                request.FILES.getlist("aux_file_structure")[0], params
-            )
-            if isinstance(_aux_struct, HttpResponse):
-                return _aux_struct
-            aux_struct = _aux_struct[0]
+            if not verify:
+                _aux_struct = handle_file_upload(
+                    request.FILES.getlist("aux_file_structure")[0], params
+                )
+                if isinstance(_aux_struct, HttpResponse):
+                    return _aux_struct
+                aux_struct = _aux_struct[0]
         else:
             if "aux_struct" not in request.POST.keys():
-                return error(request, "No valid auxiliary structure")
+                return "No valid auxiliary structure"
             try:
                 aux_struct = Structure.objects.get(
                     pk=int(clean(request.POST["aux_struct"]))
                 )
             except Structure.DoesNotExist:
-                return error(request, "No valid auxiliary structure")
+                return "No valid auxiliary structure"
             if not can_view_structure(aux_struct, profile):
-                return error(request, "No valid auxiliary structure")
+                return "No valid auxiliary structure"
 
-        aux_struct.save()
-        orders[0].aux_structure = aux_struct
+        if not verify:
+            aux_struct.save()
+            orders[0].aux_structure = aux_struct
 
     TYPE_LENGTH = {"Distance": 2, "Angle": 3, "Dihedral": 4}
     constraints = ""
@@ -1768,11 +1795,11 @@ def submit_calculation(request):
                         try:
                             id = int(id_txt)
                         except ValueError:
-                            return error(request, f"Invalid constraint: {id_txt}")
+                            return f"Invalid constraint: {id_txt}"
                         ids.append(id)
 
                 if len(ids) == 0:
-                    return error(request, "Invalid or missing constraints")
+                    return "Invalid or missing constraints"
 
                 ids = "_".join([str(i) for i in ids])
                 if mode == "Freeze":
@@ -1784,20 +1811,23 @@ def submit_calculation(request):
                         try:
                             begin = float(clean(request.POST[f"calc_scan_{ind}_1"]))
                         except ValueError:
-                            return error(request, "Invalid scan parameters")
+                            return "Invalid scan parameters"
                     else:
                         begin = 42.0
                     try:
                         end = float(clean(request.POST[f"calc_scan_{ind}_2"]))
                         steps = int(clean(request.POST[f"calc_scan_{ind}_3"]))
                     except ValueError:
-                        return error(request, "Invalid scan parameters")
+                        return "Invalid scan parameters"
                     constraints += f"{mode}_{begin}_{end}_{steps}/{ids};"
                 else:
-                    return error(request, "Invalid constrained optimisation")
+                    return "Invalid constrained optimisation"
 
         if constraints == "":
-            return error(request, "No constraint specified for constrained calculation")
+            return "No constraint specified for constrained calculation"
+
+    if verify:
+        return
 
     obj.save()
     for o in orders:

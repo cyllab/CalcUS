@@ -176,6 +176,7 @@ urlpatterns = [
     path(
         "download_all_logs/<int:pk>", views.download_all_logs, name="download_all_logs"
     ),
+    path("verify_calculation/", views.verify_calculation, name="verify_calculation"),
     path("submit_calculation/", views.submit_calculation, name="submit_calculation"),
     path("get_structure/", views.get_structure, name="get_structure"),
     path("get_vib_animation/", views.get_vib_animation, name="get_vib_animation"),

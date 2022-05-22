@@ -217,7 +217,11 @@ def wait_until_done(calc, conn, lock, ind=0):
         if not isinstance(output, ErrorCodes) and len(output) > 0:
             _output = [i for i in output if i.strip() != ""]
             logger.info(f"Waiting ({job_id})")
-            status = _output[1].split()[4]
+            try:
+                status = _output[1].split()[4]
+            except IndexError:
+                logger.warning("Got unexpected str: " + str(_output))
+                return
             if status == "R" and calc.status == 0:
                 calc.date_started = timezone.now()
                 calc.status = 1
@@ -3549,7 +3553,6 @@ def _del_structure(s):
 
 def send_cluster_command(cmd):
     connection = redis.Redis(host="redis", port=6379, db=2)
-
     _cmd = cmd.replace("\n", "&")
     connection.rpush("cluster", _cmd)
     connection.close()
@@ -3584,11 +3587,6 @@ def kill_calc(calc):
     else:
         cmd = f"kill\n{calc.id}\n"
         send_cluster_command(cmd)
-
-
-@app.task(name="celery.ping")
-def ping():
-    return "pong"
 
 
 @app.task

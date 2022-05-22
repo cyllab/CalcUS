@@ -80,10 +80,9 @@ try:
 except:
     is_test = False
 
-if not is_test:
-    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calcus.settings")
-    django.setup()
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calcus.settings")
+django.setup()
 
 from frontend.models import *
 from frontend.environment_variables import *
@@ -196,14 +195,26 @@ class ClusterDaemon:
 
         c = self.access_test(access_id, password)
 
-        access = ClusterAccess.objects.get(pk=access_id)
+        try:
+            access = ClusterAccess.objects.get(pk=access_id)
+        except ClusterAccess.DoesNotExist:
+            access = None
+
+        logger.warning(
+            "Accesses: "
+            + str(list([i.cluster_address for i in ClusterAccess.objects.all()]))
+        )
         if not isinstance(c, int):
+            if not access:
+                logger.warning(f"ClusterAccess with id {access_id} does not exist")
+                return
             self.connections[access_id] = c
             self.locks[access_id] = Lock()
             logger.info(f"Connected to cluster access {access_id}")
 
             access.last_connected = timezone.now()
             access.status = "Connected"
+            access.save()
 
             profile = access.owner
 
@@ -220,9 +231,9 @@ class ClusterDaemon:
             logger.warning(
                 f"Error with cluster access {access_id}: {CONNECTION_MESSAGES[c]}"
             )
-            access.status = CONNECTION_MESSAGES[c]
-
-        access.save()
+            if access:
+                access.status = CONNECTION_MESSAGES[c]
+                access.save()
 
     def disconnect(self, access_id):
         logger.info(f"Disconnecting cluster access {access_id}")
@@ -246,7 +257,7 @@ class ClusterDaemon:
         access.save()
 
         logger.info(f"Disconnected cluster access {access_id}")
-        close_old_connections()
+        # close_old_connections()
 
     def resume_calc(self, c, attempt_count=1):
 
@@ -272,18 +283,20 @@ class ClusterDaemon:
         except KeyError:  # already deleted when disconnnected from cluster
             pass
 
-        close_old_connections()
+        # close_old_connections()
 
     def process_command(self, body):
         lines = body.decode("UTF-8").split("&")
 
         if lines[0].strip() == "stop":
             logger.info("Stopping the daemon")
-            for conn_id in list(self.connections.keys()):
-                self.disconnect(conn_id)
+            if not is_test:
+                for conn_id in list(self.connections.keys()):
+                    self.disconnect(conn_id)
 
             self.stopped = True
             return
+
         t = threading.Thread(target=self._process_command, args=(lines,))
         t.start()
 

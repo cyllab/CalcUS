@@ -90,9 +90,9 @@ class ClusterTests(CalcusLiveServer):
         p.start()
 
     def tearDown(self):
-        send_cluster_command("stop\n")
         time.sleep(0.5)  # Give time to the daemon to disconnect cleanly
         super().tearDown()
+        send_cluster_command("stop\n")
 
     def run_daemon(self):
         try:
@@ -124,8 +124,8 @@ class ClusterTests(CalcusLiveServer):
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located(
                 (
-                    By.CSS_SELECTOR,
-                    "#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a",
+                    By.ID,
+                    "public_key_area",
                 )
             )
         )

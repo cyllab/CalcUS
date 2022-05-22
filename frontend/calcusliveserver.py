@@ -1261,6 +1261,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 "class"
             ) or "has-background-danger" in header.get_attribute("class"):
                 return
+
+            if i > 20 and "has-background-warning" not in header.get_attribute("class"):
+                raise Exception("Calculation did not start after 20 seconds")
+
             time.sleep(2)
             self.driver.refresh()
         raise Exception("Calculation did not finish")
@@ -1278,6 +1282,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     "class"
                 ) and not "has-background-danger" in header.get_attribute("class"):
                     break
+
+                if i > 20 and "has-background-warning" not in header.get_attribute(
+                    "class"
+                ):
+                    raise Exception("Calculation did not start after 20 seconds")
             else:
                 return
             time.sleep(2)

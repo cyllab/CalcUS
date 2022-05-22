@@ -1241,14 +1241,27 @@
 				.appendTo(this);
 			{% endif %}
 
+			{% if not ensemble and not structure and not calc %}
 			if (sketcher.molecules.length > 0) {
 				let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
 
 				$('<input />').attr('type', 'hidden')
 					.attr('name', "structure").val(mol).appendTo("#calcform");
 			}
+			{% endif %}
 
-			return true;
+			$.ajax({
+				data: $("#calcform").serialize(), 
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				type: "POST", 
+				url: "/verify_calculation/",
+				success: function (response) { 
+					return true;
+				}
+			});
 		}); 
 
 	$( document ).ready(function() {
