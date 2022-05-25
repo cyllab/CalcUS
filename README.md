@@ -50,24 +50,21 @@ The first startup might take several minutes, as the different services used wit
 
 Also note that the `.env` *contains sensitive information* and should only be accessible by the server administrator.
 
-By default, the startup script will automatically update CalcUS from stable Docker images and remove unused images. If you use Docker other than for CalcUS or do not want this behaviour, you might want to modify the startup script. Moreover, if you would prefer building the Docker image instead of downloading it (500-600 MB), you can use `dev-compose.yml` to build the image with the following commands:
-
-<pre>
-docker-compose -f dev-compose.yml build
-docker-compose -f dev-compose.yml up
-</pre>
+By default, the startup script will automatically update CalcUS from stable Docker images and remove unused images. If you use Docker other than for CalcUS or do not want this behaviour, you might want to modify the startup script. Moreover, if you would prefer building the Docker image instead of downloading it (500-600 MB), you can build the image and run CalcUS in development mode using `start_dev.sh` on Mac/Linux or `start_dev.bat` on Windows.
 
 Further documentation is available [here](https://calcus.readthedocs.io/).
 
 ## Citation
 If you use CalcUS in your research, please cite it:
 
-> Raphaël Robidas and Claude Y. Legault, "CalcUS: An Open-Source Quantum Chemistry Web Platform", *J. Chem. Inf. Model.*, 2022, ASAP. DOI: 10.1021/acs.jcim.1c01502
+> Raphaël Robidas and Claude Y. Legault, "CalcUS: An Open-Source Quantum Chemistry Web Platform", *J. Chem. Inf. Model.*, **2022**, *62* (5) 1147-1153. DOI: [10.1021/acs.jcim.1c01502](https://doi.org/10.1021/acs.jcim.1c01502)
 
 ## Contributors
 **Project lead and main contributor**: Raphaël Robidas
 
 **Contributor to the conception and beta-testing**: Prof. Claude Y. Legault
+
+**Contributor to the web frontend**: Glen Forcha
 
 **Beta-testers**:
 
