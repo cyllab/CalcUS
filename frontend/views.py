@@ -1483,8 +1483,17 @@ def _submit_calculation(request, verify=False):
         if mol_name == "":
             return "Missing molecule name"
 
-        if (
-            not verify and len(request.FILES) > 0
+        num_files = 0
+        if "num_files" in request.POST:
+            try:
+                num_files = int(clean(request.POST["num_files"]))
+            except ValueError:
+                logger.warning("Got invalid number of files")
+
+        if verify and num_files > 0:
+            pass
+        elif (
+            len(request.FILES) > 0
         ):  # Can't really verify file uploads before actually processing the files
             combine = ""
             if "calc_combine_files" in request.POST.keys():

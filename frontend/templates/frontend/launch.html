@@ -48,6 +48,10 @@
 	#calc_charge, #calc_multiplicity {
 		width: 50px;
 	}
+	#form_error_msg {
+		font-weight: bold;
+		color: red;
+	}
 	.file-name {
 		max-width: 100%;
 		width: 100%;
@@ -138,6 +142,54 @@
 			{% endfor %}
 		}
 
+		function verify_form() {
+			$("#submit_button").addClass("is-loading");
+			data = $("#calcform").serializeArray(),
+
+			data.push({"name": "constraint_num", "value": constraint_num});
+
+			{% if ensemble or structures %}
+			data.push({"name": "starting_ensemble", "value": {{ ensemble.id }}});
+			{% endif %}
+
+			{% if structures %}
+			data.push({"name": "starting_structs", "value": {{ structures }}});
+			{% endif %}
+
+			{% if calc %}
+			data.push({"name": "starting_calc", "value": {{ calc.id }}});
+			data.push({"name": "starting_frame", "value": {{ frame_num }}});
+			{% endif %}
+
+			{% if not ensemble and not structure and not calc %}
+			if (sketcher.molecules.length > 0) {
+				let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
+				data.push({"name": "structure", "value": mol});
+			}
+			{% endif %}
+
+			num_files = $("#file_structure")[0].files.length;
+			data.push({"name": "num_files", "value": num_files});
+
+			$.ajax({
+				data: data, 
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				type: "POST", 
+				url: "/verify_calculation/",
+				success: function (response) { 
+					$("#calcform").submit();
+					$("#form_error_msg").html("");
+				},
+				error: function (response) {
+					$("#form_error_msg").html("Could not submit the calculation: " + response.responseText);
+					$("#submit_button").removeClass("is-loading");
+				}
+			});
+
+		}
 		function load_preset(id) {
 			$.ajax({
 				method: "POST",	 	 
@@ -1202,8 +1254,9 @@
 				{% endif %}
 
 				<div class="field">
+					<span id="form_error_msg"></span>
 					<div class="control">
-						<button class="button is-primary" id="submit_button">Submit</button>
+						<a class="button is-primary" id="submit_button" onclick="verify_form()">Submit</a>
 					</div>
 				</div>
 			</form>
@@ -1250,18 +1303,6 @@
 			}
 			{% endif %}
 
-			$.ajax({
-				data: $("#calcform").serialize(), 
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-
-				type: "POST", 
-				url: "/verify_calculation/",
-				success: function (response) { 
-					return true;
-				}
-			});
 		}); 
 
 	$( document ).ready(function() {
