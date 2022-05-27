@@ -69,7 +69,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
 tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 
 
@@ -101,9 +100,9 @@ def direct_command(command, conn, lock, attempt_count=1):
         response = conn[1].run("source ~/.bashrc; " + command, hide="both")
     except invoke.exceptions.UnexpectedExit as e:
         lock.release()
-        if (
-            e.result.exited == 1
-            and e.result.stderr.find("Invalid job id specified") != -1
+        if e.result.exited == 1 and (
+            e.result.stderr.find("Invalid job id specified") != -1
+            or e.result.stdout.find("Invalid job id specified") != -1
         ):
             return []
 
@@ -214,14 +213,15 @@ def wait_until_done(calc, conn, lock, ind=0):
 
     while True:
         output = direct_command(f"squeue -j {job_id}", conn, lock)
-        if not isinstance(output, ErrorCodes) and len(output) > 0:
-            _output = [i for i in output if i.strip() != ""]
+        _output = [i for i in output if i.strip() != ""]
+        if not isinstance(output, ErrorCodes) and len(_output) > 1:
             logger.info(f"Waiting ({job_id})")
             try:
                 status = _output[1].split()[4]
             except IndexError:
                 logger.warning("Got unexpected str: " + str(_output))
                 return
+
             if status == "R" and calc.status == 0:
                 calc.date_started = timezone.now()
                 calc.status = 1
@@ -449,14 +449,12 @@ def setup_cached_calc(calc):
     if not index:
         return False
 
-    if os.path.isdir(os.path.join(tests_dir, "scr", str(calc.id))):
-        rmtree(os.path.join(tests_dir, "scr", str(calc.id)))
-
-    # shutil.copytree(os.path.join(tests_dir, "cache", index), os.path.join(tests_dir, "scr", str(calc.id)))
+    if os.path.isdir(f"/calcus/scratch/scr/{calc.id}"):
+        rmtree(f"/calcus/scratch/scr/{calc.id}")
 
     os.symlink(
         os.path.join(tests_dir, "cache", index),
-        os.path.join(tests_dir, "scr", str(calc.id)),
+        f"/calcus/scratch/scr/{calc.id}",
     )
     logger.info(f"Using cache ({index})")
     return True
@@ -3362,14 +3360,8 @@ def run_calc(calc_id):
     in_file = os.path.join(workdir, "in.xyz")
 
     if calc.status == 0:
-        try:
-            os.mkdir(res_dir)
-        except OSError:
-            logger.info(f"Directory already exists: {res_dir}")
-        try:
-            os.mkdir(workdir)
-        except OSError:
-            logger.info(f"Directory already exists: {res_dir}")
+        os.makedirs(res_dir, exist_ok=True)
+        os.makedirs(workdir, exist_ok=True)
 
         with open(in_file, "w") as out:
             out.write(clean_xyz(calc.structure.xyz_structure))
@@ -3448,7 +3440,7 @@ def run_calc(calc_id):
     ):
         test_name = os.environ["TEST_NAME"]
         shutil.copytree(
-            os.path.join(tests_dir, "scr", str(calc.id)),
+            f"/calcus/scratch/scr/{calc.id}",
             os.path.join(tests_dir, "cache", test_name),
             dirs_exist_ok=True,
         )

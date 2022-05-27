@@ -30,12 +30,9 @@ from django.contrib.auth import authenticate
 from django.test import TestCase, Client
 from django.http import HttpRequest
 from .gen_calc import gen_calc, gen_param
-
-dir_path = os.path.dirname(os.path.realpath(__file__))
+from .calcusliveserver import SCR_DIR, RESULTS_DIR
 
 tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
-SCR_DIR = os.path.join(tests_dir, "scr")
-RESULTS_DIR = os.path.join(tests_dir, "results")
 
 basic_params = {
     "file_structure": [""],

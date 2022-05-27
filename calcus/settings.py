@@ -144,6 +144,9 @@ DATABASES = {
     }
 }
 
+if os.environ.get("IS_TEST_CLUSTER_DAEMON", "") != "":
+    DATABASES["default"]["NAME"] = "test_calcus"
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -183,7 +186,7 @@ DEFAULT_FROM_EMAIL = "bot@CalcUS"
 
 if IS_TEST:
     EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
-    EMAIL_FILE_PATH = os.path.join(BASE_DIR, "frontend", "tests", "sent_emails")
+    EMAIL_FILE_PATH = os.path.join(BASE_DIR, "scratch", "sent_emails")
 
 MEDIA_URL = "/media/"
 

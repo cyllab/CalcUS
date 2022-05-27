@@ -53,20 +53,13 @@ from .cluster_daemon import ClusterDaemon
 from .environment_variables import *
 
 from django.core.management import call_command
-from .calcusliveserver import CalcusLiveServer
+from .calcusliveserver import CalcusLiveServer, SCR_DIR, RESULTS_DIR, KEYS_DIR
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 
 from unittest import mock
-
-dir_path = os.path.dirname(os.path.realpath(__file__))
-
-tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
-SCR_DIR = os.path.join(tests_dir, "scr")
-RESULTS_DIR = os.path.join(tests_dir, "results")
-KEYS_DIR = os.path.join(tests_dir, "keys")
 
 
 class ClusterTests(CalcusLiveServer):
@@ -86,8 +79,8 @@ class ClusterTests(CalcusLiveServer):
         connection.flushdb()
         connection.close()
 
-        p = Process(target=self.run_daemon)
-        p.start()
+        # p = Process(target=self.run_daemon)
+        # p.start()
 
     def tearDown(self):
         time.sleep(0.5)  # Give time to the daemon to disconnect cleanly
@@ -250,7 +243,7 @@ class ClusterTests(CalcusLiveServer):
         self.setup_cluster()
         params = {
             "mol_name": "test",
-            "type": "Single-Point Energy",
+            "type": "Geometrical Optimisation",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
             "in_file": "ethanol.sdf",
@@ -523,6 +516,7 @@ class ClusterTests(CalcusLiveServer):
         s = self.get_calculation_statuses()
         self.assertEqual(s[0], "Error - Job cancelled")
 
+    @mock.patch.dict(os.environ, {"CAN_USE_CACHED_CALCULATIONS": "false"})
     def test_relaunch_calc(self):
         self.setup_cluster()
         params = {
@@ -530,10 +524,10 @@ class ClusterTests(CalcusLiveServer):
             "type": "Single-Point Energy",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
-            "in_file": "CH4.mol",
+            "in_file": "ethanol.xyz",
             "software": "Gaussian",
             "theory": "HF",
-            "basis_set": "Def2-SVP",
+            "basis_set": "Def2-TZVP",
         }
 
         self.lget("/launch/")

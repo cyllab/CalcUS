@@ -28,7 +28,8 @@ from django.test import TestCase
 from django.contrib.auth.models import User, Group
 from django.core.management import call_command
 
-from .calculation_unittest import CalculationUnitTest, tests_dir
+from .calculation_unittest import CalculationUnitTest
+from .calcusliveserver import tests_dir
 from .models import *
 from .libxyz import *
 

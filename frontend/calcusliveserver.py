@@ -49,12 +49,12 @@ from django.contrib.auth.models import User, Group
 from .models import *
 from .environment_variables import *
 
+tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
-SCR_DIR = os.path.join(tests_dir, "scr")
-RESULTS_DIR = os.path.join(tests_dir, "results")
-KEYS_DIR = os.path.join(tests_dir, "keys")
+SCR_DIR = "/calcus/scratch/scr"
+RESULTS_DIR = "/calcus/scratch/results"
+KEYS_DIR = "/calcus/scratch/keys"
 
 HEADLESS = os.getenv("CALCUS_HEADLESS")
 
@@ -269,11 +269,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             self.driver.find_element_by_xpath(
                 f"//*[@id='calc_type']/option[text()='{params['type']}']"
             ).click()
+            self.wait_for_ajax()
 
         if "project" in params.keys():
             self.driver.find_element_by_xpath(
                 f"//*[@id='calc_project']/option[text()='{params['project']}']"
             ).click()
+            self.wait_for_ajax()
 
         if "solvation_model" in params.keys():
             self.driver.find_element_by_xpath(
@@ -281,6 +283,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     params["solvation_model"]
                 )
             ).click()
+            self.wait_for_ajax()
 
         if "solvation_radii" in params.keys():
             self.driver.find_element_by_xpath(
@@ -470,6 +473,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def calc_launch(self):
         submit = self.driver.find_element_by_id("submit_button")
         submit.click()
+        self.wait_for_ajax()
+        try:
+            msg = self.driver.find_element_by_id("form_error_msg")
+        except selenium.common.exceptions.NoSuchElementException:
+            pass
+        else:
+            if msg.text != "":
+                raise Exception(f"Got error while submitting calculation: {msg.text}")
 
     def get_confirmed_specifications(self):
         assert self.is_on_page_ensemble()

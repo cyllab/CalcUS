@@ -123,9 +123,13 @@ class ClusterDaemon:
     def check_binaries(self, conn):
         lock = self.locks[conn[0].id]
         ls_home = tasks.direct_command("ls ~", conn, lock)
-
-        if "calcus" not in ls_home:
-            return ConnectionCodes.NO_CALCUS_FOLDER
+        if isinstance(ls_home, ErrorCodes):
+            logger.warning(
+                f"Could not check the presence of a remote calcus folder: {ls_home}"
+            )
+        else:
+            if "calcus" not in ls_home:
+                return ConnectionCodes.NO_CALCUS_FOLDER
 
         return ""
 
@@ -180,7 +184,6 @@ class ClusterDaemon:
             logger.warning(f"No lock for connection with id {access_id} in memory")
 
     def job(self, calc):
-
         access_id = calc.order.resource.id
         tasks.connections[threading.get_ident()] = self.connections[access_id]
         tasks.locks[threading.get_ident()] = self.locks[access_id]
@@ -200,10 +203,6 @@ class ClusterDaemon:
         except ClusterAccess.DoesNotExist:
             access = None
 
-        logger.warning(
-            "Accesses: "
-            + str(list([i.cluster_address for i in ClusterAccess.objects.all()]))
-        )
         if not isinstance(c, int):
             if not access:
                 logger.warning(f"ClusterAccess with id {access_id} does not exist")

@@ -26,8 +26,6 @@ from django.test import TestCase, Client
 from .libxyz import *
 
 tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
-SCR_DIR = os.path.join(tests_dir, "scr")
-RESULTS_DIR = os.path.join(tests_dir, "results")
 
 
 class XyzTests(TestCase):

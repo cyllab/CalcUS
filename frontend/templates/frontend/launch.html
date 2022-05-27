@@ -153,7 +153,7 @@
 			{% endif %}
 
 			{% if structures %}
-			data.push({"name": "starting_structs", "value": {{ structures }}});
+			data.push({"name": "starting_structs", "value": "{{ structures }}"});
 			{% endif %}
 
 			{% if calc %}
@@ -168,8 +168,23 @@
 			}
 			{% endif %}
 
-			num_files = $("#file_structure")[0].files.length;
+			upload_el = $("#file_structure");
+			if(upload_el.length != 0) {
+				num_files = upload_el[0].files.length;
+			}
+			else {
+				num_files = 0;
+			}
 			data.push({"name": "num_files", "value": num_files});
+
+			upload_aux_el = $("#aux_file_structure");
+			if(upload_aux_el.length != 0) {
+				num_aux_files = upload_aux_el[0].files.length;
+			}
+			else {
+				num_aux_files = 0;
+			}
+			data.push({"name": "num_aux_files", "value": num_aux_files});
 
 			$.ajax({
 				data: data, 

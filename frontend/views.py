@@ -1291,6 +1291,7 @@ def process_filename(filename):
 def verify_calculation(request):
     ret = _submit_calculation(request, verify=True)
     if isinstance(ret, str):
+        logger.warning(f"Invalid calculation: {ret}")
         return HttpResponse(ret, status=400)
     return HttpResponse(status=200)
 
@@ -1756,30 +1757,50 @@ def _submit_calculation(request, verify=False):
                 return "No input structure"
 
     if step.name == "Minimum Energy Path":
-        if len(orders) != 1:
-            return "Only one initial structure can be used"
-
-        if len(request.FILES.getlist("aux_file_structure")) == 1:
-            if not verify:
-                _aux_struct = handle_file_upload(
-                    request.FILES.getlist("aux_file_structure")[0], params
-                )
-                if isinstance(_aux_struct, HttpResponse):
-                    return _aux_struct
-                aux_struct = _aux_struct[0]
-        else:
-            if "aux_struct" not in request.POST.keys():
+        if verify:
+            if "num_aux_files" not in request.POST.keys():
                 return "No valid auxiliary structure"
             try:
-                aux_struct = Structure.objects.get(
-                    pk=int(clean(request.POST["aux_struct"]))
-                )
-            except Structure.DoesNotExist:
+                num_aux_files = int(clean(request.POST["num_aux_files"]))
+            except ValueError:
                 return "No valid auxiliary structure"
-            if not can_view_structure(aux_struct, profile):
-                return "No valid auxiliary structure"
+            if num_aux_files == 0:
+                if "aux_struct" not in request.POST.keys():
+                    return "No valid auxiliary structure"
+                try:
+                    aux_struct = Structure.objects.get(
+                        pk=int(clean(request.POST["aux_struct"]))
+                    )
+                except Structure.DoesNotExist:
+                    return "No valid auxiliary structure"
+                if not can_view_structure(aux_struct, profile):
+                    return "No valid auxiliary structure"
 
-        if not verify:
+            elif num_aux_files > 1:
+                return "Only one auxiliary structure can be used"
+        else:
+            if len(orders) != 1:
+                return "Only one initial structure can be used"
+            if len(request.FILES.getlist("aux_file_structure")) == 1:
+                if not verify:
+                    _aux_struct = handle_file_upload(
+                        request.FILES.getlist("aux_file_structure")[0], params
+                    )
+                    if isinstance(_aux_struct, HttpResponse):
+                        return _aux_struct
+                    aux_struct = _aux_struct[0]
+            else:
+                if "aux_struct" not in request.POST.keys():
+                    return "No valid auxiliary structure"
+                try:
+                    aux_struct = Structure.objects.get(
+                        pk=int(clean(request.POST["aux_struct"]))
+                    )
+                except Structure.DoesNotExist:
+                    return "No valid auxiliary structure"
+                if not can_view_structure(aux_struct, profile):
+                    return "No valid auxiliary structure"
+
             aux_struct.save()
             orders[0].aux_structure = aux_struct
 
@@ -1814,7 +1835,8 @@ def _submit_calculation(request, verify=False):
                 if mode == "Freeze":
                     constraints += f"{mode}/{ids};"
                 elif mode == "Scan":
-                    obj.has_scan = True
+                    if not verify:
+                        obj.has_scan = True
 
                     if params.software != "Gaussian":
                         try:

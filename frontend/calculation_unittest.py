@@ -10,14 +10,9 @@ from .libxyz import *
 from .models import *
 from .gen_calc import gen_calc
 from .tasks import run_calc
+from .calcusliveserver import SCR_DIR, RESULTS_DIR
 
-
-dir_path = os.path.dirname(os.path.realpath(__file__))
 base_cwd = os.getcwd()
-
-tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
-SCR_DIR = os.path.join(tests_dir, "scr")
-RESULTS_DIR = os.path.join(tests_dir, "results")
 
 
 class CalculationUnitTest(TestCase):

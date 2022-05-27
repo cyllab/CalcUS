@@ -17,6 +17,8 @@ services:
                 depends_on:
                         - redis
                         - slurm
+                volumes:
+                        - scratch:/calcus/scratch
                 env_file:
                         - ./.env
                 environment:
@@ -43,6 +45,26 @@ services:
                 links:
                         - web
                 shm_size: '1gb' # Necessary to ensure that selenium does not crash
+        cluster:
+                build:
+                        context: .
+                        dockerfile: Dockerfile
+                        target: calcus_dev
+                restart: always
+                user: "${UID}:${GID}"
+                command: ./scripts/run_cluster_daemon.sh
+                environment:
+                        - CALCUS_TEST=True
+                        - IS_TEST_CLUSTER_DAEMON=True
+                volumes:
+                        - scratch:/calcus/scratch
+                env_file:
+                        - ./.env
+                links:
+                        - web
+                depends_on:
+                        - redis
+
         postgres:
                 image: postgres:11-bullseye
                 restart: always
@@ -56,4 +78,5 @@ services:
                         - POSTGRES_USER=calcus
                         - POSTGRES_DB=calcus
 
-
+volumes:
+  scratch:

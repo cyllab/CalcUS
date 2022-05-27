@@ -33,8 +33,6 @@ from shutil import copyfile, rmtree
 from .tasks import write_mol, gen_fingerprint
 
 tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
-SCR_DIR = os.path.join(tests_dir, "scr")
-RESULTS_DIR = os.path.join(tests_dir, "results")
 
 
 class JobTestCase(TestCase):

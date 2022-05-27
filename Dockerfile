@@ -8,9 +8,9 @@ ENV PYTHONUNBUFFERED 1
 ENV CALCUS_SCR_HOME "/calcus/scr"
 ENV CALCUS_RESULTS_HOME "/calcus/results"
 ENV CALCUS_KEY_HOME "/calcus/keys"
-ENV CALCUS_TEST_SCR_HOME "/calcus/frontend/tests/scr"
-ENV CALCUS_TEST_RESULTS_HOME "/calcus/frontend/tests/results"
-ENV CALCUS_TEST_KEY_HOME "/calcus/frontend/tests/keys"
+ENV CALCUS_TEST_SCR_HOME "/calcus/scratch/scr"
+ENV CALCUS_TEST_RESULTS_HOME "/calcus/scratch/results"
+ENV CALCUS_TEST_KEY_HOME "/calcus/scratch/keys"
 
 ENV EBROOTORCA "/binaries/orca"
 ENV GAUSS_EXEDIR "/binaries/g16"
@@ -43,4 +43,8 @@ RUN adduser --disabled-password --gecos '' calcus
 FROM calcus_user as calcus_dev
 
 ADD ./test-requirements.txt /calcus/test-requirements.txt
-RUN pip install -r /calcus/test-requirements.txt
+RUN  pip install -r /calcus/test-requirements.txt
+RUN mkdir -p /calcus/scratch/keys
+RUN mkdir -p /calcus/scratch/scr
+RUN mkdir -p /calcus/scratch/results
+RUN chown -R calcus:calcus /calcus/scratch

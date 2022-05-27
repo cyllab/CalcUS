@@ -42,16 +42,10 @@ from calcus.celery import app
 from .models import *
 from .libxyz import *
 from django.core.management import call_command
-from .calcusliveserver import CalcusLiveServer
+from .calcusliveserver import CalcusLiveServer, SCR_DIR, RESULTS_DIR, tests_dir
 
 from selenium.webdriver.support.select import Select
 from unittest import mock
-
-dir_path = os.path.dirname(os.path.realpath(__file__))
-
-tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
-SCR_DIR = os.path.join(tests_dir, "scr")
-RESULTS_DIR = os.path.join(tests_dir, "results")
 
 
 class InterfaceTests(CalcusLiveServer):
