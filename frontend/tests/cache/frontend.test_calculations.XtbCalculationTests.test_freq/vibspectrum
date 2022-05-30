@@ -1,0 +1,16 @@
+$vibrational spectrum
+#  mode     symmetry     wave number   IR intensity    selection rules
+#                         cm**(-1)      (km*mol⁻¹)       IR     RAMAN
+     1                      -0.00         0.00000        -       - 
+     2                      -0.00         0.00000        -       - 
+     3                       0.00         0.00000        -       - 
+     4                       0.00         0.00000        -       - 
+     5                       0.00         0.00000        -       - 
+     6                       0.00         0.00000        -       - 
+     7        a           1004.71        16.75296       YES     YES
+     8        a           1101.27       134.91680       YES     YES
+     9        a           1101.29       134.81024       YES     YES
+    10        a           3193.98        37.95677       YES     YES
+    11        a           3196.88       178.11264       YES     YES
+    12        a           3197.24       177.61423       YES     YES
+$end

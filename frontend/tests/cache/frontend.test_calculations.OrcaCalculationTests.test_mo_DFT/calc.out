@@ -1,0 +1,2234 @@
+
+                                 *****************
+                                 * O   R   C   A *
+                                 *****************
+
+                                            #,                                       
+                                            ###                                      
+                                            ####                                     
+                                            #####                                    
+                                            ######                                   
+                                           ########,                                 
+                                     ,,################,,,,,                         
+                               ,,#################################,,                 
+                          ,,##########################################,,             
+                       ,#########################################, ''#####,          
+                    ,#############################################,,   '####,        
+                  ,##################################################,,,,####,       
+                ,###########''''           ''''###############################       
+              ,#####''   ,,,,##########,,,,          '''####'''          '####       
+            ,##' ,,,,###########################,,,                        '##       
+           ' ,,###''''                  '''############,,,                           
+         ,,##''                                '''############,,,,        ,,,,,,###''
+      ,#''                                            '''#######################'''  
+     '                                                          ''''####''''         
+             ,#######,   #######,   ,#######,      ##                                
+            ,#'     '#,  ##    ##  ,#'     '#,    #''#        ######   ,####,        
+            ##       ##  ##   ,#'  ##            #'  '#       #        #'  '#        
+            ##       ##  #######   ##           ,######,      #####,   #    #        
+            '#,     ,#'  ##    ##  '#,     ,#' ,#      #,         ##   #,  ,#        
+             '#######'   ##     ##  '#######'  #'      '#     #####' # '####'        
+
+
+
+                  #######################################################
+                  #                        -***-                        #
+                  #          Department of theory and spectroscopy      #
+                  #    Directorship and core code : Frank Neese         #
+                  #        Max Planck Institute fuer Kohlenforschung    #
+                  #                Kaiser Wilhelm Platz 1               #
+                  #                 D-45470 Muelheim/Ruhr               #
+                  #                      Germany                        #
+                  #                                                     #
+                  #                  All rights reserved                #
+                  #                        -***-                        #
+                  #######################################################
+
+
+                         Program Version 5.0.3 -  RELEASE  -
+
+
+ With contributions from (in alphabetic order):
+   Daniel Aravena         : Magnetic Suceptibility
+   Michael Atanasov       : Ab Initio Ligand Field Theory (pilot matlab implementation)
+   Alexander A. Auer      : GIAO ZORA, VPT2 properties, NMR spectrum
+   Ute Becker             : Parallelization
+   Giovanni Bistoni       : ED, misc. LED, open-shell LED, HFLD
+   Martin Brehm           : Molecular dynamics
+   Dmytro Bykov           : SCF Hessian
+   Vijay G. Chilkuri      : MRCI spin determinant printing, contributions to CSF-ICE
+   Dipayan Datta          : RHF DLPNO-CCSD density
+   Achintya Kumar Dutta   : EOM-CC, STEOM-CC
+   Dmitry Ganyushin       : Spin-Orbit,Spin-Spin,Magnetic field MRCI
+   Miquel Garcia          : C-PCM and meta-GGA Hessian, CC/C-PCM, Gaussian charge scheme
+   Yang Guo               : DLPNO-NEVPT2, F12-NEVPT2, CIM, IAO-localization
+   Andreas Hansen         : Spin unrestricted coupled pair/coupled cluster methods
+   Benjamin Helmich-Paris : MC-RPA, TRAH-SCF, COSX integrals
+   Lee Huntington         : MR-EOM, pCC
+   Robert Izsak           : Overlap fitted RIJCOSX, COSX-SCS-MP3, EOM
+   Marcus Kettner         : VPT2
+   Christian Kollmar      : KDIIS, OOCD, Brueckner-CCSD(T), CCSD density, CASPT2, CASPT2-K
+   Simone Kossmann        : Meta GGA functionals, TD-DFT gradient, OOMP2, MP2 Hessian
+   Martin Krupicka        : Initial AUTO-CI
+   Lucas Lang             : DCDCAS
+   Marvin Lechner         : AUTO-CI (C++ implementation), FIC-MRCC
+   Dagmar Lenk            : GEPOL surface, SMD
+   Dimitrios Liakos       : Extrapolation schemes; Compound Job, initial MDCI parallelization
+   Dimitrios Manganas     : Further ROCIS development; embedding schemes
+   Dimitrios Pantazis     : SARC Basis sets
+   Anastasios Papadopoulos: AUTO-CI, single reference methods and gradients
+   Taras Petrenko         : DFT Hessian,TD-DFT gradient, ASA, ECA, R-Raman, ABS, FL, XAS/XES, NRVS
+   Peter Pinski           : DLPNO-MP2, DLPNO-MP2 Gradient
+   Christoph Reimann      : Effective Core Potentials
+   Marius Retegan         : Local ZFS, SOC
+   Christoph Riplinger    : Optimizer, TS searches, QM/MM, DLPNO-CCSD(T), (RO)-DLPNO pert. Triples
+   Tobias Risthaus        : Range-separated hybrids, TD-DFT gradient, RPA, STAB
+   Michael Roemelt        : Original ROCIS implementation
+   Masaaki Saitow         : Open-shell DLPNO-CCSD energy and density
+   Barbara Sandhoefer     : DKH picture change effects
+   Avijit Sen             : IP-ROCIS
+   Kantharuban Sivalingam : CASSCF convergence, NEVPT2, FIC-MRCI
+   Bernardo de Souza      : ESD, SOC TD-DFT
+   Georgi Stoychev        : AutoAux, RI-MP2 NMR, DLPNO-MP2 response
+   Willem Van den Heuvel  : Paramagnetic NMR
+   Boris Wezisla          : Elementary symmetry handling
+   Frank Wennmohs         : Technical directorship
+
+
+ We gratefully acknowledge several colleagues who have allowed us to
+ interface, adapt or use parts of their codes:
+   Stefan Grimme, W. Hujo, H. Kruse, P. Pracht,  : VdW corrections, initial TS optimization,
+                  C. Bannwarth, S. Ehlert          DFT functionals, gCP, sTDA/sTD-DF
+   Ed Valeev, F. Pavosevic, A. Kumar             : LibInt (2-el integral package), F12 methods
+   Garnet Chan, S. Sharma, J. Yang, R. Olivares  : DMRG
+   Ulf Ekstrom                                   : XCFun DFT Library
+   Mihaly Kallay                                 : mrcc  (arbitrary order and MRCC methods)
+   Jiri Pittner, Ondrej Demel                    : Mk-CCSD
+   Frank Weinhold                                : gennbo (NPA and NBO analysis)
+   Christopher J. Cramer and Donald G. Truhlar   : smd solvation model
+   Lars Goerigk                                  : TD-DFT with DH, B97 family of functionals
+   V. Asgeirsson, H. Jonsson                     : NEB implementation
+   FAccTs GmbH                                   : IRC, NEB, NEB-TS, DLPNO-Multilevel, CI-OPT
+                                                   MM, QMMM, 2- and 3-layer-ONIOM, Crystal-QMMM,
+                                                   LR-CPCM, SF, NACMEs, symmetry and pop. for TD-DFT,
+                                                   nearIR, NL-DFT gradient (VV10), updates on ESD,
+                                                   ML-optimized integration grids
+   S Lehtola, MJT Oliveira, MAL Marques          : LibXC Library
+   Liviu Ungur et al                             : ANISO software
+
+
+ Your calculation uses the libint2 library for the computation of 2-el integrals
+ For citations please refer to: http://libint.valeyev.net
+
+ Your ORCA version has been built with support for libXC version: 5.1.0
+ For citations please refer to: https://tddft.org/programs/libxc/
+
+ This ORCA versions uses:
+   CBLAS   interface :  Fast vector & matrix operations
+   LAPACKE interface :  Fast linear algebra routines
+   SCALAPACK package :  Parallel linear algebra routines
+   Shared memory     :  Shared parallel matrices
+   BLAS/LAPACK       :  OpenBLAS 0.3.15  USE64BITINT DYNAMIC_ARCH NO_AFFINITY Zen SINGLE_THREADED
+        Core in use  :  Zen
+   Copyright (c) 2011-2014, The OpenBLAS Project
+
+
+XCFun DFT library Copyright 2009-2010 Ulf Ekstrom and contributors.
+See http://admol.org/xcfun for more information.
+This is free software; see the source code for copying conditions.
+There is ABSOLUTELY NO WARRANTY; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+For details see the documentation.
+Scientific users of this library should cite U. Ekstrom, L. Visscher, R. Bast, A. J. Thorvaldsen and K. Ruud;
+J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
+XCFun Version 0.99 
+
+================================================================================
+
+----- Orbital basis set information -----
+Your calculation utilizes the basis: def2-SVP
+   F. Weigend and R. Ahlrichs, Phys. Chem. Chem. Phys. 7, 3297 (2005).
+
+----- AuxJ basis set information -----
+Your calculation utilizes the auxiliary basis: def2/J
+   F. Weigend, Phys. Chem. Chem. Phys. 8, 1057 (2006).
+
+================================================================================
+                                        WARNINGS
+                       Please study these warnings very carefully!
+================================================================================
+
+
+WARNING: Minnesota functionals are quite sensitive to the integration grid.
+         see SE Wheeler, KN Houk, JCTC 2010, 6, 395,
+             N Mardirossian, M Head-Gordon, JCTC 2016, 12, 4303.
+         DEFGRID3 seems to be a minimum grid for reliable results with these functionals!
+  ===> : Please increase the integration grid!
+
+
+INFO   : the flag for use of the SHARK integral package has been found!
+
+================================================================================
+                                       INPUT FILE
+================================================================================
+NAME = calc.inp
+|  1> !SP M062X Def2-SVP
+|  2> *xyz 1 1
+|  3> C   -2.90770000   1.66310000   0.00000000
+|  4> H   -2.55100000   2.16750000   0.87370000
+|  5> H   -3.97770000   1.66310000   0.00000000
+|  6> H   -2.55100000   2.16750000  -0.87370000
+|  7> *
+|  8> %plots
+|  9> dim1 45
+| 10> dim2 45
+| 11> dim3 45
+| 12> min1 0
+| 13> max1 0
+| 14> min2 0
+| 15> max2 0
+| 16> min3 0
+| 17> max3 0
+| 18> Format Gaussian_Cube
+| 19> MO("in-HOMO.cube",3,0);
+| 20> MO("in-LUMO.cube",4,0);
+| 21> MO("in-LUMOA.cube",5,0);
+| 22> MO("in-LUMOB.cube",6,0);
+| 23> end
+| 24> 
+| 25> %pal
+| 26> nprocs 4
+| 27> endd                         ****END OF INPUT****
+================================================================================
+
+                       ****************************
+                       * Single Point Calculation *
+                       ****************************
+
+---------------------------------
+CARTESIAN COORDINATES (ANGSTROEM)
+---------------------------------
+  C     -2.907700    1.663100    0.000000
+  H     -2.551000    2.167500    0.873700
+  H     -3.977700    1.663100    0.000000
+  H     -2.551000    2.167500   -0.873700
+
+----------------------------
+CARTESIAN COORDINATES (A.U.)
+----------------------------
+  NO LB      ZA    FRAG     MASS         X           Y           Z
+   0 C     6.0000    0    12.011   -5.494757    3.142804    0.000000
+   1 H     1.0000    0     1.008   -4.820691    4.095981    1.651054
+   2 H     1.0000    0     1.008   -7.516764    3.142804    0.000000
+   3 H     1.0000    0     1.008   -4.820691    4.095981   -1.651054
+
+--------------------------------
+INTERNAL COORDINATES (ANGSTROEM)
+--------------------------------
+ C      0   0   0     0.000000000000     0.00000000     0.00000000
+ H      1   0   0     1.070049503528     0.00000000     0.00000000
+ H      1   2   0     1.070000000000   109.47217659     0.00000000
+ H      1   2   3     1.070049503528   109.47274885   120.00269215
+
+---------------------------
+INTERNAL COORDINATES (A.U.)
+---------------------------
+ C      0   0   0     0.000000000000     0.00000000     0.00000000
+ H      1   0   0     2.022100511406     0.00000000     0.00000000
+ H      1   2   0     2.022006963296   109.47217659     0.00000000
+ H      1   2   3     2.022100511406   109.47274885   120.00269215
+
+---------------------
+BASIS SET INFORMATION
+---------------------
+There are 2 groups of distinct atoms
+
+ Group   1 Type C   : 7s4p1d contracted to 3s2p1d pattern {511/31/1}
+ Group   2 Type H   : 4s1p contracted to 2s1p pattern {31/1}
+
+Atom   0C    basis set group =>   1
+Atom   1H    basis set group =>   2
+Atom   2H    basis set group =>   2
+Atom   3H    basis set group =>   2
+---------------------------------
+AUXILIARY/J BASIS SET INFORMATION
+---------------------------------
+There are 2 groups of distinct atoms
+
+ Group   1 Type C   : 12s5p4d2f1g contracted to 6s4p3d1f1g pattern {711111/2111/211/2/1}
+ Group   2 Type H   : 5s2p1d contracted to 3s1p1d pattern {311/2/1}
+
+Atom   0C    basis set group =>   1
+Atom   1H    basis set group =>   2
+Atom   2H    basis set group =>   2
+Atom   3H    basis set group =>   2
+
+
+           ************************************************************
+           *        Program running with 4 parallel MPI-processes     *
+           *              working on a common directory               *
+           ************************************************************
+------------------------------------------------------------------------------
+                           ORCA GTO INTEGRAL CALCULATION
+                           -- RI-GTO INTEGRALS CHOSEN --
+------------------------------------------------------------------------------
+[web:00836] Read -1, expected 651728, errno = 1
+[web:00837] Read -1, expected 651728, errno = 1
+[web:00838] Read -1, expected 651728, errno = 1
+[web:00836] Read -1, expected 27448, errno = 1
+[web:00837] Read -1, expected 27448, errno = 1
+[web:00838] Read -1, expected 27448, errno = 1
+------------------------------------------------------------------------------
+                   ___                                                        
+                  /   \      - P O W E R E D   B Y -                         
+                 /     \                                                     
+                 |  |  |   _    _      __       _____    __    __             
+                 |  |  |  | |  | |    /  \     |  _  \  |  |  /  |          
+                  \  \/   | |  | |   /    \    | | | |  |  | /  /          
+                 / \  \   | |__| |  /  /\  \   | |_| |  |  |/  /          
+                |  |  |   |  __  | /  /__\  \  |    /   |      \           
+                |  |  |   | |  | | |   __   |  |    \   |  |\   \          
+                \     /   | |  | | |  |  |  |  | |\  \  |  | \   \       
+                 \___/    |_|  |_| |__|  |__|  |_| \__\ |__|  \__/        
+                                                                              
+                      - O R C A' S   B I G   F R I E N D -                    
+                                      &                                       
+                       - I N T E G R A L  F E E D E R -                       
+                                                                              
+ v1 FN, 2020, v2 2021                                                         
+------------------------------------------------------------------------------
+
+
+Reading SHARK input file calc.SHARKINP.tmp ... [web:00837] Read -1, expected 4136, errno = 1
+[web:00836] Read -1, expected 4136, errno = 1
+[web:00838] Read -1, expected 4136, errno = 1
+ok
+----------------------
+SHARK INTEGRAL PACKAGE
+----------------------
+
+Number of atoms                             ...      4
+Number of basis functions                   ...     29
+Number of shells                            ...     15
+Maximum angular momentum                    ...      2
+Integral batch strategy                     ... SHARK/LIBINT Hybrid
+RI-J (if used) integral strategy            ... SPLIT-RIJ (Revised 2003 algorithm where possible)
+Printlevel                                  ...      1
+Contraction scheme used                     ... SEGMENTED contraction
+Coulomb Range Separation                    ... NOT USED
+Exchange Range Separation                   ... NOT USED
+Finite Nucleus Model                        ... NOT USED
+Auxiliary Coulomb fitting basis             ... AVAILABLE
+   # of basis functions in Aux-J            ...     82
+   # of shells in Aux-J                     ...     30
+   Maximum angular momentum in Aux-J        ...      4
+Auxiliary J/K fitting basis                 ... NOT available
+Auxiliary Correlation fitting basis         ... NOT available
+Auxiliary 'external' fitting basis          ... NOT available
+Integral threshold                          ...     1.000000e-10
+Primitive cut-off                           ...     1.000000e-11
+Primitive pair pre-selection threshold      ...     1.000000e-11
+
+Calculating pre-screening integrals         ... done (  0.0 sec) Dimension = 15
+Organizing shell pair data                  ... [web:00836] Read -1, expected 4136, errno = 1
+[web:00838] Read -1, expected 4136, errno = 1
+[web:00837] Read -1, expected 4136, errno = 1
+done (  0.0 sec)
+Shell pair information
+Total number of shell pairs                 ...       120
+Shell pairs after pre-screening             ...       120
+Total number of primitive shell pairs       ...       400
+Primitive shell pairs kept                  ...       388
+          la=0 lb=0:     45 shell pairs
+          la=1 lb=0:     45 shell pairs
+          la=1 lb=1:     15 shell pairs
+          la=2 lb=0:      9 shell pairs
+          la=2 lb=1:      5 shell pairs
+          la=2 lb=2:      1 shell pairs
+
+Calculating one electron integrals          ... done (  0.0 sec)
+Calculating RI/J V-Matrix + Cholesky decomp.... [web:00837] Read -1, expected 4136, errno = 1
+[web:00836] Read -1, expected 4136, errno = 1
+[web:00838] Read -1, expected 4136, errno = 1
+[web:00837] Read -1, expected 4136, errno = 1
+[web:00836] Read -1, expected 4136, errno = 1
+[web:00838] Read -1, expected 4136, errno = 1
+done (  0.0 sec)
+Calculating Nuclear repulsion               ... done (  0.0 sec) ENN=      9.810298803803 Eh
+
+SHARK setup successfully completed in   0.1 seconds
+
+Maximum memory used throughout the entire GTOINT-calculation: 8.8 MB
+
+
+           ************************************************************
+           *        Program running with 4 parallel MPI-processes     *
+           *              working on a common directory               *
+           ************************************************************
+[web:00853] Read -1, expected 651728, errno = 1
+[web:00854] Read -1, expected 651728, errno = 1
+[web:00855] Read -1, expected 651728, errno = 1
+[web:00853] Read -1, expected 27448, errno = 1
+[web:00854] Read -1, expected 27448, errno = 1
+[web:00855] Read -1, expected 27448, errno = 1
+-------------------------------------------------------------------------------
+                                 ORCA SCF
+-------------------------------------------------------------------------------
+
+------------
+SCF SETTINGS
+------------
+Hamiltonian:
+ Density Functional     Method          .... DFT(GTOs)
+ Exchange Functional    Exchange        .... M062X
+ Correlation Functional Correlation     .... M062X
+ Gradients option       PostSCFGGA      .... off
+ Hybrid DFT is turned on
+   Fraction HF Exchange ScalHFX         ....  0.540000
+   Scaling of DF-GGA-X  ScalDFX         ....  0.460000
+   Scaling of DF-GGA-C  ScalDFC         ....  1.000000
+   Scaling of DF-LDA-C  ScalLDAC        ....  1.000000
+   Perturbative correction              ....  0.000000
+   Density functional embedding theory  .... OFF
+ RI-approximation to the Coulomb term is turned on
+   Number of AuxJ basis functions       .... 82
+   RIJ-COSX (HFX calculated with COS-X)).... on
+
+
+General Settings:
+ Integral files         IntName         .... calc
+ Hartree-Fock type      HFTyp           .... RHF
+ Total Charge           Charge          ....    1
+ Multiplicity           Mult            ....    1
+ Number of Electrons    NEL             ....    8
+ Basis Dimension        Dim             ....   29
+ Nuclear Repulsion      ENuc            ....      9.8102988038 Eh
+
+Convergence Acceleration:
+ DIIS                   CNVDIIS         .... on
+   Start iteration      DIISMaxIt       ....    12
+   Startup error        DIISStart       ....  0.200000
+   # of expansion vecs  DIISMaxEq       ....     5
+   Bias factor          DIISBfac        ....   1.050
+   Max. coefficient     DIISMaxC        ....  10.000
+ Trust-Rad. Augm. Hess. CNVTRAH         .... auto
+   Auto Start mean grad. ratio tolernc. ....  1.125000
+   Auto Start start iteration           ....    20
+   Auto Start num. interpolation iter.  ....    10
+   Max. Number of Micro iterations      ....    16
+   Max. Number of Macro iterations      .... Maxiter - #DIIS iter
+   Number of Davidson start vectors     ....     2
+   Converg. threshold I  (grad. norm)   ....   5.000e-05
+   Converg. threshold II (energy diff.) ....   1.000e-06
+   Grad. Scal. Fac. for Micro threshold ....   0.100
+   Minimum threshold for Micro iter.    ....   0.010
+   NR start threshold (gradient norm)   ....   0.001
+   Initial trust radius                 ....   0.400
+   Minimum AH scaling param. (alpha)    ....   1.000
+   Maximum AH scaling param. (alpha)    .... 1000.000
+   Orbital update algorithm             .... Taylor
+   White noise on init. David. guess    .... on
+   Maximum white noise                  ....   0.010
+   Quad. conv. algorithm                .... NR
+ SOSCF                  CNVSOSCF        .... on
+   Start iteration      SOSCFMaxIt      ....   150
+   Startup grad/error   SOSCFStart      ....  0.003300
+ Level Shifting         CNVShift        .... on
+   Level shift para.    LevelShift      ....    0.2500
+   Turn off err/grad.   ShiftErr        ....    0.0010
+ Zerner damping         CNVZerner       .... off
+ Static damping         CNVDamp         .... on
+   Fraction old density DampFac         ....    0.7000
+   Max. Damping (<1)    DampMax         ....    0.9800
+   Min. Damping (>=0)   DampMin         ....    0.0000
+   Turn off err/grad.   DampErr         ....    0.1000
+ Fernandez-Rico         CNVRico         .... off
+
+SCF Procedure:
+ Maximum # iterations   MaxIter         ....   125
+ SCF integral mode      SCFMode         .... Direct
+   Integral package                     .... SHARK and LIBINT hybrid scheme
+ Reset frequency        DirectResetFreq ....    20
+ Integral Threshold     Thresh          ....  1.000e-10 Eh
+ Primitive CutOff       TCut            ....  1.000e-11 Eh
+
+Convergence Tolerance:
+ Convergence Check Mode ConvCheckMode   .... Total+1el-Energy
+ Convergence forced     ConvForced      .... 0
+ Energy Change          TolE            ....  1.000e-06 Eh
+ 1-El. energy change                    ....  1.000e-03 Eh
+ Orbital Gradient       TolG            ....  5.000e-05
+ Orbital Rotation angle TolX            ....  5.000e-05
+ DIIS Error             TolErr          ....  1.000e-06
+
+
+Diagonalization of the overlap matrix:
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+Smallest eigenvalue                        ... 1.724e-02
+Time for diagonalization                   ...    0.000 sec
+Threshold for overlap eigenvalues          ... 1.000e-08
+Number of eigenvalues below threshold      ... 0
+Time for construction of square roots      ...    0.000 sec
+Total time needed                          ...    0.001 sec
+
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 69440, errno = 1
+[web:00854] Read -1, expected 69440, errno = 1
+[web:00855] Read -1, expected 69440, errno = 1
+[web:00854] Read -1, expected 26688, errno = 1
+[web:00855] Read -1, expected 26688, errno = 1
+[web:00852] Read -1, expected 26688, errno = 1
+[web:00855] Read -1, expected 27072, errno = 1
+[web:00853] Read -1, expected 27072, errno = 1
+[web:00852] Read -1, expected 27072, errno = 1
+[web:00852] Read -1, expected 26688, errno = 1
+[web:00853] Read -1, expected 26688, errno = 1
+[web:00854] Read -1, expected 26688, errno = 1
+[web:00853] Read -1, expected 52080, errno = 1
+[web:00855] Read -1, expected 52080, errno = 1
+[web:00854] Read -1, expected 52080, errno = 1
+[web:00854] Read -1, expected 20016, errno = 1
+[web:00852] Read -1, expected 20016, errno = 1
+[web:00852] Read -1, expected 20304, errno = 1
+[web:00855] Read -1, expected 20016, errno = 1
+[web:00855] Read -1, expected 20304, errno = 1
+[web:00853] Read -1, expected 20304, errno = 1
+[web:00852] Read -1, expected 20016, errno = 1
+[web:00853] Read -1, expected 20016, errno = 1
+[web:00854] Read -1, expected 20016, errno = 1
+[web:00855] Read -1, expected 79696, errno = 1
+[web:00854] Read -1, expected 79696, errno = 1
+[web:00853] Read -1, expected 79696, errno = 1
+[web:00855] Read -1, expected 79336, errno = 1
+[web:00854] Read -1, expected 79336, errno = 1
+[web:00852] Read -1, expected 79336, errno = 1
+[web:00855] Read -1, expected 77236, errno = 1
+[web:00853] Read -1, expected 77236, errno = 1
+[web:00853] Read -1, expected 74292, errno = 1
+[web:00852] Read -1, expected 77236, errno = 1
+[web:00854] Read -1, expected 74292, errno = 1
+[web:00852] Read -1, expected 74292, errno = 1
+Time for model grid setup =    0.010 sec
+
+------------------------------
+INITIAL GUESS: MODEL POTENTIAL
+------------------------------
+Loading Hartree-Fock densities                     ... done
+Calculating cut-offs                               ... done
+Initializing the effective Hamiltonian             ... done
+Setting up the integral package (SHARK)            ... done
+Starting the Coulomb interaction                   ... [web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+done (   0.0 sec)
+Reading the grid                                   ... done
+Mapping shells                                     ... done
+Starting the XC term evaluation                    ... done (   0.0 sec)
+  promolecular density results
+     # of electrons  =      8.998201062
+     EX              =     -5.938942303
+     EC              =     -0.260015463
+     EX+EC           =     -6.198957766
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+Transforming the Hamiltonian                       ... done (   0.0 sec)
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+Diagonalizing the Hamiltonian                      ... [web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+done (   0.0 sec)
+Back transforming the eigenvectors                 ... done (   0.0 sec)
+Now organizing SCF variables                       ... done
+                      ------------------
+                      INITIAL GUESS DONE (   0.0 sec)
+                      ------------------
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+-------------------
+DFT GRID GENERATION
+-------------------
+
+General Integration Accuracy     IntAcc      ... 4.388
+Radial Grid Type                 RadialGrid  ... OptM3 with GC (2021)
+Angular Grid (max. ang.)         AngularGrid ... 4 (Lebedev-302)
+Angular grid pruning method      GridPruning ... 4 (adaptive)
+Weight generation scheme         WeightScheme... Becke
+Basis function cutoff            BFCut       ... 1.0000e-10
+Integration weight cutoff        WCut        ... 1.0000e-14
+Angular grids for H and He will be reduced by one unit
+Partially contracted basis set               ... off
+Rotationally invariant grid construction     ... off
+
+[web:00854] Read -1, expected 195968, errno = 1
+[web:00855] Read -1, expected 195968, errno = 1
+[web:00853] Read -1, expected 195968, errno = 1
+[web:00854] Read -1, expected 105504, errno = 1
+[web:00852] Read -1, expected 105504, errno = 1
+[web:00855] Read -1, expected 105504, errno = 1
+[web:00855] Read -1, expected 105376, errno = 1
+[web:00852] Read -1, expected 105376, errno = 1
+[web:00853] Read -1, expected 105376, errno = 1
+[web:00852] Read -1, expected 105504, errno = 1
+[web:00853] Read -1, expected 105504, errno = 1
+[web:00854] Read -1, expected 105504, errno = 1
+[web:00855] Read -1, expected 146976, errno = 1
+[web:00854] Read -1, expected 146976, errno = 1
+[web:00853] Read -1, expected 146976, errno = 1
+[web:00854] Read -1, expected 79128, errno = 1
+[web:00855] Read -1, expected 79128, errno = 1
+[web:00852] Read -1, expected 79128, errno = 1
+[web:00855] Read -1, expected 79032, errno = 1
+[web:00852] Read -1, expected 79032, errno = 1
+[web:00853] Read -1, expected 79032, errno = 1
+[web:00852] Read -1, expected 79128, errno = 1
+[web:00854] Read -1, expected 79128, errno = 1
+[web:00853] Read -1, expected 79128, errno = 1
+[web:00855] Read -1, expected 100000, errno = 1
+[web:00854] Read -1, expected 100000, errno = 1
+[web:00853] Read -1, expected 100000, errno = 1
+[web:00853] Read -1, expected 100000, errno = 1
+[web:00854] Read -1, expected 100000, errno = 1
+[web:00855] Read -1, expected 100000, errno = 1
+[web:00855] Read -1, expected 66136, errno = 1
+[web:00853] Read -1, expected 66136, errno = 1
+[web:00854] Read -1, expected 66136, errno = 1
+[web:00854] Read -1, expected 100000, errno = 1
+[web:00855] Read -1, expected 100000, errno = 1
+[web:00852] Read -1, expected 100000, errno = 1
+[web:00854] Read -1, expected 100000, errno = 1
+[web:00855] Read -1, expected 100000, errno = 1
+[web:00852] Read -1, expected 100000, errno = 1
+[web:00855] Read -1, expected 65440, errno = 1
+[web:00854] Read -1, expected 65440, errno = 1
+[web:00855] Read -1, expected 100000, errno = 1
+[web:00852] Read -1, expected 65440, errno = 1
+[web:00852] Read -1, expected 100000, errno = 1
+[web:00853] Read -1, expected 100000, errno = 1
+[web:00853] Read -1, expected 100000, errno = 1
+[web:00855] Read -1, expected 100000, errno = 1
+[web:00852] Read -1, expected 100000, errno = 1
+[web:00855] Read -1, expected 65032, errno = 1
+[web:00853] Read -1, expected 65032, errno = 1
+[web:00853] Read -1, expected 100000, errno = 1
+[web:00852] Read -1, expected 65032, errno = 1
+[web:00854] Read -1, expected 100000, errno = 1
+[web:00852] Read -1, expected 100000, errno = 1
+[web:00853] Read -1, expected 100000, errno = 1
+[web:00854] Read -1, expected 100000, errno = 1
+[web:00852] Read -1, expected 100000, errno = 1
+[web:00853] Read -1, expected 61980, errno = 1
+[web:00854] Read -1, expected 61980, errno = 1
+[web:00852] Read -1, expected 61980, errno = 1
+Total number of grid points                  ...    16011
+Total number of batches                      ...      251
+Average number of points per batch           ...       63
+Average number of grid points per atom       ...     4003
+Time for grid setup =    0.046 sec
+
+--------------------
+COSX GRID GENERATION
+--------------------
+
+GRIDX 1
+-------
+General Integration Accuracy     IntAcc      ... 3.816
+Radial Grid Type                 RadialGrid  ... OptM3 with GC (2021)
+Angular Grid (max. ang.)         AngularGrid ... 1 (Lebedev-50)
+Angular grid pruning method      GridPruning ... 4 (adaptive)
+Weight generation scheme         WeightScheme... Becke
+Basis function cutoff            BFCut       ... 1.0000e-10
+Integration weight cutoff        WCut        ... 1.0000e-14
+Angular grids for H and He will be reduced by one unit
+Partially contracted basis set               ... on
+Rotationally invariant grid construction     ... off
+
+[web:00855] Read -1, expected 24480, errno = 1
+[web:00853] Read -1, expected 24480, errno = 1
+[web:00854] Read -1, expected 24480, errno = 1
+[web:00852] Read -1, expected 14144, errno = 1
+[web:00852] Read -1, expected 14208, errno = 1
+[web:00854] Read -1, expected 14144, errno = 1
+[web:00855] Read -1, expected 14144, errno = 1
+[web:00855] Read -1, expected 14208, errno = 1
+[web:00853] Read -1, expected 14208, errno = 1
+[web:00853] Read -1, expected 14144, errno = 1
+[web:00853] Read -1, expected 18360, errno = 1
+[web:00854] Read -1, expected 14144, errno = 1
+[web:00854] Read -1, expected 18360, errno = 1
+[web:00852] Read -1, expected 14144, errno = 1
+[web:00855] Read -1, expected 18360, errno = 1
+[web:00854] Read -1, expected 10608, errno = 1
+[web:00852] Read -1, expected 10608, errno = 1
+[web:00855] Read -1, expected 10608, errno = 1
+[web:00852] Read -1, expected 10656, errno = 1
+[web:00853] Read -1, expected 10656, errno = 1
+[web:00853] Read -1, expected 10608, errno = 1
+[web:00855] Read -1, expected 10656, errno = 1
+[web:00854] Read -1, expected 10608, errno = 1
+[web:00852] Read -1, expected 10608, errno = 1
+[web:00854] Read -1, expected 34680, errno = 1
+[web:00854] Read -1, expected 37548, errno = 1
+[web:00853] Read -1, expected 34680, errno = 1
+[web:00855] Read -1, expected 34680, errno = 1
+[web:00855] Read -1, expected 37548, errno = 1
+[web:00855] Read -1, expected 35496, errno = 1
+[web:00853] Read -1, expected 35496, errno = 1
+[web:00852] Read -1, expected 37548, errno = 1
+[web:00853] Read -1, expected 31736, errno = 1
+[web:00852] Read -1, expected 35496, errno = 1
+[web:00852] Read -1, expected 31736, errno = 1
+[web:00854] Read -1, expected 31736, errno = 1
+Total number of grid points                  ...     2093
+Total number of batches                      ...       35
+Average number of points per batch           ...       59
+Average number of grid points per atom       ...      523
+UseSFitting                                  ... on
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+
+GRIDX 2
+-------
+General Integration Accuracy     IntAcc      ... 4.020
+Radial Grid Type                 RadialGrid  ... OptM3 with GC (2021)
+Angular Grid (max. ang.)         AngularGrid ... 2 (Lebedev-110)
+Angular grid pruning method      GridPruning ... 4 (adaptive)
+Weight generation scheme         WeightScheme... Becke
+Basis function cutoff            BFCut       ... 1.0000e-10
+Integration weight cutoff        WCut        ... 1.0000e-14
+Angular grids for H and He will be reduced by one unit
+Partially contracted basis set               ... on
+Rotationally invariant grid construction     ... off
+
+[web:00855] Read -1, expected 60000, errno = 1
+[web:00854] Read -1, expected 60000, errno = 1
+[web:00853] Read -1, expected 60000, errno = 1
+[web:00854] Read -1, expected 25760, errno = 1
+[web:00852] Read -1, expected 25760, errno = 1
+[web:00855] Read -1, expected 25760, errno = 1
+[web:00852] Read -1, expected 25920, errno = 1
+[web:00855] Read -1, expected 25920, errno = 1
+[web:00853] Read -1, expected 25920, errno = 1
+[web:00852] Read -1, expected 25760, errno = 1
+[web:00853] Read -1, expected 25760, errno = 1
+[web:00854] Read -1, expected 25760, errno = 1
+[web:00855] Read -1, expected 45000, errno = 1
+[web:00854] Read -1, expected 45000, errno = 1
+[web:00853] Read -1, expected 45000, errno = 1
+[web:00852] Read -1, expected 19320, errno = 1
+[web:00855] Read -1, expected 19320, errno = 1
+[web:00854] Read -1, expected 19320, errno = 1
+[web:00855] Read -1, expected 19440, errno = 1
+[web:00853] Read -1, expected 19440, errno = 1
+[web:00852] Read -1, expected 19440, errno = 1
+[web:00853] Read -1, expected 19320, errno = 1
+[web:00852] Read -1, expected 19320, errno = 1
+[web:00854] Read -1, expected 19320, errno = 1
+[web:00855] Read -1, expected 73080, errno = 1
+[web:00853] Read -1, expected 73080, errno = 1
+[web:00854] Read -1, expected 73080, errno = 1
+[web:00855] Read -1, expected 73668, errno = 1
+[web:00854] Read -1, expected 73668, errno = 1
+[web:00855] Read -1, expected 72912, errno = 1
+[web:00852] Read -1, expected 73668, errno = 1
+[web:00853] Read -1, expected 72912, errno = 1
+[web:00853] Read -1, expected 65272, errno = 1
+[web:00852] Read -1, expected 72912, errno = 1
+[web:00854] Read -1, expected 65272, errno = 1
+[web:00852] Read -1, expected 65272, errno = 1
+Total number of grid points                  ...     4295
+Total number of batches                      ...       70
+Average number of points per batch           ...       61
+Average number of grid points per atom       ...     1074
+UseSFitting                                  ... on
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+
+GRIDX 3
+-------
+General Integration Accuracy     IntAcc      ... 4.338
+Radial Grid Type                 RadialGrid  ... OptM3 with GC (2021)
+Angular Grid (max. ang.)         AngularGrid ... 3 (Lebedev-194)
+Angular grid pruning method      GridPruning ... 4 (adaptive)
+Weight generation scheme         WeightScheme... Becke
+Basis function cutoff            BFCut       ... 1.0000e-10
+Integration weight cutoff        WCut        ... 1.0000e-14
+Angular grids for H and He will be reduced by one unit
+Partially contracted basis set               ... on
+Rotationally invariant grid construction     ... off
+
+[web:00853] Read -1, expected 134080, errno = 1
+[web:00854] Read -1, expected 134080, errno = 1
+[web:00855] Read -1, expected 134080, errno = 1
+[web:00854] Read -1, expected 56480, errno = 1
+[web:00855] Read -1, expected 56480, errno = 1
+[web:00852] Read -1, expected 56480, errno = 1
+[web:00855] Read -1, expected 56672, errno = 1
+[web:00853] Read -1, expected 56672, errno = 1
+[web:00852] Read -1, expected 56672, errno = 1
+[web:00852] Read -1, expected 56480, errno = 1
+[web:00854] Read -1, expected 56480, errno = 1
+[web:00853] Read -1, expected 56480, errno = 1
+[web:00855] Read -1, expected 100560, errno = 1
+[web:00854] Read -1, expected 100560, errno = 1
+[web:00853] Read -1, expected 100560, errno = 1
+[web:00852] Read -1, expected 42360, errno = 1
+[web:00855] Read -1, expected 42360, errno = 1
+[web:00854] Read -1, expected 42360, errno = 1
+[web:00855] Read -1, expected 42504, errno = 1
+[web:00853] Read -1, expected 42504, errno = 1
+[web:00852] Read -1, expected 42504, errno = 1
+[web:00852] Read -1, expected 42360, errno = 1
+[web:00854] Read -1, expected 42360, errno = 1
+[web:00853] Read -1, expected 42360, errno = 1
+[web:00853] Read -1, expected 100000, errno = 1
+[web:00855] Read -1, expected 100000, errno = 1
+[web:00854] Read -1, expected 100000, errno = 1
+[web:00853] Read -1, expected 58600, errno = 1
+[web:00855] Read -1, expected 58600, errno = 1
+[web:00855] Read -1, expected 100000, errno = 1
+[web:00854] Read -1, expected 58600, errno = 1
+[web:00854] Read -1, expected 100000, errno = 1
+[web:00852] Read -1, expected 100000, errno = 1
+[web:00855] Read -1, expected 57184, errno = 1
+[web:00854] Read -1, expected 57184, errno = 1
+[web:00855] Read -1, expected 100000, errno = 1
+[web:00852] Read -1, expected 57184, errno = 1
+[web:00853] Read -1, expected 100000, errno = 1
+[web:00852] Read -1, expected 100000, errno = 1
+[web:00855] Read -1, expected 57568, errno = 1
+[web:00853] Read -1, expected 57568, errno = 1
+[web:00853] Read -1, expected 100000, errno = 1
+[web:00852] Read -1, expected 57568, errno = 1
+[web:00854] Read -1, expected 100000, errno = 1
+[web:00852] Read -1, expected 100000, errno = 1
+[web:00853] Read -1, expected 50852, errno = 1
+[web:00854] Read -1, expected 50852, errno = 1
+[web:00852] Read -1, expected 50852, errno = 1
+Total number of grid points                  ...     9491
+Total number of batches                      ...      150
+Average number of points per batch           ...       63
+Average number of grid points per atom       ...     2373
+UseSFitting                                  ... on
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+
+Time for X-Grid setup             =    0.021 sec
+
+--------------
+SCF ITERATIONS
+--------------
+ITER       Energy         Delta-E        Max-DP      RMS-DP      [F,P]     Damp
+               ***  Starting incremental Fock matrix formation  ***
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+  0    -39.3589689917   0.000000000000 0.01887827  0.00162258  0.0801985 0.7000
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+  1    -39.3630153100  -0.004046318345 0.01303868  0.00136850  0.0576784 0.7000
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+                               ***Turning on DIIS***
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+  2    -39.3655282150  -0.002512904994 0.02211784  0.00314653  0.0383166 0.0000
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+  3    -39.3702264175  -0.004698202541 0.01641988  0.00097751  0.0139145 0.0000
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+                      *** Initiating the SOSCF procedure ***
+                           *** Shutting down DIIS ***
+                      *** Re-Reading the Fockian *** 
+                      *** Removing any level shift *** 
+ITER      Energy       Delta-E        Grad      Rot      Max-DP    RMS-DP
+  4    -39.37056374  -0.0003373200  0.000865  0.000865  0.001017  0.000084
+               *** Restarting incremental Fock matrix formation ***
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+  5    -39.37059660  -0.0000328666  0.000269  0.000278  0.000672  0.000056
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+  6    -39.37059719  -0.0000005851  0.000100  0.000131  0.000325  0.000017
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+                 **** Energy Check signals convergence ****
+              ***Rediagonalizing the Fockian in SOSCF/NRSCF***
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+
+               *****************************************************
+               *                     SUCCESS                       *
+               *           SCF CONVERGED AFTER   7 CYCLES          *
+               *****************************************************
+
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+Old exchange energy                            =     -3.201818221 Eh
+New exchange energy                            =     -3.201831939 Eh
+Exchange energy change after final integration =     -0.000013718 Eh
+Total energy after final integration           =    -39.370610996 Eh
+Final COS-X integration done in                =     0.023 sec
+
+----------------
+TOTAL SCF ENERGY
+----------------
+
+Total Energy       :          -39.37061100 Eh           -1071.32879 eV
+
+Components:
+Nuclear Repulsion  :            9.81029880 Eh             266.95180 eV
+Electronic Energy  :          -49.18090980 Eh           -1338.28059 eV
+One Electron Energy:          -68.25741554 Eh           -1857.37870 eV
+Two Electron Energy:           19.07650574 Eh             519.09811 eV
+Max COSX asymmetry :            0.00000281 Eh               0.00008 eV
+
+Virial components:
+Potential Energy   :          -78.43233196 Eh           -2134.25226 eV
+Kinetic Energy     :           39.06172096 Eh            1062.92347 eV
+Virial Ratio       :            2.00790774
+
+
+DFT components:
+N(Alpha)           :        4.000000026672 electrons
+N(Beta)            :        4.000000026672 electrons
+N(Total)           :        8.000000053344 electrons
+E(XC)              :       -2.948926241744 Eh       
+DFET-embed. en.    :        0.000000000000 Eh       
+
+---------------
+SCF CONVERGENCE
+---------------
+
+  Last Energy change         ...   -8.8260e-08  Tolerance :   1.0000e-06
+  Last MAX-Density change    ...    4.4409e-16  Tolerance :   1.0000e-05
+  Last RMS-Density change    ...    2.8112e-17  Tolerance :   1.0000e-06
+  Last Orbital Gradient      ...    1.0574e-05  Tolerance :   5.0000e-05
+  Last Orbital Rotation      ...    4.4742e-06  Tolerance :   5.0000e-05
+
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+             **** THE GBW FILE WAS UPDATED (calc.gbw) ****
+             **** DENSITY calc.scfp WAS UPDATED ****
+             **** ENERGY FILE WAS UPDATED (calc.en.tmp) ****
+             **** THE GBW FILE WAS UPDATED (calc.gbw) ****
+             **** DENSITY calc.scfp WAS UPDATED ****
+----------------
+ORBITAL ENERGIES
+----------------
+
+  NO   OCC          E(Eh)            E(eV) 
+   0   2.0000     -11.018598      -299.8313 
+   1   2.0000      -1.140485       -31.0342 
+   2   2.0000      -0.844734       -22.9864 
+   3   2.0000      -0.844711       -22.9857 
+   4   0.0000      -0.461071       -12.5464 
+   5   0.0000      -0.131382        -3.5751 
+   6   0.0000      -0.085906        -2.3376 
+   7   0.0000      -0.085881        -2.3369 
+   8   0.0000       0.164697         4.4816 
+   9   0.0000       0.164717         4.4822 
+  10   0.0000       0.204643         5.5686 
+  11   0.0000       0.327381         8.9085 
+  12   0.0000       0.417181        11.3521 
+  13   0.0000       0.424084        11.5399 
+  14   0.0000       0.424234        11.5440 
+  15   0.0000       0.865859        23.5612 
+  16   0.0000       0.865934        23.5633 
+  17   0.0000       1.252253        34.0755 
+  18   0.0000       1.272939        34.6384 
+  19   0.0000       1.409720        38.3604 
+  20   0.0000       1.409853        38.3641 
+  21   0.0000       1.658194        45.1218 
+  22   0.0000       1.658459        45.1290 
+  23   0.0000       1.864990        50.7490 
+  24   0.0000       2.119390        57.6715 
+  25   0.0000       2.119582        57.6767 
+  26   0.0000       2.421327        65.8876 
+  27   0.0000       2.613234        71.1097 
+  28   0.0000       2.613937        71.1288 
+
+                    ********************************
+                    * MULLIKEN POPULATION ANALYSIS *
+                    ********************************
+
+-----------------------
+MULLIKEN ATOMIC CHARGES
+-----------------------
+   0 C :    0.346354
+   1 H :    0.217851
+   2 H :    0.217943
+   3 H :    0.217851
+Sum of atomic charges:    1.0000000
+
+--------------------------------
+MULLIKEN REDUCED ORBITAL CHARGES
+--------------------------------
+  0 C s       :     3.253587  s :     3.253587
+      pz      :     1.182598  p :     2.383995
+      px      :     1.053540
+      py      :     0.147857
+      dz2     :     0.004462  d :     0.016064
+      dxz     :     0.003269
+      dyz     :     0.004778
+      dx2y2   :     0.003471
+      dxy     :     0.000084
+  1 H s       :     0.755553  s :     0.755553
+      pz      :     0.015268  p :     0.026595
+      px      :     0.005571
+      py      :     0.005756
+  2 H s       :     0.755454  s :     0.755454
+      pz      :     0.004871  p :     0.026603
+      px      :     0.021364
+      py      :     0.000368
+  3 H s       :     0.755554  s :     0.755554
+      pz      :     0.015268  p :     0.026595
+      px      :     0.005571
+      py      :     0.005756
+
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+
+                     *******************************
+                     * LOEWDIN POPULATION ANALYSIS *
+                     *******************************
+
+----------------------
+LOEWDIN ATOMIC CHARGES
+----------------------
+   0 C :    0.662633
+   1 H :    0.112440
+   2 H :    0.112488
+   3 H :    0.112440
+
+-------------------------------
+LOEWDIN REDUCED ORBITAL CHARGES
+-------------------------------
+  0 C s       :     2.960110  s :     2.960110
+      pz      :     1.162934  p :     2.341691
+      px      :     1.035634
+      py      :     0.143123
+      dz2     :     0.009584  d :     0.035565
+      dxz     :     0.006768
+      dyz     :     0.010648
+      dx2y2   :     0.007984
+      dxy     :     0.000582
+  1 H s       :     0.808342  s :     0.808342
+      pz      :     0.044090  p :     0.079219
+      px      :     0.015950
+      py      :     0.019179
+  2 H s       :     0.808273  s :     0.808273
+      pz      :     0.014610  p :     0.079239
+      px      :     0.063071
+      py      :     0.001558
+  3 H s       :     0.808342  s :     0.808342
+      pz      :     0.044090  p :     0.079219
+      px      :     0.015950
+      py      :     0.019179
+
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00855] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00852] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 6728, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 6728, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+[web:00853] Read -1, expected 4136, errno = 1
+[web:00854] Read -1, expected 4136, errno = 1
+[web:00855] Read -1, expected 4136, errno = 1
+
+                      *****************************
+                      * MAYER POPULATION ANALYSIS *
+                      *****************************
+
+  NA   - Mulliken gross atomic population
+  ZA   - Total nuclear charge
+  QA   - Mulliken gross atomic charge
+  VA   - Mayer's total valence
+  BVA  - Mayer's bonded valence
+  FA   - Mayer's free valence
+
+  ATOM       NA         ZA         QA         VA         BVA        FA
+  0 C      5.6536     6.0000     0.3464     2.8530     2.8530     0.0000
+  1 H      0.7821     1.0000     0.2179     0.9551     0.9551     0.0000
+  2 H      0.7821     1.0000     0.2179     0.9550     0.9550    -0.0000
+  3 H      0.7821     1.0000     0.2179     0.9551     0.9551     0.0000
+
+  Mayer bond orders larger than 0.100000
+B(  0-C ,  1-H ) :   0.9510 B(  0-C ,  2-H ) :   0.9509 B(  0-C ,  3-H ) :   0.9510 
+
+
+-------
+TIMINGS
+-------
+
+Total SCF time: 0 days 0 hours 0 min 0 sec 
+
+Total time                  ....       0.430 sec
+Sum of individual times     ....       0.382 sec  ( 88.9%)
+
+Fock matrix formation       ....       0.292 sec  ( 67.8%)
+  Split-RI-J                ....       0.075 sec  ( 25.8% of F)
+  Chain of spheres X        ....       0.135 sec  ( 46.3% of F)
+  XC integration            ....       0.077 sec  ( 26.5% of F)
+    Basis function eval.    ....       0.014 sec  ( 18.6% of XC)
+    Density eval.           ....       0.018 sec  ( 22.7% of XC)
+    XC-Functional eval.     ....       0.021 sec  ( 27.6% of XC)
+    XC-Potential eval.      ....       0.017 sec  ( 22.4% of XC)
+Diagonalization             ....       0.003 sec  (  0.6%)
+Density matrix formation    ....       0.000 sec  (  0.0%)
+Population analysis         ....       0.001 sec  (  0.2%)
+Initial guess               ....       0.005 sec  (  1.3%)
+Orbital Transformation      ....       0.000 sec  (  0.0%)
+Orbital Orthonormalization  ....       0.000 sec  (  0.0%)
+DIIS solution               ....       0.003 sec  (  0.8%)
+SOSCF solution              ....       0.002 sec  (  0.4%)
+Grid generation             ....       0.077 sec  ( 17.8%)
+
+Maximum memory used throughout the entire SCF-calculation: 43.2 MB
+
+-------------------------   --------------------
+FINAL SINGLE POINT ENERGY       -39.370610995563
+-------------------------   --------------------
+
+MakePlots. Basename = [calc]
+
+---------------
+PLOT GENERATION
+---------------
+choosing x-range =   -14.516764 ..     2.179309
+choosing y-range =    -3.857196 ..    11.095981
+choosing z-range =    -8.651054 ..     8.651054
+
+
+           ************************************************************
+           *        Program running with 4 parallel MPI-processes     *
+           *              working on a common directory               *
+           ************************************************************
+[web:00870] Read -1, expected 651728, errno = 1
+[web:00871] Read -1, expected 651728, errno = 1
+[web:00872] Read -1, expected 651728, errno = 1
+[web:00870] Read -1, expected 27448, errno = 1
+[web:00871] Read -1, expected 27448, errno = 1
+[web:00872] Read -1, expected 27448, errno = 1
+[web:00871] Read -1, expected 7428, errno = 1
+[web:00870] Read -1, expected 7428, errno = 1
+
+GBW-File       ... calc.gbw
+PlotType       ... MO-PLOT
+MO/Operator    ... 3 0
+Output file    ... in-HOMO.cube
+Format         ... Gaussian-Cube
+Resolution     ... 45 45 45
+Boundaries     ...   -14.516764     2.179309 (x direction)
+                      -3.857196    11.095981 (y direction)
+                      -8.651054     8.651054 (z direction)
+[web:00872] Read -1, expected 7428, errno = 1
+Entering PlotGrid3d with Plottype =1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00872] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00869] Read -1, expected 16200, errno = 1
+[web:00870] Read -1, expected 16200, errno = 1
+[web:00871] Read -1, expected 16200, errno = 1
+choosing x-range =   -14.516764 ..     2.179309
+choosing y-range =    -3.857196 ..    11.095981
+choosing z-range =    -8.651054 ..     8.651054
+
+
+           ************************************************************
+           *        Program running with 4 parallel MPI-processes     *
+           *              working on a common directory               *
+           ************************************************************
+[web:00887] Read -1, expected 651728, errno = 1
+[web:00888] Read -1, expected 651728, errno = 1
+[web:00889] Read -1, expected 651728, errno = 1
+[web:00887] Read -1, expected 27448, errno = 1
+[web:00888] Read -1, expected 27448, errno = 1
+[web:00889] Read -1, expected 27448, errno = 1
+[web:00888] Read -1, expected 7428, errno = 1
+[web:00887] Read -1, expected 7428, errno = 1
+[web:00889] Read -1, expected 7428, errno = 1
+
+GBW-File       ... calc.gbw
+PlotType       ... MO-PLOT
+MO/Operator    ... 4 0
+Output file    ... in-LUMO.cube
+Format         ... Gaussian-Cube
+Resolution     ... 45 45 45
+Boundaries     ...   -14.516764     2.179309 (x direction)
+                      -3.857196    11.095981 (y direction)
+                      -8.651054     8.651054 (z direction)
+Entering PlotGrid3d with Plottype =1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00889] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+[web:00887] Read -1, expected 16200, errno = 1
+[web:00888] Read -1, expected 16200, errno = 1
+[web:00886] Read -1, expected 16200, errno = 1
+choosing x-range =   -14.516764 ..     2.179309
+choosing y-range =    -3.857196 ..    11.095981
+choosing z-range =    -8.651054 ..     8.651054
+
+
+           ************************************************************
+           *        Program running with 4 parallel MPI-processes     *
+           *              working on a common directory               *
+           ************************************************************
+[web:00904] Read -1, expected 651728, errno = 1
+[web:00905] Read -1, expected 651728, errno = 1
+[web:00906] Read -1, expected 651728, errno = 1
+[web:00904] Read -1, expected 27448, errno = 1
+[web:00906] Read -1, expected 27448, errno = 1
+[web:00905] Read -1, expected 27448, errno = 1
+[web:00905] Read -1, expected 7428, errno = 1
+[web:00904] Read -1, expected 7428, errno = 1
+[web:00906] Read -1, expected 7428, errno = 1
+
+GBW-File       ... calc.gbw
+PlotType       ... MO-PLOT
+MO/Operator    ... 5 0
+Output file    ... in-LUMOA.cube
+Format         ... Gaussian-Cube
+Resolution     ... 45 45 45
+Boundaries     ...   -14.516764     2.179309 (x direction)
+                      -3.857196    11.095981 (y direction)
+                      -8.651054     8.651054 (z direction)
+Entering PlotGrid3d with Plottype =1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00906] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00905] Read -1, expected 16200, errno = 1
+[web:00904] Read -1, expected 16200, errno = 1
+[web:00903] Read -1, expected 16200, errno = 1
+choosing x-range =   -14.516764 ..     2.179309
+choosing y-range =    -3.857196 ..    11.095981
+choosing z-range =    -8.651054 ..     8.651054
+
+
+           ************************************************************
+           *        Program running with 4 parallel MPI-processes     *
+           *              working on a common directory               *
+           ************************************************************
+[web:00921] Read -1, expected 651728, errno = 1
+[web:00923] Read -1, expected 651728, errno = 1
+[web:00922] Read -1, expected 651728, errno = 1
+[web:00921] Read -1, expected 27448, errno = 1
+[web:00923] Read -1, expected 27448, errno = 1
+[web:00922] Read -1, expected 27448, errno = 1
+[web:00921] Read -1, expected 7428, errno = 1
+[web:00922] Read -1, expected 7428, errno = 1
+[web:00923] Read -1, expected 7428, errno = 1
+
+GBW-File       ... calc.gbw
+PlotType       ... MO-PLOT
+MO/Operator    ... 6 0
+Output file    ... in-LUMOB.cube
+Format         ... Gaussian-Cube
+Resolution     ... 45 45 45
+Boundaries     ...   -14.516764     2.179309 (x direction)
+                      -3.857196    11.095981 (y direction)
+                      -8.651054     8.651054 (z direction)
+Entering PlotGrid3d with Plottype =1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00923] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00921] Read -1, expected 16200, errno = 1
+[web:00922] Read -1, expected 16200, errno = 1
+[web:00920] Read -1, expected 16200, errno = 1
+
+                            ***************************************
+                            *     ORCA property calculations      *
+                            ***************************************
+
+                                    ---------------------
+                                    Active property flags
+                                    ---------------------
+   (+) Dipole Moment
+
+
+------------------------------------------------------------------------------
+                       ORCA ELECTRIC PROPERTIES CALCULATION
+------------------------------------------------------------------------------
+
+Dipole Moment Calculation                       ... on
+Quadrupole Moment Calculation                   ... off
+Polarizability Calculation                      ... off
+GBWName                                         ... calc.gbw
+Electron density                                ... calc.scfp
+The origin for moment calculation is the CENTER OF MASS  = (-5.539936,  3.270612  0.000000)
+
+-------------
+DIPOLE MOMENT
+-------------
+                                X             Y             Z
+Electronic contribution:      0.24155      -0.68418      -0.00000
+Nuclear contribution   :     -0.26726       0.75608       0.00000
+                        -----------------------------------------
+Total Dipole Moment    :     -0.02571       0.07190      -0.00000
+                        -----------------------------------------
+Magnitude (a.u.)       :      0.07636
+Magnitude (Debye)      :      0.19409
+
+
+
+--------------------
+Rotational spectrum 
+--------------------
+ 
+Rotational constants in cm-1:     9.131461     9.130920     5.477308 
+Rotational constants in MHz : 273754.325982 273738.102198 164205.556177 
+
+ Dipole components along the rotational axes: 
+x,y,z [a.u.] :    -0.000000     0.000274     0.076359 
+x,y,z [Debye]:    -0.000000     0.000697     0.194090 
+
+ 
+[web:00938] Read -1, expected 651728, errno = 1
+[web:00939] Read -1, expected 651728, errno = 1
+[web:00940] Read -1, expected 651728, errno = 1
+
+Timings for individual modules:
+
+Sum of individual times         ...        2.834 sec (=   0.047 min)
+GTO integral calculation        ...        0.465 sec (=   0.008 min)  16.4 %
+SCF iterations                  ...        0.789 sec (=   0.013 min)  27.8 %
+Orbital/Density plot generation ...        1.580 sec (=   0.026 min)  55.7 %
+                             ****ORCA TERMINATED NORMALLY****
+TOTAL RUN TIME: 0 days 0 hours 0 minutes 3 seconds 257 msec

@@ -264,6 +264,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if "solvent" in params.keys():
             solvent_input = self.driver.find_element_by_name("calc_solvent")
             solvent_input.send_keys(params["solvent"])
+            self.wait_for_ajax()
 
         if "type" in params.keys():
             self.driver.find_element_by_xpath(
@@ -1367,7 +1368,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             latest_order = CalculationOrder.objects.latest("id")
             print(f"Error messages of calculations in order {latest_order.id}")
             for c in latest_order.calculation_set.all():
-                print(c.error_message)
+                print(f"Calc {c.id}: {c.error_message}")
         return successful
 
     def all_calc_successful(self):

@@ -19,6 +19,7 @@ services:
                         - slurm
                 volumes:
                         - scratch:/calcus/scratch
+                        - ./frontend/tests/cache:/calcus/cache
                 env_file:
                         - ./.env
                 environment:
@@ -31,6 +32,8 @@ services:
                         context: ./docker/slurm
                         dockerfile: Dockerfile
                 hostname: slurm
+                volumes:
+                        - ./frontend/tests/cache:/calcus/cache/
                 command: /home/slurm/run_slurm.sh
                 env_file:
                         - ./.env

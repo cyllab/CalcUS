@@ -69,8 +69,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
-
 
 REMOTE = False
 connections = {}
@@ -403,13 +401,14 @@ def files_are_equal(f, input_file):
     with open(f) as ff:
         lines = ff.readlines()
 
-    sinput = input_file.split("\n")
+    lines = [i.strip() for i in lines if i.strip() != ""]
+    sinput = [i.strip() for i in input_file.split("\n") if i.strip() != ""]
 
-    if len(lines) != len(sinput):
+    if len(sinput) != len(lines):
         return False
 
     for l1, l2 in zip(lines, sinput):
-        if l1.strip() != l2:
+        if l1 != l2:
             return False
 
     return True
@@ -418,7 +417,7 @@ def files_are_equal(f, input_file):
 def get_cache_index(calc, cache_path):
     inputs = glob.glob(cache_path + "/*.input")
     for f in inputs:
-        if files_are_equal(f, calc.input_file):
+        if files_are_equal(f, calc.all_inputs):
             ind = ".".join(f.split("/")[-1].split(".")[:-1])
             return ind
     else:
@@ -430,7 +429,7 @@ def calc_is_cached(calc):
         os.getenv("USE_CACHED_LOGS") == "true"
         and os.getenv("CAN_USE_CACHED_LOGS") == "true"
     ):
-        cache_path = os.path.join(tests_dir, "cache")
+        cache_path = "/calcus/cache/"
         if not os.path.isdir(cache_path):
             os.mkdir(cache_path)
             return False
@@ -453,7 +452,7 @@ def setup_cached_calc(calc):
         rmtree(f"/calcus/scratch/scr/{calc.id}")
 
     os.symlink(
-        os.path.join(tests_dir, "cache", index),
+        os.path.join("/calcus", "cache", index),
         f"/calcus/scratch/scr/{calc.id}",
     )
     logger.info(f"Using cache ({index})")
@@ -3441,11 +3440,11 @@ def run_calc(calc_id):
         test_name = os.environ["TEST_NAME"]
         shutil.copytree(
             f"/calcus/scratch/scr/{calc.id}",
-            os.path.join(tests_dir, "cache", test_name),
+            os.path.join("/calcus/cache", test_name),
             dirs_exist_ok=True,
         )
-        with open(os.path.join(tests_dir, "cache", test_name + ".input"), "w") as out:
-            out.write(calc.input_file)
+        with open(os.path.join("/calcus/cache", test_name + ".input"), "w") as out:
+            out.write(calc.all_inputs)
 
     return ret
 

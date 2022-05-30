@@ -1,0 +1,1469 @@
+
+                                 *****************
+                                 * O   R   C   A *
+                                 *****************
+
+                                            #,                                       
+                                            ###                                      
+                                            ####                                     
+                                            #####                                    
+                                            ######                                   
+                                           ########,                                 
+                                     ,,################,,,,,                         
+                               ,,#################################,,                 
+                          ,,##########################################,,             
+                       ,#########################################, ''#####,          
+                    ,#############################################,,   '####,        
+                  ,##################################################,,,,####,       
+                ,###########''''           ''''###############################       
+              ,#####''   ,,,,##########,,,,          '''####'''          '####       
+            ,##' ,,,,###########################,,,                        '##       
+           ' ,,###''''                  '''############,,,                           
+         ,,##''                                '''############,,,,        ,,,,,,###''
+      ,#''                                            '''#######################'''  
+     '                                                          ''''####''''         
+             ,#######,   #######,   ,#######,      ##                                
+            ,#'     '#,  ##    ##  ,#'     '#,    #''#        ######   ,####,        
+            ##       ##  ##   ,#'  ##            #'  '#       #        #'  '#        
+            ##       ##  #######   ##           ,######,      #####,   #    #        
+            '#,     ,#'  ##    ##  '#,     ,#' ,#      #,         ##   #,  ,#        
+             '#######'   ##     ##  '#######'  #'      '#     #####' # '####'        
+
+
+
+                  #######################################################
+                  #                        -***-                        #
+                  #          Department of theory and spectroscopy      #
+                  #    Directorship and core code : Frank Neese         #
+                  #        Max Planck Institute fuer Kohlenforschung    #
+                  #                Kaiser Wilhelm Platz 1               #
+                  #                 D-45470 Muelheim/Ruhr               #
+                  #                      Germany                        #
+                  #                                                     #
+                  #                  All rights reserved                #
+                  #                        -***-                        #
+                  #######################################################
+
+
+                         Program Version 5.0.3 -  RELEASE  -
+
+
+ With contributions from (in alphabetic order):
+   Daniel Aravena         : Magnetic Suceptibility
+   Michael Atanasov       : Ab Initio Ligand Field Theory (pilot matlab implementation)
+   Alexander A. Auer      : GIAO ZORA, VPT2 properties, NMR spectrum
+   Ute Becker             : Parallelization
+   Giovanni Bistoni       : ED, misc. LED, open-shell LED, HFLD
+   Martin Brehm           : Molecular dynamics
+   Dmytro Bykov           : SCF Hessian
+   Vijay G. Chilkuri      : MRCI spin determinant printing, contributions to CSF-ICE
+   Dipayan Datta          : RHF DLPNO-CCSD density
+   Achintya Kumar Dutta   : EOM-CC, STEOM-CC
+   Dmitry Ganyushin       : Spin-Orbit,Spin-Spin,Magnetic field MRCI
+   Miquel Garcia          : C-PCM and meta-GGA Hessian, CC/C-PCM, Gaussian charge scheme
+   Yang Guo               : DLPNO-NEVPT2, F12-NEVPT2, CIM, IAO-localization
+   Andreas Hansen         : Spin unrestricted coupled pair/coupled cluster methods
+   Benjamin Helmich-Paris : MC-RPA, TRAH-SCF, COSX integrals
+   Lee Huntington         : MR-EOM, pCC
+   Robert Izsak           : Overlap fitted RIJCOSX, COSX-SCS-MP3, EOM
+   Marcus Kettner         : VPT2
+   Christian Kollmar      : KDIIS, OOCD, Brueckner-CCSD(T), CCSD density, CASPT2, CASPT2-K
+   Simone Kossmann        : Meta GGA functionals, TD-DFT gradient, OOMP2, MP2 Hessian
+   Martin Krupicka        : Initial AUTO-CI
+   Lucas Lang             : DCDCAS
+   Marvin Lechner         : AUTO-CI (C++ implementation), FIC-MRCC
+   Dagmar Lenk            : GEPOL surface, SMD
+   Dimitrios Liakos       : Extrapolation schemes; Compound Job, initial MDCI parallelization
+   Dimitrios Manganas     : Further ROCIS development; embedding schemes
+   Dimitrios Pantazis     : SARC Basis sets
+   Anastasios Papadopoulos: AUTO-CI, single reference methods and gradients
+   Taras Petrenko         : DFT Hessian,TD-DFT gradient, ASA, ECA, R-Raman, ABS, FL, XAS/XES, NRVS
+   Peter Pinski           : DLPNO-MP2, DLPNO-MP2 Gradient
+   Christoph Reimann      : Effective Core Potentials
+   Marius Retegan         : Local ZFS, SOC
+   Christoph Riplinger    : Optimizer, TS searches, QM/MM, DLPNO-CCSD(T), (RO)-DLPNO pert. Triples
+   Tobias Risthaus        : Range-separated hybrids, TD-DFT gradient, RPA, STAB
+   Michael Roemelt        : Original ROCIS implementation
+   Masaaki Saitow         : Open-shell DLPNO-CCSD energy and density
+   Barbara Sandhoefer     : DKH picture change effects
+   Avijit Sen             : IP-ROCIS
+   Kantharuban Sivalingam : CASSCF convergence, NEVPT2, FIC-MRCI
+   Bernardo de Souza      : ESD, SOC TD-DFT
+   Georgi Stoychev        : AutoAux, RI-MP2 NMR, DLPNO-MP2 response
+   Willem Van den Heuvel  : Paramagnetic NMR
+   Boris Wezisla          : Elementary symmetry handling
+   Frank Wennmohs         : Technical directorship
+
+
+ We gratefully acknowledge several colleagues who have allowed us to
+ interface, adapt or use parts of their codes:
+   Stefan Grimme, W. Hujo, H. Kruse, P. Pracht,  : VdW corrections, initial TS optimization,
+                  C. Bannwarth, S. Ehlert          DFT functionals, gCP, sTDA/sTD-DF
+   Ed Valeev, F. Pavosevic, A. Kumar             : LibInt (2-el integral package), F12 methods
+   Garnet Chan, S. Sharma, J. Yang, R. Olivares  : DMRG
+   Ulf Ekstrom                                   : XCFun DFT Library
+   Mihaly Kallay                                 : mrcc  (arbitrary order and MRCC methods)
+   Jiri Pittner, Ondrej Demel                    : Mk-CCSD
+   Frank Weinhold                                : gennbo (NPA and NBO analysis)
+   Christopher J. Cramer and Donald G. Truhlar   : smd solvation model
+   Lars Goerigk                                  : TD-DFT with DH, B97 family of functionals
+   V. Asgeirsson, H. Jonsson                     : NEB implementation
+   FAccTs GmbH                                   : IRC, NEB, NEB-TS, DLPNO-Multilevel, CI-OPT
+                                                   MM, QMMM, 2- and 3-layer-ONIOM, Crystal-QMMM,
+                                                   LR-CPCM, SF, NACMEs, symmetry and pop. for TD-DFT,
+                                                   nearIR, NL-DFT gradient (VV10), updates on ESD,
+                                                   ML-optimized integration grids
+   S Lehtola, MJT Oliveira, MAL Marques          : LibXC Library
+   Liviu Ungur et al                             : ANISO software
+
+
+ Your calculation uses the libint2 library for the computation of 2-el integrals
+ For citations please refer to: http://libint.valeyev.net
+
+ Your ORCA version has been built with support for libXC version: 5.1.0
+ For citations please refer to: https://tddft.org/programs/libxc/
+
+ This ORCA versions uses:
+   CBLAS   interface :  Fast vector & matrix operations
+   LAPACKE interface :  Fast linear algebra routines
+   SCALAPACK package :  Parallel linear algebra routines
+   Shared memory     :  Shared parallel matrices
+   BLAS/LAPACK       :  OpenBLAS 0.3.15  USE64BITINT DYNAMIC_ARCH NO_AFFINITY Zen SINGLE_THREADED
+        Core in use  :  Zen
+   Copyright (c) 2011-2014, The OpenBLAS Project
+
+
+XCFun DFT library Copyright 2009-2010 Ulf Ekstrom and contributors.
+See http://admol.org/xcfun for more information.
+This is free software; see the source code for copying conditions.
+There is ABSOLUTELY NO WARRANTY; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+For details see the documentation.
+Scientific users of this library should cite U. Ekstrom, L. Visscher, R. Bast, A. J. Thorvaldsen and K. Ruud;
+J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
+XCFun Version 0.99 
+
+================================================================================
+
+----- Orbital basis set information -----
+Your calculation utilizes the basis: def2-SVP
+   F. Weigend and R. Ahlrichs, Phys. Chem. Chem. Phys. 7, 3297 (2005).
+
+----- AuxJ basis set information -----
+Your calculation utilizes the auxiliary basis: def2/J
+   F. Weigend, Phys. Chem. Chem. Phys. 8, 1057 (2006).
+
+================================================================================
+                                        WARNINGS
+                       Please study these warnings very carefully!
+================================================================================
+
+
+WARNING: Minnesota functionals are quite sensitive to the integration grid.
+         see SE Wheeler, KN Houk, JCTC 2010, 6, 395,
+             N Mardirossian, M Head-Gordon, JCTC 2016, 12, 4303.
+         DEFGRID3 seems to be a minimum grid for reliable results with these functionals!
+  ===> : Please increase the integration grid!
+
+
+INFO   : the flag for use of the SHARK integral package has been found!
+
+================================================================================
+                                       INPUT FILE
+================================================================================
+NAME = calc.inp
+|  1> !SP M062X Def2-SVP
+|  2> *xyz -1 1
+|  3> Cl   0.00000000   0.00000000   0.00000000
+|  4> *
+|  5> %pal
+|  6> nprocs 4
+|  7> endd                         ****END OF INPUT****
+================================================================================
+
+                       ****************************
+                       * Single Point Calculation *
+                       ****************************
+
+---------------------------------
+CARTESIAN COORDINATES (ANGSTROEM)
+---------------------------------
+  Cl     0.000000    0.000000    0.000000
+
+----------------------------
+CARTESIAN COORDINATES (A.U.)
+----------------------------
+  NO LB      ZA    FRAG     MASS         X           Y           Z
+   0 Cl   17.0000    0    35.453    0.000000    0.000000    0.000000
+
+--------------------------------
+INTERNAL COORDINATES (ANGSTROEM)
+--------------------------------
+ Cl     0   0   0     0.000000000000     0.00000000     0.00000000
+
+---------------------------
+INTERNAL COORDINATES (A.U.)
+---------------------------
+ Cl     0   0   0     0.000000000000     0.00000000     0.00000000
+
+---------------------
+BASIS SET INFORMATION
+---------------------
+There are 1 groups of distinct atoms
+
+ Group   1 Type Cl  : 10s7p1d contracted to 4s3p1d pattern {5311/511/1}
+
+Atom   0Cl   basis set group =>   1
+---------------------------------
+AUXILIARY/J BASIS SET INFORMATION
+---------------------------------
+There are 1 groups of distinct atoms
+
+ Group   1 Type Cl  : 14s5p5d2f1g contracted to 8s4p3d1f1g pattern {71111111/2111/311/2/1}
+
+Atom   0Cl   basis set group =>   1
+
+
+           ************************************************************
+           *        Program running with 4 parallel MPI-processes     *
+           *              working on a common directory               *
+           ************************************************************
+------------------------------------------------------------------------------
+                           ORCA GTO INTEGRAL CALCULATION
+                           -- RI-GTO INTEGRALS CHOSEN --
+------------------------------------------------------------------------------
+[web:01322] Read -1, expected 651728, errno = 1
+[web:01323] Read -1, expected 651728, errno = 1
+[web:01324] Read -1, expected 651728, errno = 1
+[web:01322] Read -1, expected 15240, errno = 1
+[web:01324] Read -1, expected 15240, errno = 1
+[web:01323] Read -1, expected 15240, errno = 1
+------------------------------------------------------------------------------
+                   ___                                                        
+                  /   \      - P O W E R E D   B Y -                         
+                 /     \                                                     
+                 |  |  |   _    _      __       _____    __    __             
+                 |  |  |  | |  | |    /  \     |  _  \  |  |  /  |          
+                  \  \/   | |  | |   /    \    | | | |  |  | /  /          
+                 / \  \   | |__| |  /  /\  \   | |_| |  |  |/  /          
+                |  |  |   |  __  | /  /__\  \  |    /   |      \           
+                |  |  |   | |  | | |   __   |  |    \   |  |\   \          
+                \     /   | |  | | |  |  |  |  | |\  \  |  | \   \       
+                 \___/    |_|  |_| |__|  |__|  |_| \__\ |__|  \__/        
+                                                                              
+                      - O R C A' S   B I G   F R I E N D -                    
+                                      &                                       
+                       - I N T E G R A L  F E E D E R -                       
+                                                                              
+ v1 FN, 2020, v2 2021                                                         
+------------------------------------------------------------------------------
+
+
+Reading SHARK input file calc.SHARKINP.tmp ... [web:01322] Read -1, expected 4136, errno = 1
+[web:01323] Read -1, expected 4136, errno = 1
+[web:01324] Read -1, expected 4136, errno = 1
+ok
+----------------------
+SHARK INTEGRAL PACKAGE
+----------------------
+
+Number of atoms                             ...      1
+Number of basis functions                   ...     18
+Number of shells                            ...      8
+Maximum angular momentum                    ...      2
+Integral batch strategy                     ... SHARK/LIBINT Hybrid
+RI-J (if used) integral strategy            ... SPLIT-RIJ (Revised 2003 algorithm where possible)
+Printlevel                                  ...      1
+Contraction scheme used                     ... SEGMENTED contraction
+Coulomb Range Separation                    ... NOT USED
+Exchange Range Separation                   ... NOT USED
+Finite Nucleus Model                        ... NOT USED
+Auxiliary Coulomb fitting basis             ... AVAILABLE
+   # of basis functions in Aux-J            ...     51
+   # of shells in Aux-J                     ...     17
+   Maximum angular momentum in Aux-J        ...      4
+Auxiliary J/K fitting basis                 ... NOT available
+Auxiliary Correlation fitting basis         ... NOT available
+Auxiliary 'external' fitting basis          ... NOT available
+Integral threshold                          ...     1.000000e-10
+Primitive cut-off                           ...     1.000000e-11
+Primitive pair pre-selection threshold      ...     1.000000e-11
+
+Calculating pre-screening integrals         ... done (  0.0 sec) Dimension = 8
+Organizing shell pair data                  ... [web:01322] Read -1, expected 4136, errno = 1
+[web:01323] Read -1, expected 4136, errno = 1
+[web:01324] Read -1, expected 4136, errno = 1
+done (  0.0 sec)
+Shell pair information
+Total number of shell pairs                 ...        36
+Shell pairs after pre-screening             ...        36
+Total number of primitive shell pairs       ...       194
+Primitive shell pairs kept                  ...       194
+          la=0 lb=0:     10 shell pairs
+          la=1 lb=0:     12 shell pairs
+          la=1 lb=1:      6 shell pairs
+          la=2 lb=0:      4 shell pairs
+          la=2 lb=1:      3 shell pairs
+          la=2 lb=2:      1 shell pairs
+
+Calculating one electron integrals          ... done (  0.0 sec)
+Calculating RI/J V-Matrix + Cholesky decomp.... [web:01324] Read -1, expected 4136, errno = 1
+[web:01323] Read -1, expected 4136, errno = 1
+[web:01322] Read -1, expected 4136, errno = 1
+[web:01324] Read -1, expected 4136, errno = 1
+[web:01323] Read -1, expected 4136, errno = 1
+[web:01322] Read -1, expected 4136, errno = 1
+done (  0.0 sec)
+Calculating Nuclear repulsion               ... done (  0.0 sec) ENN=      0.000000000000 Eh
+
+SHARK setup successfully completed in   0.1 seconds
+
+Maximum memory used throughout the entire GTOINT-calculation: 8.7 MB
+
+
+           ************************************************************
+           *        Program running with 4 parallel MPI-processes     *
+           *              working on a common directory               *
+           ************************************************************
+[web:01341] Read -1, expected 651728, errno = 1
+[web:01339] Read -1, expected 651728, errno = 1
+[web:01340] Read -1, expected 651728, errno = 1
+[web:01339] Read -1, expected 15240, errno = 1
+[web:01340] Read -1, expected 15240, errno = 1
+[web:01341] Read -1, expected 15240, errno = 1
+-------------------------------------------------------------------------------
+                                 ORCA SCF
+-------------------------------------------------------------------------------
+
+------------
+SCF SETTINGS
+------------
+Hamiltonian:
+ Density Functional     Method          .... DFT(GTOs)
+ Exchange Functional    Exchange        .... M062X
+ Correlation Functional Correlation     .... M062X
+ Gradients option       PostSCFGGA      .... off
+ Hybrid DFT is turned on
+   Fraction HF Exchange ScalHFX         ....  0.540000
+   Scaling of DF-GGA-X  ScalDFX         ....  0.460000
+   Scaling of DF-GGA-C  ScalDFC         ....  1.000000
+   Scaling of DF-LDA-C  ScalLDAC        ....  1.000000
+   Perturbative correction              ....  0.000000
+   Density functional embedding theory  .... OFF
+ RI-approximation to the Coulomb term is turned on
+   Number of AuxJ basis functions       .... 51
+   RIJ-COSX (HFX calculated with COS-X)).... on
+
+
+General Settings:
+ Integral files         IntName         .... calc
+ Hartree-Fock type      HFTyp           .... RHF
+ Total Charge           Charge          ....   -1
+ Multiplicity           Mult            ....    1
+ Number of Electrons    NEL             ....   18
+ Basis Dimension        Dim             ....   18
+ Nuclear Repulsion      ENuc            ....      0.0000000000 Eh
+
+Convergence Acceleration:
+ DIIS                   CNVDIIS         .... on
+   Start iteration      DIISMaxIt       ....    12
+   Startup error        DIISStart       ....  0.200000
+   # of expansion vecs  DIISMaxEq       ....     5
+   Bias factor          DIISBfac        ....   1.050
+   Max. coefficient     DIISMaxC        ....  10.000
+ Trust-Rad. Augm. Hess. CNVTRAH         .... auto
+   Auto Start mean grad. ratio tolernc. ....  1.125000
+   Auto Start start iteration           ....    20
+   Auto Start num. interpolation iter.  ....    10
+   Max. Number of Micro iterations      ....    16
+   Max. Number of Macro iterations      .... Maxiter - #DIIS iter
+   Number of Davidson start vectors     ....     2
+   Converg. threshold I  (grad. norm)   ....   5.000e-05
+   Converg. threshold II (energy diff.) ....   1.000e-06
+   Grad. Scal. Fac. for Micro threshold ....   0.100
+   Minimum threshold for Micro iter.    ....   0.010
+   NR start threshold (gradient norm)   ....   0.001
+   Initial trust radius                 ....   0.400
+   Minimum AH scaling param. (alpha)    ....   1.000
+   Maximum AH scaling param. (alpha)    .... 1000.000
+   Orbital update algorithm             .... Taylor
+   White noise on init. David. guess    .... on
+   Maximum white noise                  ....   0.010
+   Quad. conv. algorithm                .... NR
+ SOSCF                  CNVSOSCF        .... on
+   Start iteration      SOSCFMaxIt      ....   150
+   Startup grad/error   SOSCFStart      ....  0.003300
+ Level Shifting         CNVShift        .... on
+   Level shift para.    LevelShift      ....    0.2500
+   Turn off err/grad.   ShiftErr        ....    0.0010
+ Zerner damping         CNVZerner       .... off
+ Static damping         CNVDamp         .... on
+   Fraction old density DampFac         ....    0.7000
+   Max. Damping (<1)    DampMax         ....    0.9800
+   Min. Damping (>=0)   DampMin         ....    0.0000
+   Turn off err/grad.   DampErr         ....    0.1000
+ Fernandez-Rico         CNVRico         .... off
+
+SCF Procedure:
+ Maximum # iterations   MaxIter         ....   125
+ SCF integral mode      SCFMode         .... Direct
+   Integral package                     .... SHARK and LIBINT hybrid scheme
+ Reset frequency        DirectResetFreq ....    20
+ Integral Threshold     Thresh          ....  1.000e-10 Eh
+ Primitive CutOff       TCut            ....  1.000e-11 Eh
+
+Convergence Tolerance:
+ Convergence Check Mode ConvCheckMode   .... Total+1el-Energy
+ Convergence forced     ConvForced      .... 0
+ Energy Change          TolE            ....  1.000e-06 Eh
+ 1-El. energy change                    ....  1.000e-03 Eh
+ Orbital Gradient       TolG            ....  5.000e-05
+ Orbital Rotation angle TolX            ....  5.000e-05
+ DIIS Error             TolErr          ....  1.000e-06
+
+
+Diagonalization of the overlap matrix:
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+Smallest eigenvalue                        ... 1.160e-01
+Time for diagonalization                   ...    0.000 sec
+Threshold for overlap eigenvalues          ... 1.000e-08
+Number of eigenvalues below threshold      ... 0
+Time for construction of square roots      ...    0.000 sec
+Total time needed                          ...    0.000 sec
+
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 76224, errno = 1
+[web:01339] Read -1, expected 76224, errno = 1
+[web:01341] Read -1, expected 76224, errno = 1
+[web:01340] Read -1, expected 57168, errno = 1
+[web:01339] Read -1, expected 57168, errno = 1
+[web:01341] Read -1, expected 57168, errno = 1
+[web:01341] Read -1, expected 38824, errno = 1
+[web:01339] Read -1, expected 38824, errno = 1
+[web:01340] Read -1, expected 38824, errno = 1
+[web:01341] Read -1, expected 39256, errno = 1
+[web:01340] Read -1, expected 39256, errno = 1
+[web:01338] Read -1, expected 39256, errno = 1
+[web:01341] Read -1, expected 39520, errno = 1
+[web:01339] Read -1, expected 39520, errno = 1
+[web:01338] Read -1, expected 39520, errno = 1
+[web:01339] Read -1, expected 33176, errno = 1
+[web:01340] Read -1, expected 33176, errno = 1
+[web:01338] Read -1, expected 33176, errno = 1
+Time for model grid setup =    0.008 sec
+
+------------------------------
+INITIAL GUESS: MODEL POTENTIAL
+------------------------------
+Loading Hartree-Fock densities                     ... done
+Calculating cut-offs                               ... done
+Initializing the effective Hamiltonian             ... done
+Setting up the integral package (SHARK)            ... done
+Starting the Coulomb interaction                   ... [web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+done (   0.0 sec)
+Reading the grid                                   ... done
+Mapping shells                                     ... done
+Starting the XC term evaluation                    ... done (   0.0 sec)
+  promolecular density results
+     # of electrons  =     17.000000428
+     EX              =    -27.332861292
+     EC              =     -0.649388565
+     EX+EC           =    -27.982249857
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+Transforming the Hamiltonian                       ... done (   0.0 sec)
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+Diagonalizing the Hamiltonian                      ... [web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+done (   0.0 sec)
+Back transforming the eigenvectors                 ... done (   0.0 sec)
+Now organizing SCF variables                       ... done
+                      ------------------
+                      INITIAL GUESS DONE (   0.0 sec)
+                      ------------------
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+-------------------
+DFT GRID GENERATION
+-------------------
+
+General Integration Accuracy     IntAcc      ... 4.388
+Radial Grid Type                 RadialGrid  ... OptM3 with GC (2021)
+Angular Grid (max. ang.)         AngularGrid ... 4 (Lebedev-302)
+Angular grid pruning method      GridPruning ... 4 (adaptive)
+Weight generation scheme         WeightScheme... Becke
+Basis function cutoff            BFCut       ... 1.0000e-10
+Integration weight cutoff        WCut        ... 1.0000e-14
+Angular grids for H and He will be reduced by one unit
+Partially contracted basis set               ... off
+Rotationally invariant grid construction     ... off
+
+[web:01340] Read -1, expected 235776, errno = 1
+[web:01341] Read -1, expected 235776, errno = 1
+[web:01339] Read -1, expected 235776, errno = 1
+[web:01340] Read -1, expected 176832, errno = 1
+[web:01341] Read -1, expected 176832, errno = 1
+[web:01339] Read -1, expected 176832, errno = 1
+[web:01340] Read -1, expected 100000, errno = 1
+[web:01339] Read -1, expected 100000, errno = 1
+[web:01341] Read -1, expected 100000, errno = 1
+[web:01340] Read -1, expected 14788, errno = 1
+[web:01341] Read -1, expected 14788, errno = 1
+[web:01341] Read -1, expected 100000, errno = 1
+[web:01339] Read -1, expected 14788, errno = 1
+[web:01340] Read -1, expected 100000, errno = 1
+[web:01338] Read -1, expected 100000, errno = 1
+[web:01341] Read -1, expected 15652, errno = 1
+[web:01340] Read -1, expected 15652, errno = 1
+[web:01341] Read -1, expected 100000, errno = 1
+[web:01338] Read -1, expected 15652, errno = 1
+[web:01339] Read -1, expected 100000, errno = 1
+[web:01338] Read -1, expected 100000, errno = 1
+[web:01341] Read -1, expected 16060, errno = 1
+[web:01339] Read -1, expected 16060, errno = 1
+[web:01339] Read -1, expected 100000, errno = 1
+[web:01338] Read -1, expected 16060, errno = 1
+[web:01338] Read -1, expected 100000, errno = 1
+[web:01340] Read -1, expected 100000, errno = 1
+[web:01339] Read -1, expected 19948, errno = 1
+[web:01340] Read -1, expected 19948, errno = 1
+[web:01338] Read -1, expected 19948, errno = 1
+Total number of grid points                  ...     7368
+Total number of batches                      ...      116
+Average number of points per batch           ...       63
+Average number of grid points per atom       ...     7368
+Time for grid setup =    0.042 sec
+
+--------------------
+COSX GRID GENERATION
+--------------------
+
+GRIDX 1
+-------
+General Integration Accuracy     IntAcc      ... 3.816
+Radial Grid Type                 RadialGrid  ... OptM3 with GC (2021)
+Angular Grid (max. ang.)         AngularGrid ... 1 (Lebedev-50)
+Angular grid pruning method      GridPruning ... 4 (adaptive)
+Weight generation scheme         WeightScheme... Becke
+Basis function cutoff            BFCut       ... 1.0000e-10
+Integration weight cutoff        WCut        ... 1.0000e-14
+Angular grids for H and He will be reduced by one unit
+Partially contracted basis set               ... on
+Rotationally invariant grid construction     ... off
+
+[web:01339] Read -1, expected 26880, errno = 1
+[web:01340] Read -1, expected 26880, errno = 1
+[web:01341] Read -1, expected 26880, errno = 1
+[web:01339] Read -1, expected 20160, errno = 1
+[web:01340] Read -1, expected 20160, errno = 1
+[web:01341] Read -1, expected 20160, errno = 1
+[web:01340] Read -1, expected 15232, errno = 1
+[web:01340] Read -1, expected 15328, errno = 1
+[web:01339] Read -1, expected 15232, errno = 1
+[web:01341] Read -1, expected 15232, errno = 1
+[web:01341] Read -1, expected 15328, errno = 1
+[web:01341] Read -1, expected 15328, errno = 1
+[web:01339] Read -1, expected 15328, errno = 1
+[web:01339] Read -1, expected 7664, errno = 1
+[web:01338] Read -1, expected 15328, errno = 1
+[web:01338] Read -1, expected 15328, errno = 1
+[web:01338] Read -1, expected 7664, errno = 1
+[web:01340] Read -1, expected 7664, errno = 1
+Total number of grid points                  ...      840
+Total number of batches                      ...       14
+Average number of points per batch           ...       60
+Average number of grid points per atom       ...      840
+UseSFitting                                  ... on
+
+GRIDX 2
+-------
+General Integration Accuracy     IntAcc      ... 4.020
+Radial Grid Type                 RadialGrid  ... OptM3 with GC (2021)
+Angular Grid (max. ang.)         AngularGrid ... 2 (Lebedev-110)
+Angular grid pruning method      GridPruning ... 4 (adaptive)
+Weight generation scheme         WeightScheme... Becke
+Basis function cutoff            BFCut       ... 1.0000e-10
+Integration weight cutoff        WCut        ... 1.0000e-14
+Angular grids for H and He will be reduced by one unit
+Partially contracted basis set               ... on
+Rotationally invariant grid construction     ... off
+
+[web:01340] Read -1, expected 63296, errno = 1
+[web:01341] Read -1, expected 63296, errno = 1
+[web:01339] Read -1, expected 63296, errno = 1
+[web:01340] Read -1, expected 47472, errno = 1
+[web:01341] Read -1, expected 47472, errno = 1
+[web:01339] Read -1, expected 47472, errno = 1
+[web:01340] Read -1, expected 31616, errno = 1
+[web:01339] Read -1, expected 31616, errno = 1
+[web:01341] Read -1, expected 31616, errno = 1
+[web:01341] Read -1, expected 31904, errno = 1
+[web:01340] Read -1, expected 31904, errno = 1
+[web:01341] Read -1, expected 32048, errno = 1
+[web:01338] Read -1, expected 31904, errno = 1
+[web:01339] Read -1, expected 32048, errno = 1
+[web:01339] Read -1, expected 29584, errno = 1
+[web:01338] Read -1, expected 32048, errno = 1
+[web:01340] Read -1, expected 29584, errno = 1
+[web:01338] Read -1, expected 29584, errno = 1
+Total number of grid points                  ...     1978
+Total number of batches                      ...       31
+Average number of points per batch           ...       63
+Average number of grid points per atom       ...     1978
+UseSFitting                                  ... on
+
+GRIDX 3
+-------
+General Integration Accuracy     IntAcc      ... 4.338
+Radial Grid Type                 RadialGrid  ... OptM3 with GC (2021)
+Angular Grid (max. ang.)         AngularGrid ... 3 (Lebedev-194)
+Angular grid pruning method      GridPruning ... 4 (adaptive)
+Weight generation scheme         WeightScheme... Becke
+Basis function cutoff            BFCut       ... 1.0000e-10
+Integration weight cutoff        WCut        ... 1.0000e-14
+Angular grids for H and He will be reduced by one unit
+Partially contracted basis set               ... on
+Rotationally invariant grid construction     ... off
+
+[web:01341] Read -1, expected 161024, errno = 1
+[web:01340] Read -1, expected 161024, errno = 1
+[web:01339] Read -1, expected 161024, errno = 1
+[web:01340] Read -1, expected 120768, errno = 1
+[web:01341] Read -1, expected 120768, errno = 1
+[web:01339] Read -1, expected 120768, errno = 1
+[web:01340] Read -1, expected 78848, errno = 1
+[web:01340] Read -1, expected 79712, errno = 1
+[web:01339] Read -1, expected 78848, errno = 1
+[web:01341] Read -1, expected 78848, errno = 1
+[web:01341] Read -1, expected 79712, errno = 1
+[web:01341] Read -1, expected 79976, errno = 1
+[web:01338] Read -1, expected 79712, errno = 1
+[web:01339] Read -1, expected 79976, errno = 1
+[web:01339] Read -1, expected 79528, errno = 1
+[web:01338] Read -1, expected 79976, errno = 1
+[web:01340] Read -1, expected 79528, errno = 1
+[web:01338] Read -1, expected 79528, errno = 1
+Total number of grid points                  ...     5032
+Total number of batches                      ...       79
+Average number of points per batch           ...       63
+Average number of grid points per atom       ...     5032
+UseSFitting                                  ... on
+
+Time for X-Grid setup             =    0.017 sec
+
+--------------
+SCF ITERATIONS
+--------------
+ITER       Energy         Delta-E        Max-DP      RMS-DP      [F,P]     Damp
+               ***  Starting incremental Fock matrix formation  ***
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+  0   -460.0174049448   0.000000000000 0.11720622  0.01164878  0.1699975 0.7000
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+  1   -460.0370464102  -0.019641465336 0.08712235  0.00862161  0.1089199 0.7000
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+                               ***Turning on DIIS***
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+  2   -460.0479781805  -0.010931770298 0.17493321  0.01685235  0.0627320 0.0000
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+  3   -460.0660882559  -0.018110075405 0.05057785  0.00572508  0.0306472 0.0000
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+                      *** Initiating the SOSCF procedure ***
+                           *** Shutting down DIIS ***
+                      *** Re-Reading the Fockian *** 
+                      *** Removing any level shift *** 
+ITER      Energy       Delta-E        Grad      Rot      Max-DP    RMS-DP
+  4   -460.06809613  -0.0020078696  0.000888  0.000888  0.001397  0.000179
+               *** Restarting incremental Fock matrix formation ***
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+  5   -460.06766603   0.0004300945  0.018303  0.010121  0.013391  0.001067
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+  6   -460.06807918  -0.0004131539  0.002034  0.001269  0.001673  0.000140
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+  7   -460.06808442  -0.0000052322  0.000057  0.000044  0.000226  0.000022
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+                 **** Energy Check signals convergence ****
+              ***Rediagonalizing the Fockian in SOSCF/NRSCF***
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+
+               *****************************************************
+               *                     SUCCESS                       *
+               *           SCF CONVERGED AFTER   8 CYCLES          *
+               *****************************************************
+
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+Old exchange energy                            =    -15.050753294 Eh
+New exchange energy                            =    -15.050755277 Eh
+Exchange energy change after final integration =     -0.000001983 Eh
+Total energy after final integration           =   -460.068086407 Eh
+Final COS-X integration done in                =     0.014 sec
+
+----------------
+TOTAL SCF ENERGY
+----------------
+
+Total Energy       :         -460.06808641 Eh          -12519.08909 eV
+
+Components:
+Nuclear Repulsion  :            0.00000000 Eh               0.00000 eV
+Electronic Energy  :         -460.06808641 Eh          -12519.08909 eV
+One Electron Energy:         -642.42011116 Eh          -17481.13995 eV
+Two Electron Energy:          182.35202476 Eh            4962.05086 eV
+Max COSX asymmetry :            0.00000038 Eh               0.00001 eV
+
+Virial components:
+Potential Energy   :         -919.57781509 Eh          -25022.98449 eV
+Kinetic Energy     :          459.50972868 Eh           12503.89540 eV
+Virial Ratio       :            2.00121512
+
+
+DFT components:
+N(Alpha)           :        8.999999995446 electrons
+N(Beta)            :        8.999999995446 electrons
+N(Total)           :       17.999999990891 electrons
+E(XC)              :      -13.518530621978 Eh       
+DFET-embed. en.    :        0.000000000000 Eh       
+
+---------------
+SCF CONVERGENCE
+---------------
+
+  Last Energy change         ...   -7.0611e-09  Tolerance :   1.0000e-06
+  Last MAX-Density change    ...    2.2204e-15  Tolerance :   1.0000e-05
+  Last RMS-Density change    ...    1.7816e-16  Tolerance :   1.0000e-06
+  Last Orbital Gradient      ...    2.8926e-05  Tolerance :   5.0000e-05
+  Last Orbital Rotation      ...    1.4481e-05  Tolerance :   5.0000e-05
+
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+             **** THE GBW FILE WAS UPDATED (calc.gbw) ****
+             **** DENSITY calc.scfp WAS UPDATED ****
+             **** ENERGY FILE WAS UPDATED (calc.en.tmp) ****
+             **** THE GBW FILE WAS UPDATED (calc.gbw) ****
+             **** DENSITY calc.scfp WAS UPDATED ****
+----------------
+ORBITAL ENERGIES
+----------------
+
+  NO   OCC          E(Eh)            E(eV) 
+   0   2.0000    -102.212454     -2781.3423 
+   1   2.0000      -9.378667      -255.2065 
+   2   2.0000      -7.102680      -193.2738 
+   3   2.0000      -7.102680      -193.2737 
+   4   2.0000      -7.102680      -193.2737 
+   5   2.0000      -0.483629       -13.1602 
+   6   2.0000      -0.006223        -0.1693 
+   7   2.0000      -0.006222        -0.1693 
+   8   2.0000      -0.006222        -0.1693 
+   9   0.0000       0.828275        22.5385 
+  10   0.0000       1.241477        33.7823 
+  11   0.0000       1.241477        33.7823 
+  12   0.0000       1.241477        33.7823 
+  13   0.0000       1.241478        33.7823 
+  14   0.0000       1.241478        33.7823 
+  15   0.0000       1.276831        34.7443 
+  16   0.0000       1.276832        34.7444 
+  17   0.0000       1.276832        34.7444 
+
+                    ********************************
+                    * MULLIKEN POPULATION ANALYSIS *
+                    ********************************
+
+-----------------------
+MULLIKEN ATOMIC CHARGES
+-----------------------
+   0 Cl:   -1.000000
+Sum of atomic charges:   -1.0000000
+
+--------------------------------
+MULLIKEN REDUCED ORBITAL CHARGES
+--------------------------------
+  0 Cls       :     6.000000  s :     6.000000
+      pz      :     4.000000  p :    12.000000
+      px      :     4.000000
+      py      :     4.000000
+      dz2     :     0.000000  d :     0.000000
+      dxz     :     0.000000
+      dyz     :     0.000000
+      dx2y2   :     0.000000
+      dxy     :     0.000000
+
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+
+                     *******************************
+                     * LOEWDIN POPULATION ANALYSIS *
+                     *******************************
+
+----------------------
+LOEWDIN ATOMIC CHARGES
+----------------------
+   0 Cl:   -1.000000
+
+-------------------------------
+LOEWDIN REDUCED ORBITAL CHARGES
+-------------------------------
+  0 Cls       :     6.000000  s :     6.000000
+      pz      :     4.000000  p :    12.000000
+      px      :     4.000000
+      py      :     4.000000
+      dz2     :     0.000000  d :     0.000000
+      dxz     :     0.000000
+      dyz     :     0.000000
+      dx2y2   :     0.000000
+      dxy     :     0.000000
+
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+[web:01339] Read -1, expected 4136, errno = 1
+[web:01341] Read -1, expected 4136, errno = 1
+[web:01340] Read -1, expected 4136, errno = 1
+
+                      *****************************
+                      * MAYER POPULATION ANALYSIS *
+                      *****************************
+
+  NA   - Mulliken gross atomic population
+  ZA   - Total nuclear charge
+  QA   - Mulliken gross atomic charge
+  VA   - Mayer's total valence
+  BVA  - Mayer's bonded valence
+  FA   - Mayer's free valence
+
+  ATOM       NA         ZA         QA         VA         BVA        FA
+  0 Cl    18.0000    17.0000    -1.0000     0.0000     0.0000     0.0000
+
+  Mayer bond orders larger than 0.100000
+
+
+
+Warning: MO coefficients are modified such that the real solid harmonic m components
+have the correct order within each shell (0, +1, -1, +2, -2, ...) and all s orbitals
+come before all p orbitals etc. (with increasing orbital energy within each block of given angular momentum).
+
+--------------------------
+ATOM BASIS FOR ELEMENT Cl
+--------------------------
+ NewGTO Cl
+ S 10
+    1      10449.827566000000         0.005393856089
+    2       1571.736522100000         0.040381275455
+    3        357.120655230000         0.182489817847
+    4        100.251859350000         0.471527451449
+    5         30.812727554000         0.434713226683
+    6         51.923789434000        -0.002078860771
+    7          5.704576097500         0.012636402827
+    8          2.350837680900         0.011288558814
+    9          0.446051246700        -0.008969359672
+   10          0.168488561900         0.004462958119
+ S 10
+    1      10449.827566000000         0.001695073579
+    2       1571.736522100000         0.012690222353
+    3        357.120655230000         0.057349262489
+    4        100.251859350000         0.148182248758
+    5         30.812727554000         0.136613007995
+    6         51.923789434000         0.094983601158
+    7          5.704576097500        -0.577359995832
+    8          2.350837680900        -0.515776709467
+    9          0.446051246700        -0.041884163375
+   10          0.168488561900         0.013471828067
+ S 10
+    1      10449.827566000000         0.000457779999
+    2       1571.736522100000         0.003427184544
+    3        357.120655230000         0.015488026966
+    4        100.251859350000         0.040018834856
+    5         30.812727554000         0.036894388173
+    6         51.923789434000         0.048958009071
+    7          5.704576097500        -0.297592379828
+    8          2.350837680900        -0.265850110050
+    9          0.446051246700         0.660290604389
+   10          0.168488561900         0.498114149012
+ S 10
+    1      10449.827566000000        -0.000437336255
+    2       1571.736522100000        -0.003274131806
+    3        357.120655230000        -0.014796355739
+    4        100.251859350000        -0.038231655852
+    5         30.812727554000        -0.035246742105
+    6         51.923789434000        -0.055046946910
+    7          5.704576097500         0.334604127985
+    8          2.350837680900         0.298914052501
+    9          0.446051246700        -2.119744088855
+   10          0.168488561900         1.910077565116
+ P 7
+    1        307.667905690000         0.008732233904
+    2         72.102015515000         0.063216481391
+    3         22.532680262000         0.238853672765
+    4          7.899176544400         0.475380214691
+    5          2.876726832100         0.383056636370
+    6          0.774593639600         0.044109112689
+    7          0.210376997000        -0.005915766009
+ P 7
+    1        307.667905690000         0.002317445276
+    2         72.102015515000         0.016777005492
+    3         22.532680262000         0.063389313855
+    4          7.899176544400         0.126161031064
+    5          2.876726832100         0.101659300717
+    6          0.774593639600        -0.428583919423
+    7          0.210376997000        -0.707557707756
+ P 7
+    1        307.667905690000         0.003580121183
+    2         72.102015515000         0.025918071669
+    3         22.532680262000         0.097927415017
+    4          7.899176544400         0.194900731633
+    5          2.876726832100         0.157049065944
+    6          0.774593639600        -1.302228667684
+    7          0.210376997000         1.065043204586
+ D 1
+    1          0.650000000000         0.999999999956
+ end
+-------
+TIMINGS
+-------
+
+Total SCF time: 0 days 0 hours 0 min 0 sec 
+
+Total time                  ....       0.332 sec
+Sum of individual times     ....       0.288 sec  ( 86.8%)
+
+Fock matrix formation       ....       0.210 sec  ( 63.3%)
+  Split-RI-J                ....       0.067 sec  ( 31.9% of F)
+  Chain of spheres X        ....       0.112 sec  ( 53.0% of F)
+  XC integration            ....       0.028 sec  ( 13.2% of F)
+    Basis function eval.    ....       0.004 sec  ( 15.2% of XC)
+    Density eval.           ....       0.005 sec  ( 18.7% of XC)
+    XC-Functional eval.     ....       0.011 sec  ( 38.2% of XC)
+    XC-Potential eval.      ....       0.004 sec  ( 13.7% of XC)
+Diagonalization             ....       0.002 sec  (  0.6%)
+Density matrix formation    ....       0.000 sec  (  0.0%)
+Population analysis         ....       0.001 sec  (  0.2%)
+Initial guess               ....       0.004 sec  (  1.1%)
+Orbital Transformation      ....       0.000 sec  (  0.0%)
+Orbital Orthonormalization  ....       0.000 sec  (  0.0%)
+DIIS solution               ....       0.003 sec  (  0.8%)
+SOSCF solution              ....       0.002 sec  (  0.5%)
+Grid generation             ....       0.067 sec  ( 20.2%)
+
+Maximum memory used throughout the entire SCF-calculation: 42.7 MB
+
+-------------------------   --------------------
+FINAL SINGLE POINT ENERGY      -460.068086406898
+-------------------------   --------------------
+
+
+                            ***************************************
+                            *     ORCA property calculations      *
+                            ***************************************
+
+                                    ---------------------
+                                    Active property flags
+                                    ---------------------
+   (+) Dipole Moment
+
+
+------------------------------------------------------------------------------
+                       ORCA ELECTRIC PROPERTIES CALCULATION
+------------------------------------------------------------------------------
+
+Dipole Moment Calculation                       ... on
+Quadrupole Moment Calculation                   ... off
+Polarizability Calculation                      ... off
+GBWName                                         ... calc.gbw
+Electron density                                ... calc.scfp
+The origin for moment calculation is the CENTER OF MASS  = ( 0.000000,  0.000000  0.000000)
+
+-------------
+DIPOLE MOMENT
+-------------
+                                X             Y             Z
+Electronic contribution:      0.00000      -0.00001      -0.00001
+Nuclear contribution   :      0.00000       0.00000       0.00000
+                        -----------------------------------------
+Total Dipole Moment    :      0.00000      -0.00001      -0.00001
+                        -----------------------------------------
+Magnitude (a.u.)       :      0.00001
+Magnitude (Debye)      :      0.00003
+
+
+
+--------------------
+Rotational spectrum 
+--------------------
+ 
+Rotational constants in cm-1:     0.000000     0.000000     0.000000 
+Rotational constants in MHz :     0.000000     0.000000     0.000000 
+
+ Dipole components along the rotational axes: 
+x,y,z [a.u.] :     0.000004    -0.000008    -0.000010 
+x,y,z [Debye]:     0.000010    -0.000020    -0.000025 
+
+ 
+[web:01356] Read -1, expected 651728, errno = 1
+[web:01357] Read -1, expected 651728, errno = 1
+[web:01358] Read -1, expected 651728, errno = 1
+
+Timings for individual modules:
+
+Sum of individual times         ...        1.119 sec (=   0.019 min)
+GTO integral calculation        ...        0.431 sec (=   0.007 min)  38.5 %
+SCF iterations                  ...        0.688 sec (=   0.011 min)  61.5 %
+                             ****ORCA TERMINATED NORMALLY****
+TOTAL RUN TIME: 0 days 0 hours 0 minutes 1 seconds 552 msec

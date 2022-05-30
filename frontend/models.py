@@ -998,6 +998,10 @@ class Calculation(models.Model):
     def text_status(self):
         return self.INV_CALC_STATUSES[self.status]
 
+    @property
+    def all_inputs(self):
+        return f"{self.command}\n{self.input_file}"
+
 
 class Filter(models.Model):
     type = models.CharField(max_length=500)

@@ -6,9 +6,15 @@ logs
 data
 backups
 test_run
+html_cov
+docs
+bulma
+scratch
 *.override.yml
 *__pycache__*
+*.swp
+*.swo
 frontend/tests/keys
-frontend/tests/cache
 frontend/tests/scr
 frontend/tests/results
+.git

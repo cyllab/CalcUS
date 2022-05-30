@@ -12,7 +12,6 @@ frontend/migrations/
 !.github
 *.override.yml
 htmlcov/
-frontend/tests/cache/
 old/
 data/
 logs/
