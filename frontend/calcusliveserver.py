@@ -27,6 +27,7 @@ import datetime
 import pexpect
 import socket
 from unittest import mock
+from shutil import copyfile, rmtree
 
 from selenium import webdriver
 from selenium.webdriver.common.alert import Alert
@@ -38,7 +39,6 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.action_chains import ActionChains
-from shutil import copyfile, rmtree
 
 from celery.contrib.testing.worker import start_worker
 from celery.contrib.abortable import AbortableAsyncResult
@@ -46,6 +46,7 @@ from celery.contrib.abortable import AbortableAsyncResult
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.management import call_command
 from django.contrib.auth.models import User, Group
+
 from .models import *
 from .environment_variables import *
 
@@ -55,8 +56,6 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 SCR_DIR = "/calcus/scratch/scr"
 RESULTS_DIR = "/calcus/scratch/results"
 KEYS_DIR = "/calcus/scratch/keys"
-
-HEADLESS = os.getenv("CALCUS_HEADLESS")
 
 from calcus.celery import app
 from frontend import tasks
@@ -97,6 +96,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         os.mkdir(RESULTS_DIR)
         os.mkdir(KEYS_DIR)
 
+        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
+        cls.patcher.start()
+
     @classmethod
     def tearDownClass(cls):
         cls.driver.quit()
@@ -115,7 +117,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         m = getattr(self, self.m_name)
 
         num = 1
-        MAX_ATTEMPTS = 3
+        MAX_ATTEMPTS = 1
 
         exc = None
 
@@ -188,16 +190,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def lget(self, url):
         self.driver.get(f"{self.live_server_url}{url}")
 
-        # Try to wait until everything is loaded
-        # This hopefully reduces the overall flakiness of Selenium integration tests
-        for i in range(10):
-            try:
-                self.wait_for_ajax()
-            except selenium.common.exceptions.JavascriptException:
-                # JQuery not loaded
-                time.sleep(0.1)
-            else:
-                break
+        self.wait_for_ajax()
+
         try:
             box = self.driver.find_element_by_id("error_box")
         except selenium.common.exceptions.NoSuchElementException:
@@ -210,26 +204,30 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.wait_for_ajax()
 
         if "mol_name" in params.keys():
-            element = WebDriverWait(self.driver, 1).until(
+            element = WebDriverWait(self.driver, 6).until(
                 EC.presence_of_element_located((By.NAME, "calc_mol_name"))
             )
-            name_input = self.driver.find_element_by_name("calc_mol_name")
-            name_input.clear()
-            name_input.send_keys(params["mol_name"])
+            element = self.driver.find_element_by_name("calc_mol_name")
+            element.click()
+            element.clear()
+
+            # Sending "test" as mol_name causes some additional path to appear (???)
+            element.send_keys(params["mol_name"])
+            self.wait_for_ajax()
 
         if "name" in params.keys():
-            element = WebDriverWait(self.driver, 1).until(
+            element = WebDriverWait(self.driver, 6).until(
                 EC.presence_of_element_located((By.NAME, "calc_name"))
             )
-            name_input = self.driver.find_element_by_name("calc_name")
-            name_input.clear()
-            name_input.send_keys(params["name"])
+            element.click()
+            element.clear()
+            element.send_keys(params["name"])
 
-        element = WebDriverWait(self.driver, 2).until(
+        element = WebDriverWait(self.driver, 6).until(
             EC.presence_of_element_located((By.NAME, "calc_solvent"))
         )
 
-        element = WebDriverWait(self.driver, 2).until(
+        element = WebDriverWait(self.driver, 6).until(
             EC.presence_of_element_located((By.NAME, "calc_project"))
         )
 
@@ -239,12 +237,16 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             pass
 
         if "charge" in params.keys():
-            charge_input = self.driver.find_element_by_name("calc_charge")
+            charge_input = WebDriverWait(self.driver, 6).until(
+                EC.presence_of_element_located((By.NAME, "calc_charge"))
+            )
+            charge_input.click()
             charge_input.clear()
             charge_input.send_keys(params["charge"])
 
         if "multiplicity" in params.keys():
             mult_input = self.driver.find_element_by_name("calc_multiplicity")
+            mult_input.click()
             mult_input.clear()
             mult_input.send_keys(params["multiplicity"])
 
@@ -295,6 +297,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         if "new_project_name" in params.keys():
             new_project_input = self.driver.find_element_by_name("new_project_name")
+            new_project_input.click()
             new_project_input.send_keys(params["new_project_name"])
 
         if "in_file" in params.keys():
@@ -365,46 +368,54 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 atoms = constraint[2]
 
                 # Although not elegant, it reduces flakiness
-                while (
-                    self.driver.find_element_by_id(
+                for i in range(10):
+                    if (
+                        self.driver.find_element_by_id(
+                            f"calc_constraint_{ind}_1"
+                        ).get_attribute("value")
+                        != ""
+                    ):
+                        break
+                    constr_c1 = self.driver.find_element_by_id(
                         f"calc_constraint_{ind}_1"
-                    ).get_attribute("value")
-                    == ""
-                ):
-                    self.driver.find_element_by_id(
-                        f"calc_constraint_{ind}_1"
-                    ).send_keys(str(atoms[0]))
-                    time.sleep(1)
+                    )
+                    constr_c1.click()
+                    constr_c1.send_keys(str(atoms[0]))
+                    time.sleep(0.5)
+                else:
+                    print("Could not input the calculation constraint...")
 
-                self.driver.find_element_by_id(f"calc_constraint_{ind}_2").send_keys(
-                    str(atoms[1])
-                )
-                if c_type == "Angle":
-                    self.driver.find_element_by_id(
+                constr_c2 = self.driver.find_element_by_id(f"calc_constraint_{ind}_2")
+                constr_c2.click()
+                constr_c2.send_keys(str(atoms[1]))
+                if c_type in ["Angle", "Dihedral"]:
+                    constr_c3 = self.driver.find_element_by_id(
                         f"calc_constraint_{ind}_3"
-                    ).send_keys(str(atoms[2]))
-                elif c_type == "Dihedral":
-                    self.driver.find_element_by_id(
-                        f"calc_constraint_{ind}_3"
-                    ).send_keys(str(atoms[2]))
-                    self.driver.find_element_by_id(
-                        f"calc_constraint_{ind}_4"
-                    ).send_keys(str(atoms[3]))
+                    )
+                    constr_c3.click()
+                    constr_c3.send_keys(str(atoms[2]))
+                    if c_type == "Dihedral":
+                        constr_c4 = self.driver.find_element_by_id(
+                            f"calc_constraint_{ind}_4"
+                        )
+                        constr_c4.click()
+                        constr_c4.send_keys(str(atoms[3]))
+
                 if c_mode == "Scan":
                     scan = constraint[3]
                     if (
                         not "software" in params.keys()
                         or params["software"] != "Gaussian"
                     ):
-                        self.driver.find_element_by_id(f"calc_scan_{ind}_1").send_keys(
-                            str(scan[0])
-                        )
-                    self.driver.find_element_by_id(f"calc_scan_{ind}_2").send_keys(
-                        str(scan[1])
-                    )
-                    self.driver.find_element_by_id(f"calc_scan_{ind}_3").send_keys(
-                        str(scan[2])
-                    )
+                        constr_s1 = self.driver.find_element_by_id(f"calc_scan_{ind}_1")
+                        constr_s1.click()
+                        constr_s1.send_keys(str(scan[0]))
+                    constr_s2 = self.driver.find_element_by_id(f"calc_scan_{ind}_2")
+                    constr_s2.click()
+                    constr_s2.send_keys(str(scan[1]))
+                    constr_s3 = self.driver.find_element_by_id(f"calc_scan_{ind}_3")
+                    constr_s3.click()
+                    constr_s3.send_keys(str(scan[2]))
 
             constr = params["constraints"]
             handle_constraint(constr[0], 1)
@@ -439,17 +450,20 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             )
             func = self.driver.find_element_by_id("calc_functional")
             func.clear()
+            func.click()
             func.send_keys(params["functional"])
 
         if "basis_set" in params.keys():
             bs = self.driver.find_element_by_id("calc_basis_set")
             bs.clear()
+            bs.click()
             bs.send_keys(params["basis_set"])
 
         if "specifications" in params.keys():
             self.driver.find_element_by_css_selector("summary").click()
             specs = self.driver.find_element_by_id("calc_specifications")
             specs.clear()
+            specs.click()
             specs.send_keys(params["specifications"])
             # self.driver.find_element_by_css_selector("summary").click()
 
@@ -462,6 +476,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             ).click()
 
             filter_value = self.driver.find_element_by_id("filter_value_input")
+            filter_value.click()
             filter_value.send_keys(params["filter_value"])
 
         if "resource" in params.keys():
@@ -472,6 +487,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.wait_for_ajax()
 
     def calc_launch(self):
+        self.wait_for_ajax()
         submit = self.driver.find_element_by_id("submit_button")
         submit.click()
         self.wait_for_ajax()
@@ -537,13 +553,21 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         return len(tabs)
 
     def wait_for_ajax(self):
-        wait = WebDriverWait(self.driver, 5)
-
-        wait.until(lambda driver: driver.execute_script("return jQuery.active") == 0)
-        wait.until(
-            lambda driver: driver.execute_script("return document.readyState")
-            == "complete"
-        )
+        for i in range(10):
+            try:
+                wait = WebDriverWait(self.driver, 5)
+                wait.until(
+                    lambda driver: driver.execute_script("return jQuery.active") == 0
+                )
+                wait.until(
+                    lambda driver: driver.execute_script("return document.readyState")
+                    == "complete"
+                )
+            except selenium.common.exceptions.JavascriptException:
+                # JQuery not loaded
+                time.sleep(0.1)
+            else:
+                break
 
     def get_nmr_shifts(self):
         assert self.is_on_page_nmr_analysis()
@@ -1335,7 +1359,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             calculations = self.get_calc_orders()
 
             header = calculations[0].find_element_by_class_name("message-header")
-            if "has-background-warning" in header.get_attribute("class"):
+            if (
+                "has-background-warning" in header.get_attribute("class")
+                or "has-background-danger" in header.get_attribute("class")
+                or "has-background-success" in header.get_attribute("class")
+            ):
                 return
             time.sleep(1)
             self.driver.refresh()
@@ -1602,6 +1630,16 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             return False
 
     def setup_test_group(self):
+        g = ResearchGroup.objects.create(name="Test group", PI=self.profile)
+        self.profile.is_PI = True
+        self.profile.save()
+
+        u = User.objects.create_user(username="Student", password=self.password)
+        p = Profile.objects.get(user__username="Student")
+        p.member_of = g
+        p.save()
+
+    def setup_test_group_manual(self):
         self.lget("/profile/")
 
         self.apply_PI("Test group")

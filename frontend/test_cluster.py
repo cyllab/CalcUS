@@ -65,8 +65,6 @@ from unittest import mock
 class ClusterTests(CalcusLiveServer):
     @classmethod
     def setUpClass(cls):
-        cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
-        cls.patcher.start()
         super().send_slurm_command(cls, "rm -r /home/slurm/scratch")
         super().setUpClass()
 
@@ -474,7 +472,7 @@ class ClusterTests(CalcusLiveServer):
         self.calc_launch()
         self.lget("/calculations/")
         self.wait_latest_calc_running(30)
-        time.sleep(5)
+        time.sleep(3)
         self.details_latest_order()
         self.cancel_all_calc()
 
@@ -516,7 +514,7 @@ class ClusterTests(CalcusLiveServer):
         s = self.get_calculation_statuses()
         self.assertEqual(s[0], "Error - Job cancelled")
 
-    @mock.patch.dict(os.environ, {"CAN_USE_CACHED_CALCULATIONS": "false"})
+    @mock.patch.dict(os.environ, {"CACHE_POST_WAIT": "15"})
     def test_relaunch_calc(self):
         self.setup_cluster()
         params = {

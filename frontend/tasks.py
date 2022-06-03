@@ -42,7 +42,7 @@ import threading
 from threading import Lock
 
 from shutil import copyfile, rmtree
-from time import time, sleep
+import time
 from celery.signals import task_prerun, task_postrun
 from django.utils import timezone
 from django.conf import settings
@@ -91,7 +91,7 @@ def direct_command(command, conn, lock, attempt_count=1):
                     attempt_count, MAX_COMMAND_ATTEMPT_COUNT
                 )
             )
-            sleep(2)
+            time.sleep(2)
             return direct_command(command, conn, lock, attempt_count + 1)
 
     try:
@@ -149,7 +149,7 @@ def sftp_get(src, dst, conn, lock, attempt_count=1):
         else:
             ret = ErrorCodes.SUCCESS
             break
-        sleep(1)
+        time.sleep(1)
     else:
         ret = ErrorCodes.CONNECTION_ERROR
 
@@ -192,7 +192,7 @@ def wait_until_logfile(remote_dir, conn, lock):
                         job_id = i.replace("CalcUS-", "").replace(".log", "")
                         logger.debug(f"Log found: {job_id}")
                         return job_id
-        sleep(DELAY[ind])
+        time.sleep(DELAY[ind])
         ind += 1
     logger.warning("Failed to find a job log")
     return ErrorCodes.NO_JOB_LOG
@@ -238,10 +238,42 @@ def wait_until_done(calc, conn, lock, ind=0):
             if pid not in connections.keys():
                 logger.info(f"Thread aborted for calculation {calc.id}")
                 return ErrorCodes.SERVER_DISCONNECTED
-            sleep(1)
+            time.sleep(1)
 
         if ind < len(DELAY) - 1:
             ind += 1
+
+
+def testing_delay_local(res):
+    """
+    Wait some extra time during some tests to simulate the job running, then return.
+    This function should be called instead of returning success directly in order to
+    allow tests to cancel the job (instead of finishing too fast).
+    """
+    wait = int(os.environ.get("CACHE_POST_WAIT", "0"))
+    for i in range(wait):
+        time.sleep(1)
+        if res.is_aborted():
+            logger.info(f"Stopping calculation after loading the cache")
+            return ErrorCodes.JOB_CANCELLED
+
+    return ErrorCodes.SUCCESS
+
+
+def testing_delay_remote(calc_id):
+    """
+    Same as `testing_delay_local`, but for remote calculations.
+    """
+    wait = int(os.environ.get("CACHE_POST_WAIT", "0"))
+    for i in range(wait):
+        if pid in kill_sig:
+            return ErrorCodes.JOB_CANCELLED
+
+            if pid not in connections.keys():
+                return ErrorCodes.SERVER_DISCONNECTED
+        time.sleep(1)
+
+    return ErrorCodes.SUCCESS
 
 
 def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
@@ -301,7 +333,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                         )
                         if isinstance(output, int):
                             ind += 1
-                            sleep(1)
+                            time.sleep(1)
                         else:
                             break
                     if not isinstance(output, ErrorCodes) and len(output) > 0:
@@ -314,6 +346,8 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                                 calc.remote_id = int(job_id)
                                 calc.save()
                                 ret = wait_until_done(calc, conn, lock)
+                                if ret == ErrorCodes.SUCCESS:
+                                    return testing_delay_remote(calc.id)
                                 return ret
                         else:
                             job_id = (
@@ -323,6 +357,8 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                             calc.remote_id = int(job_id)
                             calc.save()
                             ret = wait_until_done(calc, conn, lock)
+                            if ret == ErrorCodes.SUCCESS:
+                                return testing_delay_remote(calc.id)
                             return ret
                     else:
                         return output
@@ -335,6 +371,8 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     calc.remote_id = int(job_id)
                     calc.save()
                     ret = wait_until_done(calc, conn, lock)
+                    if ret == ErrorCodes.SUCCESS:
+                        return testing_delay_remote(calc.id)
                     return ret
                 else:
                     return ErrorCodes.FAILED_SUBMISSION
@@ -343,6 +381,10 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                 ret = wait_until_done(calc, conn, lock)
             else:
                 ret = wait_until_done(calc, conn, lock, ind=6)
+
+            if ret == ErrorCodes.SUCCESS:
+                return testing_delay_remote(calc.id)
+
             return ret
     else:  # Local
         if calc_id != -1:
@@ -358,7 +400,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
             stream = open("/dev/null", "w")
 
         if calc_id != -1 and is_test and setup_cached_calc(calc):
-            return ErrorCodes.SUCCESS
+            return testing_delay_local(res)
 
         try:
             t = subprocess.Popen(shlex.split(command), stdout=stream, stderr=stream)
@@ -374,12 +416,14 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
 
             if not poll is None:
                 if t.returncode == 0:
+                    if calc_id != -1:
+                        return testing_delay_local(res)
                     return ErrorCodes.SUCCESS
                 else:
                     logger.info(f"Got returncode {t.returncode}")
                     return ErrorCodes.UNKNOWN_TERMINATION
 
-            if calc_id != -1 and res.is_aborted() == True:
+            if calc_id != -1 and res.is_aborted():
                 logger.info(f"Stopping calculation {calc_id}")
                 signal_to_send = signal.SIGTERM
 
@@ -394,7 +438,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
 
                 return ErrorCodes.JOB_CANCELLED
 
-            sleep(1)
+            time.sleep(1)
 
 
 def files_are_equal(f, input_file):
@@ -462,7 +506,7 @@ def setup_cached_calc(calc):
 def generate_xyz_structure(drawing, structure):
     if structure.xyz_structure == "":
         if structure.mol_structure != "":
-            t = time()
+            t = time.time()
             fname = f"{t}_{structure.id}"
             if drawing:
                 with open(f"/tmp/{fname}.mol", "w") as out:
@@ -502,7 +546,7 @@ def generate_xyz_structure(drawing, structure):
                 structure.save()
                 return ErrorCodes.SUCCESS
         elif structure.sdf_structure != "":
-            t = time()
+            t = time.time()
             fname = f"{t}_{structure.id}"
 
             with open(f"/tmp/{fname}.sdf", "w") as out:
@@ -518,7 +562,7 @@ def generate_xyz_structure(drawing, structure):
             structure.save()
             return ErrorCodes.SUCCESS
         elif structure.mol2_structure != "":
-            t = time()
+            t = time.time()
             fname = f"{t}_{structure.id}"
 
             with open(f"/tmp/{fname}.mol2", "w") as out:
@@ -2716,7 +2760,7 @@ def gen_fingerprint(structure):
             a, x, y, z = line.strip().split()
             xyz.append([a, float(x), float(y), float(z)])
 
-    t = f"{time()}_{structure.id}"
+    t = f"{time.time()}_{structure.id}"
     mol = write_mol(xyz)
 
     with open(f"/tmp/{t}.mol", "w") as out:
@@ -3323,10 +3367,10 @@ def run_calc(calc_id):
             try:
                 calc = Calculation.objects.get(pk=calc_id)
             except Calculation.DoesNotExist:
-                sleep(1)
+                time.sleep(1)
             else:
                 if not is_test and calc.task_id == "" and calc.local:
-                    sleep(1)
+                    time.sleep(1)
                 else:
                     return calc
         raise Exception("Could not get calculation to run")

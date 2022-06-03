@@ -1,0 +1,6 @@
+xtb in.xyz --opt tight --input input --chrg 1
+$constrain
+force constant=1.0
+angle: 5, 2, 13, auto
+$scan
+1: 90.0, 180.0, 200
