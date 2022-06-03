@@ -573,6 +573,7 @@ class ClusterTests(CalcusLiveServer):
         self.calc_launch()
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
+        self.wait_for_ajax()
         self.assertEqual(self.get_number_unseen_calcs(), 1)
         self.see_latest_calc()
         self.assertEqual(self.get_number_unseen_calcs(), 0)

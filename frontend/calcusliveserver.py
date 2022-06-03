@@ -117,7 +117,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         m = getattr(self, self.m_name)
 
         num = 1
-        MAX_ATTEMPTS = 1
+        MAX_ATTEMPTS = 3
 
         exc = None
 

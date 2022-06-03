@@ -64,7 +64,10 @@ If you use CalcUS in your research, please cite it:
 
 **Contributor to the conception and beta-testing**: Prof. Claude Y. Legault
 
-**Contributor to the web frontend**: Glen Forcha
+**Contributors to the web frontend**: 
+
++ Glen Forcha
++ Divyam Agarwal
 
 **Beta-testers**:
 
