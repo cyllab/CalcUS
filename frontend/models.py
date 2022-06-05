@@ -823,6 +823,23 @@ class CalculationOrder(models.Model):
             return "Unknown"
 
     @property
+    def source(self):
+        if self.ensemble != None and self.ensemble.parent_molecule != None:
+            return self.ensemble.name, f"/ensemble/{self.ensemble.id}"
+        elif self.structure != None and self.structure.parent_ensemble != None:
+            return (
+                self.structure.parent_ensemble.name,
+                f"/ensemble/{self.structure.parent_ensemble.id}",
+            )
+        elif self.start_calc != None and self.start_calc.result_ensemble != None:
+            return (
+                self.start_calc.result_ensemble.name,
+                f"/ensemble/{self.start_calc.result_ensemble.id}",
+            )
+        else:
+            return "Unknown"
+
+    @property
     def status(self):
         return self._status(*self.get_all_calcs)
 

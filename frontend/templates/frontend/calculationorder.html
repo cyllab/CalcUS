@@ -11,6 +11,15 @@
 			margin-bottom: 10px;
 			display: block;
 		}
+		h5 > a {
+			text-decoration: underline;
+			color: grey;
+		}
+
+		h5 > a:hover {
+			text-decoration: underline;
+			color: black;
+		}
 	</style>
 	<script>
 		function calc_action(id, action) {
@@ -55,12 +64,11 @@
 <div class="container">
 	<div class="box">
 		<center>
-			<header class="title is-2">{{ order.ensemble.parent_molecule.name }}</header>
-			{% if order.ensemble %}
-				<h3 class="title is-h3">Calculation Order {{ order.id }} - {{ order.ensemble.name }}</h3>
-			{% else %}
-			<h3 class="title is-h3">Calculation Order {{ order.id }} - {{ order.structure.parent_ensemble.name }}</h3>
-			{% endif %}
+			<header class="title is-3">{{ order.molecule_name }}</header>
+			{% with order.source as source %}
+			<h4 class="title is-4">Calculation Order {{ order.id }} - {{ order.step.name }}</h4>
+			<h5 class="title is-5">Starting from: <a href={{ source.1 }}>{{ source.0 }}</a></h5>
+			{% endwith %}
 
 			{% if order.resource.cluster_address %}
 				Remote calculation ({{ order.resource.cluster_address }}) <br />

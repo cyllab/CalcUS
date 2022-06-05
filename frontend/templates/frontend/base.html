@@ -173,15 +173,12 @@
 			</div>
 			<div id="calcusnavbar" class="navbar-menu" >
 				<div class="navbar-start">
-					<a class="navbar-item" href="/home/">
-						Home
-					</a>
 					<a class="navbar-item" href="/projects/">
 						Projects
 					</a>
 
 					<a class="navbar-item" href="/launch/">
-						New Molecule
+						Launch
 					</a>
 					<a class="navbar-item" href="/calculations/">
 						Calculations					
@@ -190,13 +187,17 @@
 						{% endif %}
 					</a>
 
-					<a class="navbar-item" href="https://calcus.readthedocs.io/en/latest/index.html" target="_blank" rel="noopener noreferrer">
-						Documentation
-					</a>
+					<div class="navbar-item has-dropdown is-hoverable">
+						<a class="navbar-link">Learn</a>
+						<div class="navbar-dropdown">
+							<a class="navbar-item" href="https://calcus.readthedocs.io/en/latest/index.html" target="_blank" rel="noopener noreferrer">
+								Documentation
+							</a>
 
-					<a class="navbar-item" href="/learn/">
-						Learn
-					</a>
+							<a class="navbar-item" href="/learn/">Examples</a>
+						</div>
+					</div>
+
 
 					{% if user.profile.group != None %}
 					<div class="navbar-item has-dropdown is-hoverable">
@@ -234,7 +235,7 @@
 					<div class="navbar-item">
 						<div class="buttons">
 						{% if user.is_authenticated %}
-							Welcome <a href="{% url 'frontend:profile' %}"> &nbsp;<strong>{{ user.get_username }}</strong></a>
+							<a href="{% url 'frontend:profile' %}"> &nbsp;<strong>My Profile</strong></a>
 							&nbsp;&nbsp;&nbsp;&nbsp;
 							<a href="{% url 'logout'%}?next={{request.path}}">Logout <i class="fas fa-sign-out-alt"></i></a>
 						{% else %}
