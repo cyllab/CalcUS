@@ -166,7 +166,7 @@
 			}
 		}
 		$(document).ready(function() { 
-			{% for project in projects %}
+			{% for project in projects|dictsort:"name" %}
 			add_project({{ project.id }}, "{{ project.name }}", "{{ project.author.username }}", {% if request.user.profile == project.author %} true {% else %} false {% endif %}, {% if project.private %} true {% else %} false {% endif %}, {{ project.molecule_set.count }});
 			{% endfor %}
 		});
