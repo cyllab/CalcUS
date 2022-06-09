@@ -144,6 +144,11 @@
 
 		function verify_form() {
 			$("#submit_button").addClass("is-loading");
+			
+			//Adding the selected Project to localStorage on pressing Submit Button
+			choice = document.getElementById("calc_project");
+			localStorage.setItem("lastSelectedProject", choice.value);
+
 			data = $("#calcform").serializeArray(),
 
 			data.push({"name": "constraint_num", "value": constraint_num});
@@ -334,12 +339,26 @@
 				field.style.display = "none";	
 				if(project_presets[choice.value] != -1) {
 					load_preset(project_presets[choice.value]);
+					preselect_last_project()
 				}
 				type = document.getElementById("calc_type");
 				if(type.value == "Minimum Energy Path") {
 					refresh_aux_mol();
 				}
 
+			}
+		}
+
+		function preselect_last_project() {
+			choice = document.getElementById("calc_project");
+			for(var i=0;i<choice.options.length;i++)
+			{
+				option = choice.options[i];
+				if(option.text == localStorage.getItem("lastSelectedProject") && option.text != "New Project")
+				{
+					option.setAttribute('selected', true);
+					return;
+				}
 			}
 		}
 
