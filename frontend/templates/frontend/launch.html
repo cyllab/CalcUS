@@ -329,8 +329,7 @@
 			refresh_availabilities();
 		}
 
-		function project_selection_changed() {
-			choice = document.getElementById("calc_project");
+		function project_selection_changed(choice) {
 			field = document.getElementById("new_project_name_field");
 			if(choice.value == "New Project") {
 				field.style.display = "block";
@@ -339,7 +338,6 @@
 				field.style.display = "none";	
 				if(project_presets[choice.value] != -1) {
 					load_preset(project_presets[choice.value]);
-					preselect_last_project()
 				}
 				type = document.getElementById("calc_type");
 				if(type.value == "Minimum Energy Path") {
@@ -357,6 +355,7 @@
 				if(option.text == localStorage.getItem("lastSelectedProject") && option.text != "New Project")
 				{
 					option.setAttribute('selected', true);
+					project_selection_changed(option);
 					return;
 				}
 			}
@@ -1017,7 +1016,7 @@
 							<label class="label">Project</label>
 							<div class="control">
 								<div class="select" >
-								  <select name="calc_project" onchange="project_selection_changed()" id="calc_project">
+								  <select name="calc_project" onchange="project_selection_changed(this)" id="calc_project">
 									  {% for proj in profile.project_set.all|dictsort:"name" %}
 									  <option name="{{ proj }}">{{ proj }}</option>
 									  {% endfor %}
@@ -1341,7 +1340,8 @@
 
 	$( document ).ready(function() {
 		{% if not ensemble and not structure %}
-		project_selection_changed();
+		preselect_last_project();
+		project_selection_changed(document.getElementById("calc_project"));
 		{% endif %}
 
 		refresh_presets();
