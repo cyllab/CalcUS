@@ -339,7 +339,6 @@
 				field.style.display = "none";	
 				if(project_presets[choice.value] != -1) {
 					load_preset(project_presets[choice.value]);
-					preselect_last_project()
 				}
 				type = document.getElementById("calc_type");
 				if(type.value == "Minimum Energy Path") {
@@ -348,18 +347,24 @@
 
 			}
 		}
-
-		function preselect_last_project() {
-			choice = document.getElementById("calc_project");
-			for(var i=0;i<choice.options.length;i++)
-			{
-				option = choice.options[i];
-				if(option.text == localStorage.getItem("lastSelectedProject") && option.text != "New Project")
+		
+		function project_selection() {
+			var option;
+			{% for proj in profile.project_set.all|dictsort:"name" %}
+				option = document.createElement("option")
+				option.setAttribute("name", "{{ proj.name }}")
+				if("{{ proj.name }}" == localStorage.getItem("lastSelectedProject"))
 				{
-					option.setAttribute('selected', true);
-					return;
+					console.log("Selected")
+					option.selected = true;
 				}
-			}
+				option.innerHTML = "{{ proj.name }}"
+				document.getElementById("calc_project").appendChild(option)
+			{% endfor %}
+				option = document.createElement("option")
+				option.setAttribute("name", "new_project")
+				option.innerHTML =  "New Project"
+				document.getElementById("calc_project").appendChild(option)
 		}
 
 		function refresh_availabilities() {
@@ -1017,12 +1022,8 @@
 							<label class="label">Project</label>
 							<div class="control">
 								<div class="select" >
-								  <select name="calc_project" onchange="project_selection_changed()" id="calc_project">
-									  {% for proj in profile.project_set.all|dictsort:"name" %}
-									  <option name="{{ proj }}">{{ proj }}</option>
-									  {% endfor %}
-									  <option name="new_project">New Project</option>
-								  </select>
+									<select name="calc_project" onchange="project_selection_changed()" id="calc_project">
+									</select>
 								</div>
 							</div>
 						</div>
@@ -1341,6 +1342,7 @@
 
 	$( document ).ready(function() {
 		{% if not ensemble and not structure %}
+		project_selection();
 		project_selection_changed();
 		{% endif %}
 
