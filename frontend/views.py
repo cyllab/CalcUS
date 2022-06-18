@@ -917,6 +917,8 @@ def learn(request):
         request, "frontend/learn.html", {"examples": examples, "recipes": recipes}
     )
 
+def flowchart(request):
+    return render(request, "frontend/flowchart.html")
 
 def example(request, pk):
     try:

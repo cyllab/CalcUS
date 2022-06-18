@@ -1,0 +1,127 @@
+{% extends 'frontend/base.html' %}
+
+{% load static %}
+
+{% block extrahead %}
+	<title>CalcUS - Flowchart</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/alyssaxuu/flowy/flowy.min.css"> 
+    <script src="https://cdn.jsdelivr.net/gh/alyssaxuu/flowy/flowy.min.js"></script>
+	<style>
+		.title {
+			margin-top: 50px;
+			margin-bottom: 20px;
+		}
+
+		h1 {
+			text-align: center;
+		}
+
+		.content {
+			
+		}
+        
+        .create-flowy {
+            outline: 2px solid black;
+            margin: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .block {
+            outline: 2px solid black;
+            margin: 5px;
+            padding: 3px;
+            cursor: pointer;
+        }
+
+        .no-select {
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
+        }
+
+        .footer {
+            display: none;
+        }
+
+        .flowy-button {
+            margin: 5px;
+        }
+	</style>
+{% endblock %}
+
+{% block content %}
+<div class="content" >
+    <div class="no-select" style="width:10%;float:left;">
+        <div class="create-flowy">Input</div>
+        <div class="create-flowy">Calculation 1</div>
+        <div class="create-flowy">Calculation 2</div>
+        <div class="create-flowy">Calculation 3</div>
+        <div class="create-flowy">Calculation 4</div>
+        <div class="create-flowy">Calculation 5</div>
+        <div class="create-flowy">Calculation 6</div>
+    </div>
+    <div style="width:80%;float:left;">
+        <div id="canvas"></div>
+    </div> 
+    <div style="width:10%;float:right">
+        <button class="button flowy-button" onclick="flowy.deleteBlocks()">Delete All</button>
+        <button class="button flowy-button" onclick="flowchartOutput()">Output</button>
+        <button class="button flowy-button" onclick="flowchartInput()">Input</button>
+        <button class="button flowy-button" onclick="Submit()">Submit</button>
+    </div> 
+</div>
+<script>
+    var spacing_x = 40;
+    var spacing_y = 100;
+    var flowyOut;
+
+    // Initialize Flowy
+    flowy(document.getElementById("canvas"), onGrab, onRelease, onSnap, onRearrange, spacing_x, spacing_y);
+    function onGrab(block){
+        // When the user grabs a block
+        console.log("Grabbed")
+    }
+
+    function onRelease(){
+        // When the user releases a block
+        console.log("Released")
+    }
+
+    function onSnap(block, first, parent){
+        // When a block snaps with another one
+        console.log("Snapped")
+        return true;
+    }
+
+    function onRearrange(block, parent){
+        // When a block is rearranged
+        console.log("Rearranged")
+        return false;
+    }
+
+    function flowchartOutput() {
+        console.log("Output")
+        console.log(JSON.stringify(flowy.output()));
+        flowyOut = flowy.output();
+        var htmlContent = JSON.stringify(flowy.output());
+        var bl = new Blob([htmlContent], {type: "text/json"});
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(bl);
+        a.download = "flowchart.json";
+        a.hidden = true;
+        document.body.appendChild(a);
+        a.innerHTML = "File Link";
+        a.click();
+    }
+
+    function flowchartInput() {
+        flowy.import(flowyOut);
+    }
+
+    function Submit() {
+        console.log("Submitted")
+    }
+</script>
+{% endblock %}
+
