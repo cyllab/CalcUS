@@ -256,7 +256,7 @@ class ClusterDaemon:
         access.save()
 
         logger.info(f"Disconnected cluster access {access_id}")
-        # close_old_connections()
+        close_old_connections()
 
     def resume_calc(self, c, attempt_count=1):
 
@@ -282,7 +282,7 @@ class ClusterDaemon:
         except KeyError:  # already deleted when disconnnected from cluster
             pass
 
-        # close_old_connections()
+        close_old_connections()
 
     def process_command(self, body):
         lines = body.decode("UTF-8").split("&")
