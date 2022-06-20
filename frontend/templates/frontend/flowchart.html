@@ -32,6 +32,9 @@
             margin: 5px;
             padding: 3px;
             cursor: pointer;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
         }
 
         .no-select {
@@ -53,7 +56,6 @@
 {% block content %}
 <div class="content" >
     <div class="no-select" style="width:10%;float:left;">
-        <div class="create-flowy">Input</div>
         <div class="create-flowy">Calculation 1</div>
         <div class="create-flowy">Calculation 2</div>
         <div class="create-flowy">Calculation 3</div>
@@ -62,7 +64,13 @@
         <div class="create-flowy">Calculation 6</div>
     </div>
     <div style="width:80%;float:left;">
-        <div id="canvas"></div>
+        <div id="canvas">
+            {% comment %} <div class="block" style="left: 658.844px; top: 80px;">Input
+                <input type="hidden" name="blockid" class="blockid" value="0">
+                <div class="indicator invisible" style="left: 17.5px; top: 30px;">
+                </div>
+            </div>  {% endcomment %}
+        </div>
     </div> 
     <div style="width:10%;float:right">
         <button class="button flowy-button" onclick="flowy.deleteBlocks()">Delete All</button>
