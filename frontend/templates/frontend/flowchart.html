@@ -20,6 +20,10 @@
 			
 		}
         
+        .blockelem:first-child {
+            margin-top: 20px;
+        }
+        
         .blockelem {
             cursor: pointer;
             text-align: center;
@@ -34,6 +38,7 @@
         }
 
         .block {
+            margin-top: 0px!important;
             white-space: nowrap;
             cursor: pointer;
             -webkit-user-select: none; /* Safari */
@@ -54,6 +59,17 @@
         .flowy-button {
             margin: 5px;
         }
+
+        #canvas {
+            position: absolute;
+            width: calc(100% - 30%);
+            height: calc(100% - 71px);
+            top: 71px;
+            left: 15%;
+            z-index: 0;
+            overflow: auto;
+            outline: 2px solid black;
+        }
 	</style>
 {% endblock %}
 
@@ -67,16 +83,15 @@
         <div class="create-flowy blockelem">Calculation 5</div>
         <div class="create-flowy blockelem">Calculation 6</div>
     </div>
-    <div style="margin:10px">
-        <div style="width:80%;height:400px;float:left;outline: 2px solid black;" id="canvas">
-        </div>
-    </div> 
     <div style="width:10%;float:right">
         <button class="button flowy-button" onclick="deleteAllBlocks()">Delete All</button>
         <button class="button flowy-button" onclick="flowchartOutput()">Output</button>
         <button class="button flowy-button" onclick="flowchartInput()">Input</button>
         <button class="button flowy-button" onclick="Submit()">Submit</button>
-    </div> 
+    </div>
+    <div id="canvas">
+
+    </div>
 </div>
 <script>
     var spacing_x = 40;
@@ -116,7 +131,7 @@
 
     function flowchartOutput() {
         console.log("Output")
-        console.log(JSON.stringify(flowy.output()));
+        console.log(flowy.output());
         flowyOut = flowy.output();
         var htmlContent = JSON.stringify(flowy.output());
         var bl = new Blob([htmlContent], {type: "text/json"});
@@ -139,14 +154,14 @@
     
     function hardCodedInput() { 
         var hardCodedObject = {
-            "html": "\n        <div class=\"indicator invisible\"></div><div class=\"blockelem block\" style=\"left: 612.844px; top: 95px;\">Input<input type=\"hidden\" name=\"blockid\" class=\"blockid\" value=\"0\"></div>",
+            "html": "\n\n    <div class=\"indicator invisible\"></div><div class=\"blockelem block\" style=\"left: 431.297px; top: 9px;\">Input<input type=\"hidden\" name=\"blockid\" class=\"blockid\" value=\"0\"></div>",
             "blockarr": [
                 {
                     "parent": -1,
                     "childwidth": 0,
                     "id": 0,
-                    "x": 454.078125,
-                    "y": 31,
+                    "x": 451.296875,
+                    "y": 27,
                     "width": 40,
                     "height": 36
                 }
@@ -166,12 +181,13 @@
                             "class": "blockelem block"
                         },
                         {
-                            "style": "left: 612.844px; top: 95px;"
+                            "style": "left: 431.297px; top: 9px;"
                         }
                     ]
                 }
             ]
         }
+            
         console.log(hardCodedObject);
         flowy.import(hardCodedObject);
     }
