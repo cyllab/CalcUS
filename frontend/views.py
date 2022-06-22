@@ -707,8 +707,14 @@ def get_shifts(request):
             <td>{}</td>
     </tr>"""
 
+    def sort_nmr_shifts(l):
+        pred = shifts[l][2]
+        if pred == "-":
+            return -1
+        return float(pred)
+
     response = ""
-    for shift in sorted(shifts.keys(), key=lambda l: shifts[l][2], reverse=True):
+    for shift in sorted(shifts.keys(), key=sort_nmr_shifts, reverse=True):
         response += CELL.format(shift, *shifts[shift])
 
     return HttpResponse(response)
