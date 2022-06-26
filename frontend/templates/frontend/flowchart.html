@@ -4,6 +4,8 @@
 
 {% block extrahead %}
 	<title>CalcUS - Flowchart</title>
+	<script src="{% static 'frontend/jquery.min.js' %}"></script>
+	<script src="{% static 'frontend/jquery.toc.min.js' %}"></script>
     <script src="https://kit.fontawesome.com/8bfdbc9f0e.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/alyssaxuu/flowy/flowy.min.css"> 
     <script src="https://cdn.jsdelivr.net/gh/alyssaxuu/flowy/flowy.min.js"></script>
@@ -83,28 +85,34 @@
 <div class="content" >
     <div class="no-select" style="width:15%;float:left;">
         <div>
-            <div style="display:inline-block" class="create-flowy blockelem">Calculation 1</div>
-            <i style="cursor: pointer;" class="js-modal-trigger fa-solid fa-wrench" data-target="modal-js-example"></i>
+            <div style="display:inline-block" class="create-flowy blockelem">Calculation 1
+				<i onclick="openParaModal()" style="cursor: pointer;margin-left:5px;" class="fa-solid fa-wrench"></i>
+			</div>
         </div>
         <div>
-            <div style="display:inline-block" class="create-flowy blockelem">Calculation 2</div>
-            <i style="cursor: pointer;" class="js-modal-trigger fa-solid fa-wrench" data-target="modal-js-example"></i>
+            <div style="display:inline-block" class="create-flowy blockelem">Calculation 2
+				<i onclick="openParaModal()" style="cursor: pointer;margin-left:5px;" class="fa-solid fa-wrench"></i>
+			</div>
         </div>
-        <div>
-            <div style="display:inline-block" class="create-flowy blockelem">Calculation 3</div>
-            <i style="cursor: pointer;" class="js-modal-trigger fa-solid fa-wrench" data-target="modal-js-example"></i>
+		<div>
+            <div style="display:inline-block" class="create-flowy blockelem">Calculation 3
+				<i onclick="openParaModal()" style="cursor: pointer;margin-left:5px;" class="fa-solid fa-wrench"></i>
+			</div>
         </div>
-        <div>
-            <div style="display:inline-block" class="create-flowy blockelem">Calculation 4</div>
-            <i style="cursor: pointer;" class="js-modal-trigger fa-solid fa-wrench" data-target="modal-js-example"></i>
+		<div>
+            <div style="display:inline-block" class="create-flowy blockelem">Calculation 4
+				<i onclick="openParaModal()" style="cursor: pointer;margin-left:5px;" class="fa-solid fa-wrench"></i>
+			</div>
         </div>
-        <div>
-            <div style="display:inline-block" class="create-flowy blockelem">Calculation 5</div>
-            <i style="cursor: pointer;" class="js-modal-trigger fa-solid fa-wrench" data-target="modal-js-example"></i>
+		<div>
+            <div style="display:inline-block" class="create-flowy blockelem">Calculation 5
+				<i onclick="openParaModal()" style="cursor: pointer;margin-left:5px;" class="fa-solid fa-wrench"></i>
+			</div>
         </div>
-        <div>
-            <div style="display:inline-block" class="create-flowy blockelem">Calculation 6</div>
-            <i style="cursor: pointer;" class="js-modal-trigger fa-solid fa-wrench" data-target="modal-js-example"></i>
+		<div>
+            <div style="display:inline-block" class="create-flowy blockelem">Calculation 6
+				<i onclick="openParaModal()" style="cursor: pointer;margin-left:5px;" class="fa-solid fa-wrench"></i>
+			</div>
         </div>
     </div>
     <div style="width:10%;float:right">
@@ -117,7 +125,7 @@
 
     </div>
 </div>
-<div class="modal" id="modal-js-example">
+<div class="modal modal-para" id="modal-js-example">
     <div class="modal-background"></div>
     <div class="modal-card">
       <header class="modal-card-head">
@@ -574,7 +582,7 @@
     </div>
 </div>
 <script>
-    var spacing_x = 40;
+	var spacing_x = 40;
     var spacing_y = 100;
     var flowyOut;
     document.addEventListener("DOMContentLoaded", function(){
@@ -595,7 +603,7 @@
     function onSnap(block, first, parent){
         // When a block snaps with another one
         console.log("Snapped")
-        return true;
+		return true;
     }
 
     function onRearrange(block, parent){
@@ -630,6 +638,11 @@
 
     function Submit() {
         console.log("Submitted")
+    }
+
+	function openParaModal() {
+        console.log("Clicked")
+		$(".modal-para").addClass("is-active");
     }
     
     function hardCodedInput() { 
@@ -671,6 +684,21 @@
         console.log(hardCodedObject);
         flowy.import(hardCodedObject);
     }
+
+	document.querySelector('input').addEventListener('change', function() {
+		if (this.files && this.files[0]) {
+		  var reader = new FileReader();
+		  reader.onload = function(e) {
+			console.log("Input function")
+			console.log(typeof reader.result)
+			annotationsObject = JSON.parse(reader.result);
+			console.log(annotationsObject)
+			importedFlowchart = annotationsObject;
+			console.log(typeof annotationsObject)
+		  };
+		  reader.readAsText(this.files[0])
+		}
+	});
 
     document.addEventListener('DOMContentLoaded', () => {
         // Functions to open and close a modal
