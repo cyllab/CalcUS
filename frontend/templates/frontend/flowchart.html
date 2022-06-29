@@ -6,9 +6,9 @@
 	<title>CalcUS - Flowchart</title>
 	<script src="{% static 'frontend/jquery.min.js' %}"></script>
 	<script src="{% static 'frontend/jquery.toc.min.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'frontend/flowy.min.css' %}" type="text/css">
+	<script src="{% static 'frontend/flowy.min.js' %}"></script>
     <script src="https://kit.fontawesome.com/8bfdbc9f0e.js" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/alyssaxuu/flowy/flowy.min.css"> 
-    <script src="https://cdn.jsdelivr.net/gh/alyssaxuu/flowy/flowy.min.js"></script>
 	<style>
 		.title {
 			margin-top: 50px;
@@ -118,8 +118,24 @@
     <div style="width:10%;float:right">
         <button class="button flowy-button" onclick="deleteAllBlocks()">Delete All</button>
         <button class="button flowy-button" onclick="flowchartOutput()">Output</button>
-        <button class="button flowy-button" onclick="flowchartInput()">Input</button>
-        <button class="button flowy-button" onclick="Submit()">Submit</button>
+		<button class="button flowy-button" onclick="Submit()">Submit</button>
+		<label class="label">Import a flowchart</label>
+		<div class="file is-small is-boxed has-name">
+			<label class="file-label">
+			  <input id="importJsonFile" class="file-input" type="file" name="resume">
+			  <span class="file-cta">
+				<span class="file-icon">
+				  <i class="fas fa-upload"></i>
+				</span>
+				<span class="file-label">
+				  File Upload
+				</span>
+			  </span>
+			  <span id="importedFlowchartName" class="file-name">
+				No file chosen
+			  </span>
+			</label>
+		</div>
     </div>
     <div id="canvas">
 
@@ -681,22 +697,21 @@
             ]
         }
             
-        console.log(hardCodedObject);
+        //console.log(hardCodedObject);
         flowy.import(hardCodedObject);
     }
 
-	document.querySelector('input').addEventListener('change', function() {
+	document.querySelector('#importJsonFile').addEventListener('change', function() {
 		if (this.files && this.files[0]) {
-		  var reader = new FileReader();
-		  reader.onload = function(e) {
-			console.log("Input function")
-			console.log(typeof reader.result)
-			annotationsObject = JSON.parse(reader.result);
-			console.log(annotationsObject)
-			importedFlowchart = annotationsObject;
-			console.log(typeof annotationsObject)
-		  };
-		  reader.readAsText(this.files[0])
+			var reader = new FileReader();
+		  	reader.onload = function(e) {
+				annotationsObject = JSON.parse(reader.result);
+				flowy.deleteBlocks();
+				flowy.import(annotationsObject)
+				document.getElementById("importedFlowchartName").textContent = document.getElementById("importJsonFile").files[0].name;
+				importedFlowchart = annotationsObject;
+		  	};
+		  	reader.readAsText(this.files[0])
 		}
 	});
 
