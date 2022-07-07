@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from django.db import models, transaction
 from django.db.models.signals import pre_save
+from django.forms import JSONField
 from django.utils import timezone
 from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save, post_init
@@ -134,6 +135,17 @@ class PIRequest(models.Model):
     group_name = models.CharField(max_length=100)
     date_issued = models.DateTimeField("date")
 
+
+class Flowchart(models.Model):
+    name = models.CharField(max_length=100)
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    flowchart = models.JSONField(null=True)
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
 
 class Project(models.Model):
     name = models.CharField(max_length=100)

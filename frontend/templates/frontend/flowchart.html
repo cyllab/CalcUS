@@ -654,6 +654,19 @@
 
     function Submit() {
         console.log("Submitted")
+		name = "Flowchart 2"
+		flowchart_data = JSON.stringify(flowy.output());
+		$.ajax({
+			method: "POST",	 	 
+			url: "/create_flowchart/",
+			headers: {
+				"X-CSRFToken": '{{ csrf_token }}',
+			},
+			data: {'flowchart_name': name, 'flowchart_data': flowchart_data},
+			success: function() {
+				console.log("Success")	
+			}
+		});
     }
 
 	function openParaModal() {

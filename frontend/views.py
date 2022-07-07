@@ -70,6 +70,7 @@ from .models import (
     Recipe,
     Folder,
     CalculationFrame,
+    Flowchart,
 )
 from .tasks import (
     dispatcher,
@@ -413,6 +414,18 @@ def create_project(request):
     else:
         return HttpResponse(status=404)
 
+@login_required
+def create_flowchart(request):
+    if request.method == "POST":
+        profile = request.user.profile
+        if "flowchart_name" in request.POST.keys():
+            flowchart_name = clean(request.POST["flowchart_name"])
+        if "flowchart_data" in request.POST.keys():
+            flowchart_dat = clean(request.POST["flowchart_data"])
+        flowchart_view = Flowchart.objects.create(name=flowchart_name, author=profile, flowchart=flowchart_dat)
+        flowchart_view.save()
+
+        return HttpResponse(status=200)   
 
 @login_required
 def create_folder(request):
