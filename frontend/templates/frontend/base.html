@@ -200,7 +200,7 @@
 
 
 					{% if user.profile.group != None %}
-					<div class="navbar-item has-dropdown is-hoverable">
+					<div class="navbar-item has-dropdown is-hoverable" id="navbar_group">
 						<a class="navbar-link">Research Group</a>
 						<div class="navbar-dropdown">
 							<a class="navbar-item" href="/projects/{{ user.profile.group.PI.username }}">{{ user.profile.group.PI.username }}</a>
@@ -211,7 +211,7 @@
 					</div>
 					{% endif %}
 					{% if user.profile.clusteraccess_owner.count > 0 %}
-					<div class="navbar-item has-dropdown is-hoverable">
+					<div class="navbar-item has-dropdown is-hoverable" id="navbar_accesses">
 						<a class="navbar-link">Cluster Accesses</a>
 						<div class="navbar-dropdown">
 							{% for a in user.profile.clusteraccess_owner.all %}

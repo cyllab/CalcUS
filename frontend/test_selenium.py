@@ -853,12 +853,12 @@ class InterfaceTests(CalcusLiveServer):
 
         self.load_preset("Test Preset")
 
-        solvent = self.driver.find_element_by_name("calc_solvent")
-        theory = Select(self.driver.find_element_by_id("calc_theory_level"))
-        func = self.driver.find_element_by_id("calc_functional")
-        basis_set = self.driver.find_element_by_id("calc_basis_set")
-        specifications = self.driver.find_element_by_id("calc_specifications")
-        software = self.driver.find_element_by_id("calc_software")
+        solvent = self.driver.find_element(By.NAME, "calc_solvent")
+        theory = Select(self.driver.find_element(By.ID, "calc_theory_level"))
+        func = self.driver.find_element(By.ID, "calc_functional")
+        basis_set = self.driver.find_element(By.ID, "calc_basis_set")
+        specifications = self.driver.find_element(By.ID, "calc_specifications")
+        software = self.driver.find_element(By.ID, "calc_software")
 
         self.assertEqual(solvent.get_attribute("value"), params["solvent"])
         self.assertEqual(theory.first_selected_option.text, params["theory"])
@@ -893,18 +893,18 @@ class InterfaceTests(CalcusLiveServer):
         self.click_project("My Project")
         self.create_molecule_in_project()
 
-        solvent = self.driver.find_element_by_name("calc_solvent")
+        solvent = self.driver.find_element(By.NAME, "calc_solvent")
         solvation_model = Select(
-            self.driver.find_element_by_name("calc_solvation_model")
+            self.driver.find_element(By.NAME, "calc_solvation_model")
         )
         solvation_radii = Select(
-            self.driver.find_element_by_name("calc_solvation_radii")
+            self.driver.find_element(By.NAME, "calc_solvation_radii")
         )
-        theory = Select(self.driver.find_element_by_id("calc_theory_level"))
-        func = self.driver.find_element_by_id("calc_functional")
-        basis_set = self.driver.find_element_by_id("calc_basis_set")
-        software = self.driver.find_element_by_id("calc_software")
-        specifications = self.driver.find_element_by_id("calc_specifications")
+        theory = Select(self.driver.find_element(By.ID, "calc_theory_level"))
+        func = self.driver.find_element(By.ID, "calc_functional")
+        basis_set = self.driver.find_element(By.ID, "calc_basis_set")
+        software = self.driver.find_element(By.ID, "calc_software")
+        specifications = self.driver.find_element(By.ID, "calc_specifications")
 
         self.assertEqual(solvent.get_attribute("value"), params["solvent"])
         self.assertEqual(
@@ -1549,7 +1549,7 @@ class UserPermissionsTests(CalcusLiveServer):
         self.lget("/profile/")
         self.apply_PI("Test group")
         self.assertTrue(
-            self.driver.find_element_by_id("PI_application_message").text.find(
+            self.driver.find_element(By.ID, "PI_application_message").text.find(
                 "Your request has been received"
             )
             != -1
@@ -1993,7 +1993,7 @@ class XtbCalculationTests(CalcusLiveServer):
         }
         self.calc_input_params(params2)
 
-        charge = self.driver.find_element_by_name("calc_charge")
+        charge = self.driver.find_element(By.NAME, "calc_charge")
         self.assertEqual(charge.get_attribute("value"), params["charge"])
 
         self.calc_launch()
@@ -2027,7 +2027,7 @@ class XtbCalculationTests(CalcusLiveServer):
         }
         self.calc_input_params(params2)
 
-        mult = self.driver.find_element_by_name("calc_multiplicity")
+        mult = self.driver.find_element(By.NAME, "calc_multiplicity")
         self.assertEqual(mult.get_attribute("value"), params["multiplicity"])
 
     def test_structure_second_step(self):
@@ -2054,7 +2054,7 @@ class XtbCalculationTests(CalcusLiveServer):
             # project and charge implicit
         }
 
-        charge = self.driver.find_element_by_name("calc_charge")
+        charge = self.driver.find_element(By.NAME, "calc_charge")
         self.assertEqual(charge.get_attribute("value"), params["charge"])
 
         self.calc_input_params(params2)
@@ -2277,12 +2277,12 @@ class XtbCalculationTests(CalcusLiveServer):
 
         self.launch_ensemble_next_step()
 
-        solvent = self.driver.find_element_by_name("calc_solvent")
-        charge = self.driver.find_element_by_name("calc_charge")
+        solvent = self.driver.find_element(By.NAME, "calc_solvent")
+        charge = self.driver.find_element(By.NAME, "calc_charge")
         solvation_model = Select(
-            self.driver.find_element_by_name("calc_solvation_model")
+            self.driver.find_element(By.NAME, "calc_solvation_model")
         )
-        software = self.driver.find_element_by_id("calc_software")
+        software = self.driver.find_element(By.ID, "calc_software")
 
         self.assertEqual(solvent.get_attribute("value"), params["solvent"])
         self.assertEqual(charge.get_attribute("value"), params["charge"])
@@ -2314,12 +2314,12 @@ class XtbCalculationTests(CalcusLiveServer):
 
         self.launch_structure_next_step()
 
-        solvent = self.driver.find_element_by_name("calc_solvent")
-        charge = self.driver.find_element_by_name("calc_charge")
+        solvent = self.driver.find_element(By.NAME, "calc_solvent")
+        charge = self.driver.find_element(By.NAME, "calc_charge")
         solvation_model = Select(
-            self.driver.find_element_by_name("calc_solvation_model")
+            self.driver.find_element(By.NAME, "calc_solvation_model")
         )
-        software = self.driver.find_element_by_id("calc_software")
+        software = self.driver.find_element(By.ID, "calc_software")
 
         self.assertEqual(solvent.get_attribute("value"), params["solvent"])
         self.assertEqual(charge.get_attribute("value"), params["charge"])
@@ -2351,12 +2351,12 @@ class XtbCalculationTests(CalcusLiveServer):
         self.details_first_calc()
         self.launch_frame_next_step()
 
-        solvent = self.driver.find_element_by_name("calc_solvent")
-        charge = self.driver.find_element_by_name("calc_charge")
+        solvent = self.driver.find_element(By.NAME, "calc_solvent")
+        charge = self.driver.find_element(By.NAME, "calc_charge")
         solvation_model = Select(
-            self.driver.find_element_by_name("calc_solvation_model")
+            self.driver.find_element(By.NAME, "calc_solvation_model")
         )
-        software = self.driver.find_element_by_id("calc_software")
+        software = self.driver.find_element(By.ID, "calc_software")
 
         self.assertEqual(solvent.get_attribute("value"), params["solvent"])
         self.assertEqual(charge.get_attribute("value"), params["charge"])
@@ -4058,7 +4058,7 @@ class MiscCalculationTests(CalcusLiveServer):
         self.details_latest_order()
         self.details_first_calc()
 
-        input_file = self.driver.find_element_by_css_selector(".textarea")
+        input_file = self.driver.find_element(By.CSS_SELECTOR, ".textarea")
         assert len(input_file.text) > 10
 
     def test_sp_from_frame(self):

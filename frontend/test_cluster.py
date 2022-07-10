@@ -95,15 +95,16 @@ class ClusterTests(CalcusLiveServer):
 
     def test_setup(self):
         self.setup_cluster()
-        msg = self.driver.find_element_by_id("test_msg").text
+        msg = self.driver.find_element(By.ID, "test_msg").text
         self.assertEqual(msg, "Connected")
 
     def setup_cluster(self):
         self.lget("/profile")
 
         try:
-            access = self.driver.find_element_by_css_selector(
-                "#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a"
+            access = self.driver.find_element(
+                By.CSS_SELECTOR,
+                "#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a",
             )
         except selenium.common.exceptions.NoSuchElementException:
             pass
@@ -134,7 +135,7 @@ class ClusterTests(CalcusLiveServer):
         while not main_window_handle:
             main_window_handle = self.driver.current_window_handle
 
-        delete_access = self.driver.find_element_by_id("delete_access_button")
+        delete_access = self.driver.find_element(By.ID, "delete_access_button")
         delete_access.click()
 
         alert = Alert(self.driver)
@@ -151,25 +152,25 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_settings(self):
         self.lget("/profile")
 
-        adress = self.driver.find_element_by_name("cluster_address")
+        adress = self.driver.find_element(By.NAME, "cluster_address")
         adress.send_keys("localhost")
 
-        username = self.driver.find_element_by_name("cluster_username")
+        username = self.driver.find_element(By.NAME, "cluster_username")
         username.send_keys("cluster")
 
-        pal = self.driver.find_element_by_name("cluster_cores")
+        pal = self.driver.find_element(By.NAME, "cluster_cores")
         pal.clear()
         pal.send_keys("8")
 
-        memory = self.driver.find_element_by_name("cluster_memory")
+        memory = self.driver.find_element(By.NAME, "cluster_memory")
         memory.clear()
         memory.send_keys("10000")
 
-        password = self.driver.find_element_by_name("cluster_password")
+        password = self.driver.find_element(By.NAME, "cluster_password")
         password.clear()
         password.send_keys("Selenium")
 
-        self.driver.find_element_by_id("add_access_button").click()
+        self.driver.find_element(By.ID, "add_access_button").click()
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "public_key_area"))
         )
@@ -184,25 +185,25 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_settings2(self):
         self.lget("/profile")
 
-        adress = self.driver.find_element_by_name("cluster_address")
+        adress = self.driver.find_element(By.NAME, "cluster_address")
         adress.send_keys("localhost")
 
-        username = self.driver.find_element_by_name("cluster_username")
+        username = self.driver.find_element(By.NAME, "cluster_username")
         username.send_keys("cluster")
 
-        pal = self.driver.find_element_by_name("cluster_cores")
+        pal = self.driver.find_element(By.NAME, "cluster_cores")
         pal.clear()
         pal.send_keys("24")
 
-        memory = self.driver.find_element_by_name("cluster_memory")
+        memory = self.driver.find_element(By.NAME, "cluster_memory")
         memory.clear()
         memory.send_keys("31000")
 
-        password = self.driver.find_element_by_name("cluster_password")
+        password = self.driver.find_element(By.NAME, "cluster_password")
         password.clear()
         password.send_keys("Selenium")
 
-        self.driver.find_element_by_id("add_access_button").click()
+        self.driver.find_element(By.ID, "add_access_button").click()
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "public_key_area"))
         )
@@ -216,12 +217,13 @@ class ClusterTests(CalcusLiveServer):
 
     def test_connection_gui(self):
         self.setup_cluster()
-        msg = self.driver.find_element_by_id("test_msg").text
+        msg = self.driver.find_element(By.ID, "test_msg").text
         self.assertEqual(msg, "Connected")
 
         self.lget("/profile/")
-        manage = self.driver.find_element_by_css_selector(
-            "#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a"
+        manage = self.driver.find_element(
+            By.CSS_SELECTOR,
+            "#owned_accesses > center > table > tbody > tr > th:nth-child(3) > a",
         )
         manage.send_keys(Keys.RETURN)
 
@@ -229,7 +231,7 @@ class ClusterTests(CalcusLiveServer):
             EC.text_to_be_present_in_element((By.ID, "status_box"), "Connected")
         )
         self.assertNotEqual(
-            self.driver.find_element_by_id("status_box").text.find("Connected"), -1
+            self.driver.find_element(By.ID, "status_box").text.find("Connected"), -1
         )
 
     def test_autoselect_resource_remote(self):
@@ -250,7 +252,9 @@ class ClusterTests(CalcusLiveServer):
 
         self.lget("/launch/")
 
-        resources = self.driver.find_elements_by_css_selector("#calc_resource > option")
+        resources = self.driver.find_elements(
+            By.CSS_SELECTOR, "#calc_resource > option"
+        )
         self.assertEqual(len(resources), 2)
         self.assertEqual(resources[0].text, "Local")
         self.assertTrue(resources[0].is_selected())
@@ -260,7 +264,9 @@ class ClusterTests(CalcusLiveServer):
 
         self.calc_input_params(params)
 
-        resources = self.driver.find_elements_by_css_selector("#calc_resource > option")
+        resources = self.driver.find_elements(
+            By.CSS_SELECTOR, "#calc_resource > option"
+        )
         self.assertEqual(len(resources), 2)
         self.assertEqual(resources[0].text, "Local")
         self.assertFalse(resources[0].is_selected())
@@ -277,7 +283,9 @@ class ClusterTests(CalcusLiveServer):
         self.launch_ensemble_next_step()
         self.wait_for_ajax()
 
-        resources = self.driver.find_elements_by_css_selector("#calc_resource > option")
+        resources = self.driver.find_elements(
+            By.CSS_SELECTOR, "#calc_resource > option"
+        )
         self.assertEqual(len(resources), 2)
         self.assertEqual(resources[0].text, "Local")
         self.assertFalse(resources[0].is_selected())
@@ -303,7 +311,9 @@ class ClusterTests(CalcusLiveServer):
 
         self.lget("/launch/")
 
-        resources = self.driver.find_elements_by_css_selector("#calc_resource > option")
+        resources = self.driver.find_elements(
+            By.CSS_SELECTOR, "#calc_resource > option"
+        )
         self.assertEqual(len(resources), 2)
         self.assertEqual(resources[0].text, "Local")
         self.assertTrue(resources[0].is_selected())
@@ -313,7 +323,9 @@ class ClusterTests(CalcusLiveServer):
 
         self.calc_input_params(params)
 
-        resources = self.driver.find_elements_by_css_selector("#calc_resource > option")
+        resources = self.driver.find_elements(
+            By.CSS_SELECTOR, "#calc_resource > option"
+        )
         self.assertEqual(len(resources), 2)
         self.assertEqual(resources[0].text, "Local")
         self.assertTrue(resources[0].is_selected())
@@ -330,7 +342,9 @@ class ClusterTests(CalcusLiveServer):
         self.launch_ensemble_next_step()
         self.wait_for_ajax()
 
-        resources = self.driver.find_elements_by_css_selector("#calc_resource > option")
+        resources = self.driver.find_elements(
+            By.CSS_SELECTOR, "#calc_resource > option"
+        )
         self.assertEqual(len(resources), 2)
         self.assertEqual(resources[0].text, "Local")
         self.assertTrue(resources[0].is_selected())

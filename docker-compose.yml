@@ -20,6 +20,7 @@ services:
                         - ./backups:/calcus/backups
                         - ./logs:/calcus/logs
                         - ./frontend/migrations:/calcus/frontend/migrations
+                        - ./scripts:/calcus/scripts
                 links:
                         - redis
                 env_file:
