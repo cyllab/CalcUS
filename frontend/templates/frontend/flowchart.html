@@ -117,8 +117,9 @@
     </div>
     <div style="width:10%;float:right">
         <button class="button flowy-button" onclick="deleteAllBlocks()">Delete All</button>
-        <button class="button flowy-button" onclick="flowchartOutput()">Output</button>
-		<button class="button flowy-button" onclick="Submit()">Submit</button>
+		<button class="button is-small flowy-button js-modal-trigger" data-target="modal-load-flowchart">Load Flowchart from DB</button>
+		<button class="button is-small flowy-button js-modal-trigger" data-target="modal-open-naming-flowchart-modal">Save Flowchart to DB</button>
+		<button class="button flowy-button" onclick="flowchartOutput()">Output</button>
 		<label class="label">Import a flowchart</label>
 		<div class="file is-small is-boxed has-name">
 			<label class="file-label">
@@ -140,6 +141,44 @@
     <div id="canvas">
 
     </div>
+</div>
+<div id="modal-open-naming-flowchart-modal" class="modal">
+	<div class="modal-background"></div>
+  	<div class="modal-card">
+    	<header class="modal-card-head">
+      		<p class="modal-card-title">Enter Flowchart Title</p>
+    	</header>
+    	<section class="modal-card-body">
+      		<input id="flowchart-title" class="input is-primary" type="text" placeholder="Unnamed Flowchart">
+    	</section>
+    	<footer class="modal-card-foot">
+     		<button onclick="saveFlowchartName()" class="button is-success">Save changes</button>
+      		<button class="button">Cancel</button>
+    	</footer>
+  	</div>
+	<button class="modal-close is-large" aria-label="close"></button>
+</div>
+<div id="modal-load-flowchart" class="modal">
+	<div class="modal-background"></div>
+  	<div class="modal-card">
+    	<header class="modal-card-head">
+      		<p class="modal-card-title">Load Flowcharts</p>
+    	</header>
+    	<section class="modal-card-body">
+			<div class="select">
+				<select id="flowchart-load-select">
+				{% for flowchart in flowchartsData %}
+					<option value="{{ flowchart.flowchart }}">{{ flowchart.name }}</option>
+				{% endfor %}
+				</select>
+			</div>
+    	</section>
+    	<footer class="modal-card-foot">
+     		<button onclick="loadFlowchart()" class="button is-success">Load Flowchart</button>
+      		<button class="button">Cancel</button>
+    	</footer>
+  	</div>
+	<button class="modal-close is-large" aria-label="close"></button>
 </div>
 <div class="modal modal-para" id="modal-js-example">
     <div class="modal-background"></div>
@@ -598,6 +637,29 @@
     </div>
 </div>
 <script>
+	function decodeJSON(inputJSON) {
+		const replaceWithcomma = '"'
+		var result = inputJSON.replace(/&quot;/g, replaceWithcomma)
+		const replacewithLessThan = '<'
+		result = result.replace(/&amp;lt;/g, replacewithLessThan)
+		const replacewithGreaterThan = '>'
+		result = result.replace(/&amp;gt;/g, replacewithGreaterThan)
+		result = result.replace(/&lt;/g, replacewithLessThan)
+		result = result.replace(/&gt;/g, replacewithGreaterThan)
+		result = result.replace(/<i>/g, '<i onclick=\\"openParaModal()\\" style=\\"cursor: pointer;margin-left:5px;\\" class=\\"fa-solid fa-wrench\\">')
+		return result;
+	}
+
+	function saveFlowchartName() {
+		const flowchartTitleUser = document.getElementById("flowchart-title").value
+		Submit(flowchartTitleUser)
+	}
+
+	function loadFlowchart() {
+		flowy.deleteBlocks()
+		flowy.import(JSON.parse(decodeJSON(document.getElementById("flowchart-load-select").value)))
+	}
+
 	var spacing_x = 40;
     var spacing_y = 100;
     var flowyOut;
@@ -652,9 +714,12 @@
         flowy.import(flowyOut);
     }
 
-    function Submit() {
+    function Submit(flowchartTitle) {
         console.log("Submitted")
-		name = "Flowchart 2"
+		if(flowchartTitle!="")
+			name = flowchartTitle
+		else
+			name = "Unnamed Flowchart"
 		flowchart_data = JSON.stringify(flowy.output());
 		$.ajax({
 			method: "POST",	 	 

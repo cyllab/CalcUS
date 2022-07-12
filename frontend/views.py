@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
+import json
 import os
 import glob
 import random
@@ -931,7 +932,8 @@ def learn(request):
     )
 
 def flowchart(request):
-    return render(request, "frontend/flowchart.html")
+    flowchartsData = Flowchart.objects.all()
+    return render(request, "frontend/flowchart.html", {"flowchartsData": flowchartsData})
 
 def example(request, pk):
     try:
