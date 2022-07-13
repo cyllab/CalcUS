@@ -1,4 +1,3 @@
-
 %chk=in.chk
 %nproc=4
 %mem=2000MB
