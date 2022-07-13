@@ -117,7 +117,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         m = getattr(self, self.m_name)
 
         num = 1
-        MAX_ATTEMPTS = 1
+        MAX_ATTEMPTS = int(os.environ.get("CALCUS_TEST_MAX_ATTEMPTS", "1"))
 
         exc = None
 
@@ -1449,7 +1449,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         button = WebDriverWait(self.driver, 1).until(
             EC.presence_of_element_located((By.ID, "next_step_ensemble"))
         )
-        button.send_keys(Keys.RETURN)
+        button.click()  # Less flaky than "send_keys(Keys.RETURN)" in headless mode?
 
     def launch_structure_next_step(self):
         assert self.is_on_page_ensemble()
@@ -1461,7 +1461,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             EC.presence_of_element_located((By.CSS_SELECTOR, "#conf_table > tr"))
         )
 
-        button.send_keys(Keys.RETURN)
+        button.click()  # Less flaky than "send_keys(Keys.RETURN)" in headless mode?
 
     def launch_frame_next_step(self):
         assert self.is_on_page_calculation()
@@ -1480,7 +1480,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         else:
             raise Exception("Could not get the button to launch calculation from frame")
 
-        button.send_keys(Keys.RETURN)
+        button.click()  # Less flaky than "send_keys(Keys.RETURN)" in headless mode?
 
     def delete_project(self, name):
         assert self.is_on_page_projects()

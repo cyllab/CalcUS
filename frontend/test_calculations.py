@@ -43,7 +43,7 @@ class XtbCalculationTests(CalculationUnitTest):
         super().setUpClass()
 
         cls.params = {
-            "mol_name": "test",
+            "mol_name": "methane",
             "type": "Single-Point Energy",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
@@ -264,6 +264,7 @@ class OrcaCalculationTests(CalculationUnitTest):
     def test_opt_HF(self):
         self.assertTrue(
             self.run_test(
+                basis_set="Def2-SVP",
                 type="Geometrical Optimisation",
                 callback=partial(self.cb_has_n_conformers, 1),
             )
@@ -275,6 +276,7 @@ class OrcaCalculationTests(CalculationUnitTest):
                 type="Geometrical Optimisation",
                 theory_level="DFT",
                 method="M062X",
+                basis_set="Def2-SVP",
                 callback=partial(self.cb_has_n_conformers, 1),
             )
         )

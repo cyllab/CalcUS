@@ -77,21 +77,10 @@ class ClusterTests(CalcusLiveServer):
         connection.flushdb()
         connection.close()
 
-        # p = Process(target=self.run_daemon)
-        # p.start()
-
     def tearDown(self):
         time.sleep(0.5)  # Give time to the daemon to disconnect cleanly
         super().tearDown()
         send_cluster_command("stop\n")
-
-    def run_daemon(self):
-        try:
-            daemon = ClusterDaemon()
-        except SystemExit:
-            print("Daemon has exited")
-        except:
-            traceback.print_exc()
 
     def test_setup(self):
         self.setup_cluster()
@@ -242,8 +231,8 @@ class ClusterTests(CalcusLiveServer):
 
         self.setup_cluster()
         params = {
-            "mol_name": "test",
-            "type": "Geometrical Optimisation",
+            "mol_name": "ethanol",
+            "type": "Single-Point Energy",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
             "in_file": "ethanol.sdf",
@@ -283,9 +272,12 @@ class ClusterTests(CalcusLiveServer):
         self.launch_ensemble_next_step()
         self.wait_for_ajax()
 
-        resources = self.driver.find_elements(
-            By.CSS_SELECTOR, "#calc_resource > option"
+        resources = WebDriverWait(self.driver, 3).until(
+            EC.presence_of_all_elements_located(
+                (By.CSS_SELECTOR, "#calc_resource > option")
+            )
         )
+
         self.assertEqual(len(resources), 2)
         self.assertEqual(resources[0].text, "Local")
         self.assertFalse(resources[0].is_selected())
@@ -301,7 +293,7 @@ class ClusterTests(CalcusLiveServer):
 
         self.setup_cluster()
         params = {
-            "mol_name": "test",
+            "mol_name": "ethanol",
             "type": "Single-Point Energy",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
@@ -355,7 +347,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_xtb_crest(self):
         self.setup_cluster()
         params = {
-            "mol_name": "test",
+            "mol_name": "ethanol",
             "type": "Conformational Search",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
@@ -372,7 +364,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_orca_mo(self):
         self.setup_cluster()
         params = {
-            "mol_name": "test",
+            "mol_name": "ethanol",
             "type": "MO Calculation",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
@@ -409,7 +401,7 @@ class ClusterTests(CalcusLiveServer):
         self.setup_cluster()
 
         params = {
-            "mol_name": "test",
+            "mol_name": "ethanol",
             "type": "Geometrical Optimisation",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
@@ -431,7 +423,7 @@ class ClusterTests(CalcusLiveServer):
         self.setup_cluster()
 
         params = {
-            "mol_name": "test",
+            "mol_name": "ethanol",
             "type": "Geometrical Optimisation",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
@@ -448,11 +440,11 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_gaussian_sp(self):
         self.setup_cluster()
         params = {
-            "mol_name": "test",
+            "mol_name": "benzene",
             "type": "Single-Point Energy",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
-            "in_file": "benzene.mol",
+            "in_file": "H2.mol2",
             "software": "Gaussian",
             "theory": "HF",
             "basis_set": "Def2-SVP",
@@ -467,10 +459,11 @@ class ClusterTests(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
+    """
     def test_gaussian_parse_cancelled_calc(self):
         self.setup_cluster()
         params = {
-            "mol_name": "test",
+            "mol_name": "methane",
             "type": "Constrained Optimisation",
             "constraints": [["Scan", "Angle", [1, 2, 3], [120, 160, 1000]]],
             "project": "New Project",
@@ -500,7 +493,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cancel_calc(self):
         self.setup_cluster()
         params = {
-            "mol_name": "test",
+            "mol_name": "pentane",
             "type": "Conformational Search",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
@@ -528,11 +521,11 @@ class ClusterTests(CalcusLiveServer):
         s = self.get_calculation_statuses()
         self.assertEqual(s[0], "Error - Job cancelled")
 
-    @mock.patch.dict(os.environ, {"CACHE_POST_WAIT": "15"})
+    @mock.patch.dict(os.environ, {"CACHE_POST_WAIT": "5"})
     def test_relaunch_calc(self):
         self.setup_cluster()
         params = {
-            "mol_name": "test",
+            "mol_name": "ethanol",
             "type": "Single-Point Energy",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
@@ -568,10 +561,12 @@ class ClusterTests(CalcusLiveServer):
         self.assertEqual(self.get_number_unseen_calcs(), 1)
         self.assertTrue(self.latest_calc_successful())
 
+    """
+
     def test_cluster_unseen_calc(self):
         self.setup_cluster()
         params = {
-            "mol_name": "test",
+            "mol_name": "methane",
             "type": "Single-Point Energy",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
@@ -595,7 +590,7 @@ class ClusterTests(CalcusLiveServer):
     def test_cluster_refetch(self):
         self.setup_cluster()
         params = {
-            "mol_name": "test",
+            "mol_name": "pentane",
             "type": "Conformational Search",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
@@ -621,10 +616,11 @@ class ClusterTests(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(num, self.get_number_conformers())
 
+    @mock.patch.dict(os.environ, {"CACHE_POST_WAIT": "5"})
     def test_cluster_disconnect(self):
         self.setup_cluster()
         params = {
-            "mol_name": "test",
+            "mol_name": "pentane",
             "type": "Conformational Search",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
@@ -647,8 +643,7 @@ class ClusterTests(CalcusLiveServer):
         for i in range(5):
             statuses = self.get_status_calc_orders()
             self.assertEqual(len(statuses), 1)
-            self.assertEqual(statuses[0], 1)
-            time.sleep(2)
+            time.sleep(1)
             self.driver.refresh()
 
         self.lget("/profile/")
@@ -659,28 +654,3 @@ class ClusterTests(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(300)
         self.assertTrue(self.latest_calc_successful())
-
-    def test_stress_num_calcs(self):
-        self.setup_cluster()
-        files = [f"batch/benzene{i:02d}.xyz" for i in range(1, 11)]
-        params = {
-            "mol_name": "test",
-            "type": "Geometrical Optimisation",
-            "project": "New Project",
-            "new_project_name": "SeleniumProject",
-            "in_files": files,
-            "software": "xtb",
-        }
-
-        self.lget("/launch/")
-        self.calc_input_params(params)
-        self.calc_launch()
-        self.lget("/calculations/")
-        self.assertEqual(self.get_number_calc_orders(), 1)
-        self.wait_latest_calc_done(600)
-        self.assertTrue(self.latest_calc_successful())
-
-        self.lget("/projects/")
-        n_mol = self.get_number_calcs_in_project("SeleniumProject")
-
-        self.assertEqual(n_mol, 1)

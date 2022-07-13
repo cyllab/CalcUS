@@ -19,7 +19,7 @@ services:
                         - slurm
                 volumes:
                         - scratch:/calcus/scratch
-                        - ./frontend/tests/cache:/calcus/cache
+                        - ./frontend/tests/cache:/calcus/cache:rw
                 env_file:
                         - ./.env
                 environment:
@@ -32,8 +32,6 @@ services:
                         context: ./docker/slurm
                         dockerfile: Dockerfile
                 hostname: slurm
-                volumes:
-                        - ./frontend/tests/cache:/calcus/cache/
                 command: /home/slurm/run_slurm.sh
                 env_file:
                         - ./.env
@@ -58,9 +56,12 @@ services:
                 command: ./scripts/run_cluster_daemon.sh
                 environment:
                         - CALCUS_TEST=True
+                        - CAN_USE_CACHED_LOGS=true
                         - IS_TEST_CLUSTER_DAEMON=True
+                        - USE_CACHED_LOGS=true
                 volumes:
                         - scratch:/calcus/scratch
+                        - ./frontend/tests/cache:/calcus/cache:rw
                 env_file:
                         - ./.env
                 links:

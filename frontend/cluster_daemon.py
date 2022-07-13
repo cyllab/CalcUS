@@ -44,10 +44,10 @@ import code, traceback, signal, logging
 
 MAX_RESUME_CALC_ATTEMPT_COUNT = 3
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("cluster_daemon")
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter("%(asctime)s [%(levelname)s]  %(module)s: %(message)s")
 
 
 class ConnectionCodes:

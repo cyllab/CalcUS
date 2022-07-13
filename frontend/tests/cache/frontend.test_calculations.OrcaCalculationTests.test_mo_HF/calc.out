@@ -229,6 +229,13 @@ Atom   0C    basis set group =>   1
 Atom   1H    basis set group =>   2
 Atom   2H    basis set group =>   2
 Atom   3H    basis set group =>   2
+--------------------------------------------------------------------------
+An invalid value was supplied for an enum variable.
+
+  Variable     : btl_vader_single_copy_mechanism
+  Value        : "none"
+  Valid values : 1:"cma", 4:"emulated", 3:"none"
+--------------------------------------------------------------------------
 
 
            ************************************************************
@@ -238,12 +245,12 @@ Atom   3H    basis set group =>   2
 ------------------------------------------------------------------------------
                            ORCA GTO INTEGRAL CALCULATION
 ------------------------------------------------------------------------------
-[web:00956] Read -1, expected 651728, errno = 1
-[web:00957] Read -1, expected 651728, errno = 1
-[web:00958] Read -1, expected 651728, errno = 1
-[web:00956] Read -1, expected 9176, errno = 1
-[web:00957] Read -1, expected 9176, errno = 1
-[web:00958] Read -1, expected 9176, errno = 1
+[web:00032] Read -1, expected 651728, errno = 1
+[web:00033] Read -1, expected 651728, errno = 1
+[web:00031] Read -1, expected 651728, errno = 1
+[web:00032] Read -1, expected 9176, errno = 1
+[web:00031] Read -1, expected 9176, errno = 1
+[web:00033] Read -1, expected 9176, errno = 1
 ------------------------------------------------------------------------------
                    ___                                                        
                   /   \      - P O W E R E D   B Y -                         
@@ -265,9 +272,9 @@ Atom   3H    basis set group =>   2
 ------------------------------------------------------------------------------
 
 
-Reading SHARK input file calc.SHARKINP.tmp ... [web:00957] Read -1, expected 4136, errno = 1
-[web:00956] Read -1, expected 4136, errno = 1
-[web:00958] Read -1, expected 4136, errno = 1
+Reading SHARK input file calc.SHARKINP.tmp ... [web:00032] Read -1, expected 4136, errno = 1
+[web:00031] Read -1, expected 4136, errno = 1
+[web:00033] Read -1, expected 4136, errno = 1
 ok
 ----------------------
 SHARK INTEGRAL PACKAGE
@@ -293,9 +300,9 @@ Primitive cut-off                           ...     1.000000e-11
 Primitive pair pre-selection threshold      ...     1.000000e-11
 
 Calculating pre-screening integrals         ... done (  0.0 sec) Dimension = 15
-Organizing shell pair data                  ... [web:00956] Read -1, expected 4136, errno = 1
-[web:00957] Read -1, expected 4136, errno = 1
-[web:00958] Read -1, expected 4136, errno = 1
+Organizing shell pair data                  ... [web:00032] Read -1, expected 4136, errno = 1
+[web:00031] Read -1, expected 4136, errno = 1
+[web:00033] Read -1, expected 4136, errno = 1
 done (  0.0 sec)
 Shell pair information
 Total number of shell pairs                 ...       120
@@ -312,21 +319,30 @@ Primitive shell pairs kept                  ...       388
 Calculating one electron integrals          ... done (  0.0 sec)
 Calculating Nuclear repulsion               ... done (  0.0 sec) ENN=      9.810298803803 Eh
 
-SHARK setup successfully completed in   0.1 seconds
+SHARK setup successfully completed in   0.0 seconds
 
 Maximum memory used throughout the entire GTOINT-calculation: 6.8 MB
+[web:00026] 3 more processes have sent help message help-mca-var.txt / invalid-value-enum
+[web:00026] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+--------------------------------------------------------------------------
+An invalid value was supplied for an enum variable.
+
+  Variable     : btl_vader_single_copy_mechanism
+  Value        : "none"
+  Valid values : 1:"cma", 4:"emulated", 3:"none"
+--------------------------------------------------------------------------
 
 
            ************************************************************
            *        Program running with 4 parallel MPI-processes     *
            *              working on a common directory               *
            ************************************************************
-[web:00975] Read -1, expected 651728, errno = 1
-[web:00974] Read -1, expected 651728, errno = 1
-[web:00973] Read -1, expected 651728, errno = 1
-[web:00973] Read -1, expected 9176, errno = 1
-[web:00974] Read -1, expected 9176, errno = 1
-[web:00975] Read -1, expected 9176, errno = 1
+[web:00048] Read -1, expected 651728, errno = 1
+[web:00049] Read -1, expected 651728, errno = 1
+[web:00050] Read -1, expected 651728, errno = 1
+[web:00048] Read -1, expected 9176, errno = 1
+[web:00049] Read -1, expected 9176, errno = 1
+[web:00050] Read -1, expected 9176, errno = 1
 -------------------------------------------------------------------------------
                                  ORCA SCF
 -------------------------------------------------------------------------------
@@ -406,59 +422,59 @@ Convergence Tolerance:
 
 
 Diagonalization of the overlap matrix:
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
 Smallest eigenvalue                        ... 1.724e-02
 Time for diagonalization                   ...    0.000 sec
 Threshold for overlap eigenvalues          ... 1.000e-08
 Number of eigenvalues below threshold      ... 0
 Time for construction of square roots      ...    0.000 sec
-Total time needed                          ...    0.001 sec
+Total time needed                          ...    0.000 sec
 
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 69440, errno = 1
-[web:00973] Read -1, expected 69440, errno = 1
-[web:00974] Read -1, expected 69440, errno = 1
-[web:00975] Read -1, expected 26688, errno = 1
-[web:00974] Read -1, expected 26688, errno = 1
-[web:00972] Read -1, expected 26688, errno = 1
-[web:00975] Read -1, expected 27072, errno = 1
-[web:00973] Read -1, expected 27072, errno = 1
-[web:00972] Read -1, expected 27072, errno = 1
-[web:00973] Read -1, expected 26688, errno = 1
-[web:00972] Read -1, expected 26688, errno = 1
-[web:00974] Read -1, expected 26688, errno = 1
-[web:00975] Read -1, expected 52080, errno = 1
-[web:00974] Read -1, expected 52080, errno = 1
-[web:00973] Read -1, expected 52080, errno = 1
-[web:00972] Read -1, expected 20016, errno = 1
-[web:00975] Read -1, expected 20016, errno = 1
-[web:00974] Read -1, expected 20016, errno = 1
-[web:00972] Read -1, expected 20304, errno = 1
-[web:00975] Read -1, expected 20304, errno = 1
-[web:00973] Read -1, expected 20304, errno = 1
-[web:00972] Read -1, expected 20016, errno = 1
-[web:00974] Read -1, expected 20016, errno = 1
-[web:00973] Read -1, expected 20016, errno = 1
-[web:00975] Read -1, expected 79696, errno = 1
-[web:00974] Read -1, expected 79696, errno = 1
-[web:00973] Read -1, expected 79696, errno = 1
-[web:00975] Read -1, expected 79336, errno = 1
-[web:00974] Read -1, expected 79336, errno = 1
-[web:00972] Read -1, expected 79336, errno = 1
-[web:00975] Read -1, expected 77236, errno = 1
-[web:00973] Read -1, expected 77236, errno = 1
-[web:00973] Read -1, expected 74292, errno = 1
-[web:00972] Read -1, expected 77236, errno = 1
-[web:00974] Read -1, expected 74292, errno = 1
-[web:00972] Read -1, expected 74292, errno = 1
-Time for model grid setup =    0.012 sec
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 69440, errno = 1
+[web:00050] Read -1, expected 69440, errno = 1
+[web:00048] Read -1, expected 69440, errno = 1
+[web:00047] Read -1, expected 26688, errno = 1
+[web:00050] Read -1, expected 26688, errno = 1
+[web:00049] Read -1, expected 26688, errno = 1
+[web:00047] Read -1, expected 27072, errno = 1
+[web:00050] Read -1, expected 27072, errno = 1
+[web:00048] Read -1, expected 27072, errno = 1
+[web:00047] Read -1, expected 26688, errno = 1
+[web:00049] Read -1, expected 26688, errno = 1
+[web:00048] Read -1, expected 26688, errno = 1
+[web:00049] Read -1, expected 52080, errno = 1
+[web:00048] Read -1, expected 52080, errno = 1
+[web:00050] Read -1, expected 52080, errno = 1
+[web:00047] Read -1, expected 20016, errno = 1
+[web:00049] Read -1, expected 20016, errno = 1
+[web:00050] Read -1, expected 20016, errno = 1
+[web:00047] Read -1, expected 20304, errno = 1
+[web:00048] Read -1, expected 20304, errno = 1
+[web:00050] Read -1, expected 20304, errno = 1
+[web:00048] Read -1, expected 20016, errno = 1
+[web:00047] Read -1, expected 20016, errno = 1
+[web:00049] Read -1, expected 20016, errno = 1
+[web:00048] Read -1, expected 79696, errno = 1
+[web:00050] Read -1, expected 79696, errno = 1
+[web:00049] Read -1, expected 79696, errno = 1
+[web:00049] Read -1, expected 79336, errno = 1
+[web:00050] Read -1, expected 79336, errno = 1
+[web:00047] Read -1, expected 79336, errno = 1
+[web:00050] Read -1, expected 77236, errno = 1
+[web:00048] Read -1, expected 77236, errno = 1
+[web:00047] Read -1, expected 77236, errno = 1
+[web:00048] Read -1, expected 74292, errno = 1
+[web:00047] Read -1, expected 74292, errno = 1
+[web:00049] Read -1, expected 74292, errno = 1
+Time for model grid setup =    0.009 sec
 
 ------------------------------
 INITIAL GUESS: MODEL POTENTIAL
@@ -467,361 +483,361 @@ Loading Hartree-Fock densities                     ... done
 Calculating cut-offs                               ... done
 Initializing the effective Hamiltonian             ... done
 Setting up the integral package (SHARK)            ... done
-Starting the Coulomb interaction                   ... [web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+Starting the Coulomb interaction                   ... [web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
 done (   0.0 sec)
 Reading the grid                                   ... done
 Mapping shells                                     ... done
 Starting the XC term evaluation                    ... done (   0.0 sec)
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
 Transforming the Hamiltonian                       ... done (   0.0 sec)
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-Diagonalizing the Hamiltonian                      ... [web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+Diagonalizing the Hamiltonian                      ... [web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
 done (   0.0 sec)
 Back transforming the eigenvectors                 ... done (   0.0 sec)
 Now organizing SCF variables                       ... done
                       ------------------
                       INITIAL GUESS DONE (   0.0 sec)
                       ------------------
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
 --------------
 SCF ITERATIONS
 --------------
 ITER       Energy         Delta-E        Max-DP      RMS-DP      [F,P]     Damp
                ***  Starting incremental Fock matrix formation  ***
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00972] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00972] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00047] Read -1, expected 6728, errno = 1
+[web:00047] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
   0    -39.1393650181   0.000000000000 0.01729451  0.00130814  0.0716729 0.7000
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00972] Read -1, expected 6728, errno = 1
-[web:00972] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00047] Read -1, expected 6728, errno = 1
+[web:00047] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
   1    -39.1424828888  -0.003117870669 0.01295460  0.00114933  0.0562544 0.7000
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00972] Read -1, expected 6728, errno = 1
-[web:00972] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00047] Read -1, expected 6728, errno = 1
+[web:00047] Read -1, expected 6728, errno = 1
                                ***Turning on DIIS***
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
   2    -39.1448219901  -0.002339101319 0.03048385  0.00297310  0.0426425 0.0000
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00972] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00972] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00047] Read -1, expected 6728, errno = 1
+[web:00047] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
   3    -39.1482279452  -0.003405955106 0.00556885  0.00071210  0.0088628 0.0000
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00972] Read -1, expected 6728, errno = 1
-[web:00972] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00047] Read -1, expected 6728, errno = 1
+[web:00047] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
   4    -39.1525917814  -0.004363836149 0.00235315  0.00023209  0.0044660 0.0000
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00972] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00972] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00047] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00047] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
                       *** Initiating the SOSCF procedure ***
                            *** Shutting down DIIS ***
                       *** Re-Reading the Fockian *** 
@@ -829,75 +845,75 @@ ITER       Energy         Delta-E        Max-DP      RMS-DP      [F,P]     Damp
 ITER      Energy       Delta-E        Grad      Rot      Max-DP    RMS-DP
   5    -39.15059753   0.0019942547  0.001170  0.001170  0.000727  0.000056
                *** Restarting incremental Fock matrix formation ***
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
   6    -39.15094853  -0.0003509991  0.000239  0.000248  0.000217  0.000016
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
                  **** Energy Check signals convergence ****
               ***Rediagonalizing the Fockian in SOSCF/NRSCF***
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
 
                *****************************************************
                *                     SUCCESS                       *
@@ -933,12 +949,12 @@ SCF CONVERGENCE
   Last Orbital Gradient      ...    7.5682e-05  Tolerance :   5.0000e-05
   Last Orbital Rotation      ...    1.2651e-04  Tolerance :   5.0000e-05
 
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
              **** THE GBW FILE WAS UPDATED (calc.gbw) ****
              **** DENSITY calc.scfp WAS UPDATED ****
              **** ENERGY FILE WAS UPDATED (calc.en.tmp) ****
@@ -1017,12 +1033,12 @@ MULLIKEN REDUCED ORBITAL CHARGES
       px      :     0.005767
       py      :     0.007309
 
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
 
                      *******************************
                      * LOEWDIN POPULATION ANALYSIS *
@@ -1061,20 +1077,20 @@ LOEWDIN REDUCED ORBITAL CHARGES
       px      :     0.015973
       py      :     0.020226
 
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00972] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 6728, errno = 1
-[web:00972] Read -1, expected 6728, errno = 1
-[web:00975] Read -1, expected 6728, errno = 1
-[web:00973] Read -1, expected 6728, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
-[web:00974] Read -1, expected 4136, errno = 1
-[web:00973] Read -1, expected 4136, errno = 1
-[web:00975] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00047] Read -1, expected 6728, errno = 1
+[web:00047] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00050] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 6728, errno = 1
+[web:00049] Read -1, expected 6728, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
+[web:00048] Read -1, expected 4136, errno = 1
+[web:00049] Read -1, expected 4136, errno = 1
+[web:00050] Read -1, expected 4136, errno = 1
 
                       *****************************
                       * MAYER POPULATION ANALYSIS *
@@ -1103,20 +1119,22 @@ TIMINGS
 
 Total SCF time: 0 days 0 hours 0 min 0 sec 
 
-Total time                  ....       0.184 sec
-Sum of individual times     ....       0.054 sec  ( 29.4%)
+Total time                  ....       0.151 sec
+Sum of individual times     ....       0.044 sec  ( 29.3%)
 
-Fock matrix formation       ....       0.024 sec  ( 13.3%)
-Diagonalization             ....       0.006 sec  (  3.3%)
+Fock matrix formation       ....       0.023 sec  ( 15.3%)
+Diagonalization             ....       0.003 sec  (  1.8%)
 Density matrix formation    ....       0.000 sec  (  0.1%)
-Population analysis         ....       0.001 sec  (  0.5%)
-Initial guess               ....       0.005 sec  (  2.5%)
+Population analysis         ....       0.001 sec  (  0.6%)
+Initial guess               ....       0.004 sec  (  2.5%)
 Orbital Transformation      ....       0.000 sec  (  0.0%)
 Orbital Orthonormalization  ....       0.000 sec  (  0.0%)
-DIIS solution               ....       0.005 sec  (  2.5%)
-SOSCF solution              ....       0.001 sec  (  0.6%)
+DIIS solution               ....       0.004 sec  (  2.4%)
+SOSCF solution              ....       0.001 sec  (  0.5%)
 
 Maximum memory used throughout the entire SCF-calculation: 224.1 MB
+[web:00043] 3 more processes have sent help message help-mca-var.txt / invalid-value-enum
+[web:00043] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
 
 -------------------------   --------------------
 FINAL SINGLE POINT ENERGY       -39.150948714107
@@ -1130,21 +1148,25 @@ PLOT GENERATION
 choosing x-range =   -14.516764 ..     2.179309
 choosing y-range =    -3.857196 ..    11.095981
 choosing z-range =    -8.651054 ..     8.651054
+--------------------------------------------------------------------------
+An invalid value was supplied for an enum variable.
+
+  Variable     : btl_vader_single_copy_mechanism
+  Value        : "none"
+  Valid values : 1:"cma", 4:"emulated", 3:"none"
+--------------------------------------------------------------------------
 
 
            ************************************************************
            *        Program running with 4 parallel MPI-processes     *
            *              working on a common directory               *
            ************************************************************
-[web:00990] Read -1, expected 651728, errno = 1
-[web:00991] Read -1, expected 651728, errno = 1
-[web:00992] Read -1, expected 651728, errno = 1
-[web:00991] Read -1, expected 9176, errno = 1
-[web:00992] Read -1, expected 9176, errno = 1
-[web:00990] Read -1, expected 9176, errno = 1
-[web:00991] Read -1, expected 7428, errno = 1
-[web:00990] Read -1, expected 7428, errno = 1
-[web:00992] Read -1, expected 7428, errno = 1
+[web:00065] Read -1, expected 651728, errno = 1
+[web:00066] Read -1, expected 651728, errno = 1
+[web:00067] Read -1, expected 651728, errno = 1
+[web:00065] Read -1, expected 9176, errno = 1
+[web:00066] Read -1, expected 9176, errno = 1
+[web:00067] Read -1, expected 9176, errno = 1
 
 GBW-File       ... calc.gbw
 PlotType       ... MO-PLOT
@@ -1156,123 +1178,135 @@ Boundaries     ...   -14.516764     2.179309 (x direction)
                       -3.857196    11.095981 (y direction)
                       -8.651054     8.651054 (z direction)
 Entering PlotGrid3d with Plottype =1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00992] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
-[web:00989] Read -1, expected 16200, errno = 1
-[web:00990] Read -1, expected 16200, errno = 1
-[web:00991] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 7428, errno = 1
+[web:00065] Read -1, expected 7428, errno = 1
+[web:00067] Read -1, expected 7428, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00067] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00065] Read -1, expected 16200, errno = 1
+[web:00066] Read -1, expected 16200, errno = 1
+[web:00064] Read -1, expected 16200, errno = 1
+[web:00060] 3 more processes have sent help message help-mca-var.txt / invalid-value-enum
+[web:00060] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
 choosing x-range =   -14.516764 ..     2.179309
 choosing y-range =    -3.857196 ..    11.095981
 choosing z-range =    -8.651054 ..     8.651054
+--------------------------------------------------------------------------
+An invalid value was supplied for an enum variable.
+
+  Variable     : btl_vader_single_copy_mechanism
+  Value        : "none"
+  Valid values : 1:"cma", 4:"emulated", 3:"none"
+--------------------------------------------------------------------------
 
 
            ************************************************************
            *        Program running with 4 parallel MPI-processes     *
            *              working on a common directory               *
            ************************************************************
-[web:01009] Read -1, expected 651728, errno = 1
-[web:01007] Read -1, expected 651728, errno = 1
-[web:01008] Read -1, expected 651728, errno = 1
-[web:01009] Read -1, expected 9176, errno = 1
-[web:01007] Read -1, expected 9176, errno = 1
-[web:01008] Read -1, expected 9176, errno = 1
-[web:01007] Read -1, expected 7428, errno = 1
-[web:01009] Read -1, expected 7428, errno = 1
-[web:01008] Read -1, expected 7428, errno = 1
+[web:00082] Read -1, expected 651728, errno = 1
+[web:00083] Read -1, expected 651728, errno = 1
+[web:00084] Read -1, expected 651728, errno = 1
+[web:00082] Read -1, expected 9176, errno = 1
+[web:00083] Read -1, expected 9176, errno = 1
+[web:00084] Read -1, expected 9176, errno = 1
+[web:00083] Read -1, expected 7428, errno = 1
+[web:00082] Read -1, expected 7428, errno = 1
+[web:00084] Read -1, expected 7428, errno = 1
 
 GBW-File       ... calc.gbw
 PlotType       ... MO-PLOT
@@ -1284,123 +1318,132 @@ Boundaries     ...   -14.516764     2.179309 (x direction)
                       -3.857196    11.095981 (y direction)
                       -8.651054     8.651054 (z direction)
 Entering PlotGrid3d with Plottype =1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01009] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01008] Read -1, expected 16200, errno = 1
-[web:01007] Read -1, expected 16200, errno = 1
-[web:01006] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00084] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00082] Read -1, expected 16200, errno = 1
+[web:00083] Read -1, expected 16200, errno = 1
+[web:00081] Read -1, expected 16200, errno = 1
+[web:00077] 3 more processes have sent help message help-mca-var.txt / invalid-value-enum
+[web:00077] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
 choosing x-range =   -14.516764 ..     2.179309
 choosing y-range =    -3.857196 ..    11.095981
 choosing z-range =    -8.651054 ..     8.651054
+--------------------------------------------------------------------------
+An invalid value was supplied for an enum variable.
+
+  Variable     : btl_vader_single_copy_mechanism
+  Value        : "none"
+  Valid values : 1:"cma", 4:"emulated", 3:"none"
+--------------------------------------------------------------------------
 
 
            ************************************************************
            *        Program running with 4 parallel MPI-processes     *
            *              working on a common directory               *
            ************************************************************
-[web:01025] Read -1, expected 651728, errno = 1
-[web:01026] Read -1, expected 651728, errno = 1
-[web:01024] Read -1, expected 651728, errno = 1
-[web:01026] Read -1, expected 9176, errno = 1
-[web:01025] Read -1, expected 9176, errno = 1
-[web:01024] Read -1, expected 9176, errno = 1
-[web:01025] Read -1, expected 7428, errno = 1
-[web:01024] Read -1, expected 7428, errno = 1
-[web:01026] Read -1, expected 7428, errno = 1
+[web:00099] Read -1, expected 651728, errno = 1
+[web:00100] Read -1, expected 651728, errno = 1
+[web:00101] Read -1, expected 651728, errno = 1
+[web:00099] Read -1, expected 9176, errno = 1
+[web:00101] Read -1, expected 9176, errno = 1
+[web:00100] Read -1, expected 9176, errno = 1
+[web:00099] Read -1, expected 7428, errno = 1
+[web:00100] Read -1, expected 7428, errno = 1
+[web:00101] Read -1, expected 7428, errno = 1
 
 GBW-File       ... calc.gbw
 PlotType       ... MO-PLOT
@@ -1412,123 +1455,132 @@ Boundaries     ...   -14.516764     2.179309 (x direction)
                       -3.857196    11.095981 (y direction)
                       -8.651054     8.651054 (z direction)
 Entering PlotGrid3d with Plottype =1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01026] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01025] Read -1, expected 16200, errno = 1
-[web:01023] Read -1, expected 16200, errno = 1
-[web:01024] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00101] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00099] Read -1, expected 16200, errno = 1
+[web:00100] Read -1, expected 16200, errno = 1
+[web:00098] Read -1, expected 16200, errno = 1
+[web:00094] 3 more processes have sent help message help-mca-var.txt / invalid-value-enum
+[web:00094] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
 choosing x-range =   -14.516764 ..     2.179309
 choosing y-range =    -3.857196 ..    11.095981
 choosing z-range =    -8.651054 ..     8.651054
+--------------------------------------------------------------------------
+An invalid value was supplied for an enum variable.
+
+  Variable     : btl_vader_single_copy_mechanism
+  Value        : "none"
+  Valid values : 1:"cma", 4:"emulated", 3:"none"
+--------------------------------------------------------------------------
 
 
            ************************************************************
            *        Program running with 4 parallel MPI-processes     *
            *              working on a common directory               *
            ************************************************************
-[web:01041] Read -1, expected 651728, errno = 1
-[web:01042] Read -1, expected 651728, errno = 1
-[web:01043] Read -1, expected 651728, errno = 1
-[web:01041] Read -1, expected 9176, errno = 1
-[web:01043] Read -1, expected 9176, errno = 1
-[web:01042] Read -1, expected 9176, errno = 1
-[web:01042] Read -1, expected 7428, errno = 1
-[web:01041] Read -1, expected 7428, errno = 1
-[web:01043] Read -1, expected 7428, errno = 1
+[web:00118] Read -1, expected 651728, errno = 1
+[web:00116] Read -1, expected 651728, errno = 1
+[web:00117] Read -1, expected 651728, errno = 1
+[web:00116] Read -1, expected 9176, errno = 1
+[web:00118] Read -1, expected 9176, errno = 1
+[web:00117] Read -1, expected 9176, errno = 1
+[web:00116] Read -1, expected 7428, errno = 1
+[web:00117] Read -1, expected 7428, errno = 1
+[web:00118] Read -1, expected 7428, errno = 1
 
 GBW-File       ... calc.gbw
 PlotType       ... MO-PLOT
@@ -1540,105 +1592,107 @@ Boundaries     ...   -14.516764     2.179309 (x direction)
                       -3.857196    11.095981 (y direction)
                       -8.651054     8.651054 (z direction)
 Entering PlotGrid3d with Plottype =1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01043] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01040] Read -1, expected 16200, errno = 1
-[web:01042] Read -1, expected 16200, errno = 1
-[web:01041] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00118] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00115] Read -1, expected 16200, errno = 1
+[web:00116] Read -1, expected 16200, errno = 1
+[web:00117] Read -1, expected 16200, errno = 1
+[web:00111] 3 more processes have sent help message help-mca-var.txt / invalid-value-enum
+[web:00111] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
 
                             ***************************************
                             *     ORCA property calculations      *
@@ -1687,15 +1741,24 @@ x,y,z [a.u.] :    -0.000000    -0.000016     0.056548
 x,y,z [Debye]:    -0.000000    -0.000040     0.143734 
 
  
-[web:01058] Read -1, expected 651728, errno = 1
-[web:01059] Read -1, expected 651728, errno = 1
-[web:01060] Read -1, expected 651728, errno = 1
+--------------------------------------------------------------------------
+An invalid value was supplied for an enum variable.
+
+  Variable     : btl_vader_single_copy_mechanism
+  Value        : "none"
+  Valid values : 1:"cma", 4:"emulated", 3:"none"
+--------------------------------------------------------------------------
+[web:00134] Read -1, expected 651728, errno = 1
+[web:00135] Read -1, expected 651728, errno = 1
+[web:00133] Read -1, expected 651728, errno = 1
+[web:00128] 3 more processes have sent help message help-mca-var.txt / invalid-value-enum
+[web:00128] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
 
 Timings for individual modules:
 
-Sum of individual times         ...        2.593 sec (=   0.043 min)
-GTO integral calculation        ...        0.440 sec (=   0.007 min)  17.0 %
-SCF iterations                  ...        0.535 sec (=   0.009 min)  20.6 %
-Orbital/Density plot generation ...        1.618 sec (=   0.027 min)  62.4 %
+Sum of individual times         ...        2.490 sec (=   0.041 min)
+GTO integral calculation        ...        0.427 sec (=   0.007 min)  17.1 %
+SCF iterations                  ...        0.499 sec (=   0.008 min)  20.0 %
+Orbital/Density plot generation ...        1.564 sec (=   0.026 min)  62.8 %
                              ****ORCA TERMINATED NORMALLY****
-TOTAL RUN TIME: 0 days 0 hours 0 minutes 2 seconds 986 msec
+TOTAL RUN TIME: 0 days 0 hours 0 minutes 2 seconds 890 msec
