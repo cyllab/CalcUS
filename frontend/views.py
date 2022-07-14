@@ -933,7 +933,7 @@ def learn(request):
 
 def flowchart(request):
     flowchartsData = Flowchart.objects.all()
-    return render(request, "frontend/flowchart.html", {"flowchartsData": flowchartsData})
+    return render(request, "frontend/flowchart.html", {"flowchartsData": flowchartsData, "procs":BasicStep.objects.all()})
 
 def example(request, pk):
     try:

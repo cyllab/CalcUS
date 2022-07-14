@@ -65,10 +65,10 @@
 
         #canvas {
             position: absolute;
-            width: calc(100% - 30%);
+            width: calc(100% - 38%);
             height: calc(100% - 71px);
             top: 71px;
-            left: 15%;
+            left: 23%;
             z-index: 0;
             overflow: auto;
             outline: 2px solid black;
@@ -83,37 +83,14 @@
 
 {% block content %}
 <div class="content" >
-    <div class="no-select" style="width:15%;float:left;">
-        <div>
-            <div style="display:inline-block" class="create-flowy blockelem">Calculation 1
+    <div class="no-select" style="width:20%;float:left;">
+		{% for proc in procs %}
+		<div style="margin:-10px;">
+            <div style="display:inline-block" class="create-flowy blockelem is-size-7">{{ proc.name }}
 				<i onclick="openParaModal()" style="cursor: pointer;margin-left:5px;" class="fa-solid fa-wrench"></i>
 			</div>
         </div>
-        <div>
-            <div style="display:inline-block" class="create-flowy blockelem">Calculation 2
-				<i onclick="openParaModal()" style="cursor: pointer;margin-left:5px;" class="fa-solid fa-wrench"></i>
-			</div>
-        </div>
-		<div>
-            <div style="display:inline-block" class="create-flowy blockelem">Calculation 3
-				<i onclick="openParaModal()" style="cursor: pointer;margin-left:5px;" class="fa-solid fa-wrench"></i>
-			</div>
-        </div>
-		<div>
-            <div style="display:inline-block" class="create-flowy blockelem">Calculation 4
-				<i onclick="openParaModal()" style="cursor: pointer;margin-left:5px;" class="fa-solid fa-wrench"></i>
-			</div>
-        </div>
-		<div>
-            <div style="display:inline-block" class="create-flowy blockelem">Calculation 5
-				<i onclick="openParaModal()" style="cursor: pointer;margin-left:5px;" class="fa-solid fa-wrench"></i>
-			</div>
-        </div>
-		<div>
-            <div style="display:inline-block" class="create-flowy blockelem">Calculation 6
-				<i onclick="openParaModal()" style="cursor: pointer;margin-left:5px;" class="fa-solid fa-wrench"></i>
-			</div>
-        </div>
+		{% endfor %}
     </div>
     <div style="width:10%;float:right">
         <button class="button flowy-button" onclick="deleteAllBlocks()">Delete All</button>
@@ -663,6 +640,7 @@
 	var spacing_x = 40;
     var spacing_y = 100;
     var flowyOut;
+	var saveCalculationName = new Map();
     document.addEventListener("DOMContentLoaded", function(){
         hardCodedInput();
     })
@@ -681,12 +659,18 @@
     function onSnap(block, first, parent){
         // When a block snaps with another one
         console.log("Snapped")
+		var inner_text = block.innerHTML;
+		var index_of_Opening_tag = inner_text.indexOf("<");
+		inner_text = inner_text.substring(0, index_of_Opening_tag);
+		inner_text = inner_text.trim();
+		saveCalculationName.set(block.children[1].value, inner_text)
 		return true;
     }
 
     function onRearrange(block, parent){
         // When a block is rearranged
         console.log("Rearranged")
+		saveCalculationName.delete(block.children[1].value)
         return false;
     }
 
@@ -697,9 +681,13 @@
 
     function flowchartOutput() {
         console.log("Output")
-        console.log(flowy.output());
         flowyOut = flowy.output();
-        var htmlContent = JSON.stringify(flowy.output());
+		for(var i=0;i<flowyOut.blocks.length;i++)
+		{
+			flowyOut.blocks[i].calculationType = saveCalculationName.get(flowyOut.blocks[i].id.toString())
+		}
+		console.log(flowyOut)
+        var htmlContent = JSON.stringify(flowyOut);
         var bl = new Blob([htmlContent], {type: "text/json"});
         var a = document.createElement("a");
         a.href = URL.createObjectURL(bl);
@@ -741,39 +729,39 @@
     
     function hardCodedInput() { 
         var hardCodedObject = {
-            "html": "\n\n    <div class=\"indicator invisible\"></div><div class=\"blockelem block\" style=\"left: 431.297px; top: 9px;\">Input<input type=\"hidden\" name=\"blockid\" class=\"blockid\" value=\"0\"></div>",
-            "blockarr": [
-                {
-                    "parent": -1,
-                    "childwidth": 0,
-                    "id": 0,
-                    "x": 451.296875,
-                    "y": 27,
-                    "width": 40,
-                    "height": 36
-                }
-            ],
-            "blocks": [
-                {
-                    "id": 0,
-                    "parent": -1,
-                    "data": [
-                        {
-                            "name": "blockid",
-                            "value": "0"
-                        }
-                    ],
-                    "attr": [
-                        {
-                            "class": "blockelem block"
-                        },
-                        {
-                            "style": "left: 431.297px; top: 9px;"
-                        }
-                    ]
-                }
-            ]
-        }
+			"html": "\n\n    <div class=\"indicator invisible\"></div><div class=\"blockelem block\" style=\"left: 377.297px; top: 4px;\">Input<input type=\"hidden\" name=\"blockid\" class=\"blockid\" value=\"0\"></div>",
+			"blockarr": [
+				{
+					"childwidth": 0,
+					"parent": -1,
+					"id": 0,
+					"x": 397.296875,
+					"y": 22,
+					"width": 40,
+					"height": 36
+				}
+			],
+			"blocks": [
+				{
+					"id": 0,
+					"parent": -1,
+					"data": [
+						{
+							"name": "blockid",
+							"value": "0"
+						}
+					],
+					"attr": [
+						{
+							"class": "blockelem block"
+						},
+						{
+							"style": "left: 377.297px; top: 4px;"
+						}
+					]
+				}
+			]
+		}
             
         //console.log(hardCodedObject);
         flowy.import(hardCodedObject);
