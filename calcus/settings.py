@@ -35,6 +35,7 @@ else:
     SECRET_KEY = os.environ["CALCUS_SECRET_KEY"]
 
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
 
 try:
     DEBUG = os.environ["CALCUS_DEBUG"]
@@ -139,7 +140,7 @@ DATABASES = {
         "NAME": "calcus",
         "USER": "calcus",
         "PASSWORD": POSTGRES_PASSWORD,
-        "HOST": "postgres",
+        "HOST": POSTGRES_HOST,
         "PORT": "5432",
     }
 }

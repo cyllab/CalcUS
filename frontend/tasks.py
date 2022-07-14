@@ -462,6 +462,9 @@ def files_are_equal(f, input_file):
         return False
 
     for l1, l2 in zip(lines, sinput):
+        if l1.find("nproc") != -1 and l2.find("nproc") != -1:
+            continue
+
         if l1 != l2:
             return False
 
@@ -469,7 +472,7 @@ def files_are_equal(f, input_file):
 
 
 def get_cache_index(calc, cache_path):
-    inputs = glob.glob(cache_path + "/*.input")
+    inputs = list(glob.glob(cache_path + "/*.input"))
     for f in inputs:
         if files_are_equal(f, calc.all_inputs):
             ind = ".".join(f.split("/")[-1].split(".")[:-1])
@@ -483,16 +486,15 @@ def calc_is_cached(calc):
         os.getenv("USE_CACHED_LOGS") == "true"
         and os.getenv("CAN_USE_CACHED_LOGS") == "true"
     ):
-        cache_path = "/calcus/cache/"
-
-        if calc.local and not os.path.isdir(cache_path):
-            logger.info("no cache")
-            os.mkdir(cache_path)
+        if calc.local and not os.path.isdir(CALCUS_CACHE_HOME):
+            logger.info(f"no cache")
+            os.mkdir(CALCUS_CACHE_HOME)
             return False
 
-        index = get_cache_index(calc, cache_path)
+        index = get_cache_index(calc, CALCUS_CACHE_HOME)
 
         if index == -1:
+            logger.info(f"not found")
             return False
 
         return index
@@ -505,7 +507,7 @@ def setup_cached_calc(calc):
     if not index:
         return False
 
-    scr_path = f"/calcus/scratch/scr/{calc.id}"
+    scr_path = f"{CALCUS_SCR_HOME}/{calc.id}"
     if os.path.isdir(scr_path):
         if os.path.islink(scr_path):
             # Likely already setup
@@ -513,7 +515,7 @@ def setup_cached_calc(calc):
         rmtree(scr_path)
 
     os.symlink(
-        os.path.join("/calcus", "cache", index),
+        os.path.join(CALCUS_CACHE_HOME, index),
         scr_path,
     )
     logger.info(f"Using cache ({index})")
@@ -3509,11 +3511,11 @@ def run_calc(calc_id):
         )
         logger.info(f"Adding calculation results of {test_name} to the cache")
         shutil.copytree(
-            f"/calcus/scratch/scr/{calc.id}",
-            os.path.join("/calcus/cache", test_name),
+            f"{CALCUS_SCR_HOME}/{calc.id}",
+            os.path.join(CALCUS_CACHE_HOME, test_name),
             dirs_exist_ok=True,
         )
-        with open(os.path.join("/calcus/cache", test_name + ".input"), "w") as out:
+        with open(os.path.join(CALCUS_CACHE_HOME, test_name + ".input"), "w") as out:
             out.write(calc.all_inputs)
 
     return ret

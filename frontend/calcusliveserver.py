@@ -53,9 +53,10 @@ from .environment_variables import *
 tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-SCR_DIR = "/calcus/scratch/scr"
-RESULTS_DIR = "/calcus/scratch/results"
-KEYS_DIR = "/calcus/scratch/keys"
+# Somewhat pointless, could be cleaned up
+SCR_DIR = CALCUS_SCR_HOME
+RESULTS_DIR = CALCUS_RESULTS_HOME
+KEYS_DIR = CALCUS_KEY_HOME
 
 from calcus.celery import app
 from frontend import tasks
@@ -73,10 +74,20 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         cls.host = socket.gethostbyname(socket.gethostname())
 
-        cls.driver = webdriver.Remote(
-            command_executor="http://selenium:4444/wd/hub",
-            desired_capabilities=DesiredCapabilities.CHROME,
-        )
+        if "CI" in os.environ:  # Github Actions
+            chrome_options = Options()
+            from pyvirtualdisplay import Display
+
+            cls.display = Display(visible=0, size=(1920, 1080))
+            cls.display.start()
+
+            cls.driver = webdriver.Chrome(chrome_options=chrome_options)
+            cls.driver.set_window_size(1920, 1080)
+        else:
+            cls.driver = webdriver.Remote(
+                command_executor="http://selenium:4444/wd/hub",
+                desired_capabilities=DesiredCapabilities.CHROME,
+            )
         cls.driver.set_window_size(1920, 1080)
 
         tasks.REMOTE = False
@@ -751,7 +762,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             time.sleep(1)
 
         child = pexpect.spawn("ssh slurm@slurm")
-        # child.logfile = open("/calcus/pexpect.log", 'wb')
         choice = child.expect(["(yes/no)", "password"])
         if choice == 0:
             child.sendline("yes")
@@ -1096,9 +1106,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         for mol in molecules:
             mol_name = mol.find_element(By.CSS_SELECTOR, "a > strong > p").text
             if mol_name == name:
-                # link = mol.find_element(By.CSS_SELECTOR, "a")
-                # link.click()
-                mol.click()
+                curr_url = self.driver.current_url
+                for i in range(3):
+                    mol.click()
+                    self.wait_for_ajax()
+                    time.sleep(0.5)
+                    if self.driver.current_url != curr_url:
+                        break
                 return
         else:
             raise Exception("Could not click on molecule")
@@ -1120,7 +1134,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             e_link = e.find_element(By.CSS_SELECTOR, "td:nth-child(2) > a")
             e_name = e_link.text
             if e_name == name:
-                e_link.click()
+                curr_url = self.driver.current_url
+                for i in range(3):
+                    e_link.click()
+                    self.wait_for_ajax()
+                    time.sleep(0.5)
+                    if self.driver.current_url != curr_url:
+                        return
                 return
         else:
             raise Exception("Ensemble not found")
