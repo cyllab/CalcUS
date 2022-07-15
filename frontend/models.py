@@ -697,6 +697,24 @@ class Parameters(models.Model):
         return self._md5
 
 
+class Step(models.Model):
+    name = models.CharField(max_length=50)
+    flowchartId = models.ForeignKey(Flowchart, on_delete=models.cascade)
+    step = models.ForeignKey(
+        BasicStep, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    parameters = models.ForeignKey(
+        Parameters, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    parentId = models.CharField(max_length=10)
+    objectId = models.CharField(max_length=10)
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
+
 def gen_params_md5(obj):
     values = [(k, v) for k, v in obj.__dict__.items() if k != "_state" and k != "id"]
     params_str = ""
