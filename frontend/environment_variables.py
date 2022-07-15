@@ -26,21 +26,38 @@ except:
     is_test = False
 
 if is_test:
-    CALCUS_SCR_HOME = os.environ["CALCUS_TEST_SCR_HOME"]
-    CALCUS_RESULTS_HOME = os.environ["CALCUS_TEST_RESULTS_HOME"]
-    CALCUS_KEY_HOME = os.environ["CALCUS_TEST_KEY_HOME"]
+    if "GITHUB_WORKSPACE" in os.environ:
+        prefix = os.environ["GITHUB_WORKSPACE"]
+        CALCUS_CACHE_HOME = os.path.join(prefix, "frontend", "tests", "cache")
+    else:
+        CALCUS_CACHE_HOME = "/calcus/cache"
+        prefix = ""
+
+    CALCUS_SCR_HOME = os.path.join(
+        prefix, os.environ.get("CALCUS_TEST_SCR_HOME", "scratch/scr")
+    )
+    CALCUS_RESULTS_HOME = os.path.join(
+        prefix, os.environ.get("CALCUS_TEST_RESULTS_HOME", "scratch/results")
+    )
+    CALCUS_KEY_HOME = os.path.join(
+        prefix, os.environ.get("CALCUS_TEST_KEY_HOME", "scratch/keys")
+    )
 else:
     CALCUS_SCR_HOME = os.environ["CALCUS_SCR_HOME"]
     CALCUS_RESULTS_HOME = os.environ["CALCUS_RESULTS_HOME"]
     CALCUS_KEY_HOME = os.environ["CALCUS_KEY_HOME"]
 
+try:
+    PAL = os.environ["OMP_NUM_THREADS"][0]
+except KeyError:
+    PAL = 1
 
-PAL = os.environ["OMP_NUM_THREADS"][0]
-STACKSIZE = os.environ["OMP_STACKSIZE"]
+STACKSIZE = os.environ.get("OMP_STACKSIZE", "1G")
+
 if STACKSIZE.find("G") != -1:
     STACKSIZE = int(STACKSIZE.replace("G", "")) * 1024
 elif STACKSIZE.find("M") != -1:
     STACKSIZE = int(STACKSIZE.replace("M", ""))
 
 MEM = int(PAL) * STACKSIZE
-EBROOTORCA = os.environ["EBROOTORCA"]
+EBROOTORCA = os.environ.get("EBROOTORCA", "")

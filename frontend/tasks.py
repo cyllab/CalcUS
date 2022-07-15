@@ -123,6 +123,12 @@ def direct_command(command, conn, lock, attempt_count=1):
 
 def sftp_get(src, dst, conn, lock, attempt_count=1):
 
+    if (
+        os.getenv("USE_CACHED_LOGS") == "true"
+        and os.getenv("CAN_USE_CACHED_LOGS") == "true"
+    ):
+        return ErrorCodes.SUCCESS
+
     _src = str(src).replace("//", "/")
     _dst = str(dst).replace("//", "/")
 
@@ -290,7 +296,11 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
 
+        if calc_id != -1 and is_test and setup_cached_calc(calc):
+            return testing_delay_remote(calc_id)
+
         if calc.status == 0 and calc.remote_id == 0:
+
             if log_file != "":
                 output = direct_command(
                     "cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{} | tee {}' >> submit_{}.sh; sbatch --job-name={} submit_{}.sh | tee calcus".format(
@@ -452,6 +462,9 @@ def files_are_equal(f, input_file):
         return False
 
     for l1, l2 in zip(lines, sinput):
+        if l1.find("nproc") != -1 and l2.find("nproc") != -1:
+            continue
+
         if l1 != l2:
             return False
 
@@ -459,7 +472,7 @@ def files_are_equal(f, input_file):
 
 
 def get_cache_index(calc, cache_path):
-    inputs = glob.glob(cache_path + "/*.input")
+    inputs = list(glob.glob(cache_path + "/*.input"))
     for f in inputs:
         if files_are_equal(f, calc.all_inputs):
             ind = ".".join(f.split("/")[-1].split(".")[:-1])
@@ -473,13 +486,15 @@ def calc_is_cached(calc):
         os.getenv("USE_CACHED_LOGS") == "true"
         and os.getenv("CAN_USE_CACHED_LOGS") == "true"
     ):
-        cache_path = "/calcus/cache/"
-        if not os.path.isdir(cache_path):
-            os.mkdir(cache_path)
+        if calc.local and not os.path.isdir(CALCUS_CACHE_HOME):
+            logger.info(f"no cache")
+            os.mkdir(CALCUS_CACHE_HOME)
             return False
-        index = get_cache_index(calc, cache_path)
+
+        index = get_cache_index(calc, CALCUS_CACHE_HOME)
 
         if index == -1:
+            logger.info(f"not found")
             return False
 
         return index
@@ -492,12 +507,16 @@ def setup_cached_calc(calc):
     if not index:
         return False
 
-    if os.path.isdir(f"/calcus/scratch/scr/{calc.id}"):
-        rmtree(f"/calcus/scratch/scr/{calc.id}")
+    scr_path = f"{CALCUS_SCR_HOME}/{calc.id}"
+    if os.path.isdir(scr_path):
+        if os.path.islink(scr_path):
+            # Likely already setup
+            return True
+        rmtree(scr_path)
 
     os.symlink(
-        os.path.join("/calcus", "cache", index),
-        f"/calcus/scratch/scr/{calc.id}",
+        os.path.join(CALCUS_CACHE_HOME, index),
+        scr_path,
     )
     logger.info(f"Using cache ({index})")
     return True
@@ -639,7 +658,10 @@ def launch_xtb_calc(in_file, calc, files):
             )
             if not cancelled and a != ErrorCodes.SUCCESS:
                 return a
-        if not cancelled:
+        if not cancelled and not (
+            os.getenv("USE_CACHED_LOGS") == "true"
+            and os.getenv("CAN_USE_CACHED_LOGS") == "true"
+        ):
             a = sftp_get(
                 f"{folder}/NOT_CONVERGED",
                 os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"),
@@ -3456,6 +3478,7 @@ def run_calc(calc_id):
             if calc.error_message == "":
                 calc.error_message = "Failed to execute the relevant command"
         else:
+            logger.warning(f"Calculation {calc.id} finished with return code {ret}")
             calc.status = 3
             calc.error_message = "Unknown termination"
 
@@ -3481,13 +3504,18 @@ def run_calc(calc_id):
         and os.getenv("USE_CACHED_LOGS") == "true"
         and not calc_is_cached(calc)
     ):
-        test_name = os.environ["TEST_NAME"]
+        # Get the test name for convenient labeling
+        # If not available, the code is running in a thread of the cluster daemon
+        test_name = os.environ.get(
+            "TEST_NAME", f"frontend.test_cluster.unknown_{time.time()}"
+        )
+        logger.info(f"Adding calculation results of {test_name} to the cache")
         shutil.copytree(
-            f"/calcus/scratch/scr/{calc.id}",
-            os.path.join("/calcus/cache", test_name),
+            f"{CALCUS_SCR_HOME}/{calc.id}",
+            os.path.join(CALCUS_CACHE_HOME, test_name),
             dirs_exist_ok=True,
         )
-        with open(os.path.join("/calcus/cache", test_name + ".input"), "w") as out:
+        with open(os.path.join(CALCUS_CACHE_HOME, test_name + ".input"), "w") as out:
             out.write(calc.all_inputs)
 
     return ret

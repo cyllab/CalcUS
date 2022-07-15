@@ -155,7 +155,7 @@
 					success: function(data, textStatus, xhr) {
 						viewer.addModel(data, "xyz");
 						viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
-						viewer.addPropertyLabels('serial', {}, {showBackground: false, 'fontColor': {'color': '#00000000'}, 'fontSize': 20});
+						viewer.addPropertyLabels('serial', {}, {showBackground: false, 'fontColor': {'color': '#00000000'}, 'fontSize': 20, 'alignment': 'center'});
 						viewer.zoomTo();
 						viewer.render();
 					}

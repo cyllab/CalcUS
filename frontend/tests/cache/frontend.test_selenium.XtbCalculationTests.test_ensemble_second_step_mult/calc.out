@@ -71,7 +71,7 @@
    J. Pisarek, C. Plett, P. Pracht, J. Seibert, P. Shushkov, S. Spicher
    M. Stahn, M. Steiner, T. Strunk, J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2022/05/29 at 19:01:33.561     
+ * started run on 2022/07/13 at 11:03:56.319     
 
            -------------------------------------------------
           |                Calculation Setup                |
@@ -85,7 +85,7 @@
           number of electrons        :                     7
           charge                     :                     0
           spin                       :                   1.0
-          first test random number   :      0.43011382248237
+          first test random number   :      0.70707075628499
 
    ID    Z sym.   atoms
     1   17 Cl     1
@@ -167,13 +167,13 @@
  oscillator strength :  0.00000E+00
 
  SCC (total)                   0 d,  0 h,  0 min,  0.002 sec
- SCC setup                      ...        0 min,  0.000 sec ( 10.150%)
- Dispersion                     ...        0 min,  0.000 sec (  2.059%)
- classical contributions        ...        0 min,  0.000 sec (  1.152%)
- integral evaluation            ...        0 min,  0.000 sec ( 17.938%)
- iterations                     ...        0 min,  0.001 sec ( 35.373%)
- molecular gradient             ...        0 min,  0.000 sec (  7.558%)
- printout                       ...        0 min,  0.000 sec ( 24.100%)
+ SCC setup                      ...        0 min,  0.000 sec (  7.656%)
+ Dispersion                     ...        0 min,  0.000 sec (  1.643%)
+ classical contributions        ...        0 min,  0.000 sec (  1.010%)
+ integral evaluation            ...        0 min,  0.000 sec ( 15.931%)
+ iterations                     ...        0 min,  0.000 sec ( 27.566%)
+ molecular gradient             ...        0 min,  0.000 sec (  5.501%)
+ printout                       ...        0 min,  0.001 sec ( 39.246%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
@@ -271,13 +271,13 @@ Cl        0.00000000000000    0.00000000000000    0.00000000000000
  oscillator strength :  0.00000E+00
 
  SCC (total)                   0 d,  0 h,  0 min,  0.001 sec
- SCC setup                      ...        0 min,  0.000 sec ( 10.205%)
- Dispersion                     ...        0 min,  0.000 sec (  1.884%)
- classical contributions        ...        0 min,  0.000 sec (  1.192%)
- integral evaluation            ...        0 min,  0.000 sec ( 13.209%)
- iterations                     ...        0 min,  0.000 sec ( 30.496%)
- molecular gradient             ...        0 min,  0.000 sec (  8.202%)
- printout                       ...        0 min,  0.000 sec ( 31.998%)
+ SCC setup                      ...        0 min,  0.000 sec (  9.844%)
+ Dispersion                     ...        0 min,  0.000 sec (  1.844%)
+ classical contributions        ...        0 min,  0.000 sec (  1.188%)
+ integral evaluation            ...        0 min,  0.000 sec ( 23.219%)
+ iterations                     ...        0 min,  0.000 sec ( 25.156%)
+ molecular gradient             ...        0 min,  0.000 sec (  7.344%)
+ printout                       ...        0 min,  0.000 sec ( 29.125%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
@@ -364,19 +364,19 @@ optimized geometry written to: xtbopt.xyz
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2022/05/29 at 19:01:33.625     
+ * finished run on 2022/07/13 at 11:03:56.369     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.063 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.719 sec
- * ratio c/w:    11.404 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.050 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.686 sec
+ * ratio c/w:    13.760 speedup
  SCF:
  * wall-time:     0 d,  0 h,  0 min,  0.002 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.030 sec
- * ratio c/w:    15.950 speedup
+ *  cpu-time:     0 d,  0 h,  0 min,  0.027 sec
+ * ratio c/w:    15.817 speedup
  ANC optimizer:
- * wall-time:     0 d,  0 h,  0 min,  0.002 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.025 sec
- * ratio c/w:    16.015 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.001 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.023 sec
+ * ratio c/w:    15.881 speedup
 
 normal termination of xtb

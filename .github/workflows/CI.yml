@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop master ]
+
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: calcus
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: calcus
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -r requirements.txt
+        python -m pip install -r test-requirements.txt
+    - name: Install binary dependencies
+      run: |
+        sudo apt-get install openbabel sshpass postgresql-client dos2unix -y
+    - name: Environment setup
+      run: |
+        dos2unix scripts/*
+        mkdir -p scratch/keys
+        mkdir -p scratch/scr
+        mkdir -p scratch/results
+        PGPASSWORD=postgres createdb -h localhost -p 5432 -U calcus test_calcus
+    - name: Run tests
+      run: |
+        python3 manage.py makemigrations 
+        python3 manage.py makemigrations frontend
+        python3 manage.py migrate
+        python3 manage.py init_static_obj
+        coverage run --omit frontend/test_cluster.py manage.py test
+      env:
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+        POSTGRES_PASSWORD: postgres
+        CALCUS_TEST: True
+        IS_TEST_CLUSTER_DAEMON: True
+        CAN_USE_CACHED_LOGS: true
+        USE_CACHED_LOGS: true
+        CALCUS_TEST_MAX_ATTEMPTS: 5

@@ -71,7 +71,7 @@
    J. Pisarek, C. Plett, P. Pracht, J. Seibert, P. Shushkov, S. Spicher
    M. Stahn, M. Steiner, T. Strunk, J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2022/05/29 at 19:36:08.814     
+ * started run on 2022/07/12 at 17:52:46.989     
 
            -------------------------------------------------
           |                Calculation Setup                |
@@ -85,7 +85,7 @@
           number of electrons        :                     8
           charge                     :                     0
           spin                       :                   0.0
-          first test random number   :      0.45434434880468
+          first test random number   :      0.96834427551798
 
    ID    Z sym.   atoms
     1    6 C      1
@@ -164,14 +164,14 @@
                   HL-Gap            0.6591798 Eh           17.9372 eV
              Fermi-level           -0.1384840 Eh           -3.7683 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.001 sec
- SCC setup                      ...        0 min,  0.000 sec (  9.861%)
- Dispersion                     ...        0 min,  0.000 sec (  2.532%)
- classical contributions        ...        0 min,  0.000 sec (  1.337%)
- integral evaluation            ...        0 min,  0.000 sec (  7.846%)
- iterations                     ...        0 min,  0.001 sec ( 59.754%)
- molecular gradient             ...        0 min,  0.000 sec ( 12.411%)
- printout                       ...        0 min,  0.000 sec (  4.404%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.003 sec
+ SCC setup                      ...        0 min,  0.000 sec (  5.858%)
+ Dispersion                     ...        0 min,  0.000 sec (  4.057%)
+ classical contributions        ...        0 min,  0.000 sec (  2.750%)
+ integral evaluation            ...        0 min,  0.000 sec (  5.705%)
+ iterations                     ...        0 min,  0.002 sec ( 56.767%)
+ molecular gradient             ...        0 min,  0.001 sec ( 21.791%)
+ printout                       ...        0 min,  0.000 sec (  2.176%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
@@ -257,15 +257,15 @@ molecular quadrupole (traceless):
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2022/05/29 at 19:36:08.931     
+ * finished run on 2022/07/12 at 17:52:47.025     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.117 sec
- *  cpu-time:     0 d,  0 h,  0 min,  1.740 sec
- * ratio c/w:    14.824 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.036 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.464 sec
+ * ratio c/w:    12.759 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.001 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.024 sec
- * ratio c/w:    15.945 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.003 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.042 sec
+ * ratio c/w:    14.965 speedup
 
 normal termination of xtb

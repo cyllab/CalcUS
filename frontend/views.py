@@ -721,8 +721,14 @@ def get_shifts(request):
             <td>{}</td>
     </tr>"""
 
+    def sort_nmr_shifts(l):
+        pred = shifts[l][2]
+        if pred == "-":
+            return -1
+        return float(pred)
+
     response = ""
-    for shift in sorted(shifts.keys(), key=lambda l: shifts[l][2], reverse=True):
+    for shift in sorted(shifts.keys(), key=sort_nmr_shifts, reverse=True):
         response += CELL.format(shift, *shifts[shift])
 
     return HttpResponse(response)
@@ -1498,8 +1504,16 @@ def _submit_calculation(request, verify=False):
             )
             orders.append(obj)
     else:
-        if mol_name == "":
-            return "Missing molecule name"
+        combine = ""
+        if "calc_combine_files" in request.POST.keys():
+            combine = clean(request.POST["calc_combine_files"])
+
+        parse_filenames = ""
+        if "calc_parse_filenames" in request.POST.keys():
+            parse_filenames = clean(request.POST["calc_parse_filenames"])
+        else:
+            if mol_name == "":
+                return "Missing molecule name"
 
         num_files = 0
         if "num_files" in request.POST:
@@ -1513,13 +1527,6 @@ def _submit_calculation(request, verify=False):
         elif (
             len(request.FILES) > 0
         ):  # Can't really verify file uploads before actually processing the files
-            combine = ""
-            if "calc_combine_files" in request.POST.keys():
-                combine = clean(request.POST["calc_combine_files"])
-
-            parse_filenames = ""
-            if "calc_parse_filenames" in request.POST.keys():
-                parse_filenames = clean(request.POST["calc_parse_filenames"])
 
             files = request.FILES.getlist("file_structure")
             if len(files) > 1:

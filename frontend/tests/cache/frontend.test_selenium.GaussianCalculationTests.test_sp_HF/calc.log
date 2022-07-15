@@ -2,8 +2,8 @@
  Input=calc.com
  Output=calc.log
  Initial command:
- /binaries/g16/l1.exe "/calcus/scratch/scr/143/Gau-44231.inp" -scrdir="/calcus/scratch/scr/143/"
- Entering Link 1 = /binaries/g16/l1.exe PID=     44233.
+ /binaries/g16/l1.exe "/calcus/scratch/scr/1/Gau-29.inp" -scrdir="/calcus/scratch/scr/1/"
+ Entering Link 1 = /binaries/g16/l1.exe PID=        31.
   
  Copyright (c) 1988-2019, Gaussian, Inc.  All Rights Reserved.
   
@@ -76,7 +76,7 @@
  
  ******************************************
  Gaussian 16:  ES64L-G16RevC.01  3-Jul-2019
-                29-May-2022 
+                13-Jul-2022 
  ******************************************
  %chk=in.chk
  %nproc=4
@@ -92,7 +92,7 @@
  5/5=2,38=5/2;
  6/7=2,8=2,9=2,10=2,28=1/1;
  99/5=1,9=1/99;
- Leave Link    1 at Sun May 29 14:26:37 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link    1 at Wed Jul 13 11:05:16 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l101.exe)
  -----------------------
  File created by ccinput
@@ -121,7 +121,7 @@
  NQMom=    0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
  NMagM=    0.0000000   2.7928460   2.7928460   2.7928460   2.7928460
  AtZNuc=   6.0000000   1.0000000   1.0000000   1.0000000   1.0000000
- Leave Link  101 at Sun May 29 14:26:37 2022, MaxMem=   262144000 cpu:               0.4 elap:               0.1
+ Leave Link  101 at Wed Jul 13 11:05:16 2022, MaxMem=   262144000 cpu:               0.4 elap:               0.1
  (Enter /binaries/g16/l202.exe)
                           Input orientation:                          
  ---------------------------------------------------------------------
@@ -159,7 +159,7 @@
       5          1           0       -0.330072    0.878070   -0.514750
  ---------------------------------------------------------------------
  Rotational constants (GHZ):         164.4303219         163.9529333         163.7655362
- Leave Link  202 at Sun May 29 14:26:37 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  202 at Wed Jul 13 11:05:16 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l301.exe)
  Standard basis: def2SVP (5D, 7F)
  Ernie: Thresh=  0.10000D-02 Tol=  0.10000D-05 Strict=F.
@@ -175,7 +175,7 @@
  Integral buffers will be    131072 words long.
  Raffenetti 1 integral format.
  Two-electron integral symmetry is turned on.
- Leave Link  301 at Sun May 29 14:26:37 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  301 at Wed Jul 13 11:05:17 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
  (Enter /binaries/g16/l302.exe)
  NPDir=0 NMtPBC=     1 NCelOv=     1 NCel=       1 NClECP=     1 NCelD=      1
          NCelK=      1 NCelE2=     1 NClLst=     1 CellRange=     0.0.
@@ -186,10 +186,10 @@
  LDataN:  DoStor=T MaxTD1= 4 Len=   56
  NBasis=    34 RedAO= T EigKep=  1.32D-02  NBF=    34
  NBsUse=    34 1.00D-06 EigRej= -1.00D+00 NBFU=    34
- Leave Link  302 at Sun May 29 14:26:37 2022, MaxMem=   262144000 cpu:               0.3 elap:               0.1
+ Leave Link  302 at Wed Jul 13 11:05:17 2022, MaxMem=   262144000 cpu:               0.3 elap:               0.1
  (Enter /binaries/g16/l303.exe)
  DipDrv:  MaxL=1.
- Leave Link  303 at Sun May 29 14:26:37 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  303 at Wed Jul 13 11:05:17 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
  (Enter /binaries/g16/l401.exe)
  ExpMin= 1.22D-01 ExpMax= 1.24D+03 ExpMxC= 1.86D+02 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
  Harris functional with IExCor=  205 and IRadAn=       5 diagonalized for initial guess.
@@ -202,7 +202,7 @@
  Petite list used in FoFCou.
  Harris En= -40.3454315785124    
  JPrj=0 DoOrth=F DoCkMO=F.
- Leave Link  401 at Sun May 29 14:26:37 2022, MaxMem=   262144000 cpu:               0.4 elap:               0.1
+ Leave Link  401 at Wed Jul 13 11:05:17 2022, MaxMem=   262144000 cpu:               0.4 elap:               0.1
  (Enter /binaries/g16/l502.exe)
  Keep R1 ints in memory in canonical form, NReq=1009981.
  FoFCou: FMM=F IPFlag=           0 FMFlag=           0 FMFlg1=           0
@@ -257,9 +257,9 @@
  RMSDP=4.26D-04 MaxDP=4.29D-03 DE=-1.74D-02 OVMax= 5.67D-03
 
  Cycle   4  Pass 1  IDiag  1:
- E= -40.1681233366104     Delta-E=       -0.000278606200 Rises=F Damp=F
+ E= -40.1681233366102     Delta-E=       -0.000278606200 Rises=F Damp=F
  DIIS: error= 4.20D-04 at cycle   4 NSaved=   4.
- NSaved= 4 IEnMin= 4 EnMin= -40.1681233366104     IErMin= 4 ErrMin= 4.20D-04
+ NSaved= 4 IEnMin= 4 EnMin= -40.1681233366102     IErMin= 4 ErrMin= 4.20D-04
  ErrMax= 4.20D-04  0.00D+00 EMaxC= 1.00D-01 BMatC= 3.02D-06 BMatP= 2.18D-04
  IDIUse=3 WtCom= 9.96D-01 WtEn= 4.20D-03
  Coeff-Com:  0.829D-02-0.200D-01-0.346D+00 0.136D+01
@@ -269,7 +269,7 @@
  RMSDP=1.23D-04 MaxDP=9.73D-04 DE=-2.79D-04 OVMax= 1.06D-03
 
  Cycle   5  Pass 1  IDiag  1:
- E= -40.1681298711068     Delta-E=       -0.000006534496 Rises=F Damp=F
+ E= -40.1681298711068     Delta-E=       -0.000006534497 Rises=F Damp=F
  DIIS: error= 1.87D-05 at cycle   5 NSaved=   5.
  NSaved= 5 IEnMin= 5 EnMin= -40.1681298711068     IErMin= 5 ErrMin= 1.87D-05
  ErrMax= 1.87D-05  0.00D+00 EMaxC= 1.00D-01 BMatC= 2.02D-08 BMatP= 3.02D-06
@@ -304,9 +304,9 @@
  RMSDP=8.56D-08 MaxDP=6.78D-07 DE=-4.03D-11 OVMax= 4.85D-07
 
  Cycle   8  Pass 1  IDiag  1:
- E= -40.1681299182596     Delta-E=       -0.000000000001 Rises=F Damp=F
+ E= -40.1681299182594     Delta-E=       -0.000000000001 Rises=F Damp=F
  DIIS: error= 1.28D-08 at cycle   8 NSaved=   8.
- NSaved= 8 IEnMin= 8 EnMin= -40.1681299182596     IErMin= 8 ErrMin= 1.28D-08
+ NSaved= 8 IEnMin= 8 EnMin= -40.1681299182594     IErMin= 8 ErrMin= 1.28D-08
  ErrMax= 1.28D-08  0.00D+00 EMaxC= 1.00D-01 BMatC= 7.79D-15 BMatP= 5.15D-13
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com: -0.352D-06 0.131D-05 0.196D-04-0.928D-04 0.319D-03 0.107D-01
@@ -314,12 +314,12 @@
  Coeff:     -0.352D-06 0.131D-05 0.196D-04-0.928D-04 0.319D-03 0.107D-01
  Coeff:     -0.151D+00 0.114D+01
  Gap=     0.738 Goal=   None    Shift=    0.000
- RMSDP=6.55D-09 MaxDP=6.46D-08 DE=-1.12D-12 OVMax= 7.15D-08
+ RMSDP=6.55D-09 MaxDP=6.46D-08 DE=-1.02D-12 OVMax= 7.15D-08
 
  SCF Done:  E(RHF) =  -40.1681299183     A.U. after    8 cycles
             NFock=  8  Conv=0.66D-08     -V/T= 2.0048
- KE= 3.997686483991D+01 PE=-1.200706156377D+02 EE= 2.624721215245D+01
- Leave Link  502 at Sun May 29 14:26:37 2022, MaxMem=   262144000 cpu:               0.3 elap:               0.1
+ KE= 3.997686483991D+01 PE=-1.200706156377D+02 EE= 2.624721215244D+01
+ Leave Link  502 at Wed Jul 13 11:05:17 2022, MaxMem=   262144000 cpu:               0.3 elap:               0.1
  (Enter /binaries/g16/l601.exe)
  Copying SCF densities to generalized density rwf, IOpCl= 0 IROHF=0.
 
@@ -361,7 +361,7 @@
                1
      1  C   -0.000000
  Electronic spatial extent (au):  <R**2>=             34.8918
- Charge=             -0.0000 electrons
+ Charge=              0.0000 electrons
  Dipole moment (field-independent basis, Debye):
     X=             -0.0035    Y=             -0.0000    Z=              0.0004  Tot=              0.0035
  Quadrupole moment (field-independent basis, Debye-Ang):
@@ -381,10 +381,10 @@
  XXYZ=             -0.0022 YYXZ=              0.2906 ZZXY=              0.0088
  N-N= 1.367840872710D+01 E-N=-1.200706157071D+02  KE= 3.997686483991D+01
  No NMR shielding tensors so no spin-rotation constants.
- Leave Link  601 at Sun May 29 14:26:37 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.1
+ Leave Link  601 at Wed Jul 13 11:05:17 2022, MaxMem=   262144000 cpu:               0.3 elap:               0.1
  (Enter /binaries/g16/l9999.exe)
  Unable to Open any file for archive entry.
- 1\1\GINC-WEB\SP\RHF\def2SVP\C1H4\CALCUS\29-May-2022\0\\#p sp HF/Def2SV
+ 1\1\GINC-WEB\SP\RHF\def2SVP\C1H4\CALCUS\13-Jul-2022\0\\#p sp HF/Def2SV
  P\\File created by ccinput\\0,1\C,0,4.2918,3.6588,0.\H,0,4.6485,2.65,0
  .\H,0,4.6485,4.1632,0.8707\H,0,4.6485,4.1632,-0.8797\H,0,3.2218,3.6588
  ,0.\\Version=ES64L-G16RevC.01\State=1-A\HF=-40.1681299\RMSD=6.551e-09\
@@ -393,9 +393,22 @@
  The archive entry for this job was punched.
 
 
- IF AT FIRST YOU DON'T SUCCEED, TRY LOOKING IN 
- THE WASTEBASKET FOR THE DIRECTIONS.
- Job cpu time:       0 days  0 hours  0 minutes  1.9 seconds.
- Elapsed time:       0 days  0 hours  0 minutes  0.5 seconds.
+            ARSENIC
+
+ FOR SMELTER FUMES HAVE I BEEN NAMED,
+    I AM AN EVIL POISONOUS SMOKE...
+ BUT WHEN FROM POISON I AM FREED,
+    THROUGH ART AND SLEIGHT OF HAND,
+ THEN CAN I CURE BOTH MAN AND BEAST,
+    FROM DIRE DISEASE OFTTIMES DIRECT THEM;
+ BUT PREPARE ME CORRECTLY, AND TAKE GREAT CARE
+    THAT YOU FAITHFULLY KEEP WATCHFUL GUARD OVER ME;
+ FOR ELSE I AM POISON, AND POISON REMAIN,
+    THAT PIERCES THE HEART OF MANY A ONE.
+
+ ATTRIBUTED TO THE PROBABLY MYTHICAL 15TH
+ CENTURY MONK, BASILIUS VALENTINUS
+ Job cpu time:       0 days  0 hours  0 minutes  2.0 seconds.
+ Elapsed time:       0 days  0 hours  0 minutes  0.6 seconds.
  File lengths (MBytes):  RWF=      6 Int=      0 D2E=      0 Chk=      1 Scr=      1
- Normal termination of Gaussian 16 at Sun May 29 14:26:37 2022.
+ Normal termination of Gaussian 16 at Wed Jul 13 11:05:17 2022.

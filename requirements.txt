@@ -1,9 +1,9 @@
 basis-set-exchange
 bleach
-ccinput==1.4.2
+ccinput
 celery[redis]
 cryptography
-Django==3.2.13
+Django==3.2.14
 django-appconf==1.0.4
 django-axes==5.27.0
 django-bulma

@@ -29,7 +29,14 @@ from celery.schedules import crontab
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calcus.settings")
 
-app = Celery("calcus", backend="redis://redis:6379/1", broker="redis://redis:6379/0")
+if "CI" in os.environ:
+    app = Celery(
+        "calcus", backend="redis://localhost:6379/1", broker="redis://localhost:6379/0"
+    )
+else:
+    app = Celery(
+        "calcus", backend="redis://redis:6379/1", broker="redis://redis:6379/0"
+    )
 
 app.autodiscover_tasks()
 

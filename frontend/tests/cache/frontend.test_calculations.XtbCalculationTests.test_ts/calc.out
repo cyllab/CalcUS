@@ -166,6 +166,15 @@ WARNING: Geometry Optimization
 WARNING: Found dipole moment calculation with XTB calculation
   ===> : Switching off dipole moment calculation
 
+--------------------------------------------------------------------------
+An invalid value was supplied for an enum variable.
+
+  Variable     : btl_vader_single_copy_mechanism
+  Value        : "none"
+  Valid values : 1:"cma", 4:"emulated", 3:"none"
+--------------------------------------------------------------------------
+[web:00024] 3 more processes have sent help message help-mca-var.txt / invalid-value-enum
+[web:00024] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
 
 WARNING: TRAH-SCF for XTB is not implemented!
   ===> : Turning TRAH off!
@@ -600,7 +609,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Pisarek, C. Plett, P. Pracht, J. Seibert, P. Shushkov, S. Spicher
    M. Stahn, M. Steiner, T. Strunk, J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2022/05/29 at 19:36:10.297     
+ * started run on 2022/07/13 at 11:03:02.154     
 
            -------------------------------------------------
           |                Calculation Setup                |
@@ -615,7 +624,7 @@ CARTESIAN COORDINATES (A.U.)
           number of electrons        :                   100
           charge                     :                     0
           spin                       :                   0.0
-          first test random number   :      0.55330639240846
+          first test random number   :      0.02724160780922
 
    ID    Z sym.   atoms
     1   53 I      1
@@ -712,14 +721,14 @@ CARTESIAN COORDINATES (A.U.)
                   HL-Gap            0.0938113 Eh            2.5527 eV
              Fermi-level           -0.3005522 Eh           -8.1784 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.041 sec
- SCC setup                      ...        0 min,  0.000 sec (  0.566%)
- Dispersion                     ...        0 min,  0.000 sec (  1.060%)
- classical contributions        ...        0 min,  0.000 sec (  0.102%)
- integral evaluation            ...        0 min,  0.003 sec (  6.407%)
- iterations                     ...        0 min,  0.032 sec ( 78.122%)
- molecular gradient             ...        0 min,  0.005 sec ( 13.151%)
- printout                       ...        0 min,  0.000 sec (  0.532%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.029 sec
+ SCC setup                      ...        0 min,  0.001 sec (  2.906%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.848%)
+ classical contributions        ...        0 min,  0.000 sec (  0.091%)
+ integral evaluation            ...        0 min,  0.003 sec (  9.452%)
+ iterations                     ...        0 min,  0.020 sec ( 71.566%)
+ molecular gradient             ...        0 min,  0.004 sec ( 14.572%)
+ printout                       ...        0 min,  0.000 sec (  0.512%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
@@ -748,16 +757,16 @@ Property printout bound to 'properties.out'
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2022/05/29 at 19:36:10.374     
+ * finished run on 2022/07/13 at 11:03:02.215     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.077 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.237 sec
- * ratio c/w:     3.078 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.061 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.192 sec
+ * ratio c/w:     3.165 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.042 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.166 sec
- * ratio c/w:     3.995 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.029 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.108 sec
+ * ratio c/w:     3.722 speedup
 
 
 -------------------------   --------------------
@@ -1197,9 +1206,18 @@ The optimization has not yet converged - more geometry cycles are needed
    178. D(C  29,C  31,C  27,H  32)   -179.92 -0.000001    0.00   -179.91   
    179. D(C  29,C  31,C  27,C  25)      0.12 -0.000000   -0.00      0.12   
     ----------------------------------------------------------------------------
-[web:37260] Read -1, expected 651728, errno = 1
-[web:37261] Read -1, expected 651728, errno = 1
-[web:37262] Read -1, expected 651728, errno = 1
+--------------------------------------------------------------------------
+An invalid value was supplied for an enum variable.
+
+  Variable     : btl_vader_single_copy_mechanism
+  Value        : "none"
+  Valid values : 1:"cma", 4:"emulated", 3:"none"
+--------------------------------------------------------------------------
+[web:00068] Read -1, expected 651728, errno = 1
+[web:00069] Read -1, expected 651728, errno = 1
+[web:00070] Read -1, expected 651728, errno = 1
+[web:00063] 3 more processes have sent help message help-mca-var.txt / invalid-value-enum
+[web:00063] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE   2            *
@@ -1356,7 +1374,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Pisarek, C. Plett, P. Pracht, J. Seibert, P. Shushkov, S. Spicher
    M. Stahn, M. Steiner, T. Strunk, J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2022/05/29 at 19:36:10.803     
+ * started run on 2022/07/13 at 11:03:02.613     
 
            -------------------------------------------------
           |                Calculation Setup                |
@@ -1371,7 +1389,7 @@ CARTESIAN COORDINATES (A.U.)
           number of electrons        :                   100
           charge                     :                     0
           spin                       :                   0.0
-          first test random number   :      0.29752506142931
+          first test random number   :      0.45488416946733
 
    ID    Z sym.   atoms
     1   53 I      1
@@ -1436,10 +1454,10 @@ CAMM data taken from xtbrestart
    4    -54.8745736 -0.214978E-04  0.179E-02    2.58       1.0  T
    5    -54.8745777 -0.418680E-05  0.707E-03    2.58       2.4  T
    6    -54.8745780 -0.229019E-06  0.472E-03    2.58       3.6  T
-   7    -54.8745780 -0.361579E-07  0.294E-03    2.58       5.7  T
+   7    -54.8745780 -0.361580E-07  0.294E-03    2.58       5.7  T
    8    -54.8745781 -0.645568E-07  0.103E-03    2.58      16.4  T
-   9    -54.8745781 -0.604565E-08  0.543E-04    2.58      31.1  T
-  10    -54.8745781  0.791303E-09  0.315E-04    2.58      53.6  T
+   9    -54.8745781 -0.604562E-08  0.543E-04    2.58      31.1  T
+  10    -54.8745781  0.791374E-09  0.315E-04    2.58      53.6  T
 
    *** convergence criteria satisfied after 10 iterations ***
 
@@ -1465,14 +1483,14 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.0948739 Eh            2.5816 eV
              Fermi-level           -0.3009605 Eh           -8.1896 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.029 sec
- SCC setup                      ...        0 min,  0.000 sec (  0.681%)
- Dispersion                     ...        0 min,  0.000 sec (  1.459%)
- classical contributions        ...        0 min,  0.000 sec (  0.123%)
- integral evaluation            ...        0 min,  0.002 sec (  7.381%)
- iterations                     ...        0 min,  0.021 sec ( 72.956%)
- molecular gradient             ...        0 min,  0.005 sec ( 16.561%)
- printout                       ...        0 min,  0.000 sec (  0.757%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.027 sec
+ SCC setup                      ...        0 min,  0.000 sec (  0.582%)
+ Dispersion                     ...        0 min,  0.000 sec (  1.079%)
+ classical contributions        ...        0 min,  0.000 sec (  0.155%)
+ integral evaluation            ...        0 min,  0.002 sec (  8.131%)
+ iterations                     ...        0 min,  0.019 sec ( 68.262%)
+ molecular gradient             ...        0 min,  0.006 sec ( 20.988%)
+ printout                       ...        0 min,  0.000 sec (  0.737%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
@@ -1501,16 +1519,16 @@ Property printout bound to 'properties.out'
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2022/05/29 at 19:36:10.858     
+ * finished run on 2022/07/13 at 11:03:02.653     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.055 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.202 sec
- * ratio c/w:     3.656 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.040 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.152 sec
+ * ratio c/w:     3.809 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.030 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.118 sec
- * ratio c/w:     3.993 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.027 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.109 sec
+ * ratio c/w:     3.973 speedup
 
 
 -------------------------   --------------------
@@ -1735,7 +1753,7 @@ Converting the step to cartesian space:
  Initial RMS(Int)=    0.0205763688
 Transforming coordinates:
  Iter   0:  RMS(Cart)=    0.1885145584 RMS(Int)=    0.0209037789
- Iter   1:  RMS(Cart)=    0.0113254531 RMS(Int)=    0.0042208115
+ Iter   1:  RMS(Cart)=    0.0113254530 RMS(Int)=    0.0042208115
  Iter   2:  RMS(Cart)=    0.0014809736 RMS(Int)=    0.0001807264
  Iter   3:  RMS(Cart)=    0.0001627198 RMS(Int)=    0.0000603829
  Iter   4:  RMS(Cart)=    0.0000214940 RMS(Int)=    0.0000027362
@@ -1948,9 +1966,18 @@ The optimization has not yet converged - more geometry cycles are needed
    178. D(C  29,C  31,C  27,H  32)   -179.91  0.000008   -0.00   -179.92   
    179. D(C  29,C  31,C  27,C  25)      0.12  0.000005   -0.00      0.12   
     ----------------------------------------------------------------------------
-[web:37291] Read -1, expected 651728, errno = 1
-[web:37292] Read -1, expected 651728, errno = 1
-[web:37293] Read -1, expected 651728, errno = 1
+--------------------------------------------------------------------------
+An invalid value was supplied for an enum variable.
+
+  Variable     : btl_vader_single_copy_mechanism
+  Value        : "none"
+  Valid values : 1:"cma", 4:"emulated", 3:"none"
+--------------------------------------------------------------------------
+[web:00101] Read -1, expected 651728, errno = 1
+[web:00099] Read -1, expected 651728, errno = 1
+[web:00100] Read -1, expected 651728, errno = 1
+[web:00094] 3 more processes have sent help message help-mca-var.txt / invalid-value-enum
+[web:00094] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE   3            *
@@ -2107,7 +2134,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Pisarek, C. Plett, P. Pracht, J. Seibert, P. Shushkov, S. Spicher
    M. Stahn, M. Steiner, T. Strunk, J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2022/05/29 at 19:36:11.330     
+ * started run on 2022/07/13 at 11:03:03.105     
 
            -------------------------------------------------
           |                Calculation Setup                |
@@ -2122,7 +2149,7 @@ CARTESIAN COORDINATES (A.U.)
           number of electrons        :                   100
           charge                     :                     0
           spin                       :                   0.0
-          first test random number   :      0.13539852225635
+          first test random number   :      0.87261979895303
 
    ID    Z sym.   atoms
     1   53 I      1
@@ -2187,10 +2214,10 @@ CAMM data taken from xtbrestart
    4    -54.8744557 -0.203237E-04  0.165E-02    2.55       1.0  T
    5    -54.8744585 -0.282346E-05  0.576E-03    2.55       2.9  T
    6    -54.8744587 -0.146510E-06  0.443E-03    2.55       3.8  T
-   7    -54.8744587 -0.280034E-07  0.260E-03    2.55       6.5  T
-   8    -54.8744587 -0.409978E-07  0.112E-03    2.55      15.1  T
+   7    -54.8744587 -0.280035E-07  0.260E-03    2.55       6.5  T
+   8    -54.8744587 -0.409977E-07  0.112E-03    2.55      15.1  T
    9    -54.8744588 -0.138773E-07  0.491E-04    2.55      34.4  T
-  10    -54.8744588  0.501934E-09  0.290E-04    2.55      58.3  T
+  10    -54.8744588  0.502069E-09  0.290E-04    2.55      58.3  T
 
    *** convergence criteria satisfied after 10 iterations ***
 
@@ -2216,21 +2243,21 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.0938373 Eh            2.5534 eV
              Fermi-level           -0.3005976 Eh           -8.1797 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.029 sec
- SCC setup                      ...        0 min,  0.000 sec (  0.733%)
- Dispersion                     ...        0 min,  0.000 sec (  1.429%)
- classical contributions        ...        0 min,  0.000 sec (  0.120%)
- integral evaluation            ...        0 min,  0.003 sec (  9.251%)
- iterations                     ...        0 min,  0.021 sec ( 70.409%)
- molecular gradient             ...        0 min,  0.005 sec ( 17.243%)
- printout                       ...        0 min,  0.000 sec (  0.734%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.031 sec
+ SCC setup                      ...        0 min,  0.000 sec (  0.516%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.964%)
+ classical contributions        ...        0 min,  0.000 sec (  0.122%)
+ integral evaluation            ...        0 min,  0.002 sec (  6.746%)
+ iterations                     ...        0 min,  0.023 sec ( 72.229%)
+ molecular gradient             ...        0 min,  0.006 sec ( 18.663%)
+ printout                       ...        0 min,  0.000 sec (  0.695%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -53.952452137775 Eh    ::
          :: gradient norm              0.000315142995 Eh/a0 ::
-         :: HOMO-LUMO gap              2.553442177919 eV    ::
+         :: HOMO-LUMO gap              2.553442177920 eV    ::
          ::.................................................::
          :: SCC energy               -54.874458757058 Eh    ::
          :: -> isotropic ES            0.034087002664 Eh    ::
@@ -2239,7 +2266,7 @@ CAMM data taken from xtbrestart
          :: -> dispersion             -0.040859136693 Eh    ::
          :: repulsion energy           0.921878840360 Eh    ::
          :: add. restraining           0.000000000000 Eh    ::
-         :: total charge              -0.000000000000 e     ::
+         :: total charge               0.000000000000 e     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -2248,20 +2275,20 @@ Property printout bound to 'properties.out'
            -------------------------------------------------
           | TOTAL ENERGY              -53.952452137775 Eh   |
           | GRADIENT NORM               0.000315142995 Eh/α |
-          | HOMO-LUMO GAP               2.553442177919 eV   |
+          | HOMO-LUMO GAP               2.553442177920 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2022/05/29 at 19:36:11.388     
+ * finished run on 2022/07/13 at 11:03:03.150     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.058 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.199 sec
- * ratio c/w:     3.435 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.045 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.169 sec
+ * ratio c/w:     3.775 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.029 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.113 sec
- * ratio c/w:     3.848 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.031 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.124 sec
+ * ratio c/w:     3.938 speedup
 
 
 -------------------------   --------------------
@@ -2695,9 +2722,18 @@ The optimization has not yet converged - more geometry cycles are needed
    178. D(C  29,C  31,C  27,H  32)   -179.92 -0.000000    0.00   -179.91   
    179. D(C  29,C  31,C  27,C  25)      0.12 -0.000001    0.00      0.12   
     ----------------------------------------------------------------------------
-[web:37323] Read -1, expected 651728, errno = 1
-[web:37324] Read -1, expected 651728, errno = 1
-[web:37322] Read -1, expected 651728, errno = 1
+--------------------------------------------------------------------------
+An invalid value was supplied for an enum variable.
+
+  Variable     : btl_vader_single_copy_mechanism
+  Value        : "none"
+  Valid values : 1:"cma", 4:"emulated", 3:"none"
+--------------------------------------------------------------------------
+[web:00132] Read -1, expected 651728, errno = 1
+[web:00130] Read -1, expected 651728, errno = 1
+[web:00131] Read -1, expected 651728, errno = 1
+[web:00125] 3 more processes have sent help message help-mca-var.txt / invalid-value-enum
+[web:00125] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE   4            *
@@ -2854,7 +2890,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Pisarek, C. Plett, P. Pracht, J. Seibert, P. Shushkov, S. Spicher
    M. Stahn, M. Steiner, T. Strunk, J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2022/05/29 at 19:36:11.843     
+ * started run on 2022/07/13 at 11:03:03.609     
 
            -------------------------------------------------
           |                Calculation Setup                |
@@ -2869,7 +2905,7 @@ CARTESIAN COORDINATES (A.U.)
           number of electrons        :                   100
           charge                     :                     0
           spin                       :                   0.0
-          first test random number   :      0.85245875756209
+          first test random number   :      0.06914430199064
 
    ID    Z sym.   atoms
     1   53 I      1
@@ -2932,8 +2968,8 @@ CAMM data taken from xtbrestart
    2    -54.8744625 -0.841632E-06  0.694E-02    2.56       1.0  T
    3    -54.8744605  0.201299E-05  0.824E-03    2.55       2.1  T
    4    -54.8744630 -0.249681E-05  0.151E-03    2.56      11.2  T
-   5    -54.8744630 -0.185290E-07  0.992E-04    2.56      17.0  T
-   6    -54.8744630 -0.492154E-08  0.376E-04    2.56      45.0  T
+   5    -54.8744630 -0.185288E-07  0.992E-04    2.56      17.0  T
+   6    -54.8744630 -0.492153E-08  0.376E-04    2.56      45.0  T
 
    *** convergence criteria satisfied after 6 iterations ***
 
@@ -2960,20 +2996,20 @@ CAMM data taken from xtbrestart
              Fermi-level           -0.3006411 Eh           -8.1809 eV
 
  SCC (total)                   0 d,  0 h,  0 min,  0.022 sec
- SCC setup                      ...        0 min,  0.000 sec (  0.895%)
- Dispersion                     ...        0 min,  0.000 sec (  1.817%)
- classical contributions        ...        0 min,  0.000 sec (  0.178%)
- integral evaluation            ...        0 min,  0.003 sec ( 12.815%)
- iterations                     ...        0 min,  0.012 sec ( 54.951%)
- molecular gradient             ...        0 min,  0.006 sec ( 28.307%)
- printout                       ...        0 min,  0.000 sec (  0.944%)
+ SCC setup                      ...        0 min,  0.000 sec (  0.719%)
+ Dispersion                     ...        0 min,  0.000 sec (  1.464%)
+ classical contributions        ...        0 min,  0.000 sec (  0.179%)
+ integral evaluation            ...        0 min,  0.002 sec ( 10.114%)
+ iterations                     ...        0 min,  0.014 sec ( 60.355%)
+ molecular gradient             ...        0 min,  0.006 sec ( 26.138%)
+ printout                       ...        0 min,  0.000 sec (  0.956%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -53.952439001677 Eh    ::
-         :: gradient norm              0.000529227490 Eh/a0 ::
-         :: HOMO-LUMO gap              2.555761810679 eV    ::
+         :: gradient norm              0.000529227489 Eh/a0 ::
+         :: HOMO-LUMO gap              2.555761810678 eV    ::
          ::.................................................::
          :: SCC energy               -54.874462995059 Eh    ::
          :: -> isotropic ES            0.034039645112 Eh    ::
@@ -2982,7 +3018,7 @@ CAMM data taken from xtbrestart
          :: -> dispersion             -0.040917215455 Eh    ::
          :: repulsion energy           0.921909231421 Eh    ::
          :: add. restraining           0.000000000000 Eh    ::
-         :: total charge              -0.000000000000 e     ::
+         :: total charge               0.000000000000 e     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -2990,21 +3026,21 @@ Property printout bound to 'properties.out'
 
            -------------------------------------------------
           | TOTAL ENERGY              -53.952439001677 Eh   |
-          | GRADIENT NORM               0.000529227490 Eh/α |
-          | HOMO-LUMO GAP               2.555761810679 eV   |
+          | GRADIENT NORM               0.000529227489 Eh/α |
+          | HOMO-LUMO GAP               2.555761810678 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2022/05/29 at 19:36:11.894     
+ * finished run on 2022/07/13 at 11:03:03.644     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.051 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.155 sec
- * ratio c/w:     3.066 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.035 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.131 sec
+ * ratio c/w:     3.786 speedup
  SCF:
  * wall-time:     0 d,  0 h,  0 min,  0.023 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.091 sec
- * ratio c/w:     3.987 speedup
+ *  cpu-time:     0 d,  0 h,  0 min,  0.090 sec
+ * ratio c/w:     3.960 speedup
 
 
 -------------------------   --------------------
@@ -3437,9 +3473,18 @@ The optimization has not yet converged - more geometry cycles are needed
    178. D(C  29,C  31,C  27,H  32)   -179.91  0.000002   -0.00   -179.92   
    179. D(C  29,C  31,C  27,C  25)      0.12  0.000001   -0.00      0.12   
     ----------------------------------------------------------------------------
-[web:37353] Read -1, expected 651728, errno = 1
-[web:37354] Read -1, expected 651728, errno = 1
-[web:37355] Read -1, expected 651728, errno = 1
+--------------------------------------------------------------------------
+An invalid value was supplied for an enum variable.
+
+  Variable     : btl_vader_single_copy_mechanism
+  Value        : "none"
+  Valid values : 1:"cma", 4:"emulated", 3:"none"
+--------------------------------------------------------------------------
+[web:00161] Read -1, expected 651728, errno = 1
+[web:00162] Read -1, expected 651728, errno = 1
+[web:00163] Read -1, expected 651728, errno = 1
+[web:00156] 3 more processes have sent help message help-mca-var.txt / invalid-value-enum
+[web:00156] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE   5            *
@@ -3596,7 +3641,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Pisarek, C. Plett, P. Pracht, J. Seibert, P. Shushkov, S. Spicher
    M. Stahn, M. Steiner, T. Strunk, J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2022/05/29 at 19:36:12.359     
+ * started run on 2022/07/13 at 11:03:04.085     
 
            -------------------------------------------------
           |                Calculation Setup                |
@@ -3611,7 +3656,7 @@ CARTESIAN COORDINATES (A.U.)
           number of electrons        :                   100
           charge                     :                     0
           spin                       :                   0.0
-          first test random number   :      0.61815709925413
+          first test random number   :      0.47697299930393
 
    ID    Z sym.   atoms
     1   53 I      1
@@ -3674,8 +3719,8 @@ CAMM data taken from xtbrestart
    2    -54.8744500 -0.571113E-06  0.551E-02    2.55       1.0  T
    3    -54.8744488  0.117580E-05  0.635E-03    2.55       2.7  T
    4    -54.8744503 -0.148776E-05  0.135E-03    2.55      12.6  T
-   5    -54.8744503 -0.145560E-07  0.999E-04    2.55      16.9  T
-   6    -54.8744503 -0.265108E-08  0.413E-04    2.55      40.9  T
+   5    -54.8744503 -0.145561E-07  0.999E-04    2.55      16.9  T
+   6    -54.8744503 -0.265090E-08  0.413E-04    2.55      40.9  T
 
    *** convergence criteria satisfied after 6 iterations ***
 
@@ -3702,20 +3747,20 @@ CAMM data taken from xtbrestart
              Fermi-level           -0.3005966 Eh           -8.1796 eV
 
  SCC (total)                   0 d,  0 h,  0 min,  0.024 sec
- SCC setup                      ...        0 min,  0.000 sec (  0.834%)
- Dispersion                     ...        0 min,  0.000 sec (  1.787%)
- classical contributions        ...        0 min,  0.000 sec (  0.174%)
- integral evaluation            ...        0 min,  0.003 sec ( 12.822%)
- iterations                     ...        0 min,  0.013 sec ( 55.965%)
- molecular gradient             ...        0 min,  0.007 sec ( 27.699%)
- printout                       ...        0 min,  0.000 sec (  0.640%)
+ SCC setup                      ...        0 min,  0.000 sec (  0.754%)
+ Dispersion                     ...        0 min,  0.000 sec (  1.668%)
+ classical contributions        ...        0 min,  0.000 sec (  0.164%)
+ integral evaluation            ...        0 min,  0.002 sec (  8.780%)
+ iterations                     ...        0 min,  0.015 sec ( 61.941%)
+ molecular gradient             ...        0 min,  0.006 sec ( 25.716%)
+ printout                       ...        0 min,  0.000 sec (  0.905%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -53.952452506602 Eh    ::
          :: gradient norm              0.000265135710 Eh/a0 ::
-         :: HOMO-LUMO gap              2.552885974936 eV    ::
+         :: HOMO-LUMO gap              2.552885974938 eV    ::
          ::.................................................::
          :: SCC energy               -54.874450314415 Eh    ::
          :: -> isotropic ES            0.034080220604 Eh    ::
@@ -3733,20 +3778,20 @@ Property printout bound to 'properties.out'
            -------------------------------------------------
           | TOTAL ENERGY              -53.952452506602 Eh   |
           | GRADIENT NORM               0.000265135710 Eh/α |
-          | HOMO-LUMO GAP               2.552885974936 eV   |
+          | HOMO-LUMO GAP               2.552885974938 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2022/05/29 at 19:36:12.395     
+ * finished run on 2022/07/13 at 11:03:04.122     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.036 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.136 sec
- * ratio c/w:     3.814 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.037 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.138 sec
+ * ratio c/w:     3.758 speedup
  SCF:
  * wall-time:     0 d,  0 h,  0 min,  0.024 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.095 sec
- * ratio c/w:     3.992 speedup
+ *  cpu-time:     0 d,  0 h,  0 min,  0.094 sec
+ * ratio c/w:     3.911 speedup
 
 
 -------------------------   --------------------
@@ -3969,7 +4014,7 @@ The final length of the internal step   ....       0.0271
 Converting the step to cartesian space:
  Initial RMS(Int)=    0.0020227583
 Transforming coordinates:
- Iter   0:  RMS(Cart)=    0.0181356852 RMS(Int)=    0.0020231309
+ Iter   0:  RMS(Cart)=    0.0181356853 RMS(Int)=    0.0020231309
  Iter   1:  RMS(Cart)=    0.0001007478 RMS(Int)=    0.0000420658
  Iter   2:  RMS(Cart)=    0.0000010990 RMS(Int)=    0.0000001398
  Iter   3:  RMS(Cart)=    0.0000000123 RMS(Int)=    0.0000000053
@@ -3984,7 +4029,7 @@ Storing new coordinates                 .... done
           RMS gradient        0.0000228544            0.0001000000      YES
           MAX gradient        0.0001846501            0.0003000000      YES
           RMS step            0.0020227583            0.0020000000      NO
-          MAX step            0.0136075240            0.0040000000      NO
+          MAX step            0.0136075241            0.0040000000      NO
           ........................................................
           Max(Bonds)      0.0003      Max(Angles)    0.02
           Max(Dihed)        0.78      Max(Improp)    0.00
@@ -4179,9 +4224,18 @@ The optimization has not yet converged - more geometry cycles are needed
    178. D(C  29,C  31,C  27,H  32)   -179.92 -0.000000    0.00   -179.91   
    179. D(C  29,C  31,C  27,C  25)      0.12  0.000000    0.00      0.12   
     ----------------------------------------------------------------------------
-[web:37385] Read -1, expected 651728, errno = 1
-[web:37386] Read -1, expected 651728, errno = 1
-[web:37384] Read -1, expected 651728, errno = 1
+--------------------------------------------------------------------------
+An invalid value was supplied for an enum variable.
+
+  Variable     : btl_vader_single_copy_mechanism
+  Value        : "none"
+  Valid values : 1:"cma", 4:"emulated", 3:"none"
+--------------------------------------------------------------------------
+[web:00192] Read -1, expected 651728, errno = 1
+[web:00193] Read -1, expected 651728, errno = 1
+[web:00194] Read -1, expected 651728, errno = 1
+[web:00187] 3 more processes have sent help message help-mca-var.txt / invalid-value-enum
+[web:00187] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE   6            *
@@ -4338,7 +4392,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Pisarek, C. Plett, P. Pracht, J. Seibert, P. Shushkov, S. Spicher
    M. Stahn, M. Steiner, T. Strunk, J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2022/05/29 at 19:36:12.871     
+ * started run on 2022/07/13 at 11:03:04.582     
 
            -------------------------------------------------
           |                Calculation Setup                |
@@ -4353,7 +4407,7 @@ CARTESIAN COORDINATES (A.U.)
           number of electrons        :                   100
           charge                     :                     0
           spin                       :                   0.0
-          first test random number   :      0.21020710089598
+          first test random number   :      0.67853167544826
 
    ID    Z sym.   atoms
     1   53 I      1
@@ -4415,9 +4469,9 @@ CAMM data taken from xtbrestart
    1    -54.8744817 -0.548745E+02  0.623E-02    2.55       0.0  T
    2    -54.8744819 -0.212827E-06  0.364E-02    2.55       1.0  T
    3    -54.8744817  0.267660E-06  0.362E-03    2.55       4.7  T
-   4    -54.8744821 -0.385214E-06  0.140E-03    2.55      12.1  T
-   5    -54.8744821 -0.738674E-08  0.617E-04    2.55      27.4  T
-   6    -54.8744821 -0.486916E-08  0.465E-04    2.55      36.3  T
+   4    -54.8744821 -0.385213E-06  0.140E-03    2.55      12.1  T
+   5    -54.8744821 -0.738677E-08  0.617E-04    2.55      27.4  T
+   6    -54.8744821 -0.486917E-08  0.465E-04    2.55      36.3  T
 
    *** convergence criteria satisfied after 6 iterations ***
 
@@ -4443,21 +4497,21 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.0937382 Eh            2.5507 eV
              Fermi-level           -0.3005776 Eh           -8.1791 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.022 sec
- SCC setup                      ...        0 min,  0.000 sec (  0.876%)
- Dispersion                     ...        0 min,  0.000 sec (  1.820%)
- classical contributions        ...        0 min,  0.000 sec (  0.163%)
- integral evaluation            ...        0 min,  0.003 sec ( 11.393%)
- iterations                     ...        0 min,  0.013 sec ( 60.548%)
- molecular gradient             ...        0 min,  0.005 sec ( 24.115%)
- printout                       ...        0 min,  0.000 sec (  0.990%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.023 sec
+ SCC setup                      ...        0 min,  0.000 sec (  0.767%)
+ Dispersion                     ...        0 min,  0.000 sec (  1.283%)
+ classical contributions        ...        0 min,  0.000 sec (  0.208%)
+ integral evaluation            ...        0 min,  0.003 sec ( 11.207%)
+ iterations                     ...        0 min,  0.014 sec ( 59.564%)
+ molecular gradient             ...        0 min,  0.006 sec ( 25.927%)
+ printout                       ...        0 min,  0.000 sec (  0.962%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -53.952453176900 Eh    ::
          :: gradient norm              0.000152638514 Eh/a0 ::
-         :: HOMO-LUMO gap              2.550746929875 eV    ::
+         :: HOMO-LUMO gap              2.550746929873 eV    ::
          ::.................................................::
          :: SCC energy               -54.874482067163 Eh    ::
          :: -> isotropic ES            0.034084580748 Eh    ::
@@ -4466,7 +4520,7 @@ CAMM data taken from xtbrestart
          :: -> dispersion             -0.040840930594 Eh    ::
          :: repulsion energy           0.921907916042 Eh    ::
          :: add. restraining           0.000000000000 Eh    ::
-         :: total charge              -0.000000000000 e     ::
+         :: total charge               0.000000000000 e     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -4475,20 +4529,20 @@ Property printout bound to 'properties.out'
            -------------------------------------------------
           | TOTAL ENERGY              -53.952453176900 Eh   |
           | GRADIENT NORM               0.000152638514 Eh/α |
-          | HOMO-LUMO GAP               2.550746929875 eV   |
+          | HOMO-LUMO GAP               2.550746929873 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2022/05/29 at 19:36:12.910     
+ * finished run on 2022/07/13 at 11:03:04.619     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.039 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.137 sec
- * ratio c/w:     3.501 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.037 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.141 sec
+ * ratio c/w:     3.777 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.022 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.089 sec
- * ratio c/w:     3.993 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.023 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.092 sec
+ * ratio c/w:     3.960 speedup
 
 
 -------------------------   --------------------
@@ -5086,7 +5140,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Pisarek, C. Plett, P. Pracht, J. Seibert, P. Shushkov, S. Spicher
    M. Stahn, M. Steiner, T. Strunk, J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2022/05/29 at 19:36:13.047     
+ * started run on 2022/07/13 at 11:03:04.747     
 
            -------------------------------------------------
           |                Calculation Setup                |
@@ -5101,7 +5155,7 @@ CARTESIAN COORDINATES (A.U.)
           number of electrons        :                   100
           charge                     :                     0
           spin                       :                   0.0
-          first test random number   :      0.84513426983562
+          first test random number   :      0.13061873945528
 
    ID    Z sym.   atoms
     1   53 I      1
@@ -5161,10 +5215,10 @@ CAMM data taken from xtbrestart
 
  iter      E             dE          RMSdq      gap      omega  full diag
    1    -54.8744717 -0.548745E+02  0.185E-02    2.55       0.0  T
-   2    -54.8744717 -0.254133E-07  0.107E-02    2.55       1.6  T
+   2    -54.8744717 -0.254131E-07  0.107E-02    2.55       1.6  T
    3    -54.8744717  0.337711E-07  0.140E-03    2.55      12.1  T
-   4    -54.8744717 -0.461642E-07  0.631E-04    2.55      26.8  T
-   5    -54.8744717 -0.217669E-08  0.245E-04    2.55      69.0  T
+   4    -54.8744717 -0.461643E-07  0.631E-04    2.55      26.8  T
+   5    -54.8744717 -0.217656E-08  0.245E-04    2.55      69.0  T
 
    *** convergence criteria satisfied after 5 iterations ***
 
@@ -5190,21 +5244,21 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.0937840 Eh            2.5520 eV
              Fermi-level           -0.3005941 Eh           -8.1796 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.022 sec
- SCC setup                      ...        0 min,  0.000 sec (  0.892%)
- Dispersion                     ...        0 min,  0.000 sec (  1.898%)
- classical contributions        ...        0 min,  0.000 sec (  0.190%)
- integral evaluation            ...        0 min,  0.003 sec ( 13.557%)
- iterations                     ...        0 min,  0.011 sec ( 51.613%)
- molecular gradient             ...        0 min,  0.007 sec ( 30.764%)
- printout                       ...        0 min,  0.000 sec (  0.988%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.017 sec
+ SCC setup                      ...        0 min,  0.000 sec (  0.876%)
+ Dispersion                     ...        0 min,  0.000 sec (  1.869%)
+ classical contributions        ...        0 min,  0.000 sec (  0.223%)
+ integral evaluation            ...        0 min,  0.002 sec ( 12.902%)
+ iterations                     ...        0 min,  0.010 sec ( 58.295%)
+ molecular gradient             ...        0 min,  0.004 sec ( 24.846%)
+ printout                       ...        0 min,  0.000 sec (  0.904%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -53.952453425439 Eh    ::
          :: gradient norm              0.000150063182 Eh/a0 ::
-         :: HOMO-LUMO gap              2.551992295852 eV    ::
+         :: HOMO-LUMO gap              2.551992295851 eV    ::
          ::.................................................::
          :: SCC energy               -54.874471744546 Eh    ::
          :: -> isotropic ES            0.034078108278 Eh    ::
@@ -5222,20 +5276,20 @@ Property printout bound to 'properties.out'
            -------------------------------------------------
           | TOTAL ENERGY              -53.952453425439 Eh   |
           | GRADIENT NORM               0.000150063182 Eh/α |
-          | HOMO-LUMO GAP               2.551992295852 eV   |
+          | HOMO-LUMO GAP               2.551992295851 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2022/05/29 at 19:36:13.083     
+ * finished run on 2022/07/13 at 11:03:04.775     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.037 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.140 sec
- * ratio c/w:     3.812 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.028 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.105 sec
+ * ratio c/w:     3.700 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.022 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.089 sec
- * ratio c/w:     3.996 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.017 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.067 sec
+ * ratio c/w:     3.918 speedup
 
 
 -------------------------   --------------------
@@ -5243,14 +5297,23 @@ FINAL SINGLE POINT ENERGY       -53.952453425440
 -------------------------   --------------------
 
                                 *** OPTIMIZATION RUN DONE ***
-[web:37427] Read -1, expected 651728, errno = 1
-[web:37428] Read -1, expected 651728, errno = 1
-[web:37429] Read -1, expected 651728, errno = 1
+--------------------------------------------------------------------------
+An invalid value was supplied for an enum variable.
+
+  Variable     : btl_vader_single_copy_mechanism
+  Value        : "none"
+  Valid values : 1:"cma", 4:"emulated", 3:"none"
+--------------------------------------------------------------------------
+[web:00235] Read -1, expected 651728, errno = 1
+[web:00236] Read -1, expected 651728, errno = 1
+[web:00237] Read -1, expected 651728, errno = 1
+[web:00230] 3 more processes have sent help message help-mca-var.txt / invalid-value-enum
+[web:00230] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
 
 Timings for individual modules:
 
-Sum of individual times         ...        0.811 sec (=   0.014 min)
-Geometry relaxation             ...        0.381 sec (=   0.006 min)  47.0 %
-XTB module                      ...        0.430 sec (=   0.007 min)  53.0 %
+Sum of individual times         ...        0.696 sec (=   0.012 min)
+Geometry relaxation             ...        0.339 sec (=   0.006 min)  48.7 %
+XTB module                      ...        0.357 sec (=   0.006 min)  51.3 %
                              ****ORCA TERMINATED NORMALLY****
-TOTAL RUN TIME: 0 days 0 hours 0 minutes 3 seconds 510 msec
+TOTAL RUN TIME: 0 days 0 hours 0 minutes 3 seconds 429 msec
