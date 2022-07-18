@@ -938,8 +938,9 @@ def learn(request):
     )
 
 def flowchart(request):
+    flag = True
     flowchartsData = Flowchart.objects.all()
-    return render(request, "frontend/flowchart.html", {"flowchartsData": flowchartsData, "procs":BasicStep.objects.all()})
+    return render(request, "frontend/flowchart.html", {"flag": flag, "flowchartsData": flowchartsData, "procs":BasicStep.objects.all()})
 
 def example(request, pk):
     try:
@@ -3609,7 +3610,6 @@ def launch(request):
         params["calc"] = calc
         params["frame_num"] = frame_num
         params["init_params_id"] = init_params.id
-
     return render(request, "frontend/launch.html", params)
 
 

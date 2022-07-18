@@ -24,6 +24,7 @@
 		{% if not ensemble and not structure %}
 
 		<div class="columns">
+			{% if flag is None %}
 			<div class="column">
 				<div class="field">
 					<label class="label">Draw a structure or choose a file</label>
@@ -45,6 +46,7 @@
 					</div>
 				</div>
 			</div>
+			{% endif %}
 			<div class="column is-narrow has-text-centered" id="calc_parse_filenames_column" style="display: none;">
 				<label class="label">Use filename(s)</label>
 				<div class="control">
@@ -160,6 +162,7 @@
 				</div>
 			</div>
 		</div>
+		{% if flag is None %}
 		<div class="columns">
 			<div class="column is-narrow">
 				<div class="field">
@@ -187,6 +190,7 @@
 			</div>
 
 		</div>
+		{% endif %}
 
 		<div class="field">
 			<label class="label">Software</label>
@@ -482,7 +486,7 @@
 	}); 
 
 $( document ).ready(function() {
-	{% if not ensemble and not structure %}
+	{% if not ensemble and not structure and flag is None%}
 	preselect_last_project();
 	project_selection_changed(document.getElementById("calc_project"));
 	{% endif %}
