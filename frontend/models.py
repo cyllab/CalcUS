@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
+from tkinter import CASCADE
 from django.db import models, transaction
 from django.db.models.signals import pre_save
 from django.forms import JSONField
@@ -699,15 +700,16 @@ class Parameters(models.Model):
 
 class Step(models.Model):
     name = models.CharField(max_length=50)
-    flowchartId = models.ForeignKey(Flowchart, on_delete=models.cascade)
+    flowchart = models.ForeignKey(Flowchart, on_delete=models.CASCADE)
     step = models.ForeignKey(
         BasicStep, on_delete=models.SET_NULL, blank=True, null=True
     )
     parameters = models.ForeignKey(
         Parameters, on_delete=models.SET_NULL, blank=True, null=True
     )
-    parentId = models.CharField(max_length=10)
-    objectId = models.CharField(max_length=10)
+    #parentId = models.CharField(max_length=10)
+    #objectId = models.CharField(max_length=10)
+    parentId = models.ForeignKey('Step', related_name='+', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
