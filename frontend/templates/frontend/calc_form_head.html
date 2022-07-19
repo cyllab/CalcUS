@@ -221,17 +221,19 @@ String.prototype.format = function() {
 	{% endif %}
 
 	function calc_selection_changed() {
-		choice = document.getElementById("calc_type");
-		if(choice.value == "Constrained Optimisation" || choice.value == "Constrained Conformational Search") {
-			editor.styles.atoms_displayLabels_3D = true;
-		}
-		else if(choice.value == "Minimum Energy Path") {
-			editor.styles.atoms_displayLabels_3D = false;
-			refresh_aux_mol();
-		}
-		else {
-			editor.styles.atoms_displayLabels_3D = false;
-		}
+		{% if is_flowchart is None %}
+			choice = document.getElementById("calc_type");
+			if(choice.value == "Constrained Optimisation" || choice.value == "Constrained Conformational Search") {
+				editor.styles.atoms_displayLabels_3D = true;
+			}
+			else if(choice.value == "Minimum Energy Path") {
+				editor.styles.atoms_displayLabels_3D = false;
+				refresh_aux_mol();
+			}
+			else {
+				editor.styles.atoms_displayLabels_3D = false;
+			}
+		{% endif %}
 		set_visibility_name();
 		refresh_availabilities();
 	}

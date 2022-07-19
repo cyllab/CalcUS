@@ -281,6 +281,23 @@
 
 	function openParaModal() {
         console.log("Clicked")
+		document.getElementById('calcform').reset();
+		var inner_text = event.target.parentElement.innerHTML;
+		var index_of_Opening_tag = inner_text.indexOf("<");
+		inner_text = inner_text.substring(0, index_of_Opening_tag);
+		inner_text = inner_text.trim();
+		var select_calculation = document.getElementById('calc_type');
+		for(i=0;i<select_calculation.length;i++)
+		{
+			if(select_calculation[i].value==inner_text)
+			{
+				select_calculation[i].disabled = false;
+				select_calculation[i].selected = true;
+			}
+			else
+				select_calculation[i].disabled = true;
+		}
+		calc_selection_changed();
 		$(".modal-para").addClass("is-active");
     }
     
