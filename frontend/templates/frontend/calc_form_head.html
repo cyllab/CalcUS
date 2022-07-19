@@ -116,9 +116,11 @@ String.prototype.format = function() {
 	function verify_form() {
 		$("#submit_button").addClass("is-loading");
 		
-		//Adding the selected Project to localStorage on pressing Submit Button
-		choice = document.getElementById("calc_project");
-		localStorage.setItem("lastSelectedProject", choice.value);
+		{% if is_flowchart is None %}
+			//Adding the selected Project to localStorage on pressing Submit Button
+			choice = document.getElementById("calc_project");
+			localStorage.setItem("lastSelectedProject", choice.value);
+		{% endif %}
 
 		data = $("#calcform").serializeArray(),
 
