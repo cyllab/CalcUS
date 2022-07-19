@@ -24,7 +24,7 @@
 		{% if not ensemble and not structure %}
 
 		<div class="columns">
-			{% if flag is None %}
+			{% if is_flowchart is None %}
 			<div class="column">
 				<div class="field">
 					<label class="label">Draw a structure or choose a file</label>
@@ -162,7 +162,7 @@
 				</div>
 			</div>
 		</div>
-		{% if flag is None %}
+		{% if is_flowchart is None %}
 		<div class="columns">
 			<div class="column is-narrow">
 				<div class="field">
@@ -486,7 +486,7 @@
 	}); 
 
 $( document ).ready(function() {
-	{% if not ensemble and not structure and flag is None%}
+	{% if not ensemble and not structure and is_flowchart is None%}
 	preselect_last_project();
 	project_selection_changed(document.getElementById("calc_project"));
 	{% endif %}

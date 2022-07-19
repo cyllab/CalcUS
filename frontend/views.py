@@ -940,7 +940,7 @@ def learn(request):
 def flowchart(request):
     flag = True
     flowchartsData = Flowchart.objects.all()
-    return render(request, "frontend/flowchart.html", {"flag": flag, "flowchartsData": flowchartsData, "procs":BasicStep.objects.all()})
+    return render(request, "frontend/flowchart.html", {"is_flowchart": flag, "flowchartsData": flowchartsData, "procs":BasicStep.objects.all()})
 
 def example(request, pk):
     try:
