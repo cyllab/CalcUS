@@ -61,14 +61,16 @@ function debounce(callback, wait) {
 	};
 }
 
-/* Sets atomic labels as the atomic numbers in the xyz structure */
-(function(ChemDoodle) {
-	ChemDoodle.relabel = function(molecule){
-		for(let i = 0, ii = molecule.atoms.length; i<ii; i++){
-			molecule.atoms[i].altLabel = String(i+1);
-		}
-	};
-})(ChemDoodle);
+{% if is_flowchart is None %}
+	/* Sets atomic labels as the atomic numbers in the xyz structure */
+	(function(ChemDoodle) {
+		ChemDoodle.relabel = function(molecule){
+			for(let i = 0, ii = molecule.atoms.length; i<ii; i++){
+				molecule.atoms[i].altLabel = String(i+1);
+			}
+		};
+	})(ChemDoodle);
+{% endif %}
 
 let constraint_num = 0;
 String.prototype.format = function() {

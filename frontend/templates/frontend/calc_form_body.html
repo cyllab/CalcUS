@@ -607,7 +607,7 @@ $('#calc_software').change(function(e){
 
 add_constraint(true);	
 
-{% if not ensemble and not structure and not calc %}
+{% if not ensemble and not structure and not calc and is_flowchart is None%}
 	const inputElement = document.getElementById("file_structure");
 	inputElement.addEventListener("change", file_upload_changed, false);
 {% endif %}
