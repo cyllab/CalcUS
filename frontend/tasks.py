@@ -1864,9 +1864,6 @@ def calc_to_ccinput(calc):
     else:
         _solvation_radii = ""
 
-    PAL = int(os.environ.get("NUM_CPU", 1))
-    MEM = int(os.environ.get("OMP_STACKSIZE", "1G")[:-1]) * 1024 * PAL
-
     if is_test:
         _nproc = min(4, PAL)
         _mem = 2000
