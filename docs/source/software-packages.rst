@@ -37,7 +37,7 @@ Calculations involving ``xtb``-related packages are grouped under the software `
 Specifications
 --------------
 
-Specifications are modifiers or additional keywords that will change the input file. Common specifications are listed below for Gaussian and ORCA. Any valid additional keyword for these softwares can be used, even if not present below. In the case of xtb, only the recognized specifications listed below can be used for security reasons.
+Specifications are modifiers or additional keywords that will change the input file. Common specifications are listed below for Gaussian and ORCA. Any valid additional keyword for these software can be used, even if not present below. In the case of xtb, only the recognized specifications listed below can be used for security reasons.
 
 Gaussian
 ^^^^^^^^

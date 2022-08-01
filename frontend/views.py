@@ -4295,7 +4295,7 @@ def download_folder(request, pk):
         ensembles = folder.ensemble_set.filter(flagged=True)
 
         for e in ensembles:
-            prefix = f"{e.parent_molecule.name}.{e.name}_"
+            prefix = f"{e.parent_molecule.name}.{e.name}_{e.id}_"
             related_orders = _get_related_calculations(e)
             # Verify if the user can view the ensemble?
             # The ensembles should be in the project which he can view, so probably not necessary
@@ -4316,6 +4316,15 @@ def download_folder(request, pk):
                             os.path.join(CALCUS_RESULTS_HOME, str(c.id), "calc.out"),
                             os.path.join(path, clean_filename(folder.name), name),
                         )
+                        if c.parameters.software == "xtb":
+                            zip.writestr(
+                                os.path.join(
+                                    path,
+                                    clean_filename(folder.name),
+                                    name.replace(".log", ".xyz"),
+                                ),
+                                c.structure.xyz_structure,
+                            )
 
         for f in subfolders:
             add_folder_data(zip, f, os.path.join(path, clean_filename(folder.name)))
