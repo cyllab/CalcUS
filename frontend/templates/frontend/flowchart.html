@@ -170,11 +170,6 @@
     </div>
 </div>
 <script>
-	{% for i in flowchartsData %}
-		{% for j in i.step_set.all%}
-			console.log("{{j.id}}")
-		{% endfor %}
-	{% endfor %}
 
 	function decodeJSON(inputJSON) {
 		const replaceWithcomma = '"'
@@ -302,7 +297,6 @@
 		else
 			name = "Unnamed Flowchart"
 		flowchart_data = JSON.stringify(flowy.output());
-		const cars = ["Tigor", "Tiago", "Harrier"];
 		$.ajax({
 			method: "POST",	 	 
 			url: "/create_flowchart/",
