@@ -700,16 +700,14 @@ class Parameters(models.Model):
 
 class Step(models.Model):
     name = models.CharField(max_length=50)
-    flowchart = models.ForeignKey(Flowchart, on_delete=models.CASCADE)
+    flowchart = models.ForeignKey(Flowchart, on_delete=models.CASCADE, default=None)
     step = models.ForeignKey(
         BasicStep, on_delete=models.SET_NULL, blank=True, null=True
     )
     parameters = models.ForeignKey(
         Parameters, on_delete=models.SET_NULL, blank=True, null=True
     )
-    #parentId = models.CharField(max_length=10)
-    #objectId = models.CharField(max_length=10)
-    parentId = models.ForeignKey('Step', related_name='+', on_delete=models.CASCADE)
+    parentId = models.ForeignKey("Step", related_name="+", on_delete = models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return self.name

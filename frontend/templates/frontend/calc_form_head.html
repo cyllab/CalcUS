@@ -139,7 +139,7 @@ String.prototype.format = function() {
 		data.push({"name": "starting_frame", "value": {{ frame_num }}});
 		{% endif %}
 
-		{% if not ensemble and not structure and not calc %}
+		{% if not ensemble and not structure and not calc and is_flowchart is None%}
 		if (sketcher.molecules.length > 0) {
 			let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
 			data.push({"name": "structure", "value": mol});

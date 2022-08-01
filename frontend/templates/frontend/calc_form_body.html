@@ -437,7 +437,11 @@
 		<div class="field">
 			<span id="form_error_msg"></span>
 			<div class="control">
-				<a class="button is-primary" id="submit_button" onclick="verify_form()">Submit</a>
+				{% if is_flowchart is None %}
+					<a class="button is-primary" id="submit_button" onclick="verify_form()">Submit</a>
+				{% else %}
+					<a class="button is-primary" onclick="verify_form_flowchart()">Save</a>
+				{% endif %}
 			</div>
 		</div>
 	</form>

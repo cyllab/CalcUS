@@ -72,6 +72,7 @@ from .models import (
     Folder,
     CalculationFrame,
     Flowchart,
+    Step,
 )
 from .tasks import (
     dispatcher,
@@ -425,8 +426,28 @@ def create_flowchart(request):
             flowchart_dat = clean(request.POST["flowchart_data"])
         flowchart_view = Flowchart.objects.create(name=flowchart_name, author=profile, flowchart=flowchart_dat)
         flowchart_view.save()
+        calc_name = request.POST.getlist("calc_name[]")
+        calc_id = request.POST.getlist("calc_id[]")
+        calc_parent_id = request.POST.getlist("calc_parent_id[]")
+        calc_id = [int(x) for x in calc_id]
+        calc_parent_id = [int(x) for x in calc_parent_id]
+        max_id = max(calc_id)
+        parent_dict = {}
+        for i in range(max_id+1):
+            if(i in calc_id):
+                index = calc_id.index(i)
+                parent_id = calc_parent_id[index]
+                if(parent_id in parent_dict.keys()):
+                    obj_parent = parent_dict.get(parent_id)
+                    obj_view = Step.objects.create(name=calc_name[index], flowchart=flowchart_view, parentId=obj_parent)
+                    obj_view.save()
+                    parent_dict[i]=obj_view
+                else:
+                    obj_view = Step.objects.create(name=calc_name[index], flowchart=flowchart_view, parentId=None)
+                    obj_view.save()
+                    parent_dict[i]=obj_view
 
-        return HttpResponse(status=200)   
+        return HttpResponse(status=200)
 
 @login_required
 def create_folder(request):
@@ -940,7 +961,7 @@ def learn(request):
 def flowchart(request):
     flag = True
     flowchartsData = Flowchart.objects.all()
-    return render(request, "frontend/flowchart.html", {"is_flowchart": flag, "flowchartsData": flowchartsData, "procs":BasicStep.objects.all()})
+    return render(request, "frontend/flowchart.html", {"is_flowchart": flag, "flowchartsData": flowchartsData, "procs":BasicStep.objects.all(), "stepsData": Step.objects.all(),})
 
 def example(request, pk):
     try:

@@ -145,7 +145,7 @@
 			<div class="select">
 				<select id="flowchart-load-select">
 				{% for flowchart in flowchartsData %}
-					<option value="{{ flowchart.flowchart }}">{{ flowchart.name }}</option>
+					<option data-id="{{flowchart.id}}" value="{{ flowchart.flowchart }}">{{ flowchart.name }}</option>
 				{% endfor %}
 				</select>
 			</div>
@@ -170,6 +170,12 @@
     </div>
 </div>
 <script>
+	{% for i in flowchartsData %}
+		{% for j in i.step_set.all%}
+			console.log("{{j.id}}")
+		{% endfor %}
+	{% endfor %}
+
 	function decodeJSON(inputJSON) {
 		const replaceWithcomma = '"'
 		var result = inputJSON.replace(/&quot;/g, replaceWithcomma)
@@ -189,6 +195,26 @@
 	}
 
 	function loadFlowchart() {
+		const flowchartOption = document.getElementById("flowchart-load-select")
+		console.log(flowchartOption.firstElementChild.getAttribute("data-id"))
+		data_id = flowchartOption.firstElementChild.getAttribute("data-id")
+		data_id = parseInt(data_id)
+		console.log(typeof data_id)
+		var frontend_id_array = []
+		var db_id_array = []
+		var JSON_object = JSON.parse(decodeJSON(document.getElementById("flowchart-load-select").value))
+		for(i = 0;i<JSON_object.blockarr.length;i++)
+			frontend_id_array.push(parseInt(JSON_object.blockarr[i].id))
+		frontend_id_array.sort();
+		{% for i in flowchartsData %}
+			if("{{i.id}}"==data_id)
+				console.log("{{i.step_set.all}}")
+				{% for j in i.step_set.all%}
+					db_id_array.push(parseInt("{{j.id}}"))
+				{% endfor %}
+		{% endfor %}
+		for(i=0;i<db_id_array.length;i++)
+			db_id_map.set(frontend_id_array[i], db_id_array[i])
 		flowy.deleteBlocks()
 		flowy.import(JSON.parse(decodeJSON(document.getElementById("flowchart-load-select").value)))
 	}
@@ -197,6 +223,12 @@
     var spacing_y = 100;
     var flowyOut;
 	var saveCalculationName = new Map();
+	var saveCalculationParentId = new Map();
+	var db_id_map = new Map();
+	var calc_para_map = new Map();
+	var calc_name_array = [];
+	var calc_parentId_array = [];
+	var calc_objectId_array = [];
     document.addEventListener("DOMContentLoaded", function(){
         hardCodedInput();
     })
@@ -241,8 +273,13 @@
 		for(var i=0;i<flowyOut.blocks.length;i++)
 		{
 			flowyOut.blocks[i].calculationType = saveCalculationName.get(flowyOut.blocks[i].id.toString())
+			//saveCalculationParentId.set(flowyOut.blocks[i].id.toString(), flowyOut.blocks[i].parent.toString())
+			calc_name_array.push(saveCalculationName.get(flowyOut.blocks[i].id.toString()))
+			calc_parentId_array.push(flowyOut.blocks[i].parent)
+			calc_objectId_array.push(flowyOut.blocks[i].id)
 		}
 		console.log(flowyOut)
+		console.log(saveCalculationParentId)
         var htmlContent = JSON.stringify(flowyOut);
         var bl = new Blob([htmlContent], {type: "text/json"});
         var a = document.createElement("a");
@@ -265,21 +302,30 @@
 		else
 			name = "Unnamed Flowchart"
 		flowchart_data = JSON.stringify(flowy.output());
+		const cars = ["Tigor", "Tiago", "Harrier"];
 		$.ajax({
 			method: "POST",	 	 
 			url: "/create_flowchart/",
 			headers: {
 				"X-CSRFToken": '{{ csrf_token }}',
 			},
-			data: {'flowchart_name': name, 'flowchart_data': flowchart_data},
+			data: {'flowchart_name': name, 'flowchart_data': flowchart_data, "calc_name[]": calc_name_array, "calc_id[]": calc_objectId_array, "calc_parent_id[]": calc_parentId_array},
 			success: function() {
 				console.log("Success")	
 			}
 		});
     }
 
+	var para_calc_id
+	function verify_form_flowchart() {
+		data = $("#calcform").serializeArray()
+		form = $("#calcform");
+		formData = new FormData(form[0])
+		calc_para_map.set(para_calc_id, formData)
+	}
+
 	function openParaModal() {
-        console.log("Clicked")
+		console.log("Clicked")
 		document.getElementById('calcform').reset();
 		var inner_text = event.target.parentElement.innerHTML;
 		var index_of_Opening_tag = inner_text.indexOf("<");
@@ -297,6 +343,29 @@
 				select_calculation[i].disabled = true;
 		}
 		calc_selection_changed();
+		console.log(event.target.parentElement.children[1].value)
+		para_calc_id = event.target.parentElement.children[1].value
+		form_data = calc_para_map.get(event.target.parentElement.children[1].value)
+		if (form_data)
+		{
+			for(var key of form_data.keys()) {
+				var newVal = form_data.get(key)
+				if(newVal)
+				{
+					if(document.getElementById(key))
+					{
+						if(document.getElementById(key).type != "file")
+						{
+							document.getElementById(key).value = newVal
+							check("functional")
+							check("basis_set")
+							check("solvent")
+							refresh_availabilities();
+						}
+					}
+				}
+			}
+		}
 		$(".modal-para").addClass("is-active");
     }
     
