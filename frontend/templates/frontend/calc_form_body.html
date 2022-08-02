@@ -83,7 +83,7 @@
 
 		<div class="columns">
 			<div class="column">
-				{% if not calc and not ensemble and not structure %}
+				{% if not calc and not ensemble and not structure  and is_flowchart is None%}
 				<div class="field" id="calc_mol_name_field">
 					<label class="label">Molecule Name</label>
 					<div class="control">
