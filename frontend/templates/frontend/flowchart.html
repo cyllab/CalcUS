@@ -296,6 +296,15 @@
 			name = flowchartTitle
 		else
 			name = "Unnamed Flowchart"
+		flowyOut = flowy.output();
+		for(var i=0;i<flowyOut.blocks.length;i++)
+		{
+			flowyOut.blocks[i].calculationType = saveCalculationName.get(flowyOut.blocks[i].id.toString())
+			//saveCalculationParentId.set(flowyOut.blocks[i].id.toString(), flowyOut.blocks[i].parent.toString())
+			calc_name_array.push(saveCalculationName.get(flowyOut.blocks[i].id.toString()))
+			calc_parentId_array.push(flowyOut.blocks[i].parent)
+			calc_objectId_array.push(flowyOut.blocks[i].id)
+		}
 		flowchart_data = JSON.stringify(flowy.output());
 		$.ajax({
 			method: "POST",	 	 
@@ -303,7 +312,7 @@
 			headers: {
 				"X-CSRFToken": '{{ csrf_token }}',
 			},
-			data: {'flowchart_name': name, 'flowchart_data': flowchart_data, "calc_name[]": calc_name_array, "calc_id[]": calc_objectId_array, "calc_parent_id[]": calc_parentId_array},
+			data: {'flowchart_name': name, 'flowchart_data': flowchart_data, "calc_name[]": calc_name_array, "calc_id[]": calc_objectId_array, "calc_parent_id[]": calc_parentId_array,},
 			success: function() {
 				console.log("Success")	
 			}
@@ -316,7 +325,6 @@
 		form = $("#calcform");
 		formData = new FormData(form[0])
 		calc_para_map.set(para_calc_id, formData)
-		
 		data.push({"name": "constraint_num", "value": constraint_num});
 
 		{% if ensemble or structures %}
@@ -349,6 +357,7 @@
 			num_aux_files = 0;
 		}
 		data.push({"name": "num_aux_files", "value": num_aux_files});
+		data.push({"name": "para_calc_id", "value": para_calc_id});
 		$.ajax({
 			data: data, 
 			headers: {

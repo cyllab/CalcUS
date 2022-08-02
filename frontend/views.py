@@ -439,7 +439,9 @@ def create_flowchart(request):
                 parent_id = calc_parent_id[index]
                 if(parent_id in parent_dict.keys()):
                     obj_parent = parent_dict.get(parent_id)
-                    obj_view = Step.objects.create(name=calc_name[index], flowchart=flowchart_view, parentId=obj_parent)
+                    obj_para = flowchart_para_dict[index]
+                    obj_para.save()
+                    obj_view = Step.objects.create(name=calc_name[index], flowchart=flowchart_view, step=flowchart_step_dict[index], parameters=obj_para, parentId=obj_parent)
                     obj_view.save()
                     parent_dict[i]=obj_view
                 else:
@@ -1346,12 +1348,19 @@ def verify_calculation(request):
         return HttpResponse(ret, status=400)
     return HttpResponse(status=200)
 
+flowchart_para_dict = {}
+flowchart_step_dict = {}
 @login_required
 def verify_flowchart_calculation(request):
     ret = parse_parameters(request, verify=False, is_flowchart=True)
     if isinstance(ret, str):
         logger.warning(f"Invalid calculation: {ret}")
         return HttpResponse(ret, status=400)
+    params, step = ret
+    global flowchart_para_dict
+    global flowchart_step_dict
+    flowchart_para_dict[int(request.POST["para_calc_id"])] = params
+    flowchart_step_dict[int(request.POST["para_calc_id"])] = step
     return HttpResponse(status=200)
 
 @login_required
