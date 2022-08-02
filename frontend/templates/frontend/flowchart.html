@@ -316,7 +316,55 @@
 		form = $("#calcform");
 		formData = new FormData(form[0])
 		calc_para_map.set(para_calc_id, formData)
-		$(".modal-para").removeClass("is-active");
+		
+		data.push({"name": "constraint_num", "value": constraint_num});
+
+		{% if ensemble or structures %}
+		data.push({"name": "starting_ensemble", "value": {{ ensemble.id }}});
+		{% endif %}
+
+		{% if structures %}
+		data.push({"name": "starting_structs", "value": "{{ structures }}"});
+		{% endif %}
+
+		{% if calc %}
+		data.push({"name": "starting_calc", "value": {{ calc.id }}});
+		data.push({"name": "starting_frame", "value": {{ frame_num }}});
+		{% endif %}
+
+		upload_el = $("#file_structure");
+		if(upload_el.length != 0) {
+			num_files = upload_el[0].files.length;
+		}
+		else {
+			num_files = 0;
+		}
+		data.push({"name": "num_files", "value": num_files});
+
+		upload_aux_el = $("#aux_file_structure");
+		if(upload_aux_el.length != 0) {
+			num_aux_files = upload_aux_el[0].files.length;
+		}
+		else {
+			num_aux_files = 0;
+		}
+		data.push({"name": "num_aux_files", "value": num_aux_files});
+		$.ajax({
+			data: data, 
+			headers: {
+				"X-CSRFToken": '{{ csrf_token }}',
+			},
+
+			type: "POST", 
+			url: "/verify_flowchart_calculation/",
+			success: function (response) { 
+				$(".modal-para").removeClass("is-active");
+				$("#form_error_msg").html("");
+			},
+			error: function (response) {
+				$("#form_error_msg").html("Could not submit the calculation: " + response.responseText);
+			}
+		});
 	}
 
 	function openParaModal() {

@@ -200,5 +200,6 @@ urlpatterns = [
     path("delete_folder/", views.delete_folder, name="delete_folder"),
     path("flowchart/", views.flowchart, name="flowchart" ),
     path("create_flowchart/", views.create_flowchart, name="create_flowchart"),
+    path("verify_flowchart_calculation/", views.verify_flowchart_calculation, name="verify_flowchart_calculation"),
     path("change_password/", views.change_password, name="change_password"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1006,7 +1006,7 @@ def error(request, msg):
     )
 
 
-def parse_parameters(request, verify=False):
+def parse_parameters(request, is_flowchart=None, verify=False):
     profile = request.user.profile
 
     if "calc_type" in request.POST.keys():
@@ -1016,13 +1016,13 @@ def parse_parameters(request, verify=False):
             return "No such procedure"
     else:
         return "No calculation type"
-
-    if "calc_project" in request.POST.keys():
-        project = clean(request.POST["calc_project"])
-        if project.strip() == "":
+    if is_flowchart is None:
+        if "calc_project" in request.POST.keys():
+            project = clean(request.POST["calc_project"])
+            if project.strip() == "":
+                return "No calculation project"
+        else:
             return "No calculation project"
-    else:
-        return "No calculation project"
 
     if "calc_charge" in request.POST.keys():
         try:
@@ -1170,8 +1170,9 @@ def parse_parameters(request, verify=False):
             functional = ""
             basis_set = ""
 
-    if len(project) > 100:
-        return "The chosen project name is too long"
+    if is_flowchart is None:
+        if len(project) > 100:
+            return "The chosen project name is too long"
 
     if step.name not in BASICSTEP_TABLE[software].keys():
         return "Invalid calculation type"
@@ -1181,30 +1182,31 @@ def parse_parameters(request, verify=False):
     else:
         specifications = ""
 
-    if project == "New Project":
-        new_project_name = clean(request.POST["new_project_name"])
-        try:
-            project_obj = Project.objects.get(name=new_project_name, author=profile)
-        except Project.DoesNotExist:
-            if not verify:
-                project_obj = Project.objects.create(
-                    name=new_project_name, author=profile
-                )
+    if is_flowchart is None:
+        if project == "New Project":
+            new_project_name = clean(request.POST["new_project_name"])
+            try:
+                project_obj = Project.objects.get(name=new_project_name, author=profile)
+            except Project.DoesNotExist:
+                if not verify:
+                    project_obj = Project.objects.create(
+                        name=new_project_name, author=profile
+                    )
+                else:
+                    project_obj = Project(name=new_project_name, author=profile)
+                    # project_obj.save(commit=False)
             else:
-                project_obj = Project(name=new_project_name, author=profile)
-                # project_obj.save(commit=False)
+                logger.info("Project with that name already exists")
         else:
-            logger.info("Project with that name already exists")
-    else:
-        try:
-            project_set = profile.project_set.filter(name=project)
-        except Profile.DoesNotExist:
-            return "No such project"
+            try:
+                project_set = profile.project_set.filter(name=project)
+            except Profile.DoesNotExist:
+                return "No such project"
 
-        if len(project_set) != 1:
-            return "More than one project with the same name found!"
-        else:
-            project_obj = project_set[0]
+            if len(project_set) != 1:
+                return "More than one project with the same name found!"
+            else:
+                project_obj = project_set[0]
 
     _params = {
         "charge": charge,
@@ -1227,7 +1229,10 @@ def parse_parameters(request, verify=False):
         params = Parameters(**_params)
         # params.save(commit=False)
 
-    return params, project_obj, step
+    if is_flowchart is None:
+        return params, project_obj, step
+    else:
+        return params, step
 
 
 @login_required
@@ -1341,6 +1346,13 @@ def verify_calculation(request):
         return HttpResponse(ret, status=400)
     return HttpResponse(status=200)
 
+@login_required
+def verify_flowchart_calculation(request):
+    ret = parse_parameters(request, verify=False, is_flowchart=True)
+    if isinstance(ret, str):
+        logger.warning(f"Invalid calculation: {ret}")
+        return HttpResponse(ret, status=400)
+    return HttpResponse(status=200)
 
 @login_required
 def submit_calculation(request):
