@@ -961,8 +961,9 @@ def learn(request):
 def flowchart(request):
     flag = True
     flowchartsData = Flowchart.objects.all()
-    return render(request, "frontend/flowchart.html", {"is_flowchart": flag, "flowchartsData": flowchartsData, "procs":BasicStep.objects.all(), "stepsData": Step.objects.all(),})
-
+    return render(request, "frontend/flowchart.html", {"is_flowchart": flag, "flowchartsData": flowchartsData, "procs":BasicStep.objects.all(), "stepsData": Step.objects.all(), 
+    "profile": profile, "allow_local_calc": settings.ALLOW_LOCAL_CALC,})
+    
 def example(request, pk):
     try:
         ex = Example.objects.get(pk=pk)
