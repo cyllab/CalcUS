@@ -352,9 +352,16 @@
 						if(document.getElementById(key).type != "file")
 						{
 							document.getElementById(key).value = newVal
-							check("functional")
-							check("basis_set")
-							check("solvent")
+
+							if(key=="calc_functional")
+								check("functional")
+
+							if(key=="calc_basis_set")
+								check("basis_set")
+
+							if(key=="calc_solvent")
+								check("solvent")
+
 							refresh_availabilities();
 						}
 					}
