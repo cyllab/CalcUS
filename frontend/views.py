@@ -1014,7 +1014,9 @@ def parse_parameters(request, verify=False):
             solvation_model = clean(request.POST["calc_solvation_model"])
             if solvation_model not in ["SMD", "PCM", "CPCM", "GBSA", "ALPB"]:
                 return "Invalid solvation model"
-            if "calc_solvation_radii" in request.POST.keys():
+            if solvation_model in ["GBSA", "ALPB"]:
+                solvation_radii = "Default"
+            elif "calc_solvation_radii" in request.POST.keys():
                 solvation_radii = clean(request.POST["calc_solvation_radii"])
             else:
                 return "No solvation radii"
