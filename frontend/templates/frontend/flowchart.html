@@ -191,25 +191,44 @@
 
 	function loadFlowchart() {
 		const flowchartOption = document.getElementById("flowchart-load-select")
-		console.log(flowchartOption.firstElementChild.getAttribute("data-id"))
-		data_id = flowchartOption.firstElementChild.getAttribute("data-id")
+		console.log(flowchartOption.options[flowchartOption.selectedIndex].getAttribute("data-id"))
+		data_id = flowchartOption.options[flowchartOption.selectedIndex].getAttribute("data-id")
 		data_id = parseInt(data_id)
-		console.log(typeof data_id)
 		var frontend_id_array = []
 		var db_id_array = []
+		var para_map = new Map()
+		var para_map_map =new Map()
+		var ajax_para_map = new Map()
+		var id_db_map = new Map()
 		var JSON_object = JSON.parse(decodeJSON(document.getElementById("flowchart-load-select").value))
 		for(i = 0;i<JSON_object.blockarr.length;i++)
 			frontend_id_array.push(parseInt(JSON_object.blockarr[i].id))
 		frontend_id_array.sort();
 		{% for i in flowchartsData %}
+			data_id = data_id.toString()
 			if("{{i.id}}"==data_id)
-				console.log("{{i.step_set.all}}")
+			{
+				$.ajax({
+					method: "POST",	 	 
+					url: "/load_flowchart_params/" + {{ i.id }},
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					success: function(data) {
+						eval(data, para_map_map, db_id_array, db_id_map)
+					},
+				});
 				{% for j in i.step_set.all%}
 					db_id_array.push(parseInt("{{j.id}}"))
 				{% endfor %}
+			}
 		{% endfor %}
+		db_id_array.sort();
 		for(i=0;i<db_id_array.length;i++)
-			db_id_map.set(frontend_id_array[i], db_id_array[i])
+		{
+			id_db_map.set(frontend_id_array[i], db_id_array[i])
+			db_id_map.set(db_id_array[i], frontend_id_array[i])
+		}
 		flowy.deleteBlocks()
 		flowy.import(JSON.parse(decodeJSON(document.getElementById("flowchart-load-select").value)))
 	}
@@ -324,7 +343,7 @@
 		data = $("#calcform").serializeArray()
 		form = $("#calcform");
 		formData = new FormData(form[0])
-		calc_para_map.set(para_calc_id, formData)
+		calc_para_map.set(parseInt(para_calc_id), formData)
 		data.push({"name": "constraint_num", "value": constraint_num});
 
 		{% if ensemble or structures %}
@@ -369,6 +388,7 @@
 			success: function (response) { 
 				$(".modal-para").removeClass("is-active");
 				$("#form_error_msg").html("");
+				ajax_para_map.set(para_calc_id, data)
 			},
 			error: function (response) {
 				$("#form_error_msg").html("Could not submit the calculation: " + response.responseText);
@@ -395,9 +415,8 @@
 				select_calculation[i].disabled = true;
 		}
 		calc_selection_changed();
-		console.log(event.target.parentElement.children[1].value)
 		para_calc_id = event.target.parentElement.children[1].value
-		form_data = calc_para_map.get(event.target.parentElement.children[1].value)
+		form_data = calc_para_map.get(parseInt(event.target.parentElement.children[1].value))
 		if (form_data)
 		{
 			for(var key of form_data.keys()) {

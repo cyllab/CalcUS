@@ -1,4 +1,4 @@
-from frontend.models import Step, Flowchart
+from frontend.models import Step, Flowchart, Parameters
 
 allObjects = Step.objects.all()
 allFields = Step._meta.get_fields()
@@ -21,5 +21,8 @@ for i in range(allObjects.count()):
         print("No Step")
     else:
         print(allObjects[i].step)
-    print(allObjects[i].parameters)
+    if(allObjects[i].parameters is not None):
+        print(allObjects[i].parameters.specifications)
+    else:
+        print("No Parameters")
     print()

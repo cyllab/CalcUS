@@ -201,5 +201,6 @@ urlpatterns = [
     path("flowchart/", views.flowchart, name="flowchart" ),
     path("create_flowchart/", views.create_flowchart, name="create_flowchart"),
     path("verify_flowchart_calculation/", views.verify_flowchart_calculation, name="verify_flowchart_calculation"),
+    path("load_flowchart_params/<int:pk>", views.load_flowchart_params, name="load_flowchart_params"),
     path("change_password/", views.change_password, name="change_password"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

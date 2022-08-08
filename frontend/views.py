@@ -439,9 +439,12 @@ def create_flowchart(request):
                 parent_id = calc_parent_id[index]
                 if(parent_id in parent_dict.keys()):
                     obj_parent = parent_dict.get(parent_id)
-                    obj_para = flowchart_para_dict[index]
-                    obj_para.save()
-                    obj_view = Step.objects.create(name=calc_name[index], flowchart=flowchart_view, step=flowchart_step_dict[index], parameters=obj_para, parentId=obj_parent)
+                    if 0 <= index < len(flowchart_para_dict):
+                        obj_para = flowchart_para_dict[index]
+                        obj_para.save()
+                        obj_view = Step.objects.create(name=calc_name[index], flowchart=flowchart_view, step=flowchart_step_dict[index], parameters=obj_para, parentId=obj_parent)
+                    else:
+                        obj_view = Step.objects.create(name=calc_name[index], flowchart=flowchart_view, step=None, parameters=None, parentId=obj_parent)
                     obj_view.save()
                     parent_dict[i]=obj_view
                 else:
@@ -3830,6 +3833,38 @@ def load_params(request, pk):
         },
     )
 
+@login_required
+def load_flowchart_params(request, pk):
+    flowchartObj = Flowchart.objects.get(pk=pk)
+    params_dict = {}
+    for j in flowchartObj.step_set.all():
+        params = {}
+        if j.parameters is not None:
+            params["calc_solvent"] = j.parameters.solvent
+            params["calc_solvation_model"] = j.parameters.solvation_model
+            params["calc_solvation_radii"] = j.parameters.solvation_radii
+            params["calc_software"] = j.parameters.software
+            params["calc_theory_level"] = j.parameters.theory_level
+            params["calc_basis_set"] = j.parameters.basis_set
+            if j.parameters.method == "PBEh-3c":
+                params["pbeh3c"] = True
+            elif j.parameters.method =="HF-3c":
+                params["hf3c"] = True
+            else:
+                params["calc_functional"] = j.parameters.method
+            params["calc_charge"] = j.parameters.charge
+            params["calc_multiplicity"] = j.parameters.multiplicity
+            params["calc_df"] = j.parameters.density_fitting
+            params["calc_custom_bs"] = j.parameters.custom_basis_sets
+            params["calc_specifications"] = j.parameters.specifications
+        params_dict[j.id] = params
+    return render(
+        request,
+        "frontend/dynamic/load_flowchart_params.js",
+        {
+            "params_dict": params_dict,
+        },
+    )
 
 class CsvParameters:
     def __init__(self):
