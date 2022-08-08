@@ -35,8 +35,8 @@ import shlex
 import glob
 import sys
 import shutil
-
 import invoke
+import tempfile
 
 import threading
 from threading import Lock
@@ -522,26 +522,22 @@ def setup_cached_calc(calc):
     return True
 
 
-def generate_xyz_structure(drawing, structure):
-    if structure.xyz_structure == "":
-        if structure.mol_structure != "":
-            t = time.time()
-            fname = f"{t}_{structure.id}"
+def generate_xyz_structure(drawing, inp, ext):
+    if ext == "mol":
+        with tempfile.TemporaryDirectory() as d:
             if drawing:
-                with open(f"/tmp/{fname}.mol", "w") as out:
-                    out.write(structure.mol_structure)
+                with open(f"{d}/inp.mol", "w") as out:
+                    out.write(inp)
                 a = system(
-                    f"obabel /tmp/{fname}.mol -O /tmp/{fname}.xyz -h --gen3D",
+                    f"obabel {d}/inp.mol -O {d}/inp.xyz -h --gen3D",
                     force_local=True,
                 )
-                with open(f"/tmp/{fname}.xyz") as f:
+                with open(f"{d}/inp.xyz") as f:
                     lines = f.readlines()
-                    structure.xyz_structure = clean_xyz("".join(lines))
-                    structure.save()
-                    return ErrorCodes.SUCCESS
+                    return clean_xyz("".join(lines))
             else:
                 to_print = []
-                for line in structure.mol_structure.split("\n")[4:]:
+                for line in inp.split("\n")[4:]:
                     sline = line.split()
                     try:
                         a = int(sline[3])
@@ -561,49 +557,28 @@ def generate_xyz_structure(drawing, structure):
                 _xyz += "CalcUS\n"
                 for line in to_print:
                     _xyz += line
-                structure.xyz_structure = clean_xyz(_xyz)
-                structure.save()
-                return ErrorCodes.SUCCESS
-        elif structure.sdf_structure != "":
-            t = time.time()
-            fname = f"{t}_{structure.id}"
-
-            with open(f"/tmp/{fname}.sdf", "w") as out:
-                out.write(structure.sdf_structure)
+                return clean_xyz(_xyz)
+    elif ext in ["sdf", "mol2"]:
+        with tempfile.TemporaryDirectory() as d:
+            with open(f"{d}/inp.{ext}", "w") as out:
+                out.write(inp)
             a = system(
-                f"obabel /tmp/{fname}.sdf -O /tmp/{fname}.xyz",
+                f"obabel {d}/inp.{ext} -O {d}/inp.xyz",
                 force_local=True,
             )
 
-            with open(f"/tmp/{fname}.xyz") as f:
+            with open(f"{d}/inp.xyz") as f:
                 lines = f.readlines()
-            structure.xyz_structure = clean_xyz("\n".join([i.strip() for i in lines]))
-            structure.save()
-            return ErrorCodes.SUCCESS
-        elif structure.mol2_structure != "":
-            t = time.time()
-            fname = f"{t}_{structure.id}"
-
-            with open(f"/tmp/{fname}.mol2", "w") as out:
-                out.write(
-                    structure.mol2_structure.replace("&lt;", "<").replace("&gt;", ">")
-                )
-            a = system(
-                f"obabel /tmp/{fname}.mol2 -O /tmp/{fname}.xyz",
-                force_local=True,
-            )
-
-            with open(f"/tmp/{fname}.xyz") as f:
-                lines = f.readlines()
-            structure.xyz_structure = clean_xyz("\n".join([i.strip() for i in lines]))
-            structure.save()
-            return ErrorCodes.SUCCESS
-
-        else:
-            logger.error("Unimplemented")
-            return ErrorCodes.UNIMPLEMENTED
+            return clean_xyz("\n".join([i.strip() for i in lines]))
+    elif ext in ["log", "out"]:
+        return get_Gaussian_xyz(
+            inp
+        )  # Will not work for ORCA, cclib should probably be used
+    elif ext in ["com", "gjf"]:
+        return get_xyz_from_Gaussian_input(inp)
     else:
-        return ErrorCodes.SUCCESS
+        logger.error(f"The conversion of files with extension {ext} is not implemented")
+        return ErrorCodes.UNIMPLEMENTED
 
 
 def launch_xtb_calc(in_file, calc, files):

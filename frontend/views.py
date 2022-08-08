@@ -30,6 +30,7 @@ from os.path import basename
 from io import BytesIO
 import basis_set_exchange
 import numpy as np
+import tempfile
 import ccinput
 
 from cryptography.hazmat.primitives import serialization
@@ -89,7 +90,6 @@ from .tasks import (
     analyse_opt,
     generate_xyz_structure,
     gen_fingerprint,
-    get_Gaussian_xyz,
 )
 from .constants import *
 from .libxyz import parse_xyz_from_text, equivalent_atoms
@@ -1258,23 +1258,14 @@ def handle_file_upload(ff, params):
     filename = ".".join(fname.split(".")[:-1])
     ext = fname.split(".")[-1]
 
-    if ext == "mol":
-        s.mol_structure = in_file
-        generate_xyz_structure(False, s)
-    elif ext == "xyz":
-        s.xyz_structure = in_file
-    elif ext == "sdf":
-        s.sdf_structure = in_file
-        generate_xyz_structure(False, s)
-    elif ext == "mol2":
-        s.mol2_structure = in_file
-        generate_xyz_structure(False, s)
-    elif ext in ["log", "out"]:
-        s.xyz_structure = get_Gaussian_xyz(in_file)
-    elif ext in ["com", "gjf"]:
-        s.xyz_structure = get_xyz_from_Gaussian_input(in_file)
+    if ext == "xyz":
+        xyz = in_file
+    elif ext in ["mol", "mol2", "sdf", "log", "out", "com", "gjf"]:
+        xyz = generate_xyz_structure(False, in_file, ext)
     else:
         return "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf, .com, .gjf)"
+
+    s.xyz_structure = xyz
     s.save()
     return s, filename
 
@@ -2997,25 +2988,38 @@ def download_structure(request, ee, num):
     return response
 
 
+def get_mol_preview(request):
+    if request.method == "POST":
+        mol = clean(request.POST["mol"])
+        ext = clean(request.POST["ext"])
+
+        xyz = generate_xyz_structure(False, mol, ext)
+
+        if xyz == ErrorCodes.UNIMPLEMENTED:
+            return HttpResponse(status=204)
+
+        return HttpResponse(xyz)
+
+
 def gen_3D(request):
     if request.method == "POST":
-        mol = request.POST["mol"]
-        clean_mol = clean(mol)
+        mol = clean(request.POST["mol"])
+        with tempfile.TemporaryDirectory() as d:
+            with open(f"{d}/inp.mol", "w") as out:
+                out.write(mol)
 
-        t = time.time()
-        with open(f"/tmp/{t}.mol", "w") as out:
-            out.write(clean_mol)
+            system(
+                f"obabel {d}/inp.mol -O {d}/inp.xyz -h --gen3D",
+                force_local=True,
+            )
+            with open(f"{d}/inp.xyz") as f:
+                lines = f.readlines()
 
-        system(
-            f"obabel /tmp/{t}.mol -O /tmp/{t}.xyz -h --gen3D",
-            force_local=True,
-        )
-        with open(f"/tmp/{t}.xyz") as f:
-            lines = f.readlines()
-        if "".join(lines).strip() == "":
-            return HttpResponse(status=404)
+            if "".join(lines).strip() == "":
+                return HttpResponse(status=404)
 
-        return HttpResponse(lines)
+            return HttpResponse(lines)
+
     return HttpResponse(status=403)
 
 

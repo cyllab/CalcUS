@@ -208,7 +208,7 @@ THROTTLE_BACKEND = "throttle.backends.cache.CacheBackend"
 
 THROTTLE_ENABLED = True
 
-MAX_UPLOAD_SIZE = "2621440"  # 2.5MB max
+MAX_UPLOAD_SIZE = "5242880"  # 5MB max
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
