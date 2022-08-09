@@ -71,7 +71,7 @@
    J. Pisarek, C. Plett, P. Pracht, J. Seibert, P. Shushkov, S. Spicher
    M. Stahn, M. Steiner, T. Strunk, J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2022/08/08 at 14:21:54.391     
+ * started run on 2022/05/30 at 17:52:51.171     
 
            -------------------------------------------------
           |                Calculation Setup                |
@@ -85,7 +85,7 @@
           number of electrons        :                    28
           charge                     :                    -1
           spin                       :                   0.0
-          first test random number   :      0.19901553490959
+          first test random number   :      0.97859398935944
 
    ID    Z sym.   atoms
     1    6 C      1, 2
@@ -188,14 +188,14 @@ constraining FC (au)   :  1.0000
                   HL-Gap            0.0772289 Eh            2.1015 eV
              Fermi-level           -0.0202399 Eh           -0.5508 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.007 sec
- SCC setup                      ...        0 min,  0.000 sec (  2.568%)
- Dispersion                     ...        0 min,  0.000 sec (  0.808%)
- classical contributions        ...        0 min,  0.000 sec (  0.247%)
- integral evaluation            ...        0 min,  0.000 sec (  4.726%)
- iterations                     ...        0 min,  0.006 sec ( 82.466%)
- molecular gradient             ...        0 min,  0.000 sec (  6.675%)
- printout                       ...        0 min,  0.000 sec (  2.135%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.005 sec
+ SCC setup                      ...        0 min,  0.000 sec (  2.998%)
+ Dispersion                     ...        0 min,  0.000 sec (  1.434%)
+ classical contributions        ...        0 min,  0.000 sec (  0.548%)
+ integral evaluation            ...        0 min,  0.000 sec (  7.741%)
+ iterations                     ...        0 min,  0.004 sec ( 75.152%)
+ molecular gradient             ...        0 min,  0.000 sec (  9.406%)
+ printout                       ...        0 min,  0.000 sec (  2.173%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
@@ -259,7 +259,7 @@ Using Lindh-Hessian (1995)
    2    -16.1952233 -0.913047E-12  0.212E-05    2.10    1488.7  T
    3    -16.1952233 -0.191847E-12  0.813E-06    2.10    3889.9  T
      SCC iter.                  ...        0 min,  0.001 sec
-     gradient                   ...        0 min,  0.000 sec
+     gradient                   ...        0 min,  0.001 sec
  * total energy  :   -16.0503156 Eh     change       -0.2642153E-10 Eh
    gradient norm :     0.2493127 Eh/α   predicted     0.0000000E+00 (-100.00%)
    displ. norm   :     0.2369331 α      lambda       -0.3645569E-01
@@ -279,7 +279,7 @@ Using Lindh-Hessian (1995)
    9    -16.2017181 -0.253022E-08  0.750E-04    2.13      42.2  T
   10    -16.2017181 -0.144654E-08  0.405E-04    2.13      78.1  T
      SCC iter.                  ...        0 min,  0.003 sec
-     gradient                   ...        0 min,  0.000 sec
+     gradient                   ...        0 min,  0.001 sec
  * total energy  :   -16.0772027 Eh     change       -0.2688708E-01 Eh
    gradient norm :     0.1394185 Eh/α   predicted    -0.1925111E-01 ( -28.40%)
    displ. norm   :     0.2747516 α      lambda       -0.2047208E-01
@@ -338,7 +338,7 @@ Using Lindh-Hessian (1995)
    8    -16.2177490 -0.117384E-05  0.175E-03    2.13      18.1  T
    9    -16.2177490 -0.152172E-07  0.689E-04    2.14      45.9  T
   10    -16.2177490 -0.119280E-08  0.929E-05    2.14     340.4  T
-     SCC iter.                  ...        0 min,  0.002 sec
+     SCC iter.                  ...        0 min,  0.003 sec
      gradient                   ...        0 min,  0.000 sec
  * total energy  :   -16.1005842 Eh     change       -0.3028780E-02 Eh
    gradient norm :     0.0219434 Eh/α   predicted    -0.2235954E-02 ( -26.18%)
@@ -359,8 +359,8 @@ Using Lindh-Hessian (1995)
    9    -16.2217272 -0.157378E-06  0.135E-03    2.06      23.4  T
   10    -16.2217272 -0.392169E-08  0.366E-04    2.06      86.4  T
   11    -16.2217272 -0.272291E-09  0.254E-04    2.06     124.6  T
-     SCC iter.                  ...        0 min,  0.002 sec
-     gradient                   ...        0 min,  0.000 sec
+     SCC iter.                  ...        0 min,  0.003 sec
+     gradient                   ...        0 min,  0.001 sec
  * total energy  :   -16.1021996 Eh     change       -0.1615342E-02 Eh
    gradient norm :     0.0129353 Eh/α   predicted    -0.1348588E-02 ( -16.51%)
    displ. norm   :     0.2977361 α      lambda       -0.1905574E-02
@@ -380,7 +380,7 @@ Using Lindh-Hessian (1995)
    9    -16.2280783 -0.720275E-06  0.151E-03    2.18      21.0  T
   10    -16.2280783  0.297638E-08  0.815E-04    2.18      38.8  T
   11    -16.2280783 -0.543262E-08  0.189E-04    2.18     167.6  T
-     SCC iter.                  ...        0 min,  0.002 sec
+     SCC iter.                  ...        0 min,  0.003 sec
      gradient                   ...        0 min,  0.000 sec
  * total energy  :   -16.1029691 Eh     change       -0.7695525E-03 Eh
    gradient norm :     0.0170611 Eh/α   predicted    -0.1037244E-02 (  34.79%)
@@ -400,7 +400,7 @@ Using Lindh-Hessian (1995)
    8    -16.2264869 -0.500547E-07  0.138E-03    2.18      22.9  T
    9    -16.2264869 -0.109930E-07  0.608E-04    2.18      52.0  T
   10    -16.2264869 -0.349312E-08  0.123E-04    2.18     258.1  T
-     SCC iter.                  ...        0 min,  0.001 sec
+     SCC iter.                  ...        0 min,  0.003 sec
      gradient                   ...        0 min,  0.000 sec
  * total energy  :   -16.1033155 Eh     change       -0.3463405E-03 Eh
    gradient norm :     0.0084278 Eh/α   predicted    -0.2850944E-03 ( -17.68%)
@@ -419,7 +419,7 @@ Using Lindh-Hessian (1995)
    7    -16.2269722 -0.785618E-07  0.204E-03    2.18      15.5  T
    8    -16.2269723 -0.184736E-07  0.515E-04    2.18      61.4  T
    9    -16.2269723  0.429878E-12  0.222E-04    2.18     142.4  T
-     SCC iter.                  ...        0 min,  0.001 sec
+     SCC iter.                  ...        0 min,  0.002 sec
      gradient                   ...        0 min,  0.000 sec
  * total energy  :   -16.1034268 Eh     change       -0.1113100E-03 Eh
    gradient norm :     0.0066723 Eh/α   predicted    -0.8368876E-04 ( -24.81%)
@@ -438,7 +438,7 @@ Using Lindh-Hessian (1995)
    7    -16.2279332 -0.757742E-07  0.178E-03    2.16      17.8  T
    8    -16.2279332 -0.143816E-07  0.406E-04    2.16      77.9  T
    9    -16.2279332 -0.141959E-09  0.153E-04    2.16     206.0  T
-     SCC iter.                  ...        0 min,  0.001 sec
+     SCC iter.                  ...        0 min,  0.002 sec
      gradient                   ...        0 min,  0.000 sec
  * total energy  :   -16.1035054 Eh     change       -0.7859301E-04 Eh
    gradient norm :     0.0041709 Eh/α   predicted    -0.6552801E-04 ( -16.62%)
@@ -455,7 +455,7 @@ Using Lindh-Hessian (1995)
    5    -16.2283812 -0.166658E-08  0.107E-03    2.17      29.5  T
    6    -16.2283812 -0.270011E-08  0.280E-04    2.17     113.0  T
    7    -16.2283812 -0.103352E-09  0.154E-04    2.17     205.5  T
-     SCC iter.                  ...        0 min,  0.001 sec
+     SCC iter.                  ...        0 min,  0.002 sec
      gradient                   ...        0 min,  0.000 sec
  * total energy  :   -16.1035511 Eh     change       -0.4570219E-04 Eh
    gradient norm :     0.0028501 Eh/α   predicted    -0.3273137E-04 ( -28.38%)
@@ -472,8 +472,8 @@ Using Lindh-Hessian (1995)
    5    -16.2283852 -0.673318E-08  0.104E-03    2.17      30.5  T
    6    -16.2283852 -0.157665E-08  0.400E-04    2.17      79.0  T
    7    -16.2283852 -0.460819E-09  0.255E-04    2.17     123.8  T
-     SCC iter.                  ...        0 min,  0.001 sec
-     gradient                   ...        0 min,  0.000 sec
+     SCC iter.                  ...        0 min,  0.002 sec
+     gradient                   ...        0 min,  0.001 sec
  * total energy  :   -16.1035877 Eh     change       -0.3658797E-04 Eh
    gradient norm :     0.0017529 Eh/α   predicted    -0.3145199E-04 ( -14.04%)
    displ. norm   :     0.0356038 α      lambda       -0.1450751E-04
@@ -491,7 +491,7 @@ Using Lindh-Hessian (1995)
    7    -16.2287531 -0.321283E-07  0.151E-03    2.17      20.9  T
    8    -16.2287531 -0.106703E-07  0.257E-04    2.17     123.0  T
    9    -16.2287531 -0.525375E-10  0.831E-05    2.17     380.5  T
-     SCC iter.                  ...        0 min,  0.001 sec
+     SCC iter.                  ...        0 min,  0.002 sec
      gradient                   ...        0 min,  0.000 sec
  * total energy  :   -16.1035897 Eh     change       -0.2055817E-05 Eh
    gradient norm :     0.0023257 Eh/α   predicted    -0.7259485E-05 ( 253.12%)
@@ -509,7 +509,7 @@ Using Lindh-Hessian (1995)
    6    -16.2284917 -0.588120E-08  0.100E-03    2.17      31.5  T
    7    -16.2284917 -0.387848E-08  0.579E-04    2.17      54.7  T
    8    -16.2284917 -0.159656E-08  0.118E-04    2.17     268.2  T
-     SCC iter.                  ...        0 min,  0.001 sec
+     SCC iter.                  ...        0 min,  0.002 sec
      gradient                   ...        0 min,  0.000 sec
  * total energy  :   -16.1035945 Eh     change       -0.4788593E-05 Eh
    gradient norm :     0.0006438 Eh/α   predicted    -0.3778903E-05 ( -21.09%)
@@ -526,7 +526,7 @@ Using Lindh-Hessian (1995)
    5    -16.2284271 -0.163019E-07  0.145E-03    2.17      21.8  T
    6    -16.2284271 -0.648731E-08  0.903E-04    2.17      35.0  T
    7    -16.2284271 -0.333907E-08  0.468E-04    2.17      67.6  T
-     SCC iter.                  ...        0 min,  0.001 sec
+     SCC iter.                  ...        0 min,  0.002 sec
      gradient                   ...        0 min,  0.000 sec
  * total energy  :   -16.1035951 Eh     change       -0.6437080E-06 Eh
    gradient norm :     0.0003633 Eh/α   predicted    -0.7478605E-06 (  16.18%)
@@ -538,18 +538,18 @@ Using Lindh-Hessian (1995)
 ------------------------------------------------------------------------
  total energy gain   :        -0.0532795 Eh      -33.4334 kcal/mol
  total RMSD          :         0.4811455 a0        0.2546 Å
- total power (kW/mol):        -9.3256955 (step)-3471.2761 (real)
+ total power (kW/mol):        -9.3256955 (step)-2818.9629 (real)
 ------------------------------------------------------------------------
 
- ANCopt (total)                0 d,  0 h,  0 min,  0.040 sec
- optimizer setup                ...        0 min,  0.000 sec (  0.340%)
- model hessian                  ...        0 min,  0.002 sec (  4.210%)
- ANC generation                 ...        0 min,  0.000 sec (  0.563%)
- coordinate transformation      ...        0 min,  0.000 sec (  0.187%)
- single point calculation       ...        0 min,  0.036 sec ( 90.056%)
- optimization log               ...        0 min,  0.001 sec (  1.655%)
- hessian update                 ...        0 min,  0.000 sec (  0.223%)
- rational function              ...        0 min,  0.001 sec (  1.460%)
+ ANCopt (total)                0 d,  0 h,  0 min,  0.050 sec
+ optimizer setup                ...        0 min,  0.000 sec (  0.207%)
+ model hessian                  ...        0 min,  0.001 sec (  2.301%)
+ ANC generation                 ...        0 min,  0.000 sec (  0.377%)
+ coordinate transformation      ...        0 min,  0.000 sec (  0.186%)
+ single point calculation       ...        0 min,  0.046 sec ( 92.147%)
+ optimization log               ...        0 min,  0.001 sec (  1.632%)
+ hessian update                 ...        0 min,  0.000 sec (  0.245%)
+ rational function              ...        0 min,  0.001 sec (  1.591%)
 
 ================
  final structure:
@@ -646,14 +646,14 @@ R(CMA):  4.2728
                   HL-Gap            0.0796154 Eh            2.1664 eV
              Fermi-level           -0.1121466 Eh           -3.0517 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.001 sec
- SCC setup                      ...        0 min,  0.000 sec (  3.868%)
- Dispersion                     ...        0 min,  0.000 sec (  1.366%)
- classical contributions        ...        0 min,  0.000 sec (  0.500%)
- integral evaluation            ...        0 min,  0.000 sec ( 16.224%)
- iterations                     ...        0 min,  0.001 sec ( 46.401%)
- molecular gradient             ...        0 min,  0.000 sec ( 26.078%)
- printout                       ...        0 min,  0.000 sec (  4.677%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.002 sec
+ SCC setup                      ...        0 min,  0.000 sec (  4.300%)
+ Dispersion                     ...        0 min,  0.000 sec (  2.449%)
+ classical contributions        ...        0 min,  0.000 sec (  0.506%)
+ integral evaluation            ...        0 min,  0.000 sec ( 10.503%)
+ iterations                     ...        0 min,  0.001 sec ( 54.220%)
+ molecular gradient             ...        0 min,  0.000 sec ( 21.432%)
+ printout                       ...        0 min,  0.000 sec (  5.245%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
@@ -841,19 +841,19 @@ optimized geometry written to: xtbopt.xyz
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2022/08/08 at 14:21:55.287     
+ * finished run on 2022/05/30 at 17:52:51.943     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.896 sec
- *  cpu-time:     0 d,  0 h,  0 min, 14.160 sec
- * ratio c/w:    15.810 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.772 sec
+ *  cpu-time:     0 d,  0 h,  0 min, 12.200 sec
+ * ratio c/w:    15.804 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.007 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.114 sec
- * ratio c/w:    15.991 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.005 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.078 sec
+ * ratio c/w:    15.980 speedup
  ANC optimizer:
- * wall-time:     0 d,  0 h,  0 min,  0.828 sec
- *  cpu-time:     0 d,  0 h,  0 min, 13.236 sec
- * ratio c/w:    15.995 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.724 sec
+ *  cpu-time:     0 d,  0 h,  0 min, 11.577 sec
+ * ratio c/w:    15.999 speedup
 
 normal termination of xtb

@@ -523,7 +523,9 @@ def setup_cached_calc(calc):
 
 
 def generate_xyz_structure(drawing, inp, ext):
-    if ext == "mol":
+    if ext == "xyz":
+        return inp
+    elif ext == "mol":
         with tempfile.TemporaryDirectory() as d:
             if drawing:
                 with open(f"{d}/inp.mol", "w") as out:

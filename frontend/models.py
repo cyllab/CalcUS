@@ -1039,10 +1039,7 @@ class Calculation(models.Model):
 
     @property
     def all_inputs(self):
-        if self.input_file == "":
-            return self.command
-        else:
-            return f"$ {self.command}\n\n---input:\n{self.input_file}"
+        return f"{self.command}\n{self.input_file}"
 
 
 class Filter(models.Model):
