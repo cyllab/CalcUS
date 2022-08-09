@@ -1814,6 +1814,8 @@ class XtbCalculationTests(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
 
+    """
+    # ORCA does not support initial Hessian calculations on TS optimization with xtb specifically
     def test_ts(self):
         params = {
             "mol_name": "my_mol",
@@ -1829,6 +1831,7 @@ class XtbCalculationTests(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(100)
         self.assertTrue(self.latest_calc_successful())
+    """
 
     def test_scan_distance(self):
         params = {

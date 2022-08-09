@@ -120,8 +120,9 @@ class XtbCalculationTests(CalculationUnitTest):
             )
         )
 
-    def test_ts(self):
-        self.assertTrue(self.run_test(type="TS Optimisation", in_file="ts.xyz"))
+    # ORCA does not support calculating the Hessian before TS optimization with xtb
+    # def test_ts(self):
+    #    self.assertTrue(self.run_test(type="TS Optimisation", in_file="ts.xyz"))
 
     def test_scan_distance(self):
         self.assertTrue(
