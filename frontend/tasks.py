@@ -1839,13 +1839,23 @@ def calc_to_ccinput(calc):
     else:
         _solvation_radii = ""
 
+    try:
+        _PAL = int(PAL)
+    except ValueError:
+        _PAL = 1
+
+    try:
+        _MEM = int(MEM)
+    except ValueError:
+        _MEM = 1000
+
     if is_test:
-        _nproc = min(4, PAL)
+        _nproc = min(4, _PAL)
         _mem = 2000
     else:
         if calc.local:
-            _nproc = PAL
-            _mem = MEM
+            _nproc = _PAL
+            _mem = _MEM
         else:
             _nproc = calc.order.resource.pal
             _mem = calc.order.resource.memory
@@ -3136,7 +3146,6 @@ def dispatcher(drawing, order_id):
     input_structures = None
     if order.structure != None:
         mode = "s"
-        generate_xyz_structure(drawing, order.structure)
         molecule = order.structure.parent_ensemble.parent_molecule
         if order.project == molecule.project:
             ensemble = order.structure.parent_ensemble
@@ -3160,18 +3169,11 @@ def dispatcher(drawing, order_id):
             order.save()
             input_structures = [structure]
     elif order.ensemble != None:
-        for s in ensemble.structure_set.all():
-            if s.xyz_structure == "":
-                generate_xyz_structure(drawing, s)
-
-        ensemble.save()
-
         if ensemble.parent_molecule is None:
             raise Exception(f"Ensemble {ensemble.id} has no parent molecule")
         elif ensemble.parent_molecule.inchi == "":
             fingerprint = ""
             for s in ensemble.structure_set.all():
-                generate_xyz_structure(drawing, s)
                 fing = gen_fingerprint(s)
                 if fingerprint == "":
                     fingerprint = fing

@@ -16,5 +16,5 @@ product "struct2.xyz"
 nimages 3
 end
 %pal
-nprocs 4
+nprocs 1
 end

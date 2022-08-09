@@ -2993,6 +2993,9 @@ def get_mol_preview(request):
         mol = clean(request.POST["mol"])
         ext = clean(request.POST["ext"])
 
+        if ext == "xyz":
+            return HttpResponse(mol)
+
         xyz = generate_xyz_structure(False, mol, ext)
 
         if xyz == ErrorCodes.UNIMPLEMENTED:

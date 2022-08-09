@@ -1,4 +1,6 @@
+$ 
 
+---input:
 !NEB xtb2
 *xyz -1 1
 C   -0.70637444   0.17262756   0.33274278
@@ -17,5 +19,5 @@ product "struct2.xyz"
 nimages 3
 end
 %pal
-nprocs 4
+nprocs 1
 end
