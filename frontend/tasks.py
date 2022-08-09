@@ -563,7 +563,7 @@ def generate_xyz_structure(drawing, inp, ext):
     elif ext in ["sdf", "mol2"]:
         with tempfile.TemporaryDirectory() as d:
             with open(f"{d}/inp.{ext}", "w") as out:
-                out.write(inp)
+                out.write(inp.replace("&lt;", "<").replace("&gt;", ">"))
             a = system(
                 f"obabel {d}/inp.{ext} -O {d}/inp.xyz",
                 force_local=True,
