@@ -427,6 +427,22 @@ def create_flowchart(request):
         flowchart_view = Flowchart.objects.create(name=flowchart_name, author=profile, flowchart=flowchart_dat)
         flowchart_view.save()
         calc_name = request.POST.getlist("calc_name[]")
+        calc_para_list = request.POST["calc_para_array"]
+        y = json.loads(calc_para_list)
+        flowchart_para_dict = {}
+        flowchart_step_dict = {}
+        for i in y:
+            if i is not None:
+                para_dict = {}
+                for j in i:
+                    para_dict[j["name"]] = j["value"]
+                ret = parse_parameters(para_dict, verify=False, is_flowchart=True, is_create_flowchart = True)
+                if isinstance(ret, str):
+                    print("Error in Parameters")
+                else:
+                    params, step = ret
+                    flowchart_para_dict[int(para_dict["para_calc_id"])] = params
+                    flowchart_step_dict[int(para_dict["para_calc_id"])] = step
         calc_id = request.POST.getlist("calc_id[]")
         calc_parent_id = request.POST.getlist("calc_parent_id[]")
         calc_id = [int(x) for x in calc_id]
@@ -439,7 +455,7 @@ def create_flowchart(request):
                 parent_id = calc_parent_id[index]
                 if(parent_id in parent_dict.keys()):
                     obj_parent = parent_dict.get(parent_id)
-                    if 0 <= index < len(flowchart_para_dict):
+                    if index in flowchart_para_dict:
                         obj_para = flowchart_para_dict[index]
                         obj_para.save()
                         obj_view = Step.objects.create(name=calc_name[index], flowchart=flowchart_view, step=flowchart_step_dict[index], parameters=obj_para, parentId=obj_parent)
@@ -967,7 +983,7 @@ def flowchart(request):
     flag = True
     flowchartsData = Flowchart.objects.all()
     return render(request, "frontend/flowchart.html", {"is_flowchart": flag, "flowchartsData": flowchartsData, "procs":BasicStep.objects.all(), "stepsData": Step.objects.all(), 
-    "profile": profile, "allow_local_calc": settings.ALLOW_LOCAL_CALC, "packages": settings.PACKAGES,})
+    "profile": request.user.profile, "allow_local_calc": settings.ALLOW_LOCAL_CALC, "packages": settings.PACKAGES,})
     
 def example(request, pk):
     try:
@@ -1011,35 +1027,41 @@ def error(request, msg):
     )
 
 
-def parse_parameters(request, is_flowchart=None, verify=False):
-    profile = request.user.profile
+def parse_parameters(request, is_flowchart=None, verify=False, is_create_flowchart = False):
+    if(is_create_flowchart == False):
+        profile = request.user.profile
 
-    if "calc_type" in request.POST.keys():
+    if(is_create_flowchart == False):
+        parameters_dict = request.POST
+    else:
+        parameters_dict = request
+
+    if "calc_type" in parameters_dict.keys():
         try:
-            step = BasicStep.objects.get(name=clean(request.POST["calc_type"]))
+            step = BasicStep.objects.get(name=clean(parameters_dict["calc_type"]))
         except BasicStep.DoesNotExist:
             return "No such procedure"
     else:
         return "No calculation type"
     if is_flowchart is None:
-        if "calc_project" in request.POST.keys():
-            project = clean(request.POST["calc_project"])
+        if "calc_project" in parameters_dict.keys():
+            project = clean(parameters_dict["calc_project"])
             if project.strip() == "":
                 return "No calculation project"
         else:
             return "No calculation project"
 
-    if "calc_charge" in request.POST.keys():
+    if "calc_charge" in parameters_dict.keys():
         try:
-            charge = int(clean(request.POST["calc_charge"]).replace("+", ""))
+            charge = int(clean(parameters_dict["calc_charge"]).replace("+", ""))
         except ValueError:
             return "Invalid calculation charge"
     else:
         return "No calculation charge"
 
-    if "calc_multiplicity" in request.POST.keys():
+    if "calc_multiplicity" in parameters_dict.keys():
         try:
-            mult = int(clean(request.POST["calc_multiplicity"]))
+            mult = int(clean(parameters_dict["calc_multiplicity"]))
         except ValueError:
             return "Invalid multiplicity"
         if mult < 1:
@@ -1047,20 +1069,20 @@ def parse_parameters(request, is_flowchart=None, verify=False):
     else:
         return "No calculation multiplicity"
 
-    if "calc_solvent" in request.POST.keys():
-        solvent = clean(request.POST["calc_solvent"])
+    if "calc_solvent" in parameters_dict.keys():
+        solvent = clean(parameters_dict["calc_solvent"])
         if solvent.strip() == "":
             solvent = "Vacuum"
     else:
         solvent = "Vacuum"
 
     if solvent != "Vacuum":
-        if "calc_solvation_model" in request.POST.keys():
-            solvation_model = clean(request.POST["calc_solvation_model"])
+        if "calc_solvation_model" in parameters_dict.keys():
+            solvation_model = clean(parameters_dict["calc_solvation_model"])
             if solvation_model not in ["SMD", "PCM", "CPCM", "GBSA", "ALPB"]:
                 return "Invalid solvation model"
-            if "calc_solvation_radii" in request.POST.keys():
-                solvation_radii = clean(request.POST["calc_solvation_radii"])
+            if "calc_solvation_radii" in parameters_dict.keys():
+                solvation_radii = clean(parameters_dict["calc_solvation_radii"])
             else:
                 return "No solvation radii"
         else:
@@ -1069,8 +1091,8 @@ def parse_parameters(request, is_flowchart=None, verify=False):
         solvation_model = ""
         solvation_radii = ""
 
-    if "calc_software" in request.POST.keys():
-        software = clean(request.POST["calc_software"])
+    if "calc_software" in parameters_dict.keys():
+        software = clean(parameters_dict["calc_software"])
         if software.strip() == "":
             return "No software chosen"
         if software not in BASICSTEP_TABLE.keys():
@@ -1078,19 +1100,19 @@ def parse_parameters(request, is_flowchart=None, verify=False):
     else:
         return "No software chosen"
 
-    if "calc_df" in request.POST.keys():
-        df = clean(request.POST["calc_df"])
+    if "calc_df" in parameters_dict.keys():
+        df = clean(parameters_dict["calc_df"])
     else:
         df = ""
 
-    if "calc_custom_bs" in request.POST.keys():
-        bs = clean(request.POST["calc_custom_bs"])
+    if "calc_custom_bs" in parameters_dict.keys():
+        bs = clean(parameters_dict["calc_custom_bs"])
     else:
         bs = ""
 
     if software == "ORCA" or software == "Gaussian":
-        if "calc_theory_level" in request.POST.keys():
-            theory = clean(request.POST["calc_theory_level"])
+        if "calc_theory_level" in parameters_dict.keys():
+            theory = clean(parameters_dict["calc_theory_level"])
             if theory.strip() == "":
                 return "No theory level chosen"
         else:
@@ -1098,23 +1120,23 @@ def parse_parameters(request, is_flowchart=None, verify=False):
 
         if theory == "DFT":
             special_functional = False
-            if "pbeh3c" in request.POST.keys() and software == "ORCA":
-                field_pbeh3c = clean(request.POST["pbeh3c"])
+            if "pbeh3c" in parameters_dict.keys() and software == "ORCA":
+                field_pbeh3c = clean(parameters_dict["pbeh3c"])
                 if field_pbeh3c == "on":
                     special_functional = True
                     functional = "PBEh-3c"
                     basis_set = ""
 
             if not special_functional:
-                if "calc_functional" in request.POST.keys():
-                    functional = clean(request.POST["calc_functional"])
+                if "calc_functional" in parameters_dict.keys():
+                    functional = clean(parameters_dict["calc_functional"])
                     if functional.strip() == "":
                         return "No method"
                 else:
                     return "No method"
                 if functional not in SPECIAL_FUNCTIONALS:
-                    if "calc_basis_set" in request.POST.keys():
-                        basis_set = clean(request.POST["calc_basis_set"])
+                    if "calc_basis_set" in parameters_dict.keys():
+                        basis_set = clean(parameters_dict["calc_basis_set"])
                         if basis_set.strip() == "":
                             return "No basis set chosen"
                     else:
@@ -1122,8 +1144,8 @@ def parse_parameters(request, is_flowchart=None, verify=False):
                 else:
                     basis_set = ""
         elif theory == "Semi-empirical":
-            if "calc_se_method" in request.POST.keys():
-                functional = clean(request.POST["calc_se_method"])
+            if "calc_se_method" in parameters_dict.keys():
+                functional = clean(parameters_dict["calc_se_method"])
                 if functional.strip() == "":
                     return "No semi-empirical method chosen"
                 basis_set = ""
@@ -1131,8 +1153,8 @@ def parse_parameters(request, is_flowchart=None, verify=False):
                 return "No semi-empirical method chosen"
         elif theory == "HF":
             special_functional = False
-            if "hf3c" in request.POST.keys() and software == "ORCA":
-                field_hf3c = clean(request.POST["hf3c"])
+            if "hf3c" in parameters_dict.keys() and software == "ORCA":
+                field_hf3c = clean(parameters_dict["hf3c"])
                 if field_hf3c == "on":
                     special_functional = True
                     functional = "HF-3c"
@@ -1140,8 +1162,8 @@ def parse_parameters(request, is_flowchart=None, verify=False):
 
             if not special_functional:
                 functional = "HF"
-                if "calc_basis_set" in request.POST.keys():
-                    basis_set = clean(request.POST["calc_basis_set"])
+                if "calc_basis_set" in parameters_dict.keys():
+                    basis_set = clean(parameters_dict["calc_basis_set"])
                     if basis_set.strip() == "":
                         return "No basis set chosen"
                 else:
@@ -1151,8 +1173,8 @@ def parse_parameters(request, is_flowchart=None, verify=False):
                 return "RI-MP2 is only available for ORCA"
 
             functional = "RI-MP2"
-            if "calc_basis_set" in request.POST.keys():
-                basis_set = clean(request.POST["calc_basis_set"])
+            if "calc_basis_set" in parameters_dict.keys():
+                basis_set = clean(parameters_dict["calc_basis_set"])
                 if basis_set.strip() == "":
                     return "No basis set chosen"
             else:
@@ -1166,8 +1188,8 @@ def parse_parameters(request, is_flowchart=None, verify=False):
             functional = "GFN2-xTB"
             basis_set = "min"
             if step.name == "Conformational Search":
-                if "calc_conf_option" in request.POST.keys():
-                    conf_option = clean(request.POST["calc_conf_option"])
+                if "calc_conf_option" in parameters_dict.keys():
+                    conf_option = clean(parameters_dict["calc_conf_option"])
                     if conf_option not in ["GFN2-xTB", "GFN-FF", "GFN2-xTB//GFN-FF"]:
                         return "Error in the option for the conformational search"
                     functional = conf_option
@@ -1182,14 +1204,14 @@ def parse_parameters(request, is_flowchart=None, verify=False):
     if step.name not in BASICSTEP_TABLE[software].keys():
         return "Invalid calculation type"
 
-    if "calc_specifications" in request.POST.keys():
-        specifications = clean(request.POST["calc_specifications"]).lower()
+    if "calc_specifications" in parameters_dict.keys():
+        specifications = clean(parameters_dict["calc_specifications"]).lower()
     else:
         specifications = ""
 
     if is_flowchart is None:
         if project == "New Project":
-            new_project_name = clean(request.POST["new_project_name"])
+            new_project_name = clean(parameters_dict["new_project_name"])
             try:
                 project_obj = Project.objects.get(name=new_project_name, author=profile)
             except Project.DoesNotExist:
@@ -1351,19 +1373,12 @@ def verify_calculation(request):
         return HttpResponse(ret, status=400)
     return HttpResponse(status=200)
 
-flowchart_para_dict = {}
-flowchart_step_dict = {}
 @login_required
 def verify_flowchart_calculation(request):
     ret = parse_parameters(request, verify=False, is_flowchart=True)
     if isinstance(ret, str):
         logger.warning(f"Invalid calculation: {ret}")
         return HttpResponse(ret, status=400)
-    params, step = ret
-    global flowchart_para_dict
-    global flowchart_step_dict
-    flowchart_para_dict[int(request.POST["para_calc_id"])] = params
-    flowchart_step_dict[int(request.POST["para_calc_id"])] = step
     return HttpResponse(status=200)
 
 @login_required
@@ -3862,7 +3877,7 @@ def load_flowchart_params(request, pk):
         request,
         "frontend/dynamic/load_flowchart_params.js",
         {
-            "params_dict": params_dict,
+            "params_dict": json.dumps(params_dict),
         },
     )
 

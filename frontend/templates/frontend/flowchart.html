@@ -198,7 +198,6 @@
 		var db_id_array = []
 		var para_map = new Map()
 		var para_map_map =new Map()
-		var ajax_para_map = new Map()
 		var id_db_map = new Map()
 		var JSON_object = JSON.parse(decodeJSON(document.getElementById("flowchart-load-select").value))
 		for(i = 0;i<JSON_object.blockarr.length;i++)
@@ -243,6 +242,7 @@
 	var calc_name_array = [];
 	var calc_parentId_array = [];
 	var calc_objectId_array = [];
+	var ajax_para_map = new Map()
     document.addEventListener("DOMContentLoaded", function(){
         hardCodedInput();
     })
@@ -311,6 +311,8 @@
 
     function Submit(flowchartTitle) {
         console.log("Submitted")
+		console.log(ajax_para_map)
+		var calc_para_array = []
 		if(flowchartTitle!="")
 			name = flowchartTitle
 		else
@@ -323,6 +325,10 @@
 			calc_name_array.push(saveCalculationName.get(flowyOut.blocks[i].id.toString()))
 			calc_parentId_array.push(flowyOut.blocks[i].parent)
 			calc_objectId_array.push(flowyOut.blocks[i].id)
+			if(ajax_para_map.has(flowyOut.blocks[i].id.toString()))
+				calc_para_array.push(ajax_para_map.get(flowyOut.blocks[i].id.toString()))
+			else
+				calc_para_array.push(null)
 		}
 		flowchart_data = JSON.stringify(flowy.output());
 		$.ajax({
@@ -331,7 +337,7 @@
 			headers: {
 				"X-CSRFToken": '{{ csrf_token }}',
 			},
-			data: {'flowchart_name': name, 'flowchart_data': flowchart_data, "calc_name[]": calc_name_array, "calc_id[]": calc_objectId_array, "calc_parent_id[]": calc_parentId_array,},
+			data: {'flowchart_name': name, 'flowchart_data': flowchart_data, "calc_name[]": calc_name_array, "calc_id[]": calc_objectId_array, "calc_parent_id[]": calc_parentId_array, "calc_para_array": JSON.stringify(calc_para_array), },
 			success: function() {
 				console.log("Success")	
 			}
