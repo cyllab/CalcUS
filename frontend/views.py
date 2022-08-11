@@ -436,7 +436,7 @@ def create_flowchart(request):
                 para_dict = {}
                 for j in i:
                     para_dict[j["name"]] = j["value"]
-                ret = parse_parameters(para_dict, verify=False, is_flowchart=True, is_create_flowchart = True)
+                ret = parse_parameters(request, para_dict, verify=False, is_flowchart=True)
                 if isinstance(ret, str):
                     print("Error in Parameters")
                 else:
@@ -1027,14 +1027,8 @@ def error(request, msg):
     )
 
 
-def parse_parameters(request, is_flowchart=None, verify=False, is_create_flowchart = False):
-    if(is_create_flowchart == False):
-        profile = request.user.profile
-
-    if(is_create_flowchart == False):
-        parameters_dict = request.POST
-    else:
-        parameters_dict = request
+def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
+    profile = request.user.profile
 
     if "calc_type" in parameters_dict.keys():
         try:
@@ -1264,7 +1258,7 @@ def parse_parameters(request, is_flowchart=None, verify=False, is_create_flowcha
 
 @login_required
 def save_preset(request):
-    ret = parse_parameters(request)
+    ret = parse_parameters(request, request.POST)
 
     if isinstance(ret, str):
         return HttpResponse(ret)
@@ -1284,7 +1278,7 @@ def save_preset(request):
 
 @login_required
 def set_project_default(request):
-    ret = parse_parameters(request)
+    ret = parse_parameters(request, request.POST)
 
     if isinstance(ret, str):
         return HttpResponse(ret)
@@ -1375,7 +1369,7 @@ def verify_calculation(request):
 
 @login_required
 def verify_flowchart_calculation(request):
-    ret = parse_parameters(request, verify=False, is_flowchart=True)
+    ret = parse_parameters(request, request.POST, verify=False, is_flowchart=True)
     if isinstance(ret, str):
         logger.warning(f"Invalid calculation: {ret}")
         return HttpResponse(ret, status=400)
@@ -1390,7 +1384,7 @@ def submit_calculation(request):
 
 
 def _submit_calculation(request, verify=False):
-    ret = parse_parameters(request, verify=verify)
+    ret = parse_parameters(request, request.POST, verify=verify)
 
     if isinstance(ret, str):
         return ret
