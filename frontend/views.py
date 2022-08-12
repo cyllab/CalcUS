@@ -2952,16 +2952,17 @@ def download_structures(request, ee):
     if not can_view_ensemble(e, profile):
         return HttpResponse(status=404)
 
+    name = f"{clean_filename(e.parent_molecule.name)}.{clean_filename(e.name)}"
     structs = ""
     for s in e.structure_set.all():
         if s.xyz_structure == "":
             structs += "1\nMissing Structure\nC 0 0 0"
-            logger.warning(f"Missing structure! ({profile.username}, {ee})")
+            logger.warning(f"Missing structure! ({profile.username}, {name})")
         structs += s.xyz_structure
 
     response = HttpResponse(structs)
     response["Content-Type"] = "text/plain"
-    response["Content-Disposition"] = f"attachment; filename={ee}.xyz"
+    response["Content-Disposition"] = f"attachment; filename={name}.xyz"
     return response
 
 
@@ -2982,9 +2983,13 @@ def download_structure(request, ee, num):
     except Structure.DoesNotExist:
         return HttpResponse(status=404)
 
+    name = (
+        f"{clean_filename(e.parent_molecule.name)}.{clean_filename(e.name)}_conf{num}"
+    )
+
     response = HttpResponse(s.xyz_structure)
     response["Content-Type"] = "text/plain"
-    response["Content-Disposition"] = f"attachment; filename={ee}_conf{num}.xyz"
+    response["Content-Disposition"] = f"attachment; filename={name}.xyz"
     return response
 
 
@@ -3346,6 +3351,8 @@ def download_log(request, pk):
     logs = glob.glob(dir + "/*.out")
     logs += glob.glob(dir + "/*.log")
 
+    name = f"{clean_filename(calc.order.molecule_name)}_calc{calc.id}"
+
     if len(logs) > 1:
         mem = BytesIO()
         with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zip:
@@ -3353,15 +3360,13 @@ def download_log(request, pk):
                 zip.write(f, f"{calc.id}_" + basename(f))
 
         response = HttpResponse(mem.getvalue(), content_type="application/zip")
-        response["Content-Disposition"] = f'attachment; filename="calc_{calc.id}.zip"'
+        response["Content-Disposition"] = f'attachment; filename="{name}.zip"'
         return response
     elif len(logs) == 1:
         with open(logs[0]) as f:
             lines = f.readlines()
             response = HttpResponse("".join(lines), content_type="text/plain")
-            response[
-                "Content-Disposition"
-            ] = f'attachment; filename="calc_{calc.id}.log"'
+            response["Content-Disposition"] = f'attachment; filename="{name}.log"'
             return response
     else:
         logger.warning(f"No log to download! (Calculation {pk})")
