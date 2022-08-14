@@ -71,7 +71,7 @@
    J. Pisarek, C. Plett, P. Pracht, J. Seibert, P. Shushkov, S. Spicher
    M. Stahn, M. Steiner, T. Strunk, J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2022/08/08 at 14:26:32.897     
+ * started run on 2022/08/14 at 08:18:58.212     
 
            -------------------------------------------------
           |                Calculation Setup                |
@@ -85,7 +85,7 @@
           number of electrons        :                     8
           charge                     :                     0
           spin                       :                   0.0
-          first test random number   :      0.80547057719203
+          first test random number   :      0.97959156719282
 
    ID    Z sym.   atoms
     1    6 C      1
@@ -165,14 +165,14 @@ constraining angle 1 2 3 4 to  -35.3355885°, actual value:  -35.3355885°
                   HL-Gap            0.6591798 Eh           17.9372 eV
              Fermi-level           -0.1384840 Eh           -3.7683 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.001 sec
- SCC setup                      ...        0 min,  0.000 sec (  9.895%)
- Dispersion                     ...        0 min,  0.000 sec (  2.448%)
- classical contributions        ...        0 min,  0.000 sec (  1.224%)
- integral evaluation            ...        0 min,  0.000 sec (  9.395%)
- iterations                     ...        0 min,  0.001 sec ( 57.697%)
- molecular gradient             ...        0 min,  0.000 sec ( 13.360%)
- printout                       ...        0 min,  0.000 sec (  4.344%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.002 sec
+ SCC setup                      ...        0 min,  0.000 sec (  9.331%)
+ Dispersion                     ...        0 min,  0.000 sec (  2.279%)
+ classical contributions        ...        0 min,  0.000 sec (  0.963%)
+ integral evaluation            ...        0 min,  0.000 sec (  8.707%)
+ iterations                     ...        0 min,  0.001 sec ( 53.248%)
+ molecular gradient             ...        0 min,  0.000 sec ( 19.341%)
+ printout                       ...        0 min,  0.000 sec (  4.598%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
@@ -292,18 +292,18 @@ Using Lindh-Hessian (1995)
 ------------------------------------------------------------------------
  total energy gain   :        -0.0003724 Eh       -0.2337 kcal/mol
  total RMSD          :         0.0199114 a0        0.0105 Å
- total power (kW/mol):        -0.2444071 (step) -291.5787 (real)
+ total power (kW/mol):        -0.2444071 (step) -240.5674 (real)
 ------------------------------------------------------------------------
 
- ANCopt (total)                0 d,  0 h,  0 min,  0.003 sec
- optimizer setup                ...        0 min,  0.000 sec (  3.031%)
- model hessian                  ...        0 min,  0.000 sec (  5.764%)
- ANC generation                 ...        0 min,  0.000 sec (  2.670%)
- coordinate transformation      ...        0 min,  0.000 sec (  0.800%)
- single point calculation       ...        0 min,  0.002 sec ( 69.586%)
- optimization log               ...        0 min,  0.000 sec (  4.574%)
- hessian update                 ...        0 min,  0.000 sec (  0.807%)
- rational function              ...        0 min,  0.000 sec (  6.416%)
+ ANCopt (total)                0 d,  0 h,  0 min,  0.004 sec
+ optimizer setup                ...        0 min,  0.000 sec (  3.112%)
+ model hessian                  ...        0 min,  0.000 sec (  4.997%)
+ ANC generation                 ...        0 min,  0.000 sec (  2.423%)
+ coordinate transformation      ...        0 min,  0.000 sec (  0.753%)
+ single point calculation       ...        0 min,  0.003 sec ( 69.730%)
+ optimization log               ...        0 min,  0.000 sec (  4.945%)
+ hessian update                 ...        0 min,  0.000 sec (  0.730%)
+ rational function              ...        0 min,  0.000 sec (  6.539%)
 
 ================
  final structure:
@@ -377,13 +377,13 @@ H5-C1-H3=109.50                H5-C1-H4=109.50
              Fermi-level           -0.1486156 Eh           -4.0440 eV
 
  SCC (total)                   0 d,  0 h,  0 min,  0.001 sec
- SCC setup                      ...        0 min,  0.000 sec ( 13.235%)
- Dispersion                     ...        0 min,  0.000 sec (  3.164%)
- classical contributions        ...        0 min,  0.000 sec (  1.515%)
- integral evaluation            ...        0 min,  0.000 sec (  9.537%)
- iterations                     ...        0 min,  0.000 sec ( 38.503%)
- molecular gradient             ...        0 min,  0.000 sec ( 20.722%)
- printout                       ...        0 min,  0.000 sec (  9.537%)
+ SCC setup                      ...        0 min,  0.000 sec ( 13.838%)
+ Dispersion                     ...        0 min,  0.000 sec (  2.801%)
+ classical contributions        ...        0 min,  0.000 sec (  1.267%)
+ integral evaluation            ...        0 min,  0.000 sec ( 10.070%)
+ iterations                     ...        0 min,  0.000 sec ( 37.079%)
+ molecular gradient             ...        0 min,  0.000 sec ( 21.107%)
+ printout                       ...        0 min,  0.000 sec ( 10.337%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
@@ -518,8 +518,8 @@ rotational constants/cm⁻¹ :        0.5687155E+01   0.5499451E+01   0.4833943E
  * 3 selected distances
 
      #   Z          #   Z                                           value/Å
-     1   6 C        2   1 H                                       1.0726497
-     1   6 C        3   1 H                                       1.0726497 (min)
+     1   6 C        2   1 H                                       1.0726497 (min)
+     1   6 C        3   1 H                                       1.0726497
      1   6 C        4   1 H                                       1.0783579 (max)
 
  * 1 distinct bonds (by element types)
@@ -534,23 +534,23 @@ optimized geometry written to: xtbopt.xyz
            -------------------------------------------------
           | TOTAL ENERGY               -4.175218372002 Eh   |
           | GRADIENT NORM               0.000068506555 Eh/α |
-          | HOMO-LUMO GAP              12.005719888605 eV   |
+          | HOMO-LUMO GAP              12.005719890659 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2022/08/08 at 14:26:32.990     
+ * finished run on 2022/08/14 at 08:18:58.314     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.094 sec
- *  cpu-time:     0 d,  0 h,  0 min,  1.294 sec
- * ratio c/w:    13.817 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.102 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  1.265 sec
+ * ratio c/w:    12.361 speedup
  SCF:
  * wall-time:     0 d,  0 h,  0 min,  0.002 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.025 sec
- * ratio c/w:    15.945 speedup
+ *  cpu-time:     0 d,  0 h,  0 min,  0.031 sec
+ * ratio c/w:    15.931 speedup
  ANC optimizer:
  * wall-time:     0 d,  0 h,  0 min,  0.041 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.651 sec
- * ratio c/w:    15.996 speedup
+ *  cpu-time:     0 d,  0 h,  0 min,  0.648 sec
+ * ratio c/w:    15.993 speedup
 
 normal termination of xtb

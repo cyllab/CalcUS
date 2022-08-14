@@ -121,6 +121,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.full_test_name = self.id()
         self.m_name = self._testMethodName
         self._testMethodName = "_test_wrapper"
+        tasks.cache_ind = 1
         super(StaticLiveServerTestCase, self).run(result)
         self._testMethodName = self.m_name
 

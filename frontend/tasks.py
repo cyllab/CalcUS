@@ -75,6 +75,7 @@ connections = {}
 locks = {}
 remote_dirs = {}
 kill_sig = []
+cache_ind = 1
 
 
 def direct_command(command, conn, lock, attempt_count=1):
@@ -3474,6 +3475,8 @@ def run_calc(calc_id):
     if calc.step.creates_ensemble:
         analyse_opt(calc.id)
 
+    global cache_ind
+
     if (
         is_test
         and os.getenv("CAN_USE_CACHED_LOGS") == "true"
@@ -3485,6 +3488,10 @@ def run_calc(calc_id):
         test_name = os.environ.get(
             "TEST_NAME", f"frontend.test_cluster.unknown_{time.time()}"
         )
+        if cache_ind != 1:
+            # If there are multiple calculations per test, they need to be named differently
+            test_name += str(cache_ind)
+
         logger.info(f"Adding calculation results of {test_name} to the cache")
         shutil.copytree(
             f"{CALCUS_SCR_HOME}/{calc.id}",
@@ -3493,6 +3500,8 @@ def run_calc(calc_id):
         )
         with open(os.path.join(CALCUS_CACHE_HOME, test_name + ".input"), "w") as out:
             out.write(calc.all_inputs)
+
+    cache_ind += 1
 
     return ret
 
