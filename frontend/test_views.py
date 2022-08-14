@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
+import json
 import time
 import os
 from shutil import copyfile, rmtree
@@ -28,7 +29,7 @@ from .constants import *
 from django.core.management import call_command
 from django.contrib.auth import authenticate
 from django.test import TestCase, Client
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from .gen_calc import gen_calc, gen_param
 from .calcusliveserver import SCR_DIR, RESULTS_DIR
 
@@ -103,6 +104,200 @@ class LaunchTests(TestCase):
             "/submit_calculation/", data=basic_params, follow=True
         )
         self.assertNotContains(response, "Error while submitting your calculation")
+
+    def test_verify_correct_flowchart(self):
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=basic_params, follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_verify_no_calc_type(self):
+        params = basic_params.copy()
+        del params["calc_type"]
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_verify_calc_type_name(self):
+        params = basic_params.copy()
+        params["calc_type"] = "Not a calculation name"
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_verify_no_calc_charge(self):
+        params = basic_params.copy()
+        del params["calc_charge"]
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_verify_calc_charge(self):
+        params = basic_params.copy()
+        params["calc_charge"] = "1.1"
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_verify_no_calc_multiplicity(self):
+        params = basic_params.copy()
+        del params["calc_multiplicity"]
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_verify_calc_multiplicity_1(self):
+        params = basic_params.copy()
+        params["calc_multiplicity"] = "1.1"
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_verify_calc_multiplicity_2(self):
+        params = basic_params.copy()
+        params["calc_multiplicity"] = "-1"
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_verify_calc_solvent_vacuum(self):
+        params = basic_params.copy()
+        params["calc_solvent"] = "Vacuum"
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_verify_no_calc_software(self):
+        params = basic_params.copy()
+        del params["calc_software"]
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_verify_empty_calc_software(self):
+        params = basic_params.copy()
+        params["calc_software"] = ""
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_verify_ORCA_no_theory(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_verify_gaussian_valid_specification(self):
+        params = basic_params.copy()
+        params["calc_software"] = "Gaussian"
+        params["specifications"] = "opt(loose)"
+        params["calc_theory_level"] = "DFT"
+        params["calc_functional"] = "M06-2X"
+        params["calc_basis_set"] = "Def2-SVP"
+
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_verify_constrained_opt_no_constraint(self):
+        params = basic_params.copy()
+        params["calc_type"] = "Constrained Optimisation"
+
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_verify_ORCA_empty_theory(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = ""
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_verify_ORCA_DFT_no_functional(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = "DFT"
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_verify_ORCA_DFT_no_basis_set(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = "DFT"
+        params["calc_functional"] = "M06-2X"
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_verify_ORCA_DFT_empty_functional(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = "DFT"
+        params["calc_functional"] = ""
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_verify_ORCA_DFT_correct(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = "DFT"
+        params["calc_functional"] = "M06-2X"
+        params["calc_basis_set"] = "Def2-SVP"
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_verify_ORCA_DFT_empty_basis_set(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = "DFT"
+        params["calc_functional"] = "M06-2X"
+        params["calc_basis_set"] = ""
+        response = self.client.post(
+            "/verify_flowchart_calculation/", data=params, follow=True
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_create_flowchart(self):
+        flowchart_data = {}
+        flowchart_data["flowchart_name"] = "Test Name"
+        flowchart_data["flowchart_data"] = "Sample Data"
+        calc_name_list = ["Constrained Optimisation", "Geometrical Optimisation"]
+        flowchart_data["calc_name[]"] = calc_name_list
+        calc_id = ["0", "1"]
+        flowchart_data["calc_id[]"] = calc_id
+        calc_parent_id = ["-1", "0"]
+        flowchart_data["calc_parent_id[]"] = calc_parent_id
+        calc_para_list = [None, None]
+        para_json = json.dumps(calc_para_list)
+        flowchart_data["calc_para_array"] = para_json
+        response = self.client.post(
+            "/create_flowchart/", data=flowchart_data, follow=True
+        )
+        self.assertEqual(response.status_code, 200)
 
     def test_submit_long_name(self):
         params = basic_params.copy()
@@ -179,12 +374,6 @@ class LaunchTests(TestCase):
     def test_submit_no_type(self):
         params = basic_params.copy()
         del params["calc_type"]
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_no_resource(self):
-        params = basic_params.copy()
-        del params["calc_resource"]
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
