@@ -3357,7 +3357,10 @@ def download_log(request, pk):
         mem = BytesIO()
         with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zip:
             for f in logs:
-                zip.write(f, f"{calc.id}_" + basename(f))
+                if basename(f) != "calc":
+                    zip.write(f, name + basename(f))
+                else:
+                    zip.write(f, name)
 
         response = HttpResponse(mem.getvalue(), content_type="application/zip")
         response["Content-Disposition"] = f'attachment; filename="{name}.zip"'
