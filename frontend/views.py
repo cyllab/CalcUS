@@ -1519,7 +1519,9 @@ def _submit_calculation(request, verify=False):
                         struct, filename = ss
 
                         if ind == 0:
-                            fing = gen_fingerprint(struct)
+                            # fing = gen_fingerprint(struct)
+                            # InChI fingerprints are disabled for now
+                            fing = ""
                             mol.inchi = fing
                             mol.save()
 
@@ -1559,7 +1561,8 @@ def _submit_calculation(request, verify=False):
 
                     for _mol_name, arr_structs in unique_molecules.items():
                         used_numbers = []
-                        fing = gen_fingerprint(arr_structs[0])
+                        # fing = gen_fingerprint(arr_structs[0])
+                        fing = ""
                         mol = Molecule.objects.create(
                             name=_mol_name, inchi=fing, project=project_obj
                         )
@@ -1598,7 +1601,8 @@ def _submit_calculation(request, verify=False):
 
                     struct, filename = ss
                     _mol_name, num = process_filename(filename)
-                    fing = gen_fingerprint(struct)
+                    # fing = gen_fingerprint(struct)
+                    fing = ""
 
                     mol = Molecule.objects.create(
                         name=_mol_name, project=project_obj, inchi=fing
@@ -1640,7 +1644,8 @@ def _submit_calculation(request, verify=False):
                             return ss
                         struct, filename = ss
 
-                        fing = gen_fingerprint(struct)
+                        # fing = gen_fingerprint(struct)
+                        fing = str(time.time())  # (struct)
                         if fing in unique_molecules.keys():
                             unique_molecules[fing].append(struct)
                         else:
@@ -1700,7 +1705,8 @@ def _submit_calculation(request, verify=False):
                     project=project_obj,
                 )
 
-                fing = gen_fingerprint(struct)
+                # fing = gen_fingerprint(struct)
+                fing = ""
                 mol = Molecule.objects.create(
                     name=_mol_name, inchi=fing, project=project_obj
                 )

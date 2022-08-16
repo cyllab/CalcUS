@@ -587,10 +587,7 @@ class Structure(models.Model):
         Ensemble, on_delete=models.CASCADE, blank=True, null=True
     )
 
-    mol_structure = models.CharField(default="", max_length=5000000)
-    mol2_structure = models.CharField(default="", max_length=5000000)
     xyz_structure = models.CharField(default="", max_length=5000000)
-    sdf_structure = models.CharField(default="", max_length=5000000)
 
     number = models.PositiveIntegerField(default=1)
     degeneracy = models.PositiveIntegerField(default=1)
