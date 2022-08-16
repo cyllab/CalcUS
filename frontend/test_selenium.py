@@ -2074,6 +2074,7 @@ class XtbCalculationTests(CalcusLiveServer):
             "project": "New Project",
             "new_project_name": "SeleniumProject",
             "in_files": in_files,
+            "combine": True,
         }
 
         self.lget("/launch/")
