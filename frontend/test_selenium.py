@@ -4164,7 +4164,7 @@ class MiscCalculationTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.assertEqual(self.get_number_calc_orders(), 3)
+        self.assertEqual(self.get_number_calc_orders(), 4)
         self.wait_all_calc_done(150)
         self.assertTrue(self.latest_calc_successful())
 
@@ -4187,7 +4187,7 @@ class MiscCalculationTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.assertEqual(self.get_number_calc_orders(), 3)
+        self.assertEqual(self.get_number_calc_orders(), 4)
         self.wait_all_calc_done(150)
         self.assertTrue(self.all_calc_successful())
 
@@ -4223,6 +4223,7 @@ class MiscCalculationTests(CalcusLiveServer):
             "new_project_name": "SeleniumProject",
             "in_files": files,
             "software": "xtb",
+            "combine": True,
         }
 
         self.lget("/launch/")
