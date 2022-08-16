@@ -293,16 +293,6 @@ class OrcaCalculationTests(CalculationUnitTest):
             )
         )
 
-    def test_opt_RIMP2_no_df(self):
-        self.assertFalse(
-            self.run_test(
-                type="Geometrical Optimisation",
-                in_file="H2.sdf",
-                theory_level="RI-MP2",
-                basis_set="cc-pVDZ",
-            )
-        )
-
     def test_freq_SE(self):
         self.assertTrue(
             self.run_test(
