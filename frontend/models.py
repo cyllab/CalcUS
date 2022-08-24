@@ -739,6 +739,15 @@ class Molecule(models.Model):
     def count_vis(self):
         return len(self.ensemble_set.filter(hidden=False))
 
+class FlowchartOrder(models.Model):
+    name = models.CharField(max_length=100)
+    structure = models.ForeignKey(
+        Structure, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    project = models.ForeignKey(
+        "Project", on_delete=models.CASCADE, blank=True, null=True
+    )
 
 class CalculationOrder(models.Model):
     name = models.CharField(max_length=100)

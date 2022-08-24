@@ -169,6 +169,193 @@
 	  	</section>
     </div>
 </div>
+
+<div class="modal modal-input" id="modal-js-example">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+    	<header class="modal-card-head">
+        	<p class="modal-card-title">Input</p>
+        	<button class="delete" aria-label="close"></button>
+      	</header>
+      	<section class="modal-card-body">
+			<div class="column">
+				<form method="post" id="inputform" enctype="multipart/form-data">
+					{% if not ensemble and not structure %}
+					<div class="columns">
+						<div class="column">
+							<div class="field">
+								<label class="label">Draw a structure or choose a file</label>
+								<div class="file has-name">
+									<label class="file-label">
+										<input class="file-input" type="file" name="file_structure" id="file_structure" multiple="multiple">
+										<span class="file-cta">
+											<span class="file-icon">
+												<i class="fas fa-upload"></i>
+											</span>
+											<span class="file-label">
+											File upload
+											</span>
+										</span>
+										<span class="file-name" id="file_upload_name">
+										No input file selected
+										</span>
+									</label>
+								</div>
+							</div>
+						</div>
+						<div class="column is-narrow has-text-centered" id="calc_parse_filenames_column" style="display: none;">
+							<label class="label">Use filename(s)</label>
+							<div class="control">
+								<input type="checkbox" class="checkbox" id="calc_parse_filenames" name="calc_parse_filenames" onchange="toggle_visibility_molname(this);">
+							</div>
+						</div>
+						<div class="column is-narrow has-text-centered" id="calc_combine_files_column" style="display: none;">
+							<label class="label">Single ensemble</label>
+							<div class="control">
+								<input type="checkbox" class="checkbox" id="calc_combine_files" name="calc_combine_files">
+							</div>
+						</div>
+					</div>
+					<div class="field type_specific avail_Minimum_Energy_Path" style="display: none;">
+						<div class="file">
+							<label class="file-label">
+								<input class="file-input" type="file" name="aux_file_structure" id="aux_file_structure">
+									<span class="file-cta">
+									<span class="file-icon">
+										<i class="fas fa-upload"></i>
+									</span>
+									<span class="file-label">
+									Upload auxiliary structure
+									</span>
+								</span>
+							</label>
+						</div>
+					</div>
+					{% endif %}
+					<div class="columns">
+						<div class="column">
+							{% if not calc and not ensemble and not structure%}
+							<div class="field" id="calc_mol_name_field">
+								<label class="label">Molecule Name</label>
+								<div class="control">
+									<input class="input" name="calc_mol_name" id="calc_mol_name" type="text">
+								</div>
+							</div>
+							{% endif %}
+						</div>
+						<div class="column is-narrow">
+							<div class="field">
+								<label class="label">Charge</label>
+								<div class="control" >
+									<input class="input" name="calc_charge" style="width: 50px;" type="text" value="0">
+								</div>
+							</div>
+						</div>
+						<div class="column is-narrow">
+							<div class="field">
+								<label class="label">Multiplicity</label>
+								<div class="control" >
+									<input class="input" name="calc_multiplicity" style="width: 50px;" type="text" value="1">
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="columns">
+						<div class="column">
+							<label class="checkbox">
+								<div class="control">
+									<input type="checkbox" class="checkbox" name="override_flowchart_charge_multiplicity" >
+									Override flowchart charge and multiplicity
+								</div>
+						</div>
+					</div>
+					<div class="columns">
+						<div class="column is-narrow">
+							<div class="field">
+								<label class="label">Project</label>
+								<div class="control">
+									<div class="select" >
+									  <select name="calc_project" onchange="project_selection_changed(this)" id="calc_project">
+										  {% for proj in profile.project_set.all|dictsort:"name" %}
+										  <option name="{{ proj }}">{{ proj }}</option>
+										  {% endfor %}
+										  <option name="new_project">New Project</option>
+									  </select>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="column">
+							<div class="field" style="display: none;" id="new_project_name_field">
+								<label class="label">Name of new project</label>
+								<div class="control">
+									<input class="input" name="new_project_name" type="text" placeholder="My Project">
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="field">
+						<label class="label">Resource</label>
+						<div class="control" >
+							<div class="select">
+							<select name="calc_resource" id="calc_resource" onchange="refresh_availabilities();">
+								{% if allow_local_calc %}
+									{% if profile.group or profile.is_PI or request.user.is_superuser %}
+										<option>Local</option>
+									{% endif %}
+								{% endif %}
+								{% for access in profile.accesses %}
+									{% if access.connected %}
+										<option>{{ access.cluster_address }}</option>
+									{% endif %}
+								{% endfor %}
+							  </select>
+							</div>
+						</div>
+					</div>
+					<div class="columns">
+						<div class="column">
+							<label class="checkbox">
+								<input class="checkbox" name="override_resource" type="checkbox">
+								Override resource
+						</div>
+					</div>
+					<div class="field">
+						<div class="control">
+							<a class="button is-primary" onclick="submit_input()">Submit</a>
+						</div>
+					</div>
+				</form>
+			</div>
+			<script>
+				{% if not ensemble and not structure and not calc%}
+					const inputElement = document.getElementById("file_structure");
+					inputElement.addEventListener("change", file_upload_changed, false);
+				{% endif %}
+				$( document ).ready(function() {
+					{% if not ensemble and not structure%}
+						preselect_last_project();
+						project_selection_changed(document.getElementById("calc_project"));
+					{% endif %}
+
+					refresh_presets();
+
+					refresh_availabilities();
+
+					{% if proj %}
+						proj = document.getElementById("calc_project");
+						proj.value = "{{ proj.name }}";
+					{% endif %}	
+
+					{% if resource %}
+						resource = document.getElementById("calc_resource");
+						resource.value = "{{ resource }}";
+					{% endif %}
+				})
+			</script>
+	  	</section>
+    </div>
+</div>
 <script>
 
 	function decodeJSON(inputJSON) {
@@ -344,6 +531,38 @@
 		});
     }
 
+	var input_calc_charge = null, input_calc_multiplicity = null, input_calc_resource = null, override_charge_multiplicity = null, override_resource = null
+	function submit_input() {
+		data = $("#inputform").serializeArray()
+		var override_charge_multiplicity_found = false;
+		var override_resource_found = false;
+		for(var i=0;i<data.length;i++)
+		{
+			if(data[i].name=="calc_charge")
+				input_calc_charge = data[i].value
+			if(data[i].name=="calc_multiplicity")
+				input_calc_multiplicity = data[i].value
+			if(data[i].name=="calc_resource")
+				input_calc_resource = data[i].value;
+			if(data[i].name=="override_flowchart_charge_multiplicity")
+			{
+				override_charge_multiplicity = data[i].value
+				override_charge_multiplicity_found = true;
+			}
+			else if(!override_charge_multiplicity_found)
+				override_charge_multiplicity = null;
+			if(data[i].name=="override_resource")
+			{
+				override_resource = data[i].value
+				override_resource_found = true;
+			}
+			else if(!override_resource_found)
+				override_resource=null;
+		}
+	
+		$(".modal-input").removeClass("is-active");
+	}
+
 	var para_calc_id
 	function verify_form_flowchart() {
 		data = $("#calcform").serializeArray()
@@ -450,20 +669,47 @@
 				}
 			}
 		}
+		if(override_charge_multiplicity!=null && input_calc_charge!="" && input_calc_multiplicity!="")
+		{
+			document.getElementById("calc_charge").value = input_calc_charge;
+			document.getElementById("calc_charge").disabled = true;
+			document.getElementById("calc_multiplicity").value = input_calc_multiplicity;
+			document.getElementById("calc_multiplicity").disabled = true;
+		}
+		else
+		{
+			document.getElementById("calc_charge").disabled = false;
+			document.getElementById("calc_multiplicity").disabled = false;
+		}
+		var select_resource = document.getElementById('calc_resource');
+		var inner_resource = input_calc_resource;
+		if(input_calc_resource!=null)
+		{
+			for(i=0;i<select_resource.length;i++)
+			{
+				if(select_resource[i].value==input_calc_resource)
+				{
+					select_resource[i].disabled = false;
+					select_resource[i].selected = true;
+				}
+				else
+					select_resource[i].disabled = true;
+			}
+		}
 		$(".modal-para").addClass("is-active");
     }
     
     function hardCodedInput() { 
         var hardCodedObject = {
-			"html": "\n\n    <div class=\"indicator invisible\"></div><div class=\"blockelem block\" style=\"left: 377.297px; top: 4px;\">Input<input type=\"hidden\" name=\"blockid\" class=\"blockid\" value=\"0\"></div>",
+			"html": "\n\n    <div class=\"indicator invisible\"></div><div style=\"display: inline-block; left: 369.141px; top: 4px;\" class=\"blockelem is-size-6 block\">Input\n\t\t\t<i onclick=\"openInputModal()\" style=\"cursor: pointer;margin-left:5px;\" class=\"fa-solid fa-wrench\"></i>\n\t\t<input type=\"hidden\" name=\"blockid\" class=\"blockid\" value=\"0\"></div>",
 			"blockarr": [
 				{
-					"childwidth": 0,
 					"parent": -1,
+					"childwidth": 0,
 					"id": 0,
-					"x": 397.296875,
+					"x": 401.640625,
 					"y": 22,
-					"width": 40,
+					"width": 65,
 					"height": 36
 				}
 			],
@@ -479,19 +725,24 @@
 					],
 					"attr": [
 						{
-							"class": "blockelem block"
+							"style": "display: inline-block; left: 369.141px; top: 4px;"
 						},
 						{
-							"style": "left: 377.297px; top: 4px;"
+							"class": "blockelem is-size-6 block"
 						}
-					]
+					],
+					"calculationType": "Input"
 				}
 			]
 		}
-            
         //console.log(hardCodedObject);
         flowy.import(hardCodedObject);
     }
+
+	function openInputModal()
+	{
+		$(".modal-input").addClass("is-active");
+	}
 
 	document.querySelector('#importJsonFile').addEventListener('change', function() {
 		if (this.files && this.files[0]) {
