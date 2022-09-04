@@ -73,6 +73,7 @@ from .models import (
     CalculationFrame,
     Flowchart,
     Step,
+    FlowchartOrder,
 )
 from .tasks import (
     dispatcher,
@@ -1342,6 +1343,32 @@ def handle_file_upload(ff, params):
     s.save()
     return s, filename
 
+def handle_file_upload_flowchart(ff):
+    s = Structure.objects.create()
+    drawing = False
+    in_file = clean(ff.read().decode("utf-8"))
+    fname = clean(ff.name)
+    filename = ".".join(fname.split(".")[:-1])
+    ext = fname.split(".")[-1]
+    if ext == "mol":
+        s.mol_structure = in_file
+        generate_xyz_structure(False, s)
+    elif ext == "xyz":
+        s.xyz_structure = in_file
+    elif ext == "sdf":
+        s.sdf_structure = in_file
+        generate_xyz_structure(False, s)
+    elif ext == "mol2":
+        s.mol2_structure = in_file
+        generate_xyz_structure(False, s)
+    elif ext in ["log", "out"]:
+        s.xyz_structure = get_Gaussian_xyz(in_file)
+    elif ext in ["com", "gjf"]:
+        s.xyz_structure = get_xyz_from_Gaussian_input(in_file)
+    else:
+        return "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf, .com, .gjf)"
+    s.save()
+    return s, filename
 
 def process_filename(filename):
     if filename.find("_conf") != -1:
@@ -1367,6 +1394,273 @@ def verify_calculation(request):
         return HttpResponse(ret, status=400)
     return HttpResponse(status=200)
 
+
+@login_required
+def submit_flowchart_input(request):
+    profile = request.user.profile
+    if "calc_mol_name" in request.POST.keys():
+        mol_name = clean(request.POST["calc_mol_name"])
+    else:
+        mol_name = ""
+    combine = ""
+    if "calc_combine_files" in request.POST.keys():
+        combine = clean(request.POST["calc_combine_files"])
+    parse_filenames = ""
+    if "calc_parse_filenames" in request.POST.keys():
+        parse_filenames = clean(request.POST["calc_parse_filenames"])
+    else:
+        if mol_name == "":
+            return "Missing molecule name"
+    num_files = 0
+    if "calc_project" in request.POST.keys():
+            project = clean(request.POST["calc_project"])
+            if project.strip() == "":
+                return "No calculation project"
+    else:
+        return "No calculation project"
+    if len(project) > 100:
+        return "The chosen project name is too long"
+    if project == "New Project":
+        new_project_name = clean(request.POST["new_project_name"])
+        try:
+            project_obj = Project.objects.get(name=new_project_name, author=profile)
+        except Project.DoesNotExist:
+            project_obj = Project.objects.create(
+                name=new_project_name, author=profile
+            )
+        else:
+            logger.info("Project with that name already exists")
+    else:
+        try:
+            project_set = profile.project_set.filter(name=project)
+        except Profile.DoesNotExist:
+            return "No such project"
+
+        if len(project_set) != 1:
+            return "More than one project with the same name found!"
+        else:
+            project_obj = project_set[0]
+    if "num_files" in request.POST:
+        try:
+            num_files = int(clean(request.POST["num_files"]))
+        except ValueError:
+            logger.warning("Got invalid number of files")
+    if (
+            len(request.FILES) > 0
+        ):  # Can't really verify file uploads before actually processing the files
+        files = request.FILES.getlist("file_structure")
+        if len(files) > 1:
+            if combine == "on" and parse_filenames != "on":
+                mol = Molecule.objects.create(name=mol_name, project=project_obj)
+                e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+                for ind, ff in enumerate(files):
+                    ss = handle_file_upload_flowchart(ff)
+                    if isinstance(ss, str):
+                        e.structure_set.all().delete()
+                        e.delete()
+                        mol.delete()
+                        return ss
+                    struct, filename = ss
+
+                    if ind == 0:
+                        fing = gen_fingerprint(struct)
+                        mol.inchi = fing
+                        mol.save()
+
+                    struct.number = ind + 1
+                    struct.parent_ensemble = e
+                    struct.save()
+
+                obj = FlowchartOrder.objects.create(
+                    name=mol_name,
+                    structure=struct,
+                    author=profile,
+                    project=project_obj,
+                )
+            elif combine != "on" and parse_filenames == "on":
+                unique_molecules = {}
+                for ff in files:
+                    ss = handle_file_upload_flowchart(ff)
+                    if isinstance(ss, str):
+                        for _mol_name, arr_structs in unique_molecules.items():
+                            for struct in arr_structs:
+                                struct.delete()
+                        return ss
+                    struct, filename = ss
+
+                    _mol_name, num = process_filename(filename)
+
+                    struct.number = num
+                    struct.save()
+                    if _mol_name in unique_molecules.keys():
+                        unique_molecules[_mol_name].append(struct)
+                    else:
+                        unique_molecules[_mol_name] = [struct]
+
+                for _mol_name, arr_structs in unique_molecules.items():
+                    used_numbers = []
+                    fing = gen_fingerprint(arr_structs[0])
+                    mol = Molecule.objects.create(
+                        name=_mol_name, inchi=fing, project=project_obj
+                    )
+                    mol.save()
+
+                    e = Ensemble.objects.create(
+                        name="File Upload", parent_molecule=mol
+                    )
+                    for struct in arr_structs:
+                        if struct.number == 0:
+                            num = 1
+                            while num in used_numbers:
+                                num += 1
+                            struct.number = num
+                            used_numbers.append(num)
+                        else:
+                            used_numbers.append(struct.number)
+
+                        struct.parent_ensemble = e
+                        struct.save()
+                    obj = FlowchartOrder.objects.create(
+                        name=mol_name,
+                        structure=struct,
+                        author=profile,
+                        project=project_obj,
+                    )
+            elif combine == "on" and parse_filenames == "on":
+                ss = handle_file_upload_flowchart(files[0])
+                if isinstance(ss, HttpResponse):
+                    return ss
+                struct, filename = ss
+                _mol_name, num = process_filename(filename)
+                fing = gen_fingerprint(struct)
+
+                mol = Molecule.objects.create(
+                    name=_mol_name, project=project_obj, inchi=fing
+                )
+                e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+                struct.number = 1
+                struct.parent_ensemble = e
+                struct.save()
+
+                for ind, ff in enumerate(files[1:]):
+                    ss = handle_file_upload_flowchart(ff)
+                    if isinstance(ss, HttpResponse):
+                        e.structure_set.all().delete()
+                        e.delete()
+                        mol.delete()
+                        return ss
+                    struct, filename = ss
+                    struct.number = ind + 2
+                    struct.parent_ensemble = e
+                    struct.save()
+                obj = FlowchartOrder.objects.create(
+                    name=mol_name,
+                    structure=struct,
+                    author=profile,
+                    project=project_obj,
+                )
+            else:
+                unique_molecules = {}
+                for ff in files:
+                    ss = handle_file_upload_flowchart(ff)
+                    if isinstance(ss, HttpResponse):
+                        for _mol_name, arr_structs in unique_molecules.items():
+                            for struct in arr_structs:
+                                struct.delete()
+                        return ss
+                    struct, filename = ss
+
+                    fing = gen_fingerprint(struct)
+                    if fing in unique_molecules.keys():
+                        unique_molecules[fing].append(struct)
+                    else:
+                        unique_molecules[fing] = [struct]
+
+                for ind, (fing, arr_struct) in enumerate(unique_molecules.items()):
+                    if len(unique_molecules.keys()) > 1:
+                        mol = Molecule.objects.create(
+                            name=f"{mol_name} set {ind + 1}",
+                            inchi=fing,
+                            project=project_obj,
+                        )
+                    else:
+                        mol = Molecule.objects.create(
+                            name=mol_name, inchi=fing, project=project_obj
+                        )
+                    e = Ensemble.objects.create(
+                        name="File Upload", parent_molecule=mol
+                    )
+
+                    for s_num, struct in enumerate(arr_struct):
+                        struct.parent_ensemble = e
+                        struct.number = s_num + 1
+                        struct.save()
+
+                    obj = FlowchartOrder.objects.create(
+                        name=mol_name,
+                        structure=struct,
+                        author=profile,
+                        project=project_obj,
+                    )
+        elif len(files) == 1:
+            ff = files[0]
+            ss = handle_file_upload_flowchart(ff)
+            if isinstance(ss, HttpResponse):
+                return ss
+            struct, filename = ss
+
+            num = 1
+            if parse_filenames == "on":
+                _mol_name, num = process_filename(
+                    names[struct.id]
+                )  # Disable mol_name
+            else:
+                _mol_name = mol_name
+
+            obj = FlowchartOrder.objects.create(
+                name=mol_name,
+                structure=struct,
+                author=profile,
+                project=project_obj,
+            )
+
+            fing = gen_fingerprint(struct)
+            mol = Molecule.objects.create(
+                name=_mol_name, inchi=fing, project=project_obj
+            )
+            mol.save()
+
+            e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+            struct.parent_ensemble = e
+            struct.number = num
+            struct.save()
+
+            obj.save()
+    else:  # No file upload
+        if "structure" in request.POST.keys():
+            drawing = True
+            mol_obj = Molecule.objects.create(
+                name=mol_name, project=project_obj
+            )
+            e = Ensemble.objects.create(
+                name="Drawn Structure", parent_molecule=mol_obj
+            )
+            s = Structure.objects.create(parent_ensemble=e, number=1)
+            mol = clean(request.POST["structure"])
+            s.mol_structure = mol
+            s.save()
+            obj = FlowchartOrder.objects.create(
+                name=mol_name,
+                structure=s,
+                author=profile,
+                project=project_obj,
+            )
+            obj.save()
+        else:
+            return "No input structure"
+    return HttpResponse(status=200)
+
+
 @login_required
 def verify_flowchart_calculation(request):
     ret = parse_parameters(request, request.POST, verify=False, is_flowchart=True)
@@ -1374,6 +1668,7 @@ def verify_flowchart_calculation(request):
         logger.warning(f"Invalid calculation: {ret}")
         return HttpResponse(ret, status=400)
     return HttpResponse(status=200)
+
 
 @login_required
 def submit_calculation(request):
@@ -1583,7 +1878,6 @@ def _submit_calculation(request, verify=False):
         elif (
             len(request.FILES) > 0
         ):  # Can't really verify file uploads before actually processing the files
-
             files = request.FILES.getlist("file_structure")
             if len(files) > 1:
                 if combine == "on" and parse_filenames != "on":

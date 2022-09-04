@@ -7,6 +7,8 @@
 	<script src="{% static 'frontend/jquery.min.js' %}"></script>
 	<link rel="stylesheet" href="{% static 'frontend/flowy.min.css' %}" type="text/css">
 	<script src="{% static 'frontend/flowy.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
+	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
     <script src="https://kit.fontawesome.com/8bfdbc9f0e.js" crossorigin="anonymous"></script>
 	{% include 'frontend/calc_form_head.html' %}
 	<style>
@@ -179,6 +181,30 @@
       	</header>
       	<section class="modal-card-body">
 			<div class="column">
+				{% if not ensemble and not structure and not calc %}
+				<script>
+					let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 400, 300, {useServices:false, oneMolecule:false});
+					sketcher.styles.atoms_usePYMOLColors = true;
+					sketcher.oneMolecule = false;
+					sketcher.styles.bonds_clearOverlaps_2D = true;
+					sketcher.styles.shapes_color = 'c10000';
+					sketcher.repaint();
+				</script>
+				<br />
+				<button class="button" onclick="get_3D();">Generate 3D representation</button>
+				{% endif %}
+	
+				<script>
+					let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 300, {useServices:false, oneMolecule:false});
+					editor.styles.atoms_usePYMOLColors = true;
+					editor.oneMolecule = false;
+					editor.styles.set3DRepresentation('Stick');
+					editor.styles.shapes_color = 'c10000';
+					editor.repaint();
+				</script>
+				<div id="3d_msg">
+				</div>
+			</div>
 				<form method="post" id="inputform" enctype="multipart/form-data">
 					{% if not ensemble and not structure %}
 					<div class="columns">
@@ -187,6 +213,7 @@
 								<label class="label">Draw a structure or choose a file</label>
 								<div class="file has-name">
 									<label class="file-label">
+										{% csrf_token %}
 										<input class="file-input" type="file" name="file_structure" id="file_structure" multiple="multiple">
 										<span class="file-cta">
 											<span class="file-icon">
@@ -531,6 +558,29 @@
 		});
     }
 
+	$("#inputform").submit(function(event){
+		event.preventDefault();
+		console.log("Hello Divyam")
+		data = $("#inputform").serializeArray()
+		$.ajax({
+			data: data,
+			headers: {
+				"X-CSRFToken": '{{ csrf_token }}',
+			},
+			async: true,
+			enctype: 'multipart/form-data',
+			type: "POST",
+			url: "/submit_flowchart_input/",
+			success: function (response) {
+				console.log("Success")
+			},
+			error: function (response) {
+				console.log("Error")
+			}
+		});
+	})
+
+
 	var input_calc_charge = null, input_calc_multiplicity = null, input_calc_resource = null, override_charge_multiplicity = null, override_resource = null
 	function submit_input() {
 		data = $("#inputform").serializeArray()
@@ -559,7 +609,33 @@
 			else if(!override_resource_found)
 				override_resource=null;
 		}
-	
+		{% if not ensemble and not structure and not calc%}
+		if (sketcher.molecules.length > 0) {
+			let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
+			data.push({"name": "structure", "value": mol});
+		}
+		{% endif %}
+
+		upload_el = $("#file_structure");
+		if(upload_el.length != 0) {
+			num_files = upload_el[0].files.length;
+		}
+		data.push({"name": "num_files", "value": num_files});
+		$.ajax({
+			data: data,
+			headers: {
+				"X-CSRFToken": '{{ csrf_token }}',
+			},
+
+			type: "POST",
+			url: "/submit_flowchart_input/",
+			success: function (response) {
+				console.log("Success")
+			},
+			error: function (response) {
+				console.log("Error")
+			}
+		});
 		$(".modal-input").removeClass("is-active");
 	}
 

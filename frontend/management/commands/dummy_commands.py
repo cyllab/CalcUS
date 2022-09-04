@@ -31,4 +31,12 @@ from frontend.models import Step, Flowchart, Parameters, FlowchartOrder
 #     print()
 
 print(FlowchartOrder.objects.all())
-print(FlowchartOrder._meta.get_fields())
+allObjects = FlowchartOrder.objects.all()
+print(allObjects.count())
+for i in range(allObjects.count()):
+    print(i)
+    print(allObjects[i])
+    print(allObjects[i].name)
+    print(allObjects[i].structure)
+    print(allObjects[i].author)
+    print(allObjects[i].project)

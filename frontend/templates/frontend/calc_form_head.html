@@ -50,7 +50,6 @@
 }
 </style>
 
-
 <script>
 function debounce(callback, wait) {
 	let timeout;
@@ -61,16 +60,15 @@ function debounce(callback, wait) {
 	};
 }
 
-{% if is_flowchart is None %}
-	/* Sets atomic labels as the atomic numbers in the xyz structure */
-	(function(ChemDoodle) {
-		ChemDoodle.relabel = function(molecule){
-			for(let i = 0, ii = molecule.atoms.length; i<ii; i++){
-				molecule.atoms[i].altLabel = String(i+1);
-			}
-		};
-	})(ChemDoodle);
-{% endif %}
+/* Sets atomic labels as the atomic numbers in the xyz structure */
+(function(ChemDoodle) {
+	ChemDoodle.relabel = function(molecule){
+		for(let i = 0, ii = molecule.atoms.length; i<ii; i++){
+			molecule.atoms[i].altLabel = String(i+1);
+		}
+	};
+})(ChemDoodle);
+
 
 let constraint_num = 0;
 String.prototype.format = function() {
@@ -583,6 +581,7 @@ String.prototype.format = function() {
 		}
 	}
 
+
 	function toggle_visibility_molname(check) {
 		if(check.checked) {
 			$("#calc_mol_name_field").hide();
@@ -640,6 +639,7 @@ String.prototype.format = function() {
 			parse.style.display = "none";	
 		}
 	}
+
 
 	function set_project_default() {
 		$.ajax({
