@@ -120,8 +120,9 @@ class XtbCalculationTests(CalculationUnitTest):
             )
         )
 
-    def test_ts(self):
-        self.assertTrue(self.run_test(type="TS Optimisation", in_file="ts.xyz"))
+    # ORCA does not support calculating the Hessian before TS optimization with xtb
+    # def test_ts(self):
+    #    self.assertTrue(self.run_test(type="TS Optimisation", in_file="ts.xyz"))
 
     def test_scan_distance(self):
         self.assertTrue(
@@ -289,16 +290,6 @@ class OrcaCalculationTests(CalculationUnitTest):
                 theory_level="RI-MP2",
                 basis_set="cc-pVDZ",
                 specifications="cc-pVDZ/C",
-            )
-        )
-
-    def test_opt_RIMP2_no_df(self):
-        self.assertFalse(
-            self.run_test(
-                type="Geometrical Optimisation",
-                in_file="H2.sdf",
-                theory_level="RI-MP2",
-                basis_set="cc-pVDZ",
             )
         )
 

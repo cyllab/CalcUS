@@ -606,8 +606,36 @@ String.prototype.format = function() {
 			}
 
 		}
+		else if(file_list.length == 1) {
+			var reader = new FileReader();
+			reader.readAsText(file_list[0], "UTF-8");
+			reader.onload = function(e) {
+				ext = file_list[0].name.split('.').pop();
+				$.ajax({
+					data: {"mol": e.target.result, "ext": ext}, 
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
 
+					type: "POST", 
+					url: "/get_mol_preview/",
+					statusCode: {
+						200: function (response) { 
+							let mol_read = ChemDoodle.readXYZ(response, multiplier=1);
+							ChemDoodle.relabel(mol_read);
+							editor.loadMolecule(mol_read);	
+						},
+						204: function (response) { 
+							$("#3d_msg").html("Could not generate preview: unsupported file format");
+						},
+						400: function(response) {
+							$("#3d_msg").html("Could not generate preview: the file is too large");
+						}
+					}
+				});
 
+			}
+		}
 	}
 
 	function file_upload_changed() {

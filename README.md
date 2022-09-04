@@ -66,8 +66,9 @@ If you use CalcUS in your research, please cite it:
 
 **Contributors to the web frontend**: 
 
-+ Glen Forcha
 + Divyam Agarwal
++ Glen Forcha
++ Dhairya Khanna
 
 **Beta-testers**:
 

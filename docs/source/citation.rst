@@ -14,9 +14,11 @@ Role                                    Name
 ====================================== ================
 Project lead and main contributor      Raphaël Robidas
 Conception contributor and beta-tester Prof. Claude Y. Legault
-Contributors to the web frontend       Glen Forcha
+Contributors to the web frontend       Divyam Agarwal
 
-                                       Divyam Agarwal
+                                       Glen Forcha
+
+                                       Dhairya Khanna
 Beta-testers                           Léo Hall
 
                                        Joanick Bourret
