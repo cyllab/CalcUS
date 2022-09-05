@@ -180,180 +180,186 @@
         	<button class="delete" aria-label="close"></button>
       	</header>
       	<section class="modal-card-body">
-			<div class="column">
-				{% if not ensemble and not structure and not calc %}
-				<script>
-					let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 400, 300, {useServices:false, oneMolecule:false});
-					sketcher.styles.atoms_usePYMOLColors = true;
-					sketcher.oneMolecule = false;
-					sketcher.styles.bonds_clearOverlaps_2D = true;
-					sketcher.styles.shapes_color = 'c10000';
-					sketcher.repaint();
-				</script>
-				<br />
-				<button class="button" onclick="get_3D();">Generate 3D representation</button>
-				{% endif %}
-	
-				<script>
-					let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 300, {useServices:false, oneMolecule:false});
-					editor.styles.atoms_usePYMOLColors = true;
-					editor.oneMolecule = false;
-					editor.styles.set3DRepresentation('Stick');
-					editor.styles.shapes_color = 'c10000';
-					editor.repaint();
-				</script>
-				<div id="3d_msg">
-				</div>
-			</div>
-				<form method="post" id="inputform" enctype="multipart/form-data">
-					{% if not ensemble and not structure %}
-					<div class="columns">
-						<div class="column">
-							<div class="field">
-								<label class="label">Draw a structure or choose a file</label>
-								<div class="file has-name">
-									<label class="file-label">
-										{% csrf_token %}
-										<input class="file-input" type="file" name="file_structure" id="file_structure" multiple="multiple">
-										<span class="file-cta">
-											<span class="file-icon">
-												<i class="fas fa-upload"></i>
-											</span>
-											<span class="file-label">
-											File upload
-											</span>
-										</span>
-										<span class="file-name" id="file_upload_name">
-										No input file selected
-										</span>
-									</label>
-								</div>
-							</div>
-						</div>
-						<div class="column is-narrow has-text-centered" id="calc_parse_filenames_column" style="display: none;">
-							<label class="label">Use filename(s)</label>
-							<div class="control">
-								<input type="checkbox" class="checkbox" id="calc_parse_filenames" name="calc_parse_filenames" onchange="toggle_visibility_molname(this);">
-							</div>
-						</div>
-						<div class="column is-narrow has-text-centered" id="calc_combine_files_column" style="display: none;">
-							<label class="label">Single ensemble</label>
-							<div class="control">
-								<input type="checkbox" class="checkbox" id="calc_combine_files" name="calc_combine_files">
-							</div>
-						</div>
+			<div class="columns is-centered">
+				<div class="column ml-5">
+					{% if not ensemble and not structure and not calc %}
+					<div class="column is-centered px-2">
+						<script>
+							let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 400, 300, {useServices:false, oneMolecule:false});
+							sketcher.styles.atoms_usePYMOLColors = true;
+							sketcher.oneMolecule = false;
+							sketcher.styles.bonds_clearOverlaps_2D = true;
+							sketcher.styles.shapes_color = 'c10000';
+							sketcher.repaint();
+						</script>
 					</div>
-					<div class="field type_specific avail_Minimum_Energy_Path" style="display: none;">
-						<div class="file">
-							<label class="file-label">
-								<input class="file-input" type="file" name="aux_file_structure" id="aux_file_structure">
-									<span class="file-cta">
-									<span class="file-icon">
-										<i class="fas fa-upload"></i>
-									</span>
-									<span class="file-label">
-									Upload auxiliary structure
-									</span>
-								</span>
-							</label>
-						</div>
+					<br/>
+					<div class="columns is-centered">
+						<button class="button" onclick="get_3D();">Generate 3D representation</button>
 					</div>
 					{% endif %}
-					<div class="columns">
-						<div class="column">
-							{% if not calc and not ensemble and not structure%}
-							<div class="field" id="calc_mol_name_field">
-								<label class="label">Molecule Name</label>
-								<div class="control">
-									<input class="input" name="calc_mol_name" id="calc_mol_name" type="text">
-								</div>
-							</div>
-							{% endif %}
-						</div>
-						<div class="column is-narrow">
-							<div class="field">
-								<label class="label">Charge</label>
-								<div class="control" >
-									<input class="input" name="calc_charge" style="width: 50px;" type="text" value="0">
-								</div>
-							</div>
-						</div>
-						<div class="column is-narrow">
-							<div class="field">
-								<label class="label">Multiplicity</label>
-								<div class="control" >
-									<input class="input" name="calc_multiplicity" style="width: 50px;" type="text" value="1">
-								</div>
-							</div>
-						</div>
+					<div class="column is-centered pl-6">
+						<script>
+							let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 300, {useServices:false, oneMolecule:false});
+							editor.styles.atoms_usePYMOLColors = true;
+							editor.oneMolecule = false;
+							editor.styles.set3DRepresentation('Stick');
+							editor.styles.shapes_color = 'c10000';
+							editor.repaint();
+						</script>
 					</div>
-					<div class="columns">
-						<div class="column">
-							<label class="checkbox">
-								<div class="control">
-									<input type="checkbox" class="checkbox" name="override_flowchart_charge_multiplicity" >
-									Override flowchart charge and multiplicity
-								</div>
-						</div>
+					<div id="3d_msg">
 					</div>
-					<div class="columns">
-						<div class="column is-narrow">
-							<div class="field">
-								<label class="label">Project</label>
-								<div class="control">
-									<div class="select" >
-									  <select name="calc_project" onchange="project_selection_changed(this)" id="calc_project">
-										  {% for proj in profile.project_set.all|dictsort:"name" %}
-										  <option name="{{ proj }}">{{ proj }}</option>
-										  {% endfor %}
-										  <option name="new_project">New Project</option>
-									  </select>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="column">
-							<div class="field" style="display: none;" id="new_project_name_field">
-								<label class="label">Name of new project</label>
-								<div class="control">
-									<input class="input" name="new_project_name" type="text" placeholder="My Project">
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="field">
-						<label class="label">Resource</label>
-						<div class="control" >
-							<div class="select">
-							<select name="calc_resource" id="calc_resource" onchange="refresh_availabilities();">
-								{% if allow_local_calc %}
-									{% if profile.group or profile.is_PI or request.user.is_superuser %}
-										<option>Local</option>
-									{% endif %}
-								{% endif %}
-								{% for access in profile.accesses %}
-									{% if access.connected %}
-										<option>{{ access.cluster_address }}</option>
-									{% endif %}
-								{% endfor %}
-							  </select>
-							</div>
-						</div>
-					</div>
-					<div class="columns">
-						<div class="column">
-							<label class="checkbox">
-								<input class="checkbox" name="override_resource" type="checkbox">
-								Override resource
-						</div>
-					</div>
-					<div class="field">
-						<div class="control">
-							<a class="button is-primary" onclick="submit_input()">Submit</a>
-						</div>
-					</div>
-				</form>
+				</div>
 			</div>
+			<form method="post" id="inputform" enctype="multipart/form-data">
+				{% if not ensemble and not structure %}
+				<div class="columns">
+					<div class="column">
+						<div class="field">
+							<label class="label">Draw a structure or choose a file</label>
+							<div class="file has-name">
+								<label class="file-label">
+									{% csrf_token %}
+									<input class="file-input" type="file" name="file_structure" id="file_structure" multiple="multiple">
+									<span class="file-cta">
+										<span class="file-icon">
+											<i class="fas fa-upload"></i>
+										</span>
+										<span class="file-label">
+										File upload
+										</span>
+									</span>
+									<span class="file-name" id="file_upload_name">
+									No input file selected
+									</span>
+								</label>
+							</div>
+						</div>
+					</div>
+					<div class="column is-narrow has-text-centered" id="calc_parse_filenames_column" style="display: none;">
+						<label class="label">Use filename(s)</label>
+						<div class="control">
+							<input type="checkbox" class="checkbox" id="calc_parse_filenames" name="calc_parse_filenames" onchange="toggle_visibility_molname(this);">
+						</div>
+					</div>
+					<div class="column is-narrow has-text-centered" id="calc_combine_files_column" style="display: none;">
+						<label class="label">Single ensemble</label>
+						<div class="control">
+							<input type="checkbox" class="checkbox" id="calc_combine_files" name="calc_combine_files">
+						</div>
+					</div>
+				</div>
+				<div class="field type_specific avail_Minimum_Energy_Path" style="display: none;">
+					<div class="file">
+						<label class="file-label">
+							<input class="file-input" type="file" name="aux_file_structure" id="aux_file_structure">
+								<span class="file-cta">
+								<span class="file-icon">
+									<i class="fas fa-upload"></i>
+								</span>
+								<span class="file-label">
+								Upload auxiliary structure
+								</span>
+							</span>
+						</label>
+					</div>
+				</div>
+				{% endif %}
+				<div class="columns">
+					<div class="column">
+						{% if not calc and not ensemble and not structure%}
+						<div class="field" id="calc_mol_name_field">
+							<label class="label">Molecule Name</label>
+							<div class="control">
+								<input class="input" name="calc_mol_name" id="calc_mol_name" type="text">
+							</div>
+						</div>
+						{% endif %}
+					</div>
+					<div class="column is-narrow">
+						<div class="field">
+							<label class="label">Charge</label>
+							<div class="control" >
+								<input class="input" name="calc_charge" style="width: 50px;" type="text" value="0">
+							</div>
+						</div>
+					</div>
+					<div class="column is-narrow">
+						<div class="field">
+							<label class="label">Multiplicity</label>
+							<div class="control" >
+								<input class="input" name="calc_multiplicity" style="width: 50px;" type="text" value="1">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="columns">
+					<div class="column">
+						<label class="checkbox">
+							<div class="control">
+								<input type="checkbox" class="checkbox" name="override_flowchart_charge_multiplicity" >
+								Override flowchart charge and multiplicity
+							</div>
+					</div>
+				</div>
+				<div class="columns">
+					<div class="column is-narrow">
+						<div class="field">
+							<label class="label">Project</label>
+							<div class="control">
+								<div class="select" >
+									<select name="calc_project" onchange="project_selection_changed(this)" id="calc_project">
+										{% for proj in profile.project_set.all|dictsort:"name" %}
+										<option name="{{ proj }}">{{ proj }}</option>
+										{% endfor %}
+										<option name="new_project">New Project</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="column">
+						<div class="field" style="display: none;" id="new_project_name_field">
+							<label class="label">Name of new project</label>
+							<div class="control">
+								<input class="input" name="new_project_name" type="text" placeholder="My Project">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="field">
+					<label class="label">Resource</label>
+					<div class="control" >
+						<div class="select">
+						<select name="calc_resource" id="calc_resource" onchange="refresh_availabilities();">
+							{% if allow_local_calc %}
+								{% if profile.group or profile.is_PI or request.user.is_superuser %}
+									<option>Local</option>
+								{% endif %}
+							{% endif %}
+							{% for access in profile.accesses %}
+								{% if access.connected %}
+									<option>{{ access.cluster_address }}</option>
+								{% endif %}
+							{% endfor %}
+							</select>
+						</div>
+					</div>
+				</div>
+				<div class="columns">
+					<div class="column">
+						<label class="checkbox">
+							<input class="checkbox" name="override_resource" type="checkbox">
+							Override resource
+					</div>
+				</div>
+				<div class="field">
+					<div class="control">
+						<a class="button is-primary" onclick="submit_input()">Submit</a>
+					</div>
+				</div>
+			</form>
 			<script>
 				{% if not ensemble and not structure and not calc%}
 					const inputElement = document.getElementById("file_structure");
