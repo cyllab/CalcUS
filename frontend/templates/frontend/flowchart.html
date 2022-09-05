@@ -21,14 +21,10 @@
 			text-align: center;
 		}
 
-		.content {
-			
-		}
-        
         .blockelem:first-child {
             margin-top: 20px;
         }
-        
+
         .blockelem {
             cursor: pointer;
             text-align: center;
@@ -501,7 +497,6 @@
 		for(var i=0;i<flowyOut.blocks.length;i++)
 		{
 			flowyOut.blocks[i].calculationType = saveCalculationName.get(flowyOut.blocks[i].id.toString())
-			//saveCalculationParentId.set(flowyOut.blocks[i].id.toString(), flowyOut.blocks[i].parent.toString())
 			calc_name_array.push(saveCalculationName.get(flowyOut.blocks[i].id.toString()))
 			calc_parentId_array.push(flowyOut.blocks[i].parent)
 			calc_objectId_array.push(flowyOut.blocks[i].id)
@@ -531,7 +526,6 @@
 		for(var i=0;i<flowyOut.blocks.length;i++)
 		{
 			flowyOut.blocks[i].calculationType = saveCalculationName.get(flowyOut.blocks[i].id.toString())
-			//saveCalculationParentId.set(flowyOut.blocks[i].id.toString(), flowyOut.blocks[i].parent.toString())
 			calc_name_array.push(saveCalculationName.get(flowyOut.blocks[i].id.toString()))
 			calc_parentId_array.push(flowyOut.blocks[i].parent)
 			calc_objectId_array.push(flowyOut.blocks[i].id)
