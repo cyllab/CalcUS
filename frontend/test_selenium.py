@@ -1814,6 +1814,8 @@ class XtbCalculationTests(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
 
+    """
+    # ORCA does not support initial Hessian calculations on TS optimization with xtb specifically
     def test_ts(self):
         params = {
             "mol_name": "my_mol",
@@ -1829,6 +1831,7 @@ class XtbCalculationTests(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(100)
         self.assertTrue(self.latest_calc_successful())
+    """
 
     def test_scan_distance(self):
         params = {
@@ -2071,6 +2074,7 @@ class XtbCalculationTests(CalcusLiveServer):
             "project": "New Project",
             "new_project_name": "SeleniumProject",
             "in_files": in_files,
+            "combine": True,
         }
 
         self.lget("/launch/")
@@ -4161,7 +4165,7 @@ class MiscCalculationTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.assertEqual(self.get_number_calc_orders(), 3)
+        self.assertEqual(self.get_number_calc_orders(), 4)
         self.wait_all_calc_done(150)
         self.assertTrue(self.latest_calc_successful())
 
@@ -4184,7 +4188,7 @@ class MiscCalculationTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
-        self.assertEqual(self.get_number_calc_orders(), 3)
+        self.assertEqual(self.get_number_calc_orders(), 4)
         self.wait_all_calc_done(150)
         self.assertTrue(self.all_calc_successful())
 
@@ -4220,6 +4224,7 @@ class MiscCalculationTests(CalcusLiveServer):
             "new_project_name": "SeleniumProject",
             "in_files": files,
             "software": "xtb",
+            "combine": True,
         }
 
         self.lget("/launch/")

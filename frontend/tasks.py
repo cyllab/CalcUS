@@ -35,8 +35,8 @@ import shlex
 import glob
 import sys
 import shutil
-
 import invoke
+import tempfile
 
 import threading
 from threading import Lock
@@ -75,6 +75,7 @@ connections = {}
 locks = {}
 remote_dirs = {}
 kill_sig = []
+cache_ind = 1
 
 
 def direct_command(command, conn, lock, attempt_count=1):
@@ -522,26 +523,24 @@ def setup_cached_calc(calc):
     return True
 
 
-def generate_xyz_structure(drawing, structure):
-    if structure.xyz_structure == "":
-        if structure.mol_structure != "":
-            t = time.time()
-            fname = f"{t}_{structure.id}"
+def generate_xyz_structure(drawing, inp, ext):
+    if ext == "xyz":
+        return inp
+    elif ext == "mol":
+        with tempfile.TemporaryDirectory() as d:
             if drawing:
-                with open(f"/tmp/{fname}.mol", "w") as out:
-                    out.write(structure.mol_structure)
+                with open(f"{d}/inp.mol", "w") as out:
+                    out.write(inp)
                 a = system(
-                    f"obabel /tmp/{fname}.mol -O /tmp/{fname}.xyz -h --gen3D",
+                    f"obabel {d}/inp.mol -O {d}/inp.xyz -h --gen3D",
                     force_local=True,
                 )
-                with open(f"/tmp/{fname}.xyz") as f:
+                with open(f"{d}/inp.xyz") as f:
                     lines = f.readlines()
-                    structure.xyz_structure = clean_xyz("".join(lines))
-                    structure.save()
-                    return ErrorCodes.SUCCESS
+                    return clean_xyz("".join(lines))
             else:
                 to_print = []
-                for line in structure.mol_structure.split("\n")[4:]:
+                for line in inp.split("\n")[4:]:
                     sline = line.split()
                     try:
                         a = int(sline[3])
@@ -561,49 +560,28 @@ def generate_xyz_structure(drawing, structure):
                 _xyz += "CalcUS\n"
                 for line in to_print:
                     _xyz += line
-                structure.xyz_structure = clean_xyz(_xyz)
-                structure.save()
-                return ErrorCodes.SUCCESS
-        elif structure.sdf_structure != "":
-            t = time.time()
-            fname = f"{t}_{structure.id}"
-
-            with open(f"/tmp/{fname}.sdf", "w") as out:
-                out.write(structure.sdf_structure)
+                return clean_xyz(_xyz)
+    elif ext in ["sdf", "mol2"]:
+        with tempfile.TemporaryDirectory() as d:
+            with open(f"{d}/inp.{ext}", "w") as out:
+                out.write(inp.replace("&lt;", "<").replace("&gt;", ">"))
             a = system(
-                f"obabel /tmp/{fname}.sdf -O /tmp/{fname}.xyz",
+                f"obabel {d}/inp.{ext} -O {d}/inp.xyz",
                 force_local=True,
             )
 
-            with open(f"/tmp/{fname}.xyz") as f:
+            with open(f"{d}/inp.xyz") as f:
                 lines = f.readlines()
-            structure.xyz_structure = clean_xyz("\n".join([i.strip() for i in lines]))
-            structure.save()
-            return ErrorCodes.SUCCESS
-        elif structure.mol2_structure != "":
-            t = time.time()
-            fname = f"{t}_{structure.id}"
-
-            with open(f"/tmp/{fname}.mol2", "w") as out:
-                out.write(
-                    structure.mol2_structure.replace("&lt;", "<").replace("&gt;", ">")
-                )
-            a = system(
-                f"obabel /tmp/{fname}.mol2 -O /tmp/{fname}.xyz",
-                force_local=True,
-            )
-
-            with open(f"/tmp/{fname}.xyz") as f:
-                lines = f.readlines()
-            structure.xyz_structure = clean_xyz("\n".join([i.strip() for i in lines]))
-            structure.save()
-            return ErrorCodes.SUCCESS
-
-        else:
-            logger.error("Unimplemented")
-            return ErrorCodes.UNIMPLEMENTED
+            return clean_xyz("\n".join([i.strip() for i in lines]))
+    elif ext in ["log", "out"]:
+        return get_Gaussian_xyz(
+            inp
+        )  # Will not work for ORCA, cclib should probably be used
+    elif ext in ["com", "gjf"]:
+        return get_xyz_from_Gaussian_input(inp)
     else:
-        return ErrorCodes.SUCCESS
+        logger.error(f"The conversion of files with extension {ext} is not implemented")
+        return ErrorCodes.UNIMPLEMENTED
 
 
 def launch_xtb_calc(in_file, calc, files):
@@ -1864,13 +1842,23 @@ def calc_to_ccinput(calc):
     else:
         _solvation_radii = ""
 
+    try:
+        _PAL = int(PAL)
+    except ValueError:
+        _PAL = 1
+
+    try:
+        _MEM = int(MEM)
+    except ValueError:
+        _MEM = 1000
+
     if is_test:
-        _nproc = min(4, PAL)
+        _nproc = min(4, _PAL)
         _mem = 2000
     else:
         if calc.local:
-            _nproc = PAL
-            _mem = MEM
+            _nproc = _PAL
+            _mem = _MEM
         else:
             _nproc = calc.order.resource.pal
             _mem = calc.order.resource.memory
@@ -3161,7 +3149,6 @@ def dispatcher(drawing, order_id):
     input_structures = None
     if order.structure != None:
         mode = "s"
-        generate_xyz_structure(drawing, order.structure)
         molecule = order.structure.parent_ensemble.parent_molecule
         if order.project == molecule.project:
             ensemble = order.structure.parent_ensemble
@@ -3185,18 +3172,11 @@ def dispatcher(drawing, order_id):
             order.save()
             input_structures = [structure]
     elif order.ensemble != None:
-        for s in ensemble.structure_set.all():
-            if s.xyz_structure == "":
-                generate_xyz_structure(drawing, s)
-
-        ensemble.save()
-
         if ensemble.parent_molecule is None:
             raise Exception(f"Ensemble {ensemble.id} has no parent molecule")
         elif ensemble.parent_molecule.inchi == "":
             fingerprint = ""
             for s in ensemble.structure_set.all():
-                generate_xyz_structure(drawing, s)
                 fing = gen_fingerprint(s)
                 if fingerprint == "":
                     fingerprint = fing
@@ -3495,6 +3475,8 @@ def run_calc(calc_id):
     if calc.step.creates_ensemble:
         analyse_opt(calc.id)
 
+    global cache_ind
+
     if (
         is_test
         and os.getenv("CAN_USE_CACHED_LOGS") == "true"
@@ -3506,6 +3488,10 @@ def run_calc(calc_id):
         test_name = os.environ.get(
             "TEST_NAME", f"frontend.test_cluster.unknown_{time.time()}"
         )
+        if cache_ind != 1:
+            # If there are multiple calculations per test, they need to be named differently
+            test_name += str(cache_ind)
+
         logger.info(f"Adding calculation results of {test_name} to the cache")
         shutil.copytree(
             f"{CALCUS_SCR_HOME}/{calc.id}",
@@ -3514,6 +3500,8 @@ def run_calc(calc_id):
         )
         with open(os.path.join(CALCUS_CACHE_HOME, test_name + ".input"), "w") as out:
             out.write(calc.all_inputs)
+
+    cache_ind += 1
 
     return ret
 

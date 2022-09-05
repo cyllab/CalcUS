@@ -34,6 +34,8 @@ import hashlib
 
 from .constants import *
 
+import ccinput
+
 register = template.Library()
 
 STATUS_COLORS = {0: "#AAAAAA", 1: "#FFE515", 2: "#1EE000", 3: "#FD1425"}
@@ -598,10 +600,7 @@ class Structure(models.Model):
         Ensemble, on_delete=models.CASCADE, blank=True, null=True
     )
 
-    mol_structure = models.CharField(default="", max_length=5000000)
-    mol2_structure = models.CharField(default="", max_length=5000000)
     xyz_structure = models.CharField(default="", max_length=5000000)
-    sdf_structure = models.CharField(default="", max_length=5000000)
 
     number = models.PositiveIntegerField(default=1)
     degeneracy = models.PositiveIntegerField(default=1)
@@ -674,16 +673,36 @@ class Parameters(models.Model):
         return self.__repr__()
 
     def __eq__(self, other):
-        values = [
-            (k, v) for k, v in self.__dict__.items() if k != "_state" and k != "id"
-        ]
-        other_values = [
-            (k, v) for k, v in other.__dict__.items() if k != "_state" and k != "id"
+        for field in ["method", "basis_set", "solvent"]:
+            try:
+                m1 = getattr(ccinput.utilities, f"get_abs_{field}")(
+                    getattr(self, field)
+                )
+            except ccinput.exceptions.InvalidParameter:
+                m1 = getattr(self, field)
+            try:
+                m2 = getattr(ccinput.utilities, f"get_abs_{field}")(
+                    getattr(self, field)
+                )
+            except ccinput.exceptions.InvalidParameter:
+                m2 = getattr(self, field)
+
+            if m1 != m2:
+                return False
+
+        excluded_fields = [
+            "_state",
+            "id",
+            "charge",
+            "multiplicity",
+            "method",
+            "basis_set",
         ]
 
-        # Not sure
-        # values = [(k,v) for k,v in self.__dict__.items() if k not in ['_state', 'id', 'specifications']]
-        # other_values = [(k,v) for k,v in other.__dict__.items() if k not in ['_state', 'id', 'specifications']]
+        values = [(k, v) for k, v in self.__dict__.items() if k not in excluded_fields]
+        other_values = [
+            (k, v) for k, v in other.__dict__.items() if k not in excluded_fields
+        ]
 
         return values == other_values
 

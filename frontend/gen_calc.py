@@ -103,24 +103,9 @@ def gen_calc(params, profile):
 
         in_file = "".join(lines)
         ext = params["in_file"].split(".")[-1]
-        if ext == "mol":
-            s.mol_structure = in_file
-            generate_xyz_structure(False, s)
-        elif ext == "xyz":
-            s.xyz_structure = in_file
-        elif ext == "sdf":
-            s.sdf_structure = in_file
-            generate_xyz_structure(False, s)
-        elif ext == "mol2":
-            s.mol2_structure = in_file
-            generate_xyz_structure(False, s)
-        elif ext == "log":
-            s.xyz_structure = get_Gaussian_xyz(in_file)
-        else:
-            raise Exception("Unknown file format")
-        xyz_structure = "".join(lines)
-
-    s.save()
+        xyz = generate_xyz_structure(False, in_file, ext)
+        s.xyz_structure = xyz
+        s.save()
 
     proj = Project.objects.create()
     dummy = CalculationOrder.objects.create(project=proj, author=profile)

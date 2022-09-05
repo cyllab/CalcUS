@@ -31,6 +31,7 @@ from os.path import basename
 from io import BytesIO
 import basis_set_exchange
 import numpy as np
+import tempfile
 import ccinput
 
 from cryptography.hazmat.primitives import serialization
@@ -93,7 +94,6 @@ from .tasks import (
     analyse_opt,
     generate_xyz_structure,
     gen_fingerprint,
-    get_Gaussian_xyz,
 )
 from .constants import *
 from .libxyz import parse_xyz_from_text, equivalent_atoms
@@ -1076,7 +1076,9 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
             solvation_model = clean(parameters_dict["calc_solvation_model"])
             if solvation_model not in ["SMD", "PCM", "CPCM", "GBSA", "ALPB"]:
                 return "Invalid solvation model"
-            if "calc_solvation_radii" in parameters_dict.keys():
+            if solvation_model in ["GBSA", "ALPB"]:
+                solvation_radii = "Default"
+            elif "calc_solvation_radii" in parameters_dict.keys():
                 solvation_radii = clean(parameters_dict["calc_solvation_radii"])
             else:
                 return "No solvation radii"
@@ -1323,23 +1325,14 @@ def handle_file_upload(ff, params):
     filename = ".".join(fname.split(".")[:-1])
     ext = fname.split(".")[-1]
 
-    if ext == "mol":
-        s.mol_structure = in_file
-        generate_xyz_structure(False, s)
-    elif ext == "xyz":
-        s.xyz_structure = in_file
-    elif ext == "sdf":
-        s.sdf_structure = in_file
-        generate_xyz_structure(False, s)
-    elif ext == "mol2":
-        s.mol2_structure = in_file
-        generate_xyz_structure(False, s)
-    elif ext in ["log", "out"]:
-        s.xyz_structure = get_Gaussian_xyz(in_file)
-    elif ext in ["com", "gjf"]:
-        s.xyz_structure = get_xyz_from_Gaussian_input(in_file)
+    if ext == "xyz":
+        xyz = in_file
+    elif ext in ["mol", "mol2", "sdf", "log", "out", "com", "gjf"]:
+        xyz = generate_xyz_structure(False, in_file, ext)
     else:
         return "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf, .com, .gjf)"
+
+    s.xyz_structure = xyz
     s.save()
     return s, filename
 
@@ -1893,7 +1886,9 @@ def _submit_calculation(request, verify=False):
                         struct, filename = ss
 
                         if ind == 0:
-                            fing = gen_fingerprint(struct)
+                            # fing = gen_fingerprint(struct)
+                            # InChI fingerprints are disabled for now
+                            fing = ""
                             mol.inchi = fing
                             mol.save()
 
@@ -1933,7 +1928,8 @@ def _submit_calculation(request, verify=False):
 
                     for _mol_name, arr_structs in unique_molecules.items():
                         used_numbers = []
-                        fing = gen_fingerprint(arr_structs[0])
+                        # fing = gen_fingerprint(arr_structs[0])
+                        fing = ""
                         mol = Molecule.objects.create(
                             name=_mol_name, inchi=fing, project=project_obj
                         )
@@ -1972,7 +1968,8 @@ def _submit_calculation(request, verify=False):
 
                     struct, filename = ss
                     _mol_name, num = process_filename(filename)
-                    fing = gen_fingerprint(struct)
+                    # fing = gen_fingerprint(struct)
+                    fing = ""
 
                     mol = Molecule.objects.create(
                         name=_mol_name, project=project_obj, inchi=fing
@@ -2014,7 +2011,8 @@ def _submit_calculation(request, verify=False):
                             return ss
                         struct, filename = ss
 
-                        fing = gen_fingerprint(struct)
+                        # fing = gen_fingerprint(struct)
+                        fing = str(time.time())  # (struct)
                         if fing in unique_molecules.keys():
                             unique_molecules[fing].append(struct)
                         else:
@@ -2074,7 +2072,8 @@ def _submit_calculation(request, verify=False):
                     project=project_obj,
                 )
 
-                fing = gen_fingerprint(struct)
+                # fing = gen_fingerprint(struct)
+                fing = ""
                 mol = Molecule.objects.create(
                     name=_mol_name, inchi=fing, project=project_obj
                 )
@@ -3326,16 +3325,17 @@ def download_structures(request, ee):
     if not can_view_ensemble(e, profile):
         return HttpResponse(status=404)
 
+    name = f"{clean_filename(e.parent_molecule.name)}.{clean_filename(e.name)}"
     structs = ""
     for s in e.structure_set.all():
         if s.xyz_structure == "":
             structs += "1\nMissing Structure\nC 0 0 0"
-            logger.warning(f"Missing structure! ({profile.username}, {ee})")
+            logger.warning(f"Missing structure! ({profile.username}, {name})")
         structs += s.xyz_structure
 
     response = HttpResponse(structs)
     response["Content-Type"] = "text/plain"
-    response["Content-Disposition"] = f"attachment; filename={ee}.xyz"
+    response["Content-Disposition"] = f"attachment; filename={name}.xyz"
     return response
 
 
@@ -3356,31 +3356,51 @@ def download_structure(request, ee, num):
     except Structure.DoesNotExist:
         return HttpResponse(status=404)
 
+    name = (
+        f"{clean_filename(e.parent_molecule.name)}.{clean_filename(e.name)}_conf{num}"
+    )
+
     response = HttpResponse(s.xyz_structure)
     response["Content-Type"] = "text/plain"
-    response["Content-Disposition"] = f"attachment; filename={ee}_conf{num}.xyz"
+    response["Content-Disposition"] = f"attachment; filename={name}.xyz"
     return response
+
+
+def get_mol_preview(request):
+    if request.method == "POST":
+        mol = clean(request.POST["mol"])
+        ext = clean(request.POST["ext"])
+
+        if ext == "xyz":
+            return HttpResponse(mol)
+
+        xyz = generate_xyz_structure(False, mol, ext)
+
+        if xyz == ErrorCodes.UNIMPLEMENTED:
+            return HttpResponse(status=204)
+
+        return HttpResponse(xyz)
 
 
 def gen_3D(request):
     if request.method == "POST":
-        mol = request.POST["mol"]
-        clean_mol = clean(mol)
+        mol = clean(request.POST["mol"])
+        with tempfile.TemporaryDirectory() as d:
+            with open(f"{d}/inp.mol", "w") as out:
+                out.write(mol)
 
-        t = time.time()
-        with open(f"/tmp/{t}.mol", "w") as out:
-            out.write(clean_mol)
+            system(
+                f"obabel {d}/inp.mol -O {d}/inp.xyz -h --gen3D",
+                force_local=True,
+            )
+            with open(f"{d}/inp.xyz") as f:
+                lines = f.readlines()
 
-        system(
-            f"obabel /tmp/{t}.mol -O /tmp/{t}.xyz -h --gen3D",
-            force_local=True,
-        )
-        with open(f"/tmp/{t}.xyz") as f:
-            lines = f.readlines()
-        if "".join(lines).strip() == "":
-            return HttpResponse(status=404)
+            if "".join(lines).strip() == "":
+                return HttpResponse(status=404)
 
-        return HttpResponse(lines)
+            return HttpResponse(lines)
+
     return HttpResponse(status=403)
 
 
@@ -3704,22 +3724,25 @@ def download_log(request, pk):
     logs = glob.glob(dir + "/*.out")
     logs += glob.glob(dir + "/*.log")
 
+    name = f"{clean_filename(calc.order.molecule_name)}_calc{calc.id}"
+
     if len(logs) > 1:
         mem = BytesIO()
         with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zip:
             for f in logs:
-                zip.write(f, f"{calc.id}_" + basename(f))
+                if basename(f) != "calc":
+                    zip.write(f, name + basename(f))
+                else:
+                    zip.write(f, name)
 
         response = HttpResponse(mem.getvalue(), content_type="application/zip")
-        response["Content-Disposition"] = f'attachment; filename="calc_{calc.id}.zip"'
+        response["Content-Disposition"] = f'attachment; filename="{name}.zip"'
         return response
     elif len(logs) == 1:
         with open(logs[0]) as f:
             lines = f.readlines()
             response = HttpResponse("".join(lines), content_type="text/plain")
-            response[
-                "Content-Disposition"
-            ] = f'attachment; filename="calc_{calc.id}.log"'
+            response["Content-Disposition"] = f'attachment; filename="{name}.log"'
             return response
     else:
         logger.warning(f"No log to download! (Calculation {pk})")

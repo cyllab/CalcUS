@@ -616,9 +616,9 @@ add_constraint(true);
 	inputElement.addEventListener("change", file_upload_changed, false);
 {% endif %}
 
-$("#calc_functional").keyup(debounce(function() {check("functional")}, 250));
-$("#calc_basis_set").keyup(debounce(function() {check("basis_set")}, 250));
-$("#calc_solvent").keyup(debounce(function() {check("solvent")}, 250));
+$("#calc_functional").on('input', debounce(function() {check("functional")}, 250));
+$("#calc_basis_set").on('input', debounce(function() {check("basis_set")}, 250));
+$("#calc_solvent").on('input', debounce(function() {check("solvent")}, 250));
 
 </script>
 
