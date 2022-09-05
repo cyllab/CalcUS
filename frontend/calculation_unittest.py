@@ -6,6 +6,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User, Group
 from django.core.management import call_command
 
+from frontend import tasks
 from .libxyz import *
 from .models import *
 from .gen_calc import gen_calc
@@ -60,6 +61,7 @@ class CalculationUnitTest(TestCase):
         Returns True if everything worked, otherwise it returns False or an error code value.
         """
 
+        tasks.cache_ind = 1
         params = self.get_params(**modifications)
 
         calc = gen_calc(params, self.profile)

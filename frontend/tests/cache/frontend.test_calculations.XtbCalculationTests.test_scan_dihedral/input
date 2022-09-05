@@ -1,5 +1,0 @@
-$constrain
-force constant=1.0
-dihedral: 1, 2, 3, 4, auto
-$scan
-1: 0.0, 10.0, 10

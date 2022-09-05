@@ -3,4 +3,4 @@ $constrain
 force constant=1.0
 angle: 5, 2, 13, auto
 $scan
-1: 90.0, 180.0, 200
+1: 90.00, 180.00, 200

@@ -2,8 +2,8 @@
  Input=calc.com
  Output=calc.log
  Initial command:
- /binaries/g16/l1.exe "/calcus/scratch/scr/9/Gau-628.inp" -scrdir="/calcus/scratch/scr/9/"
- Entering Link 1 = /binaries/g16/l1.exe PID=       630.
+ /binaries/g16/l1.exe "/calcus/scratch/scr/9/Gau-25.inp" -scrdir="/calcus/scratch/scr/9/"
+ Entering Link 1 = /binaries/g16/l1.exe PID=        27.
   
  Copyright (c) 1988-2019, Gaussian, Inc.  All Rights Reserved.
   
@@ -76,11 +76,11 @@
  
  ******************************************
  Gaussian 16:  ES64L-G16RevC.01  3-Jul-2019
-                29-May-2022 
+                 5-Sep-2022 
  ******************************************
  %chk=in.chk
- %nproc=4
- Will use up to    4 processors via shared memory.
+ %nproc=1
+ Will use up to    1 processors via shared memory.
  %mem=2000MB
  ------------------------
  #p opt(modredundant) AM1
@@ -104,7 +104,7 @@
  2/9=110/2;
  6/7=2,8=2,9=2,10=2,19=2,28=1/1;
  99/9=1/99;
- Leave Link    1 at Sun May 29 19:29:03 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link    1 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l101.exe)
  -----------------------
  File created by ccinput
@@ -137,7 +137,7 @@
  NQMom=    0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
  NMagM=    0.0000000   2.7928460   2.7928460   2.7928460   2.7928460
  AtZNuc=   6.0000000   1.0000000   1.0000000   1.0000000   1.0000000
- Leave Link  101 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.5 elap:               0.1
+ Leave Link  101 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.1
  (Enter /binaries/g16/l103.exe)
 
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
@@ -169,7 +169,7 @@
  Number of steps in this run=     25 maximum allowed number of steps=    100.
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- Leave Link  103 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  103 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l202.exe)
                           Input orientation:                          
  ---------------------------------------------------------------------
@@ -207,7 +207,7 @@
       5          1           0       -0.330072    0.878070   -0.514750
  ---------------------------------------------------------------------
  Rotational constants (GHZ):         164.4303219         163.9529333         163.7655362
- Leave Link  202 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  202 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l301.exe)
  Standard basis: VSTO-6G (5D, 7F)
  Ernie: Thresh=  0.10000D-02 Tol=  0.10000D-05 Strict=F.
@@ -226,7 +226,7 @@
  Integral buffers will be    131072 words long.
  Regular integral format.
  Two-electron integral symmetry is turned off.
- Leave Link  301 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  301 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l302.exe)
  Do NDO integrals.
  NPDir=0 NMtPBC=     1 NCelOv=     1 NCel=       1 NClECP=     1 NCelD=      1
@@ -234,14 +234,14 @@
  One-electron integrals computed using PRISM.
  NBasis=     8 RedAO= F EigKep=  0.00D+00  NBF=     8
  NBsUse=     8 1.00D-04 EigRej=  0.00D+00 NBFU=     8
- Leave Link  302 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.0
+ Leave Link  302 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l303.exe)
  DipDrv:  MaxL=1.
- Leave Link  303 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  303 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l401.exe)
  Simple Huckel Guess.
  JPrj=0 DoOrth=F DoCkMO=F.
- Leave Link  401 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  401 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l502.exe)
  Keep J ints in memory in canonical form, NReq=859348.
  FoFCou: FMM=F IPFlag=           0 FMFlag=           0 FMFlg1=           0
@@ -357,7 +357,7 @@
  SCF Done:  E(RAM1) = -0.896292898720E-02 A.U. after    9 cycles
             NFock=  8  Conv=0.77D-08     -V/T= 0.9991
  KE=-9.923828799827D+00 PE=-1.351118057988D+01 EE= 9.135667810355D+00
- Leave Link  502 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  502 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l601.exe)
  Copying SCF densities to generalized density rwf, IOpCl= 0 IROHF=0.
 
@@ -395,14 +395,14 @@
  Dipole moment (field-independent basis, Debye):
     X=              0.0008    Y=             -0.0000    Z=             -0.0007  Tot=              0.0011
  N-N= 1.429037864037D+01 E-N=-1.351118053997D+01  KE=-9.923828799827D+00
- Leave Link  601 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  601 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l701.exe)
  ... and contract with generalized density number  0.
  Compute integral first derivatives.
- Leave Link  701 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  701 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l702.exe)
  L702 exits ... SP integral derivatives will be done elsewhere.
- Leave Link  702 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  702 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l703.exe)
  Integral derivatives from FoFJK, PRISM(SPDF).
  Compute integral first derivatives, UseDBF=F ICtDFT=           0.
@@ -414,7 +414,7 @@
          wScrn=  0.000000 ICntrl=      2127 IOpCl=  0 I1Cent=           0 NGrid=           0
          NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
  Symmetry not used in FoFCou.
- Leave Link  703 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  703 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l716.exe)
  Dipole        = 3.24043308D-04-2.85092585D-06-2.93570403D-04
  ***** Axes restored to original set *****
@@ -429,7 +429,7 @@
       5        1          -0.034085398    0.000025235   -0.000037709
  -------------------------------------------------------------------
  Cartesian Forces:  Max     0.034085398 RMS     0.017409316
- Leave Link  716 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  716 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l103.exe)
 
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
@@ -519,7 +519,7 @@
  Lowest energy point so far.  Saving SCF results.
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- Leave Link  103 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  103 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l202.exe)
                           Input orientation:                          
  ---------------------------------------------------------------------
@@ -558,7 +558,7 @@
       5          1           0        0.987519    0.528205   -0.003377
  ---------------------------------------------------------------------
  Rotational constants (GHZ):         160.9246910         155.0580839         151.8551183
- Leave Link  202 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  202 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l301.exe)
  Standard basis: VSTO-6G (5D, 7F)
  Ernie: Thresh=  0.10000D-02 Tol=  0.10000D-05 Strict=F.
@@ -577,7 +577,7 @@
  Integral buffers will be    131072 words long.
  Regular integral format.
  Two-electron integral symmetry is turned off.
- Leave Link  301 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  301 at Mon Sep  5 11:44:57 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l302.exe)
  Do NDO integrals.
  NPDir=0 NMtPBC=     1 NCelOv=     1 NCel=       1 NClECP=     1 NCelD=      1
@@ -585,17 +585,17 @@
  One-electron integrals computed using PRISM.
  NBasis=     8 RedAO= F EigKep=  0.00D+00  NBF=     8
  NBsUse=     8 1.00D-04 EigRej=  0.00D+00 NBFU=     8
- Leave Link  302 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  302 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l303.exe)
  DipDrv:  MaxL=1.
- Leave Link  303 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  303 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l401.exe)
  Initial guess from the checkpoint file:  "in.chk"
  B after Tr=     0.000000    0.000000    0.000000
          Rot=    0.739289   -0.207322    0.148722    0.623178 Ang= -84.66 deg.
  Guess basis will be translated and rotated to current coordinates.
  JPrj=0 DoOrth=T DoCkMO=T.
- Leave Link  401 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.0
+ Leave Link  401 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l502.exe)
  Keep J ints in memory in canonical form, NReq=859348.
  FoFCou: FMM=F IPFlag=           0 FMFlag=           0 FMFlg1=           0
@@ -614,9 +614,9 @@
  No special actions if energy rises.
 
  Cycle   1  Pass 1  IDiag  1:
- E=-0.121355200899664E-01
+ E=-0.121355200899558E-01
  DIIS: error= 2.83D-03 at cycle   1 NSaved=   1.
- NSaved= 1 IEnMin= 1 EnMin=-0.121355200899664E-01 IErMin= 1 ErrMin= 2.83D-03
+ NSaved= 1 IEnMin= 1 EnMin=-0.121355200899558E-01 IErMin= 1 ErrMin= 2.83D-03
  ErrMax= 2.83D-03  0.00D+00 EMaxC= 1.00D-01 BMatC= 1.22D-04 BMatP= 1.22D-04
  IDIUse=3 WtCom= 9.72D-01 WtEn= 2.83D-02
  Coeff-Com:  0.100D+01
@@ -626,9 +626,9 @@
  RMSDP=1.90D-03 MaxDP=6.03D-03              OVMax= 0.00D+00
 
  Cycle   2  Pass 1  IDiag  3:
- E=-0.124280053708983E-01 Delta-E=       -0.000292485281 Rises=F Damp=F
+ E=-0.124280053709018E-01 Delta-E=       -0.000292485281 Rises=F Damp=F
  DIIS: error= 7.13D-04 at cycle   2 NSaved=   2.
- NSaved= 2 IEnMin= 2 EnMin=-0.124280053708983E-01 IErMin= 2 ErrMin= 7.13D-04
+ NSaved= 2 IEnMin= 2 EnMin=-0.124280053709018E-01 IErMin= 2 ErrMin= 7.13D-04
  ErrMax= 7.13D-04  0.00D+00 EMaxC= 1.00D-01 BMatC= 9.23D-06 BMatP= 1.22D-04
  IDIUse=3 WtCom= 9.93D-01 WtEn= 7.13D-03
  Coeff-Com: -0.346D+00 0.135D+01
@@ -638,9 +638,9 @@
  RMSDP=8.27D-04 MaxDP=1.86D-03 DE=-2.92D-04 OVMax= 3.57D-03
 
  Cycle   3  Pass 1  IDiag  3:
- E=-0.124583959804383E-01 Delta-E=       -0.000030390610 Rises=F Damp=F
+ E=-0.124583959804401E-01 Delta-E=       -0.000030390610 Rises=F Damp=F
  DIIS: error= 9.29D-05 at cycle   3 NSaved=   3.
- NSaved= 3 IEnMin= 3 EnMin=-0.124583959804383E-01 IErMin= 3 ErrMin= 9.29D-05
+ NSaved= 3 IEnMin= 3 EnMin=-0.124583959804401E-01 IErMin= 3 ErrMin= 9.29D-05
  ErrMax= 9.29D-05  0.00D+00 EMaxC= 1.00D-01 BMatC= 2.20D-07 BMatP= 9.23D-06
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com:  0.224D+00-0.911D+00 0.169D+01
@@ -649,9 +649,9 @@
  RMSDP=2.05D-04 MaxDP=4.80D-04 DE=-3.04D-05 OVMax= 1.01D-03
 
  Cycle   4  Pass 1  IDiag  3:
- E=-0.124595052550145E-01 Delta-E=       -0.000001109275 Rises=F Damp=F
+ E=-0.124595052550287E-01 Delta-E=       -0.000001109275 Rises=F Damp=F
  DIIS: error= 1.30D-05 at cycle   4 NSaved=   4.
- NSaved= 4 IEnMin= 4 EnMin=-0.124595052550145E-01 IErMin= 4 ErrMin= 1.30D-05
+ NSaved= 4 IEnMin= 4 EnMin=-0.124595052550287E-01 IErMin= 4 ErrMin= 1.30D-05
  ErrMax= 1.30D-05  0.00D+00 EMaxC= 1.00D-01 BMatC= 1.82D-09 BMatP= 2.20D-07
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com: -0.163D+00 0.663D+00-0.125D+01 0.175D+01
@@ -671,9 +671,9 @@
  RMSDP=9.39D-07 MaxDP=2.36D-06 DE=-9.21D-09 OVMax= 0.00D+00
 
  Cycle   6  Pass 1  IDiag  3:
- E=-0.124595145119937E-01 Delta-E=       -0.000000000044 Rises=F Damp=F
+ E=-0.124595145119777E-01 Delta-E=       -0.000000000044 Rises=F Damp=F
  DIIS: error= 3.00D-07 at cycle   6 NSaved=   6.
- NSaved= 6 IEnMin= 6 EnMin=-0.124595145119937E-01 IErMin= 6 ErrMin= 3.00D-07
+ NSaved= 6 IEnMin= 6 EnMin=-0.124595145119777E-01 IErMin= 6 ErrMin= 3.00D-07
  ErrMax= 3.00D-07  0.00D+00 EMaxC= 1.00D-01 BMatC= 1.28D-12 BMatP= 9.75D-12
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com: -0.149D-02 0.603D-02-0.109D-01 0.631D-02-0.523D+00 0.152D+01
@@ -682,9 +682,9 @@
  RMSDP=5.27D-07 MaxDP=1.46D-06 DE=-4.42D-11 OVMax= 0.00D+00
 
  Cycle   7  Pass 1  IDiag  3:
- E=-0.124595145191471E-01 Delta-E=       -0.000000000007 Rises=F Damp=F
+ E=-0.124595145191542E-01 Delta-E=       -0.000000000007 Rises=F Damp=F
  DIIS: error= 2.69D-08 at cycle   7 NSaved=   7.
- NSaved= 7 IEnMin= 7 EnMin=-0.124595145191471E-01 IErMin= 7 ErrMin= 2.69D-08
+ NSaved= 7 IEnMin= 7 EnMin=-0.124595145191542E-01 IErMin= 7 ErrMin= 2.69D-08
  ErrMax= 2.69D-08  0.00D+00 EMaxC= 1.00D-01 BMatC= 1.52D-14 BMatP= 1.28D-12
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com: -0.378D-04 0.162D-03-0.457D-03 0.397D-02 0.172D+00-0.571D+00
@@ -692,12 +692,12 @@
  Coeff:     -0.378D-04 0.162D-03-0.457D-03 0.397D-02 0.172D+00-0.571D+00
  Coeff:      0.140D+01
  Gap=     0.654 Goal=   None    Shift=    0.000
- RMSDP=4.70D-08 MaxDP=1.43D-07 DE=-7.15D-12 OVMax= 1.58D-07
+ RMSDP=4.70D-08 MaxDP=1.43D-07 DE=-7.18D-12 OVMax= 1.58D-07
 
  Cycle   8  Pass 1  IDiag  3:
- E=-0.124595145192146E-01 Delta-E=       -0.000000000000 Rises=F Damp=F
+ E=-0.124595145192181E-01 Delta-E=       -0.000000000000 Rises=F Damp=F
  DIIS: error= 3.37D-09 at cycle   8 NSaved=   8.
- NSaved= 8 IEnMin= 8 EnMin=-0.124595145192146E-01 IErMin= 8 ErrMin= 3.37D-09
+ NSaved= 8 IEnMin= 8 EnMin=-0.124595145192181E-01 IErMin= 8 ErrMin= 3.37D-09
  ErrMax= 3.37D-09  0.00D+00 EMaxC= 1.00D-01 BMatC= 2.27D-16 BMatP= 1.52D-14
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com: -0.645D-05 0.208D-04 0.609D-04-0.225D-02-0.114D+00 0.377D+00
@@ -705,19 +705,19 @@
  Coeff:     -0.645D-05 0.208D-04 0.609D-04-0.225D-02-0.114D+00 0.377D+00
  Coeff:     -0.955D+00 0.169D+01
  Gap=     0.654 Goal=   None    Shift=    0.000
- RMSDP=6.90D-09 MaxDP=1.89D-08 DE=-6.75D-14 OVMax= 0.00D+00
+ RMSDP=6.90D-09 MaxDP=1.89D-08 DE=-6.39D-14 OVMax= 0.00D+00
 
  SCF Done:  E(RAM1) = -0.124595145192E-01 A.U. after    8 cycles
             NFock=  8  Conv=0.69D-08     -V/T= 0.9987
  KE=-9.892691460495D+00 PE=-1.333667256518D+01 EE= 9.069012737858D+00
- Leave Link  502 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  502 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l701.exe)
  ... and contract with generalized density number  0.
  Compute integral first derivatives.
- Leave Link  701 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  701 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l702.exe)
  L702 exits ... SP integral derivatives will be done elsewhere.
- Leave Link  702 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  702 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l703.exe)
  Integral derivatives from FoFJK, PRISM(SPDF).
  Compute integral first derivatives, UseDBF=F ICtDFT=           0.
@@ -729,7 +729,7 @@
          wScrn=  0.000000 ICntrl=      2127 IOpCl=  0 I1Cent=           0 NGrid=           0
          NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
  Symmetry not used in FoFCou.
- Leave Link  703 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  703 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l716.exe)
  Dipole        =-5.16708187D-03 3.45494341D-03-1.84954747D-04
  ***** Axes restored to original set *****
@@ -744,7 +744,7 @@
       5        1           0.003604111   -0.000232763    0.000500388
  -------------------------------------------------------------------
  Cartesian Forces:  Max     0.021084749 RMS     0.009891226
- Leave Link  716 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  716 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l103.exe)
 
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
@@ -835,7 +835,7 @@
  Lowest energy point so far.  Saving SCF results.
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- Leave Link  103 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  103 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l202.exe)
                           Input orientation:                          
  ---------------------------------------------------------------------
@@ -874,7 +874,7 @@
       5          1           0        0.876625    0.688598   -0.001151
  ---------------------------------------------------------------------
  Rotational constants (GHZ):         160.5033326         155.2878698         151.6997534
- Leave Link  202 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  202 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l301.exe)
  Standard basis: VSTO-6G (5D, 7F)
  Ernie: Thresh=  0.10000D-02 Tol=  0.10000D-05 Strict=F.
@@ -893,7 +893,7 @@
  Integral buffers will be    131072 words long.
  Regular integral format.
  Two-electron integral symmetry is turned off.
- Leave Link  301 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  301 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l302.exe)
  Do NDO integrals.
  NPDir=0 NMtPBC=     1 NCelOv=     1 NCel=       1 NClECP=     1 NCelD=      1
@@ -901,17 +901,17 @@
  One-electron integrals computed using PRISM.
  NBasis=     8 RedAO= F EigKep=  0.00D+00  NBF=     8
  NBsUse=     8 1.00D-04 EigRej=  0.00D+00 NBFU=     8
- Leave Link  302 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  302 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l303.exe)
  DipDrv:  MaxL=1.
- Leave Link  303 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  303 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l401.exe)
  Initial guess from the checkpoint file:  "in.chk"
- B after Tr=    -0.000000   -0.000000   -0.000000
+ B after Tr=     0.000000   -0.000000    0.000000
          Rot=    0.996279   -0.004170   -0.001665   -0.086073 Ang=  -9.89 deg.
  Guess basis will be translated and rotated to current coordinates.
  JPrj=0 DoOrth=T DoCkMO=T.
- Leave Link  401 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.0
+ Leave Link  401 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l502.exe)
  Keep J ints in memory in canonical form, NReq=859348.
  FoFCou: FMM=F IPFlag=           0 FMFlag=           0 FMFlg1=           0
@@ -930,9 +930,9 @@
  No special actions if energy rises.
 
  Cycle   1  Pass 1  IDiag  1:
- E=-0.125138641948865E-01
+ E=-0.125138641948919E-01
  DIIS: error= 2.96D-04 at cycle   1 NSaved=   1.
- NSaved= 1 IEnMin= 1 EnMin=-0.125138641948865E-01 IErMin= 1 ErrMin= 2.96D-04
+ NSaved= 1 IEnMin= 1 EnMin=-0.125138641948919E-01 IErMin= 1 ErrMin= 2.96D-04
  ErrMax= 2.96D-04  0.00D+00 EMaxC= 1.00D-01 BMatC= 2.06D-06 BMatP= 2.06D-06
  IDIUse=3 WtCom= 9.97D-01 WtEn= 2.96D-03
  Coeff-Com:  0.100D+01
@@ -941,9 +941,9 @@
  RMSDP=3.08D-04 MaxDP=7.46D-04              OVMax= 0.00D+00
 
  Cycle   2  Pass 1  IDiag  3:
- E=-0.125203924846922E-01 Delta-E=       -0.000006528290 Rises=F Damp=F
+ E=-0.125203924846975E-01 Delta-E=       -0.000006528290 Rises=F Damp=F
  DIIS: error= 1.07D-04 at cycle   2 NSaved=   2.
- NSaved= 2 IEnMin= 2 EnMin=-0.125203924846922E-01 IErMin= 2 ErrMin= 1.07D-04
+ NSaved= 2 IEnMin= 2 EnMin=-0.125203924846975E-01 IErMin= 2 ErrMin= 1.07D-04
  ErrMax= 1.07D-04  0.00D+00 EMaxC= 1.00D-01 BMatC= 2.40D-07 BMatP= 2.06D-06
  IDIUse=3 WtCom= 9.99D-01 WtEn= 1.07D-03
  Coeff-Com: -0.459D+00 0.146D+01
@@ -953,9 +953,9 @@
  RMSDP=1.71D-04 MaxDP=3.95D-04 DE=-6.53D-06 OVMax= 7.05D-04
 
  Cycle   3  Pass 1  IDiag  3:
- E=-0.125214306666255E-01 Delta-E=       -0.000001038182 Rises=F Damp=F
+ E=-0.125214306666201E-01 Delta-E=       -0.000001038182 Rises=F Damp=F
  DIIS: error= 1.79D-05 at cycle   3 NSaved=   3.
- NSaved= 3 IEnMin= 3 EnMin=-0.125214306666255E-01 IErMin= 3 ErrMin= 1.79D-05
+ NSaved= 3 IEnMin= 3 EnMin=-0.125214306666201E-01 IErMin= 3 ErrMin= 1.79D-05
  ErrMax= 1.79D-05  0.00D+00 EMaxC= 1.00D-01 BMatC= 6.08D-09 BMatP= 2.40D-07
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com:  0.236D+00-0.811D+00 0.157D+01
@@ -964,9 +964,9 @@
  RMSDP=3.23D-05 MaxDP=1.05D-04 DE=-1.04D-06 OVMax= 1.34D-04
 
  Cycle   4  Pass 1  IDiag  3:
- E=-0.125214598316639E-01 Delta-E=       -0.000000029165 Rises=F Damp=F
+ E=-0.125214598316923E-01 Delta-E=       -0.000000029165 Rises=F Damp=F
  DIIS: error= 3.39D-06 at cycle   4 NSaved=   4.
- NSaved= 4 IEnMin= 4 EnMin=-0.125214598316639E-01 IErMin= 4 ErrMin= 3.39D-06
+ NSaved= 4 IEnMin= 4 EnMin=-0.125214598316923E-01 IErMin= 4 ErrMin= 3.39D-06
  ErrMax= 3.39D-06  0.00D+00 EMaxC= 1.00D-01 BMatC= 8.77D-11 BMatP= 6.08D-09
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com: -0.157D+00 0.540D+00-0.109D+01 0.170D+01
@@ -975,9 +975,9 @@
  RMSDP=4.15D-06 MaxDP=1.83D-05 DE=-2.92D-08 OVMax= 0.00D+00
 
  Cycle   5  Pass 1  IDiag  3:
- E=-0.125214602664414E-01 Delta-E=       -0.000000000435 Rises=F Damp=F
+ E=-0.125214602664521E-01 Delta-E=       -0.000000000435 Rises=F Damp=F
  DIIS: error= 1.38D-07 at cycle   5 NSaved=   5.
- NSaved= 5 IEnMin= 5 EnMin=-0.125214602664414E-01 IErMin= 5 ErrMin= 1.38D-07
+ NSaved= 5 IEnMin= 5 EnMin=-0.125214602664521E-01 IErMin= 5 ErrMin= 1.38D-07
  ErrMax= 1.38D-07  0.00D+00 EMaxC= 1.00D-01 BMatC= 2.70D-13 BMatP= 8.77D-11
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com:  0.103D+00-0.356D+00 0.715D+00-0.112D+01 0.166D+01
@@ -986,9 +986,9 @@
  RMSDP=2.23D-07 MaxDP=5.16D-07 DE=-4.35D-10 OVMax= 0.00D+00
 
  Cycle   6  Pass 1  IDiag  3:
- E=-0.125214602678625E-01 Delta-E=       -0.000000000001 Rises=F Damp=F
+ E=-0.125214602678696E-01 Delta-E=       -0.000000000001 Rises=F Damp=F
  DIIS: error= 2.04D-08 at cycle   6 NSaved=   6.
- NSaved= 6 IEnMin= 6 EnMin=-0.125214602678625E-01 IErMin= 6 ErrMin= 2.04D-08
+ NSaved= 6 IEnMin= 6 EnMin=-0.125214602678696E-01 IErMin= 6 ErrMin= 2.04D-08
  ErrMax= 2.04D-08  0.00D+00 EMaxC= 1.00D-01 BMatC= 4.49D-15 BMatP= 2.70D-13
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com: -0.296D-01 0.102D+00-0.205D+00 0.320D+00-0.543D+00 0.136D+01
@@ -997,9 +997,9 @@
  RMSDP=2.88D-08 MaxDP=6.72D-08 DE=-1.42D-12 OVMax= 0.00D+00
 
  Cycle   7  Pass 1  IDiag  3:
- E=-0.125214602678767E-01 Delta-E=       -0.000000000000 Rises=F Damp=F
+ E=-0.125214602678909E-01 Delta-E=       -0.000000000000 Rises=F Damp=F
  DIIS: error= 2.00D-09 at cycle   7 NSaved=   7.
- NSaved= 7 IEnMin= 7 EnMin=-0.125214602678767E-01 IErMin= 7 ErrMin= 2.00D-09
+ NSaved= 7 IEnMin= 7 EnMin=-0.125214602678909E-01 IErMin= 7 ErrMin= 2.00D-09
  ErrMax= 2.00D-09  0.00D+00 EMaxC= 1.00D-01 BMatC= 6.82D-17 BMatP= 4.49D-15
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com:  0.153D-02-0.527D-02 0.106D-01-0.158D-01 0.307D-01-0.166D+00
@@ -1007,19 +1007,19 @@
  Coeff:      0.153D-02-0.527D-02 0.106D-01-0.158D-01 0.307D-01-0.166D+00
  Coeff:      0.114D+01
  Gap=     0.652 Goal=   None    Shift=    0.000
- RMSDP=3.22D-09 MaxDP=8.99D-09 DE=-1.42D-14 OVMax= 0.00D+00
+ RMSDP=3.22D-09 MaxDP=8.99D-09 DE=-2.13D-14 OVMax= 0.00D+00
 
  SCF Done:  E(RAM1) = -0.125214602679E-01 A.U. after    7 cycles
             NFock=  7  Conv=0.32D-08     -V/T= 0.9987
- KE=-9.892264790801D+00 PE=-1.333402663250D+01 EE= 9.068033905412D+00
- Leave Link  502 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ KE=-9.892264790801D+00 PE=-1.333402663251D+01 EE= 9.068033905413D+00
+ Leave Link  502 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l701.exe)
  ... and contract with generalized density number  0.
  Compute integral first derivatives.
- Leave Link  701 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  701 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l702.exe)
  L702 exits ... SP integral derivatives will be done elsewhere.
- Leave Link  702 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  702 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l703.exe)
  Integral derivatives from FoFJK, PRISM(SPDF).
  Compute integral first derivatives, UseDBF=F ICtDFT=           0.
@@ -1031,7 +1031,7 @@
          wScrn=  0.000000 ICntrl=      2127 IOpCl=  0 I1Cent=           0 NGrid=           0
          NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
  Symmetry not used in FoFCou.
- Leave Link  703 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  703 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l716.exe)
  Dipole        =-6.01888870D-03 3.93060083D-03-4.03557199D-05
  ***** Axes restored to original set *****
@@ -1046,7 +1046,7 @@
       5        1           0.000465355   -0.000083243    0.000160857
  -------------------------------------------------------------------
  Cartesian Forces:  Max     0.020368715 RMS     0.009764494
- Leave Link  716 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  716 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l103.exe)
 
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
@@ -1102,7 +1102,7 @@
      Eigenvalues ---    0.05612   0.07580   0.11075   0.16000   0.18412
      Eigenvalues ---    0.37363   0.389941000.000001000.000001000.00000
      Eigenvalues --- 1000.000001000.000001000.000001000.000001000.00000
- RFO step:  Lambda=-3.01041738D-07 EMin= 5.61242768D-02
+ RFO step:  Lambda=-3.01041739D-07 EMin= 5.61242768D-02
  Quartic linear search produced a step of  0.14074.
  Iteration  1 RMS(Cart)=  0.00084104 RMS(Int)=  0.00000716
  Iteration  2 RMS(Cart)=  0.00000063 RMS(Int)=  0.00000711
@@ -1135,7 +1135,7 @@
  Lowest energy point so far.  Saving SCF results.
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- Leave Link  103 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  103 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l202.exe)
                           Input orientation:                          
  ---------------------------------------------------------------------
@@ -1174,7 +1174,7 @@
       5          1           0        0.860184    0.707899   -0.000262
  ---------------------------------------------------------------------
  Rotational constants (GHZ):         160.4111748         155.3536466         151.6802524
- Leave Link  202 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  202 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l301.exe)
  Standard basis: VSTO-6G (5D, 7F)
  Ernie: Thresh=  0.10000D-02 Tol=  0.10000D-05 Strict=F.
@@ -1193,7 +1193,7 @@
  Integral buffers will be    131072 words long.
  Regular integral format.
  Two-electron integral symmetry is turned off.
- Leave Link  301 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  301 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l302.exe)
  Do NDO integrals.
  NPDir=0 NMtPBC=     1 NCelOv=     1 NCel=       1 NClECP=     1 NCelD=      1
@@ -1201,17 +1201,17 @@
  One-electron integrals computed using PRISM.
  NBasis=     8 RedAO= F EigKep=  0.00D+00  NBF=     8
  NBsUse=     8 1.00D-04 EigRej=  0.00D+00 NBFU=     8
- Leave Link  302 at Sun May 29 19:29:04 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.0
+ Leave Link  302 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l303.exe)
  DipDrv:  MaxL=1.
- Leave Link  303 at Sun May 29 19:29:05 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  303 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l401.exe)
  Initial guess from the checkpoint file:  "in.chk"
- B after Tr=     0.000000    0.000000    0.000000
+ B after Tr=    -0.000000   -0.000000   -0.000000
          Rot=    0.999940   -0.000751   -0.000115   -0.010945 Ang=  -1.26 deg.
  Guess basis will be translated and rotated to current coordinates.
  JPrj=0 DoOrth=T DoCkMO=T.
- Leave Link  401 at Sun May 29 19:29:05 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.0
+ Leave Link  401 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l502.exe)
  Keep J ints in memory in canonical form, NReq=859348.
  FoFCou: FMM=F IPFlag=           0 FMFlag=           0 FMFlg1=           0
@@ -1230,9 +1230,9 @@
  No special actions if energy rises.
 
  Cycle   1  Pass 1  IDiag  1:
- E=-0.125225088052616E-01
+ E=-0.125225088052581E-01
  DIIS: error= 6.15D-05 at cycle   1 NSaved=   1.
- NSaved= 1 IEnMin= 1 EnMin=-0.125225088052616E-01 IErMin= 1 ErrMin= 6.15D-05
+ NSaved= 1 IEnMin= 1 EnMin=-0.125225088052581E-01 IErMin= 1 ErrMin= 6.15D-05
  ErrMax= 6.15D-05  0.00D+00 EMaxC= 1.00D-01 BMatC= 6.14D-08 BMatP= 6.14D-08
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com:  0.100D+01
@@ -1240,9 +1240,9 @@
  RMSDP=5.33D-05 MaxDP=1.30D-04              OVMax= 0.00D+00
 
  Cycle   2  Pass 1  IDiag  3:
- E=-0.125227038283260E-01 Delta-E=       -0.000000195023 Rises=F Damp=F
+ E=-0.125227038283153E-01 Delta-E=       -0.000000195023 Rises=F Damp=F
  DIIS: error= 1.71D-05 at cycle   2 NSaved=   2.
- NSaved= 2 IEnMin= 2 EnMin=-0.125227038283260E-01 IErMin= 2 ErrMin= 1.71D-05
+ NSaved= 2 IEnMin= 2 EnMin=-0.125227038283153E-01 IErMin= 2 ErrMin= 1.71D-05
  ErrMax= 1.71D-05  0.00D+00 EMaxC= 1.00D-01 BMatC= 7.18D-09 BMatP= 6.14D-08
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com: -0.461D+00 0.146D+01
@@ -1251,9 +1251,9 @@
  RMSDP=2.96D-05 MaxDP=6.90D-05 DE=-1.95D-07 OVMax= 1.44D-04
 
  Cycle   3  Pass 1  IDiag  3:
- E=-0.125227348893624E-01 Delta-E=       -0.000000031061 Rises=F Damp=F
+ E=-0.125227348893446E-01 Delta-E=       -0.000000031061 Rises=F Damp=F
  DIIS: error= 3.17D-06 at cycle   3 NSaved=   3.
- NSaved= 3 IEnMin= 3 EnMin=-0.125227348893624E-01 IErMin= 3 ErrMin= 3.17D-06
+ NSaved= 3 IEnMin= 3 EnMin=-0.125227348893446E-01 IErMin= 3 ErrMin= 3.17D-06
  ErrMax= 3.17D-06  0.00D+00 EMaxC= 1.00D-01 BMatC= 1.78D-10 BMatP= 7.18D-09
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com:  0.237D+00-0.810D+00 0.157D+01
@@ -1262,9 +1262,9 @@
  RMSDP=5.45D-06 MaxDP=1.85D-05 DE=-3.11D-08 OVMax= 2.72D-05
 
  Cycle   4  Pass 1  IDiag  3:
- E=-0.125227357284121E-01 Delta-E=       -0.000000000839 Rises=F Damp=F
+ E=-0.125227357284103E-01 Delta-E=       -0.000000000839 Rises=F Damp=F
  DIIS: error= 6.05D-07 at cycle   4 NSaved=   4.
- NSaved= 4 IEnMin= 4 EnMin=-0.125227357284121E-01 IErMin= 4 ErrMin= 6.05D-07
+ NSaved= 4 IEnMin= 4 EnMin=-0.125227357284103E-01 IErMin= 4 ErrMin= 6.05D-07
  ErrMax= 6.05D-07  0.00D+00 EMaxC= 1.00D-01 BMatC= 2.48D-12 BMatP= 1.78D-10
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com: -0.143D+00 0.491D+00-0.997D+00 0.165D+01
@@ -1273,9 +1273,9 @@
  RMSDP=6.93D-07 MaxDP=3.11D-06 DE=-8.39D-10 OVMax= 0.00D+00
 
  Cycle   5  Pass 1  IDiag  3:
- E=-0.125227357408448E-01 Delta-E=       -0.000000000012 Rises=F Damp=F
+ E=-0.125227357408324E-01 Delta-E=       -0.000000000012 Rises=F Damp=F
  DIIS: error= 3.86D-08 at cycle   5 NSaved=   5.
- NSaved= 5 IEnMin= 5 EnMin=-0.125227357408448E-01 IErMin= 5 ErrMin= 3.86D-08
+ NSaved= 5 IEnMin= 5 EnMin=-0.125227357408324E-01 IErMin= 5 ErrMin= 3.86D-08
  ErrMax= 3.86D-08  0.00D+00 EMaxC= 1.00D-01 BMatC= 2.49D-14 BMatP= 2.48D-12
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com:  0.778D-01-0.267D+00 0.543D+00-0.908D+00 0.155D+01
@@ -1284,20 +1284,20 @@
  RMSDP=6.31D-08 MaxDP=1.36D-07 DE=-1.24D-11 OVMax= 0.00D+00
 
  Cycle   6  Pass 1  IDiag  3:
- E=-0.125227357409621E-01 Delta-E=       -0.000000000000 Rises=F Damp=F
+ E=-0.125227357409532E-01 Delta-E=       -0.000000000000 Rises=F Damp=F
  DIIS: error= 6.60D-09 at cycle   6 NSaved=   6.
- NSaved= 6 IEnMin= 6 EnMin=-0.125227357409621E-01 IErMin= 6 ErrMin= 6.60D-09
+ NSaved= 6 IEnMin= 6 EnMin=-0.125227357409532E-01 IErMin= 6 ErrMin= 6.60D-09
  ErrMax= 6.60D-09  0.00D+00 EMaxC= 1.00D-01 BMatC= 7.07D-16 BMatP= 2.49D-14
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com: -0.363D-01 0.125D+00-0.253D+00 0.423D+00-0.814D+00 0.156D+01
  Coeff:     -0.363D-01 0.125D+00-0.253D+00 0.423D+00-0.814D+00 0.156D+01
  Gap=     0.651 Goal=   None    Shift=    0.000
- RMSDP=1.23D-08 MaxDP=3.23D-08 DE=-1.17D-13 OVMax= 0.00D+00
+ RMSDP=1.23D-08 MaxDP=3.23D-08 DE=-1.21D-13 OVMax= 0.00D+00
 
  Cycle   7  Pass 1  IDiag  3:
- E=-0.125227357409727E-01 Delta-E=       -0.000000000000 Rises=F Damp=F
+ E=-0.125227357409674E-01 Delta-E=       -0.000000000000 Rises=F Damp=F
  DIIS: error= 4.61D-10 at cycle   7 NSaved=   7.
- NSaved= 7 IEnMin= 7 EnMin=-0.125227357409727E-01 IErMin= 7 ErrMin= 4.61D-10
+ NSaved= 7 IEnMin= 7 EnMin=-0.125227357409674E-01 IErMin= 7 ErrMin= 4.61D-10
  ErrMax= 4.61D-10  0.00D+00 EMaxC= 1.00D-01 BMatC= 4.07D-18 BMatP= 7.07D-16
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com:  0.242D-01-0.833D-01 0.169D+00-0.283D+00 0.546D+00-0.106D+01
@@ -1305,20 +1305,20 @@
  Coeff:      0.242D-01-0.833D-01 0.169D+00-0.283D+00 0.546D+00-0.106D+01
  Coeff:      0.169D+01
  Gap=     0.651 Goal=   None    Shift=    0.000
- RMSDP=9.28D-10 MaxDP=2.85D-09 DE=-1.07D-14 OVMax= 3.20D-09
+ RMSDP=9.28D-10 MaxDP=2.85D-09 DE=-1.42D-14 OVMax= 3.20D-09
 
  Cycle   8  Pass 2  IDiag  1:
  SCF Done:  E(RAM1) = -0.125227357410E-01 A.U. after    8 cycles
             NFock=  7  Conv=0.93D-09     -V/T= 0.9987
  KE=-9.892206835697D+00 PE=-1.333369685890D+01 EE= 9.067913123806D+00
- Leave Link  502 at Sun May 29 19:29:05 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  502 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l701.exe)
  ... and contract with generalized density number  0.
  Compute integral first derivatives.
- Leave Link  701 at Sun May 29 19:29:05 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  701 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l702.exe)
  L702 exits ... SP integral derivatives will be done elsewhere.
- Leave Link  702 at Sun May 29 19:29:05 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  702 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l703.exe)
  Integral derivatives from FoFJK, PRISM(SPDF).
  Compute integral first derivatives, UseDBF=F ICtDFT=           0.
@@ -1330,9 +1330,9 @@
          wScrn=  0.000000 ICntrl=      2127 IOpCl=  0 I1Cent=           0 NGrid=           0
          NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
  Symmetry not used in FoFCou.
- Leave Link  703 at Sun May 29 19:29:05 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  703 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l716.exe)
- Dipole        =-6.22081946D-03 4.02865244D-03-1.03152505D-05
+ Dipole        =-6.22081946D-03 4.02865244D-03-1.03152504D-05
  ***** Axes restored to original set *****
  -------------------------------------------------------------------
  Center     Atomic                   Forces (Hartrees/Bohr)
@@ -1345,7 +1345,7 @@
       5        1           0.000010211   -0.000017473    0.000034761
  -------------------------------------------------------------------
  Cartesian Forces:  Max     0.020275182 RMS     0.009775018
- Leave Link  716 at Sun May 29 19:29:05 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  716 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l103.exe)
 
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
@@ -1405,7 +1405,7 @@
  RFO step:  Lambda=-7.16745037D-07.
  NNeg= 0 NGDIIS= 2 SimSw=  2.50D-01 Rises=F DC= -1.28D-06 SmlDif=  1.00D-05
  NRisDI= 0 DoIntr=F SqrtH=F CThrHd= 10.0 CDAdj=  3.0
- RMS Error=  0.1675346789D-03 NUsed= 2 OKEnD=F EnDIS=F
+ RMS Error=  0.1675346799D-03 NUsed= 2 OKEnD=F EnDIS=F
  InvSVX:  RCond= 5.81D-06 Info=           0 Equed=N FErr=  1.13D-15 BErr=  0.00D+00
  DidBck=F Rises=F RFO-DIIS coefs:    1.11772   -0.11772
  Iteration  1 RMS(Cart)=  0.00012431 RMS(Int)=  0.00000092
@@ -1463,7 +1463,7 @@
  Largest change from initial coordinates is atom    5       1.308 Angstoms.
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- Leave Link  103 at Sun May 29 19:29:05 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  103 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l202.exe)
                           Input orientation:                          
  ---------------------------------------------------------------------
@@ -1487,7 +1487,7 @@
  Framework group  C1[X(CH4)]
  Deg. of freedom     9
  Full point group                 C1      NOp   1
- RotChk:  IX=1 Diff= 1.57D-14
+ RotChk:  IX=1 Diff= 3.64D-14
  Largest Abelian subgroup         C1      NOp   1
  Largest concise Abelian subgroup C1      NOp   1
                          Standard orientation:                         
@@ -1502,7 +1502,7 @@
       5          1           0        0.860184    0.707899   -0.000262
  ---------------------------------------------------------------------
  Rotational constants (GHZ):         160.4111748         155.3536466         151.6802524
- Leave Link  202 at Sun May 29 19:29:05 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  202 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l601.exe)
  Copying SCF densities to generalized density rwf, IOpCl= 0 IROHF=0.
 
@@ -1532,18 +1532,18 @@
      3  H    0.062771
      4  H    0.070164
      5  H    0.068565
- Sum of Mulliken charges =   0.00000
+ Sum of Mulliken charges =  -0.00000
  Mulliken charges with hydrogens summed into heavy atoms:
                1
-     1  C    0.000000
- Charge=              0.0000 electrons
+     1  C   -0.000000
+ Charge=             -0.0000 electrons
  Dipole moment (field-independent basis, Debye):
     X=             -0.0158    Y=              0.0102    Z=             -0.0000  Tot=              0.0188
- N-N= 1.414546783504D+01 E-N=-1.333369686168D+01  KE=-9.892206835697D+00
- Leave Link  601 at Sun May 29 19:29:05 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ N-N= 1.414546783505D+01 E-N=-1.333369686168D+01  KE=-9.892206835697D+00
+ Leave Link  601 at Mon Sep  5 11:44:58 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l9999.exe)
  Unable to Open any file for archive entry.
- 1\1\GINC-WEB\FOpt\RAM1\ZDO\C1H4\CALCUS\29-May-2022\0\\#p opt(modredund
+ 1\1\GINC-WEB\FOpt\RAM1\ZDO\C1H4\CALCUS\05-Sep-2022\0\\#p opt(modredund
  ant) AM1\\File created by ccinput\\0,1\C,4.2884749707,3.6698386656,-0.
  0209374615\H,4.672787594,2.6358842898,0.0252939547\H,4.6737209454,4.14
  90834659,0.8959929421\H,4.6479869635,4.1748634858,-0.8991329967\H,3.17
@@ -1553,11 +1553,8 @@
  The archive entry for this job was punched.
 
 
- The theorems and results in mathematical physics are
- not theorems and results about Nature, but about our
- description of it.
-                   --Gerard 't Hooft
- Job cpu time:       0 days  0 hours  0 minutes  4.3 seconds.
- Elapsed time:       0 days  0 hours  0 minutes  1.1 seconds.
+ YOU ARE IN A MAZE OF TWISTY LITTLE PASSAGES.
+ Job cpu time:       0 days  0 hours  0 minutes  1.3 seconds.
+ Elapsed time:       0 days  0 hours  0 minutes  1.2 seconds.
  File lengths (MBytes):  RWF=      6 Int=      0 D2E=      0 Chk=      2 Scr=      1
- Normal termination of Gaussian 16 at Sun May 29 19:29:05 2022.
+ Normal termination of Gaussian 16 at Mon Sep  5 11:44:58 2022.
