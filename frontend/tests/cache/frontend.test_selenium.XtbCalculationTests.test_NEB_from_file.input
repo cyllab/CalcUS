@@ -1,6 +1,4 @@
-$ 
 
----input:
 !NEB xtb2
 *xyz -1 1
 C   -0.74277000   0.14309000   0.12635000
@@ -18,6 +16,7 @@ H   -1.82448000   0.94856000   3.28105000
 product "struct2.xyz"
 nimages 3
 end
+%MaxCore 2000
 %pal
 nprocs 1
 end

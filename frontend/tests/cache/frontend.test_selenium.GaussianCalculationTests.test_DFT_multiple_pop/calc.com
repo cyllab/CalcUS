@@ -1,5 +1,5 @@
 %chk=in.chk
-%nproc=4
+%nproc=1
 %mem=2000MB
 #p sp M062X/Def2SVP pop(nbo, hirshfeld)
 

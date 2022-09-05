@@ -2,6 +2,7 @@
 *xyz -1 1
 Cl   0.00000000   0.00000000   0.00000000
 *
+%MaxCore 2000
 %pal
-nprocs 4
+nprocs 1
 end

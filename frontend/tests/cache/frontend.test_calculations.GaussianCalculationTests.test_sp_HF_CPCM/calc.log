@@ -2,8 +2,8 @@
  Input=calc.com
  Output=calc.log
  Initial command:
- /binaries/g16/l1.exe "/calcus/scratch/scr/26/Gau-5811.inp" -scrdir="/calcus/scratch/scr/26/"
- Entering Link 1 = /binaries/g16/l1.exe PID=      5813.
+ /binaries/g16/l1.exe "/calcus/scratch/scr/26/Gau-42.inp" -scrdir="/calcus/scratch/scr/26/"
+ Entering Link 1 = /binaries/g16/l1.exe PID=        44.
   
  Copyright (c) 1988-2019, Gaussian, Inc.  All Rights Reserved.
   
@@ -76,11 +76,11 @@
  
  ******************************************
  Gaussian 16:  ES64L-G16RevC.01  3-Jul-2019
-                29-May-2022 
+                 5-Sep-2022 
  ******************************************
  %chk=in.chk
- %nproc=4
- Will use up to    4 processors via shared memory.
+ %nproc=1
+ Will use up to    1 processors via shared memory.
  %mem=2000MB
  ---------------------------------------------
  #p sp HF/Def2SVP SCRF(CPCM, Solvent=methanol)
@@ -92,7 +92,7 @@
  5/5=2,38=5,53=3/2;
  6/7=2,8=2,9=2,10=2,28=1/1;
  99/5=1,9=1/99;
- Leave Link    1 at Sun May 29 19:30:13 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link    1 at Mon Sep  5 11:45:36 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l101.exe)
  -----------------------
  File created by ccinput
@@ -118,7 +118,7 @@
  NQMom=    0.0000000   0.0000000
  NMagM=    2.7928460   2.7928460
  AtZNuc=   1.0000000   1.0000000
- Leave Link  101 at Sun May 29 19:30:13 2022, MaxMem=   262144000 cpu:               0.4 elap:               0.1
+ Leave Link  101 at Mon Sep  5 11:45:36 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.1
  (Enter /binaries/g16/l202.exe)
                           Input orientation:                          
  ---------------------------------------------------------------------
@@ -143,7 +143,7 @@
       2          1           0        0.000000    0.000000   -0.300000
  ---------------------------------------------------------------------
  Rotational constants (GHZ):           0.0000000        2785.8616915        2785.8616915
- Leave Link  202 at Sun May 29 19:30:14 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  202 at Mon Sep  5 11:45:36 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l301.exe)
  Standard basis: def2SVP (5D, 7F)
  Ernie: Thresh=  0.10000D-02 Tol=  0.10000D-05 Strict=F.
@@ -208,7 +208,7 @@
  GePol: Fraction of low-weight points (<1% of avg)   =       0.00%
  GePol: Cavity surface area                          =     37.681 Ang**2
  GePol: Cavity volume                                =     21.449 Ang**3
- Leave Link  301 at Sun May 29 19:30:14 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  301 at Mon Sep  5 11:45:36 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l302.exe)
  NPDir=0 NMtPBC=     1 NCelOv=     1 NCel=       1 NClECP=     1 NCelD=      1
          NCelK=      1 NCelE2=     1 NClLst=     1 CellRange=     0.0.
@@ -219,10 +219,10 @@
  LDataN:  DoStor=T MaxTD1= 2 Len=   12
  NBasis=    10 RedAO= T EigKep=  1.98D-02  NBF=     3     0     1     1     0     3     1     1
  NBsUse=    10 1.00D-06 EigRej= -1.00D+00 NBFU=     3     0     1     1     0     3     1     1
- Leave Link  302 at Sun May 29 19:30:14 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.1
+ Leave Link  302 at Mon Sep  5 11:45:37 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.1
  (Enter /binaries/g16/l303.exe)
  DipDrv:  MaxL=1.
- Leave Link  303 at Sun May 29 19:30:14 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  303 at Mon Sep  5 11:45:37 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l401.exe)
  ExpMin= 1.22D-01 ExpMax= 1.30D+01 ExpMxC= 1.30D+01 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
  Harris functional with IExCor=  205 and IRadAn=       5 diagonalized for initial guess.
@@ -240,7 +240,7 @@
        Virtual   (SGU) (SGG) (SGU) (PIU) (PIU) (SGG) (PIG) (PIG)
                  (SGU)
  The electronic state of the initial guess is 1-SGG.
- Leave Link  401 at Sun May 29 19:30:14 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.1
+ Leave Link  401 at Mon Sep  5 11:45:37 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l502.exe)
  Keep R1 ints in memory in symmetry-blocked form, NReq=1421324.
  FoFCou: FMM=F IPFlag=           0 FMFlag=           0 FMFlg1=           0
@@ -258,10 +258,10 @@
 
  Cycle   1  Pass 1  IDiag  1:
  Inv3:  Mode=1 IEnd=      164268.
- Iteration    1 A*A^-1 deviation from unit magnitude is 2.44D-15 for    230.
- Iteration    1 A*A^-1 deviation from orthogonality  is 8.33D-16 for    144     82.
- Iteration    1 A^-1*A deviation from unit magnitude is 2.44D-15 for    118.
- Iteration    1 A^-1*A deviation from orthogonality  is 5.83D-16 for    197     22.
+ Iteration    1 A*A^-1 deviation from unit magnitude is 2.00D-15 for    217.
+ Iteration    1 A*A^-1 deviation from orthogonality  is 9.24D-16 for    212     94.
+ Iteration    1 A^-1*A deviation from unit magnitude is 2.00D-15 for    230.
+ Iteration    1 A^-1*A deviation from orthogonality  is 6.19D-16 for    224    106.
  E= -1.10393705584700    
  DIIS: error= 1.88D-02 at cycle   1 NSaved=   1.
  NSaved= 1 IEnMin= 1 EnMin= -1.10393705584700     IErMin= 1 ErrMin= 1.88D-02
@@ -315,10 +315,10 @@
  NSaved= 5 IEnMin= 5 EnMin= -1.10747900472777     IErMin= 5 ErrMin= 3.02D-09
  ErrMax= 3.02D-09  0.00D+00 EMaxC= 1.00D-01 BMatC= 5.93D-17 BMatP= 6.77D-11
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
- Large coefficients: NSaved=  5 BigCof=    0.00 CofMax=   10.00 Det=-1.19D-26
+ Large coefficients: NSaved=  5 BigCof=    0.00 CofMax=   10.00 Det= 4.32D-26
  Inversion failed.  Reducing to  4 matrices.
- Coeff-Com:  0.531D-08 0.707D-06 0.916D-03 0.999D+00
- Coeff:      0.531D-08 0.707D-06 0.916D-03 0.999D+00
+ Coeff-Com:  0.529D-08 0.707D-06 0.916D-03 0.999D+00
+ Coeff:      0.529D-08 0.707D-06 0.916D-03 0.999D+00
  Gap=     0.863 Goal=   None    Shift=    0.000
  RMSDP=1.11D-09 MaxDP=4.62D-09 DE=-1.49D-10 OVMax= 8.64D-09
 
@@ -326,7 +326,7 @@
  SCF Done:  E(RHF) =  -1.10747900473     A.U. after    5 cycles
             NFock=  5  Conv=0.11D-08     -V/T= 1.8914
  KE= 1.242463358773D+00 PE=-3.943524126564D+00 EE= 7.116197448639D-01
- Leave Link  502 at Sun May 29 19:30:14 2022, MaxMem=   262144000 cpu:               0.5 elap:               0.1
+ Leave Link  502 at Mon Sep  5 11:45:37 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.1
  (Enter /binaries/g16/l601.exe)
  Copying SCF densities to generalized density rwf, IOpCl= 0 IROHF=0.
 
@@ -366,7 +366,7 @@
    XX=             -0.1478   YY=             -0.1478   ZZ=              0.2956
    XY=             -0.0000   XZ=             -0.0000   YZ=              0.0000
  Octapole moment (field-independent basis, Debye-Ang**2):
-  XXX=             -0.0000  YYY=              0.0000  ZZZ=             -0.0000  XYY=             -0.0000
+  XXX=             -0.0000  YYY=              0.0000  ZZZ=              0.0000  XYY=             -0.0000
   XXY=              0.0000  XXZ=             -0.0000  XZZ=             -0.0000  YZZ=              0.0000
   YYZ=             -0.0000  XYZ=              0.0000
  Hexadecapole moment (field-independent basis, Debye-Ang**3):
@@ -384,10 +384,10 @@
  Symmetry B2U  KE= 6.336400985792D-35
  Symmetry B3U  KE= 6.336400985792D-35
  No NMR shielding tensors so no spin-rotation constants.
- Leave Link  601 at Sun May 29 19:30:14 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.1
+ Leave Link  601 at Mon Sep  5 11:45:37 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l9999.exe)
  Unable to Open any file for archive entry.
- 1\1\GINC-WEB\SP\RHF\def2SVP\H2\CALCUS\29-May-2022\0\\#p sp HF/Def2SVP 
+ 1\1\GINC-WEB\SP\RHF\def2SVP\H2\CALCUS\05-Sep-2022\0\\#p sp HF/Def2SVP 
  SCRF(CPCM, Solvent=methanol)\\File created by ccinput\\0,1\H,0,-1.4386
  ,-0.2682,0.\H,0,-2.0386,-0.2682,0.\\Version=ES64L-G16RevC.01\State=1-S
  GG\HF=-1.107479\RMSD=1.114e-09\Dipole=0.,0.,0.\Quadrupole=0.2197511,-0
@@ -395,12 +395,10 @@
  The archive entry for this job was punched.
 
 
- A MAN SHOULD NEVER BE ASHAMED TO OWN HE HAS BEEN IN THE WRONG
- WHICH IS BUT SAYING IN OTHER WORDS,
- THAT HE IS WISER TODAY THAN HE WAS YESTERDAY.
+ A COMPLEXITY IS MERELY A DISARRANGEMENT OF SIMPLICITIES.
 
-                          -- JONATHAN SWIFT
- Job cpu time:       0 days  0 hours  0 minutes  1.9 seconds.
- Elapsed time:       0 days  0 hours  0 minutes  0.5 seconds.
+                                    -- G. O. ABELL IN "EXPLORATION OF THE UNIVERSE"
+ Job cpu time:       0 days  0 hours  0 minutes  0.5 seconds.
+ Elapsed time:       0 days  0 hours  0 minutes  0.4 seconds.
  File lengths (MBytes):  RWF=      6 Int=      0 D2E=      0 Chk=      1 Scr=      1
- Normal termination of Gaussian 16 at Sun May 29 19:30:14 2022.
+ Normal termination of Gaussian 16 at Mon Sep  5 11:45:37 2022.

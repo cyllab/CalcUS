@@ -1,6 +1,4 @@
-$ xtb in.xyz --opt tight --input input
-
----input:
+xtb in.xyz --opt tight --input input
 $constrain
 force constant=1.0
 angle: 1, 2, 3, auto

@@ -2,8 +2,8 @@
  Input=calc.com
  Output=calc.log
  Initial command:
- /binaries/g16/l1.exe "/calcus/scratch/scr/124/Gau-41443.inp" -scrdir="/calcus/scratch/scr/124/"
- Entering Link 1 = /binaries/g16/l1.exe PID=     41445.
+ /binaries/g16/l1.exe "/calcus/scratch/scr/20/Gau-130.inp" -scrdir="/calcus/scratch/scr/20/"
+ Entering Link 1 = /binaries/g16/l1.exe PID=       132.
   
  Copyright (c) 1988-2019, Gaussian, Inc.  All Rights Reserved.
   
@@ -76,11 +76,11 @@
  
  ******************************************
  Gaussian 16:  ES64L-G16RevC.01  3-Jul-2019
-                29-May-2022 
+                 5-Sep-2022 
  ******************************************
  %chk=in.chk
- %nproc=4
- Will use up to    4 processors via shared memory.
+ %nproc=1
+ Will use up to    1 processors via shared memory.
  %mem=2000MB
  ---------------------
  #p freq M062X/Def2SVP
@@ -97,7 +97,7 @@
  7/8=1,10=1,25=1/1,2,3,16;
  1/10=4,30=1/3;
  99//99;
- Leave Link    1 at Sun May 29 14:22:20 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link    1 at Mon Sep  5 10:33:36 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l101.exe)
  -----------------------
  File created by ccinput
@@ -125,7 +125,7 @@
  NQMom=    0.0000000   0.0000000   0.0000000   0.0000000
  NMagM=    0.0000000   2.7928460   2.7928460   2.7928460
  AtZNuc=   6.0000000   1.0000000   1.0000000   1.0000000
- Leave Link  101 at Sun May 29 14:22:21 2022, MaxMem=   262144000 cpu:               0.4 elap:               0.1
+ Leave Link  101 at Mon Sep  5 10:33:36 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l103.exe)
 
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
@@ -135,7 +135,7 @@
  Number of steps in this run=      2 maximum allowed number of steps=      2.
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- Leave Link  103 at Sun May 29 14:22:21 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  103 at Mon Sep  5 10:33:36 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l202.exe)
                           Input orientation:                          
  ---------------------------------------------------------------------
@@ -170,7 +170,7 @@
       4          1           0       -0.504413   -0.237796   -0.873700
  ---------------------------------------------------------------------
  Rotational constants (GHZ):         273.8084056         273.7921782         164.2339101
- Leave Link  202 at Sun May 29 14:22:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  202 at Mon Sep  5 10:33:36 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l301.exe)
  Standard basis: def2SVP (5D, 7F)
  Ernie: Thresh=  0.10000D-02 Tol=  0.10000D-05 Strict=F.
@@ -188,7 +188,7 @@
  Integral buffers will be    131072 words long.
  Raffenetti 2 integral format.
  Two-electron integral symmetry is turned on.
- Leave Link  301 at Sun May 29 14:22:21 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  301 at Mon Sep  5 10:33:36 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l302.exe)
  NPDir=0 NMtPBC=     1 NCelOv=     1 NCel=       1 NClECP=     1 NCelD=      1
          NCelK=      1 NCelE2=     1 NClLst=     1 CellRange=     0.0.
@@ -203,10 +203,10 @@
  IXCGrd= 4 IRadAn=           5 IRanWt=          -1 IRanGd=           0 AccXCQ= 0.00D+00.
  Generated NRdTot=       0 NPtTot=           0 NUsed=           0 NTot=          32
  NSgBfM=    30    30    30    30    30 MxSgAt=     4 MxSgA2=     4.
- Leave Link  302 at Sun May 29 14:22:21 2022, MaxMem=   262144000 cpu:               0.3 elap:               0.1
+ Leave Link  302 at Mon Sep  5 10:33:36 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.1
  (Enter /binaries/g16/l303.exe)
  DipDrv:  MaxL=1.
- Leave Link  303 at Sun May 29 14:22:21 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  303 at Mon Sep  5 10:33:36 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l401.exe)
  ExpMin= 1.22D-01 ExpMax= 1.24D+03 ExpMxC= 1.86D+02 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
  Harris functional with IExCor= 1009 and IRadAn=       5 diagonalized for initial guess.
@@ -225,9 +225,9 @@
                  (A') (A") (A') (A") (A') (A") (A') (A") (A') (A')
                  (A') (A") (A') (A") (A')
  The electronic state of the initial guess is 1-A'.
- Leave Link  401 at Sun May 29 14:22:21 2022, MaxMem=   262144000 cpu:               0.3 elap:               0.1
+ Leave Link  401 at Mon Sep  5 10:33:37 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.1
  (Enter /binaries/g16/l502.exe)
- Keep R1 ints in memory in symmetry-blocked form, NReq=3554337.
+ Keep R1 ints in memory in symmetry-blocked form, NReq=961008.
  FoFCou: FMM=F IPFlag=           0 FMFlag=           0 FMFlg1=           0
          NFxFlg=           0 DoJE=F BraDBF=F KetDBF=F FulRan=T
          wScrn=  0.000000 ICntrl=       600 IOpCl=  0 I1Cent=           0 NGrid=           0
@@ -243,9 +243,9 @@
  Integral accuracy reduced to 1.0D-05 until final iterations.
 
  Cycle   1  Pass 0  IDiag  1:
- E= -39.3596845237904    
+ E= -39.3596845237903    
  DIIS: error= 2.01D-02 at cycle   1 NSaved=   1.
- NSaved= 1 IEnMin= 1 EnMin= -39.3596845237904     IErMin= 1 ErrMin= 2.01D-02
+ NSaved= 1 IEnMin= 1 EnMin= -39.3596845237903     IErMin= 1 ErrMin= 2.01D-02
  ErrMax= 2.01D-02  0.00D+00 EMaxC= 1.00D-01 BMatC= 1.02D-02 BMatP= 1.02D-02
  IDIUse=3 WtCom= 7.99D-01 WtEn= 2.01D-01
  Coeff-Com:  0.100D+01
@@ -338,9 +338,9 @@
  RMSDP=5.18D-07 MaxDP=5.80D-06 DE=-3.60D-09 OVMax= 1.55D-05
 
  Cycle   9  Pass 1  IDiag  1:
- E= -39.3705168321067     Delta-E=       -0.000000000449 Rises=F Damp=F
+ E= -39.3705168321068     Delta-E=       -0.000000000449 Rises=F Damp=F
  DIIS: error= 1.35D-06 at cycle   4 NSaved=   4.
- NSaved= 4 IEnMin= 4 EnMin= -39.3705168321067     IErMin= 4 ErrMin= 1.35D-06
+ NSaved= 4 IEnMin= 4 EnMin= -39.3705168321068     IErMin= 4 ErrMin= 1.35D-06
  ErrMax= 1.35D-06  0.00D+00 EMaxC= 1.00D-01 BMatC= 1.67D-11 BMatP= 2.11D-10
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com:  0.110D-01-0.898D-01-0.285D+00 0.136D+01
@@ -349,9 +349,9 @@
  RMSDP=3.83D-07 MaxDP=4.84D-06 DE=-4.49D-10 OVMax= 1.29D-05
 
  Cycle  10  Pass 1  IDiag  1:
- E= -39.3705168322298     Delta-E=       -0.000000000123 Rises=F Damp=F
+ E= -39.3705168322299     Delta-E=       -0.000000000123 Rises=F Damp=F
  DIIS: error= 4.07D-07 at cycle   5 NSaved=   5.
- NSaved= 5 IEnMin= 5 EnMin= -39.3705168322298     IErMin= 5 ErrMin= 4.07D-07
+ NSaved= 5 IEnMin= 5 EnMin= -39.3705168322299     IErMin= 5 ErrMin= 4.07D-07
  ErrMax= 4.07D-07  0.00D+00 EMaxC= 1.00D-01 BMatC= 2.11D-12 BMatP= 1.67D-11
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com:  0.481D-02-0.295D-01-0.111D+00 0.136D+00 0.100D+01
@@ -368,7 +368,7 @@
  Coeff-Com: -0.850D-03 0.672D-02 0.309D-01-0.169D+00 0.743D-01 0.106D+01
  Coeff:     -0.850D-03 0.672D-02 0.309D-01-0.169D+00 0.743D-01 0.106D+01
  Gap=     0.384 Goal=   None    Shift=    0.000
- RMSDP=3.86D-08 MaxDP=4.67D-07 DE=-1.14D-11 OVMax= 1.28D-06
+ RMSDP=3.86D-08 MaxDP=4.67D-07 DE=-1.13D-11 OVMax= 1.28D-06
 
  Cycle  12  Pass 1  IDiag  1:
  E= -39.3705168322420     Delta-E=       -0.000000000001 Rises=F Damp=F
@@ -381,29 +381,29 @@
  Coeff:     -0.159D-03 0.105D-02 0.553D-02-0.151D-01-0.212D-01 0.785D-01
  Coeff:      0.951D+00
  Gap=     0.384 Goal=   None    Shift=    0.000
- RMSDP=1.88D-09 MaxDP=1.86D-08 DE=-7.82D-13 OVMax= 5.42D-08
+ RMSDP=1.88D-09 MaxDP=1.86D-08 DE=-7.89D-13 OVMax= 5.42D-08
 
  SCF Done:  E(RM062X) =  -39.3705168322     A.U. after   12 cycles
             NFock= 12  Conv=0.19D-08     -V/T= 2.0079
  KE= 3.906183925259D+01 PE=-1.073193557539D+02 EE= 1.907670081672D+01
- Leave Link  502 at Sun May 29 14:22:21 2022, MaxMem=   262144000 cpu:               1.4 elap:               0.4
+ Leave Link  502 at Mon Sep  5 10:33:38 2022, MaxMem=   262144000 cpu:               1.2 elap:               1.2
  (Enter /binaries/g16/l801.exe)
  DoSCS=F DFT=T ScalE2(SS,OS)=  1.000000  1.000000
  Range of M.O.s used for correlation:     1    29
  NBasis=    29 NAE=     4 NBE=     4 NFC=     0 NFV=     0
  NROrb=     29 NOA=     4 NOB=     4 NVA=    25 NVB=    25
- Leave Link  801 at Sun May 29 14:22:21 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  801 at Mon Sep  5 10:33:38 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l1101.exe)
  Using compressed storage, NAtomX=     4.
  Will process      5 centers per pass.
    2 Symmetry operations used in ECPInt.
  ECPInt:  NShTT=     120 NPrTT=     400 LenC2=     121 LenP2D=     394.
  LDataN:  DoStor=T MaxTD1= 5 Len=  102
- Leave Link 1101 at Sun May 29 14:22:21 2022, MaxMem=   262144000 cpu:               0.3 elap:               0.1
+ Leave Link 1101 at Mon Sep  5 10:33:38 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.1
  (Enter /binaries/g16/l1102.exe)
  Symmetrizing basis deriv contribution to polar:
  IMax=3 JMax=2 DiffMx= 0.00D+00
- Leave Link 1102 at Sun May 29 14:22:21 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link 1102 at Mon Sep  5 10:33:38 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l1110.exe)
  Forming Gx(P) for the SCF density, NAtomX=     4.
  Integral derivatives from FoFJK, PRISM(SPDF).
@@ -421,7 +421,7 @@
  End of G2Drv F.D. properties file   721 does not exist.
  End of G2Drv F.D. properties file   722 does not exist.
  End of G2Drv F.D. properties file   788 does not exist.
- Leave Link 1110 at Sun May 29 14:22:22 2022, MaxMem=   262144000 cpu:               1.0 elap:               0.3
+ Leave Link 1110 at Mon Sep  5 10:33:39 2022, MaxMem=   262144000 cpu:               0.7 elap:               0.7
  (Enter /binaries/g16/l1002.exe)
  Minotr:  Closed shell wavefunction.
           IDoAtm=1111
@@ -434,7 +434,7 @@
           Secondary convergence is 1.0D-12 RMS, and 1.0D-12 maximum.
           NewPWx=T KeepS1=F KeepF1=F KeepIn=T MapXYZ=F SortEE=F KeepMc=T.
          1158 words used for storage of precomputed grid.
- Keep R1 ints in memory in symmetry-blocked form, NReq=3544028.
+ Keep R1 ints in memory in symmetry-blocked form, NReq=961235.
  FoFCou: FMM=F IPFlag=           0 FMFlag=           0 FMFlg1=           0
          NFxFlg=           0 DoJE=F BraDBF=F KetDBF=F FulRan=T
          wScrn=  0.000000 ICntrl=       600 IOpCl=  0 I1Cent=           0 NGrid=           0
@@ -450,14 +450,14 @@
      12 vectors produced by pass  3 Test12= 8.33D-16 8.33D-09 XBig12= 2.54D-07 2.41D-04.
      12 vectors produced by pass  4 Test12= 8.33D-16 8.33D-09 XBig12= 2.58D-10 8.17D-06.
       3 vectors produced by pass  5 Test12= 8.33D-16 8.33D-09 XBig12= 6.57D-14 1.15D-07.
- InvSVY:  IOpt=1 It=  1 EMax= 8.88D-16
+ InvSVY:  IOpt=1 It=  1 EMax= 4.44D-16
  Solved reduced A of dimension    63 with    12 vectors.
  FullF1:  Do perturbations      1 to      12.
  Isotropic polarizability for W=    0.000000        7.22 Bohr**3.
  End of Minotr F.D. properties file   721 does not exist.
  End of Minotr F.D. properties file   722 does not exist.
  End of Minotr F.D. properties file   788 does not exist.
- Leave Link 1002 at Sun May 29 14:22:22 2022, MaxMem=   262144000 cpu:               1.6 elap:               0.4
+ Leave Link 1002 at Mon Sep  5 10:33:40 2022, MaxMem=   262144000 cpu:               1.4 elap:               1.4
  (Enter /binaries/g16/l601.exe)
  Copying SCF densities to generalized density rwf, IOpCl= 0 IROHF=0.
 
@@ -530,17 +530,17 @@
   Exact polarizability:       7.915       0.007       5.903      -0.000      -0.000       7.829
  Approx polarizability:       7.650       0.000       7.246      -0.000      -0.000       7.650
  No NMR shielding tensors so no spin-rotation constants.
- Leave Link  601 at Sun May 29 14:22:22 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.1
+ Leave Link  601 at Mon Sep  5 10:33:40 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l701.exe)
  ... and contract with generalized density number  0.
  Compute integral second derivatives.
    2 Symmetry operations used in ECPInt.
  ECPInt:  NShTT=     120 NPrTT=     400 LenC2=     121 LenP2D=     394.
  LDataN:  DoStor=T MaxTD1= 6 Len=  172
- Leave Link  701 at Sun May 29 14:22:22 2022, MaxMem=   262144000 cpu:               0.3 elap:               0.1
+ Leave Link  701 at Mon Sep  5 10:33:40 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.1
  (Enter /binaries/g16/l702.exe)
  L702 exits ... SP integral derivatives will be done elsewhere.
- Leave Link  702 at Sun May 29 14:22:22 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  702 at Mon Sep  5 10:33:40 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l703.exe)
  Integral derivatives from FoFJK, PRISM(SPDF).
  Compute integral second derivatives, UseDBF=F ICtDFT=           0.
@@ -552,13 +552,13 @@
          wScrn=  0.000000 ICntrl=    100127 IOpCl=  0 I1Cent=           0 NGrid=           0
          NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
  Petite list used in FoFCou.
- Leave Link  703 at Sun May 29 14:22:22 2022, MaxMem=   262144000 cpu:               1.4 elap:               0.3
+ Leave Link  703 at Mon Sep  5 10:33:41 2022, MaxMem=   262144000 cpu:               1.0 elap:               1.0
  (Enter /binaries/g16/l716.exe)
- Dipole        =-8.68572850D-06 1.30712928D-02 4.29718415D-16
+ Dipole        =-8.68572850D-06 1.30712928D-02 5.40740718D-16
  Polarizability= 7.91465244D+00 6.95773963D-03 5.90346066D+00
-                -1.39130250D-11-6.71525476D-12 7.82922663D+00
+                -1.39133635D-11-6.71611453D-12 7.82922663D+00
  Full mass-weighted force constant matrix:
- Low frequencies --- -748.2045 -632.7847 -624.4857   -0.0010   -0.0010   -0.0005
+ Low frequencies --- -748.2045 -632.7847 -624.4857   -0.0011   -0.0009   -0.0006
  Low frequencies --- 1272.1359 1284.8810 1286.6911
  Diagonal vibrational polarizability:
         0.8386455       0.3424771       0.8405402
@@ -704,7 +704,7 @@
                11            12 
      11  0.806309D-01
      12 -0.140956D+00  0.303912D+00
- Leave Link  716 at Sun May 29 14:22:22 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  716 at Mon Sep  5 10:33:41 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l103.exe)
 
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
@@ -771,7 +771,7 @@
  Predicted change in Energy=-3.198319D-02
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- Leave Link  103 at Sun May 29 14:22:22 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  103 at Mon Sep  5 10:33:41 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l9999.exe)
 
  ----------------------------------------------------------------------
@@ -828,7 +828,7 @@
 
  ----------------------------------------------------------------------
  Unable to Open any file for archive entry.
- 1\1\GINC-WEB\Freq\RM062X\def2SVP\C1H3(1+)\CALCUS\29-May-2022\0\\#p fre
+ 1\1\GINC-WEB\Freq\RM062X\def2SVP\C1H3(1+)\CALCUS\05-Sep-2022\0\\#p fre
  q M062X/Def2SVP\\File created by ccinput\\1,1\C,-2.9077,1.6631,0.\H,-2
  .551,2.1675,0.8737\H,-3.9777,1.6631,0.\H,-2.551,2.1675,-0.8737\\Versio
  n=ES64L-G16RevC.01\State=1-A'\HF=-39.3705168\RMSD=1.881e-09\RMSF=3.947
@@ -857,13 +857,10 @@
  The archive entry for this job was punched.
 
 
- WE HAVE LEARNED THAT NOTHING IS SIMPLE AND
- RATIONAL EXCEPT WHAT WE OURSELVES HAVE INVENTED;
- THAT GOD THINKS IN TERMS NEITHER OF EUCLID OR RIEMANN; THAT SCIENCE HAS "EXPLAINED" NOTHING;
- THAT THE MORE WE KNOW THE MORE FANTASTIC THE WORLD BECOMES
- AND THE PROFOUNDER THE SURROUNDING DARKNESS.
-   --  ALDOUS HUXLEY
- Job cpu time:       0 days  0 hours  0 minutes  8.0 seconds.
- Elapsed time:       0 days  0 hours  0 minutes  2.0 seconds.
+ I am not a vegetarian because I love animals;
+ I am a vegetarian because I hate plants.
+                               -- A. Whitney Brown
+ Job cpu time:       0 days  0 hours  0 minutes  4.9 seconds.
+ Elapsed time:       0 days  0 hours  0 minutes  5.0 seconds.
  File lengths (MBytes):  RWF=      6 Int=      0 D2E=      0 Chk=      1 Scr=      1
- Normal termination of Gaussian 16 at Sun May 29 14:22:23 2022.
+ Normal termination of Gaussian 16 at Mon Sep  5 10:33:41 2022.

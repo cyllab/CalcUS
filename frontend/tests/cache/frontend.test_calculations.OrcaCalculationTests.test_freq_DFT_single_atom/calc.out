@@ -175,9 +175,10 @@ NAME = calc.inp
 |  2> *xyz -1 1
 |  3> Cl   0.00000000   0.00000000   0.00000000
 |  4> *
-|  5> %pal
-|  6> nprocs 4
-|  7> endd                         ****END OF INPUT****
+|  5> %MaxCore 2000
+|  6> %pal
+|  7> nprocs 1
+|  8> endd                         ****END OF INPUT****
 ================================================================================
 
                        ****************************
@@ -221,22 +222,10 @@ There are 1 groups of distinct atoms
  Group   1 Type Cl  : 14s5p5d2f1g contracted to 8s4p3d1f1g pattern {71111111/2111/311/2/1}
 
 Atom   0Cl   basis set group =>   1
-
-
-           ************************************************************
-           *        Program running with 4 parallel MPI-processes     *
-           *              working on a common directory               *
-           ************************************************************
 ------------------------------------------------------------------------------
                            ORCA GTO INTEGRAL CALCULATION
                            -- RI-GTO INTEGRALS CHOSEN --
 ------------------------------------------------------------------------------
-[web:00445] Read -1, expected 651728, errno = 1
-[web:00446] Read -1, expected 651728, errno = 1
-[web:00447] Read -1, expected 651728, errno = 1
-[web:00445] Read -1, expected 15240, errno = 1
-[web:00447] Read -1, expected 15240, errno = 1
-[web:00446] Read -1, expected 15240, errno = 1
 ------------------------------------------------------------------------------
                    ___                                                        
                   /   \      - P O W E R E D   B Y -                         
@@ -258,10 +247,7 @@ Atom   0Cl   basis set group =>   1
 ------------------------------------------------------------------------------
 
 
-Reading SHARK input file calc.SHARKINP.tmp ... [web:00447] Read -1, expected 4136, errno = 1
-[web:00446] Read -1, expected 4136, errno = 1
-[web:00445] Read -1, expected 4136, errno = 1
-ok
+Reading SHARK input file calc.SHARKINP.tmp ... ok
 ----------------------
 SHARK INTEGRAL PACKAGE
 ----------------------
@@ -289,10 +275,7 @@ Primitive cut-off                           ...     1.000000e-11
 Primitive pair pre-selection threshold      ...     1.000000e-11
 
 Calculating pre-screening integrals         ... done (  0.0 sec) Dimension = 8
-Organizing shell pair data                  ... [web:00445] Read -1, expected 4136, errno = 1
-[web:00447] Read -1, expected 4136, errno = 1
-[web:00446] Read -1, expected 4136, errno = 1
-done (  0.0 sec)
+Organizing shell pair data                  ... done (  0.0 sec)
 Shell pair information
 Total number of shell pairs                 ...        36
 Shell pairs after pre-screening             ...        36
@@ -306,30 +289,12 @@ Primitive shell pairs kept                  ...       194
           la=2 lb=2:      1 shell pairs
 
 Calculating one electron integrals          ... done (  0.0 sec)
-Calculating RI/J V-Matrix + Cholesky decomp.... [web:00446] Read -1, expected 4136, errno = 1
-[web:00445] Read -1, expected 4136, errno = 1
-[web:00447] Read -1, expected 4136, errno = 1
-[web:00446] Read -1, expected 4136, errno = 1
-[web:00445] Read -1, expected 4136, errno = 1
-[web:00447] Read -1, expected 4136, errno = 1
-done (  0.0 sec)
+Calculating RI/J V-Matrix + Cholesky decomp.... done (  0.0 sec)
 Calculating Nuclear repulsion               ... done (  0.0 sec) ENN=      0.000000000000 Eh
 
 SHARK setup successfully completed in   0.1 seconds
 
 Maximum memory used throughout the entire GTOINT-calculation: 8.7 MB
-
-
-           ************************************************************
-           *        Program running with 4 parallel MPI-processes     *
-           *              working on a common directory               *
-           ************************************************************
-[web:00462] Read -1, expected 651728, errno = 1
-[web:00463] Read -1, expected 651728, errno = 1
-[web:00464] Read -1, expected 651728, errno = 1
-[web:00463] Read -1, expected 15240, errno = 1
-[web:00464] Read -1, expected 15240, errno = 1
-[web:00462] Read -1, expected 15240, errno = 1
 -------------------------------------------------------------------------------
                                  ORCA SCF
 -------------------------------------------------------------------------------
@@ -422,41 +387,14 @@ Convergence Tolerance:
 
 
 Diagonalization of the overlap matrix:
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
 Smallest eigenvalue                        ... 1.160e-01
 Time for diagonalization                   ...    0.000 sec
 Threshold for overlap eigenvalues          ... 1.000e-08
 Number of eigenvalues below threshold      ... 0
 Time for construction of square roots      ...    0.000 sec
-Total time needed                          ...    0.001 sec
+Total time needed                          ...    0.000 sec
 
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 76224, errno = 1
-[web:00463] Read -1, expected 76224, errno = 1
-[web:00464] Read -1, expected 76224, errno = 1
-[web:00463] Read -1, expected 57168, errno = 1
-[web:00462] Read -1, expected 57168, errno = 1
-[web:00464] Read -1, expected 57168, errno = 1
-[web:00463] Read -1, expected 38824, errno = 1
-[web:00463] Read -1, expected 39256, errno = 1
-[web:00464] Read -1, expected 38824, errno = 1
-[web:00464] Read -1, expected 39256, errno = 1
-[web:00462] Read -1, expected 38824, errno = 1
-[web:00461] Read -1, expected 39256, errno = 1
-[web:00464] Read -1, expected 39520, errno = 1
-[web:00462] Read -1, expected 39520, errno = 1
-[web:00462] Read -1, expected 33176, errno = 1
-[web:00461] Read -1, expected 39520, errno = 1
-[web:00463] Read -1, expected 33176, errno = 1
-[web:00461] Read -1, expected 33176, errno = 1
-Time for model grid setup =    0.008 sec
+Time for model grid setup =    0.004 sec
 
 ------------------------------
 INITIAL GUESS: MODEL POTENTIAL
@@ -465,13 +403,7 @@ Loading Hartree-Fock densities                     ... done
 Calculating cut-offs                               ... done
 Initializing the effective Hamiltonian             ... done
 Setting up the integral package (SHARK)            ... done
-Starting the Coulomb interaction                   ... [web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-done (   0.0 sec)
+Starting the Coulomb interaction                   ... done (   0.0 sec)
 Reading the grid                                   ... done
 Mapping shells                                     ... done
 Starting the XC term evaluation                    ... done (   0.0 sec)
@@ -480,34 +412,13 @@ Starting the XC term evaluation                    ... done (   0.0 sec)
      EX              =    -27.332861292
      EC              =     -0.649388565
      EX+EC           =    -27.982249857
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
 Transforming the Hamiltonian                       ... done (   0.0 sec)
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-Diagonalizing the Hamiltonian                      ... [web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-done (   0.0 sec)
+Diagonalizing the Hamiltonian                      ... done (   0.0 sec)
 Back transforming the eigenvectors                 ... done (   0.0 sec)
 Now organizing SCF variables                       ... done
                       ------------------
                       INITIAL GUESS DONE (   0.0 sec)
                       ------------------
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
 -------------------
 DFT GRID GENERATION
 -------------------
@@ -523,41 +434,11 @@ Angular grids for H and He will be reduced by one unit
 Partially contracted basis set               ... off
 Rotationally invariant grid construction     ... off
 
-[web:00464] Read -1, expected 235776, errno = 1
-[web:00462] Read -1, expected 235776, errno = 1
-[web:00463] Read -1, expected 235776, errno = 1
-[web:00464] Read -1, expected 176832, errno = 1
-[web:00462] Read -1, expected 176832, errno = 1
-[web:00463] Read -1, expected 176832, errno = 1
-[web:00462] Read -1, expected 100000, errno = 1
-[web:00464] Read -1, expected 100000, errno = 1
-[web:00463] Read -1, expected 100000, errno = 1
-[web:00464] Read -1, expected 14788, errno = 1
-[web:00462] Read -1, expected 14788, errno = 1
-[web:00463] Read -1, expected 14788, errno = 1
-[web:00463] Read -1, expected 100000, errno = 1
-[web:00464] Read -1, expected 100000, errno = 1
-[web:00461] Read -1, expected 100000, errno = 1
-[web:00463] Read -1, expected 15652, errno = 1
-[web:00464] Read -1, expected 15652, errno = 1
-[web:00464] Read -1, expected 100000, errno = 1
-[web:00461] Read -1, expected 15652, errno = 1
-[web:00461] Read -1, expected 100000, errno = 1
-[web:00462] Read -1, expected 100000, errno = 1
-[web:00464] Read -1, expected 16060, errno = 1
-[web:00462] Read -1, expected 16060, errno = 1
-[web:00462] Read -1, expected 100000, errno = 1
-[web:00461] Read -1, expected 16060, errno = 1
-[web:00461] Read -1, expected 100000, errno = 1
-[web:00463] Read -1, expected 100000, errno = 1
-[web:00461] Read -1, expected 19948, errno = 1
-[web:00463] Read -1, expected 19948, errno = 1
-[web:00462] Read -1, expected 19948, errno = 1
 Total number of grid points                  ...     7368
 Total number of batches                      ...      116
 Average number of points per batch           ...       63
 Average number of grid points per atom       ...     7368
-Time for grid setup =    0.041 sec
+Time for grid setup =    0.029 sec
 
 --------------------
 COSX GRID GENERATION
@@ -576,24 +457,6 @@ Angular grids for H and He will be reduced by one unit
 Partially contracted basis set               ... on
 Rotationally invariant grid construction     ... off
 
-[web:00462] Read -1, expected 26880, errno = 1
-[web:00462] Read -1, expected 20160, errno = 1
-[web:00463] Read -1, expected 26880, errno = 1
-[web:00463] Read -1, expected 20160, errno = 1
-[web:00464] Read -1, expected 26880, errno = 1
-[web:00464] Read -1, expected 20160, errno = 1
-[web:00462] Read -1, expected 15232, errno = 1
-[web:00462] Read -1, expected 15328, errno = 1
-[web:00463] Read -1, expected 15232, errno = 1
-[web:00463] Read -1, expected 15328, errno = 1
-[web:00461] Read -1, expected 15328, errno = 1
-[web:00461] Read -1, expected 15328, errno = 1
-[web:00464] Read -1, expected 15232, errno = 1
-[web:00464] Read -1, expected 15328, errno = 1
-[web:00464] Read -1, expected 15328, errno = 1
-[web:00462] Read -1, expected 7664, errno = 1
-[web:00461] Read -1, expected 7664, errno = 1
-[web:00463] Read -1, expected 7664, errno = 1
 Total number of grid points                  ...      840
 Total number of batches                      ...       14
 Average number of points per batch           ...       60
@@ -613,24 +476,6 @@ Angular grids for H and He will be reduced by one unit
 Partially contracted basis set               ... on
 Rotationally invariant grid construction     ... off
 
-[web:00463] Read -1, expected 63296, errno = 1
-[web:00462] Read -1, expected 63296, errno = 1
-[web:00464] Read -1, expected 63296, errno = 1
-[web:00463] Read -1, expected 47472, errno = 1
-[web:00462] Read -1, expected 47472, errno = 1
-[web:00464] Read -1, expected 47472, errno = 1
-[web:00464] Read -1, expected 31616, errno = 1
-[web:00462] Read -1, expected 31616, errno = 1
-[web:00463] Read -1, expected 31616, errno = 1
-[web:00463] Read -1, expected 31904, errno = 1
-[web:00464] Read -1, expected 31904, errno = 1
-[web:00464] Read -1, expected 32048, errno = 1
-[web:00461] Read -1, expected 31904, errno = 1
-[web:00462] Read -1, expected 32048, errno = 1
-[web:00462] Read -1, expected 29584, errno = 1
-[web:00461] Read -1, expected 32048, errno = 1
-[web:00463] Read -1, expected 29584, errno = 1
-[web:00461] Read -1, expected 29584, errno = 1
 Total number of grid points                  ...     1978
 Total number of batches                      ...       31
 Average number of points per batch           ...       63
@@ -650,303 +495,24 @@ Angular grids for H and He will be reduced by one unit
 Partially contracted basis set               ... on
 Rotationally invariant grid construction     ... off
 
-[web:00463] Read -1, expected 161024, errno = 1
-[web:00464] Read -1, expected 161024, errno = 1
-[web:00462] Read -1, expected 161024, errno = 1
-[web:00464] Read -1, expected 120768, errno = 1
-[web:00463] Read -1, expected 120768, errno = 1
-[web:00462] Read -1, expected 120768, errno = 1
-[web:00464] Read -1, expected 78848, errno = 1
-[web:00464] Read -1, expected 79712, errno = 1
-[web:00462] Read -1, expected 78848, errno = 1
-[web:00463] Read -1, expected 78848, errno = 1
-[web:00463] Read -1, expected 79712, errno = 1
-[web:00461] Read -1, expected 79712, errno = 1
-[web:00464] Read -1, expected 79976, errno = 1
-[web:00462] Read -1, expected 79976, errno = 1
-[web:00462] Read -1, expected 79528, errno = 1
-[web:00461] Read -1, expected 79976, errno = 1
-[web:00463] Read -1, expected 79528, errno = 1
-[web:00461] Read -1, expected 79528, errno = 1
 Total number of grid points                  ...     5032
 Total number of batches                      ...       79
 Average number of points per batch           ...       63
 Average number of grid points per atom       ...     5032
 UseSFitting                                  ... on
 
-Time for X-Grid setup             =    0.017 sec
+Time for X-Grid setup             =    0.018 sec
 
 --------------
 SCF ITERATIONS
 --------------
 ITER       Energy         Delta-E        Max-DP      RMS-DP      [F,P]     Damp
                ***  Starting incremental Fock matrix formation  ***
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
   0   -460.0174049448   0.000000000000 0.11720622  0.01164878  0.1699975 0.7000
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
   1   -460.0370464102  -0.019641465336 0.08712235  0.00862161  0.1089199 0.7000
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
                                ***Turning on DIIS***
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
   2   -460.0479781805  -0.010931770298 0.17493321  0.01685235  0.0627320 0.0000
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
   3   -460.0660882559  -0.018110075405 0.05057785  0.00572508  0.0306472 0.0000
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
                       *** Initiating the SOSCF procedure ***
                            *** Shutting down DIIS ***
                       *** Re-Reading the Fockian *** 
@@ -954,199 +520,22 @@ ITER       Energy         Delta-E        Max-DP      RMS-DP      [F,P]     Damp
 ITER      Energy       Delta-E        Grad      Rot      Max-DP    RMS-DP
   4   -460.06809613  -0.0020078696  0.000888  0.000888  0.001397  0.000179
                *** Restarting incremental Fock matrix formation ***
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
   5   -460.06766603   0.0004300945  0.018303  0.010121  0.013391  0.001067
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
   6   -460.06807918  -0.0004131539  0.002034  0.001269  0.001673  0.000140
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
   7   -460.06808442  -0.0000052322  0.000057  0.000044  0.000226  0.000022
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
                  **** Energy Check signals convergence ****
               ***Rediagonalizing the Fockian in SOSCF/NRSCF***
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
 
                *****************************************************
                *                     SUCCESS                       *
                *           SCF CONVERGED AFTER   8 CYCLES          *
                *****************************************************
 
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
 Old exchange energy                            =    -15.050753294 Eh
 New exchange energy                            =    -15.050755277 Eh
 Exchange energy change after final integration =     -0.000001983 Eh
 Total energy after final integration           =   -460.068086407 Eh
-Final COS-X integration done in                =     0.014 sec
+Final COS-X integration done in                =     0.028 sec
 
 ----------------
 TOTAL SCF ENERGY
@@ -1178,18 +567,12 @@ DFET-embed. en.    :        0.000000000000 Eh
 SCF CONVERGENCE
 ---------------
 
-  Last Energy change         ...   -7.0611e-09  Tolerance :   1.0000e-06
-  Last MAX-Density change    ...    2.2204e-15  Tolerance :   1.0000e-05
-  Last RMS-Density change    ...    1.7816e-16  Tolerance :   1.0000e-06
+  Last Energy change         ...   -7.0617e-09  Tolerance :   1.0000e-06
+  Last MAX-Density change    ...    2.6645e-15  Tolerance :   1.0000e-05
+  Last RMS-Density change    ...    2.6150e-16  Tolerance :   1.0000e-06
   Last Orbital Gradient      ...    2.8926e-05  Tolerance :   5.0000e-05
   Last Orbital Rotation      ...    1.4481e-05  Tolerance :   5.0000e-05
 
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
              **** THE GBW FILE WAS UPDATED (calc.gbw) ****
              **** DENSITY calc.scfp WAS UPDATED ****
              **** ENERGY FILE WAS UPDATED (calc.en.tmp) ****
@@ -1242,12 +625,6 @@ MULLIKEN REDUCED ORBITAL CHARGES
       dx2y2   :     0.000000
       dxy     :     0.000000
 
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
 
                      *******************************
                      * LOEWDIN POPULATION ANALYSIS *
@@ -1271,12 +648,6 @@ LOEWDIN REDUCED ORBITAL CHARGES
       dx2y2   :     0.000000
       dxy     :     0.000000
 
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
-[web:00463] Read -1, expected 4136, errno = 1
-[web:00462] Read -1, expected 4136, errno = 1
-[web:00464] Read -1, expected 4136, errno = 1
 
                       *****************************
                       * MAYER POPULATION ANALYSIS *
@@ -1381,28 +752,28 @@ TIMINGS
 
 Total SCF time: 0 days 0 hours 0 min 0 sec 
 
-Total time                  ....       0.340 sec
-Sum of individual times     ....       0.293 sec  ( 86.4%)
+Total time                  ....       0.407 sec
+Sum of individual times     ....       0.364 sec  ( 89.4%)
 
-Fock matrix formation       ....       0.215 sec  ( 63.2%)
-  Split-RI-J                ....       0.068 sec  ( 31.9% of F)
-  Chain of spheres X        ....       0.111 sec  ( 51.8% of F)
-  XC integration            ....       0.030 sec  ( 14.1% of F)
-    Basis function eval.    ....       0.004 sec  ( 14.4% of XC)
-    Density eval.           ....       0.005 sec  ( 18.0% of XC)
-    XC-Functional eval.     ....       0.011 sec  ( 37.4% of XC)
-    XC-Potential eval.      ....       0.004 sec  ( 12.7% of XC)
-Diagonalization             ....       0.003 sec  (  0.8%)
+Fock matrix formation       ....       0.310 sec  ( 76.2%)
+  Split-RI-J                ....       0.054 sec  ( 17.3% of F)
+  Chain of spheres X        ....       0.156 sec  ( 50.3% of F)
+  XC integration            ....       0.099 sec  ( 31.9% of F)
+    Basis function eval.    ....       0.017 sec  ( 17.2% of XC)
+    Density eval.           ....       0.020 sec  ( 20.5% of XC)
+    XC-Functional eval.     ....       0.042 sec  ( 42.9% of XC)
+    XC-Potential eval.      ....       0.015 sec  ( 15.3% of XC)
+Diagonalization             ....       0.000 sec  (  0.1%)
 Density matrix formation    ....       0.000 sec  (  0.0%)
-Population analysis         ....       0.001 sec  (  0.2%)
-Initial guess               ....       0.003 sec  (  1.0%)
+Population analysis         ....       0.000 sec  (  0.1%)
+Initial guess               ....       0.002 sec  (  0.5%)
 Orbital Transformation      ....       0.000 sec  (  0.0%)
 Orbital Orthonormalization  ....       0.000 sec  (  0.0%)
-DIIS solution               ....       0.004 sec  (  1.1%)
-SOSCF solution              ....       0.002 sec  (  0.5%)
-Grid generation             ....       0.067 sec  ( 19.6%)
+DIIS solution               ....       0.000 sec  (  0.0%)
+SOSCF solution              ....       0.000 sec  (  0.0%)
+Grid generation             ....       0.051 sec  ( 12.5%)
 
-Maximum memory used throughout the entire SCF-calculation: 42.7 MB
+Maximum memory used throughout the entire SCF-calculation: 43.2 MB
 
 -------------------------   --------------------
 FINAL SINGLE POINT ENERGY      -460.068086406898
@@ -1457,28 +828,10 @@ x,y,z [Debye]:     0.000010    -0.000020    -0.000025
 
  
 
-
-           ************************************************************
-           *        Program running with 4 parallel MPI-processes     *
-           *              working on a common directory               *
-           ************************************************************
-[web:00479] Read -1, expected 651728, errno = 1
-[web:00480] Read -1, expected 651728, errno = 1
-[web:00481] Read -1, expected 651728, errno = 1
-[web:00481] Read -1, expected 15240, errno = 1
-[web:00479] Read -1, expected 15240, errno = 1
-[web:00480] Read -1, expected 15240, errno = 1
-
 -------------------------------------------------------------------------------
                                ORCA SCF HESSIAN
 -------------------------------------------------------------------------------
 
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
                    --------- SHARK INITIALIZATION DONE ---------
 
 Hessian of the Kohn-Sham DFT energy:
@@ -1506,36 +859,6 @@ Angular grids for H and He will be reduced by one unit
 Partially contracted basis set               ... off
 Rotationally invariant grid construction     ... off
 
-[web:00480] Read -1, expected 336640, errno = 1
-[web:00481] Read -1, expected 336640, errno = 1
-[web:00479] Read -1, expected 336640, errno = 1
-[web:00480] Read -1, expected 252480, errno = 1
-[web:00481] Read -1, expected 252480, errno = 1
-[web:00479] Read -1, expected 252480, errno = 1
-[web:00480] Read -1, expected 100000, errno = 1
-[web:00479] Read -1, expected 100000, errno = 1
-[web:00481] Read -1, expected 100000, errno = 1
-[web:00479] Read -1, expected 66248, errno = 1
-[web:00480] Read -1, expected 66248, errno = 1
-[web:00481] Read -1, expected 66248, errno = 1
-[web:00480] Read -1, expected 100000, errno = 1
-[web:00481] Read -1, expected 100000, errno = 1
-[web:00478] Read -1, expected 100000, errno = 1
-[web:00480] Read -1, expected 67496, errno = 1
-[web:00481] Read -1, expected 67496, errno = 1
-[web:00481] Read -1, expected 100000, errno = 1
-[web:00478] Read -1, expected 67496, errno = 1
-[web:00479] Read -1, expected 100000, errno = 1
-[web:00478] Read -1, expected 100000, errno = 1
-[web:00479] Read -1, expected 67904, errno = 1
-[web:00479] Read -1, expected 100000, errno = 1
-[web:00481] Read -1, expected 67904, errno = 1
-[web:00478] Read -1, expected 67904, errno = 1
-[web:00478] Read -1, expected 100000, errno = 1
-[web:00480] Read -1, expected 100000, errno = 1
-[web:00478] Read -1, expected 63968, errno = 1
-[web:00479] Read -1, expected 63968, errno = 1
-[web:00480] Read -1, expected 63968, errno = 1
 Total number of grid points                  ...    10520
 Total number of batches                      ...      165
 Average number of points per batch           ...       63
@@ -1543,506 +866,8 @@ Average number of grid points per atom       ...    10520
 
 Building densities                               ... done   (      0.0 sec)
 Calculating rho(r) on the grid                   ... done   (      0.0 sec)
-Building xc-kernel on the grid                   ... done   (      0.0 sec)
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00481] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 18144, errno = 1
-[web:00478] Read -1, expected 18144, errno = 1
-[web:00479] Read -1, expected 18144, errno = 1
-[web:00480] Read -1, expected 7520, errno = 1
-[web:00479] Read -1, expected 7520, errno = 1
-[web:00481] Read -1, expected 7520, errno = 1
-[web:00480] Read -1, expected 54144, errno = 1
-[web:00481] Read -1, expected 54144, errno = 1
-[web:00479] Read -1, expected 54144, errno = 1
-                                                     done   (      0.1 sec)
+Building xc-kernel on the grid                   ... done   (      0.1 sec)
+                                                     done   (      0.2 sec)
 
 Nuclear repulsion Hessian  (SHARK)               ... done   (      0.0 sec)
 
@@ -2054,46 +879,10 @@ Transforming the overlap derivative matrices     ... done   (      0.0 sec)
 Making the Q(x) pseudodensities                  ... done   (      0.0 sec)
 Adding the E*S(x)*S(y) terms to the Hessian      ... done   (      0.0 sec)
 Calculating energy weighted overlap derivatives  ... done   (      0.0 sec)
-Two electron integral derivatives (SHARK-RI)     ... [web:00480] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-done   (      0.0 sec)
+Two electron integral derivatives (SHARK-RI)     ... done   (      0.0 sec)
 Exchange-correlation integral derivatives        ... done   (      0.0 sec)
 tr(F(y)Q(x)) contribution to the Hessian         ... done   (      0.0 sec)
-Response fock operator R(S(x)) (SHARK-RIJCOSX)   ... [web:00481] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-done   (      0.1 sec)
+Response fock operator R(S(x)) (SHARK-RIJCOSX)   ... done   (      0.1 sec)
 XC Response fock operator R(S(x))                ... done   (      0.0 sec)
 tr(F(y)S(x)) contribution to the Hessian         ... done   (      0.0 sec)
 Transforming and finalizing RHSs                 ... done   (      0.0 sec)
@@ -2101,93 +890,21 @@ Transforming and finalizing RHSs                 ... done   (      0.0 sec)
 ----------------------------------------------
 Solving the CP-SCF equations (RIJCOSX)           ...
 ----------------------------------------------
-[web:00481] Read -1, expected 651728, errno = 1
-[web:00480] Read -1, expected 651728, errno = 1
-[web:00479] Read -1, expected 651728, errno = 1
-[web:00481] Read -1, expected 15240, errno = 1
-[web:00480] Read -1, expected 15240, errno = 1
-[web:00479] Read -1, expected 15240, errno = 1
-[web:00480] Read -1, expected 34624, errno = 1
-[web:00480] Read -1, expected 25968, errno = 1
-[web:00481] Read -1, expected 34624, errno = 1
-[web:00481] Read -1, expected 25968, errno = 1
-[web:00479] Read -1, expected 34624, errno = 1
-[web:00479] Read -1, expected 25968, errno = 1
-[web:00481] Read -1, expected 19844, errno = 1
-[web:00481] Read -1, expected 20036, errno = 1
-[web:00481] Read -1, expected 20060, errno = 1
-[web:00480] Read -1, expected 19844, errno = 1
-[web:00480] Read -1, expected 20036, errno = 1
-[web:00479] Read -1, expected 19844, errno = 1
-[web:00479] Read -1, expected 20060, errno = 1
-[web:00478] Read -1, expected 20036, errno = 1
-[web:00479] Read -1, expected 8684, errno = 1
-[web:00478] Read -1, expected 20060, errno = 1
-[web:00478] Read -1, expected 8684, errno = 1
-[web:00480] Read -1, expected 8684, errno = 1
-[web:00479] Read -1, expected 16960, errno = 1
-[web:00481] Read -1, expected 16960, errno = 1
-[web:00481] Read -1, expected 12720, errno = 1
-[web:00480] Read -1, expected 16960, errno = 1
-[web:00480] Read -1, expected 12720, errno = 1
-[web:00479] Read -1, expected 12720, errno = 1
-[web:00481] Read -1, expected 11088, errno = 1
-[web:00481] Read -1, expected 11136, errno = 1
-[web:00480] Read -1, expected 11088, errno = 1
-[web:00480] Read -1, expected 11136, errno = 1
-[web:00479] Read -1, expected 11088, errno = 1
-[web:00478] Read -1, expected 11136, errno = 1
-[web:00481] Read -1, expected 11616, errno = 1
-[web:00479] Read -1, expected 11616, errno = 1
-[web:00478] Read -1, expected 11616, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-     CP-SCF ITERATION   0: [web:00481] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-  5.5839e-31 (   0.1 sec   3/  3 done)
+     CP-SCF ITERATION   0:   4.0282e-31 (   0.1 sec   3/  3 done)
                     *** THE CP-SCF HAS CONVERGED ***
 
                                                  ... done   (      0.1 sec)
 Forming perturbed density Hessian contributions  ... done   (      0.0 sec)
-2nd integral derivative contribs (SHARK-RI)      ... [web:00479] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-[web:00481] Read -1, expected 4136, errno = 1
-[web:00480] Read -1, expected 4136, errno = 1
-[web:00479] Read -1, expected 4136, errno = 1
-done   (      0.0 sec)
-Exchange-correlation Hessian                     ... done   (      0.0 sec)
-Dipole derivatives                               ... (center of mass:  0.000000,  0.000000  0.000000)done   (      0.1 sec)
+2nd integral derivative contribs (SHARK-RI)      ... done   (      0.1 sec)
+Exchange-correlation Hessian                     ... done   (      0.1 sec)
+Dipole derivatives                               ... (center of mass:  0.000000,  0.000000  0.000000)done   (      0.0 sec)
 
 Total SCF Hessian time: 0 days 0 hours 0 min 0 sec 
 
 Writing the Hessian file to the disk             ... done
 
 
-Maximum memory used throughout the entire SCFHESS-calculation: 50.9 MB
+Maximum memory used throughout the entire SCFHESS-calculation: 54.5 MB
 
 -----------------------
 VIBRATIONAL FREQUENCIES
@@ -2334,15 +1051,12 @@ Final Gibbs free energy         ...   -460.08312855 Eh
 For completeness - the Gibbs free energy minus the electronic energy
 G-E(el)                           ...     -0.01504214 Eh     -9.44 kcal/mol
 
-[web:00496] Read -1, expected 651728, errno = 1
-[web:00497] Read -1, expected 651728, errno = 1
-[web:00498] Read -1, expected 651728, errno = 1
 
 Timings for individual modules:
 
-Sum of individual times         ...        2.134 sec (=   0.036 min)
-GTO integral calculation        ...        0.417 sec (=   0.007 min)  19.6 %
-SCF iterations                  ...        0.692 sec (=   0.012 min)  32.4 %
-Analytical frequency calculation...        1.025 sec (=   0.017 min)  48.0 %
+Sum of individual times         ...        1.272 sec (=   0.021 min)
+GTO integral calculation        ...        0.076 sec (=   0.001 min)   5.9 %
+SCF iterations                  ...        0.420 sec (=   0.007 min)  33.0 %
+Analytical frequency calculation...        0.776 sec (=   0.013 min)  61.0 %
                              ****ORCA TERMINATED NORMALLY****
-TOTAL RUN TIME: 0 days 0 hours 0 minutes 2 seconds 551 msec
+TOTAL RUN TIME: 0 days 0 hours 0 minutes 1 seconds 344 msec
