@@ -2,8 +2,8 @@
  Input=calc.com
  Output=calc.log
  Initial command:
- /binaries/g16/l1.exe "/calcus/scratch/scr/140/Gau-44162.inp" -scrdir="/calcus/scratch/scr/140/"
- Entering Link 1 = /binaries/g16/l1.exe PID=     44164.
+ /binaries/g16/l1.exe "/calcus/scratch/scr/36/Gau-190.inp" -scrdir="/calcus/scratch/scr/36/"
+ Entering Link 1 = /binaries/g16/l1.exe PID=       192.
   
  Copyright (c) 1988-2019, Gaussian, Inc.  All Rights Reserved.
   
@@ -76,11 +76,11 @@
  
  ******************************************
  Gaussian 16:  ES64L-G16RevC.01  3-Jul-2019
-                29-May-2022 
+                 5-Sep-2022 
  ******************************************
  %chk=in.chk
- %nproc=4
- Will use up to    4 processors via shared memory.
+ %nproc=1
+ Will use up to    1 processors via shared memory.
  %mem=2000MB
  ------------------------------------------------------
  #p sp M062X/Def2SVP SCRF(CPCM, Solvent=methanol, Read)
@@ -92,7 +92,7 @@
  5/5=2,38=5,53=3/2;
  6/7=2,8=2,9=2,10=2,28=1/1;
  99/5=1,9=1/99;
- Leave Link    1 at Sun May 29 14:26:02 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link    1 at Mon Sep  5 10:39:28 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l101.exe)
  -----------------------
  File created by ccinput
@@ -121,7 +121,7 @@
  NQMom=    0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
  NMagM=    0.0000000   2.7928460   2.7928460   2.7928460   2.7928460
  AtZNuc=   6.0000000   1.0000000   1.0000000   1.0000000   1.0000000
- Leave Link  101 at Sun May 29 14:26:03 2022, MaxMem=   262144000 cpu:               0.4 elap:               0.1
+ Leave Link  101 at Mon Sep  5 10:39:28 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.1
  (Enter /binaries/g16/l202.exe)
                           Input orientation:                          
  ---------------------------------------------------------------------
@@ -159,7 +159,7 @@
       5          1           0       -0.330072    0.878070   -0.514750
  ---------------------------------------------------------------------
  Rotational constants (GHZ):         164.4303219         163.9529333         163.7655362
- Leave Link  202 at Sun May 29 14:26:03 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  202 at Mon Sep  5 10:39:28 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l301.exe)
  Standard basis: def2SVP (5D, 7F)
  Ernie: Thresh=  0.10000D-02 Tol=  0.10000D-05 Strict=F.
@@ -216,7 +216,7 @@
  GePol: Fraction of low-weight points (<1% of avg)   =       6.27%
  GePol: Cavity surface area                          =     54.252 Ang**2
  GePol: Cavity volume                                =     34.919 Ang**3
- Leave Link  301 at Sun May 29 14:26:03 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  301 at Mon Sep  5 10:39:28 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l302.exe)
  NPDir=0 NMtPBC=     1 NCelOv=     1 NCel=       1 NClECP=     1 NCelD=      1
          NCelK=      1 NCelE2=     1 NClLst=     1 CellRange=     0.0.
@@ -231,10 +231,10 @@
  IXCGrd= 4 IRadAn=           5 IRanWt=          -1 IRanGd=           0 AccXCQ= 0.00D+00.
  Generated NRdTot=       0 NPtTot=           0 NUsed=           0 NTot=          32
  NSgBfM=    35    35    35    35    35 MxSgAt=     5 MxSgA2=     5.
- Leave Link  302 at Sun May 29 14:26:03 2022, MaxMem=   262144000 cpu:               0.3 elap:               0.1
+ Leave Link  302 at Mon Sep  5 10:39:28 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.1
  (Enter /binaries/g16/l303.exe)
  DipDrv:  MaxL=1.
- Leave Link  303 at Sun May 29 14:26:03 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  303 at Mon Sep  5 10:39:28 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l401.exe)
  ExpMin= 1.22D-01 ExpMax= 1.24D+03 ExpMxC= 1.86D+02 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
  Harris functional with IExCor= 1009 and IRadAn=       5 diagonalized for initial guess.
@@ -247,9 +247,9 @@
  Petite list used in FoFCou.
  Harris En= -40.4890225627125    
  JPrj=0 DoOrth=F DoCkMO=F.
- Leave Link  401 at Sun May 29 14:26:03 2022, MaxMem=   262144000 cpu:               0.4 elap:               0.1
+ Leave Link  401 at Mon Sep  5 10:39:28 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.2
  (Enter /binaries/g16/l502.exe)
- Keep R1 ints in memory in canonical form, NReq=3636988.
+ Keep R1 ints in memory in canonical form, NReq=1618630.
  FoFCou: FMM=F IPFlag=           0 FMFlag=           0 FMFlg1=           0
          NFxFlg=           0 DoJE=F BraDBF=F KetDBF=F FulRan=T
          wScrn=  0.000000 ICntrl=       600 IOpCl=  0 I1Cent=           0 NGrid=           0
@@ -266,10 +266,10 @@
 
  Cycle   1  Pass 1  IDiag  1:
  Inv3:  Mode=1 IEnd=      477603.
- Iteration    1 A*A^-1 deviation from unit magnitude is 5.33D-15 for     89.
- Iteration    1 A*A^-1 deviation from orthogonality  is 1.85D-15 for    292     77.
- Iteration    1 A^-1*A deviation from unit magnitude is 4.44D-15 for     89.
- Iteration    1 A^-1*A deviation from orthogonality  is 1.24D-15 for    309    118.
+ Iteration    1 A*A^-1 deviation from unit magnitude is 2.33D-15 for    136.
+ Iteration    1 A*A^-1 deviation from orthogonality  is 1.49D-15 for    365    144.
+ Iteration    1 A^-1*A deviation from unit magnitude is 2.33D-15 for    136.
+ Iteration    1 A^-1*A deviation from orthogonality  is 9.96D-16 for    381     59.
  E= -40.3613495212832    
  DIIS: error= 5.18D-02 at cycle   1 NSaved=   1.
  NSaved= 1 IEnMin= 1 EnMin= -40.3613495212832     IErMin= 1 ErrMin= 5.18D-02
@@ -295,9 +295,9 @@
  RMSDP=5.52D-03 MaxDP=7.29D-02 DE=-3.68D-02 OVMax= 7.11D-02
 
  Cycle   3  Pass 1  IDiag  1:
- E= -40.4484369990633     Delta-E=       -0.050237483994 Rises=F Damp=F
+ E= -40.4484369990634     Delta-E=       -0.050237483994 Rises=F Damp=F
  DIIS: error= 3.01D-03 at cycle   3 NSaved=   3.
- NSaved= 3 IEnMin= 3 EnMin= -40.4484369990633     IErMin= 3 ErrMin= 3.01D-03
+ NSaved= 3 IEnMin= 3 EnMin= -40.4484369990634     IErMin= 3 ErrMin= 3.01D-03
  ErrMax= 3.01D-03  0.00D+00 EMaxC= 1.00D-01 BMatC= 2.56D-04 BMatP= 4.72D-02
  IDIUse=3 WtCom= 9.70D-01 WtEn= 3.01D-02
  Coeff-Com: -0.231D-01 0.425D-01 0.981D+00
@@ -307,9 +307,9 @@
  RMSDP=3.63D-04 MaxDP=4.93D-03 DE=-5.02D-02 OVMax= 4.88D-03
 
  Cycle   4  Pass 1  IDiag  1:
- E= -40.4487053728622     Delta-E=       -0.000268373799 Rises=F Damp=F
+ E= -40.4487053728621     Delta-E=       -0.000268373799 Rises=F Damp=F
  DIIS: error= 5.93D-05 at cycle   4 NSaved=   4.
- NSaved= 4 IEnMin= 4 EnMin= -40.4487053728622     IErMin= 4 ErrMin= 5.93D-05
+ NSaved= 4 IEnMin= 4 EnMin= -40.4487053728621     IErMin= 4 ErrMin= 5.93D-05
  ErrMax= 5.93D-05  0.00D+00 EMaxC= 1.00D-01 BMatC= 6.12D-08 BMatP= 2.56D-04
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com:  0.263D-02-0.651D-02-0.124D+00 0.113D+01
@@ -350,12 +350,12 @@
  Coeff:     -0.314D-05 0.101D-04 0.956D-04-0.157D-02-0.332D-01 0.119D+00
  Coeff:      0.915D+00
  Gap=     0.577 Goal=   None    Shift=    0.000
- RMSDP=3.60D-08 MaxDP=3.55D-07 DE=-2.20D-11 OVMax= 3.56D-07
+ RMSDP=3.60D-08 MaxDP=3.55D-07 DE=-2.19D-11 OVMax= 3.56D-07
 
  Cycle   8  Pass 1  IDiag  1:
- E= -40.4487054724526     Delta-E=       -0.000000000001 Rises=F Damp=F
+ E= -40.4487054724525     Delta-E=       -0.000000000001 Rises=F Damp=F
  DIIS: error= 1.78D-08 at cycle   8 NSaved=   8.
- NSaved= 8 IEnMin= 8 EnMin= -40.4487054724526     IErMin= 8 ErrMin= 1.78D-08
+ NSaved= 8 IEnMin= 8 EnMin= -40.4487054724525     IErMin= 8 ErrMin= 1.78D-08
  ErrMax= 1.78D-08  0.00D+00 EMaxC= 1.00D-01 BMatC= 5.85D-15 BMatP= 5.84D-13
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
  Coeff-Com:  0.304D-06-0.737D-06 0.171D-05 0.156D-03 0.808D-02-0.350D-01
@@ -363,13 +363,13 @@
  Coeff:      0.304D-06-0.737D-06 0.171D-05 0.156D-03 0.808D-02-0.350D-01
  Coeff:     -0.168D+00 0.119D+01
  Gap=     0.577 Goal=   None    Shift=    0.000
- RMSDP=6.53D-09 MaxDP=5.54D-08 DE=-7.96D-13 OVMax= 6.31D-08
+ RMSDP=6.53D-09 MaxDP=5.54D-08 DE=-7.32D-13 OVMax= 6.31D-08
 
  Error on total polarization charges =  0.01666
  SCF Done:  E(RM062X) =  -40.4487054725     A.U. after    8 cycles
             NFock=  8  Conv=0.65D-08     -V/T= 2.0116
  KE= 3.998606698454D+01 PE=-1.201905382412D+02 EE= 2.607735705713D+01
- Leave Link  502 at Sun May 29 14:26:04 2022, MaxMem=   262144000 cpu:               3.9 elap:               1.0
+ Leave Link  502 at Mon Sep  5 10:39:31 2022, MaxMem=   262144000 cpu:               3.1 elap:               3.1
  (Enter /binaries/g16/l601.exe)
  Copying SCF densities to generalized density rwf, IOpCl= 0 IROHF=0.
 
@@ -431,10 +431,10 @@
  XXYZ=             -0.0022 YYXZ=              0.2970 ZZXY=              0.0089
  N-N= 1.367840872710D+01 E-N=-1.201905380092D+02  KE= 3.998606698454D+01
  No NMR shielding tensors so no spin-rotation constants.
- Leave Link  601 at Sun May 29 14:26:04 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.1
+ Leave Link  601 at Mon Sep  5 10:39:31 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l9999.exe)
  Unable to Open any file for archive entry.
- 1\1\GINC-WEB\SP\RM062X\def2SVP\C1H4\CALCUS\29-May-2022\0\\#p sp M062X/
+ 1\1\GINC-WEB\SP\RM062X\def2SVP\C1H4\CALCUS\05-Sep-2022\0\\#p sp M062X/
  Def2SVP SCRF(CPCM, Solvent=methanol, Read)\\File created by ccinput\\0
  ,1\C,0,4.2918,3.6588,0.\H,0,4.6485,2.65,0.\H,0,4.6485,4.1632,0.8707\H,
  0,4.6485,4.1632,-0.8797\H,0,3.2218,3.6588,0.\\Version=ES64L-G16RevC.01
@@ -444,9 +444,10 @@
  The archive entry for this job was punched.
 
 
- You never know when you're making a memory.
-                        -- Rickie Lee Jones
- Job cpu time:       0 days  0 hours  0 minutes  5.7 seconds.
- Elapsed time:       0 days  0 hours  0 minutes  1.4 seconds.
+ REFRAIN FROM ILLUSIONS, INSIST ON WORK AND NOT WORDS,
+ PATIENTLY SEEK DIVINE AND SCIENTIFIC TRUTH.
+ LAST WORDS OF MARIA MENDELEEVA TO HER SON DMITRI, C. 1850
+ Job cpu time:       0 days  0 hours  0 minutes  3.6 seconds.
+ Elapsed time:       0 days  0 hours  0 minutes  3.6 seconds.
  File lengths (MBytes):  RWF=      6 Int=      0 D2E=      0 Chk=      1 Scr=      1
- Normal termination of Gaussian 16 at Sun May 29 14:26:04 2022.
+ Normal termination of Gaussian 16 at Mon Sep  5 10:39:31 2022.

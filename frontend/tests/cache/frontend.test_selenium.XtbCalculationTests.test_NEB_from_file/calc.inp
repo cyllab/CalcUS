@@ -15,6 +15,7 @@ H   -1.82448000   0.94856000   3.28105000
 product "struct2.xyz"
 nimages 3
 end
+%MaxCore 2000
 %pal
 nprocs 1
 end

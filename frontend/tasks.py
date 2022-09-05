@@ -3490,7 +3490,7 @@ def run_calc(calc_id):
         )
         if cache_ind != 1:
             # If there are multiple calculations per test, they need to be named differently
-            test_name += str(cache_ind)
+            test_name += f"_{cache_ind}"
 
         logger.info(f"Adding calculation results of {test_name} to the cache")
         shutil.copytree(

@@ -1,5 +1,0 @@
-$constrain
-force constant=1.0
-angle: 1, 2, 3, auto
-$scan
-1: 120.0, 130.0, 10

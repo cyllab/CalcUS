@@ -2010,7 +2010,7 @@ class XtbCalculationTests(CalcusLiveServer):
             "type": "Geometrical Optimisation",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
-            "in_file": "Cl.xyz",
+            "in_file": "enolate_anion.mol",
             "charge": "0",
             "multiplicity": "2",
         }

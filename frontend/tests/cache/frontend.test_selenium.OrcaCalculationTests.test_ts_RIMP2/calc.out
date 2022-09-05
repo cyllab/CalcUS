@@ -199,9 +199,10 @@ NAME = calc.inp
 |  8> %geom
 |  9> Calc_Hess true
 | 10> end
-| 11> %pal
-| 12> nprocs 1
-| 13> endd                         ****END OF INPUT****
+| 11> %MaxCore 2000
+| 12> %pal
+| 13> nprocs 1
+| 14> endd                         ****END OF INPUT****
 ================================================================================
 
                        *****************************
@@ -696,17 +697,17 @@ TIMINGS
 
 Total SCF time: 0 days 0 hours 0 min 0 sec 
 
-Total time                  ....       0.154 sec
-Sum of individual times     ....       0.098 sec  ( 63.5%)
+Total time                  ....       0.163 sec
+Sum of individual times     ....       0.100 sec  ( 61.8%)
 
-Fock matrix formation       ....       0.086 sec  ( 55.7%)
-Diagonalization             ....       0.001 sec  (  0.3%)
+Fock matrix formation       ....       0.088 sec  ( 54.3%)
+Diagonalization             ....       0.001 sec  (  0.4%)
 Density matrix formation    ....       0.000 sec  (  0.0%)
 Population analysis         ....       0.000 sec  (  0.3%)
-Initial guess               ....       0.004 sec  (  2.7%)
+Initial guess               ....       0.004 sec  (  2.6%)
 Orbital Transformation      ....       0.000 sec  (  0.0%)
 Orbital Orthonormalization  ....       0.000 sec  (  0.0%)
-DIIS solution               ....       0.000 sec  (  0.1%)
+DIIS solution               ....       0.000 sec  (  0.2%)
 SOSCF solution              ....       0.000 sec  (  0.2%)
 
 Maximum memory used throughout the entire SCF-calculation: 225.5 MB
@@ -721,7 +722,7 @@ Freezing NCore=2 chemical core electrons
 RI-MP2 ENERGY+GRADIENT
 ----------------------
 Dimension of the basis                    ...   29
-Memory devoted to MP2                     ...  256 MB   
+Memory devoted to MP2                     ... 2000 MB   
 Data format for buffers                   ... DOUBLE
 Compression type for matrix containers    ... UNCOMPRESSED
 Overall scaling of the MP2 energy         ...   1.000e+00
@@ -747,11 +748,11 @@ First Phase: integral generation and transformation of MO indices
   Aux angular momentum 3               ... done (    0.000 sec)
 Closing buffer VIJ ( 0.00 GB; CompressionRatio= 0.91)
 Closing buffer VIA ( 0.00 GB; CompressionRatio= 0.99)
-  Phase 1 completed in     0.047 sec
+  Phase 1 completed in     0.048 sec
 Second Phase: sorting and transformation of aux index
 
 IJ-Transformation
-Memory available                       ... 216 MB 
+Memory available                       ... 1960 MB 
 Max. # MO pairs treated in a batch     ... 5    
 # of internal orbitals                 ... 5
 # batches for internal orbitals        ... 1
@@ -759,22 +760,22 @@ Closing buffer IJV ( 0.00 GB; CompressionRatio= 0.98)
 (ij|v) transformation done in     0.000 sec
 
 IA-Transformation
-Memory available                       ... 216 MB 
+Memory available                       ... 1960 MB 
 Max. # MO pairs treated in a batch     ... 5    
 # of internal orbitals                 ... 5
 # batches for internal orbitals        ... 1
 Closing buffer IAV ( 0.00 GB; CompressionRatio= 1.00)
 (ia|v) transformation done in     0.000 sec
 
-  Phase 2 completed in     0.001 sec
-RI-Integral transformation completed in     0.047 sec
+  Phase 2 completed in     0.000 sec
+RI-Integral transformation completed in     0.049 sec
 Opening buffers                              ... done
 Frozen core precalculation                   ... done
 
 Starting loop over batches of integrals:
 
 Operator 0  - window                       ... (  1-  4)x(  5- 28)
-Operator 0  - Memory available             ...   256 MB
+Operator 0  - Memory available             ...  2000 MB
 Operator 0  - Memory needed per MO         ...   0.0 MB
 Operator 0  - Number of orbitals per batch ... 4
 Operator 0  - Number of batches            ... 1
@@ -782,7 +783,7 @@ Operator 0  - Number of batches            ... 1
 OPERATOR  0   PASS   0:  MOs     1 ...    4
   Reading integrals       ... ok
   Internal MO   3
-Time spent in pair loops =     0.008 sec
+Time spent in pair loops =     0.007 sec
 Deleting buffer (Ka|jb)[aa] ...done
 
 -----------------------------------------------
@@ -818,7 +819,7 @@ Number of operators            ... 1
 Orbital ranges used for CP-SCF:
  Operator 0:  Orbitals   0...  4  to   5... 28
 Variables per perturbation     ... 120
-Memory available               ... 982.3 MB
+Memory available               ... 1958.3 MB
 Memory needed per perturbation ...   0.3 MB
 Perturbations treated per batch... 1
 Number of batches              ... 1
@@ -1078,8 +1079,8 @@ B(  0-N ,  1-H ) :   0.9756 B(  0-N ,  2-H ) :   0.9756 B(  0-N ,  3-H ) :   0.9
 TIMINGS
 -------
 
-Total time                :    0.443 sec
-Integral trafo            :    0.053 sec ( 11.9%)
+Total time                :    0.451 sec
+Integral trafo            :    0.054 sec ( 11.9%)
 FC preparation            :    0.000 sec (  0.0%)
 I/O of integrals          :    0.000 sec (  0.0%)
 K(i,j) Operators          :    0.000 sec (  0.0%)
@@ -1094,12 +1095,12 @@ W(virtual)                :    0.000 sec (  0.0%)
 W(internal)               :    0.000 sec (  0.0%)
 L(virtual)                :    0.002 sec (  0.5%)
 L(internal)               :    0.000 sec (  0.0%)
-G(D)                      :    0.072 sec ( 16.2%)
-G(Z)                      :    0.069 sec ( 15.5%)
-Z-Vector Solution         :    0.060 sec ( 13.5%)
-3-Index Derivative        :    0.005 sec (  1.1%)
+G(D)                      :    0.075 sec ( 16.7%)
+G(Z)                      :    0.070 sec ( 15.6%)
+Z-Vector Solution         :    0.060 sec ( 13.4%)
+3-Index Derivative        :    0.004 sec (  1.0%)
 2-Index Derivative        :    0.000 sec (  0.1%)
-Separable Gradient        :    0.160 sec ( 36.0%)
+Separable Gradient        :    0.161 sec ( 35.6%)
 
 
 ---------------------------------------

@@ -175,7 +175,7 @@ INFO   : the flag for use of the SHARK integral package has been found!
                                        INPUT FILE
 ================================================================================
 NAME = calc.inp
-|  1> !NMR M062X Def2-SVP def2/J
+|  1> !NMR M062X Def2-SVP Def2/J
 |  2> *xyz 0 1
 |  3> C   -1.31970000  -0.64380000   0.00000000
 |  4> H   -0.96310000  -1.65260000   0.00000000
@@ -187,9 +187,10 @@ NAME = calc.inp
 | 10> O    0.62360000   0.07990000   1.25870000
 | 11> H    0.94410000   0.53240000   2.04240000
 | 12> *
-| 13> %pal
-| 14> nprocs 1
-| 15> endd                         ****END OF INPUT****
+| 13> %MaxCore 2000
+| 14> %pal
+| 15> nprocs 1
+| 16> endd                         ****END OF INPUT****
 ================================================================================
 
                        ****************************
@@ -451,13 +452,13 @@ Convergence Tolerance:
 
 Diagonalization of the overlap matrix:
 Smallest eigenvalue                        ... 3.791e-03
-Time for diagonalization                   ...    0.002 sec
+Time for diagonalization                   ...    0.000 sec
 Threshold for overlap eigenvalues          ... 1.000e-08
 Number of eigenvalues below threshold      ... 0
 Time for construction of square roots      ...    0.000 sec
-Total time needed                          ...    0.002 sec
+Total time needed                          ...    0.001 sec
 
-Time for model grid setup =    0.026 sec
+Time for model grid setup =    0.025 sec
 
 ------------------------------
 INITIAL GUESS: MODEL POTENTIAL
@@ -501,7 +502,7 @@ Total number of grid points                  ...    37734
 Total number of batches                      ...      596
 Average number of points per batch           ...       63
 Average number of grid points per atom       ...     4193
-Time for grid setup =    0.139 sec
+Time for grid setup =    0.132 sec
 
 --------------------
 COSX GRID GENERATION
@@ -564,7 +565,7 @@ Average number of points per batch           ...       63
 Average number of grid points per atom       ...     2495
 UseSFitting                                  ... on
 
-Time for X-Grid setup             =    0.129 sec
+Time for X-Grid setup             =    0.125 sec
 
 --------------
 SCF ITERATIONS
@@ -598,7 +599,7 @@ Old exchange energy                            =    -11.207543829 Eh
 New exchange energy                            =    -11.207597688 Eh
 Exchange energy change after final integration =     -0.000053859 Eh
 Total energy after final integration           =   -154.835585520 Eh
-Final COS-X integration done in                =     0.612 sec
+Final COS-X integration done in                =     0.600 sec
 
 ----------------
 TOTAL SCF ENERGY
@@ -899,26 +900,26 @@ TIMINGS
 
 Total SCF time: 0 days 0 hours 0 min 4 sec 
 
-Total time                  ....       4.550 sec
-Sum of individual times     ....       4.517 sec  ( 99.3%)
+Total time                  ....       4.396 sec
+Sum of individual times     ....       4.365 sec  ( 99.3%)
 
-Fock matrix formation       ....       4.179 sec  ( 91.8%)
-  Split-RI-J                ....       0.249 sec  (  6.0% of F)
-  Chain of spheres X        ....       2.298 sec  ( 55.0% of F)
-  XC integration            ....       1.629 sec  ( 39.0% of F)
-    Basis function eval.    ....       0.327 sec  ( 20.1% of XC)
-    Density eval.           ....       0.475 sec  ( 29.2% of XC)
-    XC-Functional eval.     ....       0.228 sec  ( 14.0% of XC)
-    XC-Potential eval.      ....       0.563 sec  ( 34.6% of XC)
+Fock matrix formation       ....       4.044 sec  ( 92.0%)
+  Split-RI-J                ....       0.237 sec  (  5.9% of F)
+  Chain of spheres X        ....       2.219 sec  ( 54.9% of F)
+  XC integration            ....       1.584 sec  ( 39.2% of F)
+    Basis function eval.    ....       0.320 sec  ( 20.2% of XC)
+    Density eval.           ....       0.462 sec  ( 29.2% of XC)
+    XC-Functional eval.     ....       0.222 sec  ( 14.0% of XC)
+    XC-Potential eval.      ....       0.549 sec  ( 34.7% of XC)
 Diagonalization             ....       0.003 sec  (  0.1%)
 Density matrix formation    ....       0.000 sec  (  0.0%)
 Population analysis         ....       0.001 sec  (  0.0%)
-Initial guess               ....       0.037 sec  (  0.8%)
+Initial guess               ....       0.034 sec  (  0.8%)
 Orbital Transformation      ....       0.000 sec  (  0.0%)
 Orbital Orthonormalization  ....       0.000 sec  (  0.0%)
 DIIS solution               ....       0.001 sec  (  0.0%)
 SOSCF solution              ....       0.000 sec  (  0.0%)
-Grid generation             ....       0.295 sec  (  6.5%)
+Grid generation             ....       0.282 sec  (  6.4%)
 
 Maximum memory used throughout the entire SCF-calculation: 48.8 MB
 
@@ -1099,12 +1100,12 @@ Average number of grid points per atom       ...     4193
   Summing G[dS/dB_ij] into RHS contribs.  ... done
 
   GIAO profiling information: 
-    Total GIAO time               ...       1.7 sec
-       GIAO 1-electron integrals  ...       0.0 sec (  0.4%)
-       GIAO G(dS/dB) terms        ...       0.1 sec (  6.4%)
-       GIAO RI-J                  ...       0.1 sec (  8.4%)
-       GIAO COSX                  ...       0.4 sec ( 23.0%)
-       GIAO XC-terms              ...       0.9 sec ( 53.4%)
+    Total GIAO time               ...       1.6 sec
+       GIAO 1-electron integrals  ...       0.0 sec (  0.2%)
+       GIAO G(dS/dB) terms        ...       0.1 sec (  6.0%)
+       GIAO RI-J                  ...       0.1 sec (  8.2%)
+       GIAO COSX                  ...       0.4 sec ( 23.2%)
+       GIAO XC-terms              ...       0.9 sec ( 54.0%)
 
   GIAO right hand side done
 
@@ -1178,7 +1179,7 @@ Total number of batches                      ...       45
 Average number of points per batch           ...       55
 Average number of grid points per atom       ...      276
 
-Memory available               ... 1008.9 MB
+Memory available               ... 1984.9 MB
 Memory needed per perturbation ...   0.9 MB
 Perturbations treated per batch... 3
 Number of batches              ... 1
@@ -1191,7 +1192,7 @@ Number of batches              ... 1
 Forming final perturbed densities           ... done
 Transforming perturbed density to AO basis  ... done
 
-Magnetic field perturbation calculated in  2.077 sec
+Magnetic field perturbation calculated in  2.007 sec
 
 ---------------
 CHEMICAL SHIFTS
@@ -1467,9 +1468,9 @@ Maximum memory used throughout the entire EPRNMR-calculation: 18.6 MB
 
 Timings for individual modules:
 
-Sum of individual times         ...        6.812 sec (=   0.114 min)
-GTO integral calculation        ...        0.083 sec (=   0.001 min)   1.2 %
-SCF iterations                  ...        4.567 sec (=   0.076 min)  67.0 %
-EPR/NMR calculation             ...        2.162 sec (=   0.036 min)  31.7 %
+Sum of individual times         ...        6.575 sec (=   0.110 min)
+GTO integral calculation        ...        0.081 sec (=   0.001 min)   1.2 %
+SCF iterations                  ...        4.408 sec (=   0.073 min)  67.0 %
+EPR/NMR calculation             ...        2.085 sec (=   0.035 min)  31.7 %
                              ****ORCA TERMINATED NORMALLY****
-TOTAL RUN TIME: 0 days 0 hours 0 minutes 6 seconds 905 msec
+TOTAL RUN TIME: 0 days 0 hours 0 minutes 6 seconds 648 msec

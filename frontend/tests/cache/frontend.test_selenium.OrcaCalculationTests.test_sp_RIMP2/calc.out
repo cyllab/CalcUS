@@ -194,9 +194,10 @@ NAME = calc.inp
 |  3> H   -1.43860000  -0.26820000   0.00000000
 |  4> H   -2.03860000  -0.26820000   0.00000000
 |  5> *
-|  6> %pal
-|  7> nprocs 1
-|  8> endd                         ****END OF INPUT****
+|  6> %MaxCore 2000
+|  7> %pal
+|  8> nprocs 1
+|  9> endd                         ****END OF INPUT****
 ================================================================================
 
                        ****************************
@@ -401,7 +402,7 @@ Number of eigenvalues below threshold      ... 0
 Time for construction of square roots      ...    0.000 sec
 Total time needed                          ...    0.000 sec
 
-Time for model grid setup =    0.004 sec
+Time for model grid setup =    0.003 sec
 
 ------------------------------
 INITIAL GUESS: MODEL POTENTIAL
@@ -568,14 +569,14 @@ TIMINGS
 
 Total SCF time: 0 days 0 hours 0 min 0 sec 
 
-Total time                  ....       0.077 sec
-Sum of individual times     ....       0.009 sec  ( 12.2%)
+Total time                  ....       0.080 sec
+Sum of individual times     ....       0.010 sec  ( 13.0%)
 
-Fock matrix formation       ....       0.004 sec  (  4.7%)
+Fock matrix formation       ....       0.005 sec  (  6.1%)
 Diagonalization             ....       0.000 sec  (  0.1%)
 Density matrix formation    ....       0.000 sec  (  0.0%)
 Population analysis         ....       0.000 sec  (  0.4%)
-Initial guess               ....       0.002 sec  (  2.3%)
+Initial guess               ....       0.002 sec  (  2.0%)
 Orbital Transformation      ....       0.000 sec  (  0.0%)
 Orbital Orthonormalization  ....       0.000 sec  (  0.0%)
 DIIS solution               ....       0.000 sec  (  0.1%)
@@ -593,7 +594,7 @@ Freezing NCore=0 chemical core electrons
 RI-MP2 ENERGY
 -------------
 Dimension of the basis                    ...   10
-Memory devoted to MP2                     ...  256 MB   
+Memory devoted to MP2                     ... 2000 MB   
 Data format for buffers                   ... DOUBLE
 Compression type for matrix containers    ... UNCOMPRESSED
 Overall scaling of the MP2 energy         ...   1.000e+00
@@ -615,11 +616,11 @@ First Phase: integral generation and transformation of MO indices
   Aux angular momentum 1               ... done (    0.000 sec)
   Aux angular momentum 2               ... done (    0.000 sec)
 Closing buffer VIA ( 0.00 GB; CompressionRatio= 0.86)
-  Phase 1 completed in     0.041 sec
+  Phase 1 completed in     0.045 sec
 Second Phase: sorting and transformation of aux index
 
 IA-Transformation
-Memory available                       ... 217 MB 
+Memory available                       ... 1961 MB 
 Max. # MO pairs treated in a batch     ... 1    
 # of internal orbitals                 ... 1
 # batches for internal orbitals        ... 1
@@ -627,13 +628,13 @@ Closing buffer IAV ( 0.00 GB; CompressionRatio= 0.99)
 (ia|v) transformation done in     0.000 sec
 
   Phase 2 completed in     0.000 sec
-RI-Integral transformation completed in     0.042 sec
+RI-Integral transformation completed in     0.045 sec
 Opening buffers                              ... done
 
 Starting loop over batches of integrals:
 
 Operator 0  - window                       ... (  0-  0)x(  1-  9)
-Operator 0  - Memory available             ...   256 MB
+Operator 0  - Memory available             ...  2000 MB
 Operator 0  - Memory needed per MO         ...   0.0 MB
 Operator 0  - Number of orbitals per batch ... 1
 Operator 0  - Number of batches            ... 1
@@ -651,8 +652,8 @@ Time spent in pair loops =     0.000 sec
 TIMINGS
 -------
 
-Total time                :    0.045 sec
-Integral trafo            :    0.045 sec ( 99.5%)
+Total time                :    0.049 sec
+Integral trafo            :    0.049 sec ( 99.5%)
 I/O of integrals          :    0.000 sec (  0.0%)
 K(i,j) Operators          :    0.000 sec (  0.0%)
 T(i,j) pair energies      :    0.000 sec (  0.0%)
@@ -742,9 +743,9 @@ x,y,z [Debye]:     0.000000     0.000000    -0.000000
 
 Timings for individual modules:
 
-Sum of individual times         ...        0.278 sec (=   0.005 min)
-GTO integral calculation        ...        0.059 sec (=   0.001 min)  21.1 %
-SCF iterations                  ...        0.090 sec (=   0.001 min)  32.3 %
-MP2 module                      ...        0.129 sec (=   0.002 min)  46.6 %
+Sum of individual times         ...        0.281 sec (=   0.005 min)
+GTO integral calculation        ...        0.058 sec (=   0.001 min)  20.7 %
+SCF iterations                  ...        0.094 sec (=   0.002 min)  33.5 %
+MP2 module                      ...        0.129 sec (=   0.002 min)  45.7 %
                              ****ORCA TERMINATED NORMALLY****
-TOTAL RUN TIME: 0 days 0 hours 0 minutes 0 seconds 326 msec
+TOTAL RUN TIME: 0 days 0 hours 0 minutes 0 seconds 341 msec

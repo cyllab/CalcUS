@@ -2,8 +2,8 @@
  Input=calc.com
  Output=calc.log
  Initial command:
- /binaries/g16/l1.exe "/calcus/scratch/scr/25/Gau-5777.inp" -scrdir="/calcus/scratch/scr/25/"
- Entering Link 1 = /binaries/g16/l1.exe PID=      5779.
+ /binaries/g16/l1.exe "/calcus/scratch/scr/25/Gau-38.inp" -scrdir="/calcus/scratch/scr/25/"
+ Entering Link 1 = /binaries/g16/l1.exe PID=        40.
   
  Copyright (c) 1988-2019, Gaussian, Inc.  All Rights Reserved.
   
@@ -76,11 +76,11 @@
  
  ******************************************
  Gaussian 16:  ES64L-G16RevC.01  3-Jul-2019
-                29-May-2022 
+                 5-Sep-2022 
  ******************************************
  %chk=in.chk
- %nproc=4
- Will use up to    4 processors via shared memory.
+ %nproc=1
+ Will use up to    1 processors via shared memory.
  %mem=2000MB
  ----------------
  #p sp HF/Def2SVP
@@ -92,7 +92,7 @@
  5/5=2,38=5/2;
  6/7=2,8=2,9=2,10=2,28=1/1;
  99/5=1,9=1/99;
- Leave Link    1 at Sun May 29 19:30:11 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link    1 at Mon Sep  5 11:45:34 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l101.exe)
  -----------------------
  File created by ccinput
@@ -118,7 +118,7 @@
  NQMom=    0.0000000   0.0000000
  NMagM=    2.7928460   2.7928460
  AtZNuc=   1.0000000   1.0000000
- Leave Link  101 at Sun May 29 19:30:11 2022, MaxMem=   262144000 cpu:               0.4 elap:               0.1
+ Leave Link  101 at Mon Sep  5 11:45:34 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.1
  (Enter /binaries/g16/l202.exe)
                           Input orientation:                          
  ---------------------------------------------------------------------
@@ -143,7 +143,7 @@
       2          1           0        0.000000    0.000000   -0.300000
  ---------------------------------------------------------------------
  Rotational constants (GHZ):           0.0000000        2785.8616915        2785.8616915
- Leave Link  202 at Sun May 29 19:30:11 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  202 at Mon Sep  5 11:45:34 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l301.exe)
  Standard basis: def2SVP (5D, 7F)
  Ernie: Thresh=  0.10000D-02 Tol=  0.10000D-05 Strict=F.
@@ -173,7 +173,7 @@
  Integral buffers will be    131072 words long.
  Raffenetti 1 integral format.
  Two-electron integral symmetry is turned on.
- Leave Link  301 at Sun May 29 19:30:11 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  301 at Mon Sep  5 11:45:34 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l302.exe)
  NPDir=0 NMtPBC=     1 NCelOv=     1 NCel=       1 NClECP=     1 NCelD=      1
          NCelK=      1 NCelE2=     1 NClLst=     1 CellRange=     0.0.
@@ -184,10 +184,10 @@
  LDataN:  DoStor=T MaxTD1= 2 Len=   12
  NBasis=    10 RedAO= T EigKep=  1.98D-02  NBF=     3     0     1     1     0     3     1     1
  NBsUse=    10 1.00D-06 EigRej= -1.00D+00 NBFU=     3     0     1     1     0     3     1     1
- Leave Link  302 at Sun May 29 19:30:11 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.1
+ Leave Link  302 at Mon Sep  5 11:45:34 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.1
  (Enter /binaries/g16/l303.exe)
  DipDrv:  MaxL=1.
- Leave Link  303 at Sun May 29 19:30:11 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
+ Leave Link  303 at Mon Sep  5 11:45:34 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l401.exe)
  ExpMin= 1.22D-01 ExpMax= 1.30D+01 ExpMxC= 1.30D+01 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
  Harris functional with IExCor=  205 and IRadAn=       5 diagonalized for initial guess.
@@ -205,7 +205,7 @@
        Virtual   (SGU) (SGG) (SGU) (PIU) (PIU) (SGG) (PIG) (PIG)
                  (SGU)
  The electronic state of the initial guess is 1-SGG.
- Leave Link  401 at Sun May 29 19:30:11 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.1
+ Leave Link  401 at Mon Sep  5 11:45:34 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l502.exe)
  Keep R1 ints in memory in symmetry-blocked form, NReq=804501.
  FoFCou: FMM=F IPFlag=           0 FMFlag=           0 FMFlg1=           0
@@ -275,17 +275,17 @@
  NSaved= 5 IEnMin= 5 EnMin= -1.10736661646302     IErMin= 5 ErrMin= 2.98D-09
  ErrMax= 2.98D-09  0.00D+00 EMaxC= 1.00D-01 BMatC= 5.75D-17 BMatP= 6.55D-11
  IDIUse=1 WtCom= 1.00D+00 WtEn= 0.00D+00
- Large coefficients: NSaved=  5 BigCof=    0.00 CofMax=   10.00 Det= 1.01D-26
+ Large coefficients: NSaved=  5 BigCof=    0.00 CofMax=   10.00 Det=-1.03D-26
  Inversion failed.  Reducing to  4 matrices.
- Coeff-Com:  0.636D-08 0.797D-06 0.913D-03 0.999D+00
- Coeff:      0.636D-08 0.797D-06 0.913D-03 0.999D+00
+ Coeff-Com:  0.635D-08 0.797D-06 0.913D-03 0.999D+00
+ Coeff:      0.635D-08 0.797D-06 0.913D-03 0.999D+00
  Gap=     0.861 Goal=   None    Shift=    0.000
  RMSDP=1.10D-09 MaxDP=4.54D-09 DE=-1.44D-10 OVMax= 8.50D-09
 
  SCF Done:  E(RHF) =  -1.10736661646     A.U. after    5 cycles
             NFock=  5  Conv=0.11D-08     -V/T= 1.8914
  KE= 1.242291337320D+00 PE=-3.943283962982D+00 EE= 7.116639909992D-01
- Leave Link  502 at Sun May 29 19:30:12 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.0
+ Leave Link  502 at Mon Sep  5 11:45:34 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l601.exe)
  Copying SCF densities to generalized density rwf, IOpCl= 0 IROHF=0.
 
@@ -309,15 +309,15 @@
      2  H    0.444748   0.555252
  Mulliken charges:
                1
-     1  H    0.000000
-     2  H    0.000000
- Sum of Mulliken charges =   0.00000
+     1  H   -0.000000
+     2  H   -0.000000
+ Sum of Mulliken charges =  -0.00000
  Mulliken charges with hydrogens summed into heavy atoms:
                1
  Electronic spatial extent (au):  <R**2>=              4.3531
- Charge=              0.0000 electrons
+ Charge=             -0.0000 electrons
  Dipole moment (field-independent basis, Debye):
-    X=              0.0000    Y=             -0.0000    Z=             -0.0000  Tot=              0.0000
+    X=             -0.0000    Y=              0.0000    Z=             -0.0000  Tot=              0.0000
  Quadrupole moment (field-independent basis, Debye-Ang):
    XX=             -1.8110   YY=             -1.8110   ZZ=             -1.3686
    XY=             -0.0000   XZ=             -0.0000   YZ=              0.0000
@@ -343,10 +343,10 @@
  Symmetry B2U  KE= 6.338805790590D-35
  Symmetry B3U  KE= 6.338805790590D-35
  No NMR shielding tensors so no spin-rotation constants.
- Leave Link  601 at Sun May 29 19:30:12 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.1
+ Leave Link  601 at Mon Sep  5 11:45:34 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l9999.exe)
  Unable to Open any file for archive entry.
- 1\1\GINC-WEB\SP\RHF\def2SVP\H2\CALCUS\29-May-2022\0\\#p sp HF/Def2SVP\
+ 1\1\GINC-WEB\SP\RHF\def2SVP\H2\CALCUS\05-Sep-2022\0\\#p sp HF/Def2SVP\
  \File created by ccinput\\0,1\H,0,-1.4386,-0.2682,0.\H,0,-2.0386,-0.26
  82,0.\\Version=ES64L-G16RevC.01\State=1-SGG\HF=-1.1073666\RMSD=1.096e-
  09\Dipole=0.,0.,0.\Quadrupole=0.2192391,-0.1096195,-0.1096195,0.,0.,0.
@@ -354,11 +354,12 @@
  The archive entry for this job was punched.
 
 
- KNOWLEDGE IS OF TWO KINDS:  WE KNOW A SUBJECT OURSELVES OR WE KNOW 
- WHERE WE CAN FIND INFORMATION UPON IT.
-
-                                    -- SAMUEL JOHNSON
- Job cpu time:       0 days  0 hours  0 minutes  1.5 seconds.
+ ERWIN WITH HIS PSI CAN DO
+ CALCULATIONS QUITE A FEW.
+ BUT ONE THING HAS NOT BEEN SEEN
+ JUST WHAT DOES PSI REALLY MEAN.
+ -- WALTER HUCKEL, TRANS. BY FELIX BLOCH
+ Job cpu time:       0 days  0 hours  0 minutes  0.4 seconds.
  Elapsed time:       0 days  0 hours  0 minutes  0.4 seconds.
  File lengths (MBytes):  RWF=      6 Int=      0 D2E=      0 Chk=      1 Scr=      1
- Normal termination of Gaussian 16 at Sun May 29 19:30:12 2022.
+ Normal termination of Gaussian 16 at Mon Sep  5 11:45:35 2022.

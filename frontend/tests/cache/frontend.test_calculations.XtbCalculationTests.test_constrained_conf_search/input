@@ -1,7 +1,0 @@
-$constrain
-force constant=1.0
-reference=in.xyz
-angle: 1, 5, 8, auto
-atoms: 1,5,8
-$metadyn
-atoms: 2-4,6-7,9-17
