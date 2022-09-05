@@ -411,7 +411,6 @@
 
 	function loadFlowchart() {
 		const flowchartOption = document.getElementById("flowchart-load-select")
-		console.log(flowchartOption.options[flowchartOption.selectedIndex].getAttribute("data-id"))
 		data_id = flowchartOption.options[flowchartOption.selectedIndex].getAttribute("data-id")
 		data_id = parseInt(data_id)
 		var frontend_id_array = []
@@ -470,17 +469,14 @@
     flowy(document.getElementById("canvas"), onGrab, onRelease, onSnap, onRearrange, spacing_x, spacing_y);
     function onGrab(block){
         // When the user grabs a block
-        console.log("Grabbed")
     }
 
     function onRelease(){
         // When the user releases a block
-        console.log("Released")
     }
 
     function onSnap(block, first, parent){
         // When a block snaps with another one
-        console.log("Snapped")
 		var inner_text = block.innerHTML;
 		var index_of_Opening_tag = inner_text.indexOf("<");
 		inner_text = inner_text.substring(0, index_of_Opening_tag);
@@ -491,7 +487,6 @@
 
     function onRearrange(block, parent){
         // When a block is rearranged
-        console.log("Rearranged")
 		saveCalculationName.delete(block.children[1].value)
         return false;
     }
@@ -502,7 +497,6 @@
     }
 
     function flowchartOutput() {
-        console.log("Output")
         flowyOut = flowy.output();
 		for(var i=0;i<flowyOut.blocks.length;i++)
 		{
@@ -512,8 +506,6 @@
 			calc_parentId_array.push(flowyOut.blocks[i].parent)
 			calc_objectId_array.push(flowyOut.blocks[i].id)
 		}
-		console.log(flowyOut)
-		console.log(saveCalculationParentId)
         var htmlContent = JSON.stringify(flowyOut);
         var bl = new Blob([htmlContent], {type: "text/json"});
         var a = document.createElement("a");
@@ -530,8 +522,6 @@
     }
 
     function Submit(flowchartTitle) {
-        console.log("Submitted")
-		console.log(ajax_para_map)
 		var calc_para_array = []
 		if(flowchartTitle!="")
 			name = flowchartTitle
@@ -558,15 +548,13 @@
 				"X-CSRFToken": '{{ csrf_token }}',
 			},
 			data: {'flowchart_name': name, 'flowchart_data': flowchart_data, "calc_name[]": calc_name_array, "calc_id[]": calc_objectId_array, "calc_parent_id[]": calc_parentId_array, "calc_para_array": JSON.stringify(calc_para_array), },
-			success: function() {
-				console.log("Success")	
+			success: function() {	
 			}
 		});
     }
 
 	$("#inputform").submit(function(event){
 		event.preventDefault();
-		console.log("Hello Divyam")
 		data = $("#inputform").serializeArray()
 		$.ajax({
 			data: data,
@@ -578,10 +566,10 @@
 			type: "POST",
 			url: "/submit_flowchart_input/",
 			success: function (response) {
-				console.log("Success")
+				console.log("Success in submitting the input form")
 			},
 			error: function (response) {
-				console.log("Error")
+				console.log("Error in submitting the input form")
 			}
 		});
 	})
@@ -636,10 +624,10 @@
 			type: "POST",
 			url: "/submit_flowchart_input/",
 			success: function (response) {
-				console.log("Success")
+				console.log("Success in submitting the flowchart form")
 			},
 			error: function (response) {
-				console.log("Error")
+				console.log("Error in submitting the flowchart form")
 			}
 		});
 		$(".modal-input").removeClass("is-active");
@@ -704,7 +692,6 @@
 	}
 
 	function openParaModal() {
-		console.log("Clicked")
 		document.getElementById('calcform').reset();
 		var inner_text = event.target.parentElement.innerHTML;
 		var index_of_Opening_tag = inner_text.indexOf("<");
@@ -817,7 +804,6 @@
 				}
 			]
 		}
-        //console.log(hardCodedObject);
         flowy.import(hardCodedObject);
     }
 
