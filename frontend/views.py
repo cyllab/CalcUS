@@ -87,6 +87,7 @@ from .tasks import (
     cancel,
     run_calc,
     send_cluster_command,
+    dispatcher_flowchart,
 )
 from .decorators import superuser_required
 from .tasks import (
@@ -427,6 +428,12 @@ def create_flowchart(request):
             flowchart_dat = clean(request.POST["flowchart_data"])
         flowchart_view = Flowchart.objects.create(name=flowchart_name, author=profile, flowchart=flowchart_dat)
         flowchart_view.save()
+        flowchart_order_id = request.POST["flowchart_order_id"]
+        if (flowchart_order_id !=""):
+            flowchart_order_id = (int)(request.POST["flowchart_order_id"])
+            flowchart_order_obj = FlowchartOrder.objects.get(pk=flowchart_order_id)
+            flowchart_order_obj.flowchart = flowchart_view
+            flowchart_order_obj.save()
         calc_name = request.POST.getlist("calc_name[]")
         calc_para_list = request.POST["calc_para_array"]
         y = json.loads(calc_para_list)
@@ -468,7 +475,6 @@ def create_flowchart(request):
                     obj_view = Step.objects.create(name=calc_name[index], flowchart=flowchart_view, parentId=None)
                     obj_view.save()
                     parent_dict[i]=obj_view
-
         return HttpResponse(status=200)
 
 @login_required
@@ -1390,6 +1396,7 @@ def verify_calculation(request):
 
 @login_required
 def submit_flowchart_input(request):
+    obj_id = ""
     profile = request.user.profile
     if "calc_mol_name" in request.POST.keys():
         mol_name = clean(request.POST["calc_mol_name"])
@@ -1629,6 +1636,7 @@ def submit_flowchart_input(request):
             struct.save()
 
             obj.save()
+            obj_id = obj.id
     else:  # No file upload
         if "structure" in request.POST.keys():
             drawing = True
@@ -1649,9 +1657,12 @@ def submit_flowchart_input(request):
                 project=project_obj,
             )
             obj.save()
+            obj_id = obj.id
         else:
             return "No input structure"
-    return HttpResponse(status=200)
+    dispatcher_flowchart()
+    ret = obj_id
+    return HttpResponse(ret, status=200)
 
 
 @login_required
