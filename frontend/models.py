@@ -768,6 +768,9 @@ class FlowchartOrder(models.Model):
         "Project", on_delete=models.CASCADE, blank=True, null=True
     )
     flowchart = models.ForeignKey(Flowchart, on_delete=models.CASCADE, default=None, null=True)
+    ensemble = models.ForeignKey(
+        Ensemble, on_delete=models.SET_NULL, blank=True, null=True
+    )
 
 class CalculationOrder(models.Model):
     name = models.CharField(max_length=100)

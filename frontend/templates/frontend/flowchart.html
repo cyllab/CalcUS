@@ -95,6 +95,7 @@
 		<button class="button is-small flowy-button js-modal-trigger" data-target="modal-load-flowchart">Load Flowchart from DB</button>
 		<button class="button is-small flowy-button js-modal-trigger" data-target="modal-open-naming-flowchart-modal">Save Flowchart to DB</button>
 		<button class="button flowy-button" onclick="flowchartOutput()">Output</button>
+		<button class="button flowy-button" onclick="submitFlowchart()">Submit</button>
 		<label class="label">Import a flowchart</label>
 		<div class="file is-small is-boxed has-name">
 			<label class="file-label">
@@ -422,6 +423,7 @@
 			data_id = data_id.toString()
 			if("{{i.id}}"==data_id)
 			{
+				flowchart_id = data_id;
 				$.ajax({
 					method: "POST",	 	 
 					url: "/load_flowchart_params/" + {{ i.id }},
@@ -459,6 +461,7 @@
 	var calc_objectId_array = [];
 	var ajax_para_map = new Map()
 	var flowchart_order_id
+	var flowchart_id
     document.addEventListener("DOMContentLoaded", function(){
         hardCodedInput();
     })
@@ -571,6 +574,32 @@
 		});
 	})
 
+
+	function submitFlowchart()
+	{
+		data = flowchart_id
+		if(flowchart_id!=undefined)
+		{
+			$.ajax({
+				data: data,
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+	
+				type: "POST",
+				url: "/submit_flowchart/",
+				success: function (response) {
+					console.log("Success Flowchart")
+				},
+				error: function (response) {
+					console.log("Failure Flowchart")
+				}
+			});
+		}
+		else
+			alert("No flowchart to submit!")
+	}
+	
 
 	var input_calc_charge = null, input_calc_multiplicity = null, input_calc_resource = null, override_charge_multiplicity = null, override_resource = null
 	function submit_input() {

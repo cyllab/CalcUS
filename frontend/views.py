@@ -478,6 +478,14 @@ def create_flowchart(request):
         return HttpResponse(status=200)
 
 @login_required
+def submit_flowchart(request):
+    keysList = list(request.POST)    
+    flowchart_id = (int)(keysList[0])
+    flowchart_obj = Flowchart.objects.get(pk=flowchart_id)
+    flowchart_order_obj = flowchart_obj.flowchartorder_set.all()
+    return HttpResponse(status=200)
+
+@login_required
 def create_folder(request):
     if request.method == "POST":
         profile = request.user.profile
@@ -1476,6 +1484,7 @@ def submit_flowchart_input(request):
                     structure=struct,
                     author=profile,
                     project=project_obj,
+                    ensemble=e,
                 )
             elif combine != "on" and parse_filenames == "on":
                 unique_molecules = {}
@@ -1525,6 +1534,7 @@ def submit_flowchart_input(request):
                         structure=struct,
                         author=profile,
                         project=project_obj,
+                        ensemble=e,
                     )
             elif combine == "on" and parse_filenames == "on":
                 ss = handle_file_upload_flowchart(files[0])
@@ -1558,6 +1568,7 @@ def submit_flowchart_input(request):
                     structure=struct,
                     author=profile,
                     project=project_obj,
+                    ensemble=e,
                 )
             else:
                 unique_molecules = {}
@@ -1601,6 +1612,7 @@ def submit_flowchart_input(request):
                         structure=struct,
                         author=profile,
                         project=project_obj,
+                        ensemble=e,
                     )
         elif len(files) == 1:
             ff = files[0]
@@ -1631,6 +1643,7 @@ def submit_flowchart_input(request):
             mol.save()
 
             e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+            obj.ensemble = e
             struct.parent_ensemble = e
             struct.number = num
             struct.save()
@@ -1655,6 +1668,7 @@ def submit_flowchart_input(request):
                 structure=s,
                 author=profile,
                 project=project_obj,
+                ensemble=e,
             )
             obj.save()
             obj_id = obj.id
