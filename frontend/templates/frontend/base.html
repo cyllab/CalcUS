@@ -214,7 +214,7 @@
 					<div class="navbar-item has-dropdown is-hoverable" id="navbar_accesses">
 						<a class="navbar-link">Cluster Accesses</a>
 						<div class="navbar-dropdown">
-							{% for a in user.profile.clusteraccess_owner.all %}
+							{% for a in user.profile.clusteraccess_owner.all|dictsort:"cluster_address" %}
 								<a class="navbar-item" href="/manage_access/{{ a.id }}">{{ a.cluster_address }}</a>
 							{% endfor %}
 						</div>
