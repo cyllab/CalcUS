@@ -45,6 +45,7 @@ services:
                         - ./scr:/calcus/scr
                         - ./results:/calcus/results
                         - ./keys:/calcus/keys
+                        - ./backups:/calcus/backups
                 env_file:
                         - ./.env
                 links:

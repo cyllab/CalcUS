@@ -180,7 +180,10 @@ STATICFILES_DIRS = [
 ]
 
 DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
-DBBACKUP_STORAGE_OPTIONS = {"location": "backups/"}
+DBBACKUP_STORAGE_OPTIONS = {"location": "/calcus/backups/"}
+DBBACKUP_CLEANUP_KEEP = 10  # Number of old DBs to keep
+DBBACKUP_INTERVAL = 1  # In days (can be a float)
+
 LOGIN_REDIRECT_URL = "/home"
 
 DEFAULT_FROM_EMAIL = "bot@CalcUS"
@@ -216,9 +219,6 @@ INTERNAL_IPS = [
 SESSION_COOKIE_NAME = "CALCUS_SESSION_COOKIE"
 
 ALLOW_LOCAL_CALC = True
-
-DBBACKUP_CLEANUP_KEEP = 10  # Number of old DBs to keep
-DBBACKUP_INTERVAL = 1  # In days (can be a float)
 
 PING_SATELLITE = os.getenv("CALCUS_PING_SATELLITE", "False")
 PING_CODE = os.getenv("CALCUS_PING_CODE", "default")
