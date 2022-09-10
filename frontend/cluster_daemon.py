@@ -36,7 +36,7 @@ import socket
 import threading
 from threading import Lock
 
-from django.utils.timezone import now
+from django.utils import timezone
 from django.db import close_old_connections
 from django.conf import settings
 
@@ -411,6 +411,15 @@ class ClusterDaemon:
 
             for conn_name in list(self.connections.keys()):
                 access, conn = self.connections[conn_name]
+
+                if access.last_connected - timezone.now() > timezone.timedelta(
+                    minutes=15
+                ):
+                    logger.warning(
+                        f"Access {access.id} has not pinged the remote server in 15 minutes, automatically disconnecting..."
+                    )
+                    self.disconnect(access.id)
+                    continue
 
                 access.refresh_from_db()
                 access.last_connected = timezone.now()
