@@ -688,18 +688,9 @@ def xtb_opt(in_file, calc):
         lines = f.readlines()
         ind = len(lines) - 1
 
-        try:
-            while lines[ind].find("HOMO-LUMO GAP") == -1:
-                ind -= 1
-            hl_gap = float(lines[ind].split()[3])
-        except IndexError:
-            ind = len(lines) - 1
-            while lines[ind].find("TOTAL ENERGY") == -1:
-                ind -= 1
-            E = float(lines[ind].split()[3])
-            hl_gap = 0.0
-        else:
-            E = float(lines[ind - 2].split()[3])
+        while lines[ind].find("TOTAL ENERGY") == -1:
+            ind -= 1
+        E = float(lines[ind].split()[3])
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
@@ -708,7 +699,6 @@ def xtb_opt(in_file, calc):
     )[0]
     s.degeneracy = 1
     prop = get_or_create(calc.parameters, s)
-    prop.homo_lumo_gap = hl_gap
     prop.energy = E
     prop.geom = True
     s.save()
@@ -780,13 +770,11 @@ def xtb_sp(in_file, calc):
         lines = f.readlines()
         ind = len(lines) - 1
 
-        while lines[ind].find("HOMO-LUMO GAP") == -1:
+        while lines[ind].find("TOTAL ENERGY") == -1:
             ind -= 1
-        hl_gap = float(lines[ind].split()[3])
-        E = float(lines[ind - 2].split()[3])
+        E = float(lines[ind].split()[3])
 
     prop = get_or_create(calc.parameters, calc.structure)
-    prop.homo_lumo_gap = hl_gap
     prop.energy = E
     prop.save()
     return ErrorCodes.SUCCESS
@@ -818,10 +806,6 @@ def xtb_ts(in_file, calc):
             ind -= 1
         E = float(olines[ind].split()[4])
 
-        while olines[ind].find("HOMO-LUMO GAP") == -1:
-            ind -= 1
-        hl_gap = float(olines[ind].split()[3])
-
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
         xyz_structure=clean_xyz("".join(lines)),
@@ -829,7 +813,6 @@ def xtb_ts(in_file, calc):
     )[0]
     s.degeneracy = calc.structure.degeneracy
     prop = get_or_create(calc.parameters, s)
-    prop.homo_lumo_gap = hl_gap
     prop.energy = E
     prop.geom = True
 
@@ -924,24 +907,13 @@ def xtb_scan(in_file, calc):
             lines = f.readlines()
             ind = len(lines) - 1
 
-            try:
-                while lines[ind].find("HOMO-LUMO GAP") == -1:
-                    ind -= 1
-                hl_gap = float(lines[ind].split()[3])
-            except IndexError:
-                ind = len(lines) - 1
-                while lines[ind].find("TOTAL ENERGY") == -1:
-                    ind -= 1
-                E = float(lines[ind].split()[3])
-                hl_gap = 0.0
-            else:
-                E = float(lines[ind - 2].split()[3])
+            while lines[ind].find("TOTAL ENERGY") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[3])
 
             prop = get_or_create(calc.parameters, r)
             prop.energy = E
-            prop.homo_lumo_gap = hl_gap
 
-            r.homo_lumo_gap = hl_gap
             r.save()
             prop.save()
             calc.result_ensemble.structure_set.add(r)
@@ -967,11 +939,10 @@ def xtb_freq(in_file, calc):
         lines = f.readlines()
         ind = len(lines) - 1
 
-        while lines[ind].find("HOMO-LUMO GAP") == -1:
+        while lines[ind].find("TOTAL ENERGY") == -1:
             ind -= 1
-        hl_gap = float(lines[ind].split()[3])
-        E = float(lines[ind - 4].split()[3])
-        G = float(lines[ind - 2].split()[4])
+        E = float(lines[ind].split()[3])
+        G = float(lines[ind + 2].split()[4])
 
     vib_file = os.path.join(local_folder, "vibspectrum")
 

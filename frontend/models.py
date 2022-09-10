@@ -569,8 +569,6 @@ class Property(models.Model):
     energy = models.FloatField(default=0)
     free_energy = models.FloatField(default=0)
 
-    homo_lumo_gap = models.FloatField(default=0)
-
     uvvis = models.PositiveIntegerField(default=0)
     nmr = models.PositiveIntegerField(default=0)
     mo = models.PositiveIntegerField(default=0)
