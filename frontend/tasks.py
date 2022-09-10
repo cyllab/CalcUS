@@ -3140,15 +3140,22 @@ def dispatcher_flowchart():
 
 
 @app.task(base=AbortableTask)
-def dispatcher(drawing, order_id):
-    order = CalculationOrder.objects.get(pk=order_id)
+def dispatcher(drawing, order_id, is_flowchart=False, stepFlowchart=None):
+    if(is_flowchart):
+        order = FlowchartOrder.objects.get(pk=order_id)
+    else:
+        order = CalculationOrder.objects.get(pk=order_id)
     ensemble = order.ensemble
 
     local = True
-    if order.resource is not None:
-        local = False
+    if is_flowchart is not True:
+        if order.resource is not None:
+            local = False
 
-    step = order.step
+    if stepFlowchart is None:
+        step = order.step
+    else:
+        step = stepFlowchart
 
     mode = "e"  # Mode for input structure (Ensemble/Structure)
     input_structures = None
@@ -3265,7 +3272,8 @@ def dispatcher(drawing, order_id):
     group_order = []
     calculations = []
 
-    input_structures = filter(order, input_structures)
+    if is_flowchart is not True:
+        input_structures = filter(order, input_structures)
     if step.creates_ensemble:
         if order.name.strip() == "":
             e = Ensemble.objects.create(
@@ -3280,18 +3288,30 @@ def dispatcher(drawing, order_id):
 
         order.result_ensemble = e
         order.save()
-
+        
         for s in input_structures:
-            c = Calculation.objects.create(
-                structure=s,
-                order=order,
-                date_submitted=timezone.now(),
-                step=step,
-                parameters=order.parameters,
-                result_ensemble=e,
-                constraints=order.constraints,
-                aux_structure=order.aux_structure,
-            )
+            if is_flowchart is not True:
+                c = Calculation.objects.create(
+                    structure=s,
+                    order=order,
+                    date_submitted=timezone.now(),
+                    step=step,
+                    parameters=order.parameters,
+                    result_ensemble=e,
+                    constraints=order.constraints,
+                    aux_structure=order.aux_structure,
+                )
+            else:
+                c = Calculation.objects.create(
+                    structure=s,
+                    order=order,
+                    date_submitted=timezone.now(),
+                    step=step,
+                    #parameters=order.parameters,
+                    result_ensemble=e,
+                    #constraints=order.constraints,
+                    #aux_structure=order.aux_structure,
+                )
             c.save()
             if local:
                 calculations.append(c)
@@ -3311,15 +3331,26 @@ def dispatcher(drawing, order_id):
             order.result_ensemble = ensemble
             order.save()
         for s in input_structures:
-            c = Calculation.objects.create(
-                structure=s,
-                order=order,
-                date_submitted=timezone.now(),
-                parameters=order.parameters,
-                step=step,
-                constraints=order.constraints,
-                aux_structure=order.aux_structure,
-            )
+            if is_flowchart is not True:
+                c = Calculation.objects.create(
+                    structure=s,
+                    order=order,
+                    date_submitted=timezone.now(),
+                    parameters=order.parameters,
+                    step=step,
+                    constraints=order.constraints,
+                    aux_structure=order.aux_structure,
+                )
+            else:
+                c = Calculation.objects.create(
+                    structure=s,
+                    order=order,
+                    date_submitted=timezone.now(),
+                    #parameters=order.parameters,
+                    step=step,
+                    #constraints=order.constraints,
+                    #aux_structure=order.aux_structure,
+                )
             c.save()
             if local:
                 calculations.append(c)
