@@ -22,12 +22,8 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-try:
-    IS_TEST = os.environ["CALCUS_TEST"]
-except:
-    IS_TEST = False
-else:
-    IS_TEST = True
+IS_CLOUD = "CALCUS_CLOUD" in os.environ
+IS_TEST = "CALCUS_TEST" in os.environ
 
 if IS_TEST:
     SECRET_KEY = "testkey"
@@ -36,6 +32,7 @@ else:
 
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
+POSTGRES_USER = os.environ.get("POSTGRES_HOST", "calcus")
 
 try:
     DEBUG = os.environ["CALCUS_DEBUG"]
@@ -91,10 +88,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "axes",
-    "dbbackup",
     "bulma",
     #'debug_toolbar',
 ]
+
+if not IS_CLOUD:
+    INSTALLED_APPS.append("dbbackup")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -138,7 +137,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
         "NAME": "calcus",
-        "USER": "calcus",
+        "USER": POSTGRES_USER,
         "PASSWORD": POSTGRES_PASSWORD,
         "HOST": POSTGRES_HOST,
         "PORT": "5432",
@@ -179,10 +178,11 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
-DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
-DBBACKUP_STORAGE_OPTIONS = {"location": "/calcus/backups/"}
-DBBACKUP_CLEANUP_KEEP = 10  # Number of old DBs to keep
-DBBACKUP_INTERVAL = 1  # In days (can be a float)
+if not IS_CLOUD:
+    DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
+    DBBACKUP_STORAGE_OPTIONS = {"location": "/calcus/backups/"}
+    DBBACKUP_CLEANUP_KEEP = 10  # Number of old DBs to keep
+    DBBACKUP_INTERVAL = 1  # In days (can be a float)
 
 LOGIN_REDIRECT_URL = "/home"
 
@@ -208,7 +208,6 @@ THROTTLE_ZONES = {
 }
 
 THROTTLE_BACKEND = "throttle.backends.cache.CacheBackend"
-
 THROTTLE_ENABLED = True
 
 MAX_UPLOAD_SIZE = "5242880"  # 5MB max
