@@ -8,7 +8,7 @@ ENV CALCUS_CLOUD True
 
 ADD ./cloud_requirements.txt /calcus/cloud_requirements.txt
 RUN pip install -r /calcus/cloud_requirements.txt
-RUN apt update && apt install postgresql-client dos2unix -y
+RUN apt update && apt install openbabel postgresql-client dos2unix -y
 
 COPY calcus /calcus/calcus
 COPY frontend /calcus/frontend

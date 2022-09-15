@@ -37,6 +37,7 @@ import sys
 import shutil
 import invoke
 import tempfile
+import json
 
 import threading
 from threading import Lock
@@ -729,8 +730,6 @@ def xtb_mep(in_file, calc):
     with open(f"{local_folder}/calc_MEP_trj.xyz") as f:
         lines = f.readlines()
 
-    save_to_results(os.path.join(local_folder, "calc_MEP_trj.xyz"), calc)
-
     num_atoms = lines[0]
     inds = []
     ind = 0
@@ -957,8 +956,6 @@ def xtb_freq(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    a = save_to_results(os.path.join(local_folder, "vibspectrum"), calc)
-
     with open(f"{local_folder}/calc.out") as f:
         lines = f.readlines()
         ind = len(lines) - 1
@@ -975,6 +972,8 @@ def xtb_freq(in_file, calc):
             return ErrorCodes.INVALID_OUTPUT
 
     vib_file = os.path.join(local_folder, "vibspectrum")
+
+    prop = get_or_create(calc.parameters, calc.structure)
 
     if os.path.isfile(vib_file):
         with open(vib_file) as f:
@@ -1002,19 +1001,16 @@ def xtb_freq(in_file, calc):
         if len(vibs) == len(intensities) and len(intensities) > 0:
             x = np.arange(500, 4000, 1)  # Wave number in cm^-1
             spectrum = plot_vibs(x, zip(vibs, intensities))
-            with open(
-                os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "IR.csv"), "w"
-            ) as out:
-                out.write("Wavenumber,Intensity\n")
-                intensities = 1000 * np.array(intensities) / max(intensities)
-                for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
-                    out.write(f"-{_x:.1f},{i:.5f}\n")
+            data = "Wavenumber,Intensity\n"
+            intensities = 1000 * np.array(intensities) / max(intensities)
+            for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
+                data += f"-{_x:.1f},{i:.5f}\n"
 
-    prop = get_or_create(calc.parameters, calc.structure)
+            prop.ir_spectrum = data
+            prop.freq_list = vibs
+
     prop.energy = E
     prop.free_energy = G
-    prop.freq = calc.id
-    prop.save()
 
     lines = [i + "\n" for i in calc.structure.xyz_structure.split("\n")]
     num_atoms = int(lines[0].strip())
@@ -1065,20 +1061,16 @@ def xtb_freq(in_file, calc):
             ind += 1
 
         for ind in range(len(vibs)):
-            with open(
-                os.path.join(CALCUS_RESULTS_HOME, str(calc.id), f"freq_{ind}.xyz"),
-                "w",
-            ) as out:
-                out.write(f"{num_atoms}\n")
-                assert len(struct) == num_atoms
-                out.write("CalcUS\n")
-                for ind2, (a, x, y, z) in enumerate(struct):
-                    out.write(
-                        "{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(
-                            a, x, y, z, *vibs[ind][ind2]
-                        )
-                    )
+            anim = f"{num_atoms}\nCalcUS\n"
+            assert len(struct) == num_atoms
+            for ind2, (a, x, y, z) in enumerate(struct):
+                anim += "{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(
+                    a, x, y, z, *vibs[ind][ind2]
+                )
 
+            prop.freq_animations.append(anim)
+
+    prop.save()
     return ErrorCodes.SUCCESS
 
 
@@ -1266,14 +1258,19 @@ def orca_mo_gen(in_file, calc):
             )
             return ErrorCodes.INVALID_OUTPUT
 
-    save_to_results(f"{local_folder}/in-HOMO.cube", calc)
-    save_to_results(f"{local_folder}/in-LUMO.cube", calc)
-    save_to_results(f"{local_folder}/in-LUMOA.cube", calc)
-    save_to_results(f"{local_folder}/in-LUMOB.cube", calc)
-
     prop = get_or_create(calc.parameters, calc.structure)
-    prop.mo = calc.id
+    cubes = {}
+    for mo in ["HOMO", "LUMO", "LUMOA", "LUMOB"]:
+        path = os.path.join(local_folder, f"in-{mo}.cube")
+        if not os.path.isfile(path):
+            logger.error(f"Cube file {path} does not exist!")
+            return ErrorCodes.MISSING_FILE
+        with open(path) as f:
+            cube = "".join(f.readlines())
+        cubes[mo] = cube
+
     prop.energy = E
+    prop.mo = json.dumps(cubes)
     prop.save()
 
     parse_orca_charges(calc, calc.structure)
@@ -1470,18 +1467,17 @@ def orca_freq(in_file, calc):
     x = np.arange(500, 4000, 1)  # Wave number in cm^-1
     spectrum = plot_vibs(x, zip(vibs, intensities))
 
-    with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "IR.csv"), "w") as out:
-        out.write("Wavenumber,Intensity\n")
-        if len(intensities) > 0:
-            intensities = 1000 * np.array(intensities) / max(intensities)
-            for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
-                out.write(f"-{_x:.1f},{i:.5f}\n")
-
     prop = get_or_create(calc.parameters, calc.structure)
+
+    if len(intensities) > 0:
+        ir_spectrum = "Wavenumber,Intensity\n"
+        intensities = 1000 * np.array(intensities) / max(intensities)
+        for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
+            ir_spectrum += f"-{_x:.1f},{i:.5f}\n"
+        prop.ir_spectrum = ir_spectrum
+
     prop.energy = E
     prop.free_energy = G
-    prop.freq = calc.id
-    prop.save()
 
     raw_lines = calc.structure.xyz_structure.split("\n")
     xyz_lines = []
@@ -1519,11 +1515,7 @@ def orca_freq(in_file, calc):
 
         ind += 1
 
-    with open(
-        f"{os.path.join(CALCUS_RESULTS_HOME, str(calc.id))}/orcaspectrum", "w"
-    ) as out:
-        for vib in vibs:
-            out.write(f"{vib}\n")
+    prop.freq_list = vibs
 
     while lines[ind].find("NORMAL MODES") == -1 and ind < len(lines) - 1:
         ind += 1
@@ -1560,21 +1552,18 @@ def orca_freq(in_file, calc):
             if not is_all_null(v):
                 vibs += [v]
 
+    freq_animations = []
     for ind in range(len(vibs)):
-        with open(
-            os.path.join(CALCUS_RESULTS_HOME, str(calc.id), f"freq_{ind}.xyz"),
-            "w",
-        ) as out:
-            out.write(f"{num_atoms}\n")
-            assert len(struct) == num_atoms
-            out.write("CalcUS\n")
-            for ind2, (a, x, y, z) in enumerate(struct):
-                out.write(
-                    "{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(
-                        a, x, y, z, *vibs[ind][3 * ind2 : 3 * ind2 + 3]
-                    )
-                )
+        anim = f"{num_atoms}\nCalcUS\n"
+        assert len(struct) == num_atoms
+        for ind2, (a, x, y, z) in enumerate(struct):
+            anim += "{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(
+                a, x, y, z, *vibs[ind][3 * ind2 : 3 * ind2 + 3]
+            )
+        freq_animations.append(anim)
 
+    prop.freq_animations = freq_animations
+    prop.save()
     return ErrorCodes.SUCCESS
 
 
@@ -1717,39 +1706,6 @@ def orca_nmr(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def save_to_results(f, calc_obj, multiple=False, out_name=""):
-    s = f.split(".")
-    fname = f.split("/")[-1]
-    if out_name == "":
-        out_name = fname
-    if len(s) == 2:
-        name, ext = s
-        if ext == "xyz":
-            if multiple:
-                a = system(
-                    "obabel {}/{} -O {}/conf.xyz -m".format(
-                        os.path.join(CALCUS_SCR_HOME, str(calc_obj.id)),
-                        f,
-                        os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id)),
-                    ),
-                    force_local=True,
-                )
-            else:
-                copyfile(
-                    os.path.join(CALCUS_SCR_HOME, str(calc_obj.id), fname),
-                    os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id), out_name),
-                )
-        else:
-            copyfile(f, os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id), out_name))
-    elif len(s) == 1:
-        name = s
-        copyfile(f, os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id), out_name))
-    else:
-        logger.error("Invalid file")
-        return ErrorCodes.INVALID_FILE
-    return ErrorCodes.SUCCESS
-
-
 FACTOR = 1
 SIGMA = 0.2
 SIGMA_L = 6199.21
@@ -1875,15 +1831,12 @@ def xtb_stda(in_file, calc):  # TO OPTIMIZE
     yy = plot_peaks(f_x, PP)
     yy = np.array(yy) / max(yy)
 
-    with open(
-        f"{os.path.join(CALCUS_RESULTS_HOME, str(calc.id))}/uvvis.csv", "w"
-    ) as out:
-        out.write("Wavelength (nm), Absorbance\n")
-        for ind, x in enumerate(f_x):
-            out.write(f"{x},{yy[ind]:.8f}\n")
+    uvvis = "Wavelength (nm), Absorbance\n"
+    for ind, x in enumerate(f_x):
+        uvvis += f"{x},{yy[ind]:.8f}\n"
 
     prop = get_or_create(calc.parameters, calc.structure)
-    prop.uvvis = calc.id
+    prop.uvvis = uvvis
     prop.save()
 
     return ErrorCodes.SUCCESS
@@ -2361,16 +2314,13 @@ def gaussian_td(in_file, calc):
     yy = plot_peaks(f_x, PP)
     yy = np.array(yy) / max(yy)
 
-    with open(
-        f"{os.path.join(CALCUS_RESULTS_HOME, str(calc.id))}/uvvis.csv", "w"
-    ) as out:
-        out.write("Wavelength (nm), Absorbance\n")
-        for ind, x in enumerate(f_x):
-            out.write(f"{x},{yy[ind]:.8f}\n")
+    uvvis = "Wavelength (nm), Absorbance\n"
+    for ind, x in enumerate(f_x):
+        uvvis += f"{x},{yy[ind]:.8f}\n"
 
     prop = get_or_create(calc.parameters, calc.structure)
+    prop.uvvis = uvvis
     prop.energy = E
-    prop.uvvis = calc.id
     prop.save()
 
     return ErrorCodes.SUCCESS
@@ -2467,8 +2417,6 @@ def gaussian_freq(in_file, calc):
     prop = get_or_create(calc.parameters, calc.structure)
     prop.energy = SCF
     prop.free_energy = float(0.0030119 + float(G) + float(SCF))
-    prop.freq = calc.id
-    prop.save()
 
     try:
         while outlines[ind].find("Standard orientation:") == -1:
@@ -2539,37 +2487,30 @@ def gaussian_freq(in_file, calc):
         while ind < len(outlines) - 1 and outlines[ind].find("Frequencies --") == -1:
             ind += 1
 
-    for ind in range(len(vibs)):
-        with open(
-            os.path.join(CALCUS_RESULTS_HOME, str(calc.id), f"freq_{ind}.xyz"),
-            "w",
-        ) as out:
-            out.write(f"{num_atoms}\n")
-            # assert len(struct) == num_atoms
-            out.write("CalcUS\n")
-            for ind2, (a, x, y, z) in enumerate(struct):
-                out.write(
-                    "{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(
-                        a, x, y, z, *vibs[ind][ind2]
-                    )
-                )
+    freq_animations = []
 
-    with open(
-        f"{os.path.join(CALCUS_RESULTS_HOME, str(calc.id))}/orcaspectrum", "w"
-    ) as out:
-        for vib in wavenumbers:
-            out.write(f"{vib:.1f}\n")
+    for ind in range(len(vibs)):
+        anim = f"{num_atoms}\nCalcUS\n"
+        for ind2, (a, x, y, z) in enumerate(struct):
+            anim += "{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(
+                a, x, y, z, *vibs[ind][ind2]
+            )
+        freq_animations.append(anim)
 
     x = np.arange(500, 4000, 1)  # Wave number in cm^-1
     spectrum = plot_vibs(x, zip(wavenumbers, intensities))
 
-    with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "IR.csv"), "w") as out:
-        out.write("Wavenumber,Intensity\n")
-        intensities = 1000 * np.array(intensities) / max(intensities)
-        for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
-            out.write(f"-{_x:.1f},{i:.5f}\n")
+    ir_spectrum = "Wavenumber,Intensity\n"
+
+    intensities = 1000 * np.array(intensities) / max(intensities)
+    for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
+        ir_spectrum += f"-{_x:.1f},{i:.5f}\n"
 
     parse_gaussian_charges(calc, calc.structure)
+    prop.freq_list = wavenumbers
+    prop.freq_animations = freq_animations
+    prop.ir_spectrum = ir_spectrum
+    prop.save()
     return ErrorCodes.SUCCESS
 
 
@@ -3020,15 +2961,9 @@ def analyse_opt_ORCA(calc):
 
 def analyse_opt_xtb(calc):
     if calc.step.name == "Minimum Energy Path":
-        if calc.status in [2, 3]:
-            path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "calc_MEP_trj.xyz")
-        else:
-            path = os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc_MEP_trj.xyz")
+        path = os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc_MEP_trj.xyz")
     else:
-        if calc.status in [2, 3]:
-            path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "xtbopt.out")
-        else:
-            path = os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbopt.log")
+        path = os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbopt.log")
 
     if not os.path.isfile(path):
         return
@@ -3088,12 +3023,7 @@ def analyse_opt_xtb(calc):
 
 
 def analyse_opt_Gaussian(calc):
-    if calc.status in [2, 3]:
-        calc_path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "calc.out")
-    elif calc.status == 1:
-        calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")
-    else:
-        return None
+    calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")
 
     if not os.path.isfile(calc_path):
         return
@@ -3389,10 +3319,6 @@ def dispatcher(drawing, order_id):
         calc = order.start_calc
         fid = order.start_calc_frame
         mode = "c"
-        if calc.status in [2, 3]:
-            calc_path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "calc.out")
-        else:
-            calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")
 
         molecule = calc.result_ensemble.parent_molecule
         ensemble = Ensemble.objects.create(
@@ -3543,7 +3469,6 @@ def run_calc(calc_id):
 
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
 
-    res_dir = os.path.join(CALCUS_RESULTS_HOME, str(calc.id))
     workdir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     if calc.status == 3:  # Already revoked:
@@ -3563,7 +3488,6 @@ def run_calc(calc_id):
     in_file = os.path.join(workdir, "in.xyz")
 
     if calc.status == 0:
-        os.makedirs(res_dir, exist_ok=True)
         os.makedirs(workdir, exist_ok=True)
 
         with open(in_file, "w") as out:
@@ -3620,21 +3544,22 @@ def run_calc(calc_id):
             calc.status = 3
             calc.error_message = "Unknown termination"
 
-        calc.save()
-
     logger.info(f"Calc {calc_id} finished")
-
-    # just calc.out/calc.log?
-    for f in glob.glob(f"{workdir}/*.out"):
-        fname = f.split("/")[-1]
-        copyfile(f, f"{res_dir}/{fname}")
-
-    for f in glob.glob(f"{workdir}/*.log"):
-        fname = f.split("/")[-1].replace(".log", ".out")
-        copyfile(f, f"{res_dir}/{fname}")
 
     if calc.step.creates_ensemble:
         analyse_opt(calc.id)
+
+    output_files = {}
+    for log_name in glob.glob(
+        os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.log")
+    ) + glob.glob(os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.out")):
+        fname = os.path.basename(log_name)[:-4]
+        with open(log_name) as f:
+            log = "".join(f.readlines())
+        output_files[fname] = log
+
+    calc.output_files = json.dumps(output_files)
+    calc.save()
 
     global cache_ind
 
@@ -3729,10 +3654,6 @@ def _del_calculation(calc):
     calc.delete()
     try:
         rmtree(os.path.join(CALCUS_SCR_HOME, str(calc.id)))
-    except OSError:
-        pass
-    try:
-        rmtree(os.path.join(CALCUS_RESULTS_HOME, str(calc.id)))
     except OSError:
         pass
 
