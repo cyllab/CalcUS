@@ -106,19 +106,7 @@ class ClusterDaemon:
         except ClusterAccess.DoesNotExist:
             return ConnectionCodes.INVALID_CLUSTER_ACCESS
 
-        a = self.setup_connection(conn, password)
-
-        if isinstance(a, int):
-            return a
-
-        self.locks[a[0].id] = Lock()
-
-        b = self.check_binaries(a)
-
-        if not isinstance(b, int):
-            self.connections[a[0].id] = a
-            return a
-        return b
+        return self.setup_connection(conn, password)
 
     def check_binaries(self, conn):
         lock = self.locks[conn[0].id]
@@ -160,6 +148,21 @@ class ClusterDaemon:
                 )
             )
             return ConnectionCodes.COULD_NOT_CONNECT
+
+        self.locks[conn.id] = Lock()
+
+        try:
+            b = self.check_binaries([conn, _conn])
+        except paramiko.ssh_exception.SSHException:
+            logger.warning(
+                f"Could not connect to cluster {addr} with username {username}: invalid password"
+            )
+            del self.locks[conn.id]
+            return ConnectionCodes.INVALID_KEY_PASSWORD
+
+        if b == ConnectionCodes.NO_CALCUS_FOLDER:
+            del self.locks[conn.id]
+            return b
 
         return [conn, _conn]
 
