@@ -96,27 +96,33 @@ def direct_command(command, conn, lock, attempt_count=1):
             time.sleep(2)
             return direct_command(command, conn, lock, attempt_count + 1)
 
-    try:
-        response = conn[1].run("source ~/.bashrc; " + command, hide="both")
-    except invoke.exceptions.UnexpectedExit as e:
-        lock.release()
-        if e.result.exited == 1 and (
-            e.result.stderr.find("Invalid job id specified") != -1
-            or e.result.stdout.find("Invalid job id specified") != -1
-        ):
-            return []
+    # Do not run the actual calculation in a test
+    if not is_test or (
+        command.find("xtb") == -1
+        and command.find("stda") == -1
+        and command.find("crest") == -1
+    ):
+        try:
+            response = conn[1].run("source ~/.bashrc; " + command, hide="both")
+        except invoke.exceptions.UnexpectedExit as e:
+            lock.release()
+            if e.result.exited == 1 and (
+                e.result.stderr.find("Invalid job id specified") != -1
+                or e.result.stdout.find("Invalid job id specified") != -1
+            ):
+                return []
 
-        logger.info(f"Command {command} terminated with exception: {e}")
-        return []
-    except ConnectionResetError as e:
-        logger.debug("Connection reset while executing command")
-        return retry()
-    except TimeoutError as e:
-        logger.debug("Connection timed out while executing command")
-        return retry()
-    except OSError as e:
-        logger.debug("Socked closed while executing command")
-        return retry()
+            logger.info(f"Command {command} terminated with exception: {e}")
+            return []
+        except ConnectionResetError as e:
+            logger.debug("Connection reset while executing command")
+            return retry()
+        except TimeoutError as e:
+            logger.debug("Connection timed out while executing command")
+            return retry()
+        except OSError as e:
+            logger.debug("Socked closed while executing command")
+            return retry()
 
     lock.release()
 

@@ -14,29 +14,35 @@ ENV CALCUS_TEST_KEY_HOME "/calcus/scratch/keys"
 
 ENV EBROOTORCA "/binaries/orca"
 ENV GAUSS_EXEDIR "/binaries/g16"
-ENV XTBHOME "/binaries/xtb"
 ENV XTB4STDAHOME "/binaries/xtb"
+ENV XTBPATH "/binaries/xtb/xtb:$XTB4STDAHOME"
+ENV STDAHOME "/binaries/xtb"
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/binaries/orca"
 
-ENV PATH=$PATH:"/binaries/xtb:/binaries/g16:/binaries/orca:/binaries/other:/binaries/openmpi"
+ENV PATH=$PATH:$XTB4STDAHOME/xtb/bin:$XTB4STDAHOME:$EBROOTORCA:$GAUSS_EXEDIR
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/binaries/orca:/usr/lib/openmpi/
 
 ADD ./requirements.txt /calcus/requirements.txt
 RUN pip install -r /calcus/requirements.txt
 RUN apt update && apt install openbabel sshpass postgresql-client dos2unix openmpi-bin -y
 
+RUN mkdir -p /binaries/
+
 COPY calcus /calcus/calcus
 COPY scripts /calcus/scripts
 COPY static /calcus/static
 COPY frontend /calcus/frontend
 COPY docker /calcus/docker
+COPY bin /binaries/xtb
 COPY manage.py /calcus/manage.py
 COPY docker/cluster/config /etc/ssh/ssh_config
 
 WORKDIR /calcus/
 
 RUN ls /calcus/
+
 RUN dos2unix scripts/*
+RUN python scripts/extract_xtb.py
 
 RUN adduser --disabled-password --gecos '' calcus  
 
