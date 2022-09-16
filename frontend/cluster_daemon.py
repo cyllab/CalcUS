@@ -415,6 +415,7 @@ class ClusterDaemon:
             for conn_name in list(self.connections.keys()):
                 access, conn = self.connections[conn_name]
 
+                access.refresh_from_db()
                 if access.last_connected - timezone.now() > timezone.timedelta(
                     minutes=15
                 ):
@@ -424,7 +425,6 @@ class ClusterDaemon:
                     self.disconnect(access.id)
                     continue
 
-                access.refresh_from_db()
                 access.last_connected = timezone.now()
                 access.status = "Connected"
                 access.save()

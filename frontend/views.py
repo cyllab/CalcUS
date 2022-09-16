@@ -2826,7 +2826,7 @@ def vib_table(request, pk):
 
     response = ""
     for ind, vib in enumerate(prop.freq_list):
-        response += f'<div class="column is-narrow"><a class="button" id="vib_mode_{ind}" onclick="animate_vib({ind});">{vib}</a></div>'
+        response += f'<div class="column is-narrow"><a class="button" id="vib_mode_{ind}" onclick="animate_vib({ind});">{vib:.1f}</a></div>'
 
     return HttpResponse(response)
 
@@ -3218,13 +3218,6 @@ def get_structure(request):
 @login_required
 def get_vib_animation(request):
     if request.method == "POST":
-        """
-        url = clean(request.POST["id"])
-        try:
-            id = int(url.split("/")[-1])
-        except ValueError:
-            return HttpResponse(status=404)
-        """
         if "id" not in request.POST:
             return HttpResponse(status=400)
 
@@ -3248,9 +3241,7 @@ def get_vib_animation(request):
 
         num = int(clean(request.POST["num"]))
 
-        animation = prop.freq_animations[
-            num + 1
-        ]  # Arrays in PostgreSQL are numbered starting from 1
+        animation = prop.freq_animations[num]
         return HttpResponse(animation)
 
 
