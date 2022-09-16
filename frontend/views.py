@@ -31,6 +31,7 @@ from io import BytesIO
 import basis_set_exchange
 import numpy as np
 import tempfile
+import json
 import ccinput
 
 from cryptography.hazmat.primitives import serialization
@@ -2576,24 +2577,19 @@ def conformer_table_post(request):
 
 @login_required
 def uvvis(request, pk):
-    calc = Calculation.objects.get(pk=pk)
+    try:
+        prop = Property.objects.get(pk=pk)
+    except Property.DoesNotExist:
+        return HttpResponse(status=404)
 
     profile = request.user.profile
 
-    if calc.order.author != profile and not profile_intersection(
-        profile, calc.order.author
-    ):
-        return HttpResponse(status=403)
+    if not can_view_structure(prop.parent_structure, profile):
+        return HttpResponse(status=404)
 
-    spectrum_file = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "uvvis.csv")
-
-    if os.path.isfile(spectrum_file):
-        with open(spectrum_file, "rb") as f:
-            response = HttpResponse(f, content_type="text/csv")
-            response["Content-Disposition"] = f"attachment; filename={id}.csv"
-            return response
-    else:
-        return HttpResponse(status=204)
+    response = HttpResponse(prop.uvvis, content_type="text/csv")
+    response["Content-Disposition"] = f"attachment; filename={id}.csv"
+    return response
 
 
 @login_required
@@ -2711,33 +2707,36 @@ def get_cube(request):
     if request.method == "POST":
         id = int(clean(request.POST["id"]))
         orb = int(clean(request.POST["orb"]))
-        calc = Calculation.objects.get(pk=id)
+
+        try:
+            prop = Property.objects.get(pk=id)
+        except Property.DoesNotExist:
+            return HttpResponse(status=404)
 
         profile = request.user.profile
 
-        if calc.order.author != profile and not profile_intersection(
-            profile, calc.order.author
-        ):
-            return HttpResponse(status=403)
+        if not can_view_structure(prop.parent_structure, profile):
+            return HttpResponse(status=404)
+
+        if len(prop.mo) == 0:
+            return HttpResponse(status=204)
+
+        cubes = json.loads(prop.mo)
 
         if orb == 0:
-            cube_file = "in-HOMO.cube"
+            cube_mo = "HOMO"
         elif orb == 1:
-            cube_file = "in-LUMO.cube"
+            cube_mo = "LUMO"
         elif orb == 2:
-            cube_file = "in-LUMOA.cube"
+            cube_mo = "LUMOA"
         elif orb == 3:
-            cube_file = "in-LUMOB.cube"
+            cube_mo = "LUMOB"
         else:
             return HttpResponse(status=204)
-        spectrum_file = os.path.join(CALCUS_RESULTS_HOME, str(id), cube_file)
 
-        if os.path.isfile(spectrum_file):
-            with open(spectrum_file, "r") as f:
-                lines = f.readlines()
-            return HttpResponse("".join(lines))
-        else:
-            return HttpResponse(status=204)
+        if cube_mo in cubes:
+            return HttpResponse(cubes[cube_mo])
+
     return HttpResponse(status=204)
 
 
@@ -2795,26 +2794,20 @@ def nmr(request):
 
 @login_required
 def ir_spectrum(request, pk):
-    id = str(pk)
     try:
-        calc = Calculation.objects.get(pk=id)
-    except Calculation.DoesNotExist:
+        prop = Property.objects.get(pk=pk)
+    except Property.DoesNotExist:
         return HttpResponse(status=404)
 
     profile = request.user.profile
 
-    if calc.order.author != profile and not profile_intersection(
-        profile, calc.order.author
-    ):
-        return HttpResponse(status=403)
+    if not can_view_structure(prop.parent_structure, profile):
+        return HttpResponse(status=404)
 
-    spectrum_file = os.path.join(CALCUS_RESULTS_HOME, id, "IR.csv")
-
-    if os.path.isfile(spectrum_file):
-        with open(spectrum_file, "rb") as f:
-            response = HttpResponse(f, content_type="text/csv")
-            response["Content-Disposition"] = f"attachment; filename={id}.csv"
-            return response
+    if prop.ir_spectrum != "":
+        response = HttpResponse(prop.ir_spectrum, content_type="text/csv")
+        response["Content-Disposition"] = f"attachment; filename={id}.csv"
+        return response
     else:
         return HttpResponse(status=204)
 
@@ -2822,52 +2815,18 @@ def ir_spectrum(request, pk):
 @login_required
 def vib_table(request, pk):
     try:
-        calc = Calculation.objects.get(pk=pk)
-    except Calculation.DoesNotExist:
+        prop = Property.objects.get(pk=pk)
+    except Property.DoesNotExist:
         return HttpResponse(status=404)
 
     profile = request.user.profile
 
-    if calc.order.author != profile and not profile_intersection(
-        profile, calc.order.author
-    ):
-        return HttpResponse(status=403)
-
-    vib_file = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "vibspectrum")
-    orca_file = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "orcaspectrum")
-
-    vibs = []
-
-    if os.path.isfile(vib_file):
-        with open(vib_file) as f:
-            lines = f.readlines()
-
-        for line in lines:
-            if len(line.split()) > 4 and line[0] != "#":
-                sline = line.split()
-                try:
-                    a = float(sline[1])
-                    if a == 0.0:
-                        continue
-                except ValueError:
-                    pass
-                vib = float(line[20:33].strip())
-                vibs.append(vib)
-
-    elif os.path.isfile(orca_file):
-        with open(orca_file) as f:
-            lines = f.readlines()
-
-        for line in lines:
-            vibs.append(line.strip())
-    else:
-        return HttpResponse(status=204)
+    if not can_view_structure(prop.parent_structure, profile):
+        return HttpResponse(status=404)
 
     response = ""
-    for ind, vib in enumerate(vibs):
-        response += '<div class="column is-narrow"><a class="button" id="vib_mode_{}" onclick="animate_vib({});">{}</a></div>'.format(
-            ind, ind, vib
-        )
+    for ind, vib in enumerate(prop.freq_list):
+        response += f'<div class="column is-narrow"><a class="button" id="vib_mode_{ind}" onclick="animate_vib({ind});">{vib}</a></div>'
 
     return HttpResponse(response)
 
@@ -3259,79 +3218,40 @@ def get_structure(request):
 @login_required
 def get_vib_animation(request):
     if request.method == "POST":
+        """
         url = clean(request.POST["id"])
         try:
             id = int(url.split("/")[-1])
         except ValueError:
             return HttpResponse(status=404)
+        """
+        if "id" not in request.POST:
+            return HttpResponse(status=400)
+
+        if "num" not in request.POST:
+            return HttpResponse(status=400)
 
         try:
-            calc = Calculation.objects.get(pk=id)
-        except Calculation.DoesNotExist:
+            id = int(clean(request.POST["id"]))
+        except ValueError:
+            return HttpResponse(status=400)
+
+        try:
+            prop = Property.objects.get(pk=id)
+        except Property.DoesNotExist:
             return HttpResponse(status=404)
 
         profile = request.user.profile
 
-        if not can_view_calculation(calc, profile):
+        if not can_view_structure(prop.parent_structure, profile):
             return HttpResponse(status=403)
 
         num = int(clean(request.POST["num"]))
-        expected_file = os.path.join(CALCUS_RESULTS_HOME, str(id), f"freq_{num}.xyz")
-        if os.path.isfile(expected_file):
-            with open(expected_file) as f:
-                lines = f.readlines()
 
-            return HttpResponse("".join(lines))
-        else:
-            return HttpResponse(status=204)
-
-
-@login_required
-def get_scan_animation(request):
-    if request.method == "POST":
-        url = clean(request.POST["id"])
-        id = int(url.split("/")[-1])
-
-        try:
-            calc = Calculation.objects.get(pk=id)
-        except Calculation.DoesNotExist:
-            return HttpResponse(status=404)
-
-        profile = request.user.profile
-
-        if not can_view_calculation(calc, profile):
-            return HttpResponse(status=403)
-
-        type = calc.type
-
-        if type != 5:
-            return HttpResponse(status=403)
-
-        expected_file = os.path.join(CALCUS_RESULTS_HOME, id, "xtbscan.xyz")
-        if os.path.isfile(expected_file):
-            with open(expected_file) as f:
-                lines = f.readlines()
-
-            inds = []
-            num_atoms = lines[0]
-
-            for ind, line in enumerate(lines):
-                if line == num_atoms:
-                    inds.append(ind)
-
-            inds.append(len(lines) - 1)
-            xyz_files = []
-            for ind, _ in enumerate(inds[1:]):
-                xyz = ""
-                for _ind in range(inds[ind - 1], inds[ind]):
-                    if lines[_ind].strip() != "":
-                        xyz += lines[_ind].strip() + "\\n"
-                xyz_files.append(xyz)
-            return render(
-                request, "frontend/scan_animation.html", {"xyz_files": xyz_files[1:]}
-            )
-        else:
-            return HttpResponse(status=204)
+        animation = prop.freq_animations[
+            num + 1
+        ]  # Arrays in PostgreSQL are numbered starting from 1
+        return HttpResponse(animation)
 
 
 @login_required
@@ -3346,39 +3266,31 @@ def download_log(request, pk):
     if not can_view_calculation(calc, profile):
         return HttpResponse(status=403)
 
-    if calc.status == 2 or calc.status == 3:
-        dir = os.path.join(CALCUS_RESULTS_HOME, str(pk))
-    elif calc.status == 1:
-        dir = os.path.join(CALCUS_SCR_HOME, str(pk))
-    elif calc.status == 0:
-        return HttpResponse(status=204)
-
-    logs = glob.glob(dir + "/*.out")
-    logs += glob.glob(dir + "/*.log")
-
     name = f"{clean_filename(calc.order.molecule_name)}_calc{calc.id}"
 
-    if len(logs) > 1:
+    if len(calc.output_files) == 0:
+        logger.warning(f"No log to download! (Calculation {pk})")
+        return HttpResponse(status=404)
+
+    data = json.loads(calc.output_files)
+    if len(data) > 1:
         mem = BytesIO()
         with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zip:
-            for f in logs:
-                if basename(f) != "calc":
-                    zip.write(f, name + basename(f))
-                else:
-                    zip.write(f, name)
+            # Write the main file, then others with suffixes
+            zip.writestr(data["calc"], name)
+
+            for logname, log in data.items():
+                if logname == "calc":
+                    continue
+                zip.write(log, f"{name}_{logname}")
 
         response = HttpResponse(mem.getvalue(), content_type="application/zip")
         response["Content-Disposition"] = f'attachment; filename="{name}.zip"'
         return response
-    elif len(logs) == 1:
-        with open(logs[0]) as f:
-            lines = f.readlines()
-            response = HttpResponse("".join(lines), content_type="text/plain")
-            response["Content-Disposition"] = f'attachment; filename="{name}.log"'
-            return response
     else:
-        logger.warning(f"No log to download! (Calculation {pk})")
-        return HttpResponse(status=404)
+        response = HttpResponse(data["calc"], content_type="text/plain")
+        response["Content-Disposition"] = f'attachment; filename="{name}.log"'
+        return response
 
 
 @login_required
@@ -3395,23 +3307,21 @@ def download_all_logs(request, pk):
 
     order_logs = {}
     for calc in order.calculation_set.all():
-        if calc.status == 2 or calc.status == 3:
-            dir = os.path.join(CALCUS_RESULTS_HOME, str(calc.id))
-        elif calc.status == 1:
-            dir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-        elif calc.status == 0:
+        if calc.status in [0, 1]:
             return HttpResponse(status=204)
 
-        logs = glob.glob(dir + "/*.out")
-        logs += glob.glob(dir + "/*.log")
-
-        order_logs[calc.id] = logs
+        if len(calc.output_files) > 0:
+            order_logs[calc.id] = json.loads(calc.output_files)
 
     mem = BytesIO()
     with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zip:
-        for c in order_logs.keys():
-            for f in order_logs[c]:
-                zip.write(f, f"{c}_" + basename(f))
+        for cid, calc in order_logs.items():
+            for logname, log in calc.items():
+                if logname == "calc":
+                    _logname = ""
+                else:
+                    _logname = f"_{logname}"
+                zip.writestr(f, f"{order.molecule_name}_order{pk}_calc{cid}{_logname}")
 
     response = HttpResponse(mem.getvalue(), content_type="application/zip")
     response["Content-Disposition"] = f'attachment; filename="order_{pk}.zip"'
@@ -3439,24 +3349,13 @@ def log(request, pk):
     if not can_view_calculation(calc, profile):
         return HttpResponse(status=403)
 
-    if calc.status == 2 or calc.status == 3:
-        dir = os.path.join(CALCUS_RESULTS_HOME, str(pk))
-    elif calc.status == 1:
-        dir = os.path.join(CALCUS_SCR_HOME, str(pk))
-    elif calc.status == 0:
+    if len(calc.output_files) == 0:
         return HttpResponse(status=204)
 
-    for out in glob.glob(dir + "/*.out"):
-        out_name = out.split("/")[-1]
-        with open(out) as f:
-            lines = f.readlines()
-        response += LOG_HTML.format(out_name, "".join(lines))
+    data = json.loads(calc.output_files)
 
-    for log in glob.glob(dir + "/*.log"):
-        log_name = log.split("/")[-1]
-        with open(log) as f:
-            lines = f.readlines()
-        response += LOG_HTML.format(log_name, "".join(lines))
+    for logname, log in data.items():
+        response += LOG_HTML.format(log_name, log)
 
     return HttpResponse(response)
 
@@ -4092,14 +3991,20 @@ def download_project_logs(proj, profile, scope, details, folders):
                             + f"_conf{s.number}"
                         )
 
-                    log_name = log_name.replace(" ", "_")
-                    try:
-                        copyfile(
-                            os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "calc.out"),
-                            os.path.join(e_dir, log_name + ".log"),
-                        )
-                    except FileNotFoundError:
-                        logger.warning(f"Calculation not found: {calc.id}")
+                    if len(calc.output_files) == 0:
+                        continue
+
+                    logs = json.loads(calc.output_files)
+
+                    for subname, log in logs.items():
+                        if subname == "calc":
+                            _log_name = log_name + ".log"
+                        else:
+                            _log_name = f"{log_name}_{subname}.log"
+
+                        with open(os.path.join(e_dir, _log_name), "w") as out:
+                            out.write(log)
+
                     if (
                         calc.parameters.software == "xtb"
                     ):  # xtb logs don't contain the structure
@@ -4287,25 +4192,38 @@ def download_folder(request, pk):
             for o in related_orders:
                 for c in o.calculation_set.all():
                     if c.status == 2:
-                        name = clean_filename(
+                        log_name = clean_filename(
                             prefix
                             + c.parameters.file_name
                             + "_"
                             + c.step.short_name
                             + "_conf"
                             + str(c.structure.number)
-                            + ".log"
                         )
-                        zip.write(
-                            os.path.join(CALCUS_RESULTS_HOME, str(c.id), "calc.out"),
-                            os.path.join(path, clean_filename(folder.name), name),
-                        )
+
+                        if len(c.output_files) == 0:
+                            continue
+
+                        logs = json.loads(c.output_files)
+                        for subname, log in logs.items():
+                            if subname == "calc":
+                                _log_name = log_name + ".log"
+                            else:
+                                _log_name = f"{log_name}_{subname}.log"
+
+                            zip.writestr(
+                                log,
+                                os.path.join(
+                                    path, clean_filename(folder.name), _log_name
+                                ),
+                            )
+
                         if c.parameters.software == "xtb":
                             zip.writestr(
                                 os.path.join(
                                     path,
                                     clean_filename(folder.name),
-                                    name.replace(".log", ".xyz"),
+                                    f"{name}.xyz",
                                 ),
                                 c.structure.xyz_structure,
                             )
@@ -4413,14 +4331,9 @@ def relaunch_calc(request):
         return HttpResponse(status=204)
 
     scr_dir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    res_dir = os.path.join(CALCUS_RESULTS_HOME, str(calc.id))
 
     try:
         rmtree(scr_dir)
-    except FileNotFoundError:
-        pass
-    try:
-        rmtree(res_dir)
     except FileNotFoundError:
         pass
 
