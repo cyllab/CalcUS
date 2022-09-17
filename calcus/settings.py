@@ -32,7 +32,7 @@ else:
 
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
-POSTGRES_USER = os.environ.get("POSTGRES_HOST", "calcus")
+POSTGRES_USER = os.environ.get("POSTGRES_USER", "calcus")
 
 try:
     DEBUG = os.environ["CALCUS_DEBUG"]
@@ -218,6 +218,20 @@ INTERNAL_IPS = [
 SESSION_COOKIE_NAME = "CALCUS_SESSION_COOKIE"
 
 ALLOW_LOCAL_CALC = True
+
+# For local calculations, limit the size of systems to this number of atoms or disable the limitation with -1
+LOCAL_MAX_ATOMS = -1
+
+# For local calculations, only allow these theory levels to be used (using the ccinput theory levels)
+LOCAL_ALLOWED_THEORY_LEVELS = [
+    "xtb",
+    "semiempirical",
+    "hf",
+    "special",  # hf3c, pbeh3c, r2scan3c, b973c
+    "dft",
+    "mp2",
+    "cc",
+]
 
 PING_SATELLITE = os.getenv("CALCUS_PING_SATELLITE", "False")
 PING_CODE = os.getenv("CALCUS_PING_CODE", "default")

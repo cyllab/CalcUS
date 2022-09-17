@@ -59,9 +59,10 @@ jobs:
         python3 manage.py init_static_obj
         coverage run --omit frontend/test_cluster.py manage.py test
       env:
-        POSTGRES_HOST: postgres
+        POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
         POSTGRES_PASSWORD: postgres
+        POSTGRES_USER: calcus
         CALCUS_TEST: True
         IS_TEST_CLUSTER_DAEMON: True
         CAN_USE_CACHED_LOGS: true
