@@ -30,7 +30,7 @@ from django.contrib.auth import authenticate
 from django.test import TestCase, Client
 from django.http import HttpRequest
 from .gen_calc import gen_calc, gen_param
-from .calcusliveserver import SCR_DIR, RESULTS_DIR
+from .calcusliveserver import SCR_DIR
 
 tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 
@@ -1027,14 +1027,10 @@ class CalculationTests(TestCase):
     def tearDown(self):
         if os.path.isdir(SCR_DIR):
             rmtree(SCR_DIR)
-        if os.path.isdir(RESULTS_DIR):
-            rmtree(RESULTS_DIR)
 
     def setUp(self):
         if not os.path.isdir(SCR_DIR):
             os.mkdir(SCR_DIR)
-        if not os.path.isdir(RESULTS_DIR):
-            os.mkdir(RESULTS_DIR)
 
         call_command("init_static_obj")
         self.username = "Tester"
@@ -1175,14 +1171,10 @@ class MiscTests(TestCase):
     def tearDown(self):
         if os.path.isdir(SCR_DIR):
             rmtree(SCR_DIR)
-        if os.path.isdir(RESULTS_DIR):
-            rmtree(RESULTS_DIR)
 
     def setUp(self):
         if not os.path.isdir(SCR_DIR):
             os.mkdir(SCR_DIR)
-        if not os.path.isdir(RESULTS_DIR):
-            os.mkdir(RESULTS_DIR)
 
         call_command("init_static_obj")
         self.username = "Tester"

@@ -43,7 +43,7 @@ from celery.contrib.testing.worker import start_worker
 from calcus.celery import app
 from .models import *
 from .libxyz import *
-from .calcusliveserver import CalcusLiveServer, SCR_DIR, RESULTS_DIR, tests_dir
+from .calcusliveserver import CalcusLiveServer, SCR_DIR, tests_dir
 
 
 class InterfaceTests(CalcusLiveServer):
