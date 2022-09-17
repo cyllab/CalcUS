@@ -3345,7 +3345,7 @@ def log(request, pk):
 
     data = json.loads(calc.output_files)
 
-    for logname, log in data.items():
+    for log_name, log in data.items():
         response += LOG_HTML.format(log_name, log)
 
     return HttpResponse(response)

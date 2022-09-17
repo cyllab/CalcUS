@@ -1580,7 +1580,9 @@ def orca_scan(in_file, calc):
 
     if has_scan:
         ret = launch_orca_calc(
-            in_file, calc, ["calc.out", "calc.relaxscanact.dat", "calc.allxyz"]
+            in_file,
+            calc,
+            ["calc.out", "calc.relaxscanact.dat", "calc.allxyz", "calc_trj.xyz"],
         )
     else:
         ret = launch_orca_calc(in_file, calc, ["calc.out", "calc.xyz"])
