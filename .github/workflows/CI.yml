@@ -53,14 +53,13 @@ jobs:
         PGPASSWORD=postgres createdb -h localhost -p 5432 -U calcus test_calcus
     - name: Run tests
       run: |
-        python3 scripts/wait_for_postgres.py
         python3 manage.py makemigrations 
         python3 manage.py makemigrations frontend
         python3 manage.py migrate
         python3 manage.py init_static_obj
         coverage run --omit frontend/test_cluster.py manage.py test
       env:
-        POSTGRES_HOST: localhost
+        POSTGRES_HOST: postgres
         POSTGRES_PORT: 5432
         POSTGRES_PASSWORD: postgres
         CALCUS_TEST: True
