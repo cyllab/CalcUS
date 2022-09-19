@@ -147,13 +147,13 @@
 						<div class="select">
 							<select name="calc_solvation_radii" id="calc_solvation_radii">
 								<option class="solvation_model_specific avail_SMD">SMD18</option>
-								<option class="solvation_model_specific avail_SMD">Default</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM">UFF</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM">UA0</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM">UAHF</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM">UAKS</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM">Pauling</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM">Bondi</option>
+								<option>Default</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UFF</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UA0</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UAHF</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UAKS</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">Pauling</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">Bondi</option>
 							</select>
 						</div>
 					</div>
@@ -258,16 +258,17 @@
 				<div class="control" >
 					<div class="select">
 						<select name="calc_theory_level" id="calc_theory_level" onchange="refresh_availabilities();">
-							<option class="type_exclusion not_avail_UV-Vis_Calculation">Semi-empirical</option>
-							<option>HF</option>
-							<option>DFT</option>
-							<option class="software_specific avail_ORCA">RI-MP2</option>
+							<option class="hidden software_specific avail_xtb" value="xtb">xtb</option>
+							<option class="type_exclusion not_avail_UV-Vis_Calculation" value="semiempirical">Semi-empirical</option>
+							<option value="hf">HF</option>
+							<option value="dft">DFT</option>
+							<option class="software_specific avail_ORCA" value="mp2">RI-MP2</option>
 						</select>
 					</div>
 				</div>
 			</div>
 			<div class="columns">
-				<div class="method_specific avail_DFT">
+				<div class="method_specific avail_dft">
 					<div class="column is-narrow software_specific avail_ORCA ">
 						<div class="field">
 							<label class="label">Special</label>
@@ -278,7 +279,7 @@
 						</div>
 					</div>
 				</div>
-				<div class="method_specific avail_HF">
+				<div class="method_specific avail_hf">
 					<div class="column is-narrow software_specific avail_ORCA ">
 						<div class="field">
 							<label class="label">Special</label>
@@ -289,7 +290,7 @@
 						</div>
 					</div>
 				</div>
-				<div class="column method_specific avail_Semi-empirical">
+				<div class="column method_specific avail_semiempirical">
 					<div class="field">
 						<label class="label">Method</label>
 						<div class="control">
@@ -306,7 +307,7 @@
 				</div>
 
 
-				<div class="column method_specific avail_DFT">
+				<div class="column method_specific avail_dft">
 					<div class="field" id="calc_functional_field">
 						<label class="label">Functional</label>
 						<div class="control">
@@ -315,7 +316,7 @@
 						<p class="check_msg is-danger" id="functional_check_msg"></p>
 					</div>
 				</div>
-				<div class="column method_specific avail_DFT avail_RI-MP2 avail_HF">
+				<div class="column method_specific avail_dft avail_mp2 avail_hf">
 					<div class="field" id="calc_basis_set_field">
 						<label class="label">Basis set</label>
 						<div class="control">
@@ -329,63 +330,70 @@
 		</div>
 		<br />
 		<div>
-				<div>
-					<div class="field" id="custom_specifications_field">
-						<label class="label">Specifications</label>
-						<div class="control">
-							<input class="input" name="calc_specifications" id="calc_specifications" type="text" placeholder="" >
-						</div>
+			<div>
+				<div class="field" id="custom_specifications_field">
+					<label class="label">Specifications</label>
+					<div class="control">
+						<input class="input" name="calc_specifications" id="calc_specifications" type="text" placeholder="" >
 					</div>
 				</div>
-				<div class="method_specific avail_DFT">
-					<div class="field software_specific avail_Gaussian">
-						<label class="label">Density Fitting</label>
-						<div class="control">
-							<input class="input" name="calc_df" id="calc_df" type="text" placeholder="" >
-						</div>
+			</div>
+			<div class="method_specific avail_dft">
+				<div class="field software_specific avail_Gaussian">
+					<label class="label">Density Fitting</label>
+					<div class="control">
+						<input class="input" name="calc_df" id="calc_df" type="text" placeholder="" >
 					</div>
 				</div>
-				<div class="method_specific avail_DFT avail_RI-MP2 avail_HF">
-					<div class="field" id="custom_bs_field">
-						<label class="label">Custom basis sets</label>
-						<div class="control">
-							<input class="input" name="calc_custom_bs" id="calc_custom_bs" type="text" placeholder="" >
-						<button class="button is-info" id="pick_bs_button" type="button">Pick custom basis sets</button>
-						</div>
+			</div>
+			<div class="method_specific avail_dft avail_mp2 avail_hf">
+				<div class="field" id="custom_bs_field">
+					<label class="label">Custom basis sets</label>
+					<div class="control">
+						<input class="input" name="calc_custom_bs" id="calc_custom_bs" type="text" placeholder="" >
+					<button class="button is-info" id="pick_bs_button" type="button">Pick custom basis sets</button>
 					</div>
+				</div>
 
-					<div class="modal pick_bs_div" id="pick_bs_div">
-						<div class="modal-card">
-							<header class="modal-card-head">
-								<p class="modal-card-title">Specific basis sets</p>
-								<button type="button" class="close_btn close_bs modal-close is-large" aria-label="close"></button>
-							</header>
-							<section class="modal-card-body" id="custom_bs_body">
-							</section>
-						</div>
+				<div class="modal pick_bs_div" id="pick_bs_div">
+					<div class="modal-card">
+						<header class="modal-card-head">
+							<p class="modal-card-title">Specific basis sets</p>
+							<button type="button" class="close_btn close_bs modal-close is-large" aria-label="close"></button>
+						</header>
+						<section class="modal-card-body" id="custom_bs_body">
+						</section>
 					</div>
 				</div>
+			</div>
 		</div>
 		<br />
+		{% if IS_CLOUD %}
+		<input type="hidden" id="calc_resource" name="calc_resource" value="Local">
+		{% else %}
 		<div class="field">
 			<label class="label">Resource</label>
 			<div class="control" >
 				<div class="select">
 				<select name="calc_resource" id="calc_resource" onchange="refresh_availabilities();">
-					{% if allow_local_calc %}
+					{% if ALLOW_LOCAL_CALC %}
 						{% if profile.group or profile.is_PI or request.user.is_superuser %}
 							<option>Local</option>
 						{% endif %}
 					{% endif %}
+
+					{% if ALLOW_REMOTE_CALC %}
 					{% for access in profile.accesses %}
 						{% if access.connected %}
 							<option>{{ access.cluster_address }}</option>
 						{% endif %}
 					{% endfor %}
+					{% endif %}
 				  </select>
 				</div>
 			</div>
 		</div>
+		{% endif %}
 
 		{% if ensemble and not structures %}
 			<div class="columns">
@@ -557,9 +565,26 @@ $( document ).ready(function() {
 
 			},
 		});
-
 	{% endif %}
+	if(!local_allowed_theory_levels.includes("ALL")) {
+		full_options = document.querySelectorAll("#calc_theory_level > option");
+		full_options.forEach(element => {
+			if(!local_allowed_theory_levels.includes(element.value)) {
+				element.disabled = true;
+			}
 
+		});
+	}
+
+	if(!local_allowed_steps.includes("ALL")) {
+		full_options = document.querySelectorAll("#calc_type > option");
+		full_options.forEach(element => {
+			if(!local_allowed_steps.includes(element.value)) {
+				element.disabled = true;
+			}
+
+		});
+	}
 });
 </script>
 <script>

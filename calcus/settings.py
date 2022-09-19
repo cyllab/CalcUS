@@ -55,13 +55,6 @@ else:
     except (FileNotFoundError, subprocess.CalledProcessError):
         CALCUS_VERSION_HASH = "unknown"
 
-PACKAGES = []
-if "CALCUS_XTB" in os.environ:
-    PACKAGES.append("xtb")
-if "CALCUS_ORCA" in os.environ:
-    PACKAGES.append("ORCA")
-if "CALCUS_GAUSSIAN" in os.environ:
-    PACKAGES.append("Gaussian")
 
 SSL = False
 
@@ -125,6 +118,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "frontend.context.default",
             ],
         },
     },
@@ -217,21 +211,60 @@ INTERNAL_IPS = [
 
 SESSION_COOKIE_NAME = "CALCUS_SESSION_COOKIE"
 
-ALLOW_LOCAL_CALC = True
+PACKAGES = ["xtb"]
 
-# For local calculations, limit the size of systems to this number of atoms or disable the limitation with -1
-LOCAL_MAX_ATOMS = -1
+if IS_CLOUD:
+    PING_SATELLITE = False
 
-# For local calculations, only allow these theory levels to be used (using the ccinput theory levels)
-LOCAL_ALLOWED_THEORY_LEVELS = [
-    "xtb",
-    "semiempirical",
-    "hf",
-    "special",  # hf3c, pbeh3c, r2scan3c, b973c
-    "dft",
-    "mp2",
-    "cc",
-]
+    ALLOW_LOCAL_CALC = True
+    ALLOW_REMOTE_CALC = False
 
-PING_SATELLITE = os.getenv("CALCUS_PING_SATELLITE", "False")
-PING_CODE = os.getenv("CALCUS_PING_CODE", "default")
+    LOCAL_MAX_ATOMS = 20
+
+    LOCAL_ALLOWED_THEORY_LEVELS = [
+        "xtb",
+        "semiempirical",
+        # "hf",
+        # "special",  # hf3c, pbeh3c, r2scan3c, b973c
+        # "dft",
+        # "mp2",
+        # "cc",
+    ]
+
+    LOCAL_ALLOWED_STEPS = [
+        "Geometrical Optimisation",
+        # "Conformational Search",
+        "Constrained Optimisation",
+        "Frequency Calculation",
+        "TS Optimisation",
+        "UV-Vis Calculation",
+        "Single-Point Energy",
+        # "Minimum Energy Path",
+        # "Constrained Conformational Search",
+        # "NMR Prediction",
+        # "MO Calculation",
+    ]
+
+else:
+    ALLOW_LOCAL_CALC = True
+    ALLOW_REMOTE_CALC = True
+
+    # For local calculations, limit the size of systems to this number of atoms or disable the limitation with -1
+    LOCAL_MAX_ATOMS = -1
+
+    # For local calculations, only allow these theory levels to be used (using the ccinput theory levels)
+    LOCAL_ALLOWED_THEORY_LEVELS = [
+        "ALL",  # Allows all theory levels
+    ]
+
+    LOCAL_ALLOWED_STEPS = [
+        "ALL",  # Allows all steps
+    ]
+
+    PING_SATELLITE = os.getenv("CALCUS_PING_SATELLITE", "False")
+    PING_CODE = os.getenv("CALCUS_PING_CODE", "default")
+
+    if "CALCUS_ORCA" in os.environ:
+        PACKAGES.append("ORCA")
+    if "CALCUS_GAUSSIAN" in os.environ:
+        PACKAGES.append("Gaussian")

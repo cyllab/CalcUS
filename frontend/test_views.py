@@ -29,6 +29,7 @@ from django.core.management import call_command
 from django.contrib.auth import authenticate
 from django.test import TestCase, Client
 from django.http import HttpRequest
+from django.conf import settings
 from .gen_calc import gen_calc, gen_param
 from .calcusliveserver import SCR_DIR
 
@@ -62,6 +63,45 @@ basic_params = {
     ],
     "test": ["true"],
 }
+
+LARGE_DRAWING = """Molecule from ChemDoodle Web Components
+
+http://www.ichemlabs.com
+ 15 17  0  0  0  0            999 V2000
+   -1.7321    0.2500    0.0000 C   0  0  0  0  0  0
+   -0.8660   -0.2500    0.0000 C   0  0  0  0  0  0
+   -2.5981   -0.2500    0.0000 C   0  0  0  0  0  0
+   -1.7321    1.2500    0.0000 C   0  0  0  0  0  0
+   -0.8660   -1.2500    0.0000 C   0  0  0  0  0  0
+    0.0000    0.2500    0.0000 C   0  0  0  0  0  0
+   -2.5981   -1.2500    0.0000 C   0  0  0  0  0  0
+   -0.8660    1.7500    0.0000 C   0  0  0  0  0  0
+   -1.7321   -1.7500    0.0000 C   0  0  0  0  0  0
+    0.0000    1.2500    0.0000 C   0  0  0  0  0  0
+    0.8660   -0.2500    0.0000 C   0  0  0  0  0  0
+    0.8660    1.7500    0.0000 C   0  0  0  0  0  0
+    1.7321    0.2500    0.0000 C   0  0  0  0  0  0
+    1.7321    1.2500    0.0000 C   0  0  0  0  0  0
+    2.5981   -0.2500    0.0000 C   0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  3  1  2  0  0  0  0
+  1  4  1  0  0  0  0
+  2  5  2  0  0  0  0
+  6  2  1  0  0  0  0
+  7  3  1  0  0  0  0
+  4  8  2  0  0  0  0
+  5  9  1  0  0  0  0
+ 10  6  2  0  0  0  0
+ 11  6  1  0  0  0  0
+  9  7  2  0  0  0  0
+  8 10  1  0  0  0  0
+ 10 12  1  0  0  0  0
+ 13 11  1  0  0  0  0
+ 12 14  1  0  0  0  0
+ 14 13  2  0  0  0  0
+ 15 13  1  0  0  0  0
+M  END
+"""
 
 
 class LaunchTests(TestCase):
@@ -292,6 +332,114 @@ class LaunchTests(TestCase):
         self.assertNotContains(response, "Error while submitting your calculation")
         o = CalculationOrder.objects.latest("id")
         self.assertEqual(o.ensemble.parent_molecule.name, "name/details-.")
+
+
+class RestrictionTests(TestCase):
+    def setUp(self):
+        call_command("init_static_obj")
+        self.username = "Tester"
+        self.password = "test1234"
+
+        u = User.objects.create_superuser(
+            username=self.username, password=self.password
+        )
+        u.profile.is_PI = True
+        u.save()
+        self.profile = Profile.objects.get(user__username=self.username)
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.profile)
+        self.group.save()
+        self.client = Client()
+        self.client.force_login(u)
+
+        settings.LOCAL_MAX_ATOMS = 15
+        settings.LOCAL_ALLOWED_THEORY_LEVELS = ["xtb", "semiempirical"]
+        settings.LOCAL_ALLOWED_STEPS = [
+            "Single-Point Energy",
+            "Geometrical Optimisation",
+        ]
+
+    def test_baseline_drawing(self):
+        params = basic_params.copy()
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertNotContains(response, "Error while submitting your calculation")
+
+    def test_baseline_file(self):
+        params = basic_params.copy()
+        with open(os.path.join(tests_dir, "H2.xyz")) as f:
+            del params["structure"]
+            params["file_structure"] = f
+            response = self.client.post(
+                "/submit_calculation/", data=params, follow=True
+            )
+
+        self.assertNotContains(response, "Error while submitting your calculation")
+
+    def test_limit_size_file(self):
+        params = basic_params.copy()
+        with open(os.path.join(tests_dir, "benzene.xyz")) as f:
+            del params["structure"]
+            params["file_structure"] = f
+            response = self.client.post(
+                "/submit_calculation/", data=params, follow=True
+            )
+
+        self.assertNotContains(response, "Error while submitting your calculation")
+
+    def test_too_large_file(self):
+        params = basic_params.copy()
+        with open(os.path.join(tests_dir, "pentane.xyz")) as f:
+            del params["structure"]
+            params["file_structure"] = f
+            response = self.client.post(
+                "/submit_calculation/", data=params, follow=True
+            )
+
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_too_large_drawing(self):
+        params = basic_params.copy()
+
+        params["structure"] = LARGE_DRAWING
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_forbidden_dft(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = "DFT"
+        params["calc_functional"] = "M06-2X"
+        params["calc_basis_set"] = "Def2-SVP"
+
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_forbidden_hf(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = "HF"
+        params["calc_basis_set"] = "Def2-SVP"
+
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_forbidden_conf_search(self):
+        params = basic_params.copy()
+        params["calc_type"] = "Conformational Search"
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_forbidden_freq(self):
+        params = basic_params.copy()
+        params["calc_type"] = "Frequency Calculation"
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_allowed_sp(self):
+        params = basic_params.copy()
+        params["calc_type"] = "Single-Point Energy"
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertNotContains(response, "Error while submitting your calculation")
 
 
 class PermissionTestsStudent(TestCase):

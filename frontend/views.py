@@ -975,6 +975,13 @@ def parse_parameters(request, verify=False):
             step = BasicStep.objects.get(name=clean(request.POST["calc_type"]))
         except BasicStep.DoesNotExist:
             return "No such procedure"
+
+        if (
+            "ALL" not in settings.LOCAL_ALLOWED_STEPS
+            and step.name not in settings.LOCAL_ALLOWED_STEPS
+        ):
+            return "This type of calculation has been disabled"
+
     else:
         return "No calculation type"
 
@@ -1048,13 +1055,20 @@ def parse_parameters(request, verify=False):
 
     if software == "ORCA" or software == "Gaussian":
         if "calc_theory_level" in request.POST.keys():
-            theory = clean(request.POST["calc_theory_level"])
-            if theory.strip() == "":
+            _theory = clean(request.POST["calc_theory_level"])
+            if _theory.strip() == "":
                 return "No theory level chosen"
+            theory = ccinput.utilities.get_theory_level(_theory)
         else:
             return "No theory level chosen"
 
-        if theory == "DFT":
+        if (
+            "ALL" not in settings.LOCAL_ALLOWED_THEORY_LEVELS
+            and theory not in settings.LOCAL_ALLOWED_THEORY_LEVELS
+        ):
+            return "This theory level has been disabled"
+
+        if theory == "dft":
             special_functional = False
             if "pbeh3c" in request.POST.keys() and software == "ORCA":
                 field_pbeh3c = clean(request.POST["pbeh3c"])
@@ -1079,7 +1093,7 @@ def parse_parameters(request, verify=False):
                         return "No basis set chosen"
                 else:
                     basis_set = ""
-        elif theory == "Semi-empirical":
+        elif theory == "semiempirical":
             if "calc_se_method" in request.POST.keys():
                 functional = clean(request.POST["calc_se_method"])
                 if functional.strip() == "":
@@ -1087,7 +1101,7 @@ def parse_parameters(request, verify=False):
                 basis_set = ""
             else:
                 return "No semi-empirical method chosen"
-        elif theory == "HF":
+        elif theory == "hf":
             special_functional = False
             if "hf3c" in request.POST.keys() and software == "ORCA":
                 field_hf3c = clean(request.POST["hf3c"])
@@ -1104,7 +1118,7 @@ def parse_parameters(request, verify=False):
                         return "No basis set chosen"
                 else:
                     return "No basis set chosen"
-        elif theory == "RI-MP2":
+        elif theory == "mp2":
             if software != "ORCA":
                 return "RI-MP2 is only available for ORCA"
 
@@ -1115,6 +1129,7 @@ def parse_parameters(request, verify=False):
                     return "No basis set chosen"
             else:
                 return "No basis set chosen"
+        # TODO: support for Coupled-cluster methods
         else:
             return "Invalid theory level"
 
@@ -1238,7 +1253,24 @@ def set_project_default(request):
     return HttpResponse("Default parameters updated")
 
 
-def handle_file_upload(ff, params):
+def handle_file_upload(ff, params, is_local):
+    in_file = clean(ff.read().decode("utf-8"))
+    fname = clean(ff.name)
+    filename = ".".join(fname.split(".")[:-1])
+    ext = fname.split(".")[-1]
+
+    if ext == "xyz":
+        xyz = in_file
+    elif ext in ["mol", "mol2", "sdf", "log", "out", "com", "gjf"]:
+        xyz = generate_xyz_structure(False, in_file, ext)
+    else:
+        return "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf, .com, .gjf)"
+
+    if is_local and xyz.strip().count("\n") - 2 > settings.LOCAL_MAX_ATOMS:
+        return (
+            f"Input structures are limited to at most {settings.LOCAL_MAX_ATOMS} atoms"
+        )
+
     s = Structure.objects.create()
 
     _params = Parameters.objects.create(
@@ -1252,19 +1284,6 @@ def handle_file_upload(ff, params):
     p = Property.objects.create(parent_structure=s, parameters=_params, geom=True)
     p.save()
     _params.save()
-
-    drawing = False
-    in_file = clean(ff.read().decode("utf-8"))
-    fname = clean(ff.name)
-    filename = ".".join(fname.split(".")[:-1])
-    ext = fname.split(".")[-1]
-
-    if ext == "xyz":
-        xyz = in_file
-    elif ext in ["mol", "mol2", "sdf", "log", "out", "com", "gjf"]:
-        xyz = generate_xyz_structure(False, in_file, ext)
-    else:
-        return "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf, .com, .gjf)"
 
     s.xyz_structure = xyz
     s.save()
@@ -1329,6 +1348,11 @@ def _submit_calculation(request, verify=False):
 
         if access.owner != profile:
             return "You do not have the right to use this cluster access"
+
+        is_local = False
+
+        if not setting.ALLOW_REMOTE_CALC:
+            return "Remote calculations are disabled"
     else:
         if (
             not profile.is_PI
@@ -1337,8 +1361,12 @@ def _submit_calculation(request, verify=False):
         ):
             return "You have no computing resource"
 
+        if not setting.ALLOW_LOCAL_CALC:
+            return "Local calculations are disabled"
+
+        is_local = True
+
     orders = []
-    drawing = True
 
     def get_default_name():
         return step.name + " Result"
@@ -1362,7 +1390,7 @@ def _submit_calculation(request, verify=False):
     if len(mol_name) > 100:
         return "The chosen molecule name is too long"
 
-    if "starting_ensemble" in request.POST.keys():
+    if "starting_ensemble" in request.POST:
         start_id = int(clean(request.POST["starting_ensemble"]))
         try:
             start_e = Ensemble.objects.get(pk=start_id)
@@ -1379,7 +1407,7 @@ def _submit_calculation(request, verify=False):
             order_name = start_e.name
 
         filter = None
-        if "starting_structs" in request.POST.keys():
+        if "starting_structs" in request.POST:
             structs_str = clean(request.POST["starting_structs"])
             structs_nums = [int(i) for i in structs_str.split(",")]
 
@@ -1449,8 +1477,8 @@ def _submit_calculation(request, verify=False):
                 obj.filter = filter
 
             orders.append(obj)
-    elif "starting_calc" in request.POST.keys():
-        if not "starting_frame" in request.POST.keys():
+    elif "starting_calc" in request.POST:
+        if not "starting_frame" in request.POST:
             return "Missing starting frame number"
 
         c_id = int(clean(request.POST["starting_calc"]))
@@ -1482,11 +1510,11 @@ def _submit_calculation(request, verify=False):
             orders.append(obj)
     else:
         combine = ""
-        if "calc_combine_files" in request.POST.keys():
+        if "calc_combine_files" in request.POST:
             combine = clean(request.POST["calc_combine_files"])
 
         parse_filenames = ""
-        if "calc_parse_filenames" in request.POST.keys():
+        if "calc_parse_filenames" in request.POST:
             parse_filenames = clean(request.POST["calc_parse_filenames"])
         else:
             if mol_name == "":
@@ -1511,7 +1539,7 @@ def _submit_calculation(request, verify=False):
                     mol = Molecule.objects.create(name=mol_name, project=project_obj)
                     e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
                     for ind, ff in enumerate(files):
-                        ss = handle_file_upload(ff, params)
+                        ss = handle_file_upload(ff, params, is_local)
                         if isinstance(ss, str):
                             e.structure_set.all().delete()
                             e.delete()
@@ -1543,7 +1571,7 @@ def _submit_calculation(request, verify=False):
                 elif combine != "on" and parse_filenames == "on":
                     unique_molecules = {}
                     for ff in files:
-                        ss = handle_file_upload(ff, params)
+                        ss = handle_file_upload(ff, params, is_local)
                         if isinstance(ss, str):
                             for _mol_name, arr_structs in unique_molecules.items():
                                 for struct in arr_structs:
@@ -1555,7 +1583,7 @@ def _submit_calculation(request, verify=False):
 
                         struct.number = num
                         struct.save()
-                        if _mol_name in unique_molecules.keys():
+                        if _mol_name in unique_molecules:
                             unique_molecules[_mol_name].append(struct)
                         else:
                             unique_molecules[_mol_name] = [struct]
@@ -1596,8 +1624,8 @@ def _submit_calculation(request, verify=False):
 
                         orders.append(obj)
                 elif combine == "on" and parse_filenames == "on":
-                    ss = handle_file_upload(files[0], params)
-                    if isinstance(ss, HttpResponse):
+                    ss = handle_file_upload(files[0], params, is_local)
+                    if isinstance(ss, str):
                         return ss
 
                     struct, filename = ss
@@ -1614,8 +1642,8 @@ def _submit_calculation(request, verify=False):
                     struct.save()
 
                     for ind, ff in enumerate(files[1:]):
-                        ss = handle_file_upload(ff, params)
-                        if isinstance(ss, HttpResponse):
+                        ss = handle_file_upload(ff, params, is_local)
+                        if isinstance(ss, str):
                             e.structure_set.all().delete()
                             e.delete()
                             mol.delete()
@@ -1637,8 +1665,8 @@ def _submit_calculation(request, verify=False):
                 else:
                     unique_molecules = {}
                     for ff in files:
-                        ss = handle_file_upload(ff, params)
-                        if isinstance(ss, HttpResponse):
+                        ss = handle_file_upload(ff, params, is_local)
+                        if isinstance(ss, str):
                             for _mol_name, arr_structs in unique_molecules.items():
                                 for struct in arr_structs:
                                     struct.delete()
@@ -1684,8 +1712,8 @@ def _submit_calculation(request, verify=False):
                         orders.append(obj)
             elif len(files) == 1:
                 ff = files[0]
-                ss = handle_file_upload(ff, params)
-                if isinstance(ss, HttpResponse):
+                ss = handle_file_upload(ff, params, is_local)
+                if isinstance(ss, str):
                     return ss
                 struct, filename = ss
 
@@ -1732,7 +1760,6 @@ def _submit_calculation(request, verify=False):
                         step=step,
                         project=project_obj,
                     )
-                    drawing = True
                     mol_obj = Molecule.objects.create(
                         name=mol_name, project=project_obj
                     )
@@ -1740,6 +1767,7 @@ def _submit_calculation(request, verify=False):
                         name="Drawn Structure", parent_molecule=mol_obj
                     )
                     obj.ensemble = e
+                    obj.save()
 
                     s = Structure.objects.create(parent_ensemble=e, number=1)
                     params = Parameters.objects.create(
@@ -1757,7 +1785,17 @@ def _submit_calculation(request, verify=False):
                     params.save()
 
                     mol = clean(request.POST["structure"])
-                    s.mol_structure = mol
+                    xyz = generate_xyz_structure(True, mol, "mol")
+                    if len(xyz) == 0:
+                        return "Could not convert the input drawing to XYZ"
+
+                    if (
+                        is_local
+                        and xyz.strip().count("\n") - 2 > settings.LOCAL_MAX_ATOMS
+                    ):
+                        return f"Input structures are limited to at most {settings.LOCAL_MAX_ATOMS} atoms"
+
+                    s.xyz_structure = mol
                     s.save()
                     orders.append(obj)
             else:
@@ -1791,9 +1829,9 @@ def _submit_calculation(request, verify=False):
             if len(request.FILES.getlist("aux_file_structure")) == 1:
                 if not verify:
                     _aux_struct = handle_file_upload(
-                        request.FILES.getlist("aux_file_structure")[0], params
+                        request.FILES.getlist("aux_file_structure")[0], params, is_local
                     )
-                    if isinstance(_aux_struct, HttpResponse):
+                    if isinstance(_aux_struct, str):
                         return _aux_struct
                     aux_struct = _aux_struct[0]
             else:
@@ -1844,6 +1882,7 @@ def _submit_calculation(request, verify=False):
                 elif mode == "Scan":
                     if not verify:
                         obj.has_scan = True
+                        obj.save()
 
                     if params.software != "Gaussian":
                         try:
@@ -1867,7 +1906,6 @@ def _submit_calculation(request, verify=False):
     if verify:
         return
 
-    obj.save()
     for o in orders:
         o.constraints = constraints
 
@@ -1878,7 +1916,7 @@ def _submit_calculation(request, verify=False):
 
     if "test" not in request.POST.keys():
         for o in orders:
-            dispatcher.delay(drawing, o.id)
+            dispatcher.delay(o.id)
 
     return redirect("/calculations/")
 
@@ -2976,23 +3014,8 @@ def get_mol_preview(request):
 def gen_3D(request):
     if request.method == "POST":
         mol = clean(request.POST["mol"])
-        with tempfile.TemporaryDirectory() as d:
-            with open(f"{d}/inp.mol", "w") as out:
-                out.write(mol)
-
-            system(
-                f"obabel {d}/inp.mol -O {d}/inp.xyz -h --gen3D",
-                force_local=True,
-            )
-            with open(f"{d}/inp.xyz") as f:
-                lines = f.readlines()
-
-            if "".join(lines).strip() == "":
-                return HttpResponse(status=404)
-
-            return HttpResponse(lines)
-
-    return HttpResponse(status=403)
+        xyz = generate_xyz_structure(True, mol, "mol")
+        return HttpResponse(xyz)
 
 
 @login_required
@@ -3268,7 +3291,7 @@ def download_log(request, pk):
         mem = BytesIO()
         with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zip:
             # Write the main file, then others with suffixes
-            zip.writestr(data["calc"], name)
+            zip.writestr(name, data["calc"])
 
             for logname, log in data.items():
                 if logname == "calc":
@@ -3312,7 +3335,7 @@ def download_all_logs(request, pk):
                     _logname = ""
                 else:
                     _logname = f"_{logname}"
-                zip.writestr(f, f"{order.molecule_name}_order{pk}_calc{cid}{_logname}")
+                zip.writestr(f"{order.molecule_name}_order{pk}_calc{cid}{_logname}", f)
 
     response = HttpResponse(mem.getvalue(), content_type="application/zip")
     response["Content-Disposition"] = f'attachment; filename="order_{pk}.zip"'
@@ -3428,7 +3451,6 @@ def launch(request):
     params = {
         "profile": profile,
         "procs": BasicStep.objects.all().order_by(Lower("name")),
-        "allow_local_calc": settings.ALLOW_LOCAL_CALC,
         "packages": settings.PACKAGES,
     }
 
@@ -3531,7 +3553,6 @@ def launch_project(request, pk):
                 "profile": request.user.profile,
                 "procs": BasicStep.objects.all(),
                 "init_params_id": init_params_id,
-                "allow_local_calc": settings.ALLOW_LOCAL_CALC,
                 "packages": settings.PACKAGES,
             },
         )
@@ -3543,7 +3564,6 @@ def launch_project(request, pk):
                 "proj": proj,
                 "profile": request.user.profile,
                 "procs": BasicStep.objects.all(),
-                "allow_local_calc": settings.ALLOW_LOCAL_CALC,
                 "packages": settings.PACKAGES,
             },
         )
@@ -4203,10 +4223,10 @@ def download_folder(request, pk):
                                 _log_name = f"{log_name}_{subname}.log"
 
                             zip.writestr(
-                                log,
                                 os.path.join(
                                     path, clean_filename(folder.name), _log_name
                                 ),
+                                log,
                             )
 
                         if c.parameters.software == "xtb":

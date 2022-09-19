@@ -181,7 +181,7 @@
 						Launch
 					</a>
 					<a class="navbar-item" href="/calculations/">
-						Calculations					
+						Calculations
 						{% if user.profile.unseen_calculations > 0 %}
 							<span id="unseen_calculations_badge" class="badge is-bottom is-warning">{{ user.profile.unseen_calculations }}</span>
 						{% endif %}
@@ -210,7 +210,8 @@
 						</div>
 					</div>
 					{% endif %}
-					{% if user.profile.clusteraccess_owner.count > 0 %}
+
+					{% if ALLOW_REMOTE_CALC and user.profile.clusteraccess_owner.count > 0 %}
 					<div class="navbar-item has-dropdown is-hoverable" id="navbar_accesses">
 						<a class="navbar-link">Cluster Accesses</a>
 						<div class="navbar-dropdown">
@@ -219,7 +220,6 @@
 							{% endfor %}
 						</div>
 					</div>
-
 					{% endif %}
 
 					{% if user.is_superuser %}

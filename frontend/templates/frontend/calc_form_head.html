@@ -111,6 +111,11 @@ String.prototype.format = function() {
 		{% endfor %}
 	}
 
+	const allow_local_calc = {{ ALLOW_LOCAL_CALC|yesno:"true,false" }};
+	const allow_remote_calc = {{ ALLOW_REMOTE_CALC|yesno:"true,false" }};
+	const local_allowed_theory_levels = [{% for l in LOCAL_ALLOWED_THEORY_LEVELS %}"{{ l }}", {% endfor %}];
+	const local_allowed_steps = [{% for s in LOCAL_ALLOWED_STEPS %}"{{ s }}", {% endfor %}];
+
 	function verify_form() {
 		$("#submit_button").addClass("is-loading");
 		
@@ -249,9 +254,7 @@ String.prototype.format = function() {
 		}
 		else {
 			field.style.display = "block";
-
 		}
-
 	}
 
 
@@ -342,7 +345,7 @@ String.prototype.format = function() {
 		choice = document.getElementById("calc_resource");
 
 		full_options.forEach(element => {
-			if((element.classList.contains('avail_local') && choice.value != "Local") || (element.classList.contains('avail_remote') && choice.value == "Local")) {
+			if((element.classList.contains('avail_local') && (choice.value != "Local" || !allow_local_calc)) || (element.classList.contains('avail_remote') && (choice.value == "Local" || !allow_remote_calc))) {
 				element.style.display = 'none';
 				element.classList.add("unavailable");
 			}
@@ -388,7 +391,7 @@ String.prototype.format = function() {
 
 		set_availables();
 
-		if(choice.value == "HF"){
+		if(choice.value == "hf"){
 			hf3c = document.getElementById("hf3c").checked;
 			software = document.getElementById("calc_software").value;
 			if (hf3c == true && software == "ORCA") {
@@ -400,7 +403,7 @@ String.prototype.format = function() {
 				document.getElementById("custom_bs_field").style.display = "block";
 			}
 		}
-		else if(choice.value == "DFT") {
+		else if(choice.value == "dft") {
 			pbeh3c = document.getElementById("pbeh3c").checked;
 			software = document.getElementById("calc_software").value;
 			if (pbeh3c == true && software == "ORCA") {
@@ -465,14 +468,14 @@ String.prototype.format = function() {
 			ind = sel.selectedIndex;
 			if(ind != -1) {
 				opt = sel.options[ind];
-				if(opt.style.display != "none") {
+				if(opt.style.display != "none" && !opt.disabled) {
 					return;
 				}
 			}
 
 			for(i=0; i < sel.options.length; i++) {
 				opt = sel.options[i];
-				if(opt.style.display != "none") {
+				if(opt.style.display != "none"  && !opt.disabled) {
 					sel.selectedIndex = i;
 				}
 			}

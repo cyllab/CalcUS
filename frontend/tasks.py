@@ -3234,7 +3234,7 @@ def filter(order, input_structures):
 
 
 @app.task(base=AbortableTask)
-def dispatcher(drawing, order_id):
+def dispatcher(order_id):
     order = CalculationOrder.objects.get(pk=order_id)
     ensemble = order.ensemble
 
