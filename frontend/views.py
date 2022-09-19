@@ -1351,7 +1351,7 @@ def _submit_calculation(request, verify=False):
 
         is_local = False
 
-        if not setting.ALLOW_REMOTE_CALC:
+        if not settings.ALLOW_REMOTE_CALC:
             return "Remote calculations are disabled"
     else:
         if (
@@ -1361,7 +1361,7 @@ def _submit_calculation(request, verify=False):
         ):
             return "You have no computing resource"
 
-        if not setting.ALLOW_LOCAL_CALC:
+        if not settings.ALLOW_LOCAL_CALC:
             return "Local calculations are disabled"
 
         is_local = True
