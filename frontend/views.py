@@ -180,11 +180,6 @@ def periodictable(request):
 
 
 @login_required
-def specifications(request):
-    return render(request, "frontend/dynamic/specifications.html")
-
-
-@login_required
 def get_available_bs(request):
     if "elements" in request.POST.keys():
         raw_el = clean(request.POST["elements"])
