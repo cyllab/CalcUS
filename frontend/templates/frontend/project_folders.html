@@ -167,8 +167,8 @@
 		$(document).ready(function() {
 
 			$('div.box').draggable({handle: 'p', revert: true, cancel: 'i'});
-			{% for f in folders %}
-			add_folder({{ f.id }}, "{{ f.name }}", {% if request.user.profile == project.author %} true {% else %} false {% endif %});
+			{% for f in folders|dictsort:"name" %}
+				add_folder({{ f.id }}, "{{ f.name }}", {% if request.user.profile == project.author %} true {% else %} false {% endif %});
 			{% endfor %}
 
 			{% if request.user.profile == project.author and folder.depth > 0 %}

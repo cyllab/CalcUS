@@ -4166,7 +4166,7 @@ def project_folders(request, username, proj, folder_path):
         return HttpResponse(status=404)
 
     folders = folder.folder_set.all().order_by(Lower("name"))
-    ensembles = folder.ensemble_set.all().order_by(Lower("name"))
+    ensembles = folder.ensemble_set.all().order_by(Lower("parent_molecule__name"))
 
     return render(
         request,
