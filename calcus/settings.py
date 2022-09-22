@@ -58,7 +58,10 @@ else:
 
 SSL = False
 
-ALLOWED_HOSTS = "*.*.*.*"
+ALLOWED_HOSTS = ["*.*.*.*", "0.0.0.0"]
+
+if IS_CLOUD:
+    ALLOWED_HOSTS.append("*")
 
 if not DEBUG and SSL:
     ALLOWED_HOSTS = "*.*.*.*"
@@ -129,7 +132,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
         "NAME": "calcus",
         "USER": POSTGRES_USER,
         "PASSWORD": POSTGRES_PASSWORD,
@@ -166,7 +169,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-STATIC_URL = "/static/"
+STATIC_URL = os.getenv("STATIC_URL", "/static/")
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
@@ -215,6 +218,11 @@ PACKAGES = ["xtb"]
 
 if IS_CLOUD:
     PING_SATELLITE = False
+
+    GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
+    GCP_LOCATION = os.getenv("GCP_LOCATION")
+    GCP_SERVICE_ACCOUNT_EMAIL = os.getenv("GCP_SERVICE_ACCOUNT_EMAIL")
+    COMPUTE_HOST_URL = os.getenv("COMPUTE_HOST_URL")
 
     ALLOW_LOCAL_CALC = True
     ALLOW_REMOTE_CALC = False

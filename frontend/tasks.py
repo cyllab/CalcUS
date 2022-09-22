@@ -20,11 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import, unicode_literals
 
-from calcus.celery import app
 import string
 import signal
 import psutil
-import redis
 import requests
 import os
 import numpy as np
@@ -35,22 +33,48 @@ import shlex
 import glob
 import sys
 import shutil
-import invoke
 import tempfile
 import json
+from django.conf import settings
 
 import threading
 from threading import Lock
 
 from shutil import copyfile, rmtree
 import time
-from celery.signals import task_prerun, task_postrun
+
+if not settings.IS_CLOUD:
+    from calcus.celery import app
+    from celery.signals import task_prerun, task_postrun
+    from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
+    from celery import group
+    import redis
+    import invoke
+else:
+    import functools
+
+    from unittest.mock import MagicMock
+
+    def dummy_decorator(f=None, base=None):
+        if f:
+
+            @functools.wraps(f)
+            def wrapper(*args, **kwargs):
+                return f(*args, **kwargs)
+
+            return wrapper
+        else:
+            return functools.partial(dummy_decorator, base=None)
+
+    app = MagicMock()
+    app.task = dummy_decorator
+    AbortableTask = MagicMock()
+    AbortableAsyncResult = MagicMock()
+
+
 from django.utils import timezone
-from django.conf import settings
 from django.core import management
 from django.db.utils import IntegrityError
-from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
-from celery import group
 
 from ccinput.wrapper import generate_calculation
 from ccinput.exceptions import CCInputException
@@ -441,7 +465,9 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     logger.info(f"Got returncode {t.returncode}")
                     return ErrorCodes.UNKNOWN_TERMINATION
 
-            if calc_id != -1 and res.is_aborted():
+            if (
+                calc_id != -1 and res.is_aborted() and not settings.IS_CLOUD
+            ):  # Job cancellation not implemented in the cloud version
                 logger.info(f"Stopping calculation {calc_id}")
                 signal_to_send = signal.SIGTERM
 
@@ -2964,7 +2990,10 @@ def analyse_opt_ORCA(calc):
             )
         else:
             continue
+
     CalculationFrame.objects.bulk_create(new_frames)
+
+    return ErrorCodes.SUCCESS
 
 
 def analyse_opt_xtb(calc):
@@ -3028,6 +3057,8 @@ def analyse_opt_xtb(calc):
                 continue
         CalculationFrame.objects.bulk_update(to_update, ["xyz_structure", "RMSD"])
         CalculationFrame.objects.bulk_create(to_create)
+
+    return ErrorCodes.SUCCESS
 
 
 def analyse_opt_Gaussian(calc):
@@ -3126,7 +3157,8 @@ def analyse_opt_Gaussian(calc):
                     to_update, ["xyz_structure", "energy"], batch_size=100
                 )
                 CalculationFrame.objects.bulk_create(to_create)
-                return
+                return ErrorCodes.SUCCESS
+    return ErrorCodes.SUCCESS
 
 
 def get_Gaussian_xyz(text):
@@ -3382,13 +3414,13 @@ def dispatcher(order_id):
                 constraints=order.constraints,
                 aux_structure=order.aux_structure,
             )
-            c.save()
             if local:
                 calculations.append(c)
-                if not is_test:
-                    group_order.append(run_calc.s(c.id).set(queue="comp"))
-                else:
-                    group_order.append(run_calc.s(c.id))
+                if not settings.IS_CLOUD:
+                    if not is_test:
+                        group_order.append(run_calc.s(c.id).set(queue="comp"))
+                    else:
+                        group_order.append(run_calc.s(c.id))
             else:
                 calculations.append(c)
                 c.local = False
@@ -3410,13 +3442,13 @@ def dispatcher(order_id):
                 constraints=order.constraints,
                 aux_structure=order.aux_structure,
             )
-            c.save()
             if local:
                 calculations.append(c)
-                if not is_test:
-                    group_order.append(run_calc.s(c.id).set(queue="comp"))
-                else:
-                    group_order.append(run_calc.s(c.id))
+                if not settings.IS_CLOUD:
+                    if not is_test:
+                        group_order.append(run_calc.s(c.id).set(queue="comp"))
+                    else:
+                        group_order.append(run_calc.s(c.id))
             else:
                 c.local = False
                 c.save()
@@ -3424,10 +3456,50 @@ def dispatcher(order_id):
                 cmd = f"launch\n{c.id}\n"
                 send_cluster_command(cmd)
 
-    for task, c in zip(group_order, calculations):
-        res = task.apply_async()
-        c.task_id = res
-        c.save()
+    if settings.IS_CLOUD:
+        # TODO: add some way to be able to cancel calcs?
+        for c in calculations:
+            send_gcloud_task("/cloud_calc/", str(c.id))
+    else:
+        for task, c in zip(group_order, calculations):
+            res = task.apply_async()
+            c.task_id = res
+            c.save()
+
+
+def send_gcloud_task(url, payload):
+    if is_test:
+        import grpc
+        from google.cloud import tasks_v2
+        from google.cloud.tasks_v2.services.cloud_tasks.transports import (
+            CloudTasksGrpcTransport,
+        )
+
+        client = tasks_v2.CloudTasksClient(
+            transport=CloudTasksGrpcTransport(
+                channel=grpc.insecure_channel("taskqueue:8123")
+            )
+        )
+    else:
+        from google.cloud import tasks_v2
+
+        client = tasks_v2.CloudTasksClient()
+
+    parent = client.queue_path(
+        settings.GCP_PROJECT_ID, settings.GCP_LOCATION, "xtb-compute"
+    )
+
+    task = {
+        "http_request": {
+            "http_method": "POST",
+            "url": settings.COMPUTE_HOST_URL + url,
+            "oidc_token": {"service_account_email": settings.GCP_SERVICE_ACCOUNT_EMAIL},
+        }
+    }
+    converted_payload = payload.encode()
+    task["http_request"]["body"] = converted_payload
+
+    client.create_task(parent=parent, task=task)
 
 
 def add_input_to_calc(calc):
@@ -3463,15 +3535,19 @@ def run_calc(calc_id):
             except Calculation.DoesNotExist:
                 time.sleep(1)
             else:
-                if not is_test and calc.task_id == "" and calc.local:
+                if (
+                    not settings.IS_CLOUD
+                    and not is_test
+                    and calc.task_id == ""
+                    and calc.local
+                ):
                     time.sleep(1)
                 else:
                     return calc
-        raise Exception("Could not get calculation to run")
 
-    try:
-        calc = get_calc(calc_id)
-    except Exception:
+    calc = get_calc(calc_id)
+
+    if not calc:
         logger.info(f"Could not get calculation {calc_id}")
         return ErrorCodes.UNKNOWN_TERMINATION
 
@@ -3704,6 +3780,9 @@ def cancel(calc_id):
 
 
 def kill_calc(calc):
+    if settings.IS_CLOUD:
+        # Not implemented yet
+        return
     if calc.local:
         if calc.task_id != "":
             if calc.status == 1:

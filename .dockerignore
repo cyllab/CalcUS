@@ -6,7 +6,7 @@ logs
 data
 backup*
 test_run
-html_cov
+htmlcov
 docs
 bulma
 scratch

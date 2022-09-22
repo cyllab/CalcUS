@@ -33,6 +33,8 @@ urlpatterns = [
     path("home/", views.home, name="home"),
     path("list/", views.IndexView.as_view(), name="list"),
     path("calculations/", views.calculations, name="calculations"),
+    path("cloud_order/", views.cloud_order, name="cloud_order"),
+    path("cloud_calc/", views.cloud_calc, name="cloud_calc"),
     path("cancel_calc/", views.cancel_calc, name="cancel_calc"),
     path("relaunch_calc/", views.relaunch_calc, name="relaunch_calc"),
     path("refetch_calc/", views.refetch_calc, name="refetch_calc"),
@@ -53,7 +55,6 @@ urlpatterns = [
     ),
     path("project_list/", views.project_list, name="project_list"),
     path("periodictable/", views.periodictable, name="periodictable"),
-    path("specifications/", views.specifications, name="specifications"),
     path("get_available_bs/", views.get_available_bs, name="get_available_bs"),
     path(
         "get_available_elements/",

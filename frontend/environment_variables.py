@@ -40,8 +40,12 @@ if is_test:
         prefix, os.environ.get("CALCUS_TEST_KEY_HOME", "scratch/keys")
     )
 else:
-    CALCUS_SCR_HOME = os.environ["CALCUS_SCR_HOME"]
-    CALCUS_KEY_HOME = os.environ["CALCUS_KEY_HOME"]
+    if "CALCUS_CLOUD" in os.environ:
+        CALCUS_SCR_HOME = os.getenv("CALCUS_SCR_HOME", "/tmp")
+        CALCUS_KEY_HOME = os.getenv("CALCUS_KEY_HOME", "")
+    else:
+        CALCUS_SCR_HOME = os.getenv("CALCUS_SCR_HOME", "")
+        CALCUS_KEY_HOME = os.getenv("CALCUS_KEY_HOME", "")
 
 try:
     PAL = os.environ["OMP_NUM_THREADS"][0]

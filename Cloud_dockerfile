@@ -13,12 +13,19 @@ RUN apt update && apt install openbabel postgresql-client dos2unix -y
 COPY calcus /calcus/calcus
 COPY frontend /calcus/frontend
 COPY docker /calcus/docker
+COPY scripts /calcus/scripts
+COPY bin /binaries/xtb
 COPY manage.py /calcus/manage.py
 
 WORKDIR /calcus/
 
-RUN dos2unix scripts/*
+ENV XTB4STDAHOME "/binaries/xtb"
+ENV XTBPATH "/binaries/xtb/xtb:$XTB4STDAHOME"
+ENV STDAHOME "/binaries/xtb"
+ENV PATH=$PATH:$XTB4STDAHOME/xtb/bin:$XTB4STDAHOME
+
+RUN python scripts/extract_xtb.py
 
 RUN adduser --disabled-password --gecos '' calcus  
 
-CMD exec gunicorn calcus.wsgi:application --bind :$PORT --timeout 10 --workers 1 --threads 4
+CMD exec gunicorn calcus.wsgi:application --bind :$PORT --timeout 10 --workers $NUM_WORKERS --threads $NUM_THREADS

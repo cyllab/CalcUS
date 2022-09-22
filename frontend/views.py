@@ -40,6 +40,7 @@ from cryptography.hazmat.backends import default_backend
 
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
+from django.views.decorators.csrf import csrf_exempt
 from django.views import generic
 from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
@@ -84,14 +85,13 @@ from .tasks import (
     cancel,
     run_calc,
     send_cluster_command,
-)
-from .decorators import superuser_required
-from .tasks import (
     system,
     analyse_opt,
     generate_xyz_structure,
     gen_fingerprint,
+    send_gcloud_task,
 )
+from .decorators import superuser_required
 from .constants import *
 from .libxyz import parse_xyz_from_text, equivalent_atoms
 from .environment_variables import *
@@ -962,6 +962,56 @@ def error(request, msg):
     )
 
 
+@csrf_exempt
+def cloud_order(request):
+    if not "X-Cloudtasks-QueueName" in request.headers.keys():
+        return HttpResponse(status=403)
+
+    body = request.body.decode("utf-8")
+
+    try:
+        o = CalculationOrder.objects.get(pk=int(body))
+    except ValueError:
+        logger.error(f"Could not convert to int: {body}")
+        return HttpResponse(status=400)
+    except CalculationOrder.DoesNotExist:
+        logger.error(f"Could not find calculation order number {body}")
+        return HttpResponse(status=400)
+
+    dispatcher(o.id)
+
+    return HttpResponse(status=200)
+
+
+@csrf_exempt
+def cloud_calc(request):
+    if not "X-Cloudtasks-QueueName" in request.headers.keys():
+        return HttpResponse(status=403)
+
+    body = request.body.decode("utf-8")
+
+    try:
+        calc = Calculation.objects.get(pk=int(body))
+    except ValueError:
+        logger.error(f"Could not convert to int: {body}")
+        return HttpResponse(status=400)
+    except Calculation.DoesNotExist:
+        logger.error(f"Could not find calculation number {body}")
+        return HttpResponse(status=400)
+
+    try:
+        ret = run_calc(calc.id)
+    except Exception as e:
+        logger.error(f"Calculation {calc.id} finished with exception {str(e)}")
+
+    if ret != 0:
+        logger.warning(f"Calculation {calc.id} finished with code {ret}")
+        calc.status = 3
+        calc.save()
+
+    return HttpResponse(status=200)
+
+
 def parse_parameters(request, verify=False):
     profile = request.user.profile
 
@@ -1261,7 +1311,11 @@ def handle_file_upload(ff, params, is_local):
     else:
         return "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf, .com, .gjf)"
 
-    if is_local and xyz.strip().count("\n") - 2 > settings.LOCAL_MAX_ATOMS:
+    if (
+        is_local
+        and xyz.strip().count("\n") - 2 > settings.LOCAL_MAX_ATOMS
+        and settings.LOCAL_MAX_ATOMS != -1
+    ):
         return (
             f"Input structures are limited to at most {settings.LOCAL_MAX_ATOMS} atoms"
         )
@@ -1349,6 +1403,7 @@ def _submit_calculation(request, verify=False):
         if not settings.ALLOW_REMOTE_CALC:
             return "Remote calculations are disabled"
     else:
+        ### TODO
         if (
             not profile.is_PI
             and profile.group == None
@@ -1787,10 +1842,11 @@ def _submit_calculation(request, verify=False):
                     if (
                         is_local
                         and xyz.strip().count("\n") - 2 > settings.LOCAL_MAX_ATOMS
+                        and settings.LOCAL_MAX_ATOMS != -1
                     ):
                         return f"Input structures are limited to at most {settings.LOCAL_MAX_ATOMS} atoms"
 
-                    s.xyz_structure = mol
+                    s.xyz_structure = xyz
                     s.save()
                     orders.append(obj)
             else:
@@ -1909,7 +1965,13 @@ def _submit_calculation(request, verify=False):
 
         o.save()
 
-    if "test" not in request.POST.keys():
+    if "test" in request.POST.keys():
+        return redirect("/calculations/")
+
+    if settings.IS_CLOUD:
+        for o in orders:
+            send_gcloud_task("/cloud_order/", str(o.id))
+    else:
         for o in orders:
             dispatcher.delay(o.id)
 

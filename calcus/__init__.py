@@ -20,6 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import, unicode_literals
 
-from .celery import app as celery_app
+import os
 
-__all__ = ("celery_app",)
+if "CALCUS_CLOUD" not in os.environ:
+    from .celery import app as celery_app
+
+    __all__ = ("celery_app",)
