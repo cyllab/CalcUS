@@ -1,5 +1,7 @@
 {% extends "frontend/base.html" %}
 
+{% load i18n bulma_tags %}
+
 {% block content %}
 <div class="container">
 	{% if form.errors %}
@@ -16,22 +18,9 @@
 					<div class="box has-text-centered">
 						<form method="post" action="{% url 'login' %}">
 						{% csrf_token %}
-							<div class="field">
-								<label class="label">{{ form.username.label_tag }}</label>
-								<div class="control">
-								{{ form.username }}
-								</div>
-							</div>
-							<div class="field">
-								<label class="label">{{ form.password.label_tag }}</label>
-								<div class="control">
-								  {{ form.password }}
-								</div>
-								<br>
-
-								<input class="control button is-primary" type="submit" value="Login" />
-								<input type="hidden" name="next" value="{{ next }}" />
-							</div>
+						{{ form|bulma }}
+						<input class="control button is-primary" type="submit" value="Login" />
+						<input type="hidden" name="next" value="{{ next }}" />
 						</form>
 					</div>
 

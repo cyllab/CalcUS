@@ -7,7 +7,19 @@
 	<head>
  		<meta name="viewport" content="width=device-width, initial-scale=1.0" /> 
 		<meta charset="utf-8" />
-		<link rel="shortcut icon" type="image/png" href="{% static 'frontend/favicon.ico' %}"/>
+
+		{% if IS_CLOUD %}
+		<link rel="apple-touch-icon" sizes="180x180" href="{% static 'cloud_favicon/apple-touch-icon.png' %}">
+		<link rel="icon" type="image/png" sizes="32x32" href="{% static 'cloud_favicon/favicon-32x32.png' %}">
+		<link rel="icon" type="image/png" sizes="16x16" href="{% static 'cloud_favicon/favicon-16x16.png' %}">
+		<link rel="manifest" href="{% static 'cloud_favicon/site.webmanifest' %}">
+		{% else %}
+		<link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
+		<link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
+		<link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
+		<link rel="manifest" href="{% static 'favicon/site.webmanifest' %}">
+		{% endif %}
+
 		<link rel="stylesheet" href="{% static 'frontend/bulma.min.css' %}" />
 		<link rel="stylesheet" href="{% static 'frontend/style.css' %}" />
 		<script src="https://kit.fontawesome.com/55d0fd4831.js" crossorigin="anonymous"></script>
@@ -258,9 +270,15 @@
 			{% endblock %}
 		</div>
 		<section class="footer is-success has-text-centered" style="clear: both;">  
+			{% if IS_CLOUD %}
+				<img id="calcus_logo" src="{% static 'frontend/calcus_cloud_logo.png' %}" />
+				<br />
+				<span id="version_label">Version alpha {% get_calcus_version %}</span>
+			{% else %}
 				<img id="calcus_logo" src="{% static 'frontend/calcus.png' %}" />
 				<br />
 				<span id="version_label">Version {% get_calcus_version %}</span>
+			{% endif %}
 		</section>
 	</div>
 </body>
