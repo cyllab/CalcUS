@@ -15,6 +15,8 @@
 			text-align: center;
 		}
 		.content {
+			width: 80%;
+			margin-left: 10%;
 			font-size: 1.5em;
 		}
 		#home_logo {
@@ -26,7 +28,7 @@
 		#home_logo {
 			max-width: 400px;
 		}
-		.content {
+		#logo_div {
 			width: 34%; 
 			margin-left: 33%;
 		}
@@ -35,7 +37,7 @@
 		#home_logo {
 			max-width: 400px;
 		}
-		.content {
+		#logo_div {
 			width: 40%; 
 			margin-left: 30%;
 		}
@@ -44,7 +46,7 @@
 		#home_logo {
 			max-width: 350px;
 		}
-		.content {
+		#logo_div {
 			width: 50%; 
 			margin-left: 25%;
 		}
@@ -54,7 +56,7 @@
 		#home_logo {
 			max-width: 350px;
 		}
-		.content {
+		#logo_div {
 			width: 60%; 
 			margin-left: 20%;
 		}
@@ -64,7 +66,7 @@
 		#home_logo {
 			max-width: 300px;
 		}
-		.content {
+		#logo_div {
 			width: 80%; 
 			margin-left: 10%;
 		}
@@ -85,33 +87,69 @@
 		#paper_button {
 			margin-left: 1em;
 		}
-		#tagline {
+
+		#tag_title {
 			margin-top: 20px;
 			margin-bottom: 40px;
+		}
+		#tagline {
 			font-size: 1.5em;
 			font-weight: bold;
+			margin-bottom: 0px;
+		}
+		.tile {
+			padding-left: 1em;
+			padding-right: 1em;
+		}
+		#logo_sep {
+			margin-bottom: 5em;
+		}
+		#teaser1 {
+			object-fit: cover;
+			max-height: 25em;
 		}
 	</style>
 {% endblock %}
 
 {% block content %}
 <div class="content">
-	<center>
-	{% if IS_CLOUD or True %}
-	<img id="home_logo" src="{% static 'frontend/calcus_cloud_logo.png' %}" /> <br />
-	{% else %}
-	<img id="home_logo" src="{% static 'frontend/calcus.png' %}" /> <br />
-	{% endif %}
+	<div id="logo_div">
+		<center>
+		{% if IS_CLOUD or True %}
+		<img id="home_logo" src="{% static 'frontend/calcus_cloud_logo.png' %}" /> <br />
+		{% else %}
+		<img id="home_logo" src="{% static 'frontend/calcus.png' %}" /> <br />
+		{% endif %}
 
-	<p id="tagline">	
-	Open-Source Quantum Chemistry Web Platform
-	</p>
+		
+		<div id="tag_title">
+		<p id="tagline">	
+		Quantum Chemistry Web Platform 
+		</p>
+		Education Edition<br />
+		</div>
 
-	<a class="button is-primary" href="https://github.com/cyllab/CalcUS" id="gh_button" target="_blank"><i class="fa fa-lg fa-brands fa-github"></i> View Project</a>
-	<a class="button is-info" href="https://doi.org/10.1021/acs.jcim.1c01502" id="paper_button" target="_blank"><i class="fa fa-lg fa-solid fa-scroll"></i>View Publication</a>
-	<hr />
-	</center>
-
+		<a class="button is-primary" href="https://github.com/cyllab/CalcUS" id="gh_button" target="_blank"><i class="fa fa-lg fa-brands fa-github"></i> View Project</a>
+		<a class="button is-info" href="https://doi.org/10.1021/acs.jcim.1c01502" id="paper_button" target="_blank"><i class="fa fa-lg fa-solid fa-scroll"></i>View Publication</a>
+		</center>
+	</div>
+	<hr id="logo_sep"/>
+	
+	<div class="tile is-ancestor">
+		<div class="tile is-6 is-parent">
+			<div class="tile is-child">
+			<p class="title">
+				Teach practical quantum chemistry
+			</p>
+			<p class="subtitle">
+			Students run fast xTB calculations on real computing resources, no configuration required
+			</p>
+			</div>
+		</div>
+		<div class="tile is-6">
+			<img id="teaser1" src="{% static 'home/pentane.png' %}" />
+		</div>
+	</div>		
 </div>
 {% endblock %}
 
