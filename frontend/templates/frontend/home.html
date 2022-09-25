@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block extrahead %}
-	<title>CalcUS - Home</title>
+	<title>CalcUS</title>
 
 	<style>
 		.title {
@@ -14,19 +14,104 @@
 		h1 {
 			text-align: center;
 		}
+		.content {
+			font-size: 1.5em;
+		}
+		#home_logo {
+			margin-top: 10%;
 
+		}
+
+		@media screen and (min-width: 1921px) {
+		#home_logo {
+			max-width: 400px;
+		}
+		.content {
+			width: 34%; 
+			margin-left: 33%;
+		}
+		}
+		@media screen and (min-width: 1408px) and (max-width: 1920px) {
+		#home_logo {
+			max-width: 400px;
+		}
+		.content {
+			width: 40%; 
+			margin-left: 30%;
+		}
+		}
+		@media screen and (min-width: 1024px) and (max-width: 1407px) {
+		#home_logo {
+			max-width: 350px;
+		}
 		.content {
 			width: 50%; 
 			margin-left: 25%;
+		}
+
+		}
+		@media screen and (min-width: 769px) and (max-width: 1023px) {
+		#home_logo {
+			max-width: 350px;
+		}
+		.content {
+			width: 60%; 
+			margin-left: 20%;
+		}
+
+		}
+		@media screen and (max-width: 768px) {
+		#home_logo {
+			max-width: 300px;
+		}
+		.content {
+			width: 80%; 
+			margin-left: 10%;
+		}
+		}
+
+
+		.footer {
+			display: none;
+		}
+
+		.fa {
+			margin-right: 10px;
+		}
+		#gh_button, #paper_button {
+			font-size: 1em;
+			text-align: center;
+		}
+		#paper_button {
+			margin-left: 1em;
+		}
+		#tagline {
+			margin-top: 20px;
+			margin-bottom: 40px;
+			font-size: 1.5em;
+			font-weight: bold;
 		}
 	</style>
 {% endblock %}
 
 {% block content %}
-<div class="content" >
-	<h1 class="title is-1">CalcUS</h1>
+<div class="content">
+	<center>
+	{% if IS_CLOUD or True %}
+	<img id="home_logo" src="{% static 'frontend/calcus_cloud_logo.png' %}" /> <br />
+	{% else %}
+	<img id="home_logo" src="{% static 'frontend/calcus.png' %}" /> <br />
+	{% endif %}
 
-	CalcUS is a computational chemistry platform. It strives for simplicity, clarity and efficiency. It brings all the necessary tools to perform computational chemistry in a user-friendly web interface.
+	<p id="tagline">	
+	Open-Source Quantum Chemistry Web Platform
+	</p>
+
+	<a class="button is-primary" href="https://github.com/cyllab/CalcUS" id="gh_button" target="_blank"><i class="fa fa-lg fa-brands fa-github"></i> View Project</a>
+	<a class="button is-info" href="https://doi.org/10.1021/acs.jcim.1c01502" id="paper_button" target="_blank"><i class="fa fa-lg fa-solid fa-scroll"></i>View Publication</a>
+	<hr />
+	</center>
+
 </div>
 {% endblock %}
 
