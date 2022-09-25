@@ -91,6 +91,7 @@ from .tasks import (
     gen_fingerprint,
     send_gcloud_task,
 )
+from frontend import tasks
 from .decorators import superuser_required
 from .constants import *
 from .libxyz import parse_xyz_from_text, equivalent_atoms

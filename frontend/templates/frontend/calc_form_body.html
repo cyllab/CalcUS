@@ -493,6 +493,7 @@ $( document ).ready(function() {
 	{% if not ensemble and not structure %}
 	preselect_last_project();
 	project_selection_changed(document.getElementById("calc_project"));
+	set_availables();
 	{% endif %}
 
 	refresh_presets();

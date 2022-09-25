@@ -35,6 +35,7 @@ urlpatterns = [
     path("calculations/", views.calculations, name="calculations"),
     path("cloud_order/", views.cloud_order, name="cloud_order"),
     path("cloud_calc/", views.cloud_calc, name="cloud_calc"),
+    path("cloud_action/", views.cloud_action, name="cloud_action"),
     path("cancel_calc/", views.cancel_calc, name="cancel_calc"),
     path("relaunch_calc/", views.relaunch_calc, name="relaunch_calc"),
     path("refetch_calc/", views.refetch_calc, name="refetch_calc"),

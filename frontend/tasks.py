@@ -3467,7 +3467,7 @@ def dispatcher(order_id):
             c.save()
 
 
-def send_gcloud_task(url, payload):
+def send_gcloud_task(url, payload, compute=True):
     if is_test:
         import grpc
         from google.cloud import tasks_v2
@@ -3485,14 +3485,19 @@ def send_gcloud_task(url, payload):
 
         client = tasks_v2.CloudTasksClient()
 
-    parent = client.queue_path(
-        settings.GCP_PROJECT_ID, settings.GCP_LOCATION, "xtb-compute"
-    )
+    if compute:
+        queue = "xtb-compute"
+        url = settings.COMPUTE_HOST_URL + url
+    else:
+        queue = "actions"
+        url = settings.ACTION_HOST_URL + url
+
+    parent = client.queue_path(settings.GCP_PROJECT_ID, settings.GCP_LOCATION, queue)
 
     task = {
         "http_request": {
             "http_method": "POST",
-            "url": settings.COMPUTE_HOST_URL + url,
+            "url": url,
             "oidc_token": {"service_account_email": settings.GCP_SERVICE_ACCOUNT_EMAIL},
         }
     }
