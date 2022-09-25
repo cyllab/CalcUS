@@ -1012,6 +1012,37 @@ def cloud_calc(request):
     return HttpResponse(status=200)
 
 
+@csrf_exempt
+def cloud_action(request):
+    if not "X-Cloudtasks-QueueName" in request.headers.keys():
+        return HttpResponse(status=403)
+
+    body = request.body.decode("utf-8")
+
+    try:
+        func_name, arg = body.split(";")
+    except TypeError:
+        logger.error(f"Invalid cloud action: {body}")
+        return HttpResponse(status=400)
+
+    try:
+        arg = int(arg)
+    except ValueError:
+        logger.error(f"Invalid cloud action: {body}")
+        return HttpResponse(status=400)
+
+    if func_name not in [
+        "del_project",
+        "del_order",
+        "del_molecule",
+        "del_ensemble",
+    ]:
+        logger.error(f"Invalid cloud action: {body}")
+        return HttpResponse(status=400)
+    getattr(tasks, func_name)(arg)
+    return HttpResponse(status=200)
+
+
 def parse_parameters(request, verify=False):
     profile = request.user.profile
 
@@ -2094,7 +2125,10 @@ def delete_project(request):
         if to_delete.author != request.user.profile:
             return HttpResponse(status=403)
 
-        del_project.delay(proj_id)
+        if settings.IS_CLOUD:
+            send_gcloud_task("/cloud_action/", f"del_project;{proj_id}")
+        else:
+            del_project.delay(proj_id)
         return HttpResponse(status=204)
     else:
         return HttpResponse(status=403)
@@ -2116,7 +2150,10 @@ def delete_order(request):
         if to_delete.author != request.user.profile:
             return HttpResponse(status=403)
 
-        del_order.delay(order_id)
+        if settings.IS_CLOUD:
+            send_gcloud_task("/cloud_action/", f"del_order;{order_id}")
+        else:
+            del_order.delay(order_id)
         return HttpResponse(status=204)
     else:
         return HttpResponse(status=403)
@@ -2165,7 +2202,11 @@ def delete_molecule(request):
         if to_delete.project.author != request.user.profile:
             return HttpResponse(status=403)
 
-        del_molecule.delay(mol_id)
+        if settings.IS_CLOUD:
+            send_gcloud_task("/cloud_action/", f"del_molecule;{mol_id}")
+        else:
+            del_molecule.delay(mol_id)
+
         return HttpResponse(status=204)
     else:
         return HttpResponse(status=403)
@@ -2187,7 +2228,10 @@ def delete_ensemble(request):
         if to_delete.parent_molecule.project.author != request.user.profile:
             return HttpResponse(status=403)
 
-        del_ensemble.delay(ensemble_id)
+        if settings.IS_CLOUD:
+            send_gcloud_task("/cloud_action/", f"del_ensemble;{ensemble_id}")
+        else:
+            del_ensemble.delay(ensemble_id)
         return HttpResponse(status=204)
     else:
         return HttpResponse(status=403)
@@ -4017,7 +4061,12 @@ def cancel_calc(request):
     if is_test:  ###
         cancel(calc.id)
     else:
-        cancel.delay(calc.id)
+        if settings.IS_CLOUD:
+            logger.warning(
+                f"Cannot cancel calc {calc.id}: not implemented for the cloud version"
+            )
+        else:
+            cancel.delay(calc.id)
 
     return HttpResponse(status=200)
 

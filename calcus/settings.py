@@ -60,7 +60,7 @@ SSL = False
 
 ALLOWED_HOSTS = ["*.*.*.*", "0.0.0.0"]
 
-if IS_CLOUD:
+if IS_CLOUD or IS_TEST:
     ALLOWED_HOSTS.append("*")
 
 if not DEBUG and SSL:

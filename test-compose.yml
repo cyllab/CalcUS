@@ -53,6 +53,8 @@ services:
                 environment:
                         - CALCUS_TEST=True
                         - CALCUS_CLOUD=True
+                        - NUM_THREADS=4
+                        - NUM_WORKERS=1
                         - IS_TEST_CLUSTER_DAEMON=True
                         - PORT=8001
                         - GCP_LOCATION=us-central1
