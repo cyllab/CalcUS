@@ -107,19 +107,17 @@ M  END
 class LaunchTests(TestCase):
     def setUp(self):
         call_command("init_static_obj")
-        self.username = "Tester"
+        self.email = "Tester@test.com"
         self.password = "test1234"
 
-        u = User.objects.create_superuser(
-            username=self.username, password=self.password
+        self.user = User.objects.create_superuser(
+            email=self.email,
+            password=self.password,
+            is_PI=True,
         )
-        u.profile.is_PI = True
-        u.save()
-        self.profile = Profile.objects.get(user__username=self.username)
-        self.group = ResearchGroup.objects.create(name="Test group", PI=self.profile)
-        self.group.save()
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
         self.client = Client()
-        self.client.force_login(u)
+        self.client.force_login(self.user)
 
     def tearDown(self):
         pass
@@ -337,19 +335,17 @@ class LaunchTests(TestCase):
 class RestrictionTests(TestCase):
     def setUp(self):
         call_command("init_static_obj")
-        self.username = "Tester"
+        self.email = "Tester@test.com"
         self.password = "test1234"
 
-        u = User.objects.create_superuser(
-            username=self.username, password=self.password
+        self.user = User.objects.create_superuser(
+            email=self.email,
+            password=self.password,
+            is_PI=True,
         )
-        u.profile.is_PI = True
-        u.save()
-        self.profile = Profile.objects.get(user__username=self.username)
-        self.group = ResearchGroup.objects.create(name="Test group", PI=self.profile)
-        self.group.save()
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
         self.client = Client()
-        self.client.force_login(u)
+        self.client.force_login(self.user)
 
         settings.LOCAL_MAX_ATOMS = 15
         settings.LOCAL_ALLOWED_THEORY_LEVELS = ["xtb", "semiempirical"]
@@ -445,26 +441,24 @@ class RestrictionTests(TestCase):
 class PermissionTestsStudent(TestCase):
     def setUp(self):
         call_command("init_static_obj")
-        self.username = "Student"
+        self.email = "Tester@test.com"
         self.password = "test1234"
 
-        u = User.objects.create_user(username=self.username, password=self.password)
-        u.profile.is_PI = False
-        u.save()
-
-        self.profile = Profile.objects.get(user__username=self.username)
-
-        u2 = User.objects.create_user(username="PI", password=self.password)
-        u2.profile.is_PI = True
-        u2.save()
-
-        self.PI = Profile.objects.get(user__username="PI")
-
-        self.group = ResearchGroup.objects.create(name="Test group", PI=self.PI)
-        self.group.save()
+        self.user = User.objects.create_superuser(
+            email=self.email,
+            password=self.password,
+        )
 
         self.client = Client()
-        self.client.force_login(u)
+        self.client.force_login(self.user)
+
+        self.PI = User.objects.create_user(
+            email="PI@test.com", password=self.password, is_PI=True
+        )
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.PI)
+
+        self.client = Client()
+        self.client.force_login(self.user)
 
     def test_project_public_nonmember(self):
         p = Project.objects.create(name="Public Project", author=self.PI, private=0)
@@ -476,10 +470,10 @@ class PermissionTestsStudent(TestCase):
         e.save()
         s.save()
 
-        response = self.client.get("/projects/PI")
+        response = self.client.get(f"/projects/{self.PI.id}")
         self.assertEqual(response.status_code, 404)
 
-        response = self.client.get("/projects/PI/Public Project")
+        response = self.client.get(f"/projects/{self.PI.id}/Public Project")
         self.assertEqual(response.status_code, 302)
 
         response = self.client.get(f"/molecule/{m.id}")
@@ -495,8 +489,8 @@ class PermissionTestsStudent(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_project_public(self):
-        self.profile.member_of = self.group
-        self.profile.save()
+        self.user.member_of = self.group
+        self.user.save()
 
         p = Project.objects.create(name="Public Project", author=self.PI, private=0)
         m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
@@ -507,10 +501,10 @@ class PermissionTestsStudent(TestCase):
         e.save()
         s.save()
 
-        response = self.client.get("/projects/PI")
+        response = self.client.get(f"/projects/{self.PI.id}")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/projects/PI/Public Project")
+        response = self.client.get(f"/projects/{self.PI.id}/Public Project")
         self.assertEqual(response.status_code, 200)
 
         response = self.client.get(f"/molecule/{m.id}")
@@ -526,8 +520,8 @@ class PermissionTestsStudent(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_project_private(self):
-        self.profile.member_of = self.group
-        self.profile.save()
+        self.user.member_of = self.group
+        self.user.save()
 
         p = Project.objects.create(name="Public Project", author=self.PI, private=1)
         m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
@@ -538,10 +532,10 @@ class PermissionTestsStudent(TestCase):
         e.save()
         s.save()
 
-        response = self.client.get("/projects/PI")
+        response = self.client.get(f"/projects/{self.PI.id}")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/projects/PI/Public Project")
+        response = self.client.get(f"/projects/{self.PI.id}/Public Project")
         self.assertEqual(response.status_code, 302)
 
         response = self.client.get(f"/molecule/{m.id}")
@@ -560,26 +554,25 @@ class PermissionTestsStudent(TestCase):
 class PermissionTestsPI(TestCase):
     def setUp(self):
         call_command("init_static_obj")
-        self.username = "PI"
+        self.email = "Tester@test.com"
         self.password = "test1234"
 
-        u = User.objects.create_user(username=self.username, password=self.password)
-        u.profile.is_PI = True
-        u.save()
+        self.user = User.objects.create_superuser(
+            email=self.email,
+            password=self.password,
+            is_PI=True,
+        )
+        self.client = Client()
+        self.client.force_login(self.user)
 
-        self.profile = Profile.objects.get(user__username=self.username)
+        self.student = User.objects.create_user(
+            email="Student@test.com", password=self.password
+        )
 
-        u2 = User.objects.create_user(username="Student", password=self.password)
-        u2.profile.is_PI = False
-        u2.save()
-
-        self.student = Profile.objects.get(user__username="Student")
-
-        self.group = ResearchGroup.objects.create(name="Test group", PI=self.profile)
-        self.group.save()
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
 
         self.client = Client()
-        self.client.force_login(u)
+        self.client.force_login(self.user)
 
     def test_project_public_nonmember(self):
         p = Project.objects.create(
@@ -593,10 +586,10 @@ class PermissionTestsPI(TestCase):
         e.save()
         s.save()
 
-        response = self.client.get("/projects/Student")
+        response = self.client.get(f"/projects/{self.student.id}")
         self.assertEqual(response.status_code, 404)
 
-        response = self.client.get("/projects/Student/Public Project")
+        response = self.client.get(f"/projects/{self.student.id}/Public Project")
         self.assertEqual(response.status_code, 302)
 
         response = self.client.get(f"/molecule/{m.id}")
@@ -626,10 +619,10 @@ class PermissionTestsPI(TestCase):
         e.save()
         s.save()
 
-        response = self.client.get("/projects/Student")
+        response = self.client.get(f"/projects/{self.student.id}")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/projects/Student/Public Project")
+        response = self.client.get(f"/projects/{self.student.id}/Public Project")
         self.assertEqual(response.status_code, 200)
 
         response = self.client.get(f"/molecule/{m.id}")
@@ -659,10 +652,10 @@ class PermissionTestsPI(TestCase):
         e.save()
         s.save()
 
-        response = self.client.get("/projects/Student")
+        response = self.client.get(f"/projects/{self.student.id}")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get("/projects/Student/Public Project")
+        response = self.client.get(f"/projects/{self.student.id}/Public Project")
         self.assertEqual(response.status_code, 200)
 
         response = self.client.get(f"/molecule/{m.id}")
@@ -735,32 +728,26 @@ class PermissionTestsPI(TestCase):
 class AnalysisTests(TestCase):
     def setUp(self):
         call_command("init_static_obj")
-        self.username = "Student"
+        self.email = "Tester@test.com"
         self.password = "test1234"
 
-        u = User.objects.create_user(username=self.username, password=self.password)
-        u.profile.is_PI = False
-        u.save()
-
-        self.profile = Profile.objects.get(user__username=self.username)
-
-        u2 = User.objects.create_user(username="PI", password=self.password)
-        u2.profile.is_PI = True
-        u2.save()
-
-        self.PI = Profile.objects.get(user__username="PI")
-
-        self.group = ResearchGroup.objects.create(name="Test group", PI=self.PI)
-        self.group.save()
+        self.user = User.objects.create_superuser(
+            email=self.email,
+            password=self.password,
+            is_PI=True,
+        )
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
+        self.client = Client()
+        self.client.force_login(self.user)
 
         self.client = Client()
-        self.client.force_login(u)
+        self.client.force_login(self.user)
 
     def test_boltzmann_weighting_Ha(self):
-        self.profile.pref_units = 2  # Hartree
-        self.profile.save()
+        self.user.pref_units = 2  # Hartree
+        self.user.save()
 
-        proj = Project.objects.create(name="TestProj", author=self.profile)
+        proj = Project.objects.create(name="TestProj", author=self.user)
         mol = Molecule.objects.create(name="Mol1", project=proj)
         e = Ensemble.objects.create(name="Confs", parent_molecule=mol)
 
@@ -826,10 +813,10 @@ class AnalysisTests(TestCase):
             ind += 1
 
     def test_boltzmann_weighting_Ha2(self):
-        self.profile.pref_units = 2  # Hartree
-        self.profile.save()
+        self.user.pref_units = 2  # Hartree
+        self.user.save()
 
-        proj = Project.objects.create(name="TestProj", author=self.profile)
+        proj = Project.objects.create(name="TestProj", author=self.user)
         mol = Molecule.objects.create(name="Mol1", project=proj)
         e = Ensemble.objects.create(name="Confs", parent_molecule=mol)
 
@@ -891,10 +878,10 @@ class AnalysisTests(TestCase):
             ind += 1
 
     def test_boltzmann_weighting_kJ(self):
-        self.profile.pref_units = 0  # kJ/mol
-        self.profile.save()
+        self.user.pref_units = 0  # kJ/mol
+        self.user.save()
 
-        proj = Project.objects.create(name="TestProj", author=self.profile)
+        proj = Project.objects.create(name="TestProj", author=self.user)
         mol = Molecule.objects.create(name="Mol1", project=proj)
         e = Ensemble.objects.create(name="Confs", parent_molecule=mol)
 
@@ -967,10 +954,10 @@ class AnalysisTests(TestCase):
             ind += 1
 
     def test_boltzmann_weighting_kcal(self):
-        self.profile.pref_units = 1  # kcal/mol
-        self.profile.save()
+        self.user.pref_units = 1  # kcal/mol
+        self.user.save()
 
-        proj = Project.objects.create(name="TestProj", author=self.profile)
+        proj = Project.objects.create(name="TestProj", author=self.user)
         mol = Molecule.objects.create(name="Mol1", project=proj)
         e = Ensemble.objects.create(name="Confs", parent_molecule=mol)
 
@@ -1045,10 +1032,10 @@ class AnalysisTests(TestCase):
             ind += 1
 
     def test_boltzmann_weighting_missing_structures(self):
-        self.profile.pref_units = 2  # Hartree
-        self.profile.save()
+        self.user.pref_units = 2  # Hartree
+        self.user.save()
 
-        proj = Project.objects.create(name="TestProj", author=self.profile)
+        proj = Project.objects.create(name="TestProj", author=self.user)
         mol = Molecule.objects.create(name="Mol1", project=proj)
         e = Ensemble.objects.create(name="Confs", parent_molecule=mol)
 
@@ -1120,10 +1107,10 @@ class AnalysisTests(TestCase):
             ind += 1
 
     def test_summary(self):
-        self.profile.pref_units = 2
-        self.profile.save()
+        self.user.pref_units = 2
+        self.user.save()
 
-        proj = Project.objects.create(name="TestProj", author=self.profile)
+        proj = Project.objects.create(name="TestProj", author=self.user)
         mol = Molecule.objects.create(name="Mol1", project=proj)
         e = Ensemble.objects.create(name="Confs", parent_molecule=mol)
 
@@ -1181,19 +1168,17 @@ class CalculationTests(TestCase):
             os.mkdir(SCR_DIR)
 
         call_command("init_static_obj")
-        self.username = "Tester"
+        self.email = "Tester@test.com"
         self.password = "test1234"
 
-        u = User.objects.create_superuser(
-            username=self.username, password=self.password
+        self.user = User.objects.create_superuser(
+            email=self.email,
+            password=self.password,
+            is_PI=True,
         )
-        u.profile.is_PI = True
-        u.save()
-        self.profile = Profile.objects.get(user__username=self.username)
-        self.group = ResearchGroup.objects.create(name="Test group", PI=self.profile)
-        self.group.save()
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
         self.client = Client()
-        self.client.force_login(u)
+        self.client.force_login(self.user)
 
     def test_Gaussian_frames1(self):
         params = {
@@ -1208,7 +1193,7 @@ class CalculationTests(TestCase):
             "method": "AM1",
         }
 
-        calc = gen_calc(params, self.profile)
+        calc = gen_calc(params, self.user)
         calc.status = 1
         calc.save()
         if os.path.isdir(os.path.join(SCR_DIR, str(calc.id))):
@@ -1249,7 +1234,7 @@ class CalculationTests(TestCase):
             "method": "AM1",
         }
 
-        calc = gen_calc(params, self.profile)
+        calc = gen_calc(params, self.user)
         calc.status = 1
         calc.save()
         os.mkdir(os.path.join(SCR_DIR, str(calc.id)))
@@ -1288,7 +1273,7 @@ class CalculationTests(TestCase):
             "method": "AM1",
         }
 
-        calc = gen_calc(params, self.profile)
+        calc = gen_calc(params, self.user)
         calc.status = 1
         calc.save()
         os.mkdir(os.path.join(SCR_DIR, str(calc.id)))
@@ -1325,24 +1310,22 @@ class MiscTests(TestCase):
             os.mkdir(SCR_DIR)
 
         call_command("init_static_obj")
-        self.username = "Tester"
+        self.email = "Tester@test.com"
         self.password = "test1234"
 
-        u = User.objects.create_superuser(
-            username=self.username, password=self.password
+        self.user = User.objects.create_superuser(
+            email=self.email,
+            password=self.password,
+            is_PI=True,
         )
-        u.profile.is_PI = True
-        u.save()
-        self.profile = Profile.objects.get(user__username=self.username)
-        self.group = ResearchGroup.objects.create(name="Test group", PI=self.profile)
-        self.group.save()
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
         self.client = Client()
-        self.client.force_login(u)
+        self.client.force_login(self.user)
 
 
 """
     def test_related_calculations(self):
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test project", author=self.user)
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
         e1 = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
         s1 = Structure.objects.create(parent_ensemble=e1)
@@ -1364,10 +1347,10 @@ class MiscTests(TestCase):
         e2 = Ensemble.objects.create(name="Result Ensemble", parent_molecule=mol)
         s2 = Structure.objects.create(parent_ensemble=e2)
 
-        o1 = CalculationOrder.objects.create(author=self.profile, project=proj)
+        o1 = CalculationOrder.objects.create(author=self.user, project=proj)
         calc1 = Calculation.objects.create(order=o1, structure=s1, result_ensemble=e2)
 
-        o2 = CalculationOrder.objects.create(author=self.profile, project=proj)
+        o2 = CalculationOrder.objects.create(author=self.user, project=proj)
         calc2 = Calculation.objects.create(order=o2, structure=s2, result_ensemble=e2)
 
         related = self.client.get("/get_related_calculations/{}".format(e2.pk))

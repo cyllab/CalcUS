@@ -79,7 +79,7 @@ class User(AbstractUser):
 
     username = None
     email = models.EmailField("email", unique=True)
-    full_name = models.CharField(max_length=128, default="")
+    full_name = models.CharField(max_length=256, default="")
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -146,7 +146,11 @@ class User(AbstractUser):
     @property
     def group(self):
         if self.is_PI:
-            return self.researchgroup_PI.all()[0]
+            if self.researchgroup_PI.count() > 0:
+                # TODO: handle multiple groups
+                return self.researchgroup_PI.all()[0]
+            else:
+                return None
         else:
             return self.member_of
 
@@ -176,12 +180,6 @@ class ResearchGroup(_Group):
 
     def __repr__(self):
         return self.name
-
-
-class PIRequest(models.Model):
-    issuer = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
-    group_name = models.CharField(max_length=100)
-    date_issued = models.DateTimeField("date")
 
 
 class Project(models.Model):

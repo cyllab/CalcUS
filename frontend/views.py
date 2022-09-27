@@ -60,7 +60,6 @@ from .models import (
     Project,
     ClusterAccess,
     Example,
-    PIRequest,
     ResearchGroup,
     Parameters,
     Structure,
@@ -128,7 +127,6 @@ class IndexView(generic.ListView):
         except KeyError:
             page = 0
 
-        print(self.request.GET)
         self.request.session["previous_page"] = page
         proj = clean(self.request.GET.get("project"))
         type = clean(self.request.GET.get("type"))
@@ -2100,7 +2098,7 @@ def project_list(request):
 def delete_project(request):
     if request.method == "POST":
         if "id" in request.POST.keys():
-            proj_id = int(clean(request.POST["id"]))
+            proj_id = clean(request.POST["id"])
         else:
             return HttpResponse(status=403)
 
@@ -2125,7 +2123,7 @@ def delete_project(request):
 def delete_order(request):
     if request.method == "POST":
         if "id" in request.POST.keys():
-            order_id = int(clean(request.POST["id"]))
+            order_id = clean(request.POST["id"])
         else:
             return HttpResponse(status=403)
 
@@ -2150,7 +2148,7 @@ def delete_order(request):
 def delete_folder(request):
     if request.method == "POST":
         if "id" in request.POST.keys():
-            folder_id = int(clean(request.POST["id"]))
+            folder_id = clean(request.POST["id"])
         else:
             return HttpResponse(status=403)
 
@@ -2177,7 +2175,7 @@ def delete_folder(request):
 def delete_molecule(request):
     if request.method == "POST":
         if "id" in request.POST.keys():
-            mol_id = int(clean(request.POST["id"]))
+            mol_id = clean(request.POST["id"])
         else:
             return HttpResponse(status=403)
 
@@ -2203,7 +2201,7 @@ def delete_molecule(request):
 def delete_ensemble(request):
     if request.method == "POST":
         if "id" in request.POST.keys():
-            ensemble_id = int(clean(request.POST["id"]))
+            ensemble_id = clean(request.POST["id"])
         else:
             return HttpResponse(status=403)
 
@@ -2432,28 +2430,6 @@ def update_access(request):
 
 @login_required
 @superuser_required
-def get_pi_requests(request):
-    reqs = PIRequest.objects.count()
-    return HttpResponse(str(reqs))
-
-
-@login_required
-@superuser_required
-def get_pi_requests_table(request):
-
-    reqs = PIRequest.objects.all()
-
-    return render(
-        request,
-        "frontend/dynamic/pi_requests_table.html",
-        {
-            "reqs": reqs,
-        },
-    )
-
-
-@login_required
-@superuser_required
 def server_summary(request):
     users = User.objects.all()
     groups = ResearchGroup.objects.all()
@@ -2542,54 +2518,6 @@ def profile_groups(request):
     return render(
         request,
         "frontend/dynamic/profile_groups.html",
-    )
-
-
-@login_required
-@superuser_required
-def accept_pi_request(request, pk):
-
-    a = PIRequest.objects.get(pk=pk)
-
-    try:
-        group = ResearchGroup.objects.get(name=a.group_name)
-    except ResearchGroup.DoesNotExist:
-        pass
-    else:
-        logger.error("Group with that name already exists")
-        return HttpResponse(status=403)
-    issuer = a.issuer
-    group = ResearchGroup.objects.create(name=a.group_name, PI=issuer)
-    group.save()
-    issuer.is_PI = True
-    issuer.save()
-
-    a.delete()
-
-    return HttpResponse(status=200)
-
-
-@login_required
-@superuser_required
-def deny_pi_request(request, pk):
-
-    a = PIRequest.objects.get(pk=pk)
-    a.delete()
-
-    return HttpResponse(status=200)
-
-
-@login_required
-@superuser_required
-def manage_pi_requests(request):
-    reqs = PIRequest.objects.all()
-
-    return render(
-        request,
-        "frontend/manage_pi_requests.html",
-        {
-            "reqs": reqs,
-        },
     )
 
 
@@ -2689,7 +2617,7 @@ def get_calc_data(request, pk):
     except Calculation.DoesNotExist:
         return HttpResponse(status=403)
 
-    if can_view_calculation(calc, request.user):
+    if not can_view_calculation(calc, request.user):
         return HttpResponse(status=403)
 
     if calc.status == 0:
@@ -2906,32 +2834,6 @@ def vib_table(request, pk):
 
 
 @login_required
-def apply_pi(request):
-    if request.method == "POST":
-        if request.user.is_PI:
-            return render(
-                request,
-                "frontend/apply_pi.html",
-                {
-                    "message": "You are already a PI!",
-                },
-            )
-        group_name = clean(request.POST["group_name"])
-        req = PIRequest.objects.create(
-            issuer=request.user, group_name=group_name, date_issued=timezone.now()
-        )
-        return render(
-            request,
-            "frontend/apply_pi.html",
-            {
-                "message": "Your request has been received.",
-            },
-        )
-    else:
-        return HttpResponse(status=403)
-
-
-@login_required
 def info_table(request, pk):
     try:
         calc = Calculation.objects.get(pk=pk)
@@ -2957,7 +2859,7 @@ def next_step(request, pk):
     except Calculation.DoesNotExist:
         return HttpResponse(status=403)
 
-    if can_view_calculation(calc, request.user):
+    if not can_view_calculation(calc, request.user):
         return HttpResponse(status=403)
 
     return render(
@@ -4028,7 +3930,7 @@ def download_project_logs(proj, user, scope, details, folders):
 def download_project_post(request):
     if "id" in request.POST.keys():
         try:
-            id = int(clean(request.POST["id"]))
+            id = clean(request.POST["id"])
         except ValueError:
             return error(request, "Invalid project")
     else:

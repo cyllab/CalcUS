@@ -55,37 +55,6 @@
 		</style>
 		{% block extrahead %}
 		{% endblock %}
-		{% if user.is_superuser %}
-			<script>
-				function refresh_pi_requests_notification() {
-					$.ajax({
-					url: "/get_pi_requests/",
-					type: 'GET',
-					success: function(data) {
-						if (data != "0") {
-							$("#pi_requests").html('<span class="badge is-bottom is-warning">' + data + '</span>');
-							
-						}
-						else {
-							$("#pi_requests").html("");
-						}
-
-					}
-				});
-
-				}
-			$(document).ready(function() {
-				refresh_pi_requests_notification();
-				  $(".navbar-burger").click(function() {
-
-				      // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
-				      $(".navbar-burger").toggleClass("is-active");
-				      $(".navbar-menu").toggleClass("is-active");
-
-				  });
-});
-			</script>
-		{% endif %}
 		<style>
 			@media screen and (min-width: 1408px) {
 			.main_content {
@@ -237,9 +206,6 @@
 					{% endif %}
 
 					{% if user.is_superuser %}
-						<a class="navbar-item" href="/manage_pi_requests/">
-							Manage PI requests <font id="pi_requests"></font>
-						</a>
 						<a class="navbar-item" href="/server_summary/">
 							Server Summary	
 						</a>

@@ -151,13 +151,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.addCleanup(self.cleanupCalculations)
         os.chdir(base_cwd)
         call_command("init_static_obj")
-        self.username = "Selenium"
+        self.email = "Selenium@test.com"
         self.password = "test1234"
 
-        u = User.objects.create_user(username=self.username, password=self.password)
-        u.save()
-        self.login(self.username, self.password)
-        self.profile = Profile.objects.get(user__username=self.username)
+        self.user = User.objects.create_user(email=self.email, password=self.password)
+        self.login(self.email, self.password)
         time.sleep(0.1)  # Reduces glitches (I think?)
 
         self.name_patcher = mock.patch.dict(
@@ -170,20 +168,20 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             res = AbortableAsyncResult(c.task_id)
             res.abort()
 
-    def login(self, username, password):
+    def login(self, email, password):
         self.lget("/accounts/login/")
 
         element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, "id_username"))
+            EC.presence_of_element_located((By.ID, "id_email"))
         )
         element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "id_password"))
         )
 
-        username_f = self.driver.find_element(By.ID, "id_username")
+        email_f = self.driver.find_element(By.ID, "id_email")
         password_f = self.driver.find_element(By.ID, "id_password")
         submit = self.driver.find_element(By.CSS_SELECTOR, "input.control")
-        username_f.send_keys(username)
+        email_f.send_keys(email)
         password_f.send_keys(password)
         submit.send_keys(Keys.RETURN)
 
