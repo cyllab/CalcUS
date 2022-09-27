@@ -3820,6 +3820,6 @@ def backup_db():
 @app.task
 def ping_satellite():
     r = requests.post(
-        "https://calcus-satellite-tg3y3xrnxq-uc.a.run.app/ping",
+        "https://ping.calcus.cloud/ping",
         data={"code": settings.PING_CODE},
     )

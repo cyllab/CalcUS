@@ -3437,7 +3437,7 @@ def download_all_logs(request, pk):
                     _logname = ""
                 else:
                     _logname = f"_{logname}"
-                zip.writestr(f"{order.molecule_name}_order{pk}_calc{cid}{_logname}", f)
+                zip.writestr(f"{order.molecule_name}_order{pk}_calc{cid}{_logname}")
 
     response = HttpResponse(mem.getvalue(), content_type="application/zip")
     response["Content-Disposition"] = f'attachment; filename="order_{pk}.zip"'
