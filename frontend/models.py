@@ -21,7 +21,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from django.db import models, transaction
 from django.db.models.signals import pre_save
 from django.utils import timezone
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group as _Group
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+
 from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import post_save, post_init
 from django.dispatch import receiver
@@ -30,6 +32,8 @@ import random, string
 import numpy as np
 import os
 import hashlib
+
+from hashid_field import BigHashidAutoField
 
 from .constants import *
 
@@ -40,10 +44,50 @@ register = template.Library()
 STATUS_COLORS = {0: "#AAAAAA", 1: "#FFE515", 2: "#1EE000", 3: "#FD1425"}
 
 
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+class UserManager(BaseUserManager):
+    use_in_migrations = True
+
+    def _create_user(self, email, password, **extra_fields):
+        if not email:
+            raise ValueError("No email provided")
+
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_user(self, email, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", False)
+        extra_fields.setdefault("is_superuser", False)
+        return self._create_user(email, password, **extra_fields)
+
+    def create_superuser(self, email, password, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must be staff")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must be superuser")
+
+        return self._create_user(email, password, **extra_fields)
+
+
+class User(AbstractUser):
+    id = BigHashidAutoField(primary_key=True)
+
+    username = None
+    email = models.EmailField("email", unique=True)
+    full_name = models.CharField(max_length=128, default="")
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+
+    objects = UserManager()
 
     is_PI = models.BooleanField(default=False)
+    is_temporary = models.BooleanField(default=False)
 
     member_of = models.ForeignKey(
         "ResearchGroup",
@@ -68,6 +112,12 @@ class Profile(models.Model):
     INV_UNITS = {v: k for k, v in UNITS.items()}
 
     @property
+    def name(self):
+        if self.full_name:
+            return self.full_name
+        return f"User {self.id}"
+
+    @property
     def pref_units_name(self):
         return self.UNITS[self.pref_units]
 
@@ -90,12 +140,8 @@ class Profile(models.Model):
         else:
             raise Exception("Unknown units")
 
-    @property
-    def username(self):
-        return self.user.username
-
     def __str__(self):
-        return self.user.username
+        return self.name
 
     @property
     def group(self):
@@ -119,9 +165,9 @@ class Recipe(models.Model):
     page_path = models.CharField(max_length=100)
 
 
-class ResearchGroup(Group):
+class ResearchGroup(_Group):
     PI = models.ForeignKey(
-        Profile,
+        User,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
@@ -133,14 +179,15 @@ class ResearchGroup(Group):
 
 
 class PIRequest(models.Model):
-    issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    issuer = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     group_name = models.CharField(max_length=100)
     date_issued = models.DateTimeField("date")
 
 
 class Project(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100)
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     private = models.PositiveIntegerField(default=0)
 
     preset = models.ForeignKey(
@@ -172,6 +219,7 @@ def create_main_folder(sender, instance, created, **kwargs):
 
 
 class Folder(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100)
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, blank=True, null=True
@@ -183,8 +231,9 @@ class Folder(models.Model):
 
 
 class ClusterAccess(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     owner = models.ForeignKey(
-        Profile,
+        User,
         on_delete=models.CASCADE,
         blank=True,
         null=True,
@@ -224,16 +273,16 @@ class BasicStep(models.Model):
 
 
 class Preset(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100, default="My Preset")
     params = models.ForeignKey(
         "Parameters", on_delete=models.SET_NULL, blank=True, null=True
     )
-    author = models.ForeignKey(
-        "Profile", on_delete=models.CASCADE, blank=True, null=True
-    )
+    author = models.ForeignKey("User", on_delete=models.CASCADE, blank=True, null=True)
 
 
 class Ensemble(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100, default="Nameless ensemble")
     parent_molecule = models.ForeignKey(
         "Molecule", on_delete=models.CASCADE, blank=True, null=True
@@ -556,6 +605,7 @@ def handle_folder(sender, instance, **kwargs):
 
 
 class Property(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     parameters = models.ForeignKey(
         "Parameters", on_delete=models.SET_NULL, blank=True, null=True
     )
@@ -600,6 +650,7 @@ class Property(models.Model):
 
 
 class Structure(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     parent_ensemble = models.ForeignKey(
         Ensemble, on_delete=models.CASCADE, blank=True, null=True
     )
@@ -611,6 +662,7 @@ class Structure(models.Model):
 
 
 class CalculationFrame(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     parent_calculation = models.ForeignKey(
         "Calculation", on_delete=models.CASCADE, blank=True, null=True
     )
@@ -624,6 +676,7 @@ class CalculationFrame(models.Model):
 
 
 class Parameters(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100, default="Nameless parameters")
     charge = models.IntegerField()
     multiplicity = models.IntegerField()
@@ -735,6 +788,7 @@ def gen_params_md5(obj):
 
 
 class Molecule(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100)
     inchi = models.CharField(max_length=1000, default="", blank=True, null=True)
     project = models.ForeignKey(
@@ -747,6 +801,7 @@ class Molecule(models.Model):
 
 
 class CalculationOrder(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100)
 
     structure = models.ForeignKey(
@@ -779,7 +834,7 @@ class CalculationOrder(models.Model):
         BasicStep, on_delete=models.SET_NULL, blank=True, null=True
     )
 
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     project = models.ForeignKey(
         "Project", on_delete=models.CASCADE, blank=True, null=True
     )
@@ -807,7 +862,7 @@ class CalculationOrder(models.Model):
             self.save()
 
             with transaction.atomic():
-                p = Profile.objects.select_for_update().get(id=self.author.id)
+                p = User.objects.select_for_update().get(id=self.author.id)
                 p.unseen_calculations = max(
                     p.unseen_calculations - 1, 0
                 )  # Glitches may screw up the count...
@@ -886,13 +941,13 @@ class CalculationOrder(models.Model):
         if old_unseen:
             if not new_unseen:
                 with transaction.atomic():
-                    p = Profile.objects.select_for_update().get(id=self.author.id)
+                    p = User.objects.select_for_update().get(id=self.author.id)
                     p.unseen_calculations -= 1
                     p.save()
         else:
             if new_unseen:
                 with transaction.atomic():
-                    p = Profile.objects.select_for_update().get(id=self.author.id)
+                    p = User.objects.select_for_update().get(id=self.author.id)
                     p.unseen_calculations += 1
                     p.save()
 
@@ -945,14 +1000,14 @@ class CalculationOrder(models.Model):
     def delete(self, *args, **kwargs):
         if self.new_status:
             with transaction.atomic():
-                p = Profile.objects.select_for_update().get(id=self.author.id)
+                p = User.objects.select_for_update().get(id=self.author.id)
                 p.unseen_calculations = max(0, p.unseen_calculations - 1)
                 p.save()
         super(CalculationOrder, self).delete(*args, **kwargs)
 
 
 class Calculation(models.Model):
-
+    id = BigHashidAutoField(primary_key=True)
     CALC_STATUSES = {
         "Queued": 0,
         "Running": 1,
@@ -1059,6 +1114,7 @@ class Calculation(models.Model):
 
 
 class Filter(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     type = models.CharField(max_length=500)
     parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, null=True)
     value = models.CharField(max_length=500)
@@ -1071,17 +1127,3 @@ def update_parameters_hash(sender, instance, **kwargs):
         instance._md5 = hash
     # Parameters are not really modified, but the case where they are updated could be handled
     # Changing just to _md5 field should not trigger anything
-
-
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        code = "".join(
-            random.choice(string.ascii_uppercase + string.digits) for _ in range(16)
-        )
-        Profile.objects.create(user=instance, code=code)
-
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()

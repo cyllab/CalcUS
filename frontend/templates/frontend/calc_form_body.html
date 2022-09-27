@@ -167,7 +167,7 @@
 					<div class="control">
 						<div class="select" >
 						  <select name="calc_project" onchange="project_selection_changed(this)" id="calc_project">
-							  {% for proj in profile.project_set.all|dictsort:"name" %}
+							  {% for proj in request.user.project_set.all|dictsort:"name" %}
 							  <option name="{{ proj }}">{{ proj }}</option>
 							  {% endfor %}
 							  <option name="new_project">New Project</option>
@@ -377,13 +377,13 @@
 				<div class="select">
 				<select name="calc_resource" id="calc_resource" onchange="refresh_availabilities();">
 					{% if ALLOW_LOCAL_CALC %}
-						{% if profile.group or profile.is_PI or request.user.is_superuser %}
+						{% if request.user.group or request.user.is_PI or request.user.is_superuser %}
 							<option>Local</option>
 						{% endif %}
 					{% endif %}
 
 					{% if ALLOW_REMOTE_CALC %}
-					{% for access in profile.accesses %}
+					{% for access in request.user.accesses %}
 						{% if access.connected %}
 							<option>{{ access.cluster_address }}</option>
 						{% endif %}

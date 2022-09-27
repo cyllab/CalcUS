@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from django.contrib import admin
 
-from .models import Calculation, Profile
+from .models import Calculation
 
 admin.site.register(Calculation)
-admin.site.register(Profile)

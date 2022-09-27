@@ -47,7 +47,7 @@
 	<table class="table is-fullwidth is-striped">
 		<thead>
 			<tr>
-			<th>Username</th>
+			<th>Name</th>
 			<th>Group</th>
 			<th>Date joined</th>
 			<th>Last login</th>
@@ -56,7 +56,7 @@
 		<tbody>
 			{% for u in users %}
 				<tr>
-					<td>{{ u.username }}</td>
+					<td>{{ u.name }}</td>
 					<td>{{ u.group }}</td>
 					<td>{{ u.user.date_joined }}</td>
 					<td>{{ u.user.last_login }}</td>
@@ -79,7 +79,7 @@
 			{% for a in accesses %}
 				<tr>
 					<td>{{ a.cluster_address }}</td>
-					<td>{{ a.owner.username }}</td>
+					<td>{{ a.owner.name }}</td>
 					<td><span id="status_{{ a.id }}"></span></td>
 				</tr>
 			{% endfor %}	

@@ -18,7 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
-from .models import Profile
 from django.http import HttpResponse, HttpResponseRedirect
 
 

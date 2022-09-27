@@ -106,7 +106,7 @@ String.prototype.format = function() {
 
 	}
 	var project_presets = {
-		{% for proj in profile.project_set.all %}
+		{% for proj in request.user.project_set.all %}
 		'{{ proj.name }}': {% if proj.preset %}{{ proj.preset.id }} {% else %} -1 {% endif %},
 		{% endfor %}
 	}
@@ -219,7 +219,7 @@ String.prototype.format = function() {
 			else if(choice.value == "By Relative Energy") {
 				value_input.style.display = "block";
 				param_input.style.display = "block";
-				label.innerHTML = "Lower than (" + "{{ profile.pref_units_name }}" + ")";
+				label.innerHTML = "Lower than (" + "{{ request.user.pref_units_name }}" + ")";
 			}
 		}
 

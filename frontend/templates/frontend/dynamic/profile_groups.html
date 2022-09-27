@@ -1,9 +1,9 @@
-{% if profile.researchgroup_PI.count == 0 and profile.group == None %}
-Your group code is {{ profile.code }}. Give this to your PI to be added to a research group.
+{% if request.user.researchgroup_PI.count == 0 and request.user.group == None %}
+Your group code is {{ request.user.code }}. Give this to your PI to be added to a research group.
 {% endif %}
 
-{% if profile.researchgroup_PI.count > 0 %}
-	{% for group in profile.researchgroup_PI.all %}
+{% if request.user.researchgroup_PI.count > 0 %}
+	{% for group in request.user.researchgroup_PI.all %}
 	<center>
 		You are the PI of {{ group.name }}
 	</center>
@@ -50,8 +50,8 @@ Your group code is {{ profile.code }}. Give this to your PI to be added to a res
 			</div>
 		</div>
 	{% endfor %}
-{% elif profile.group != None %}
-	You are a member of {{ profile.group.name }}
+{% elif request.user.group != None %}
+	You are a member of {{ request.user.group.name }}
 	<center>
 		<table class="table">
 			<thead>
@@ -60,8 +60,8 @@ Your group code is {{ profile.code }}. Give this to your PI to be added to a res
 				</tr>
 			</thead>
 			<tbody>
-				<th>{{ profile.group.PI.username }} (PI)</th>
-				{% for member in profile.group.members.all %}
+				<th>{{ request.user.group.PI.username }} (PI)</th>
+				{% for member in request.user.group.members.all %}
 				<tr>
 					<td>{{ member.username }}</td>
 				</tr>

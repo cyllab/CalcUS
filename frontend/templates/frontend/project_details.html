@@ -94,7 +94,7 @@
 	<div class="grid">
 		{% for mol in molecules %}
 			<div class="box has-background-blue-light" id="mol_box_{{ mol.id }}">
-				{% if mol.project.author == request.user.profile %}
+				{% if mol.project.author == request.user %}
 				<p style="float: right;">
 					<a onclick="edit_field({{ mol.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}" title="Rename"></i></a>
 					<a onclick="del({{ mol.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>
@@ -108,7 +108,7 @@
 
 		{% endfor %}
 		<div style="margin-top: 30px; margin-bottom: 30px;">
-		{% if request.user.profile == project.author %}
+		{% if request.user == project.author %}
 			<center>
 				<a href="/launch/project/{{ project.id }}">
 					<div class="box has-background-info" style="opacity: 0.5;" id="molecule_in_project">

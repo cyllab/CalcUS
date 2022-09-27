@@ -584,7 +584,7 @@
 						<tr>
 							<th>#</th>
 							<th>Energy (Eh)</th>
-							<th>Rel. energy ({{ profile.pref_units_name }})</th>
+							<th>Rel. energy ({{ request.user.pref_units_name }})</th>
 							<th>Degeneracy</th>
 							<th>Boltzmann Weight at 298K</th>
 						</tr>
@@ -636,7 +636,7 @@
 	</div>
 
 	<br />
-	{% if profile == calculation.author %}
+	{% if request.user == calculation.author %}
 		<a class="button is-danger" href="/delete/{{ calculation.id }}">Delete this calculation</a>
 	{% endif %}
 	<script>

@@ -103,6 +103,10 @@ MIDDLEWARE = [
     #'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
+HASHID_FIELD_SALT = os.getenv("CALCUS_HASHID_SALT", "test_salt")
+
+AUTH_USER_MODEL = "frontend.User"
+
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesBackend",
     "django.contrib.auth.backends.ModelBackend",
@@ -159,14 +163,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+DEFAULT_AUTO_FIELD = "hashid_field.BigHashidAutoField"
+
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "EST"
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 STATIC_URL = os.getenv("STATIC_URL", "/static/")

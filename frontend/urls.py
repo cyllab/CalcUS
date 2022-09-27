@@ -43,14 +43,14 @@ urlpatterns = [
     path("toggle_flag/", views.toggle_flag, name="toggle_flag"),
     path("projects/", views.projects, name="projects"),
     path(
-        "projects/<str:username>/<str:proj>/<path:folder_path>",
+        "projects/<str:user_id>/<str:proj>/<path:folder_path>",
         views.project_folders,
         name="project_folders",
     ),
-    path("projects/<str:username>", views.projects_username, name="projects_username"),
+    path("projects/<str:user_id>", views.projects_by_user, name="projects_by_user"),
     path("get_projects/", views.get_projects, name="get_projects"),
     path(
-        "projects/<str:username>/<str:proj>",
+        "projects/<str:user_id>/<str:proj>",
         views.project_details,
         name="project_details",
     ),

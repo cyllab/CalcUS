@@ -1,4 +1,4 @@
 <option name="all">All projects</option>
-{% for proj in target_profile.project_set.all %}
+{% for proj in target_user.project_set.all %}
 <option name="{{ proj }}">{{ proj }}</option>
 {% endfor %}

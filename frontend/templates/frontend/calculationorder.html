@@ -91,7 +91,7 @@
 						<th><a class="button is-warning" href="/calculation/{{ calc.id}}">{{ calc.id }}</a></th>
 						<th>{{ calc.text_status }}{% if calc.status == 3%} - {{ calc.error_message }}{% endif %}</th>
 						<th>{{ calc.execution_time }}</th>
-						<th>{% if request.user.profile == order.author %}<a class="button is-danger" id="cancel_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'cancel');">Kill</a> <a class="button" id="relaunch_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'relaunch');">Relaunch</a>{% if not calc.local %} <a class="button" id="refetch_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'refetch');">Refetch</a> {% endif %}{% endif %}</th>
+						<th>{% if request.user == order.author %}<a class="button is-danger" id="cancel_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'cancel');">Kill</a> <a class="button" id="relaunch_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'relaunch');">Relaunch</a>{% if not calc.local %} <a class="button" id="refetch_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'refetch');">Refetch</a> {% endif %}{% endif %}</th>
 					</tr>
 					{% endfor %}
 				</tbody>

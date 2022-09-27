@@ -9,6 +9,9 @@ ENV_TEMPLATE = """
 # Django cryptographic salt
 CALCUS_SECRET_KEY='{}'
 
+# Object hash ids cryptographic salt
+CALCUS_HASH_ID_SALT='{}'
+
 {}
 # Number of OpenMPI threads to use (xTB)
 OMP_NUM_THREADS={},1
@@ -32,7 +35,7 @@ UID={}
 GID={}
 
 # Username of the superuser account (automatically created on startup if does not already exist)
-CALCUS_SU_NAME={}
+CALCUS_SU_EMAIL={}
 
 # Ping server to participate in user statistics (True/False)
 CALCUS_PING_SATELLITE={}
@@ -154,18 +157,17 @@ if os.path.isfile(".env"):
     exit(0)
 
 secret_key = gen_key()
-print("Secret key generated")
-print("\n")
+hash_salt = gen_key()
+print("Secret key and hash salt generated\n")
 
 postgres = gen_chars()
-print("PostgreSQL password generated")
-print("\n")
+print("PostgreSQL password generated\n")
 
 while True:
-    su_name = input(
-        "Choose a username for the superuser account. This account will have the password 'default'. Make sure to change this password in the profile.\n"
+    su_email = input(
+        "Enter an email for the superuser account. This account will have the password 'default'. Make sure to change this password in the profile.\n"
     )
-    if su_name.strip() == "":
+    if su_email.strip() == "":
         print("Invalid username\n")
     else:
         break
@@ -264,7 +266,7 @@ with open(".env", "w") as out:
             postgres,
             uid,
             gid,
-            su_name,
+            su_email,
             ping,
             ping_code,
         )
@@ -291,6 +293,7 @@ with open(env_backup_path, "w") as out:
     out.write(
         ENV_TEMPLATE.format(
             secret_key,
+            hash_salt,
             software_paths,
             num_cpu,
             num_cpu,
@@ -298,7 +301,7 @@ with open(env_backup_path, "w") as out:
             postgres,
             uid,
             gid,
-            su_name,
+            su_email,
             ping,
             ping_code,
         )

@@ -160,7 +160,7 @@
 				},
 				success: function(data) {
 					sp = data.split(';');
-					add_folder(sp[0], sp[1], {% if request.user.profile == project.author %} true {% else %} false {% endif %});
+					add_folder(sp[0], sp[1], {% if request.user == project.author %} true {% else %} false {% endif %});
 				}
 			});
 		}
@@ -168,10 +168,10 @@
 
 			$('div.box').draggable({handle: 'p', revert: true, cancel: 'i'});
 			{% for f in folders|dictsort:"name" %}
-				add_folder({{ f.id }}, "{{ f.name }}", {% if request.user.profile == project.author %} true {% else %} false {% endif %});
+				add_folder({{ f.id }}, "{{ f.name }}", {% if request.user == project.author %} true {% else %} false {% endif %});
 			{% endfor %}
 
-			{% if request.user.profile == project.author and folder.depth > 0 %}
+			{% if request.user == project.author and folder.depth > 0 %}
 				$('#folder_box_{{ folder.parent_folder.id }}').droppable({drop: dropped_in_folder});
 			{% endif %}
 
@@ -194,7 +194,7 @@
 
 	</nav>
 	<div class="grid">
-		{% if request.user.profile == project.author and folder.depth > 0 %}
+		{% if request.user == project.author and folder.depth > 0 %}
 		<div style="margin-top: 30px; margin-bottom: 30px;">
 			<center>
 				<a id="parent_folder_link" href="{% get_parent_url request.path %}">
@@ -208,7 +208,7 @@
 
 		<div id="folder_list">
 		</div>
-		{% if request.user.profile == project.author %}
+		{% if request.user == project.author %}
 		<div style="margin-top: 30px; margin-bottom: 30px;">
 			<center>
 				<a id="create_folder_link" onclick="create_folder();">
@@ -222,7 +222,7 @@
 
 		{% for e in ensembles %}
 			<div class="box has-background-primary-light" id="ensemble_box_{{ e.id }}">
-				{% if e.parent_molecule.project.author == request.user.profile %}
+				{% if e.parent_molecule.project.author == request.user %}
 				<p style="float: right;">
 					<a onclick="edit_field('e', {{ e.id }});"><i class="fas fa-edit" id="icon_folder_{{ f.id}}" title="Rename"></i></a>
 					<a onclick="del('e', {{ e.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>

@@ -103,7 +103,7 @@
 				},
 				success: function(data) {
 					sdata = data.split(';');
-					add_project(sdata[0], sdata[1], "{{ request.user.username }}", true, false, 0);	
+					add_project(sdata[0], sdata[1], "{{ request.user.id }}", true, false, 0);	
 				}
 			});
 		}
@@ -167,7 +167,7 @@
 		}
 		$(document).ready(function() { 
 			{% for project in projects|dictsort:"name" %}
-			add_project({{ project.id }}, "{{ project.name }}", "{{ project.author.username }}", {% if request.user.profile == project.author %} true {% else %} false {% endif %}, {% if project.private %} true {% else %} false {% endif %}, {{ project.molecule_set.count }});
+			add_project({{ project.id }}, "{{ project.name }}", "{{ project.author.id }}", {% if request.user == project.author %} true {% else %} false {% endif %}, {% if project.private %} true {% else %} false {% endif %}, {{ project.molecule_set.count }});
 			{% endfor %}
 		});
 	</script>
@@ -175,7 +175,7 @@
 	<nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
 		<ul>
 			<li><a href="/projects/">Projects</a></li>
-			<li class="is-active"><a aria-current="page" href="#">{{ target_profile.username }}</a></li>
+			<li class="is-active"><a aria-current="page" href="#">{{ target_user.name }}</a></li>
 		</ul>
 		<hr />	
 	</nav>
@@ -183,7 +183,7 @@
 	<div id="projects_list">
 	</div>
 	<div style="margin-top: 30px; margin-bottom: 30px;">
-		{% if request.user.profile == target_profile %}
+		{% if request.user == target_user %}
 			<center>
 				<a onclick="create_project();">
 					<div class="box has-background-danger" style="opacity: 0.5;">

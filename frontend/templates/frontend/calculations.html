@@ -84,7 +84,7 @@
 			opt = sel.options[sel.selectedIndex].text;
 
 			var sel2 = document.getElementById("calc_user");
-			user = sel2.options[sel2.selectedIndex].text;
+			user_id = sel2.options[sel2.selectedIndex].value;
 
 			var sel3 = document.getElementById("calc_type");
 			type = sel3.options[sel3.selectedIndex].text;
@@ -111,7 +111,7 @@
 					csrfmiddlewaretoken: ('{{csrf_token}}'),
 					project: opt,	
 					page: page,
-					user: user,
+					user_id: user_id,
 					type: type,
 					status: status,
 					mode: sel_mode,
@@ -135,11 +135,11 @@
 		
 		function refresh_project_list() {
 			var sel2 = document.getElementById("calc_user");
-			user = sel2.options[sel2.selectedIndex].text;
+			user_id = sel2.options[sel2.selectedIndex].value;
 			$.ajax({
 				data: {
 					csrfmiddlewaretoken: ('{{csrf_token}}'),
-					user: user,
+					user_id: user_id,
 				},
 				method: "POST",
 				url: '/project_list/',
@@ -242,9 +242,9 @@
 		<div class="box">
 			<div class="select" >
 				<select name="calc_user" id="calc_user" onchange="refresh_project_list('new');">
-					<option>{{ user.username }}</option>
+					<option name="{{ request.user.name }}" value="{{ request.user.id }}">{{ request.user.name }}</option>
 					{% for teammate in teammates %}
-							<option name="{{ teammate }}">{{ teammate }}</option>
+						<option name="{{ teammate.0 }}" value="{{ teammate.1 }}">{{ teammate.1 }}</option>
 					{% endfor %}
 				</select>
 			</div>
@@ -253,7 +253,7 @@
 			<div class="select" >
 				<select name="calc_project" id="calc_project" onchange="refresh_list('new');">
 					<option name="all">All projects</option>
-					{% for proj in user.profile.project_set.all %}
+					{% for proj in request.user.project_set.all %}
 					<option name="{{ proj }}">{{ proj }}</option>
 					{% endfor %}
 				</select>

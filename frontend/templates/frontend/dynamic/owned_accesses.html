@@ -1,4 +1,4 @@
-{% if profile.clusteraccess_owner.count > 0 %}
+{% if request.user.clusteraccess_owner.count > 0 %}
 	<center>
 		<table class="table">
 			<thead>
@@ -9,7 +9,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				{% for access in profile.clusteraccess_owner.all %}
+				{% for access in request.user.clusteraccess_owner.all %}
 				<tr>
 					<th>{{ access.cluster_address }}</th>
 					<th>{{ access.cluster_username }}</th>

@@ -93,14 +93,14 @@
 							{
 								strokeWidth: 2,	
 								xlabel: "Frame",
-								ylabel: "Relative Energy ({{ request.user.profile.pref_units_name }})",
+								ylabel: "Relative Energy ({{ request.user.pref_units_name }})",
 								rangeSelectorPlotStrokeColor: "#BABABA",
 								highlightCircleSize:  5, 
 								pointClickCallback: function(e, pt) {
 								    set_frame(this.getValue(pt.idx, 0));
 								},
 								dateWindow: rmsd_graph.xAxisExtremes(),
-								digitsAfterDecimal: {{ request.user.profile.pref_units_precision}},
+								digitsAfterDecimal: {{ request.user.pref_units_precision}},
 								axes: {
 									y: {
 										axisLabelWidth: 80,

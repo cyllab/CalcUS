@@ -28,8 +28,7 @@
 		}
 
 		function add_user(group_id) {
-			let username = $("#user_to_add").val();
-			let code = $("#code").val();
+			let user_id = $("#user_to_add").val();
 			$.ajax({
 				method: "POST",	 	 
 				url: "/add_user/",
@@ -37,7 +36,7 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 
-				data: {'username': username, 'group_id': group_id, 'code': code},
+				data: {'user_id': user_id, 'group_id': group_id},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						refresh_groups();
@@ -98,20 +97,20 @@
 				<div class="control">
 					<div class="select">
 					 	<select name="pref_units" id="pref_units">
-							<option {% if profile.pref_units == 0 %}selected="selected"{% endif %} value="kJ/mol">kJ/mol</option>
-					    		<option {% if profile.pref_units == 1 %}selected="selected"{% endif %} value="kcal/mol">kcal/mol</option>
-					    		<option {% if profile.pref_units == 2 %}selected="selected"{% endif %} value="Eh">Eh</option>
+							<option {% if request.user.pref_units == 0 %}selected="selected"{% endif %} value="kJ/mol">kJ/mol</option>
+					    		<option {% if request.user.pref_units == 1 %}selected="selected"{% endif %} value="kcal/mol">kcal/mol</option>
+					    		<option {% if request.user.pref_units == 2 %}selected="selected"{% endif %} value="Eh">Eh</option>
 					  	</select>
 					</div>
 				</div>
 			</div>
 			<div class="field">
 				<label class="label">Default options for Gaussian</label>
-				<input type="text" class="input" value="{{ profile.default_gaussian }}" name="default_gaussian">
+				<input type="text" class="input" value="{{ request.user.default_gaussian }}" name="default_gaussian">
 			</div>
 			<div class="field">
 				<label class="label">Default options for ORCA</label>
-				<input type="text" class="input" value="{{ profile.default_orca }}" name="default_orca">
+				<input type="text" class="input" value="{{ request.user.default_orca }}" name="default_orca">
 			</div>
 
 			<div class="field">
@@ -126,7 +125,7 @@
 	</div>
 	<br>
 
-	{% if not profile.is_PI %}
+	{% if not request.user.is_PI %}
 	<div class="box">
 		<div class="columns is-vcentered">
 			<div class="column is-4">
