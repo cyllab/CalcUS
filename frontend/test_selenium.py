@@ -59,7 +59,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.get_number_projects(), 0)
 
     def test_projects_display(self):
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         self.lget("/projects/")
         self.assertEqual(self.get_number_projects(), 1)
 
@@ -72,128 +72,74 @@ class InterfaceTests(CalcusLiveServer):
         self.assertFalse(self.group_panel_present())
 
     def test_group_panel_appears_as_PI(self):
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+
         self.lget("/profile/")
 
-        self.apply_PI("Test group")
-        self.logout()
-
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
         self.assertTrue(self.group_panel_present())
         self.assertEqual(self.group_num_members(), 1)
 
     def test_group_panel_appears_as_PI2(self):
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+
         self.lget("/profile/")
 
-        self.apply_PI("Test group")
-        self.logout()
-
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
-        u = User.objects.create_user(username="Student", password=self.password)
+        u = User.objects.create_user(email="Student@test.com", password=self.password)
         self.lget("/profile/")
-        self.add_user_to_group("Student")
+        self.add_user_to_group(u.id)
         time.sleep(1)
         self.lget("/projects/")
         self.assertTrue(self.group_panel_present())
         self.assertEqual(self.group_num_members(), 2)
 
     def test_group_panel_absent_without_adding(self):
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+
         self.lget("/profile/")
 
-        self.apply_PI("Test group")
-        self.logout()
-
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        u = User.objects.create_user(username="Student", password=self.password)
-        self.login(self.username, self.password)
+        u = User.objects.create_user(email="Student@test.com", password=self.password)
+        self.login(self.email, self.password)
         self.lget("/profile/")
         self.assertEqual(self.group_num_members(), 1)
 
     def test_group_panel_appears_as_student(self):
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+
         self.lget("/profile/")
 
-        self.apply_PI("Test group")
-        self.logout()
-
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
-        u = User.objects.create_user(username="Student", password=self.password)
+        u = User.objects.create_user(email="Student@test.com", password=self.password)
         self.lget("/profile/")
-        self.add_user_to_group("Student")
+        self.add_user_to_group(u.id)
         self.logout()
-        self.login("Student", self.password)
+        self.login("Student@test.com", self.password)
         self.assertTrue(self.group_panel_present())
         self.assertEqual(self.group_num_members(), 2)
 
     def test_group_panel_appears_everywhere_as_student(self):
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+
         self.lget("/profile/")
 
-        self.apply_PI("Test group")
-        self.logout()
+        u = User.objects.create_user(email="Student@test.com", password=self.password)
 
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
-        u = User.objects.create_user(username="Student", password=self.password)
-
-        proj = Project.objects.create(name="Test project", author=u.profile)
+        proj = Project.objects.create(name="Test Project", author=u)
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
         e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
 
         self.lget("/profile/")
-        self.add_user_to_group("Student")
+        self.add_user_to_group(u.id)
         self.logout()
-        self.login("Student", self.password)
+        self.login("Student@test.com", self.password)
 
         self.lget("/profile/")
         self.assertTrue(self.group_panel_present())
@@ -204,7 +150,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertTrue(self.group_panel_present())
         self.assertEqual(self.group_num_members(), 2)
 
-        self.click_project("Test project")
+        self.click_project("Test Project")
         self.wait_for_ajax()
         self.assertTrue(self.group_panel_present())
         self.assertEqual(self.group_num_members(), 2)
@@ -220,31 +166,20 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.group_num_members(), 2)
 
     def test_group_panel_appears_everywhere_as_PI(self):
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+
         self.lget("/profile/")
 
-        self.apply_PI("Test group")
-        self.logout()
+        u = User.objects.create_user(email="Student@test.com", password=self.password)
 
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
-        u = User.objects.create_user(username="Student", password=self.password)
-
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
         e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
 
         self.lget("/profile/")
-        self.add_user_to_group("Student")
+        self.add_user_to_group(u.id)
         time.sleep(0.1)  # Database delay
 
         self.lget("/profile/")
@@ -258,7 +193,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertTrue(self.group_panel_present())
         self.assertEqual(self.group_num_members(), 2)
 
-        self.click_project("Test project")
+        self.click_project("Test Project")
         self.wait_for_ajax()
         self.assertTrue(self.group_panel_present())
         self.assertEqual(self.group_num_members(), 2)
@@ -274,321 +209,232 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.group_num_members(), 2)
 
     def test_group_access_projects_as_PI(self):
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+
         self.lget("/profile/")
 
-        self.apply_PI("Test group")
-        self.logout()
+        u = User.objects.create_user(email="Student@test.com", password=self.password)
 
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
-        u = User.objects.create_user(username="Student", password=self.password)
-
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
         e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
 
         self.lget("/profile/")
-        self.add_user_to_group("Student")
+        self.add_user_to_group(u.id)
         time.sleep(1)
         self.lget("/projects/")
-        self.group_click_member("Student")
+        self.group_click_member(f"User {u.id}")
         self.assertTrue(self.is_on_page_projects())
 
     def test_group_access_project_as_PI(self):
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+
         self.lget("/profile/")
 
-        self.apply_PI("Test group")
-        self.logout()
+        u = User.objects.create_user(email="Student@test.com", password=self.password)
 
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
-        u = User.objects.create_user(username="Student", password=self.password)
-
-        proj = Project.objects.create(name="Test project", author=u.profile)
+        proj = Project.objects.create(name="Test Project", author=u)
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
         e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
 
         self.lget("/profile/")
-        self.add_user_to_group("Student")
+        self.add_user_to_group(u.id)
         time.sleep(1)
         self.lget("/projects/")
-        self.group_click_member("Student")
-        self.click_project("Test project")
+        self.group_click_member(f"User {u.id}")
+        self.click_project("Test Project")
         self.assertTrue(self.is_on_page_user_project())
 
     def test_group_access_molecule_as_PI(self):
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+
         self.lget("/profile/")
 
-        self.apply_PI("Test group")
-        self.logout()
+        u = User.objects.create_user(email="Student@test.com", password=self.password)
 
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
-        u = User.objects.create_user(username="Student", password=self.password)
-
-        proj = Project.objects.create(name="Test project", author=u.profile)
+        proj = Project.objects.create(name="Test Project", author=u)
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
         e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
 
         self.lget("/profile/")
-        self.add_user_to_group("Student")
+        self.add_user_to_group(u.id)
         time.sleep(1)
         self.lget("/projects/")
-        self.group_click_member("Student")
-        self.click_project("Test project")
+        self.group_click_member(f"User {u.id}")
+        self.click_project("Test Project")
         self.click_molecule("Test Molecule")
         self.assertTrue(self.is_on_page_molecule())
 
     def test_group_access_ensemble_as_PI(self):
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+
         self.lget("/profile/")
 
-        self.apply_PI("Test group")
-        self.logout()
+        u = User.objects.create_user(email="Student@test.com", password=self.password)
 
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
-        u = User.objects.create_user(username="Student", password=self.password)
-
-        proj = Project.objects.create(name="Test project", author=u.profile)
+        proj = Project.objects.create(name="Test Project", author=u)
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
         e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
 
         self.lget("/profile/")
-        self.add_user_to_group("Student")
+        self.add_user_to_group(u.id)
         time.sleep(1)
         self.lget("/projects/")
-        self.group_click_member("Student")
-        self.click_project("Test project")
+        self.group_click_member(f"User {u.id}")
+        self.click_project("Test Project")
         self.click_molecule("Test Molecule")
         self.click_ensemble("Test Ensemble")
         self.assertTrue(self.is_on_page_ensemble())
 
     def test_group_access_projects_as_student(self):
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+
         self.lget("/profile/")
 
-        self.apply_PI("Test group")
-        self.logout()
+        self.login(self.email, self.password)
+        u = User.objects.create_user(email="Student@test.com", password=self.password)
 
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
-        u = User.objects.create_user(username="Student", password=self.password)
-
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
         e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
 
         self.lget("/profile/")
-        self.add_user_to_group("Student")
+        self.add_user_to_group(u.id)
         self.logout()
-        self.login("Student", self.password)
+        self.login("Student@test.com", self.password)
         self.lget("/projects/")
-        self.group_click_member(self.username)
+        self.group_click_member(f"User {self.user.id}")
         self.assertTrue(self.is_on_page_projects())
 
     def test_group_access_project_as_student(self):
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+
         self.lget("/profile/")
 
-        self.apply_PI("Test group")
-        self.logout()
+        u = User.objects.create_user(email="Student@test.com", password=self.password)
 
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
-        u = User.objects.create_user(username="Student", password=self.password)
-
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
         e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
 
         self.lget("/profile/")
-        self.add_user_to_group("Student")
+        self.add_user_to_group(u.id)
         self.logout()
-        self.login("Student", self.password)
+        self.login("Student@test.com", self.password)
         self.lget("/projects/")
-        self.group_click_member(self.username)
-        self.click_project("Test project")
+        self.group_click_member(f"User {self.user.id}")
+        self.click_project("Test Project")
         self.assertTrue(self.is_on_page_user_project())
 
     def test_group_access_molecule_as_PI(self):
-        self.lget("/profile/")
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
-        self.apply_PI("Test group")
-        self.logout()
+        u = User.objects.create_user(email="Student@test.com", password=self.password)
 
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
-        u = User.objects.create_user(username="Student", password=self.password)
-
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
         e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
 
         self.lget("/profile/")
-        self.add_user_to_group("Student")
+        self.add_user_to_group(u.id)
         self.logout()
-        self.login("Student", self.password)
+        self.login("Student@test.com", self.password)
         self.lget("/projects/")
-        self.group_click_member(self.username)
-        self.click_project("Test project")
+        self.group_click_member(f"User {self.user.id}")
+        self.click_project("Test Project")
         self.click_molecule("Test Molecule")
         self.assertTrue(self.is_on_page_molecule())
 
     def test_group_access_ensemble_as_PI(self):
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+
         self.lget("/profile/")
 
-        self.apply_PI("Test group")
-        self.logout()
+        u = User.objects.create_user(email="Student@test.com", password=self.password)
 
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
-        u = User.objects.create_user(username="Student", password=self.password)
-
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
         e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
 
         self.lget("/profile/")
-        self.add_user_to_group("Student")
+        self.add_user_to_group(u.id)
         self.logout()
-        self.login("Student", self.password)
+        self.login("Student@test.com", self.password)
         self.lget("/projects/")
-        self.group_click_member(self.username)
-        self.click_project("Test project")
+        self.group_click_member(f"User {self.user.id}")
+        self.click_project("Test Project")
         self.click_molecule("Test Molecule")
         self.click_ensemble("Test Ensemble")
         self.assertTrue(self.is_on_page_ensemble())
 
     def test_project_empty(self):
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         self.lget("/projects/")
-        self.click_project("Test project")
+        self.click_project("Test Project")
         self.assertEqual(self.get_number_molecules(), 0)
 
     def test_molecule_appears(self):
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         self.lget("/projects/")
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
-        self.click_project("Test project")
+        self.click_project("Test Project")
         self.assertTrue(self.is_on_page_user_project())
         self.assertEqual(self.get_number_molecules(), 1)
 
     def test_molecule_empty(self):
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         self.lget("/projects/")
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
-        self.click_project("Test project")
+        self.click_project("Test Project")
         self.click_molecule("Test Molecule")
         self.assertTrue(self.is_on_page_molecule())
         self.assertEqual(self.get_number_ensembles(), 0)
 
     def test_ensemble_appears(self):
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         self.lget("/projects/")
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
         e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
-        self.click_project("Test project")
+        self.click_project("Test Project")
         self.click_molecule("Test Molecule")
         self.assertEqual(self.get_number_ensembles(), 1)
 
     def test_ensemble_details(self):
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         self.lget("/projects/")
         mol = Molecule.objects.create(name="Test Molecule", project=proj)
         e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
-        self.click_project("Test project")
+        self.click_project("Test Project")
         self.click_molecule("Test Molecule")
         self.click_ensemble("Test Ensemble")
         self.assertTrue(self.is_on_page_ensemble())
 
     def test_basic_delete_project(self):
         def get_proj():
-            proj = Project.objects.get(name="Test project", author=self.profile)
+            proj = Project.objects.get(name="Test Project", author=self.user)
             return 0
 
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         self.lget("/projects/")
 
         self.assertEqual(get_proj(), 0)
-        self.delete_project("Test project")
+        self.delete_project("Test Project")
         ind = 0
         while ind < 10:
             try:
@@ -606,10 +452,10 @@ class InterfaceTests(CalcusLiveServer):
             mol = Molecule.objects.get(name="Test molecule", project=proj)
             return 0
 
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         mol = Molecule.objects.create(name="Test molecule", project=proj)
         self.lget("/projects/")
-        self.click_project("Test project")
+        self.click_project("Test Project")
 
         self.assertEqual(get_mol(), 0)
         self.delete_molecule("Test molecule")
@@ -630,11 +476,11 @@ class InterfaceTests(CalcusLiveServer):
             e = Ensemble.objects.get(name="Test ensemble", parent_molecule=mol)
             return 0
 
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         mol = Molecule.objects.create(name="Test molecule", project=proj)
         e = Ensemble.objects.create(name="Test ensemble", parent_molecule=mol)
         self.lget("/projects/")
-        self.click_project("Test project")
+        self.click_project("Test Project")
         self.click_molecule("Test molecule")
 
         self.assertEqual(get_ensemble(), 0)
@@ -709,16 +555,16 @@ class InterfaceTests(CalcusLiveServer):
         self.setup_test_group()
         self.lget("/projects/")
 
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         mol = Molecule.objects.create(name="Test molecule", project=proj)
         self.lget("/projects/")
-        self.click_project("Test project")
+        self.click_project("Test Project")
 
         mol = self.get_molecules()[0]
         self.rename_molecule(mol, "My Molecule")
 
         self.lget("/projects/")
-        self.click_project("Test project")
+        self.click_project("Test Project")
 
         self.assertEqual(self.get_number_molecules(), 1)
         self.assertEqual(self.get_name_molecules()[0], "My Molecule")
@@ -727,62 +573,62 @@ class InterfaceTests(CalcusLiveServer):
         self.setup_test_group()
         self.lget("/projects/")
 
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         mol = Molecule.objects.create(name="Test molecule", project=proj)
         self.lget("/projects/")
-        self.click_project("Test project")
+        self.click_project("Test Project")
 
         mol = self.get_molecules()[0]
         self.rename_molecule2(mol, "My Molecule")
 
         self.lget("/projects/")
-        self.click_project("Test project")
+        self.click_project("Test Project")
 
         self.assertEqual(self.get_number_molecules(), 1)
         self.assertEqual(self.get_name_molecules()[0], "My Molecule")
 
     def test_rename_ensemble(self):
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         mol = Molecule.objects.create(name="Test molecule", project=proj)
         e = Ensemble.objects.create(name="Test ensemble", parent_molecule=mol)
         self.lget("/projects/")
-        self.click_project("Test project")
+        self.click_project("Test Project")
         self.click_molecule("Test molecule")
 
         ensemble = self.get_ensemble_rows()[0]
         self.rename_ensemble(ensemble, "My Ensemble")
 
         self.lget("/projects/")
-        self.click_project("Test project")
+        self.click_project("Test Project")
         self.click_molecule("Test molecule")
 
         self.assertEqual(self.get_number_ensembles(), 1)
         self.assertEqual(self.get_name_ensembles()[0], "My Ensemble")
 
     def test_rename_ensemble2(self):
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         mol = Molecule.objects.create(name="Test molecule", project=proj)
         e = Ensemble.objects.create(name="Test ensemble", parent_molecule=mol)
         self.lget("/projects/")
-        self.click_project("Test project")
+        self.click_project("Test Project")
         self.click_molecule("Test molecule")
 
         ensemble = self.get_ensemble_rows()[0]
         self.rename_ensemble2(ensemble, "My Ensemble")
 
         self.lget("/projects/")
-        self.click_project("Test project")
+        self.click_project("Test Project")
         self.click_molecule("Test molecule")
 
         self.assertEqual(self.get_number_ensembles(), 1)
         self.assertEqual(self.get_name_ensembles()[0], "My Ensemble")
 
     def test_flag_ensemble(self):
-        proj = Project.objects.create(name="Test project", author=self.profile)
+        proj = Project.objects.create(name="Test Project", author=self.user)
         mol = Molecule.objects.create(name="Test molecule", project=proj)
         e = Ensemble.objects.create(name="Test ensemble", parent_molecule=mol)
         self.lget("/projects/")
-        self.click_project("Test project")
+        self.click_project("Test Project")
         self.click_molecule("Test molecule")
         self.click_ensemble("Test ensemble")
         self.flag_ensemble()
@@ -868,7 +714,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(specifications.get_attribute("value"), "tightscf")
 
     def test_project_preset(self):
-        proj = Project.objects.create(name="My Project", author=self.profile)
+        proj = Project.objects.create(name="My Project", author=self.user)
         proj.save()
 
         params = {
@@ -920,7 +766,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(specifications.get_attribute("value"), "nosymm")
 
     def test_duplicate_project_preset(self):
-        proj = Project.objects.create(name="My Project", author=self.profile)
+        proj = Project.objects.create(name="My Project", author=self.user)
         proj.save()
 
         params = {
@@ -955,7 +801,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(param_count, 2)
 
     def test_project_preset_independence(self):
-        proj = Project.objects.create(name="My Project", author=self.profile)
+        proj = Project.objects.create(name="My Project", author=self.user)
         proj.save()
 
         params = {
@@ -1036,11 +882,11 @@ class InterfaceTests(CalcusLiveServer):
     def test_see_all_unseen(self):
         self.setup_test_group()
 
-        o1 = CalculationOrder.objects.create(author=self.profile, last_seen_status=1)
+        o1 = CalculationOrder.objects.create(author=self.user, last_seen_status=1)
         c1a = Calculation.objects.create(order=o1, status=2)
         c1b = Calculation.objects.create(order=o1, status=2)
 
-        o2 = CalculationOrder.objects.create(author=self.profile, last_seen_status=1)
+        o2 = CalculationOrder.objects.create(author=self.user, last_seen_status=1)
         c2a = Calculation.objects.create(order=o2, status=2)
 
         o1.save()
@@ -1048,8 +894,8 @@ class InterfaceTests(CalcusLiveServer):
         c1b.save()
         o2.save()
         c2a.save()
-        self.profile.unseen_calculations = 2
-        self.profile.save()
+        self.user.unseen_calculations = 2
+        self.user.save()
 
         for i in range(3):
             self.lget("/calculations/")
@@ -1077,22 +923,22 @@ class InterfaceTests(CalcusLiveServer):
     def test_clean_all_successful(self):
         self.setup_test_group()
 
-        o1 = CalculationOrder.objects.create(author=self.profile)
+        o1 = CalculationOrder.objects.create(author=self.user)
         c1 = Calculation.objects.create(order=o1, status=1)
 
-        o2 = CalculationOrder.objects.create(author=self.profile, last_seen_status=1)
+        o2 = CalculationOrder.objects.create(author=self.user, last_seen_status=1)
         c2 = Calculation.objects.create(order=o2, status=2)
 
-        o3 = CalculationOrder.objects.create(author=self.profile, last_seen_status=0)
+        o3 = CalculationOrder.objects.create(author=self.user, last_seen_status=0)
         c3 = Calculation.objects.create(order=o3, status=0)
 
-        o4 = CalculationOrder.objects.create(author=self.profile, last_seen_status=2)
+        o4 = CalculationOrder.objects.create(author=self.user, last_seen_status=2)
         c4 = Calculation.objects.create(order=o4, status=2)
 
-        o5 = CalculationOrder.objects.create(author=self.profile)
+        o5 = CalculationOrder.objects.create(author=self.user)
         c5 = Calculation.objects.create(order=o5, status=3)
 
-        o6 = CalculationOrder.objects.create(author=self.profile, last_seen_status=2)
+        o6 = CalculationOrder.objects.create(author=self.user, last_seen_status=2)
         c6 = Calculation.objects.create(order=o6, status=3)
 
         o1.save()
@@ -1112,8 +958,8 @@ class InterfaceTests(CalcusLiveServer):
         o1.save()
         o5.save()
 
-        self.profile.unseen_calculations = 2
-        self.profile.save()
+        self.user.unseen_calculations = 2
+        self.user.save()
 
         for i in range(3):
             self.lget("/calculations/")
@@ -1149,22 +995,22 @@ class InterfaceTests(CalcusLiveServer):
     def test_clean_all_completed(self):
         self.setup_test_group()
 
-        o1 = CalculationOrder.objects.create(author=self.profile)
+        o1 = CalculationOrder.objects.create(author=self.user)
         c1 = Calculation.objects.create(order=o1, status=1)
 
-        o2 = CalculationOrder.objects.create(author=self.profile, last_seen_status=1)
+        o2 = CalculationOrder.objects.create(author=self.user, last_seen_status=1)
         c2 = Calculation.objects.create(order=o2, status=2)
 
-        o3 = CalculationOrder.objects.create(author=self.profile, last_seen_status=0)
+        o3 = CalculationOrder.objects.create(author=self.user, last_seen_status=0)
         c3 = Calculation.objects.create(order=o3, status=0)
 
-        o4 = CalculationOrder.objects.create(author=self.profile, last_seen_status=2)
+        o4 = CalculationOrder.objects.create(author=self.user, last_seen_status=2)
         c4 = Calculation.objects.create(order=o4, status=2)
 
-        o5 = CalculationOrder.objects.create(author=self.profile)
+        o5 = CalculationOrder.objects.create(author=self.user)
         c5 = Calculation.objects.create(order=o5, status=3)
 
-        o6 = CalculationOrder.objects.create(author=self.profile, last_seen_status=2)
+        o6 = CalculationOrder.objects.create(author=self.user, last_seen_status=2)
         c6 = Calculation.objects.create(order=o6, status=3)
 
         o1.save()
@@ -1184,8 +1030,8 @@ class InterfaceTests(CalcusLiveServer):
         o1.save()
         o5.save()
 
-        self.profile.unseen_calculations = 2
-        self.profile.save()
+        self.user.unseen_calculations = 2
+        self.user.save()
 
         for i in range(3):
             self.lget("/calculations/")
@@ -1320,12 +1166,12 @@ class InterfaceTests(CalcusLiveServer):
         orders = self.get_related_orders()
 
         self.assertEqual(len(orders), 1)
-        self.assertEqual(int(orders[0].split()[1]), order.id)
+        self.assertEqual(orders[0].split()[1], str(order.id))
 
         calcs = self.get_related_calculations(order.id)
 
         self.assertEqual(len(calcs), 1)
-        self.assertEqual(int(calcs[0].split()[1]), calc.id)
+        self.assertEqual(calcs[0].split()[1], str(calc.id))
 
         with self.assertRaises(Exception):
             calcs2 = self.get_related_calculations(order.id + 1)
@@ -1376,12 +1222,12 @@ class InterfaceTests(CalcusLiveServer):
         orders = self.get_related_orders()
 
         self.assertEqual(len(orders), 2)
-        self.assertEqual(int(orders[1].split()[1]), order.id)
+        self.assertEqual(orders[1].split()[1], str(order.id))
 
         calcs = self.get_related_calculations(order.id)
 
         self.assertEqual(len(calcs), 1)
-        self.assertEqual(int(calcs[0].split()[1]), calc.id)
+        self.assertEqual(calcs[0].split()[1], str(calc.id))
 
     def test_related_calculations_from_ensemble(self):
         self.setup_test_group()
@@ -1429,16 +1275,16 @@ class InterfaceTests(CalcusLiveServer):
         orders = self.get_related_orders()
 
         self.assertEqual(len(orders), 2)
-        self.assertEqual(int(orders[1].split()[1]), order.id)
+        self.assertEqual(orders[1].split()[1], str(order.id))
 
         calcs = self.get_related_calculations(order.id)
 
         self.assertEqual(len(calcs), 1)
-        self.assertEqual(int(calcs[0].split()[1]), calc.id)
+        self.assertEqual(calcs[0].split()[1], str(calc.id))
 
     def test_create_empty_folders(self):
         self.setup_test_group()
-        proj = Project.objects.create(name="Proj", author=self.profile)
+        proj = Project.objects.create(name="Proj", author=self.user)
         proj.save()
 
         self.assertEqual(proj.main_folder.folder_set.count(), 0)
@@ -1448,7 +1294,7 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.get_number_folders(), 0)
         self.create_empty_folder()
 
-        proj = Project.objects.get(name="Proj", author=self.profile)
+        proj = Project.objects.get(name="Proj", author=self.user)
         self.assertEqual(proj.main_folder.folder_set.count(), 1)
         self.assertEqual(self.get_number_folders(), 1)
         self.assertEqual(self.get_number_folder_ensembles(), 0)
@@ -1556,23 +1402,11 @@ class UserPermissionsTests(CalcusLiveServer):
         )
 
     def test_manage_PI_request(self):
+        self.user.is_PI = True
+        self.user.save()
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+
         self.lget("/profile/")
-
-        self.apply_PI("Test group")
-        self.logout()
-
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
 
         self.lget("/launch/")
 
@@ -1602,7 +1436,7 @@ class UserPermissionsTests(CalcusLiveServer):
         self.logout()
         self.login("Student", self.password)
 
-        self.lget(f"/projects/{self.username}")
+        self.lget(f"/projects/{self.user.id}")
 
         self.assertEqual(self.get_number_projects(), 0)
 
@@ -1621,7 +1455,7 @@ class UserPermissionsTests(CalcusLiveServer):
         self.assertEqual(self.get_number_projects(), 1)
 
         self.logout()
-        self.login(self.username, self.password)
+        self.login(self.email, self.password)
 
         self.lget("/projects/Student")
 
@@ -1632,12 +1466,12 @@ class XtbCalculationTests(CalcusLiveServer):
     def setUp(self):
         super().setUp()
 
-        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
         g.save()
-        self.profile.is_PI = True
-        self.profile.save()
+        self.user.is_PI = True
+        self.user.save()
 
-        self.login(self.username, self.password)
+        self.login(self.email, self.password)
 
     def test_opt(self):
         params = {
@@ -1672,7 +1506,7 @@ class XtbCalculationTests(CalcusLiveServer):
         self.assertTrue(self.latest_calc_successful())
 
     def test_proj(self):
-        proj = Project.objects.create(author=self.profile, name="TestProj")
+        proj = Project.objects.create(author=self.user, name="TestProj")
         proj.save()
 
         params = {
@@ -2374,20 +2208,17 @@ class StudentTests(CalcusLiveServer):
     def setUp(self):
         super().setUp()
 
-        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
         g.save()
 
-        u = User.objects.create_user(username="Student", password=self.password)
-        u.save()
+        u = User.objects.create_user(
+            email="Student@test.com", password=self.password, member_of=g
+        )
 
-        p = Profile.objects.get(user__username="Student")
-        p.member_of = g
-        p.save()
+        self.user.is_PI = True
+        self.user.save()
 
-        self.profile.is_PI = True
-        self.profile.save()
-
-        self.login("Student", self.password)
+        self.login("Student@test.com", self.password)
 
     def test_opt(self):
         params = {
@@ -2408,7 +2239,7 @@ class StudentTests(CalcusLiveServer):
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_proj(self):
-        student = Profile.objects.get(user__username="Student")
+        student = User.objects.get(email="Student@test.com")
         proj = Project.objects.create(author=student, name="TestProj")
         proj.save()
 
@@ -2431,12 +2262,12 @@ class OrcaCalculationTests(CalcusLiveServer):
     def setUp(self):
         super().setUp()
 
-        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
         g.save()
-        self.profile.is_PI = True
-        self.profile.save()
+        self.user.is_PI = True
+        self.user.save()
 
-        self.login(self.username, self.password)
+        self.login(self.email, self.password)
 
     def test_sp_SE(self):
         params = {
@@ -3175,12 +3006,12 @@ class GaussianCalculationTests(CalcusLiveServer):
     def setUp(self):
         super().setUp()
 
-        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
         g.save()
-        self.profile.is_PI = True
-        self.profile.save()
+        self.user.is_PI = True
+        self.user.save()
 
-        self.login(self.username, self.password)
+        self.login(self.email, self.password)
 
     def test_sp_SE(self):
         params = {
@@ -3973,12 +3804,12 @@ class MiscCalculationTests(CalcusLiveServer):
     def setUp(self):
         super().setUp()
 
-        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
         g.save()
-        self.profile.is_PI = True
-        self.profile.save()
+        self.user.is_PI = True
+        self.user.save()
 
-        self.login(self.username, self.password)
+        self.login(self.email, self.password)
 
     def test_file_com(self):
         params = {
@@ -4174,7 +4005,7 @@ class MiscCalculationTests(CalcusLiveServer):
             self.assertEqual(c.status, 2)
 
     def test_multiple_files2(self):
-        proj = Project.objects.create(name="MyProj", author=self.profile)
+        proj = Project.objects.create(name="MyProj", author=self.user)
         proj.save()
         params = {
             "mol_name": "my_mol",
@@ -4275,7 +4106,7 @@ class MiscCalculationTests(CalcusLiveServer):
             self.assertEqual(conf_data[i][0], str(i + 1))
 
     def test_conformer_table1(self):
-        proj = Project.objects.create(name="TestProj", author=self.profile)
+        proj = Project.objects.create(name="TestProj", author=self.user)
         mol = Molecule.objects.create(project=proj, name="TestMol")
         e = Ensemble.objects.create(parent_molecule=mol, name="TestEnsemble")
 
@@ -4320,7 +4151,7 @@ class MiscCalculationTests(CalcusLiveServer):
             self.assertEqual(line[4], f"{ref_weights[ind]:.2f}")
 
     def test_conformer_table2(self):
-        proj = Project.objects.create(name="TestProj", author=self.profile)
+        proj = Project.objects.create(name="TestProj", author=self.user)
         mol = Molecule.objects.create(project=proj, name="TestMol")
         e = Ensemble.objects.create(parent_molecule=mol, name="TestEnsemble")
 
@@ -4427,7 +4258,7 @@ class MiscCalculationTests(CalcusLiveServer):
     """
 
     def setup_propane_ensemble(self):
-        proj = Project.objects.create(name="TestProj", author=self.profile)
+        proj = Project.objects.create(name="TestProj", author=self.user)
         mol = Molecule.objects.create(project=proj, name="TestMol")
         e = Ensemble.objects.create(parent_molecule=mol, name="TestEnsemble")
 
@@ -4517,12 +4348,12 @@ class ComplexCalculationTests(CalcusLiveServer):
     def setUp(self):
         super().setUp()
 
-        g = ResearchGroup.objects.create(name="Test Group", PI=self.profile)
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
         g.save()
-        self.profile.is_PI = True
-        self.profile.save()
+        self.user.is_PI = True
+        self.user.save()
 
-        self.login(self.username, self.password)
+        self.login(self.email, self.password)
 
     def test_selective_delete(self):
 

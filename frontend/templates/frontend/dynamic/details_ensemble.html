@@ -105,7 +105,7 @@
 									headers: {
 										"X-CSRFToken": '{{ csrf_token }}',
 									},
-									data: {'id': {{ ensemble.id }}, 'p_id': {{ parameters.id }}, 'nucleus': nucleus},
+									data: {'id': "{{ ensemble.id }}", 'p_id': "{{ parameters.id }}", 'nucleus': nucleus},
 									success: function(data, textStatus, xhr) {
 										g4 = new Dygraph(
 										document.getElementById("simple_nmr_spectrum"),

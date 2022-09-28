@@ -3418,9 +3418,9 @@ def dispatcher(order_id):
                 calculations.append(c)
                 if not settings.IS_CLOUD:
                     if not is_test:
-                        group_order.append(run_calc.s(c.id).set(queue="comp"))
+                        group_order.append(run_calc.s(str(c.id)).set(queue="comp"))
                     else:
-                        group_order.append(run_calc.s(c.id))
+                        group_order.append(run_calc.s(str(c.id)))
             else:
                 calculations.append(c)
                 c.local = False
@@ -3446,9 +3446,9 @@ def dispatcher(order_id):
                 calculations.append(c)
                 if not settings.IS_CLOUD:
                     if not is_test:
-                        group_order.append(run_calc.s(c.id).set(queue="comp"))
+                        group_order.append(run_calc.s(str(c.id)).set(queue="comp"))
                     else:
-                        group_order.append(run_calc.s(c.id))
+                        group_order.append(run_calc.s(str(c.id)))
             else:
                 c.local = False
                 c.save()

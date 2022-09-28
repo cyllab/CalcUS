@@ -20,7 +20,7 @@ OMP_NUM_THREADS={},1
 NUM_CPU={}
 
 # Amount of memory allocated per core/thread in Gb (must be whole number)
-OMP_STACKSIZE={}G
+OMP_STACKSIZE={}M
 
 # Use cached calculation logs during testing (for developers)
 USE_CACHED_LOGS=true
@@ -213,21 +213,21 @@ if local_calc:
     print("\n")
     while True:
         n = input(
-            "How many GB of RAM per core do you want CalcUS to use for local calculations? (e.g. 1)\n"
+            "How many MB of RAM per core do you want CalcUS to use for local calculations? (e.g. 1)\n"
         )
         try:
             mem = int(n)
         except ValueError:
-            print("Invalid number of GB\n")
+            print("Invalid number of MB\n")
         else:
             if mem < 1:
-                print("Invalid number of GB\n")
+                print("Invalid number of MB\n")
             else:
                 break
     print("\n")
 else:
     num_cpu = 1
-    mem = 1
+    mem = 1024
 
 while True:
     ans = input(

@@ -153,7 +153,7 @@
 				method: "POST",	 	 
 				url: "/create_folder/",
 				data: {
-					"current_folder_id": {{ folder.id }},
+					"current_folder_id": "{{ folder.id }}",
 				},
 				headers: {
 					"X-CSRFToken": '{{ csrf_token }}',
@@ -168,7 +168,7 @@
 
 			$('div.box').draggable({handle: 'p', revert: true, cancel: 'i'});
 			{% for f in folders|dictsort:"name" %}
-				add_folder({{ f.id }}, "{{ f.name }}", {% if request.user == project.author %} true {% else %} false {% endif %});
+				add_folder("{{ f.id }}", "{{ f.name }}", {% if request.user == project.author %} true {% else %} false {% endif %});
 			{% endfor %}
 
 			{% if request.user == project.author and folder.depth > 0 %}
@@ -224,8 +224,8 @@
 			<div class="box has-background-primary-light" id="ensemble_box_{{ e.id }}">
 				{% if e.parent_molecule.project.author == request.user %}
 				<p style="float: right;">
-					<a onclick="edit_field('e', {{ e.id }});"><i class="fas fa-edit" id="icon_folder_{{ f.id}}" title="Rename"></i></a>
-					<a onclick="del('e', {{ e.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>
+					<a onclick="edit_field('e', '{{ e.id }}');"><i class="fas fa-edit" id="icon_folder_{{ f.id}}" title="Rename"></i></a>
+					<a onclick="del('e', '{{ e.id }}');"><i class="fas fa-trash-alt" title="Delete"></i></a>
 				</p>
 				{% endif %}
 					<a href="/ensemble/{{ e.id }}">

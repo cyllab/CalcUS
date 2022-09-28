@@ -49,7 +49,7 @@
 					headers: {
 						"X-CSRFToken": '{{ csrf_token }}',
 					},
-					data: {'id': {{ order.pk }}},
+					data: {'id': "{{ order.id }}"},
 					success: function() {
 						window.location.replace("/calculations/");
 					}

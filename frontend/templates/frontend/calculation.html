@@ -20,7 +20,7 @@
 			label.style.display = "none";
 			$.ajax({
 				method: "POST",	 	 
-				url: url + {{ calc.id }},
+				url: url + "{{ calc.id }}",
 				headers: {
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
@@ -147,7 +147,7 @@
 					csrfmiddlewaretoken: ('{{csrf_token}}'),
 				},
 				method: "POST",
-				url: '/log/' + {{ calc.id }},
+				url: '/log/' + "{{ calc.id }}",
 				success: function (data) {
 					$("#log_div").html(data);
 					$("#load_logs_button").removeClass("is-loading");

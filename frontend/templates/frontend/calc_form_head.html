@@ -107,7 +107,7 @@ String.prototype.format = function() {
 	}
 	var project_presets = {
 		{% for proj in request.user.project_set.all %}
-		'{{ proj.name }}': {% if proj.preset %}{{ proj.preset.id }} {% else %} -1 {% endif %},
+		'{{ proj.name }}': {% if proj.preset %}"{{ proj.preset.id }}" {% else %} -1 {% endif %},
 		{% endfor %}
 	}
 
@@ -128,7 +128,7 @@ String.prototype.format = function() {
 		data.push({"name": "constraint_num", "value": constraint_num});
 
 		{% if ensemble or structures %}
-		data.push({"name": "starting_ensemble", "value": {{ ensemble.id }}});
+		data.push({"name": "starting_ensemble", "value": "{{ ensemble.id }}"});
 		{% endif %}
 
 		{% if structures %}
@@ -136,7 +136,7 @@ String.prototype.format = function() {
 		{% endif %}
 
 		{% if calc %}
-		data.push({"name": "starting_calc", "value": {{ calc.id }}});
+		data.push({"name": "starting_calc", "value": "{{ calc.id }}"});
 		data.push({"name": "starting_frame", "value": {{ frame_num }}});
 		{% endif %}
 

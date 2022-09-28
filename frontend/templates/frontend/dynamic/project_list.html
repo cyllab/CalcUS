@@ -1,4 +1,4 @@
 <option name="all">All projects</option>
 {% for proj in target_user.project_set.all %}
-<option name="{{ proj }}">{{ proj }}</option>
+<option name="{{ proj.name }}" value="{{ proj.id }}">{{ proj.name }}</option>
 {% endfor %}

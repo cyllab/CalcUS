@@ -142,10 +142,10 @@ class IndexView(generic.ListView):
         if user_intersection(self.request.user, target_user):
             if mode in ["Workspace", "Unseen only"]:
                 hits = target_user.calculationorder_set.filter(hidden=False).exclude(
-                    author__neq=None
+                    author=None
                 )
             elif mode == "All orders":
-                hits = target_user.calculationorder_set.all().exclude(author__neq=None)
+                hits = target_user.calculationorder_set.all().exclude(author=None)
 
             if proj != "All projects":
                 hits = hits.filter(project__name=proj)
@@ -416,7 +416,7 @@ def create_folder(request):
         if "current_folder_id" not in request.POST.keys():
             return HttpResponse(status=403)
 
-        current_folder_id = int(clean(request.POST["current_folder_id"]))
+        current_folder_id = clean(request.POST["current_folder_id"])
 
         try:
             current_folder = Folder.objects.get(pk=current_folder_id)
@@ -817,9 +817,9 @@ def link_order(request, pk):
 @login_required
 def details_ensemble(request):
     if request.method == "POST":
-        pk = int(clean(request.POST["id"]))
+        pk = clean(request.POST["id"])
         try:
-            p_id = int(clean(request.POST["p_id"]))
+            p_id = clean(request.POST["p_id"])
         except KeyError:
             return HttpResponse(status=204)
 
@@ -859,9 +859,9 @@ def details_ensemble(request):
 @login_required
 def details_structure(request):
     if request.method == "POST":
-        pk = int(clean(request.POST["id"]))
+        pk = clean(request.POST["id"])
         try:
-            p_id = int(clean(request.POST["p_id"]))
+            p_id = clean(request.POST["p_id"])
             num = int(clean(request.POST["num"]))
         except KeyError:
             return HttpResponse(status=204)
@@ -1460,7 +1460,7 @@ def _submit_calculation(request, verify=False):
         return "The chosen molecule name is too long"
 
     if "starting_ensemble" in request.POST:
-        start_id = int(clean(request.POST["starting_ensemble"]))
+        start_id = clean(request.POST["starting_ensemble"])
         try:
             start_e = Ensemble.objects.get(pk=start_id)
         except Ensemble.DoesNotExist:
@@ -1550,7 +1550,7 @@ def _submit_calculation(request, verify=False):
         if not "starting_frame" in request.POST:
             return "Missing starting frame number"
 
-        c_id = int(clean(request.POST["starting_calc"]))
+        c_id = clean(request.POST["starting_calc"])
         frame_num = int(clean(request.POST["starting_frame"]))
 
         try:
@@ -1884,7 +1884,7 @@ def _submit_calculation(request, verify=False):
                     return "No valid auxiliary structure"
                 try:
                     aux_struct = Structure.objects.get(
-                        pk=int(clean(request.POST["aux_struct"]))
+                        pk=clean(request.POST["aux_struct"])
                     )
                 except Structure.DoesNotExist:
                     return "No valid auxiliary structure"
@@ -1909,7 +1909,7 @@ def _submit_calculation(request, verify=False):
                     return "No valid auxiliary structure"
                 try:
                     aux_struct = Structure.objects.get(
-                        pk=int(clean(request.POST["aux_struct"]))
+                        pk=clean(request.POST["aux_struct"])
                     )
                 except Structure.DoesNotExist:
                     return "No valid auxiliary structure"
@@ -1992,7 +1992,7 @@ def _submit_calculation(request, verify=False):
             send_gcloud_task("/cloud_order/", str(o.id))
     else:
         for o in orders:
-            dispatcher.delay(o.id)
+            dispatcher.delay(str(o.id))
 
     return redirect("/calculations/")
 
@@ -2386,7 +2386,7 @@ def load_pub_key(request, pk):
 @login_required
 def update_access(request):
     vals = {}
-    for param in ["access_id", "pal", "mem"]:
+    for param in ["pal", "mem"]:
         if param not in request.POST.keys():
             return HttpResponse(status=400)
 
@@ -2394,6 +2394,14 @@ def update_access(request):
             vals[param] = int(clean(request.POST[param]))
         except ValueError:
             return HttpResponse("Invalid value", status=400)
+
+    if "access_id" not in request.POST:
+        return HttpResponse(status=400)
+
+    try:
+        vals["access_id"] = clean(request.POST[param])
+    except ValueError:
+        return HttpResponse("Invalid value", status=400)
 
     try:
         access = ClusterAccess.objects.get(pk=vals["access_id"])
@@ -2452,7 +2460,7 @@ def add_user(request):
             return HttpResponse(status=403)
 
         user_id = clean(request.POST["user_id"])
-        group_id = int(clean(request.POST["group_id"]))
+        group_id = clean(request.POST["group_id"])
 
         try:
             group = ResearchGroup.objects.get(pk=group_id)
@@ -2484,8 +2492,8 @@ def remove_user(request):
         if not request.user.is_PI:
             return HttpResponse(status=403)
 
-        member_id = int(clean(request.POST["member_id"]))
-        group_id = int(clean(request.POST["group_id"]))
+        member_id = clean(request.POST["member_id"])
+        group_id = clean(request.POST["group_id"])
 
         try:
             group = ResearchGroup.objects.get(pk=group_id)
@@ -2545,8 +2553,8 @@ def conformer_table(request, pk):
 def conformer_table_post(request):
     if request.method == "POST":
         try:
-            id = int(clean(request.POST["ensemble_id"]))
-            p_id = int(clean(request.POST["param_id"]))
+            id = clean(request.POST["ensemble_id"])
+            p_id = clean(request.POST["param_id"])
         except KeyError:
             return HttpResponse(status=204)
 
@@ -2715,7 +2723,7 @@ def get_calc_frame(request, cid, fid):
 @login_required
 def get_cube(request):
     if request.method == "POST":
-        id = int(clean(request.POST["id"]))
+        id = clean(request.POST["id"])
         orb = int(clean(request.POST["orb"]))
 
         try:
@@ -2755,14 +2763,14 @@ def nmr(request):
 
     if "id" in request.POST.keys():
         try:
-            e = Ensemble.objects.get(pk=int(clean(request.POST["id"])))
+            e = Ensemble.objects.get(pk=clean(request.POST["id"]))
         except Ensemble.DoesNotExist:
             return HttpResponse(status=404)
     else:
         return HttpResponse(status=404)
     if "p_id" in request.POST.keys():
         try:
-            params = Parameters.objects.get(pk=int(clean(request.POST["p_id"])))
+            params = Parameters.objects.get(pk=clean(request.POST["p_id"]))
         except Parameters.DoesNotExist:
             return HttpResponse(status=404)
     else:
@@ -2946,7 +2954,7 @@ def gen_3D(request):
 @login_required
 def rename_molecule(request):
     if request.method == "POST":
-        id = int(clean(request.POST["id"]))
+        id = clean(request.POST["id"])
 
         try:
             mol = Molecule.objects.get(pk=id)
@@ -2972,7 +2980,7 @@ def rename_molecule(request):
 @login_required
 def rename_project(request):
     if request.method == "POST":
-        id = int(clean(request.POST["id"]))
+        id = clean(request.POST["id"])
 
         try:
             proj = Project.objects.get(pk=id)
@@ -2998,7 +3006,7 @@ def rename_project(request):
 @login_required
 def toggle_private(request):
     if request.method == "POST":
-        id = int(clean(request.POST["id"]))
+        id = clean(request.POST["id"])
 
         try:
             proj = Project.objects.get(pk=id)
@@ -3030,7 +3038,7 @@ def toggle_private(request):
 @login_required
 def toggle_flag(request):
     if request.method == "POST":
-        id = int(clean(request.POST["id"]))
+        id = clean(request.POST["id"])
 
         try:
             e = Ensemble.objects.get(pk=id)
@@ -3062,7 +3070,7 @@ def toggle_flag(request):
 @login_required
 def rename_ensemble(request):
     if request.method == "POST":
-        id = int(clean(request.POST["id"]))
+        id = clean(request.POST["id"])
 
         try:
             e = Ensemble.objects.get(pk=id)
@@ -3088,7 +3096,7 @@ def rename_ensemble(request):
 @login_required
 def rename_folder(request):
     if request.method == "POST":
-        id = int(clean(request.POST["id"]))
+        id = clean(request.POST["id"])
 
         try:
             f = Folder.objects.get(pk=id)
@@ -3115,7 +3123,7 @@ def rename_folder(request):
 def get_structure(request):
     if request.method == "POST":
         try:
-            id = int(clean(request.POST["id"]))
+            id = clean(request.POST["id"])
         except ValueError:
             return HttpResponse(status=404)
 
@@ -3159,7 +3167,7 @@ def get_vib_animation(request):
             return HttpResponse(status=400)
 
         try:
-            id = int(clean(request.POST["id"]))
+            id = clean(request.POST["id"])
         except ValueError:
             return HttpResponse(status=400)
 
@@ -3389,7 +3397,7 @@ def launch(request):
 
             params["init_params_id"] = init_params.id
     elif "calc_id" in request.POST.keys():
-        calc_id = int(clean(request.POST["calc_id"]))
+        calc_id = clean(request.POST["calc_id"])
 
         if "frame_num" not in request.POST.keys():
             return HttpResponse(status=404)
@@ -3825,7 +3833,7 @@ def cancel_calc(request):
 
     if "id" in request.POST.keys():
         try:
-            id = int(clean(request.POST["id"]))
+            id = clean(request.POST["id"])
         except ValueError:
             return HttpResponse(status=404)
 
@@ -3845,7 +3853,7 @@ def cancel_calc(request):
                 f"Cannot cancel calc {calc.id}: not implemented for the cloud version"
             )
         else:
-            cancel.delay(calc.id)
+            cancel.delay(str(calc.id))
 
     return HttpResponse(status=200)
 
@@ -4140,12 +4148,12 @@ def move_element(request):
     if "id" not in request.POST.keys():
         return HttpResponse(status=400)
 
-    id = int(clean(request.POST["id"]))
+    id = clean(request.POST["id"])
 
     if "folder_id" not in request.POST.keys():
         return HttpResponse(status=400)
 
-    folder_id = int(clean(request.POST["folder_id"]))
+    folder_id = clean(request.POST["folder_id"])
 
     if "type" not in request.POST.keys():
         return HttpResponse(status=400)
@@ -4205,7 +4213,7 @@ def relaunch_calc(request):
 
     if "id" in request.POST.keys():
         try:
-            id = int(clean(request.POST["id"]))
+            id = clean(request.POST["id"])
         except ValueError:
             return HttpResponse(status=404)
 
@@ -4251,7 +4259,7 @@ def refetch_calc(request):
 
     if "id" in request.POST.keys():
         try:
-            id = int(clean(request.POST["id"]))
+            id = clean(request.POST["id"])
         except ValueError:
             return HttpResponse(status=404)
 

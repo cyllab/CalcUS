@@ -174,7 +174,7 @@
 					headers: {
 						"X-CSRFToken": '{{ csrf_token }}',
 					},
-					data: {'id': {{ molecule.ensemble_set.first.id }}, 'num': 1},
+					data: {'id': "{{ molecule.ensemble_set.first.id }}", 'num': 1},
 					success: function(data, textStatus, xhr) {
 						if (xhr.status != 204) {
 							let mol = ChemDoodle.readXYZ(data);

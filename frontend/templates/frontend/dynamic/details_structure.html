@@ -17,7 +17,7 @@
 			$.ajax({
 				method: "POST",	 	 
 				url: "/get_structure/",
-				data: {'id': {{ ensemble.id }}, 'num': {{ structure.number }} },
+				data: {'id': "{{ ensemble.id }}", 'num': {{ structure.number }} },
 
 				headers: {
 					"X-CSRFToken": '{{ csrf_token }}',
@@ -105,7 +105,7 @@
 		$.ajax({
 			method: "POST",	 	 
 			url: "/get_vib_animation/",
-			data: {'id': {{ property.id }}, 'num': num },
+			data: {'id': "{{ property.id }}", 'num': num },
 
 			headers: {
 				"X-CSRFToken": '{{ csrf_token }}',
@@ -236,7 +236,7 @@
 			$.ajax({
 				method: "POST",	 	 
 				url: "/get_structure/",
-				data: {'id': {{ ensemble.id }}, 'num': {{ structure.number }} },
+				data: {'id': "{{ ensemble.id }}", 'num': {{ structure.number }} },
 
 				headers: {
 					"X-CSRFToken": '{{ csrf_token }}',
@@ -262,7 +262,7 @@
 				method: "POST",	 	 
 				url: "/get_cube/",
 				data: {
-					'id': {{ property.id }},
+					'id': "{{ property.id }}",
 					'orb': _orb,
 				},
 

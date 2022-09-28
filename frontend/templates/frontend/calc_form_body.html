@@ -456,7 +456,7 @@
 		{% if ensemble or structures %}
 		$('<input />').attr('type', 'hidden')
 			.attr('name', "starting_ensemble")
-			.attr('value', {{ ensemble.id }})
+			.attr('value', "{{ ensemble.id }}")
 			.appendTo(this);
 		{% endif %}
 
@@ -470,7 +470,7 @@
 		{% if calc %}
 		$('<input />').attr('type', 'hidden')
 			.attr('name', "starting_calc")
-			.attr('value', {{ calc.id }})
+			.attr('value', "{{ calc.id }}")
 			.appendTo(this);
 		$('<input />').attr('type', 'hidden')
 			.attr('name', "starting_frame")
@@ -508,7 +508,7 @@ $( document ).ready(function() {
 	{% if init_params_id %}
 		$.ajax({
 			method: "POST",	 	 
-			url: "/load_params/" + {{ init_params_id }},
+			url: "/load_params/{{ init_params_id }}",
 			headers: {
 				"X-CSRFToken": '{{ csrf_token }}',
 			},
@@ -534,7 +534,7 @@ $( document ).ready(function() {
 				"X-CSRFToken": '{{ csrf_token }}',
 			},
 
-			data: {'id': {{ ensemble.id }}, 'num': 1},
+			data: {'id': "{{ ensemble.id }}", 'num': 1},
 			success: function(data, textStatus, xhr) {
 				let mol_read = ChemDoodle.readXYZ(data);
 				ChemDoodle.relabel(mol_read);

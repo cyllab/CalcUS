@@ -96,8 +96,8 @@
 			<div class="box has-background-blue-light" id="mol_box_{{ mol.id }}">
 				{% if mol.project.author == request.user %}
 				<p style="float: right;">
-					<a onclick="edit_field({{ mol.id }});"><i class="fas fa-edit" id="icon_{{ mol.id}}" title="Rename"></i></a>
-					<a onclick="del({{ mol.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>
+					<a onclick="edit_field('{{ mol.id }}');"><i class="fas fa-edit" id="icon_{{ mol.id }}" title="Rename"></i></a>
+					<a onclick="del('{{ mol.id }}');"><i class="fas fa-trash-alt" title="Delete"></i></a>
 				</p>
 				{% endif %}
 					<a href="/molecule/{{ mol.id }}">

@@ -162,7 +162,7 @@
 				headers: {
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
-				data: {'id': {{ ensemble.id }}},
+				data: {'id': "{{ ensemble.id }}"},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						let mol = ChemDoodle.readXYZ(data);
@@ -183,7 +183,7 @@
 									$("#conf_table").html(data);
 									conf_length = document.getElementById("conf_table").rows.length;
 
-									refresh_details({{ ensemble.unique_parameters.0.id }});
+									refresh_details("{{ ensemble.unique_parameters.0.id }}");
 								}
 							}
 						});
@@ -235,7 +235,7 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 
-				data: {'id': {{ ensemble.id }} , 'num': get_conf_number()},
+				data: {'id': "{{ ensemble.id }}", 'num': get_conf_number()},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						let mol = ChemDoodle.readXYZ(data);
@@ -278,7 +278,7 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 
-				data: {'id': {{ ensemble.id }}, 'p_id': curr_p},
+				data: {'id': "{{ ensemble.id }}", 'p_id': curr_p},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						$("#details_ensemble_div").html(data);
@@ -297,7 +297,7 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 
-				data: {'id': {{ ensemble.id }}, 'num': get_conf_number(), 'p_id': curr_p},
+				data: {'id': "{{ ensemble.id }}", 'num': get_conf_number(), 'p_id': curr_p},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						$("#details_structure_div").html(data);
@@ -335,7 +335,7 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 				data: {
-					'ensemble_id': {{ ensemble.id }},
+					'ensemble_id': "{{ ensemble.id }}",
 					'param_id': p_id,
 				},
 				success: function(data, textStatus, xhr) {
@@ -413,7 +413,7 @@
 					headers: {
 						"X-CSRFToken": '{{ csrf_token }}',
 					},
-					data: {'id': {{ ensemble.id }}, 'new_name': name},
+					data: {'id': "{{ ensemble.id }}", 'new_name': name},
 				});
 
 			}
@@ -442,9 +442,9 @@
 					headers: {
 						"X-CSRFToken": '{{ csrf_token }}',
 					},
-					data: {'id': {{ ensemble.id }}},
+					data: {'id': "{{ ensemble.id }}"},
 					success: function() {
-						window.location = "/molecule/" + {{ ensemble.parent_molecule.id }}
+						window.location = "/molecule/{{ ensemble.parent_molecule.id }}"
 					}
 
 				});
@@ -458,7 +458,7 @@
 					method: "POST",	 	 
 					url: "/toggle_flag/",
 					data: {
-						'id': {{ ensemble.id }},
+						'id': "{{ ensemble.id }}",
 						'val': 0,
 					},
 					headers: {
@@ -475,7 +475,7 @@
 					method: "POST",	 	 
 					url: "/toggle_flag/",
 					data: {
-						'id': {{ ensemble.id }},
+						'id': "{{ ensemble.id }}",
 						'val': 1,
 					},
 					headers: {
