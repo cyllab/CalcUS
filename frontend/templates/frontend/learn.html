@@ -1,88 +1,78 @@
-{% extends 'frontend/base.html' %}
+{% extends 'frontend/base.html' %} {% load static %} {% block extrahead %}
+<title>CalcUS - Learn</title>
+<script src="{% static 'frontend/jquery.min.js' %}"></script>
+<script src="{% static 'frontend/jquery.toc.min.js' %}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", (event) => {
+        document.querySelectorAll("sh code").forEach((block) => {
+            hljs.highlightBlock(block);
+        });
+    });
+</script>
+<style>
+    p {
+        white-space: pre-line;
+    }
 
-{% load static %}
+    .title {
+        margin-top: 50px;
+        margin-bottom: 20px;
+    }
+    sh {
+        white-space: pre-line;
+        border: 1px solid #ddd;
+        color: #666;
+        font-size: 15px;
+        line-height: 1.6;
+        margin-top: 1.6em;
+        margin-bottom: 1.6em;
+        max-width: 100%;
+        padding: 1em 1.5em;
+        display: block;
+    }
+    codetitle {
+        font-weight: bold;
+        text-align: center;
+    }
+    h1 {
+        text-align: center;
+    }
+    #toc {
+        list-style-type: none;
+    }
+    li > a,
+    p > a {
+        color: green;
+    }
+    .content {
+        width: 50%;
+        margin-left: 25%;
+    }
 
-{% block extrahead %}
-	<title>CalcUS - Learn</title>
-	<script src="{% static 'frontend/jquery.min.js' %}"></script>
-	<script src="{% static 'frontend/jquery.toc.min.js' %}"></script>
-	<script>
-	document.addEventListener('DOMContentLoaded', (event) => {
-		document.querySelectorAll('sh code').forEach((block) => {
-			hljs.highlightBlock(block);
-		});
-	});
-	</script>
-	<style>
-		p {
-			white-space: pre-line;
-		}
+    .learn-item {
+        text-align: center;
+        padding: 5px;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="content">
+    <h1 class="title is-1">Learn</h1>
 
-		.title {
-			margin-top: 50px;
-			margin-bottom: 20px;
-		}
-		sh {
-			white-space: pre-line;
-			border: 1px solid #ddd;
-			color: #666;
-			font-size: 15px;
-			line-height: 1.6;
-			margin-top: 1.6em;
-			margin-bottom: 1.6em;
-			max-width: 100%;
-			padding: 1em 1.5em;
-			display: block;
-		}
-		codetitle {
-			font-weight: bold;
-			text-align: center;
-		}
-		h1 {
-			text-align: center;
-		}
-		#toc {
-			list-style-type: none;
-		}
-		li > a, p > a {
-			color: green;
-		}
-		.content {
-			width: 50%; 
-			margin-left: 25%;
-		}
+    <ul data-toc=".content" data-toc-headings="h2,h3,h4,h5" id="toc"></ul>
 
-		.learn-item {
-			text-align: center;
-			padding: 5px;
-		}
-	</style>
-{% endblock %}
+    <h3 class="title is-3">Reference</h3>
+    <h4 class="title is-4">Examples</h4>
+    <div>
+        {% for ex in examples %}
+        <a class="box learn-item" href="/learn/example/{{ ex.id }}"> {{ ex.title }} </a>
+        {% endfor %}
+    </div>
 
-{% block content %}
-<div class="content" >
-	<h1 class="title is-1">Learn</h1>
-
-	<ul data-toc=".content" data-toc-headings="h2,h3,h4,h5" id="toc"></ul>
-
-	<h3 class="title is-3">Reference</h3>
-	<h4 class="title is-4">Examples</h4>
-	<div>
-		{% for ex in examples %}
-		<a class="box learn-item" href="/learn/example/{{ ex.id }}">
-			{{ ex.title }} 
-		</a>
-		{% endfor %}
-	</div>
-
-	<h4 class="title is-4">Recipes</h4>
-	<div>
-		{% for r in recipes %}
-		<a class="box learn-item" href="/learn/recipe/{{ r.id }}">
-			{{ r.title }} 
-		</a>
-		{% endfor %}
-	</div>
+    <h4 class="title is-4">Recipes</h4>
+    <div>
+        {% for r in recipes %}
+        <a class="box learn-item" href="/learn/recipe/{{ r.id }}"> {{ r.title }} </a>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}
-

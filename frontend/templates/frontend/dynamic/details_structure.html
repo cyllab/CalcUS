@@ -1,334 +1,314 @@
-{% load details_tags %}
-
-{% if property.charges != '' %}
+{% load details_tags %} {% if property.charges != '' %}
 <span class="tag is-warning is-large">Partial Charges</span>
 <div class="columns box is-desktop" id="charges_structure_details">
-	<div>
-		<center>
-		<div id="charges_viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
-		<div id="charges_buttons_div"><button class="button is-info" onclick="get_charges_struct(); this.remove();">Load partial charges</button></div>
-		</center>
-	</div>
-	<script>
-		var charges = {};
-	   	var charges_viewer = $3Dmol.createViewer("charges_viewer_div");
-	    	charges_viewer.setBackgroundColor(0xffffff);
-		function get_charges_struct() {
-			$.ajax({
-				method: "POST",	 	 
-				url: "/get_structure/",
-				data: {'id': "{{ ensemble.id }}", 'num': {{ structure.number }} },
+    <div>
+        <center>
+            <div id="charges_viewer_div" style="width: 400px; height: 400px; position: relative"></div>
+            <div id="charges_buttons_div">
+                <button class="button is-info" onclick="get_charges_struct(); this.remove();">Load partial charges</button>
+            </div>
+        </center>
+    </div>
+    <script>
+        var charges = {};
+          	var charges_viewer = $3Dmol.createViewer("charges_viewer_div");
+           	charges_viewer.setBackgroundColor(0xffffff);
+        function get_charges_struct() {
+        	$.ajax({
+        		method: "POST",
+        		url: "/get_structure/",
+        		data: {'id': "{{ ensemble.id }}", 'num': {{ structure.number }} },
 
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				success: function(data, textStatus, xhr) {
-					charges_viewer.addModel(data, "xyz");
-					charges_viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
-					charges_viewer.zoomTo();
-					charges_viewer.render();
-					unpack_charges("{{ property.charges}}");
-				}
-			});
-		}
-		function unpack_charges(str) {
-			if(str.length == 0) {
-				return
-			}
-			scharges = str.split(';')
-			for(ind_charge = 0; ind_charge < scharges.length; ind_charge++) {
-				arr_charges = [];
-				if(scharges[ind_charge].length == 0) {
-					continue
-				}
-				data = scharges[ind_charge].split(':');
-				name = data[0];
-				all_charges = data[1].split(',');
-				for(ind = 0; ind < all_charges.length; ind++) {
-					arr_charges.push(all_charges[ind]);
-				}
-				charges[name] = arr_charges;
-				$("#charges_buttons_div").append("<button class=\"button\" onclick=\"plot_charges('" + name + "')\">" + name + "</button>");
-			}
-			plot_charges("Mulliken");
-		}
-		function plot_charges(name) {
-			charges_viewer.removeAllLabels();
-			all_charges = charges[name];
-			for(ind = 0; ind < all_charges.length; ind++) {
-				charges_viewer.addLabel(all_charges[ind], {'fontSize': 14}, {'serial': ind});
-			}
+        		headers: {
+        			"X-CSRFToken": '{{ csrf_token }}',
+        		},
+        		success: function(data, textStatus, xhr) {
+        			charges_viewer.addModel(data, "xyz");
+        			charges_viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
+        			charges_viewer.zoomTo();
+        			charges_viewer.render();
+        			unpack_charges("{{ property.charges}}");
+        		}
+        	});
+        }
+        function unpack_charges(str) {
+        	if(str.length == 0) {
+        		return
+        	}
+        	scharges = str.split(';')
+        	for(ind_charge = 0; ind_charge < scharges.length; ind_charge++) {
+        		arr_charges = [];
+        		if(scharges[ind_charge].length == 0) {
+        			continue
+        		}
+        		data = scharges[ind_charge].split(':');
+        		name = data[0];
+        		all_charges = data[1].split(',');
+        		for(ind = 0; ind < all_charges.length; ind++) {
+        			arr_charges.push(all_charges[ind]);
+        		}
+        		charges[name] = arr_charges;
+        		$("#charges_buttons_div").append("<button class=\"button\" onclick=\"plot_charges('" + name + "')\">" + name + "</button>");
+        	}
+        	plot_charges("Mulliken");
+        }
+        function plot_charges(name) {
+        	charges_viewer.removeAllLabels();
+        	all_charges = charges[name];
+        	for(ind = 0; ind < all_charges.length; ind++) {
+        		charges_viewer.addLabel(all_charges[ind], {'fontSize': 14}, {'serial': ind});
+        	}
 
-		}
-	</script>
+        }
+    </script>
 </div>
-{% endif %}
-
-{% if property.has_freq %}
+{% endif %} {% if property.has_freq %}
 <span class="tag is-warning is-large">Frequencies</span>
-<div class="columns box has-text-centered" id="frequency_structure_details" >
-		<div class="column">
-			<center>
-			<div id="vib_animation" style="width: 400px; height: 400px; position: relative;"></div>
-			<div class="slidecontainer">
-				<input type="range" min="1" max="10" value="4" class="slider" id="vib_calibration" onchange="animate_vib(-1);" style="width: 100%;">
-			</div>
-			</center>
-
-		</div>
-		<div class="column">
-			<center>
-			<div id="ir_spectrum" style="width:500px; height:400px; margin-bottom: 30px;">
-			</div>
-			<a class="button is-info" href="/ir_spectrum/{{ property.id }}">Download IR spectrum</a>
-			</center>
-		</div>
-	</div>
-	<div>
-		<div class="columns is-multiline is-centered" id="vib_table">
-		</div>
-	</div>
+<div class="columns box has-text-centered" id="frequency_structure_details">
+    <div class="column">
+        <center>
+            <div id="vib_animation" style="width: 400px; height: 400px; position: relative"></div>
+            <div class="slidecontainer">
+                <input type="range" min="1" max="10" value="4" class="slider" id="vib_calibration" onchange="animate_vib(-1);" style="width: 100%" />
+            </div>
+        </center>
+    </div>
+    <div class="column">
+        <center>
+            <div id="ir_spectrum" style="width: 500px; height: 400px; margin-bottom: 30px"></div>
+            <a class="button is-info" href="/ir_spectrum/{{ property.id }}">Download IR spectrum</a>
+        </center>
+    </div>
+</div>
+<div>
+    <div class="columns is-multiline is-centered" id="vib_table"></div>
+</div>
 <script>
-	var past_num = -1
-	function animate_vib(num) {
-		
-		if (num == -1) {
-			num = past_num;
-		}
-		else {
-			$("#vib_mode_" + past_num).removeClass("has-background-primary");
-			$("#vib_mode_" + num).addClass("has-background-primary");
-			past_num = num;
-		}
-		amplitude = document.getElementById("vib_calibration").value/10;
+    var past_num = -1;
+    function animate_vib(num) {
+        if (num == -1) {
+            num = past_num;
+        } else {
+            $("#vib_mode_" + past_num).removeClass("has-background-primary");
+            $("#vib_mode_" + num).addClass("has-background-primary");
+            past_num = num;
+        }
+        amplitude = document.getElementById("vib_calibration").value / 10;
 
-		$.ajax({
-			method: "POST",	 	 
-			url: "/get_vib_animation/",
-			data: {'id': "{{ property.id }}", 'num': num },
+        $.ajax({
+            method: "POST",
+            url: "/get_vib_animation/",
+            data: {
+                id: "{{ property.id }}",
+                num: num,
+            },
 
-			headers: {
-				"X-CSRFToken": '{{ csrf_token }}',
-			},
-			success: function(data, textStatus, xhr) {
-				vib_viewer.stopAnimate();
-				vib_viewer.removeAllModels();
-				vib_viewer.clear();
-				vib_viewer.addModel(data, "xyz");
-				vib_viewer.vibrate(10, amplitude, true, null);
-				vib_viewer.animate({'loop': 'backAndForth'});
-				vib_viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+            success: function (data, textStatus, xhr) {
+                vib_viewer.stopAnimate();
+                vib_viewer.removeAllModels();
+                vib_viewer.clear();
+                vib_viewer.addModel(data, "xyz");
+                vib_viewer.vibrate(10, amplitude, true, null);
+                vib_viewer.animate({
+                    loop: "backAndForth",
+                });
+                vib_viewer.setStyle(
+                    {},
+                    {
+                        stick: {
+                            color: "black",
+                            radius: 0.15,
+                        },
+                        sphere: {
+                            scale: 0.3,
+                        },
+                    }
+                );
 
-				vib_viewer.zoomTo();
-				vib_viewer.render();
-			}
-		});
-	}
+                vib_viewer.zoomTo();
+                vib_viewer.render();
+            },
+        });
+    }
 
+    var vib_viewer = $3Dmol.createViewer("vib_animation");
 
-	var vib_viewer = $3Dmol.createViewer("vib_animation");
+    $(document).ready(function () {
+        vib_viewer.setBackgroundColor(0xffffff);
 
-	$(document).ready(function(){
+        $("#vib_table").load("/vib_table/{{ property.id }}");
+        g4 = new Dygraph(document.getElementById("ir_spectrum"), "/ir_spectrum/{{ property.id }}", {
+            strokeWidth: 2,
+            xlabel: "Wavelength (cm^-1)",
+            ylabel: "Intensity",
 
-	vib_viewer.setBackgroundColor(0xffffff);
-
-	
-	$("#vib_table").load("/vib_table/{{ property.id }}");
-		g4 = new Dygraph(
-		document.getElementById("ir_spectrum"),
-			"/ir_spectrum/{{ property.id }}", 
-			{
-				strokeWidth: 2,	
-				xlabel: "Wavelength (cm^-1)",
-				ylabel: "Intensity",
-
-			axes: {
-				x: {
-					axisLabelFormatter: function(cm) {
-						return -cm;
-					},
-					valueFormatter: function(cm) {
-						return -cm;
-					}
-				},
-			}
-			}
-
-		);
-	});
+            axes: {
+                x: {
+                    axisLabelFormatter: function (cm) {
+                        return -cm;
+                    },
+                    valueFormatter: function (cm) {
+                        return -cm;
+                    },
+                },
+            },
+        });
+    });
 </script>
-{% endif %}
-
-{% if property.has_uvvis %}
+{% endif %} {% if property.has_uvvis %}
 <span class="tag is-warning is-large">UV-Vis</span>
 <div class="columns box is-desktop" id="uvvis_structure_details">
-	<div class="column">
-	<center>
-		<div id="uvvis_spectrum" style="width:80%; height:400px; margin-bottom: 30px;"></div>
-	</center>
-	<script>
-		$(document).ready(function(){
-					g2 = new Dygraph(
-			document.getElementById("uvvis_spectrum"),
-				"/uvvis/{{ property.id }}", 
-				{
-					strokeWidth: 2,	
-					xlabel: "Wavelength (nm)",
-					ylabel: "Absorbance"
-				}          
-			);
-		});
-	</script>
-	</div>
+    <div class="column">
+        <center>
+            <div id="uvvis_spectrum" style="width: 80%; height: 400px; margin-bottom: 30px"></div>
+        </center>
+        <script>
+            $(document).ready(function () {
+                g2 = new Dygraph(document.getElementById("uvvis_spectrum"), "/uvvis/{{ property.id }}", {
+                    strokeWidth: 2,
+                    xlabel: "Wavelength (nm)",
+                    ylabel: "Absorbance",
+                });
+            });
+        </script>
+    </div>
 </div>
-{% endif %}
-
-{% if property.has_nmr %}
+{% endif %} {% if property.has_nmr %}
 <span class="tag is-warning is-large">NMR</span>
 <div class="columns box is-desktop" id="enso_structure_details">
-	<div class="column">
-	<center>
-		<div id="nmr_spectrum" style="width:80%; height:400px; margin-bottom: 30px;"></div>
-	</center>
-	<script>
-		$(document).ready(function(){
-			g3 = new Dygraph(
-			document.getElementById("nmr_spectrum"),
-				"/nmr/{{ property.id }}", 
-				{
-					strokeWidth: 2,	
-					xlabel: "Chemical shift (ppm)",
-					ylabel: "Intensity",
-					dateWindow: [-10, 0],
-					axes: {
-						x: {
-							axisLabelFormatter: function(ppm) {
-								return -ppm.toPrecision(2);
-							},
-							valueFormatter: function(ppm) {
-								return -ppm.toPrecision(3);
-							}
-						},
-					}
-
-				}          
-			);
-		});
-	</script>
-	</div>
+    <div class="column">
+        <center>
+            <div id="nmr_spectrum" style="width: 80%; height: 400px; margin-bottom: 30px"></div>
+        </center>
+        <script>
+            $(document).ready(function () {
+                g3 = new Dygraph(document.getElementById("nmr_spectrum"), "/nmr/{{ property.id }}", {
+                    strokeWidth: 2,
+                    xlabel: "Chemical shift (ppm)",
+                    ylabel: "Intensity",
+                    dateWindow: [-10, 0],
+                    axes: {
+                        x: {
+                            axisLabelFormatter: function (ppm) {
+                                return -ppm.toPrecision(2);
+                            },
+                            valueFormatter: function (ppm) {
+                                return -ppm.toPrecision(3);
+                            },
+                        },
+                    },
+                });
+            });
+        </script>
+    </div>
 </div>
-{% endif %}
-
-{% if property.has_mo %}
+{% endif %} {% if property.has_mo %}
 <span class="tag is-warning is-large">Molecular Orbitals</span>
 <div class="columns box is-desktop" id="mo_structure_details">
-	<div class="column">
-	</div>
-	<div class="column is-tight">
+    <div class="column"></div>
+    <div class="column is-tight">
+        <div id="mo_viewer_div" style="width: 400px; height: 400px; position: relative"></div>
 
-	<div id="mo_viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
+        <script>
 
-	<script>
+              	var mo_viewer = $3Dmol.createViewer("mo_viewer_div");
+               	mo_viewer.setBackgroundColor(0xffffff);
+            function get_mo_struct() {
+            	$.ajax({
+            		method: "POST",
+            		url: "/get_structure/",
+            		data: {'id': "{{ ensemble.id }}", 'num': {{ structure.number }} },
 
-	   	var mo_viewer = $3Dmol.createViewer("mo_viewer_div");
-	    	mo_viewer.setBackgroundColor(0xffffff);
-		function get_mo_struct() {
-			$.ajax({
-				method: "POST",	 	 
-				url: "/get_structure/",
-				data: {'id': "{{ ensemble.id }}", 'num': {{ structure.number }} },
+            		headers: {
+            			"X-CSRFToken": '{{ csrf_token }}',
+            		},
+            		success: function(data, textStatus, xhr) {
+            			mo_viewer.addModel(data, "xyz");
+            			mo_viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
 
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				success: function(data, textStatus, xhr) {
-					mo_viewer.addModel(data, "xyz");
-					mo_viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
+            			mo_viewer.zoomTo();
+            			mo_viewer.render();
+            		}
+            	});
+            }
 
-					mo_viewer.zoomTo();
-					mo_viewer.render();
-				}
-			});
-		}
+            function get_cube(orb) {
+            	if (orb != -1) {
+            		window.mo_selection = orb;
+            	}
 
-		function get_cube(orb) {
-			if (orb != -1) {
-				window.mo_selection = orb;
-			}
+            	let _orb = mo_selection;
 
-			let _orb = mo_selection;
+            	$.ajax({
+            		method: "POST",
+            		url: "/get_cube/",
+            		data: {
+            			'id': "{{ property.id }}",
+            			'orb': _orb,
+            		},
 
-			$.ajax({
-				method: "POST",	 	 
-				url: "/get_cube/",
-				data: {
-					'id': "{{ property.id }}",
-					'orb': _orb,
-				},
+            		headers: {
+            			"X-CSRFToken": '{{ csrf_token }}',
+            		},
+            		success: function(volumedata, textStatus, xhr) {
 
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				success: function(volumedata, textStatus, xhr) {
+            			var isoval = 10**(-document.getElementById("mo_calibration").value);
+            			var voldata = new $3Dmol.VolumeData(volumedata, "cube");
+            				mo_viewer.clear();
+            				get_mo_struct();
+            				mo_viewer.addIsosurface(voldata, {isoval: isoval, color: "blue", alpha: 0.90, smoothness: 10});
+            				mo_viewer.addIsosurface(voldata, {isoval: -isoval, color: "red", alpha: 0.90, smoothness: 10});
+            				mo_viewer.zoomTo();
+            				mo_viewer.render();
+            			}
+            	});
+            }
 
-					var isoval = 10**(-document.getElementById("mo_calibration").value);
-					var voldata = new $3Dmol.VolumeData(volumedata, "cube");
-						mo_viewer.clear();
-						get_mo_struct();
-						mo_viewer.addIsosurface(voldata, {isoval: isoval, color: "blue", alpha: 0.90, smoothness: 10});              
-						mo_viewer.addIsosurface(voldata, {isoval: -isoval, color: "red", alpha: 0.90, smoothness: 10}); 
-						mo_viewer.zoomTo();
-						mo_viewer.render();
-					}
-			});
-		}
+            $(document).ready(function(){
+            	get_cube(0);
+            });
+        </script>
+        <div id="mo_container">
+            <button class="button" onclick="get_cube(0);" style="width: 24%">HOMO</button>
+            <button class="button" onclick="get_cube(1);" style="width: 24%">LUMO</button>
+            <button class="button" onclick="get_cube(2);" style="width: 24%">LUMO+1</button>
+            <button class="button" onclick="get_cube(3);" style="width: 24%">LUMO+2</button>
 
-		$(document).ready(function(){
-			get_cube(0);
-		});
-	</script>
-	<div id="mo_container">
-		<button class="button" onclick="get_cube(0);" style="width: 24%;">HOMO</button>
-		<button class="button" onclick="get_cube(1);" style="width: 24%;">LUMO</button>
-		<button class="button" onclick="get_cube(2);" style="width: 24%;">LUMO+1</button>
-		<button class="button" onclick="get_cube(3);" style="width: 24%;">LUMO+2</button>
+            <div class="slidecontainer">
+                <input type="range" min="1" max="10" value="4" class="slider" id="mo_calibration" onchange="get_cube(-1);" style="width: 100%" />
+            </div>
+        </div>
+    </div>
 
-		<div class="slidecontainer">
-			<input type="range" min="1" max="10" value="4" class="slider" id="mo_calibration" onchange="get_cube(-1);" style="width: 100%;">
-		</div>
-	</div>
-	</div>
-
-	<div class="column">
-	</div>
+    <div class="column"></div>
 </div>
-{% endif %}
-
-{% if property.simple_nmr != "" %}
+{% endif %} {% if property.simple_nmr != "" %}
 <span class="tag is-warning is-large">NMR</span>
 <div class="columns box is-desktop" id="nmr_structure_details">
-	<div class="column">
-	</div>
-	<div class="column">
-		{% get_simple_nmr_shifts_structure property as shifts %}
-		<table class="table">
-			<thead>
-				<tr>
-					<th>Atom number</th>
-					<th>Atom type</th>
-					<th>Raw Shift</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for shift in shifts %}
-					<tr>
-						<td>{{ shift.0 }}</td>
-						<td>{{ shift.1 }}</td>
-						<td>{{ shift.2 }}</td>
-					</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	</div>
+    <div class="column"></div>
+    <div class="column">
+        {% get_simple_nmr_shifts_structure property as shifts %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Atom number</th>
+                    <th>Atom type</th>
+                    <th>Raw Shift</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for shift in shifts %}
+                <tr>
+                    <td>{{ shift.0 }}</td>
+                    <td>{{ shift.1 }}</td>
+                    <td>{{ shift.2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endif %}

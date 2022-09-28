@@ -1,81 +1,84 @@
-{% extends 'frontend/base.html' %}
+{% extends 'frontend/base.html' %} {% load i18n %} {% load static %} {% block extrahead %}
+<title>CalcUS - Launch</title>
+<style>
+    .modal-card {
+        max-width: 850px;
+        width: 100%;
+    }
+    .close_btn {
+        float: right;
+        color: lightgray;
+        font-size: 24px;
+        font-weight: bold;
+    }
+    .close_btn:hover {
+        color: darkgray;
+    }
+    @-webkit-keyframes animatetop {
+        from {
+            top: -300px;
+            opacity: 0;
+        }
+        to {
+            top: 0;
+            opacity: 1;
+        }
+    }
+    @keyframes animatetop {
+        from {
+            top: -300px;
+            opacity: 0;
+        }
+        to {
+            top: 0;
+            opacity: 1;
+        }
+    }
+</style>
 
-{% load i18n %}
+<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
+<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
 
-{% load static %}
+{% include 'frontend/calc_form_head.html' %} {% endblock %} {% block content %} {% csrf_token %}
 
+<div class="columns is-desktop">
+    <div class="column">
+        {% if not ensemble and not structure and not calc %}
+        <script>
+            let sketcher = new ChemDoodle.SketcherCanvas("sketcher", 400, 300, {
+                useServices: false,
+                oneMolecule: false,
+            });
+            sketcher.styles.atoms_usePYMOLColors = true;
+            sketcher.oneMolecule = false;
+            sketcher.styles.bonds_clearOverlaps_2D = true;
+            sketcher.styles.shapes_color = "c10000";
+            sketcher.repaint();
+        </script>
+        <br />
+        <button class="button" onclick="get_3D();">Generate 3D representation</button>
+        {% endif %}
 
-{% block extrahead %}
-	<title>CalcUS - Launch</title>
-	<style>
-	.modal-card {
-		max-width: 850px;
-		width: 100%;
-	}
-	.close_btn {
-		float: right; 
-		color: lightgray; 
-		font-size: 24px;  
-		font-weight: bold;
-	}
-	.close_btn:hover {
-		color: darkgray;
-	}
-	@-webkit-keyframes animatetop {
-		from {top:-300px; opacity:0} 
-		to {top:0; opacity:1}
-	}
-	@keyframes animatetop {
-		from {top:-300px; opacity:0}
-		to {top:0; opacity:1}
-	}
-
-	</style>
-
-	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
-	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
-	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
-	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
-
-	{% include 'frontend/calc_form_head.html' %}	
-
-{% endblock %}
-
-{% block content %}
-
-{% csrf_token %}
-
-	<div class="columns is-desktop">
-		<div class="column">
-			{% if not ensemble and not structure and not calc %}
-			<script>
-				let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 400, 300, {useServices:false, oneMolecule:false});
-				sketcher.styles.atoms_usePYMOLColors = true;
-				sketcher.oneMolecule = false;
-				sketcher.styles.bonds_clearOverlaps_2D = true;
-				sketcher.styles.shapes_color = 'c10000';
-				sketcher.repaint();
-			</script>
-			<br />
-			<button class="button" onclick="get_3D();">Generate 3D representation</button>
-			{% endif %}
-
-			<script>
-				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 300, {useServices:false, oneMolecule:false});
-				editor.styles.atoms_usePYMOLColors = true;
-				editor.oneMolecule = false;
-				editor.styles.set3DRepresentation('Stick');
-				editor.styles.shapes_color = 'c10000';
-				editor.repaint();
-			</script>
-			<div id="3d_msg">
-			</div>
-		</div>
-		{% include 'frontend/calc_form_body.html' %}
-	</div>
-	<script>
-		window.onload = function() {
-			document.getElementById("calcform").action = "/submit_calculation/"; 
-		}
-	</script>
+        <script>
+            let editor = new ChemDoodle.EditorCanvas3D("editor", 400, 300, {
+                useServices: false,
+                oneMolecule: false,
+            });
+            editor.styles.atoms_usePYMOLColors = true;
+            editor.oneMolecule = false;
+            editor.styles.set3DRepresentation("Stick");
+            editor.styles.shapes_color = "c10000";
+            editor.repaint();
+        </script>
+        <div id="3d_msg"></div>
+    </div>
+    {% include 'frontend/calc_form_body.html' %}
+</div>
+<script>
+    window.onload = function () {
+        document.getElementById("calcform").action = "/submit_calculation/";
+    };
+</script>
 {% endblock content %}

@@ -1,319 +1,311 @@
-{% extends 'frontend/base.html' %}
+{% extends 'frontend/base.html' %} {% load i18n %} {% load static %} {% load details_tags %} {% block extrahead %}
+<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
+<script src="{% static 'frontend/jquery.min.js' %}"></script>
 
-{% load i18n %}
+<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css" />
+<title>CalcUS - Calculation</title>
+<script src="{% static 'frontend/dygraph.min.js' %}"></script>
+<script src="{% static 'frontend/synchronizer.js' %}"></script>
+<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
+<script>
+    function get_opt_structs(url) {
+    	label = document.getElementById("throttle_label");
+    	label.style.display = "none";
+    	$.ajax({
+    		method: "POST",
+    		url: url + "{{ calc.id }}",
+    		headers: {
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+    		success: function(data, textStatus, xhr) {
+    			ring = document.getElementById("lds-ring");
+    			ring.style.display = "none";
 
-{% load static %}
-{% load details_tags %}
+    			if (data.includes("You do not have the permission to access this page")) {
+    				label = document.getElementById("throttle_label");
+    				label.style.display = "block";
+    				return;
+    			}
+    			{% if calc.step.creates_ensemble %}
+    			sp = data.split(";");
+    			xyz = sp[0];
+    			rmsd = sp[1];
+    			scan = sp[2];
 
-{% block extrahead %}
-	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
-	<script src="{% static 'frontend/jquery.min.js' %}"></script>
+    			sscan = scan.split('\n')
+    			rmsd_sp = rmsd.split('\n')
 
-	<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
-	<title>CalcUS - Calculation</title>
-	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
-	<script src="{% static 'frontend/synchronizer.js' %}"></script>
-	<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
-	<script>
-		function get_opt_structs(url) {
-			label = document.getElementById("throttle_label");
-			label.style.display = "none";
-			$.ajax({
-				method: "POST",	 	 
-				url: url + "{{ calc.id }}",
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				success: function(data, textStatus, xhr) {
-					ring = document.getElementById("lds-ring");
-					ring.style.display = "none";
+    			opt_viewer.clear();
+    			opt_viewer.addModelsAsFrames(xyz, "xyz");
+    			opt_viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
+    			opt_viewer.zoomTo();
+    			opt_viewer.render();
+    			num_opt_steps = opt_viewer.getNumFrames();
+    			scroll = document.getElementById("opt_scroll");
+    			scroll.max = num_opt_steps;
+    			rmsd_graph = new Dygraph(
+    				document.getElementById("rmsd_graph"),
+    					rmsd,
+    					{
+    						strokeWidth: 2,
+    						xlabel: "Frame",
+    						ylabel: "RMS Displacement",
+    						rangeSelectorPlotStrokeColor: "#BABABA",
+    						highlightCircleSize:  5,
+    						pointClickCallback: function(e, pt) {
+    						    set_frame(this.getValue(pt.idx, 0));
+    						},
+    						underlayCallback: function(canvas, area, g) {
+    							for(i = 1; i < sscan.length; i++) {
+    								scansp = sscan[i].split(',');
+    								num = scansp[0];
+    								if(num == "") {
+    									break;
+    								}
+    								var xPoint = g.toDomXCoord(num);
+    								var yPoint = g.toDomYCoord(rmsd_sp[num].split(',')[1]);
 
-					if (data.includes("You do not have the permission to access this page")) {
-						label = document.getElementById("throttle_label");
-						label.style.display = "block";
-						return;
-					}
-					{% if calc.step.creates_ensemble %}
-					sp = data.split(";");
-					xyz = sp[0];
-					rmsd = sp[1];
-					scan = sp[2];
-					
-					sscan = scan.split('\n')
-					rmsd_sp = rmsd.split('\n')
+    								canvas.fillStyle = 'rgba(0, 0, 255, 1)';
+    								canvas.beginPath();
+    								canvas.arc(xPoint, yPoint, 5, 0, 2 * Math.PI, false);
+    								canvas.fill();
+    							}
 
-					opt_viewer.clear();
-					opt_viewer.addModelsAsFrames(xyz, "xyz");
-					opt_viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
-					opt_viewer.zoomTo();
-					opt_viewer.render();
-					num_opt_steps = opt_viewer.getNumFrames();
-					scroll = document.getElementById("opt_scroll");
-					scroll.max = num_opt_steps;
-					rmsd_graph = new Dygraph(
-						document.getElementById("rmsd_graph"),
-							rmsd, 
-							{
-								strokeWidth: 2,	
-								xlabel: "Frame",
-								ylabel: "RMS Displacement",
-								rangeSelectorPlotStrokeColor: "#BABABA",
-								highlightCircleSize:  5, 
-								pointClickCallback: function(e, pt) {
-								    set_frame(this.getValue(pt.idx, 0));
-								},
-								underlayCallback: function(canvas, area, g) {
-									for(i = 1; i < sscan.length; i++) {
-										scansp = sscan[i].split(',');
-										num = scansp[0];
-										if(num == "") {
-											break;
-										}
-										var xPoint = g.toDomXCoord(num);
-										var yPoint = g.toDomYCoord(rmsd_sp[num].split(',')[1]);
+    						},
+    						axes: {
+    							y: {
+    								axisLabelWidth: 80,
+    							}
+    						}
 
-										canvas.fillStyle = 'rgba(0, 0, 255, 1)';
-										canvas.beginPath();
-										canvas.arc(xPoint, yPoint, 5, 0, 2 * Math.PI, false);
-										canvas.fill();
-									}
+    					}
+    			);
+    			relaxed_scan_graph = new Dygraph(
+    				document.getElementById("relaxed_scan_graph"),
+    					scan,
+    					{
+    						strokeWidth: 2,
+    						xlabel: "Frame",
+    						ylabel: "Relative Energy ({{ request.user.pref_units_name }})",
+    						rangeSelectorPlotStrokeColor: "#BABABA",
+    						highlightCircleSize:  5,
+    						pointClickCallback: function(e, pt) {
+    						    set_frame(this.getValue(pt.idx, 0));
+    						},
+    						dateWindow: rmsd_graph.xAxisExtremes(),
+    						digitsAfterDecimal: {{ request.user.pref_units_precision}},
+    						axes: {
+    							y: {
+    								axisLabelWidth: 80,
+    							}
+    						}
+    					}
 
-								},
-								axes: {
-									y: {
-										axisLabelWidth: 80,
-									}
-								}
+    			);
+    			var sync = Dygraph.synchronize(rmsd_graph, relaxed_scan_graph, {
+    				range: false,
+    				zoom: true,
+    				selection: true,
+    			});
+    			rmsd_graph.setSelection(0);
 
-							}
-					);
-					relaxed_scan_graph = new Dygraph(
-						document.getElementById("relaxed_scan_graph"),
-							scan, 
-							{
-								strokeWidth: 2,	
-								xlabel: "Frame",
-								ylabel: "Relative Energy ({{ request.user.pref_units_name }})",
-								rangeSelectorPlotStrokeColor: "#BABABA",
-								highlightCircleSize:  5, 
-								pointClickCallback: function(e, pt) {
-								    set_frame(this.getValue(pt.idx, 0));
-								},
-								dateWindow: rmsd_graph.xAxisExtremes(),
-								digitsAfterDecimal: {{ request.user.pref_units_precision}},
-								axes: {
-									y: {
-										axisLabelWidth: 80,
-									}
-								}
-							}
+    			div = document.getElementById("opt_slider");
+    			div.style.display = "block";
+    			update_frame();
 
-					);
-					var sync = Dygraph.synchronize(rmsd_graph, relaxed_scan_graph, {
-						range: false,
-						zoom: true,
-						selection: true,
-					});
-					rmsd_graph.setSelection(0);
+    			{% endif %}
 
-					div = document.getElementById("opt_slider");
-					div.style.display = "block";
-					update_frame();
+    		},
+    	});
+    }
+    function update_frame() {
+    	frame_num = document.getElementById("opt_scroll").value;
+    	set_frame(frame_num);
+    }
+    function set_frame(frame_num) {
+    	frame_scroll = document.getElementById("opt_scroll");
+    	frame_scroll.value = frame_num;
+    	frame_label = document.getElementById("frame_label");
+    	opt_viewer.setFrame(parseInt(frame_num)-1);
+    	opt_viewer.render();
+    	frame_label.textContent = "Frame " + frame_num;
+    	rmsd_graph.setSelection(parseInt(frame_num)-1);
+    	relaxed_scan_graph.setSelection(relaxed_scan_graph.getRowForX(parseInt(frame_num)));
+    }
 
-					{% endif %}	
+    function load_logs() {
+    	$("#load_logs_button").addClass("is-loading");
+    	$.ajax({
+    		data: {
+    			csrfmiddlewaretoken: ('{{csrf_token}}'),
+    		},
+    		method: "POST",
+    		url: '/log/' + "{{ calc.id }}",
+    		success: function (data) {
+    			$("#log_div").html(data);
+    			$("#load_logs_button").removeClass("is-loading");
+    			$("#load_logs_button").addClass("is-success");
+    		},
+    	    });
 
-				},
-			});
-		}
-		function update_frame() {
-			frame_num = document.getElementById("opt_scroll").value;
-			set_frame(frame_num);
-		}
-		function set_frame(frame_num) {
-			frame_scroll = document.getElementById("opt_scroll");
-			frame_scroll.value = frame_num;
-			frame_label = document.getElementById("frame_label");
-			opt_viewer.setFrame(parseInt(frame_num)-1);
-			opt_viewer.render();
-			frame_label.textContent = "Frame " + frame_num;
-			rmsd_graph.setSelection(parseInt(frame_num)-1);
-			relaxed_scan_graph.setSelection(relaxed_scan_graph.getRowForX(parseInt(frame_num)));
-		}
+    }
 
-		function load_logs() {
-			$("#load_logs_button").addClass("is-loading");
-			$.ajax({
-				data: {
-					csrfmiddlewaretoken: ('{{csrf_token}}'),
-				},
-				method: "POST",
-				url: '/log/' + "{{ calc.id }}",
-				success: function (data) {
-					$("#log_div").html(data);
-					$("#load_logs_button").removeClass("is-loading");
-					$("#load_logs_button").addClass("is-success");
-				},
-			    });
+    function load_remote_log() {
+    	ring = document.getElementById("lds-ring");
+    	ring.style.display = "block";
+    	get_opt_structs("/get_calc_data_remote/");
 
-		}
+    }
 
-		function load_remote_log() {
-			ring = document.getElementById("lds-ring");
-			ring.style.display = "block";
-			get_opt_structs("/get_calc_data_remote/");
+    $(document).ready(function(){
+    	{% if calc.local or calc.status == 2 or calc.status == 3 %}
+    		ring = document.getElementById("lds-ring");
+    		ring.style.display = "block";
+    		get_opt_structs("/get_calc_data/");
+    	{% else %}
+    		{% if calc.order.resource.connected %}
+    			d = document.getElementById("load_remote_div");
+    			d.style.display = "block";
+    		{% else %}
+    			d = document.getElementById("access_not_connected_div");
+    			d.style.display = "block";
+    		{% endif %}
+    	{% endif %}
+    });
+</script>
+<style>
+    .hscroll {
+        overflow-x: auto;
+    }
+    #buttons_center {
+        margin: 20px;
+    }
+    .lds-ring {
+        display: inline-block;
+        position: relative;
+        width: 80px;
+        height: 80px;
+    }
+    .lds-ring div {
+        box-sizing: border-box;
+        display: block;
+        position: absolute;
+        width: 64px;
+        height: 64px;
+        margin: 8px;
+        border: 8px solid #fff;
+        border-radius: 50%;
+        animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        border-color: #aaa transparent transparent transparent;
+    }
+    .lds-ring div:nth-child(1) {
+        animation-delay: -0.45s;
+    }
+    .lds-ring div:nth-child(2) {
+        animation-delay: -0.3s;
+    }
+    .lds-ring div:nth-child(3) {
+        animation-delay: -0.15s;
+    }
+    @keyframes lds-ring {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
 
-		}
-
-		$(document).ready(function(){
-			{% if calc.local or calc.status == 2 or calc.status == 3 %}
-				ring = document.getElementById("lds-ring");
-				ring.style.display = "block";
-				get_opt_structs("/get_calc_data/");
-			{% else %}
-				{% if calc.order.resource.connected %}
-					d = document.getElementById("load_remote_div");
-					d.style.display = "block";  
-				{% else %}
-					d = document.getElementById("access_not_connected_div");
-					d.style.display = "block";  
-				{% endif %}
-			{% endif %}
-		});
-
-	</script>
-	<style>
-		.hscroll {
-			overflow-x: auto;
-		}
-		#buttons_center {
-			margin: 20px;
-		}
-		.lds-ring {
-		  display: inline-block;
-		  position: relative;
-		  width: 80px;
-		  height: 80px;
-		}
-		.lds-ring div {
-		  box-sizing: border-box;
-		  display: block;
-		  position: absolute;
-		  width: 64px;
-		  height: 64px;
-		  margin: 8px;
-		  border: 8px solid #fff;
-		  border-radius: 50%;
-		  animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-		  border-color: #aaa transparent transparent transparent;
-		}
-		.lds-ring div:nth-child(1) {
-		  animation-delay: -0.45s;
-		}
-		.lds-ring div:nth-child(2) {
-		  animation-delay: -0.3s;
-		}
-		.lds-ring div:nth-child(3) {
-		  animation-delay: -0.15s;
-		}
-		@keyframes lds-ring {
-		  0% {
-		    transform: rotate(0deg);
-		  }
-		  100% {
-		    transform: rotate(360deg);
-		  }
-		}
-	</style>
-
-{% endblock %}
-
-{% block content %}
-
-{% csrf_token %}
+{% endblock %} {% block content %} {% csrf_token %}
 
 <div class="container">
-	<nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
-	 	<ul>
-	    		<li><a href="/calculations/">Calculations</a></li>
-			<li><a href="/calculationorder/{{ calc.order.id }}">Order {{ calc.order.id }}</a></li>
-			<li class="is-active"><a aria-current="page" href="#">Calculation {{ calc.id }}</a></li>
-	  	</ul>
-	</nav>
+    <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+        <ul>
+            <li>
+                <a href="/calculations/">Calculations</a>
+            </li>
+            <li>
+                <a href="/calculationorder/{{ calc.order.id }}">Order {{ calc.order.id }}</a>
+            </li>
+            <li class="is-active">
+                <a aria-current="page" href="#">Calculation {{ calc.id }}</a>
+            </li>
+        </ul>
+    </nav>
 
-	<center>
-		<div class="lds-ring" id="lds-ring" style="display: none;"><div></div><div></div><div></div><div></div></div>
-	</center>
+    <center>
+        <div class="lds-ring" id="lds-ring" style="display: none">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </center>
 
-	{% if calc.step.creates_ensemble %}
-	<div id="opt_div">
-		<div class="columns is-vcentered is-desktop" id="graph_columns">
-			<div class="column">
-				<div style="width: 400px;">
-					<div id="opt_viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
-					<div class="slidecontainer" id="opt_slider" style="display: none;">
-						<center>
-						<input type="range" min="1" max="1" value="1" class="slider" id="opt_scroll" onchange="update_frame();" style="width: 100%;">
-						<label class="label" id="frame_label">Frame 1</label>
-						<form method="POST" action="/launch/" id="launch_frame_form">
-							{% csrf_token %}
-							<input type="hidden" name="calc_id" value="{{ calc.id }}"></input>
-							<button id="launch_from_frame" class="button" >Launch from selected frame</button>
-						</form>
-						</center>
-					</div>
-				</div>
-			</div>
-			<div class="column">
-				<div id="rmsd_graph" style="width: 100%;">
-				</div>
-				<div id="relaxed_scan_graph" style="height: 200px; width: 100%;">
-				</div>
-			</div>
-		</div>
-	</div>
+    {% if calc.step.creates_ensemble %}
+    <div id="opt_div">
+        <div class="columns is-vcentered is-desktop" id="graph_columns">
+            <div class="column">
+                <div style="width: 400px">
+                    <div id="opt_viewer_div" style="width: 400px; height: 400px; position: relative"></div>
+                    <div class="slidecontainer" id="opt_slider" style="display: none">
+                        <center>
+                            <input type="range" min="1" max="1" value="1" class="slider" id="opt_scroll" onchange="update_frame();" style="width: 100%" />
+                            <label class="label" id="frame_label">Frame 1</label>
+                            <form method="POST" action="/launch/" id="launch_frame_form">
+                                {% csrf_token %}
+                                <input type="hidden" name="calc_id" value="{{ calc.id }}" />
+                                <button id="launch_from_frame" class="button">Launch from selected frame</button>
+                            </form>
+                        </center>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div id="rmsd_graph" style="width: 100%"></div>
+                <div id="relaxed_scan_graph" style="height: 200px; width: 100%"></div>
+            </div>
+        </div>
+    </div>
 
-	{% endif %}
-	<div id="load_remote_div" style="display: none;">
-		<center>
-			<button class="button is-info" id="load_remote_log_button" onclick="load_remote_log();">Load remote log</button>
-			<label class="label" style="display: none; color: red" id="throttle_label">Request throttled; try again in one minute</label>
-		</center>
-	</div>
-	<div id="access_not_connected_div" style="display: none;">
-		<center>
-			<div class="box has-background-danger" style="width: 400px;"><strong>Access not connected</strong></div>
-		</center>
-	</div>
-	<div>
-		<label class="label">Input File</label>
-		<textarea class="textarea" style="height: 300px;" readonly>{{ calc.all_inputs }}</textarea>
-		<center id="buttons_center">
-			<button class="button" onclick="load_logs()" id="load_logs_button">View Logs</button>
-			<a class="button" href="/download_log/{{ calc.id }}">Download Logs</a>
-		</center>
-		<div id="log_div">
-		</div>
-	</div>
-	{% if calc.step.creates_ensemble %}
-	<script>
-		var opt_viewer = $3Dmol.createViewer("opt_viewer_div");
-		var num_opt_steps = "1";
+    {% endif %}
+    <div id="load_remote_div" style="display: none">
+        <center>
+            <button class="button is-info" id="load_remote_log_button" onclick="load_remote_log();">Load remote log</button>
+            <label class="label" style="display: none; color: red" id="throttle_label">Request throttled; try again in one minute</label>
+        </center>
+    </div>
+    <div id="access_not_connected_div" style="display: none">
+        <center>
+            <div class="box has-background-danger" style="width: 400px">
+                <strong>Access not connected</strong>
+            </div>
+        </center>
+    </div>
+    <div>
+        <label class="label">Input File</label>
+        <textarea class="textarea" style="height: 300px" readonly>{{ calc.all_inputs }}</textarea>
+        <center id="buttons_center">
+            <button class="button" onclick="load_logs()" id="load_logs_button">View Logs</button>
+            <a class="button" href="/download_log/{{ calc.id }}">Download Logs</a>
+        </center>
+        <div id="log_div"></div>
+    </div>
+    {% if calc.step.creates_ensemble %}
+    <script>
+        var opt_viewer = $3Dmol.createViewer("opt_viewer_div");
+        var num_opt_steps = "1";
 
-		opt_viewer.setBackgroundColor(0xffffff);
-	</script>
-	{% endif %}
-	<script>
-
-		$('#launch_frame_form').submit(function(){
-			frame_num = document.getElementById("opt_scroll").value;
-			$('<input />').attr('type', 'hidden')
-				.attr('name', "frame_num")
-				.attr('value', frame_num)
-				.appendTo(this);
-		});
-	</script>
-
-
+        opt_viewer.setBackgroundColor(0xffffff);
+    </script>
+    {% endif %}
+    <script>
+        $("#launch_frame_form").submit(function () {
+            frame_num = document.getElementById("opt_scroll").value;
+            $("<input />").attr("type", "hidden").attr("name", "frame_num").attr("value", frame_num).appendTo(this);
+        });
+    </script>
 </div>
 
 {% endblock content %}

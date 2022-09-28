@@ -1,254 +1,251 @@
-{% extends 'frontend/base.html' %}
+{% extends 'frontend/base.html' %} {% load i18n %} {% load static %} {% block extrahead %}
+<title>CalcUS - Manage Access</title>
+<script src="{% static 'frontend/jquery.min.js' %}"></script>
+<style>
+    #content_container > .box {
+        max-width: 400px;
+        margin: 20px auto;
+    }
 
-{% load i18n %}
-{% load static %}
+    #delete_access_box {
+        margin-top: 50px !important;
+    }
+    td > .button {
+        height: 21px;
+        float: right;
+    }
+</style>
+<script>
+    function connect_access() {
+    	password = document.getElementById("ssh_password").value;
+    	$.ajax({
+    		type: "POST",
+    		url: "/connect_access/",
+    		headers:{
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+    		data: {'access_id': {{ access.id }}, 'password': password},
+    		success: function()
+    		{
+    			var my_refresh = setInterval(function() {
+    				$.ajax({
+    					type: "POST",
+    					url: "/get_command_status/",
+    					data: {'access_id': {{ access.id }}},
+    					headers:{
+    						"X-CSRFToken": '{{ csrf_token }}',
+    					},
 
-{% block extrahead %}
-	<title>CalcUS - Manage Access</title>
-	<script src="{% static 'frontend/jquery.min.js' %}"></script>
-	<style>
-		#content_container > .box {
-			max-width: 400px;
-			margin: 20px auto;
-		}
+    					success: function(data)
+    					{
+    						$("#test_msg").html(data);
+    						if (data != "Pending") {
+    							clearInterval(my_refresh);
+    							refresh_status();
+    						}
+    					}
+    				});
+    	 		}, 1000);
 
-		#delete_access_box {
-			margin-top: 50px !important;
-		}
-		td > .button {
-			height: 21px;
-			float: right;
-		}
-	</style>
-	<script>
-		function connect_access() {
-			password = document.getElementById("ssh_password").value;
-			$.ajax({
-				type: "POST",
-				url: "/connect_access/",
-				headers:{
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				data: {'access_id': {{ access.id }}, 'password': password}, 
-				success: function()
-				{
-					var my_refresh = setInterval(function() {
-						$.ajax({
-							type: "POST",
-							url: "/get_command_status/",
-							data: {'access_id': {{ access.id }}}, 
-							headers:{
-								"X-CSRFToken": '{{ csrf_token }}',
-							},
+    		}
+    	});
 
-							success: function(data)
-							{
-								$("#test_msg").html(data);
-								if (data != "Pending") {
-									clearInterval(my_refresh);
-									refresh_status();
-								}
-							}
-						});
-			 		}, 1000);
+    }
+    function disconnect_access() {
+    	$.ajax({
+    		type: "POST",
+    		url: "/disconnect_access/",
+    		headers:{
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+    		data: {'access_id': {{ access.id }}},
+    		success: function(data)
+    		{
+    			$("#test_msg").html("Access disconnected");
+    		}
+    	});
 
-				}
-			});
+    }
 
-		}
-		function disconnect_access() {
-			$.ajax({
-				type: "POST",
-				url: "/disconnect_access/",
-				headers:{
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				data: {'access_id': {{ access.id }}}, 
-				success: function(data)
-				{
-					$("#test_msg").html("Access disconnected");
-				}
-			});
+    function refresh_status() {
+    	$.ajax({
+    		type: "POST",
+    		url: "/status_access/",
+    		headers:{
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+    		data: {'access_id': {{ access.id }}},
+    		success: function(data)
+    		{
+    			if(data.search("Connected") != -1) {
+    				$("#status_box").html(data);
+    				$("#status_box").removeClass("has-background-danger");
+    				$("#status_box").addClass("has-background-success");
+    			}
+    			else {
+    				$("#status_box").html(data);
+    				$("#status_box").addClass("has-background-danger");
+    				$("#status_box").removeClass("has-background-success");
 
-		}
+    			}
+    		}});
+    }
 
-		function refresh_status() {
-			$.ajax({
-				type: "POST",
-				url: "/status_access/",
-				headers:{
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				data: {'access_id': {{ access.id }}}, 
-				success: function(data)
-				{
-					if(data.search("Connected") != -1) {
-						$("#status_box").html(data);		
-						$("#status_box").removeClass("has-background-danger");		
-						$("#status_box").addClass("has-background-success");		
-					}
-					else {
-						$("#status_box").html(data);		
-						$("#status_box").addClass("has-background-danger");		
-						$("#status_box").removeClass("has-background-success");		
+    function delete_access() {
+    	var res = confirm("Delete access?");
+    	if (res) {
+    		$.ajax({
+    			method: "GET",
+    			url: "/delete_access/{{ access.id }}",
+    			headers: {
+    				"X-CSRFToken": '{{ csrf_token }}',
+    			},
+    			success: function() {
+    				window.location.replace("/profile");
+    			}
+    		});
+    	}
 
-					}
-				}});
-		}
+    }
+    function load_pub_key(btn) {
+    	$(btn).addClass("is-loading");
+    	$.ajax({
+    			method: "GET",
+    			url: "/load_pub_key/{{ access.id }}",
+    			headers: {
+    				"X-CSRFToken": '{{ csrf_token }}',
+    			},
+    			success: function(data) {
+    				$(btn).remove();
+    				div = $("#load_pub_key_box");
+    				key = "<textarea class='textarea' style='width: 100%; word-break: break-all;' rows='12' readonly>"+ data + "</textarea>";
+    				div.html(key);
+    			},
+    		});
+    }
 
-		function delete_access() {
-			var res = confirm("Delete access?");	
-			if (res) {
-				$.ajax({
-					method: "GET",
-					url: "/delete_access/{{ access.id }}",
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					success: function() {
-						window.location.replace("/profile");
-					}
-				});
-			}
-			
-		}
-		function load_pub_key(btn) {
-			$(btn).addClass("is-loading");
-			$.ajax({
-					method: "GET",
-					url: "/load_pub_key/{{ access.id }}",
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					success: function(data) {
-						$(btn).remove();
-						div = $("#load_pub_key_box");
-						key = "<textarea class='textarea' style='width: 100%; word-break: break-all;' rows='12' readonly>"+ data + "</textarea>";
-						div.html(key);
-					},
-				});
-		}
+    function selectText(node) {
+        	if (document.body.createTextRange) {
+    		const range = document.body.createTextRange();
+    		range.moveToElementText(node);
+    		range.select();
+        	} else if (window.getSelection) {
+    		const selection = window.getSelection();
+    		const range = document.createRange();
+    		range.selectNodeContents(node);
+    		selection.removeAllRanges();
+    		console.warn("Could not select text in node: Unsupported browser.");
+    	}
+    }
 
-		function selectText(node) {
-		    	if (document.body.createTextRange) {
-				const range = document.body.createTextRange();
-				range.moveToElementText(node);
-				range.select();
-		    	} else if (window.getSelection) {
-				const selection = window.getSelection();
-				const range = document.createRange();
-				range.selectNodeContents(node);
-				selection.removeAllRanges();
-				console.warn("Could not select text in node: Unsupported browser.");
-			}
-		}
+    function adjust(btn) {
+    	span = $(btn).parent().find("span");
+    	if($(btn).hasClass("is-info")) {
+    		span.attr("contenteditable", "true");
+    		selectText(span.get(0));
+    		$(btn).removeClass("is-info");
+    		$(btn).addClass("is-success");
+    		$(btn).text("Done");
+    		$('[contenteditable=true]').on('keypress', function(e) {
+    			if (e.keyCode == 13 && $(btn).hasClass("is-success")) {
+    				e.preventDefault();
+    				adjust(btn);
+    			}
+    		});
 
-		function adjust(btn) {
-			span = $(btn).parent().find("span");			
-			if($(btn).hasClass("is-info")) {
-				span.attr("contenteditable", "true");
-				selectText(span.get(0));
-				$(btn).removeClass("is-info");
-				$(btn).addClass("is-success");
-				$(btn).text("Done");
-				$('[contenteditable=true]').on('keypress', function(e) {
-					if (e.keyCode == 13 && $(btn).hasClass("is-success")) {
-						e.preventDefault();
-						adjust(btn);
-					}
-				});
-
-			}
-			else {
-				span.attr("contenteditable", "false");
-				$(btn).removeClass("is-success");
-				$(btn).addClass("is-info");
-				$(btn).text("Adjust");
-				pal = $("#pal_span").text();
-				mem = $("#mem_span").text();
-				$.ajax({
-					method: "POST",
-					url: "/update_access/",
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					data: {
-						'access_id': "{{ access.id }}",
-						'pal': pal,
-						'mem': mem,
-					},
-					complete: function(xhr, stat) {
-						$("#cluster_specs_msg").html(xhr.responseText);	
-					},
-				});
-			}
-		}
+    	}
+    	else {
+    		span.attr("contenteditable", "false");
+    		$(btn).removeClass("is-success");
+    		$(btn).addClass("is-info");
+    		$(btn).text("Adjust");
+    		pal = $("#pal_span").text();
+    		mem = $("#mem_span").text();
+    		$.ajax({
+    			method: "POST",
+    			url: "/update_access/",
+    			headers: {
+    				"X-CSRFToken": '{{ csrf_token }}',
+    			},
+    			data: {
+    				'access_id': "{{ access.id }}",
+    				'pal': pal,
+    				'mem': mem,
+    			},
+    			complete: function(xhr, stat) {
+    				$("#cluster_specs_msg").html(xhr.responseText);
+    			},
+    		});
+    	}
+    }
 
 
-		$(document).ready(function() {
-			$("#ssh_password").on("keydown", function enter(e) {
-				if(e.keyCode == 13) {
-					connect_access();
-				}
-			});
-			refresh_status();
-		});
-	</script>
-{% endblock %}
-{% block content %}
-{% csrf_token %}
+    $(document).ready(function() {
+    	$("#ssh_password").on("keydown", function enter(e) {
+    		if(e.keyCode == 13) {
+    			connect_access();
+    		}
+    	});
+    	refresh_status();
+    });
+</script>
+{% endblock %} {% block content %} {% csrf_token %}
 
 <div class="box">
-	<center>
-		<table class="table">
-			<tbody>
-				<tr>
-					<th>Cluster address</th>
-					<td>{{ access.cluster_address }}</td>
-				</tr>
-				<tr>
-					<th>Username</th>
-					<td>{{ access.cluster_username }}</td>
-				</tr>
-				<tr>
-					<th>CPU</th>
-					<td><span id="pal_span">{{ access.pal }}</span> <button class="button is-info" onclick="adjust(this);">Adjust</button></td>
-				</tr>
-				<tr>
-					<th>Memory (MB)</th>
-					<td><span id="mem_span">{{ access.memory }}</span> <button class="button is-info" onclick="adjust(this);">Adjust</button></td>
-				</tr>
-			</tbody>
-		</table>
-		<span id="cluster_specs_msg"></span>
-	</center>
+    <center>
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th>Cluster address</th>
+                    <td>{{ access.cluster_address }}</td>
+                </tr>
+                <tr>
+                    <th>Username</th>
+                    <td>{{ access.cluster_username }}</td>
+                </tr>
+                <tr>
+                    <th>CPU</th>
+                    <td>
+                        <span id="pal_span">{{ access.pal }}</span>
+                        <button class="button is-info" onclick="adjust(this);">Adjust</button>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Memory (MB)</th>
+                    <td>
+                        <span id="mem_span">{{ access.memory }}</span>
+                        <button class="button is-info" onclick="adjust(this);">Adjust</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <span id="cluster_specs_msg"></span>
+    </center>
 </div>
 <div class="box">
-	<center>
-		<div>
-			<label class="label">Status</label>
-			<div class="box" id="status_box"></div>
-		</div>
-		<br />
-		<div class="field">
-			<label class="label">Key Encryption Password</label>
-			<div class="control">
-				<input class="input" type="password" id="ssh_password" style="width: 100%;">
-			</div>
-		</div>
+    <center>
+        <div>
+            <label class="label">Status</label>
+            <div class="box" id="status_box"></div>
+        </div>
+        <br />
+        <div class="field">
+            <label class="label">Key Encryption Password</label>
+            <div class="control">
+                <input class="input" type="password" id="ssh_password" style="width: 100%" />
+            </div>
+        </div>
 
-		<button class="button is-primary" id="connect_button" onclick="connect_access();">Connect to cluster</button>
-		<button class="button is-danger" id="disconnect_button" onclick="disconnect_access();">Disconnect</button>
-		<div id="test_msg">
-		</div>
-	</center>
+        <button class="button is-primary" id="connect_button" onclick="connect_access();">Connect to cluster</button>
+        <button class="button is-danger" id="disconnect_button" onclick="disconnect_access();">Disconnect</button>
+        <div id="test_msg"></div>
+    </center>
 </div>
 <div class="box has-text-centered" id="load_pub_key_box">
-	<button class="button is-info" onclick="load_pub_key(this);">View public key</button>
+    <button class="button is-info" onclick="load_pub_key(this);">View public key</button>
 </div>
 <div class="box has-text-centered" id="delete_access_box">
-	<a class="button is-danger" onclick="delete_access();" id="delete_access_button" >Delete this access</a>
+    <a class="button is-danger" onclick="delete_access();" id="delete_access_button">Delete this access</a>
 </div>
-
 
 {% endblock content %}

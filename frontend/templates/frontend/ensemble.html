@@ -1,677 +1,676 @@
-{% extends 'frontend/base.html' %}
+{% extends 'frontend/base.html' %} {% load i18n %} {% load static %} {% load details_tags %} {% block extrahead %}
+<title>CalcUS - {{ ensemble.name }}</title>
+<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css" />
+<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
+<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
+<script src="{% static 'frontend/jquery.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
 
-{% load i18n %}
+<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css" />
+<script src="{% static 'frontend/dygraph.min.js' %}"></script>
+<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
 
-{% load static %}
-{% load details_tags %}
+<style>
+    #ensemble_name > br {
+        display: none;
+    }
+    #details_ensemble_div {
+        margin-bottom: 30px;
+    }
+    .button_full {
+        width: 100%;
+        max-width: 380px;
+    }
+    .button_half {
+        width: 50%;
+        max-width: 190px;
+    }
 
-{% block extrahead %}
-	<title>CalcUS - {{ ensemble.name }}</title>
-	<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
-	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
-	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
-	<script src="{% static 'frontend/jquery.min.js' %}"></script>
-	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+    ul.tree,
+    ul.tree ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    ul.tree ul {
+        margin-left: 10px;
+    }
+    ul.tree li {
+        margin: 0;
+        padding: 0 7px;
+        line-height: 20px;
+        color: #369;
+        font-weight: bold;
+        border-left: 1px solid rgb(100, 100, 100);
+    }
+    ul.tree li:last-child {
+        border-left: none;
+    }
+    ul.tree li:before {
+        position: relative;
+        top: -0.3em;
+        height: 1em;
+        width: 12px;
+        color: white;
+        border-bottom: 1px solid rgb(100, 100, 100);
+        content: "";
+        display: inline-block;
+        left: -7px;
+    }
+    ul.tree li:last-child:before {
+        border-left: 1px solid rgb(100, 100, 100);
+    }
+    #conf_table {
+        /* Thanks Stackoverflow */
+        user-select: none; /* standard syntax */
+        -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+        -moz-user-select: none; /* mozilla browsers */
+        -khtml-user-select: none; /* webkit (konqueror) browsers */
+        -ms-user-select: none; /* IE10+ */
+    }
+    .close_btn {
+        float: right;
+        color: lightgray;
+        font-size: 24px;
+        font-weight: bold;
+    }
+    .fullscreen_div {
+        display: none;
+        position: fixed;
+        padding-top: 50px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgb(0, 0, 0);
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+    .close_btn:hover {
+        color: darkgray;
+    }
+    .modal-card {
+        max-width: 850px;
+        width: 100%;
+    }
+    #charges_viewer_div > canvas,
+    #vib_animation > canvas {
+        border: 1px solid black;
+    }
 
-	<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
-	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
-	<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
+    @-webkit-keyframes animatetop {
+        from {
+            top: -300px;
+            opacity: 0;
+        }
+        to {
+            top: 0;
+            opacity: 1;
+        }
+    }
+    @keyframes animatetop {
+        from {
+            top: -300px;
+            opacity: 0;
+        }
+        to {
+            top: 0;
+            opacity: 1;
+        }
+    }
+</style>
+<script>
+    var ctrl = false;
+    var shift = false;
+    var previous_selection = 1;
 
-	<style>
-		#ensemble_name > br { 
-			display: none 
-		}
-		#details_ensemble_div {
-			margin-bottom: 30px;
-		}
-		.button_full {
-			width: 100%;
-			max-width: 380px;
-		}
-		.button_half {
-			width: 50%;
-			max-width: 190px;
-		}
+    $(document).ready(function () {
+        (function (ChemDoodle) {
+            ChemDoodle.relabel = function (molecule) {
+                for (let i = 0, ii = molecule.atoms.length; i < ii; i++) {
+                    molecule.atoms[i].altLabel = String(i + 1);
+                }
+            };
+        })(ChemDoodle);
 
-		ul.tree, ul.tree ul {
-			list-style: none;
-			margin: 0;
-			padding: 0;
-		} 
-		ul.tree ul {
-			margin-left: 10px;
-		}
-		ul.tree li {
-			margin: 0;
-			padding: 0 7px;
-			line-height: 20px;
-			color: #369;
-			font-weight: bold;
-			border-left:1px solid rgb(100,100,100);
-		}
-		ul.tree li:last-child {
-			border-left:none;
-		}
-		ul.tree li:before {
-			position:relative;
-			top:-0.3em;
-			height:1em;
-			width:12px;
-			color:white;
-			border-bottom:1px solid rgb(100,100,100);
-			content:"";
-			display:inline-block;
-			left:-7px;
-		}
-		ul.tree li:last-child:before {
-			border-left:1px solid rgb(100,100,100);   
-		}
-		#conf_table {
-			/* Thanks Stackoverflow */	
-			user-select: none; /* standard syntax */
-			-webkit-user-select: none; /* webkit (safari, chrome) browsers */
-			-moz-user-select: none; /* mozilla browsers */
-			-khtml-user-select: none; /* webkit (konqueror) browsers */
-			-ms-user-select: none; /* IE10+ */
-		}
-		.close_btn {
-		  	float: right; 
-		  	color: lightgray; 
-		  	font-size: 24px;  
-		  	font-weight: bold;
-		}
-		.fullscreen_div {
-			display: none;
-			position: fixed; 
-			padding-top: 50px;
-			left: 0; 
-			top: 0;
-			width: 100%;
-			height: 100%; 
-			background-color: rgb(0, 0, 0);
-			background-color: rgba(0, 0, 0, 0.5);
-		}
-		.close_btn:hover {
-			color: darkgray;
-		}
-		.modal-card {
-			max-width: 850px;
-			width: 100%;
-		}
-		#charges_viewer_div > canvas, #vib_animation > canvas {
-			border: 1px solid black;
-		}
+        var details = document.querySelector("details");
+        details.addEventListener("toggle", load_related_calculations);
+    });
 
-		@-webkit-keyframes animatetop {
-		  	from {top:-300px; opacity:0} 
-		  	to {top:0; opacity:1}
-		}
-		@keyframes animatetop {
-		  	from {top:-300px; opacity:0}
-		  	to {top:0; opacity:1}
-		}
+    $(window).keydown(function (e) {
+        if (e.keyCode == 17) {
+            ctrl = true;
+        } else if (e.keyCode == 16) {
+            shift = true;
+        }
+    });
 
-	</style>
-	<script>
-		var ctrl = false;
-		var shift = false;
-		var previous_selection = 1;
+    $(window).keyup(function (e) {
+        if (e.keyCode == 17) {
+            ctrl = false;
+        } else if (e.keyCode == 16) {
+            shift = false;
+        }
+    });
 
-		$(document).ready(function(){
-			(function(ChemDoodle) {
-				ChemDoodle.relabel = function(molecule){
-				for(let i = 0, ii = molecule.atoms.length; i<ii; i++){
-					molecule.atoms[i].altLabel = String(i+1);
-				}
-	  		};
+    let num = 0;
+    let conf_length = 1;
+    var curr_p = 0;
 
-			})(ChemDoodle);
+    $.ajaxSetup({
+        cache: false,
+    });
+    $(document).ready(function () {
+        $.ajax({
+            method: "POST",
+            url: "/get_structure/",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+            data: {
+                id: "{{ ensemble.id }}",
+            },
+            success: function (data, textStatus, xhr) {
+                if (xhr.status != 204) {
+                    let mol = ChemDoodle.readXYZ(data);
 
-			var details = document.querySelector("details");
-			details.addEventListener("toggle", load_related_calculations);
+                    ChemDoodle.relabel(mol);
+                    editor.loadMolecule(mol);
+                    editorfs.loadMolecule(mol);
 
-		});
+                    $("#next_step_div").load("/next_step/{{ calculation.id }}");
+                    $.ajax({
+                        method: "GET",
+                        url: "/conformer_table/{{ ensemble.id }}",
+                        headers: {
+                            "X-CSRFToken": "{{ csrf_token }}",
+                        },
+                        success: function (data, textStatus, xhr) {
+                            if (xhr.status != 204) {
+                                $("#conf_table").html(data);
+                                conf_length = document.getElementById("conf_table").rows.length;
 
-		$(window).keydown(function (e) {
-			if(e.keyCode == 17) {
-				ctrl = true;	
-			}
-			else if(e.keyCode == 16) {
-				shift = true;
-			}
-		});
+                                refresh_details("{{ ensemble.unique_parameters.0.id }}");
+                            }
+                        },
+                    });
+                }
+            },
+        });
+    });
 
-		$(window).keyup(function (e) {
-			if(e.keyCode == 17) {
-				ctrl = false;	
-			}
-			else if(e.keyCode == 16) {
-				shift = false;
-			}
-		});
+    function select_conf(conf_num) {
+        if (shift) {
+            bounds = [previous_selection, conf_num];
+            Array.prototype.sort.call(bounds);
 
-		let num = 0;
-		let conf_length = 1;
-		var curr_p = 0;
+            for (i = bounds[0]; i <= bounds[1]; i++) {
+                target = document.getElementById("conf_table").rows[i];
+                if (!target.classList.contains("is-selected")) {
+                    target.classList.add("is-selected");
+                }
+            }
+        } else if (ctrl) {
+            target = document.getElementById("conf_table").rows[conf_num];
+            if (target.classList.contains("is-selected")) {
+                target.classList.remove("is-selected");
+            } else {
+                target.classList.add("is-selected");
+            }
+        } else {
+            for (i = 0; i < conf_length; i++) {
+                document.getElementById("conf_" + String(i)).classList.remove("is-selected");
+            }
 
-		$.ajaxSetup({ cache: false }); 
-		$(document).ready(function(){
-			$.ajax({
-				method: "POST",	 	 
-				url: "/get_structure/",
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				data: {'id': "{{ ensemble.id }}"},
-				success: function(data, textStatus, xhr) {
-					if (xhr.status != 204) {
-						let mol = ChemDoodle.readXYZ(data);
+            num = conf_num;
+            refresh();
+            document.getElementById("conf_table").rows[conf_num].classList.add("is-selected");
+        }
+        previous_selection = conf_num;
+    }
 
-						ChemDoodle.relabel(mol);	
-						editor.loadMolecule(mol);
-						editorfs.loadMolecule(mol);
+    function refresh() {
+        $.ajax({
+            method: "POST",
+            url: "/get_structure/",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
 
-						$("#next_step_div").load("/next_step/{{ calculation.id }}");
-						$.ajax({
-							method: "GET",	 	 
-							url: "/conformer_table/{{ ensemble.id }}",
-							headers: {
-								"X-CSRFToken": '{{ csrf_token }}',
-							},
-							success: function(data, textStatus, xhr) {
-								if (xhr.status != 204) {
-									$("#conf_table").html(data);
-									conf_length = document.getElementById("conf_table").rows.length;
+            data: {
+                id: "{{ ensemble.id }}",
+                num: get_conf_number(),
+            },
+            success: function (data, textStatus, xhr) {
+                if (xhr.status != 204) {
+                    let mol = ChemDoodle.readXYZ(data);
+                    editor.loadMolecule(mol);
+                    editorfs.loadMolecule(mol);
+                }
+            },
+        });
+        if (curr_p != 0) {
+            refresh_structure();
+        }
+    }
 
-									refresh_details("{{ ensemble.unique_parameters.0.id }}");
-								}
-							}
-						});
+    function increase_conf() {
+        if (num < conf_length - 1) {
+            document.getElementById("conf_table").rows[num].classList.remove("is-selected");
+            num = num + 1;
+            document.getElementById("conf_table").rows[num].classList.add("is-selected");
+            refresh();
+        }
+    }
 
-					}
-				}
-			});
-		});
+    function decrease_conf() {
+        if (num > 0) {
+            document.getElementById("conf_table").rows[num].classList.remove("is-selected");
+            num = num - 1;
+            document.getElementById("conf_table").rows[num].classList.add("is-selected");
+            refresh();
+        }
+    }
 
-		function select_conf(conf_num) {
-			if(shift) {
-				bounds = [previous_selection, conf_num];
-				Array.prototype.sort.call(bounds);
+    function refresh_ensemble() {
+        $.ajax({
+            method: "POST",
+            url: "/details_ensemble/",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
 
-				for(i=bounds[0]; i<=bounds[1]; i++) {
-					target = document.getElementById("conf_table").rows[i];
-					if(!target.classList.contains("is-selected")) {
-						target.classList.add("is-selected");
-					}
-				}
-			}
-			else if(ctrl) {
-				target = document.getElementById("conf_table").rows[conf_num];
-				if(target.classList.contains("is-selected")) {
-					target.classList.remove("is-selected");
-				}
-				else {
-					target.classList.add("is-selected");
-				}
-			}
-			else {
-				for (i=0; i < conf_length; i++) {
-					document.getElementById("conf_" + String(i)).classList.remove("is-selected");
-				}
-				
-				num = conf_num;
-				refresh();
-				document.getElementById("conf_table").rows[conf_num].classList.add("is-selected");
-			}
-			previous_selection = conf_num;
-		}
+            data: {
+                id: "{{ ensemble.id }}",
+                p_id: curr_p,
+            },
+            success: function (data, textStatus, xhr) {
+                if (xhr.status != 204) {
+                    $("#details_ensemble_div").html(data);
+                }
+            },
+        });
+    }
 
+    function refresh_structure() {
+        $.ajax({
+            method: "POST",
+            url: "/details_structure/",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
 
-		function refresh() {
-			$.ajax({
-				method: "POST",	 	 
-				url: "/get_structure/",
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
+            data: {
+                id: "{{ ensemble.id }}",
+                num: get_conf_number(),
+                p_id: curr_p,
+            },
+            success: function (data, textStatus, xhr) {
+                if (xhr.status != 204) {
+                    $("#details_structure_div").html(data);
+                }
+            },
+        });
+    }
 
-				data: {'id': "{{ ensemble.id }}", 'num': get_conf_number()},
-				success: function(data, textStatus, xhr) {
-					if (xhr.status != 204) {
-						let mol = ChemDoodle.readXYZ(data);
-						editor.loadMolecule(mol);
-						editorfs.loadMolecule(mol);
-					}
+    function refresh_details(p_id) {
+        curr_p = p_id;
 
-				}
-		  
-			});
-			if (curr_p != 0) {
-				refresh_structure();
-			}
-		}
+        actives = document.getElementById("tabs").getElementsByClassName("is-active");
+        for (i = 0; i < actives.length; i++) {
+            actives[i].classList.remove("is-active");
+        }
 
-		function increase_conf() {
-			if(num < conf_length - 1) {
-				document.getElementById("conf_table").rows[num].classList.remove("is-selected");
-				num = num + 1;
-				document.getElementById("conf_table").rows[num].classList.add("is-selected");
-				refresh();
-			}
+        $("#tab_" + p_id).addClass("is-active");
 
-		}
+        first_conf_num = 0;
 
-		function decrease_conf() {
-			if(num > 0) {
-				document.getElementById("conf_table").rows[num].classList.remove("is-selected");
-				num = num - 1;
-				document.getElementById("conf_table").rows[num].classList.add("is-selected");
-				refresh();
-			}
-		}
+        selected_confs = document.getElementById("conf_table").getElementsByClassName("is-selected");
+        if (selected_confs.length > 0) {
+            first_conf_num = selected_confs[0].getAttribute("data-num");
+        }
 
-		function refresh_ensemble () {
-			$.ajax({
-				method: "POST",	 	 
-				url: "/details_ensemble/",
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
+        $.ajax({
+            method: "POST",
+            url: "/conformer_table/",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+            data: {
+                ensemble_id: "{{ ensemble.id }}",
+                param_id: p_id,
+            },
+            success: function (data, textStatus, xhr) {
+                if (xhr.status != 204) {
+                    $("#conf_table").html(data);
+                    conf_length = document.getElementById("conf_table").rows.length;
+                    num = -1;
 
-				data: {'id': "{{ ensemble.id }}", 'p_id': curr_p},
-				success: function(data, textStatus, xhr) {
-					if (xhr.status != 204) {
-						$("#details_ensemble_div").html(data);
-					}
+                    if (first_conf_num == 0) {
+                        document.getElementById("conf_table").rows[0].classList.add("is-selected");
+                        num = 0;
+                        refresh();
+                    } else {
+                        confs = document.getElementById("conf_table").getElementsByTagName("tr");
+                        for (i = 0; i < confs.length; i++) {
+                            c = confs[i];
+                            if (c.getAttribute("data-num") == first_conf_num) {
+                                c.classList.add("is-selected");
+                                num = i;
+                                break;
+                            }
+                        }
+                        if (num == -1) {
+                            document.getElementById("conf_table").rows[0].classList.add("is-selected");
+                            num = 0;
+                            refresh();
+                        }
+                    }
+                    refresh_ensemble();
+                    refresh_structure();
+                }
+            },
+        });
+    }
 
-				}
-		  
-			});
-		}
+    function get_conf_number() {
+        return document.getElementById("conf_table").rows[parseInt(num)].cells[0].innerHTML;
+    }
 
-		function refresh_structure () {
-			$.ajax({
-				method: "POST",	 	 
-				url: "/details_structure/",
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
+    function download_selected_structure() {
+        url = "/download_structures/{{ ensemble.id }}/" + get_conf_number();
+        window.location.href = url;
+    }
 
-				data: {'id': "{{ ensemble.id }}", 'num': get_conf_number(), 'p_id': curr_p},
-				success: function(data, textStatus, xhr) {
-					if (xhr.status != 204) {
-						$("#details_structure_div").html(data);
-					}
+    function selectText(node) {
+        node = document.getElementById(node);
 
-				}
-		  
-			});
+        if (document.body.createTextRange) {
+            const range = document.body.createTextRange();
+            range.moveToElementText(node);
+            range.select();
+        } else if (window.getSelection) {
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        } else {
+            console.warn("Could not select text in node: Unsupported browser.");
+        }
+    }
 
+    function edit_title() {
+        el = document.getElementById("ensemble_name");
+        if (el.getAttribute("contentEditable") == "true") {
+            el.setAttribute("contentEditable", "false");
+            $("#icon_rename").removeClass("fa-check");
+            $("#icon_rename").addClass("fa-edit");
+            name = el.textContent;
+            $.ajax({
+                method: "POST",
+                url: "/rename_ensemble/",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                data: {
+                    id: "{{ ensemble.id }}",
+                    new_name: name,
+                },
+            });
+        } else {
+            el.setAttribute("contentEditable", "true");
+            $("#icon_rename").removeClass("fa-edit");
+            $("#icon_rename").addClass("fa-check");
+            selectText("ensemble_name");
+            $("[contenteditable=true]").on("keypress", function (e) {
+                if (e.keyCode == 13) {
+                    e.preventDefault();
+                    edit_title();
+                }
+            });
+        }
+    }
 
-		}
+    function del_ensemble() {
+        var res = confirm("Delete the ensemble?");
+        if (res) {
+            $.ajax({
+                method: "POST",
+                url: "/delete_ensemble/",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                data: {
+                    id: "{{ ensemble.id }}",
+                },
+                success: function () {
+                    window.location = "/molecule/{{ ensemble.parent_molecule.id }}";
+                },
+            });
+        }
+    }
+    function flag() {
+        icon = document.getElementById("icon_flag");
+        if (icon.style.color == "silver") {
+            $.ajax({
+                method: "POST",
+                url: "/toggle_flag/",
+                data: {
+                    id: "{{ ensemble.id }}",
+                    val: 0,
+                },
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                success: function () {
+                    icon.style.color = "";
+                },
+            });
+        } else {
+            $.ajax({
+                method: "POST",
+                url: "/toggle_flag/",
+                data: {
+                    id: "{{ ensemble.id }}",
+                    val: 1,
+                },
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                success: function () {
+                    icon.style.color = "silver";
+                },
+            });
+        }
+    }
+    function load_related_calculations() {
+        output = document.getElementById("related_calculations_div");
+        if (output.innerHTML.trim() != "") {
+            return;
+        }
+        $("#related_calculations_div").load("/get_related_calculations/{{ ensemble.id }}");
+    }
+</script>
+<style>
+    .hscroll {
+        overflow-x: auto;
+    }
+</style>
 
-		function refresh_details(p_id) {
-
-			curr_p = p_id;
-
-			actives = document.getElementById("tabs").getElementsByClassName("is-active");
-			for (i=0; i < actives.length; i++) {
-				actives[i].classList.remove("is-active");
-			}
-			
-			$("#tab_" + p_id).addClass("is-active");
-
-			first_conf_num = 0;
-
-			selected_confs = document.getElementById("conf_table").getElementsByClassName("is-selected");
-			if(selected_confs.length > 0) {
-				first_conf_num = selected_confs[0].getAttribute("data-num");
-			}	
-
-			$.ajax({
-				method: "POST",	 	 
-				url: "/conformer_table/",
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				data: {
-					'ensemble_id': "{{ ensemble.id }}",
-					'param_id': p_id,
-				},
-				success: function(data, textStatus, xhr) {
-					if (xhr.status != 204) {
-						$("#conf_table").html(data);
-						conf_length = document.getElementById("conf_table").rows.length;
-						num = -1;
-
-						if(first_conf_num == 0) {
-							document.getElementById("conf_table").rows[0].classList.add("is-selected");
-							num = 0;
-							refresh();
-						}
-						else {
-							confs = document.getElementById("conf_table").getElementsByTagName("tr");
-							for(i=0; i<confs.length; i++) {
-								c = confs[i];
-								if(c.getAttribute("data-num") == first_conf_num) {
-									c.classList.add("is-selected");
-									num = i;
-									break;
-								}
-							}
-							if(num == -1) {
-								document.getElementById("conf_table").rows[0].classList.add("is-selected");
-								num = 0;
-								refresh();
-							}
-						}
-						refresh_ensemble();
-						refresh_structure();
-					}
-				}
-			});
-
-		}
-		
-		function get_conf_number() {
-			return document.getElementById("conf_table").rows[parseInt(num)].cells[0].innerHTML;
-		}
-
-		function download_selected_structure() {
-			url = "/download_structures/{{ ensemble.id }}/" + get_conf_number();
-			window.location.href = url;
-		}
-
-		function selectText(node) {
-		    	node = document.getElementById(node);
-
-		    	if (document.body.createTextRange) {
-				const range = document.body.createTextRange();
-				range.moveToElementText(node);
-				range.select();
-		    	} else if (window.getSelection) {
-				const selection = window.getSelection();
-				const range = document.createRange();
-				range.selectNodeContents(node);
-				selection.removeAllRanges();
-				selection.addRange(range);
-			} else {
-				console.warn("Could not select text in node: Unsupported browser.");
-			}
-		}
-
-		function edit_title() {
-			el = document.getElementById("ensemble_name");
-			if (el.getAttribute("contentEditable") == "true") {
-				el.setAttribute("contentEditable", "false");
-				$("#icon_rename").removeClass("fa-check");
-				$("#icon_rename").addClass("fa-edit");
-				name = el.textContent;
-				$.ajax({
-					method: "POST",	 	 
-					url: "/rename_ensemble/",
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					data: {'id': "{{ ensemble.id }}", 'new_name': name},
-				});
-
-			}
-			else {
-				el.setAttribute("contentEditable", "true");
-				$("#icon_rename").removeClass("fa-edit");
-				$("#icon_rename").addClass("fa-check");
-				selectText("ensemble_name");
-				$('[contenteditable=true]').on('keypress', function(e) {
-					if (e.keyCode == 13) {
-						e.preventDefault();
-						edit_title();
-					}
-				});
-				
-			}
-						
-		}
-
-		function del_ensemble() {
-			var res = confirm("Delete the ensemble?");	
-			if (res) {
-				$.ajax({
-					method: "POST",	 	 
-					url: "/delete_ensemble/",
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					data: {'id': "{{ ensemble.id }}"},
-					success: function() {
-						window.location = "/molecule/{{ ensemble.parent_molecule.id }}"
-					}
-
-				});
-
-			}
-		}
-		function flag() {
-			icon = document.getElementById("icon_flag");
-			if(icon.style.color == "silver") {
-				$.ajax({
-					method: "POST",	 	 
-					url: "/toggle_flag/",
-					data: {
-						'id': "{{ ensemble.id }}",
-						'val': 0,
-					},
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					success: function() {
-						icon.style.color = "";
-					}
-
-				});
-			}
-			else {
-				$.ajax({
-					method: "POST",	 	 
-					url: "/toggle_flag/",
-					data: {
-						'id': "{{ ensemble.id }}",
-						'val': 1,
-					},
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					success: function() {
-						icon.style.color = "silver";
-					}
-
-				});
-
-			}
-
-		}
-		function load_related_calculations() {
-			output = document.getElementById("related_calculations_div");
-			if(output.innerHTML.trim() != "") {
-				return;
-			}
-			$("#related_calculations_div").load("/get_related_calculations/{{ ensemble.id }}");
-		}
-	</script>
-	<style>
-		.hscroll {
-			overflow-x: auto;
-		}
-
-	</style>
-
-{% endblock %}
-
-{% block content %}
-
-{% csrf_token %}
+{% endblock %} {% block content %} {% csrf_token %}
 
 <div class="container">
-	<nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
-	 	<ul>
-	    		<li><a href="/projects/">Projects</a></li>
-			<li><a href="/projects/{{ ensemble.parent_molecule.project.author }}">{{ ensemble.parent_molecule.project.author }}</a></li>
-			<li><a href="/projects/{{ ensemble.parent_molecule.project.author }}/{{ ensemble.parent_molecule.project }}">{{ ensemble.parent_molecule.project }}</a></li>
-			<li><a href="/molecule/{{ ensemble.parent_molecule.id }}">{{ ensemble.parent_molecule.name }}</a></li>
-			<li class="is-active"><a aria-current="page" href="#">{{ ensemble.name }}</a></li>
-	  	</ul>
-	</nav>
+    <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+        <ul>
+            <li>
+                <a href="/projects/">Projects</a>
+            </li>
+            <li>
+                <a href="/projects/{{ ensemble.parent_molecule.project.author }}">{{ ensemble.parent_molecule.project.author }}</a>
+            </li>
+            <li>
+                <a href="/projects/{{ ensemble.parent_molecule.project.author }}/{{ ensemble.parent_molecule.project }}">{{ ensemble.parent_molecule.project }}</a>
+            </li>
+            <li>
+                <a href="/molecule/{{ ensemble.parent_molecule.id }}">{{ ensemble.parent_molecule.name }}</a>
+            </li>
+            <li class="is-active">
+                <a aria-current="page" href="#">{{ ensemble.name }}</a>
+            </li>
+        </ul>
+    </nav>
 
-	<div id="status_box">
-		<div class="box is-rounded" id="ensemble_title" style="background-color: {{ ensemble.get_node_color }};">
-				<p class="title is-3" style="display: inline;" id="ensemble_name">{{ ensemble.name }}</p>
-				<p style="float: right;">
-				<a onclick="flag()"><i class="fas fa-flag" id="icon_flag" title="Flag" {% if ensemble.flagged %}style="color: silver;" {% endif %}></i></a>
-				{% if ensemble.origin %}<a href="/ensemble/{{ ensemble.origin.id }}"><i class="fas fa-level-up-alt" title="Go to parent ensemble"></i></a>{% endif %}
-				<a onclick="edit_title();"><i class="fas fa-edit" id="icon_rename" title="Rename"></i></a>
-				<a onclick="del_ensemble();"><i class="fas fa-trash-alt" title="Delete"></i></a>
-				</p>
-		</div>
-	</div>
-	<div>
-		<details>
-			<summary>Related Calculations</summary>
-			<div id="related_calculations_div">
+    <div id="status_box">
+        <div class="box is-rounded" id="ensemble_title" style="background-color: {{ ensemble.get_node_color }};">
+            <p class="title is-3" style="display: inline" id="ensemble_name">{{ ensemble.name }}</p>
+            <p style="float: right">
+                <a onclick="flag()"><i class="fas fa-flag" id="icon_flag" title="Flag" {% if ensemble.flagged %}style="color: silver;" {% endif %}></i></a>
+                {% if ensemble.origin %}<a href="/ensemble/{{ ensemble.origin.id }}"><i class="fas fa-level-up-alt" title="Go to parent ensemble"></i></a>{% endif %}
+                <a onclick="edit_title();"><i class="fas fa-edit" id="icon_rename" title="Rename"></i></a>
+                <a onclick="del_ensemble();"><i class="fas fa-trash-alt" title="Delete"></i></a>
+            </p>
+        </div>
+    </div>
+    <div>
+        <details>
+            <summary>Related Calculations</summary>
+            <div id="related_calculations_div"></div>
+        </details>
+    </div>
 
-			</div>
-		</details>
-	</div>
+    <br />
+    <span class="tag is-danger is-large">Geometries</span>
+    <div class="columns box is-desktop">
+        <div class="column is-narrow">
+            <center>
+                <script>
+                    let editor = new ChemDoodle.EditorCanvas3D("editor", 400, 400, {
+                        useServices: false,
+                    });
+                    editor.styles.set3DRepresentation("Stick");
+                    editor.styles.backgroundColor = "#FFFFFF";
+                    editor.oneMolecule = false;
+                </script>
+                <br />
+                <button class="button button_full" id="fullscreen_btn">Large View</button>
+                <br />
+                <button class="button button_full" onclick="window.location.href='/download_structures/{{ ensemble.id }}'">
+                    Download ensemble in .xyz
+                    <i class="fas fa-download"></i>
+                </button>
+                <br />
+                <button class="button button_full" onclick="download_selected_structure();">
+                    Download selected structure in .xyz
+                    <i class="fas fa-download"></i>
+                </button>
+                <br />
+                <button class="button button_half" onclick="decrease_conf()">Previous Structure</button
+                ><button class="button button_half" onclick="increase_conf()">Next Structure</button>
+                <br />
+                <br />
+                <form method="POST" action="/launch/" id="launch_ensemble_form">
+                    {% csrf_token %}
+                    <input type="hidden" name="ensemble" value="{{ ensemble.id }}" />
+                    <button class="button button_full is-info" id="next_step_ensemble">Launch calculation on ensemble<i class="fas fa-external-link-alt"></i></button>
+                </form>
+                <form method="POST" action="/launch/" id="launch_selected_form">
+                    {% csrf_token %}
+                    <input type="hidden" name="ensemble" value="{{ ensemble.id }}" />
+                    <button class="button button_full is-info" id="next_step_structure">
+                        Launch calculation on selected structure(s)
+                        <i class="fas fa-external-link-alt"></i>
+                    </button>
+                </form>
+            </center>
+        </div>
+        <div class="column">
+            <center>
+                <div class="hscroll">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Energy (Eh)</th>
+                                <th>Rel. energy ({{ request.user.pref_units_name }})</th>
+                                <th>Degeneracy</th>
+                                <th>Boltzmann Weight at 298K</th>
+                            </tr>
+                        </thead>
+                        <tbody id="conf_table"></tbody>
+                    </table>
+                </div>
+            </center>
+        </div>
+    </div>
 
-	<br />
-	<span class="tag is-danger is-large">Geometries</span>
-	<div class="columns box is-desktop">
-		<div class="column is-narrow">
-			<center>
-			<script>
-				let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 400, {useServices: false});
-				editor.styles.set3DRepresentation('Stick');
-				editor.styles.backgroundColor = '#FFFFFF';
-				editor.oneMolecule = false;
-			</script>
-			<br />
-			<button class="button button_full" id="fullscreen_btn">Large View</button>
-			<br />
-			<button class="button button_full" onclick="window.location.href='/download_structures/{{ ensemble.id }}'">Download ensemble in .xyz <i class="fas fa-download"></i></button>
-			<br />	
-			<button class="button button_full" onclick="download_selected_structure();">Download selected structure in .xyz <i class="fas fa-download"></i></button>
-			<br />	
-			<button class="button button_half" onclick="decrease_conf()">Previous Structure</button><button class="button button_half" onclick="increase_conf()">Next Structure</button>
-			<br/>
-			<br/>
-			<form method="POST" action="/launch/" id="launch_ensemble_form">
-				{% csrf_token %}
-				<input type="hidden" name="ensemble" value="{{ ensemble.id }}"></input>
-				<button class="button button_full is-info"  id="next_step_ensemble">Launch calculation on ensemble<i class="fas fa-external-link-alt" ></i></button>
-			</form>
-			<form method="POST" action="/launch/" id="launch_selected_form">
-				{% csrf_token %}
-				<input type="hidden" name="ensemble" value="{{ ensemble.id }}"></input>
-				<button class="button button_full is-info" id="next_step_structure">Launch calculation on selected structure(s) <i class="fas fa-external-link-alt" ></i></button>
-			</form>
-			</center>
+    <div class="modal fullscreen_div" id="fullscreen_div">
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Large View</p>
+                <button type="button" class="close_btn modal-close is-large" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body" id="fullscreen_section">
+                <script>
+                    let editorfs = new ChemDoodle.EditorCanvas3D("editorfs", 800, 600, {
+                        useServices: false,
+                    });
+                    editorfs.styles.set3DRepresentation("Stick");
+                    editorfs.styles.backgroundColor = "#FFFFFF";
+                    editorfs.oneMolecule = false;
+                </script>
+            </section>
+        </div>
+    </div>
 
-		</div>
-		<div class="column">
-			<center>
-			<div class="hscroll">
-				<table class="table">
-					<thead>
-						<tr>
-							<th>#</th>
-							<th>Energy (Eh)</th>
-							<th>Rel. energy ({{ request.user.pref_units_name }})</th>
-							<th>Degeneracy</th>
-							<th>Boltzmann Weight at 298K</th>
-						</tr>
-					</thead>
-					<tbody id="conf_table">
+    <br />
+    <br />
+    <div class="tabs is-boxed" id="tabs">
+        <ul>
+            {% get_sorted_params ensemble as sorted_params %} {% for p in sorted_params %}
+            <li id="tab_{{ p.id }}">
+                <a onclick="refresh_details({{ p.id }})">{{ p }}{% get_geom_flag ensemble p %}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
 
-					</tbody>
-				</table>
-			</div>
-			</center>
-		</div>
-	</div>
+    <div id="details_ensemble_div"></div>
 
-	<div class="modal fullscreen_div" id="fullscreen_div">
-		<div class="modal-card">
-			<header class="modal-card-head">
-				<p class="modal-card-title">Large View</p>
-				<button type="button" class="close_btn modal-close is-large" aria-label="close"></button>
-			</header>
-			<section class="modal-card-body" id="fullscreen_section">
-			<script>
-				let editorfs = new ChemDoodle.EditorCanvas3D('editorfs', 800, 600, {useServices: false});
-				editorfs.styles.set3DRepresentation('Stick');
-				editorfs.styles.backgroundColor = '#FFFFFF';
-				editorfs.oneMolecule = false;
-			</script>
+    <div id="details_structure_div"></div>
 
-			</section>
-		</div>
-	</div>
+    <br />
+    {% if request.user == calculation.author %}
+    <a class="button is-danger" href="/delete/{{ calculation.id }}">Delete this calculation</a>
+    {% endif %}
+    <script>
+        let modalBtnFS = document.getElementById("fullscreen_btn");
+        let modalFS = document.querySelector(".fullscreen_div");
+        let closeBtnFS = document.querySelector(".close_btn");
 
-	<br />	
-	<br />	
-	<div class="tabs is-boxed" id="tabs">
-	  	<ul>
-			{% get_sorted_params ensemble as sorted_params %}
-			{% for p in sorted_params %}
-			<li id="tab_{{ p.id }}"><a onclick="refresh_details({{ p.id }})">{{ p }}{% get_geom_flag ensemble p %}</a></li>
-			{% endfor %}
-	  	</ul>
-	</div>
+        modalBtnFS.onclick = function () {
+            modalFS.style.display = "block";
+        };
+        closeBtnFS.onclick = function () {
+            modalFS.style.display = "none";
+        };
+        window.onclick = function (e) {
+            if (e.target == modalFS) {
+                modalFS.style.display = "none";
+            }
+        };
 
-	<div id="details_ensemble_div">	
+        $("#launch_selected_form").submit(function () {
+            var structures = document.querySelectorAll("#conf_table > tr.is-selected");
 
-	</div>
+            selected_structures = [];
+            for (i = 0; i < structures.length; i++) {
+                struct_num = structures[i].dataset["num"];
+                selected_structures.push(struct_num);
+            }
 
-	<div id="details_structure_div">	
-
-	</div>
-
-	<br />
-	{% if request.user == calculation.author %}
-		<a class="button is-danger" href="/delete/{{ calculation.id }}">Delete this calculation</a>
-	{% endif %}
-	<script>
-		let modalBtnFS = document.getElementById("fullscreen_btn");
-		let modalFS = document.querySelector(".fullscreen_div");
-		let closeBtnFS = document.querySelector(".close_btn");
-
-		modalBtnFS.onclick = function(){
-			modalFS.style.display = "block";
-		}
-		closeBtnFS.onclick = function(){
-			modalFS.style.display = "none";
-		}
-		window.onclick = function(e){
-			if(e.target == modalFS){
-				modalFS.style.display = "none";
-			}
-		}		
-
-		$('#launch_selected_form').submit(function(){
-			var structures = document.querySelectorAll("#conf_table > tr.is-selected");
-
-			selected_structures = [];
-			for(i=0; i < structures.length; i++) {
-				struct_num = structures[i].dataset['num'];
-				selected_structures.push(struct_num);
-			}
-
-			$('<input />').attr('type', 'hidden')
-				.attr('name', "structures")
-				.attr('value', selected_structures.join(','))
-				.appendTo(this);
-
-		});
-	</script>
+            $("<input />").attr("type", "hidden").attr("name", "structures").attr("value", selected_structures.join(",")).appendTo(this);
+        });
+    </script>
 </div>
 
 {% endblock content %}

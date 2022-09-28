@@ -1,126 +1,120 @@
-{% extends 'frontend/base.html' %}
+{% extends 'frontend/base.html' %} {% load static %} {% block extrahead %}
+<title>CalcUS - {{ project.name }}</title>
+<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
+<script src="{% static 'frontend/jquery.min.js' %}"></script>
 
-{% load static %}
+<script>
+    function selectText(node) {
+        node = document.getElementById(node);
 
-{% block extrahead %}
-	<title>CalcUS - {{ project.name }}</title>
-	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
-	<script src="{% static 'frontend/jquery.min.js' %}"></script>
-
-
-	<script>
-		function selectText(node) {
-		    	node = document.getElementById(node);
-
-		    	if (document.body.createTextRange) {
-				const range = document.body.createTextRange();
-				range.moveToElementText(node);
-				range.select();
-		    	} else if (window.getSelection) {
-				const selection = window.getSelection();
-				const range = document.createRange();
-				range.selectNodeContents(node);
-				selection.removeAllRanges();
-				selection.addRange(range);
-			} else {
-				console.warn("Could not select text in node: Unsupported browser.");
-			}
-		}
-		function edit_field(mol_id) {
-			el = document.getElementById("mol_name_" + mol_id);
-			if (el.getAttribute("contentEditable") == "true") {
-				el.setAttribute("contentEditable", "false");
-				$("#icon_" + mol_id).removeClass("fa-check");
-				$("#icon_" + mol_id).addClass("fa-edit");
-				name = el.textContent;
-				$.ajax({
-					method: "POST",	 	 
-					url: "/rename_molecule/",
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					data: {'id': mol_id, 'new_name': name}
-				});
-
-			}
-			else {
-				el.setAttribute("contentEditable", "true");
-				$("#icon_" + mol_id).removeClass("fa-edit");
-				$("#icon_" + mol_id).addClass("fa-check");
-				selectText('mol_name_' + mol_id);
-				$('[contenteditable=true]').on('keypress', function(e) {
-					if (e.keyCode == 13) {
-						e.preventDefault();
-						edit_field(mol_id);
-					}
-				});
-
-			}
-			
-		}
-		function del(mol_id) {
-			var res = confirm("Delete this molecule?");	
-			if (res) {
-				$.ajax({
-					method: "POST",	 	 
-					url: "/delete_molecule/",
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					data: {'id': mol_id},
-					success: function() {
-						document.getElementById("mol_box_" + mol_id).remove();	
-					}
-
-				});
-			}
-		}
-
-
-	</script>
-{% endblock %}
-
-{% block content %}
+        if (document.body.createTextRange) {
+            const range = document.body.createTextRange();
+            range.moveToElementText(node);
+            range.select();
+        } else if (window.getSelection) {
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        } else {
+            console.warn("Could not select text in node: Unsupported browser.");
+        }
+    }
+    function edit_field(mol_id) {
+        el = document.getElementById("mol_name_" + mol_id);
+        if (el.getAttribute("contentEditable") == "true") {
+            el.setAttribute("contentEditable", "false");
+            $("#icon_" + mol_id).removeClass("fa-check");
+            $("#icon_" + mol_id).addClass("fa-edit");
+            name = el.textContent;
+            $.ajax({
+                method: "POST",
+                url: "/rename_molecule/",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                data: {
+                    id: mol_id,
+                    new_name: name,
+                },
+            });
+        } else {
+            el.setAttribute("contentEditable", "true");
+            $("#icon_" + mol_id).removeClass("fa-edit");
+            $("#icon_" + mol_id).addClass("fa-check");
+            selectText("mol_name_" + mol_id);
+            $("[contenteditable=true]").on("keypress", function (e) {
+                if (e.keyCode == 13) {
+                    e.preventDefault();
+                    edit_field(mol_id);
+                }
+            });
+        }
+    }
+    function del(mol_id) {
+        var res = confirm("Delete this molecule?");
+        if (res) {
+            $.ajax({
+                method: "POST",
+                url: "/delete_molecule/",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                data: {
+                    id: mol_id,
+                },
+                success: function () {
+                    document.getElementById("mol_box_" + mol_id).remove();
+                },
+            });
+        }
+    }
+</script>
+{% endblock %} {% block content %}
 <div class="container">
-	<nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
-	 	<ul>
-	    		<li><a href="/projects/">Projects</a></li>
-			<li><a href="/projects/{{ project.author }}">{{ project.author }}</a></li>
-			<li class="is-active"><a aria-current="page" href="#">{{ project.name }}</a></li>
-	  	</ul>
-	<hr />	
+    <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+        <ul>
+            <li>
+                <a href="/projects/">Projects</a>
+            </li>
+            <li>
+                <a href="/projects/{{ project.author }}">{{ project.author }}</a>
+            </li>
+            <li class="is-active">
+                <a aria-current="page" href="#">{{ project.name }}</a>
+            </li>
+        </ul>
+        <hr />
+    </nav>
+    <div class="grid">
+        {% for mol in molecules %}
+        <div class="box has-background-blue-light" id="mol_box_{{ mol.id }}">
+            {% if mol.project.author == request.user %}
+            <p style="float: right">
+                <a onclick="edit_field('{{ mol.id }}');"><i class="fas fa-edit" id="icon_{{ mol.id }}" title="Rename"></i></a>
+                <a onclick="del('{{ mol.id }}');"><i class="fas fa-trash-alt" title="Delete"></i></a>
+            </p>
+            {% endif %}
+            <a href="/molecule/{{ mol.id }}">
+                <strong><p class="text_wrap" id="mol_name_{{ mol.id }}">{{ mol.name }}</p></strong>
+                <p>{{ mol.ensemble_set.count }} Ensembles(s)</p>
+            </a>
+        </div>
 
-	</nav>
-	<div class="grid">
-		{% for mol in molecules %}
-			<div class="box has-background-blue-light" id="mol_box_{{ mol.id }}">
-				{% if mol.project.author == request.user %}
-				<p style="float: right;">
-					<a onclick="edit_field('{{ mol.id }}');"><i class="fas fa-edit" id="icon_{{ mol.id }}" title="Rename"></i></a>
-					<a onclick="del('{{ mol.id }}');"><i class="fas fa-trash-alt" title="Delete"></i></a>
-				</p>
-				{% endif %}
-					<a href="/molecule/{{ mol.id }}">
-					<strong><p class="text_wrap" id="mol_name_{{ mol.id }}">{{ mol.name }}</p></strong>
-					<p>{{ mol.ensemble_set.count }} Ensembles(s)</p>
-				</a>
-			</div>
-
-		{% endfor %}
-		<div style="margin-top: 30px; margin-bottom: 30px;">
-		{% if request.user == project.author %}
-			<center>
-				<a href="/launch/project/{{ project.id }}">
-					<div class="box has-background-info" style="opacity: 0.5;" id="molecule_in_project">
-						<i class="fas fa-plus"></i>
-					</div>
-				</a>
-			</center>
-		{% endif %}
-
-		</div>
-	</div>
+        {% endfor %}
+        <div style="margin-top: 30px; margin-bottom: 30px">
+            {% if request.user == project.author %}
+            <center>
+                <a href="/launch/project/{{ project.id }}">
+                    <div class="box has-background-info" style="opacity: 0.5" id="molecule_in_project">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                </a>
+            </center>
+            {% endif %}
+        </div>
+    </div>
 </div>
 
 {% endblock %}
-
