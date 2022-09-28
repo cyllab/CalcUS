@@ -1,6 +1,6 @@
 basis-set-exchange
 bleach
-ccinput
+ccinput>=1.5.3
 celery[redis]
 cryptography
 Django==3.2.15
@@ -25,4 +25,3 @@ psycopg2
 requests
 scipy
 wheel
-

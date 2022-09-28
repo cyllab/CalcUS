@@ -1604,7 +1604,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.user.is_PI = True
         self.user.save()
 
-        u = User.objects.create_user(
+        self.student = User.objects.create_user(
             email="Student@test.com", password=self.password, member_of=g
         )
 

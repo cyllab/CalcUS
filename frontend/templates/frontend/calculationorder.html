@@ -1,4 +1,8 @@
-{% extends 'frontend/base.html' %} {% load static %} {% block extrahead %}
+{% extends 'frontend/base.html' %} 
+
+{% load static %} 
+
+{% block extrahead %}
 <link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
 <script src="{% static 'frontend/jquery.min.js' %}"></script>
 <style>
@@ -56,7 +60,8 @@
         }
     }
 </script>
-{% endblock %} {% block content %}
+{% endblock %} 
+{% block content %}
 <div class="container">
     <div class="box">
         <center>
@@ -65,7 +70,7 @@
             <h4 class="title is-4">Calculation Order {{ order.id }} - {{ order.step.name }}</h4>
             <h5 class="title is-5">
                 Starting from:
-                <a href="{{" source.1 }}>{{ source.0 }}</a>
+                <a href="{{ source.1 }}">{{ source.0 }}</a>
             </h5>
             {% endwith %} {% if order.resource.cluster_address %} Remote calculation ({{ order.resource.cluster_address }})
             <br />
@@ -91,12 +96,12 @@
                         <th>{{ calc.text_status }}{% if calc.status == 3%} - {{ calc.error_message }}{% endif %}</th>
                         <th>{{ calc.execution_time }}</th>
                         <th>
-                            {% if request.user == order.author %}<a class="button is-danger" id="cancel_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'cancel');"
-                                >Kill</a
-                            >
-                            <a class="button" id="relaunch_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'relaunch');">Relaunch</a>{% if not calc.local %}
-                            <a class="button" id="refetch_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'refetch');">Refetch</a>
-                            {% endif %}{% endif %}
+                            {% if request.user == order.author %}<a class="button is-danger" id="cancel_button_{{ calc.id }}" onclick="calc_action('{{ calc.id }}', 'cancel');">Kill</a>
+                            <a class="button" id="relaunch_button_{{ calc.id }}" onclick="calc_action('{{ calc.id }}', 'relaunch');">Relaunch</a>
+			                    {% if not calc.local %}
+                                <a class="button" id="refetch_button_{{ calc.id }}" onclick="calc_action('{{ calc.id }}', 'refetch');">Refetch</a>
+                                {% endif %}
+			                {% endif %}
                         </th>
                     </tr>
                     {% endfor %}

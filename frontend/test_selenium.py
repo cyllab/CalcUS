@@ -1391,16 +1391,6 @@ class UserPermissionsTests(CalcusLiveServer):
             self.calc_launch()
         self.assertIn("No computing resource chosen", str(e.exception))
 
-    def test_request_PI(self):
-        self.lget("/profile/")
-        self.apply_PI("Test group")
-        self.assertTrue(
-            self.driver.find_element(By.ID, "PI_application_message").text.find(
-                "Your request has been received"
-            )
-            != -1
-        )
-
     def test_manage_PI_request(self):
         self.user.is_PI = True
         self.user.save()
@@ -1434,7 +1424,7 @@ class UserPermissionsTests(CalcusLiveServer):
         self.assertEqual(self.get_number_projects(), 1)
 
         self.logout()
-        self.login("Student", self.password)
+        self.login("Student@test.com", self.password)
 
         self.lget(f"/projects/{self.user.id}")
 
@@ -1444,7 +1434,7 @@ class UserPermissionsTests(CalcusLiveServer):
         self.setup_test_group()
 
         self.logout()
-        self.login("Student", self.password)
+        self.login("Student@test.com", self.password)
 
         self.lget("/projects/")
         self.create_empty_project()
@@ -1457,7 +1447,7 @@ class UserPermissionsTests(CalcusLiveServer):
         self.logout()
         self.login(self.email, self.password)
 
-        self.lget("/projects/Student")
+        self.lget(f"/projects/{self.student.id}")
 
         self.assertEqual(self.get_number_projects(), 0)
 

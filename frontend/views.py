@@ -252,10 +252,9 @@ def aux_ensemble(request):
     _id = clean(request.POST["mol_id"])
     if _id.strip() == "":
         return HttpResponse(status=204)
-    id = int(_id)
 
     try:
-        mol = Molecule.objects.get(pk=id)
+        mol = Molecule.objects.get(pk=_id)
     except Molecule.DoesNotExist:
         return HttpResponse(status=404)
 
@@ -277,10 +276,9 @@ def aux_structure(request):
     _id = clean(request.POST["e_id"])
     if _id.strip() == "":
         return HttpResponse(status=204)
-    id = int(_id)
 
     try:
-        e = Ensemble.objects.get(pk=id)
+        e = Ensemble.objects.get(pk=_id)
     except Ensemble.DoesNotExist:
         return HttpResponse(status=404)
 
