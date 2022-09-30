@@ -25,3 +25,4 @@ psycopg2
 requests
 scipy
 wheel
+xkcdpass

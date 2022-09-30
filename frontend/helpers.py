@@ -19,6 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from .constants import *
 import string
+import secrets
+
+from xkcdpass import xkcd_password as xp
+
+full_alphabet = string.ascii_letters + string.digits
 
 
 def clean_xyz(xyz):
@@ -40,3 +45,13 @@ def get_xyz_from_Gaussian_input(txt):
     xyz = f"{len(xyz_lines)}\n\n"
     xyz += "\n".join(xyz_lines)
     return xyz
+
+
+def get_random_string(n=16):
+    return "".join(secrets.choice(full_alphabet) for i in range(n))
+
+
+def get_random_readable_code(n=5):
+    wordfile = xp.locate_wordfile()
+    words = xp.generate_wordlist(wordfile=wordfile, min_length=n, max_length=n + 2)
+    return xp.generate_xkcdpassword(words)

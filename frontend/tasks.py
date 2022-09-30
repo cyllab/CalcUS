@@ -81,7 +81,7 @@ from ccinput.exceptions import CCInputException
 
 from .libxyz import *
 from .models import *
-from .calculation_helper import *
+from .helpers import *
 from .environment_variables import *
 
 import traceback

@@ -36,6 +36,7 @@ import hashlib
 from hashid_field import BigHashidAutoField
 
 from .constants import *
+from .helpers import get_random_readable_code
 
 import ccinput
 
@@ -86,7 +87,6 @@ class User(AbstractUser):
 
     objects = UserManager()
 
-    is_PI = models.BooleanField(default=False)
     is_temporary = models.BooleanField(default=False)
 
     member_of = models.ForeignKey(
@@ -97,10 +97,18 @@ class User(AbstractUser):
         related_name="members",
     )
 
+    in_class = models.ForeignKey(
+        "ClassGroup",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="members",
+    )
+
     default_gaussian = models.CharField(max_length=1000, default="")
     default_orca = models.CharField(max_length=1000, default="")
 
-    code = models.CharField(max_length=16)
+    code = models.CharField(max_length=16)  ### ?
 
     pref_units = models.PositiveIntegerField(default=0)
     unseen_calculations = models.PositiveIntegerField(default=0)
@@ -110,6 +118,10 @@ class User(AbstractUser):
     UNITS_FORMAT_STRING = {0: "{:.1f}", 1: "{:.1f}", 2: "{:.6f}"}
 
     INV_UNITS = {v: k for k, v in UNITS.items()}
+
+    @property
+    def is_PI(self):
+        return self.PI_of.first() is not None
 
     @property
     def name(self):
@@ -146,9 +158,9 @@ class User(AbstractUser):
     @property
     def group(self):
         if self.is_PI:
-            if self.researchgroup_PI.count() > 0:
+            if self.PI_of.count() > 0:
                 # TODO: handle multiple groups
-                return self.researchgroup_PI.all()[0]
+                return self.PI_of.all()[0]
             else:
                 return None
         else:
@@ -175,11 +187,37 @@ class ResearchGroup(_Group):
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name="researchgroup_PI",
+        related_name="PI_of",
     )
 
     def __repr__(self):
         return self.name
+
+
+class ClassGroup(_Group):
+    professor = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="professor_of",
+    )
+
+    # Maximal computation time per user or per group, in minutes
+    # 0 means no limit
+    user_resource_threshold = models.PositiveIntegerField(default=5)
+    group_resource_threshold = models.PositiveIntegerField(default=0)
+
+    # Randomly generated code upon group creation
+    # Allows student to join the group
+    access_code = models.CharField(max_length=256)
+
+    def __repr__(self):
+        return self.name
+
+    def generate_code(self):
+        self.access_code = get_random_readable_code()
+        self.save()
 
 
 class Project(models.Model):

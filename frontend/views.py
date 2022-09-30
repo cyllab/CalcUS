@@ -51,9 +51,10 @@ from django.utils.datastructures import MultiValueDictKeyError
 from django.db.models import Prefetch
 from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import login, authenticate
 from django.db.models import Q
 
-from .forms import UserCreateForm
+from .forms import ResearcherCreateForm, StudentCreateForm
 from .models import (
     Calculation,
     User,
@@ -61,6 +62,7 @@ from .models import (
     ClusterAccess,
     Example,
     ResearchGroup,
+    ClassGroup,
     Parameters,
     Structure,
     Ensemble,
@@ -96,7 +98,7 @@ from .decorators import superuser_required
 from .constants import *
 from .libxyz import parse_xyz_from_text, equivalent_atoms
 from .environment_variables import *
-from .calculation_helper import get_xyz_from_Gaussian_input
+from .helpers import get_xyz_from_Gaussian_input
 
 from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
@@ -105,7 +107,6 @@ from django.conf import settings
 from throttle.decorators import throttle
 
 import logging
-
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s"
@@ -302,8 +303,8 @@ def calculations(request):
     if request.user.member_of and request.user.member_of.PI:
         teammates.append((request.user.member_of.PI.name, request.user.member_of.PI.id))
 
-    if request.user.researchgroup_PI:
-        for g in request.user.researchgroup_PI.all():
+    if request.user.PI_of:
+        for g in request.user.PI_of.all():
             for t in g.members.all():
                 teammates.append((t.username, t.id))
 
@@ -928,11 +929,55 @@ def recipe(request, pk):
     return render(request, "recipes/" + r.page_path, {})
 
 
-class RegisterView(generic.CreateView):
-    form_class = UserCreateForm
-    template_name = "registration/signup.html"
-    model = User
-    success_url = "/accounts/login/"
+def register(request):
+    acc_type = ""
+    if request.method == "POST" and "acc_type" in request.POST:
+        acc_type = clean(request.POST["acc_type"])
+        if acc_type == "student":
+            form_student = StudentCreateForm(request.POST)
+            if form_student.is_valid():
+                form_student.save()
+                user = authenticate(
+                    request,
+                    email=form_student.rand_email,
+                    password=form_student.rand_password,
+                )
+                if user:
+                    login(request, user)
+                    return redirect("/projects/")  # Quickstart page?
+                else:
+                    logger.error(f"Could not log in student")
+            form_researcher = ResearcherCreateForm()
+        elif acc_type == "researcher":
+            form_researcher = ResearcherCreateForm(request.POST)
+            if form_researcher.is_valid():
+                form_researcher.save()
+                email = form_researcher.cleaned_data.get("email")
+                password = form_researcher.cleaned_data.get("password1")
+                user = authenticate(request, email=email, password=password)
+                if user:
+                    login(request, user)
+                    return redirect("/projects/")  # Quickstart page?
+                else:
+                    logger.error(f"Could not log in researcher {email}")
+            form_student = StudentCreateForm()
+        else:
+            logger.error(f"Invalid account type: {acc_type}")
+            form_researcher = ResearcherCreateForm()
+            form_student = StudentCreateForm()
+    else:
+        form_researcher = ResearcherCreateForm()
+        form_student = StudentCreateForm()
+
+    return render(
+        request,
+        "registration/signup.html",
+        {
+            "form_student": form_student,
+            "form_researcher": form_researcher,
+            "acc_type": acc_type,
+        },
+    )
 
 
 def please_register(request):
@@ -2061,8 +2106,8 @@ def user_intersection(user1, user2):
     if user2.group is None:
         return False
 
-    if user1.researchgroup_PI != None:
-        for group in user1.researchgroup_PI:
+    if user1.PI_of != None:
+        for group in user1.PI_of:
             if user2 in group.members.all():
                 return True
     return False
@@ -2452,6 +2497,87 @@ def server_summary(request):
 
 
 @login_required
+def create_group(request):
+    if request.method == "POST":
+
+        try:
+            group_name = clean(request.POST["group_name"])
+        except KeyError:
+            return HttpResponse("No group name given", status=400)
+
+        if len(group_name) < 4:
+            return HttpResponse("Group name too short", status=400)
+
+        if len(group_name) > 64:
+            return HttpResponse("Group name too long", status=400)
+
+        try:
+            type = clean(request.POST["type"])
+        except KeyError:
+            return HttpResponse("No group type given", status=400)
+
+        if type == "group":
+            if request.user.is_PI:
+                return HttpResponse("You already have a research group", status=400)
+            group = ResearchGroup.objects.create(name=group_name, PI=request.user)
+        elif type == "class":
+            cls = ClassGroup.objects.create(name=group_name, professor=request.user)
+            cls.generate_code()
+
+        return HttpResponse(status=201)
+
+    return HttpResponse(status=403)
+
+
+@login_required
+def dissolve_group(request):
+    if request.method == "POST":
+        try:
+            group_id = clean(request.POST["group_id"])
+        except KeyError:
+            return HttpResponse("No group ID given", status=400)
+
+        try:
+            type = clean(request.POST["type"])
+        except KeyError:
+            return HttpResponse("No type given", status=400)
+
+        if type == "group":
+            try:
+                group = ResearchGroup.objects.get(pk=group_id)
+            except ResearchGroup.DoesNotExist:
+                return HttpResponse("No research group with this ID", status=404)
+
+            if not request.user.is_PI:
+                return HttpResponse("No research group to dissolve", status=400)
+
+            if group.PI != request.user:
+                return HttpResponse(
+                    "You do not have permission to dissolve this group", status=403
+                )
+
+            group.delete()
+        elif type == "class":
+            try:
+                cls = ClassGroup.objects.get(pk=group_id)
+            except ClassGroup.DoesNotExist:
+                return HttpResponse("No class with this ID", status=404)
+
+            if cls.professor != request.user:
+                return HttpResponse(
+                    "You do not have permission to dissolve this class", status=403
+                )
+
+            cls.delete()  # or make inactive?
+        else:
+            return HttpResponse("Invalid type given", status=400)
+
+        return HttpResponse(status=200)
+
+    return HttpResponse(status=403)
+
+
+@login_required
 def add_user(request):
     if request.method == "POST":
         if not request.user.is_PI:
@@ -2486,20 +2612,16 @@ def add_user(request):
 @login_required
 def remove_user(request):
     if request.method == "POST":
-
         if not request.user.is_PI:
             return HttpResponse(status=403)
 
+        try:
+            type = clean(request.POST["type"])
+        except KeyError:
+            return HttpResponse("No group type given", status=400)
+
         member_id = clean(request.POST["member_id"])
         group_id = clean(request.POST["group_id"])
-
-        try:
-            group = ResearchGroup.objects.get(pk=group_id)
-        except ResearchGroup.DoesNotExist:
-            return HttpResponse(status=403)
-
-        if group.PI != request.user:
-            return HttpResponse(status=403)
 
         try:
             member = User.objects.get(pk=member_id)
@@ -2509,10 +2631,34 @@ def remove_user(request):
         if member == request.user:
             return HttpResponse(status=403)
 
-        if member not in group.members.all():
-            return HttpResponse(status=403)
+        if type == "group":
+            try:
+                group = ResearchGroup.objects.get(pk=group_id)
+            except ResearchGroup.DoesNotExist:
+                return HttpResponse(status=403)
 
-        group.members.remove(member)
+            if member not in group.members.all():
+                return HttpResponse(status=403)
+
+            if group.PI != request.user:
+                return HttpResponse(status=403)
+
+            group.members.remove(member)
+        elif type == "class":
+            try:
+                cls = ClassGroup.objects.get(pk=group_id)
+            except ClassGroup.DoesNotExist:
+                return HttpResponse(status=403)
+
+            if member not in cls.members.all():
+                return HttpResponse(status=403)
+
+            if cls.professor != request.user:
+                return HttpResponse(status=403)
+
+            cls.members.remove(member)
+        else:
+            return HttpResponse("Invalid group type given", status=400)
 
         return HttpResponse(status=200)
 
@@ -2524,6 +2670,14 @@ def profile_groups(request):
     return render(
         request,
         "frontend/dynamic/profile_groups.html",
+    )
+
+
+@login_required
+def profile_classes(request):
+    return render(
+        request,
+        "frontend/dynamic/profile_classes.html",
     )
 
 
@@ -3285,10 +3439,13 @@ def log(request, pk):
 
 @login_required
 def manage_access(request, pk):
-    access = ClusterAccess.objects.get(pk=pk)
+    try:
+        access = ClusterAccess.objects.get(pk=pk)
+    except ClusterAccess.DoesNotExist:
+        return HttpResponse(status=404)
 
     if access.owner != request.user:
-        return HttpResponse(status=403)
+        return HttpResponse(status=404)
 
     return render(
         request,

@@ -194,7 +194,7 @@ if IS_TEST:
 MEDIA_URL = "/media/"
 
 AXES_LOCKOUT_TEMPLATE = "registration/lockout.html"
-AXES_FAILURE_LIMIT = 5
+AXES_FAILURE_LIMIT = 5  ###
 AXES_COOLOFF_TIME = 1
 
 THROTTLE_ZONES = {

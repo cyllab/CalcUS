@@ -6,11 +6,15 @@
 {% block extrahead %}
 	<title>CalcUS - Profile</title>
 	<script src="{% static 'frontend/jquery.min.js' %}"></script>
+	<script src="{% static 'frontend/clipboard.min.js' %}"></script>
 
 	<script charset="utf-8">
 		$(document).ready(function() {
-			$("#owned_accesses").load("/owned_accesses/")
-    			refresh_groups();
+	        {% if not IS_CLOUD %}
+			$("#owned_accesses").load("/owned_accesses/");
+            {% endif %}
+    		refresh_groups();
+            new ClipboardJS('.class_code');
 		});
 
 		function update_pref() {
@@ -41,14 +45,11 @@
 					if (xhr.status != 204) {
 						refresh_groups();
 					}
-
 				}
-		  
 			});
-
 		}
 
-		function remove_user(group_id, member_id) {
+		function remove_user(group_id, member_id, type) {
 			$.ajax({
 				method: "POST",	 	 
 				url: "/remove_user/",
@@ -56,27 +57,132 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 
-				data: {'member_id': member_id, 'group_id': group_id},
+				data: {'member_id': member_id, 'group_id': group_id, 'type': type},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						refresh_groups();
 					}
-
 				}
-		  
 			});
-
 		}
+
+        function create_group(type) {
+            $("#create_" + type + "_button").addClass("is-loading");
+            group_name = $("#" + type + "_name").val();
+            $.ajax({
+				method: "POST",	 	 
+				url: "/create_group/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				data: {'group_name': group_name, 'type': type},
+				success: function(data, textStatus, xhr) {
+                    if (xhr.status != 201) {
+                        $("#create_" + type + "_msg").text(data.responseText);
+                    }
+                    else {
+					    refresh_groups();
+                    }
+				},
+				error: function(data, textStatus, xhr) {
+                    $("#create_" + type + "_msg").text(data.responseText);
+                },
+                complete: function() {
+                    $("#create_" + type + "_button").removeClass("is-loading");
+                },
+
+			});
+        }
+
+        function dissolve_group(group_id, group_name, type) {
+            $("#dissolve_" + group_id).addClass("is-loading");
+            var res = confirm("Dissolve " + group_name + "?");
+            if (res) {
+                $.ajax({
+                    method: "POST",
+                    url: "/dissolve_group/",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                    },
+                    data: {
+                        group_id: group_id,
+                        type: type
+                    },
+                    success: function(data, textStatus, xhr) {
+                        if (xhr.status != 201) {
+                            $("#dissolve_" + type + "_msg").text(data.responseText);
+                        }
+                        else {
+                            refresh_groups();
+                        }
+                    },
+                    error: function(data, textStatus, xhr) {
+                        $("#dissolve_" + type + "_msg").text(data.responseText);
+                    },
+                    complete: function() {
+                        $("#dissolve_" + group_id).removeClass("is-loading");
+                    },
+                });
+            }
+        }
 
 		function refresh_groups() {
+            {% if not request.user.is_temporary %}
 			$("#groups_div").load("/profile_groups/");
+            {% endif %}
+			$("#classes_div").load("/profile_classes/");
 		}
+        function copy_code(el) {
+            const cb = navigator.clipboard;
+            code = $(el).find("b").text();
+            cb.writeText(code).then(() => alert('Text copied'));
+        }
 	</script>
 	<style>
 	#pref_center {
 		max-width: 400px;
 		margin: 10px auto;
 	}
+    #research_group_div, #classes_div {
+        max-width: 30em;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    #create_group_div, #create_class_div {
+        text-align: center;
+    }
+    .dissolve-button {
+        margin-bottom: 2em;
+    }
+    .dissolve-class-button {
+        margin-top: 2em;
+    }
+    .box {
+        max-width: 45em;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    input {
+        max-width: 20em !important;
+    }
+    .title.is-4 {
+        margin-top: 3em;
+    }
+    table.table {
+        margin-top: 1em;
+    }
+    .class_code {
+        background-color: #eeffee;
+    }
+    .class_code:hover {
+        background-color: #ddffdd;
+        cursor: pointer;
+    }
+    .fa-clipboard {
+        margin-left: 1em;
+    }
 	</style>
 {% endblock %}
 
@@ -104,6 +210,7 @@
 					</div>
 				</div>
 			</div>
+            {% if not IS_CLOUD %}
 			<div class="field">
 				<label class="label">Default options for Gaussian</label>
 				<input type="text" class="input" value="{{ request.user.default_gaussian }}" name="default_gaussian">
@@ -112,7 +219,7 @@
 				<label class="label">Default options for ORCA</label>
 				<input type="text" class="input" value="{{ request.user.default_orca }}" name="default_orca">
 			</div>
-
+            {% endif %}
 			<div class="field">
 				<div class="control">
 					<button class="button is-primary" id="submit_button">Update</button>
@@ -125,28 +232,7 @@
 	</div>
 	<br>
 
-	{% if not request.user.is_PI %}
-	<div class="box">
-		<div class="columns is-vcentered">
-			<div class="column is-4">
-				<form action="/apply_pi/" method="POST">
-					{% csrf_token %}
-					<div class="field">
-						<div class="control">
-							<label class="label">Group name</label>
-							<input type="text" name="group_name"></input>
-						</div>
-					</div>
-					<button class="button is-primary">Apply for a PI account</button>
-				</form>
-			</div>
-
-			<div class="column">
-				Your account will have to be approved by the administrator before you are able to launch calculations.	
-			</div>
-		</div>
-	</div>
-	{% endif %}
+	{% if not IS_CLOUD %}
 	<div class="box">
 		<div class="columns">
 			<div class="column is-narrow has-text-centered">
@@ -205,22 +291,40 @@
 			</div>
 		</div>
 	</div>
+	{% endif %}
 
+    {% if not request.user.is_temporary %}
 	<div class="box">
 		<center>
-			<h5 class="title is-5">Group</h5>
+			<h5 class="title is-5">Research Group</h5>
 		</center>
 		<div id="groups_div">
 		</div>
 	</div>
+    {% endif %}
+	<div class="box">
+		<center>
+			<h5 class="title is-5">Classes</h5>
+		</center>
+		<div id="classes_div">
+		</div>
+	</div>
+
 	<div class="box">
 		<center>
 			<h5 class="title is-5">Account</h5>
+            {% if request.user.is_temporary %}
+            <p>You are logged in as temporary user <b>{{ request.user.email }}</b>.</p>
+            {% else %}
+            <p>You are logged in as <b>{{ request.user.email }}</b>.</p>
+            {% endif %}
+            <br />
 			<a class="button is-danger" href="/change_password/">Change password</a>
 		</center>
 	</div>
 
 	<script>
+        {% if not IS_CLOUD %}
 		$("#add_clusteraccess_form").submit(function(e) {
 
 		    e.preventDefault(); 
@@ -234,11 +338,12 @@
 			   {
 				$("#public_key_div").removeClass('is-hidden');
 				$("#public_key_area").html(data);
+
 				$("#owned_accesses").load("/owned_accesses/")
 			   }
 			 });
 		});
-
+        {% endif %}
 	</script>
 </div>
 {% endblock content %}

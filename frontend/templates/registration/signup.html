@@ -1,12 +1,55 @@
-{% extends 'frontend/base.html' %} {% load i18n bulma_tags %} {% block content %}
+{% extends 'frontend/base.html' %}
+{% load i18n bulma_tags static %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
+<script src="{% static 'frontend/jquery.min.js' %}"></script>
+<script>
+    function change_tab(type) {
+        $(".tabs > ul > li").each(function(n, t) {
+            $(t).removeClass("is-active");
+        });
+        $("#tab_" + type).addClass("is-active");     
+        $('form').each(function(n, t) {
+            $(t).hide();
+        });
+        $("#form_" + type).show();
+    }
+    $(document).ready(function() {
+        {% if acc_type == "student" %}
+            $("#form_student").show();
+        {% else %}
+            $("#form_researcher").show();
+        {% endif %}
+    })
+</script>
+<style>
+    .box {
+        width: 30em;
+    }
+</style>
+{% endblock %}
+{% block content %}
 <div class="columns is-centered is-expanded">
     <div class="column is-centered">
         <section class="section">
             <div class="field has-addons has-addons-centered">
                 <div class="box has-text-centered">
                     <h1 class="title is-4">Sign up</h1>
-                    <form method="post">
-                        {% csrf_token %} {{ form|bulma }}
+                    <div class="tabs is-toggle is-centered">
+                        <ul>
+                            <li onclick="change_tab('researcher');" id="tab_researcher" {% if acc_type != "student" %} class="is-active"{% endif %}><a>Researcher</a></li>
+                            <li onclick="change_tab('student');" id="tab_student" {% if acc_type == "student" %} class="is-active"{% endif %}><a>Student</a></li>
+                        </ul>
+                    </div>
+                    <form method="post" id="form_researcher" style="display: none;">
+                        {% csrf_token %} {{ form_researcher|bulma }}
+                        <input type="hidden" name="acc_type" value="researcher">
+                        <button class="control button is-primary" type="Submit">Sign up</button>
+                    </form>
+                    <form method="post" id="form_student" style="display: none;">
+                        {% csrf_token %} {{ form_student|bulma }}
+                        <input type="hidden" name="acc_type" value="student">
                         <button class="control button is-primary" type="Submit">Sign up</button>
                     </form>
                 </div>

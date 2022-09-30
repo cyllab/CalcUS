@@ -20,3 +20,4 @@ frontend/tests/results
 .git
 bin/*
 !bin/*.tar.bz2
+gcloud.sh

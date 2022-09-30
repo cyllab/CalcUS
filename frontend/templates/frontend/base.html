@@ -1,4 +1,6 @@
-{% load static %} {% load global_tags %}
+<!DOCTYPE html>
+{% load static %} 
+{% load global_tags %}
 
 <html>
     <head>
@@ -189,7 +191,22 @@
                                 {% endfor %}
                             </div>
                         </div>
-                        {% endif %} {% if ALLOW_REMOTE_CALC and request.user.clusteraccess_owner.count > 0 %}
+                        {% endif %} 
+
+                        {% if request.user.professor_of.count > 0 %}
+                            {% for class in request.user.professor_of.all %}
+                            <div class="navbar-item has-dropdown is-hoverable">
+                                <a class="navbar-link">{{ class.name }}</a>
+                                <div class="navbar-dropdown">
+                                    {% for u in class.members.all %}
+                                    <a class="navbar-item" href="/projects/{{ u.id }}">{{ u.name }}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% endif %} 
+
+                        {% if ALLOW_REMOTE_CALC and request.user.clusteraccess_owner.count > 0 %}
                         <div class="navbar-item has-dropdown is-hoverable" id="navbar_accesses">
                             <a class="navbar-link">Cluster Accesses</a>
                             <div class="navbar-dropdown">
