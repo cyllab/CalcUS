@@ -2046,7 +2046,7 @@ def can_view_project(proj, user):
     else:
         if not user_intersection(proj.author, user):
             return False
-        if proj.private and not user.is_PI:
+        if proj.private and not (user.is_PI or user.professor_of):
             return False
         return True
 
@@ -2083,9 +2083,10 @@ def can_view_order(order, user):
     if order.author == user:
         return True
     elif user_intersection(order.author, user):
-        if order.project.private and not user.is_PI:
+        if proj.private and not (user.is_PI or user.professor_of):
             return False
         return True
+    return False
 
 
 def can_view_calculation(calc, user):
@@ -2093,23 +2094,28 @@ def can_view_calculation(calc, user):
 
 
 def user_intersection(user1, user2):
+    """
+    user1 is the target
+    user2 is the user trying to access
+    """
     if user1 == user2:
         return True
+
     if user1.group is not None:
         if user2 in user1.group.members.all():
             return True
         if user2 == user1.group.PI:
             return True
-    else:
-        return False
-
-    if user2.group is None:
-        return False
 
     if user1.PI_of != None:
         for group in user1.PI_of:
             if user2 in group.members.all():
                 return True
+
+    if user1.in_class is not None:
+        if user1.in_class.professor == user2:
+            return True
+
     return False
 
 
