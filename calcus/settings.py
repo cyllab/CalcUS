@@ -230,11 +230,11 @@ if IS_CLOUD:
     ALLOW_LOCAL_CALC = True
     ALLOW_REMOTE_CALC = False
 
-    LOCAL_MAX_ATOMS = 20
+    LOCAL_MAX_ATOMS = 30
 
     LOCAL_ALLOWED_THEORY_LEVELS = [
         "xtb",
-        "semiempirical",
+        # "semiempirical",
         # "hf",
         # "special",  # hf3c, pbeh3c, r2scan3c, b973c
         # "dft",
@@ -247,8 +247,8 @@ if IS_CLOUD:
         # "Conformational Search",
         "Constrained Optimisation",
         "Frequency Calculation",
-        "TS Optimisation",
-        "UV-Vis Calculation",
+        # "TS Optimisation",
+        # "UV-Vis Calculation", # Not working right now
         "Single-Point Energy",
         # "Minimum Energy Path",
         # "Constrained Conformational Search",

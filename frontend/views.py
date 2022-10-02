@@ -1039,6 +1039,7 @@ def cloud_calc(request):
         ret = run_calc(calc.id)
     except Exception as e:
         logger.error(f"Calculation {calc.id} finished with exception {str(e)}")
+        return HttpResponse(status=500)
 
     if ret != 0:
         logger.warning(f"Calculation {calc.id} finished with code {ret}")
@@ -1069,6 +1070,7 @@ def cloud_action(request):
     ]:
         logger.error(f"Invalid cloud action: {body}")
         return HttpResponse(status=400)
+
     getattr(tasks, func_name)(arg)
     return HttpResponse(status=200)
 
@@ -1871,6 +1873,18 @@ def _submit_calculation(request, verify=False):
                 orders.append(obj)
         else:  # No file upload
             if "structure" in request.POST.keys():
+                mol = clean(request.POST["structure"])
+                xyz = generate_xyz_structure(True, mol, "mol")
+                if len(xyz) == 0:
+                    return "Could not convert the input drawing to XYZ"
+
+                if (
+                    is_local
+                    and xyz.strip().count("\n") - 2 > settings.LOCAL_MAX_ATOMS
+                    and settings.LOCAL_MAX_ATOMS != -1
+                ):
+                    return f"Input structures are limited to at most {settings.LOCAL_MAX_ATOMS} atoms"
+
                 if not verify:
                     obj = CalculationOrder.objects.create(
                         name=name,
@@ -1904,18 +1918,6 @@ def _submit_calculation(request, verify=False):
                     )
                     p.save()
                     params.save()
-
-                    mol = clean(request.POST["structure"])
-                    xyz = generate_xyz_structure(True, mol, "mol")
-                    if len(xyz) == 0:
-                        return "Could not convert the input drawing to XYZ"
-
-                    if (
-                        is_local
-                        and xyz.strip().count("\n") - 2 > settings.LOCAL_MAX_ATOMS
-                        and settings.LOCAL_MAX_ATOMS != -1
-                    ):
-                        return f"Input structures are limited to at most {settings.LOCAL_MAX_ATOMS} atoms"
 
                     s.xyz_structure = xyz
                     s.save()
@@ -2041,7 +2043,7 @@ def _submit_calculation(request, verify=False):
 
     if settings.IS_CLOUD:
         for o in orders:
-            send_gcloud_task("/cloud_order/", str(o.id))
+            send_gcloud_task("/cloud_order/", str(o.id), compute=False)
     else:
         for o in orders:
             dispatcher.delay(str(o.id))
@@ -2170,7 +2172,7 @@ def delete_project(request):
             return HttpResponse(status=403)
 
         if settings.IS_CLOUD:
-            send_gcloud_task("/cloud_action/", f"del_project;{proj_id}")
+            send_gcloud_task("/cloud_action/", f"del_project;{proj_id}", compute=False)
         else:
             del_project.delay(proj_id)
         return HttpResponse(status=204)
@@ -2195,7 +2197,7 @@ def delete_order(request):
             return HttpResponse(status=403)
 
         if settings.IS_CLOUD:
-            send_gcloud_task("/cloud_action/", f"del_order;{order_id}")
+            send_gcloud_task("/cloud_action/", f"del_order;{order_id}", compute=False)
         else:
             del_order.delay(order_id)
         return HttpResponse(status=204)
@@ -2247,7 +2249,7 @@ def delete_molecule(request):
             return HttpResponse(status=403)
 
         if settings.IS_CLOUD:
-            send_gcloud_task("/cloud_action/", f"del_molecule;{mol_id}")
+            send_gcloud_task("/cloud_action/", f"del_molecule;{mol_id}", compute=False)
         else:
             del_molecule.delay(mol_id)
 
@@ -2273,7 +2275,9 @@ def delete_ensemble(request):
             return HttpResponse(status=403)
 
         if settings.IS_CLOUD:
-            send_gcloud_task("/cloud_action/", f"del_ensemble;{ensemble_id}")
+            send_gcloud_task(
+                "/cloud_action/", f"del_ensemble;{ensemble_id}", compute=False
+            )
         else:
             del_ensemble.delay(ensemble_id)
         return HttpResponse(status=204)

@@ -621,6 +621,9 @@ def launch_xtb_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     folder = f"scratch/calcus/{calc.id}"
 
+    if not os.path.isdir(local_folder):
+        local_folder.makedirs(local_folder, exist_ok=True)
+
     if calc.input_file != "":
         with open(os.path.join(local_folder, "input"), "w") as out:
             out.write(calc.input_file)
@@ -1190,6 +1193,9 @@ def clean_struct_line(line):
 def launch_orca_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     folder = f"scratch/calcus/{calc.id}"
+
+    if not os.path.isdir(local_folder):
+        local_folder.makedirs(local_folder, exist_ok=True)
 
     with open(os.path.join(local_folder, "calc.inp"), "w") as out:
         out.write(calc.input_file)
@@ -1948,6 +1954,9 @@ def calc_to_ccinput(calc):
 def launch_gaussian_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     folder = f"scratch/calcus/{calc.id}"
+
+    if not os.path.isdir(local_folder):
+        local_folder.makedirs(local_folder, exist_ok=True)
 
     with open(os.path.join(local_folder, "calc.com"), "w") as out:  ###
         out.write(calc.input_file)
@@ -3694,10 +3703,10 @@ def bill_calculation(calc):
     logger.info(
         f"{calc.order.resource_provider.name} ({calc.order.resource_provider.id}) has been billed {calc_time} seconds for calc {calc.id}"
     )
-    if calc.author != calc.order.resource_provider:
-        calc.author.bill_time(calc_time)
+    if calc.order.author != calc.order.resource_provider:
+        calc.order.author.bill_time(calc_time)
         logger.info(
-            f"{calc.author.name} ({calc.author.id}) has also been billed {calc_time} seconds for calc {calc.id}"
+            f"{calc.order.author.name} ({calc.order.author.id}) has also been billed {calc_time} seconds for calc {calc.id}"
         )
 
 
@@ -3722,7 +3731,11 @@ def del_ensemble(ensemble_id):
 
 
 def _del_order(id):
-    o = CalculationOrder.objects.get(pk=id)
+    try:
+        o = CalculationOrder.objects.get(pk=id)
+    except CalculationOrder.DoesNotExist:
+        return
+
     for c in o.calculation_set.all():
         _del_calculation(c)
 
@@ -3741,7 +3754,11 @@ def _del_order(id):
 
 
 def _del_project(id):
-    proj = Project.objects.get(pk=id)
+    try:
+        proj = Project.objects.get(pk=id)
+    except Project.DoesNotExist:
+        return
+
     proj.author = None
     proj.save()
     for m in proj.molecule_set.all():
@@ -3750,7 +3767,10 @@ def _del_project(id):
 
 
 def _del_molecule(id):
-    mol = Molecule.objects.get(pk=id)
+    try:
+        mol = Molecule.objects.get(pk=id)
+    except Molecule.DoesNotExist:
+        return
     for e in mol.ensemble_set.all():
         _del_ensemble(e.id)
     mol.delete()

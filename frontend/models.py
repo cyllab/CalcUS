@@ -161,7 +161,7 @@ class User(AbstractUser):
         Directly bills the user for computation time
         """
         with transaction.atomic():
-            user = cls.objects.select_for_update().get(id=self.id)
+            user = User.objects.select_for_update().get(id=self.id)
             user.billed_seconds += time
             user.save()
 

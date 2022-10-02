@@ -1,17 +1,18 @@
 {% if request.user.is_temporary %}
-        {% if request.user.in_class %}
-    <div id="classes_div">
-        <div class="block">
-        You are in <b>{{ request.user.in_class.name }}</b>
-        </div>
-        {% if request.user.in_class.user_resource_threshold != 0 %}
-        <div class="field has-text-centered">
-            <label class="label">Usage of computational time</label>
-            <progress class="progress is-medium" value="{{ request.user.billed_seconds }}" max="{{ request.user.in_class.user_resource_threshold }}"></progress>
-        </div>
-        {% endif %}
+<div id="classes_div">
+    {% if request.user.in_class %}
+    <div class="block">
+    You are in <b>{{ request.user.in_class.name }}</b>
+    </div>
+    {% if request.user.in_class.user_resource_threshold != 0 %}
+    <div class="field has-text-centered">
+        <label class="label">Usage of computational time:</label>
+        <p>{{ request.user.billed_seconds }}/{{ request.user.in_class.user_resource_threshold }} seconds</p>
+        <progress class="progress is-medium" value="{{ request.user.billed_seconds }}" max="{{ request.user.in_class.user_resource_threshold }}"></progress>
     </div>
     {% endif %}
+    {% endif %}
+</div>
 
 {% else %}
 <div id="classes_div">

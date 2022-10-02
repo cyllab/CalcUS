@@ -208,10 +208,10 @@
                 <a href="/projects/">Projects</a>
             </li>
             <li>
-                <a href="/projects/{{ molecule.project.author }}">{{ molecule.project.author }}</a>
+                <a href="/projects/{{ molecule.project.author.id }}">{{ molecule.project.author.name }}</a>
             </li>
             <li>
-                <a href="/projects/{{ molecule.project.author }}/{{ molecule.project }}">{{ molecule.project }}</a>
+                <a href="/projects/{{ molecule.project.author.id }}/{{ molecule.project.name }}">{{ molecule.project.name }}</a>
             </li>
             <li class="is-active">
                 <a aria-current="page" href="#">{{ molecule.name }}</a>

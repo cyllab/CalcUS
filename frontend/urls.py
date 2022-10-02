@@ -89,7 +89,7 @@ urlpatterns = [
     path("nmr_analysis/<str:pk>/<str:pid>", views.nmr_analysis, name="nmr_analysis"),
     path("get_shifts/", views.get_shifts, name="get_shifts"),
     path("get_exp_spectrum/", views.get_exp_spectrum, name="get_exp_spectrum"),
-    path("analyse/<int:project_id>", views.analyse, name="analyse"),
+    path("analyse/<str:project_id>", views.analyse, name="analyse"),
     path("ensemble_map/<str:pk>", views.ensemble_map, name="ensemble_map"),
     path(
         "ensemble_table_body/<str:pk>",
