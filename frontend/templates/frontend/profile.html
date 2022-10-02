@@ -14,6 +14,7 @@
 			$("#owned_accesses").load("/owned_accesses/");
             {% endif %}
     		refresh_groups();
+            refresh_allocation();
             new ClipboardJS('.class_code');
 		});
 
@@ -133,13 +134,43 @@
             {% endif %}
 			$("#classes_div").load("/profile_classes/");
 		}
-        function copy_code(el) {
-            const cb = navigator.clipboard;
-            code = $(el).find("b").text();
-            cb.writeText(code).then(() => alert('Text copied'));
+		function refresh_allocation() {
+			$("#allocation_div").load("/profile_allocation/");
         }
+        function redeem_allocation() {
+            $("#redeem_button").addClass("is-loading");
+            code = $("#allocation_code").val();
+            $.ajax({
+				method: "POST",	 	 
+				url: "/redeem_allocation/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				data: {'code': code},
+				success: function(data, textStatus, xhr) {
+                    if (xhr.status != 201) {
+                        $("#redeem_allocation_msg").text(data.responseText);
+                    }
+                    else {
+					    refresh_allocation();
+                    }
+				},
+				error: function(data, textStatus, xhr) {
+                    $("#redeem_allocation_msg").text(data.responseText);
+                },
+                complete: function() {
+                    $("#redeem_button").removeClass("is-loading");
+                },
+
+			});
+        }
+
 	</script>
 	<style>
+    #change_password_button {
+        margin-top: 1em;
+        margin-bottom: 1em;
+    }
 	#pref_center {
 		max-width: 400px;
 		margin: 10px auto;
@@ -182,6 +213,12 @@
     }
     .fa-clipboard {
         margin-left: 1em;
+    }
+    #no_alloc_msg {
+        margin-bottom: 1em;
+    }
+    #allocation_div, #redeem_allocation_div {
+        margin-bottom: 3em;
     }
 	</style>
 {% endblock %}
@@ -313,14 +350,32 @@
 	<div class="box">
 		<center>
 			<h5 class="title is-5">Account</h5>
+            <div id="allocation_div">
+            </div>
+            <div id="redeem_allocation_div">
+                <div class="field">
+                    <label class="label">Redeem allocation</label>
+                    <input type="text" class="input" id="allocation_code" />
+                </div>
+                <div class="field">
+                    <div class="control has-text-centered">
+                        <button class="button is-primary" id="redeem_button" onclick="redeem_allocation();">Redeem</button>
+                    </div>
+                </div>
+                <span class="ajax_msg" id="redeem_allocation_msg"></span>
+            </div>
             {% if request.user.is_temporary %}
             <p>You are logged in as temporary user <b>{{ request.user.email }}</b>.</p>
             {% else %}
             <p>You are logged in as <b>{{ request.user.email }}</b>.</p>
             {% endif %}
-            <br />
-			<a class="button is-danger" href="/change_password/">Change password</a>
 		</center>
+
+        <div class="field">
+            <div class="control has-text-centered">
+                <a class="button is-danger" id="change_password_button" href="/change_password/">Change password</a>
+            </div>
+        </div>
 	</div>
 
 	<script>

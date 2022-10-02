@@ -4,10 +4,12 @@
         <div class="block">
         You are in <b>{{ request.user.in_class.name }}</b>
         </div>
+        {% if request.user.in_class.user_resource_threshold != 0 %}
         <div class="field has-text-centered">
             <label class="label">Usage of computational time</label>
-            <progress class="progress is-medium" value="60" max="100"></progress>
+            <progress class="progress is-medium" value="{{ request.user.billed_seconds }}" max="{{ request.user.in_class.user_resource_threshold }}"></progress>
         </div>
+        {% endif %}
     </div>
     {% endif %}
 
@@ -50,15 +52,18 @@
                     <tr>
                         <td>{{ member.name }}</td>
                         <td>
-                            <button class="button is-danger" onclick="remove_user('{{ member.id }}', '{{ member.id }}', 'student');">Remove</button>
+                            <button class="button is-danger" onclick="remove_user('{{ class.id }}', '{{ member.id }}', 'class');">Remove</button>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
             {% else %}
-                <br />
-                <button class="button is-danger dissolve-class-button" id="dissolve_{{ class.id }}" onclick="dissolve_group('{{ class.id }}', '{{ class.name }}', 'class');">Dissolve class</button>
+                <div class="field">
+                    <div class="control has-text-centered">
+                        <button class="button is-danger dissolve-class-button" id="dissolve_{{ class.id }}" onclick="dissolve_group('{{ class.id }}', '{{ class.name }}', 'class');">Dissolve class</button>
+                    </div>
+                </div>
                 <span class="ajax_msg" id="dissolve_class_{{ class.id }}_msg"></span>
             {% endif %}
         </center>

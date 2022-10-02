@@ -75,6 +75,7 @@ from .models import (
     Recipe,
     Folder,
     CalculationFrame,
+    ResourceAllocation,
 )
 from .tasks import (
     dispatcher,
@@ -140,7 +141,7 @@ class IndexView(generic.ListView):
         except User.DoesNotExist:
             return []
 
-        if user_intersection(self.request.user, target_user):
+        if user_intersection(target_user, self.request.user):
             if mode in ["Workspace", "Unseen only"]:
                 hits = target_user.calculationorder_set.filter(hidden=False).exclude(
                     author=None
@@ -345,6 +346,7 @@ def projects_by_user(request, user_id):
         target_user = User.objects.get(id=target_user_id)
     except User.DoesNotExist:
         return HttpResponse(status=404)
+    print(target_user_id)
 
     if request.user == target_user:
         return render(
@@ -356,7 +358,7 @@ def projects_by_user(request, user_id):
                 "projects": request.user.project_set.all(),
             },
         )
-    elif user_intersection(request.user, target_user):
+    elif user_intersection(target_user, request.user):
         return render(
             request,
             "frontend/projects.html",
@@ -387,7 +389,7 @@ def get_projects(request):
                 "frontend/dynamic/project_list.html",
                 {"projects": target_user.project_set.all()},
             )
-        elif user_intersection(request.user, target_user):
+        elif user_intersection(target_user, request.user):
             return render(
                 request,
                 "frontend/dynamic/project_list.html",
@@ -459,7 +461,7 @@ def project_details(request, user_id, proj):
     except User.DoesNotExist:
         return HttpResponseRedirect("/home/")
 
-    if user_intersection(request.user, target_user):
+    if user_intersection(target_user, request.user):
         try:
             project = target_user.project_set.get(name=target_project)
         except Project.DoesNotExist:
@@ -1004,7 +1006,7 @@ def cloud_order(request):
     body = request.body.decode("utf-8")
 
     try:
-        o = CalculationOrder.objects.get(pk=int(body))
+        o = CalculationOrder.objects.get(pk=body)
     except ValueError:
         logger.error(f"Could not convert to int: {body}")
         return HttpResponse(status=400)
@@ -1025,7 +1027,7 @@ def cloud_calc(request):
     body = request.body.decode("utf-8")
 
     try:
-        calc = Calculation.objects.get(pk=int(body))
+        calc = Calculation.objects.get(pk=body)
     except ValueError:
         logger.error(f"Could not convert to int: {body}")
         return HttpResponse(status=400)
@@ -1056,12 +1058,6 @@ def cloud_action(request):
     try:
         func_name, arg = body.split(";")
     except TypeError:
-        logger.error(f"Invalid cloud action: {body}")
-        return HttpResponse(status=400)
-
-    try:
-        arg = int(arg)
-    except ValueError:
         logger.error(f"Invalid cloud action: {body}")
         return HttpResponse(status=400)
 
@@ -1465,16 +1461,21 @@ def _submit_calculation(request, verify=False):
         if not settings.ALLOW_REMOTE_CALC:
             return "Remote calculations are disabled"
     else:
-        ### TODO
-        if (
-            not request.user.is_PI
-            and request.user.group == None
-            and not request.user.is_superuser
-        ):
-            return "You have no computing resource"
+        if settings.IS_CLOUD:
+            if not request.user.has_sufficient_resources(
+                10
+            ):  # Placeholder calculation time
+                return "You have insufficient calculation time to launch a calculation"
+        else:
+            if (
+                not request.user.is_PI
+                and request.user.group == None
+                and not request.user.is_superuser
+            ):
+                return "You have no computing resource"
 
-        if not settings.ALLOW_LOCAL_CALC:
-            return "Local calculations are disabled"
+            if not settings.ALLOW_LOCAL_CALC:
+                return "Local calculations are disabled"
 
         is_local = True
 
@@ -1580,6 +1581,7 @@ def _submit_calculation(request, verify=False):
                 date=timezone.now(),
                 parameters=params,
                 author=request.user,
+                resource_provider=request.user.resource_provider,
                 step=step,
                 project=project_obj,
                 ensemble=start_e,
@@ -1614,6 +1616,7 @@ def _submit_calculation(request, verify=False):
                 date=timezone.now(),
                 parameters=params,
                 author=request.user,
+                resource_provider=request.user.resource_provider,
                 step=step,
                 project=project_obj,
                 start_calc=start_c,
@@ -1675,6 +1678,7 @@ def _submit_calculation(request, verify=False):
                         date=timezone.now(),
                         parameters=params,
                         author=request.user,
+                        resource_provider=request.user.resource_provider,
                         step=step,
                         project=project_obj,
                         ensemble=e,
@@ -1729,6 +1733,7 @@ def _submit_calculation(request, verify=False):
                             date=timezone.now(),
                             parameters=params,
                             author=request.user,
+                            resource_provider=request.user.resource_provider,
                             step=step,
                             project=project_obj,
                             ensemble=e,
@@ -1769,6 +1774,7 @@ def _submit_calculation(request, verify=False):
                         date=timezone.now(),
                         parameters=params,
                         author=request.user,
+                        resource_provider=request.user.resource_provider,
                         step=step,
                         project=project_obj,
                         ensemble=e,
@@ -1817,6 +1823,7 @@ def _submit_calculation(request, verify=False):
                             date=timezone.now(),
                             parameters=params,
                             author=request.user,
+                            resource_provider=request.user.resource_provider,
                             step=step,
                             project=project_obj,
                             ensemble=e,
@@ -1842,6 +1849,7 @@ def _submit_calculation(request, verify=False):
                     date=timezone.now(),
                     parameters=params,
                     author=request.user,
+                    resource_provider=request.user.resource_provider,
                     step=step,
                     project=project_obj,
                 )
@@ -1869,6 +1877,7 @@ def _submit_calculation(request, verify=False):
                         date=timezone.now(),
                         parameters=params,
                         author=request.user,
+                        resource_provider=request.user.resource_provider,
                         step=step,
                         project=project_obj,
                     )
@@ -2041,6 +2050,7 @@ def _submit_calculation(request, verify=False):
 
 
 def can_view_project(proj, user):
+    print(proj, user)
     if proj.author == user:
         return True
     else:
@@ -2108,7 +2118,7 @@ def user_intersection(user1, user2):
             return True
 
     if user1.PI_of != None:
-        for group in user1.PI_of:
+        for group in user1.PI_of.all():
             if user2 in group.members.all():
                 return True
 
@@ -2128,7 +2138,7 @@ def project_list(request):
         except User.DoesNotExist:
             return HttpResponse(status=403)
 
-        if not user_intersection(request.user, target_user):
+        if not user_intersection(target_user, request.user):
             return HttpResponse(status=403)
 
         return render(
@@ -2618,9 +2628,6 @@ def add_user(request):
 @login_required
 def remove_user(request):
     if request.method == "POST":
-        if not request.user.is_PI:
-            return HttpResponse(status=403)
-
         try:
             type = clean(request.POST["type"])
         except KeyError:
@@ -2672,6 +2679,25 @@ def remove_user(request):
 
 
 @login_required
+def redeem_allocation(request):
+    if request.method == "POST":
+        try:
+            code = clean(request.POST["code"])
+        except KeyError:
+            return HttpResponse("No code given", status=400)
+
+        try:
+            alloc = ResourceAllocation.objects.get(code=code)
+        except ResourceAllocation.DoesNotExist:
+            return HttpResponse("Invalid code given", status=400)
+
+        if not alloc.redeem(request.user):
+            return HttpResponse("Code already redeemed", status=400)
+
+        return HttpResponse("Resource redeemed!", status=204)
+
+
+@login_required
 def profile_groups(request):
     return render(
         request,
@@ -2684,6 +2710,14 @@ def profile_classes(request):
     return render(
         request,
         "frontend/dynamic/profile_classes.html",
+    )
+
+
+@login_required
+def profile_allocation(request):
+    return render(
+        request,
+        "frontend/dynamic/profile_allocation.html",
     )
 
 
@@ -4181,7 +4215,7 @@ def project_folders(request, user_id, proj, folder_path):
     except User.DoesNotExist:
         return HttpResponseRedirect("/home/")
 
-    if not user_intersection(request.user, target_user):
+    if not user_intersection(target_user, request.user):
         return HttpResponseRedirect("/home/")
 
     try:

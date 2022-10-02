@@ -21,17 +21,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from django.db import models, transaction
 from django.db.models.signals import pre_save
 from django.utils import timezone
-from django.contrib.auth.models import Group as _Group
+from django.contrib.auth.models import Group
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 
 from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import post_save, post_init
 from django.dispatch import receiver
 from django import template
+
 import random, string
 import numpy as np
 import os
 import hashlib
+import time
 
 from hashid_field import BigHashidAutoField
 
@@ -119,6 +121,52 @@ class User(AbstractUser):
 
     INV_UNITS = {v: k for k, v in UNITS.items()}
 
+    # Total/allocated computation time and time consumed by user or class/group
+    # These numbers should be accurate, but are not the official references
+    # Instead, allocated_seconds should be recalculated from ResourceAllocation objects
+    # and billed_seconds from Calculation objects whose resource_provider is the current user
+    allocated_seconds = models.PositiveIntegerField(default=0)
+    # For temporary users, both their billed_seconds and the professor's will be incremented in order to enforce the usage limit
+    billed_seconds = models.PositiveIntegerField(default=0)
+
+    @property
+    def resource_provider(self):
+        if self.is_PI:
+            return self
+
+        if self.is_temporary:
+            if self.in_class:
+                return self.in_class.professor
+            else:
+                raise Exception(
+                    f"Unexpected case for the resource provider of user {self.id} (self.name)"
+                )
+
+        if self.member_of:
+            return self.member_of.PI
+
+        return self
+
+    def has_sufficient_resources(self, expected_time):
+        if self.resource_provider != self:
+            return self.resource_provider.has_sufficient_resources(expected_time)
+
+        # Not fool-proof or entirely safe, but good enough for now
+        if self.allocated_seconds - self.billed_seconds > expected_time:
+            return True
+        return False
+
+    def bill_time(self, time):
+        """
+        Directly bills the user for computation time
+        """
+        with transaction.atomic():
+            user = cls.objects.select_for_update().get(id=self.id)
+            user.billed_seconds += time
+            user.save()
+
+        return user
+
     @property
     def is_PI(self):
         return self.PI_of.first() is not None
@@ -171,6 +219,36 @@ class User(AbstractUser):
         return self.clusteraccess_owner.all()
 
 
+class ResourceAllocation(models.Model):
+    id = BigHashidAutoField(primary_key=True)
+
+    # Code to redeem the allocation manually
+    code = models.CharField(max_length=256)
+    redeemer = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+
+    allocation_seconds = models.PositiveIntegerField()
+
+    def redeem(self, user, stall=0):
+        with transaction.atomic():
+            alloc = ResourceAllocation.objects.select_for_update().get(id=self.id)
+
+            # For testing purposes
+            if stall != 0:
+                time.sleep(stall)
+
+            if alloc.redeemer:
+                return False
+            alloc.redeemer = user
+            alloc.save()
+
+        with transaction.atomic():
+            u = User.objects.select_for_update().get(id=user.id)
+            u.allocated_seconds += alloc.allocation_seconds
+            u.save()
+
+        return True
+
+
 class Example(models.Model):
     title = models.CharField(max_length=100)
     page_path = models.CharField(max_length=100)
@@ -181,7 +259,7 @@ class Recipe(models.Model):
     page_path = models.CharField(max_length=100)
 
 
-class ResearchGroup(_Group):
+class ResearchGroup(Group):
     PI = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -194,7 +272,7 @@ class ResearchGroup(_Group):
         return self.name
 
 
-class ClassGroup(_Group):
+class ClassGroup(Group):
     professor = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -203,9 +281,9 @@ class ClassGroup(_Group):
         related_name="professor_of",
     )
 
-    # Maximal computation time per user or per group, in minutes
+    # Maximal computation time per user or per group, in seconds
     # 0 means no limit
-    user_resource_threshold = models.PositiveIntegerField(default=5)
+    user_resource_threshold = models.PositiveIntegerField(default=5 * 60)
     group_resource_threshold = models.PositiveIntegerField(default=0)
 
     # Randomly generated code upon group creation
@@ -871,6 +949,17 @@ class CalculationOrder(models.Model):
     )
 
     author = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+
+    # Account billed for the resource usage
+    # Set when creating the order, then never modified
+    resource_provider = models.ForeignKey(
+        User,
+        related_name="provider_of",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+
     project = models.ForeignKey(
         "Project", on_delete=models.CASCADE, blank=True, null=True
     )
@@ -1059,6 +1148,7 @@ class Calculation(models.Model):
     date_submitted = models.DateTimeField("date", null=True, blank=True)
     date_started = models.DateTimeField("date", null=True, blank=True)
     date_finished = models.DateTimeField("date", null=True, blank=True)
+    billed_seconds = models.PositiveIntegerField(default=0)
 
     status = models.PositiveIntegerField(default=0)
     error_message = models.CharField(max_length=400, default="", blank=True, null=True)

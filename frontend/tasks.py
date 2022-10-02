@@ -3607,11 +3607,9 @@ def run_calc(calc_id):
 
         calc.status = 3
         calc.error_message = f"Incorrect termination ({str(e)})"
-        calc.save()
         logger.info(f"Error while running calc {calc_id}: '{str(e)}'")
     else:
         calc.refresh_from_db()
-        calc.date_finished = timezone.now()
 
         if ret == ErrorCodes.JOB_CANCELLED:
             pid = int(threading.get_ident())
@@ -3633,7 +3631,13 @@ def run_calc(calc_id):
             calc.status = 3
             calc.error_message = "Unknown termination"
 
+        calc.date_finished = timezone.now()
+
     logger.info(f"Calc {calc_id} finished")
+
+    calc.billed_seconds = max(
+        1, round((calc.date_finished - calc.date_started).total_seconds())
+    )
 
     if calc.step.creates_ensemble:
         analyse_opt(calc.id)
@@ -3678,7 +3682,23 @@ def run_calc(calc_id):
 
     cache_ind += 1
 
+    if settings.IS_CLOUD:
+        bill_calculation(calc)
+
     return ret
+
+
+def bill_calculation(calc):
+    calc_time = calc.billed_seconds
+    calc.order.resource_provider.bill_time(calc_time)
+    logger.info(
+        f"{calc.order.resource_provider.name} ({calc.order.resource_provider.id}) has been billed {calc_time} seconds for calc {calc.id}"
+    )
+    if calc.author != calc.order.resource_provider:
+        calc.author.bill_time(calc_time)
+        logger.info(
+            f"{calc.author.name} ({calc.author.id}) has also been billed {calc_time} seconds for calc {calc.id}"
+        )
 
 
 @app.task

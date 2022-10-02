@@ -115,10 +115,12 @@ urlpatterns = [
     # Group management
     path("profile_groups/", views.profile_groups, name="profile_groups"),
     path("profile_classes/", views.profile_classes, name="profile_classes"),
+    path("profile_allocation/", views.profile_allocation, name="profile_allocation"),
     path("add_user/", views.add_user, name="add_user"),
     path("remove_user/", views.remove_user, name="remove_user"),
     path("create_group/", views.create_group, name="create_group"),
     path("dissolve_group/", views.dissolve_group, name="dissolve_group"),
+    path("redeem_allocation/", views.redeem_allocation, name="redeem_allocation"),
     path("server_summary/", views.server_summary, name="server_summary"),
     # Access management
     path("manage_access/<str:pk>", views.manage_access, name="manage_access"),
