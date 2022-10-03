@@ -1,5 +1,7 @@
-from frontend.models import Step, Flowchart, Parameters, FlowchartOrder
-
+from frontend.models import Step, Flowchart, Parameters, FlowchartOrder, Calculation
+allObjects = Calculation.objects.all()
+print(allObjects)
+Calculation.objects.all().delete()
 # Flowchart.objects.all().delete()
 # Step.objects.all().delete()
 
@@ -30,13 +32,14 @@ from frontend.models import Step, Flowchart, Parameters, FlowchartOrder
 #         print("No Parameters")
 #     print()
 
-print(FlowchartOrder.objects.all())
-allObjects = FlowchartOrder.objects.all()
-print(allObjects.count())
-for i in range(allObjects.count()):
-    print(i)
-    print(allObjects[i])
-    print(allObjects[i].name)
-    print(allObjects[i].structure)
-    print(allObjects[i].author)
-    print(allObjects[i].project)
+# print(FlowchartOrder.objects.all())
+# allObjects = FlowchartOrder.objects.all()
+# print(allObjects.count())
+# for i in range(allObjects.count()):
+#     print(i)
+#     print(allObjects[i])
+#     print(allObjects[i].name)
+#     print(allObjects[i].structure)
+#     print(allObjects[i].author)
+#     print(allObjects[i].project)
+

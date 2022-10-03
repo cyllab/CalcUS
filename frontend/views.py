@@ -483,10 +483,9 @@ def submit_flowchart(request):
     flowchart_id = (int)(keysList[0])
     flowchart_obj = Flowchart.objects.get(pk=flowchart_id)
     flowchart_order_obj = flowchart_obj.flowchartorder_set.all()
-    print(flowchart_order_obj)
-    print(flowchart_obj.step_set.all()[1])
     drawing = None
-    dispatcher(drawing, flowchart_order_obj[0].id, is_flowchart=True, stepFlowchart=flowchart_obj.step_set.all()[1].step)
+    for i in range(flowchart_obj.step_set.all().count()-1):
+        dispatcher(drawing, flowchart_order_obj[0].id, is_flowchart=True, stepFlowchart=flowchart_obj.step_set.all()[i+1].step, flowchartStepObject=flowchart_obj.step_set.all()[i+1])
     return HttpResponse(status=200)
 
 @login_required

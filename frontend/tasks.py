@@ -3136,11 +3136,11 @@ def filter(order, input_structures):
 
 @app.task(base=AbortableTask)
 def dispatcher_flowchart():
-    print("Test Dispatcher")
+    print("Just for testing tasks")
 
 
 @app.task(base=AbortableTask)
-def dispatcher(drawing, order_id, is_flowchart=False, stepFlowchart=None):
+def dispatcher(drawing, order_id, is_flowchart=False, stepFlowchart=None, flowchartStepObject = None):
     if(is_flowchart):
         order = FlowchartOrder.objects.get(pk=order_id)
     else:
@@ -3272,8 +3272,7 @@ def dispatcher(drawing, order_id, is_flowchart=False, stepFlowchart=None):
     group_order = []
     calculations = []
 
-    if is_flowchart is not True:
-        input_structures = filter(order, input_structures)
+    input_structures = filter(order, input_structures)
     if step.creates_ensemble:
         if order.name.strip() == "":
             e = Ensemble.objects.create(
@@ -3304,13 +3303,11 @@ def dispatcher(drawing, order_id, is_flowchart=False, stepFlowchart=None):
             else:
                 c = Calculation.objects.create(
                     structure=s,
-                    order=order,
+                    flowchart_order=order,
                     date_submitted=timezone.now(),
                     step=step,
-                    #parameters=order.parameters,
+                    parameters=flowchartStepObject.parameters,
                     result_ensemble=e,
-                    #constraints=order.constraints,
-                    #aux_structure=order.aux_structure,
                 )
             c.save()
             if local:
@@ -3344,12 +3341,10 @@ def dispatcher(drawing, order_id, is_flowchart=False, stepFlowchart=None):
             else:
                 c = Calculation.objects.create(
                     structure=s,
-                    order=order,
+                    flowchart_order=order,
                     date_submitted=timezone.now(),
-                    #parameters=order.parameters,
+                    parameters=flowchartStepObject.parameters,
                     step=step,
-                    #constraints=order.constraints,
-                    #aux_structure=order.aux_structure,
                 )
             c.save()
             if local:

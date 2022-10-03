@@ -771,6 +771,62 @@ class FlowchartOrder(models.Model):
     ensemble = models.ForeignKey(
         Ensemble, on_delete=models.SET_NULL, blank=True, null=True
     )
+    filter = models.ForeignKey(
+        "Filter", on_delete=models.SET_NULL, blank=True, null=True
+    )
+    last_seen_status = models.PositiveIntegerField(default=0)
+    date = models.DateTimeField("date", null=True, blank=True)
+
+    @property
+    def status(self):
+        return self._status(*self.get_all_calcs)
+
+    def update_unseen(self, old_status, old_unseen):
+        new_status = self.status
+        new_unseen = self.new_status
+
+        if old_unseen:
+            if not new_unseen:
+                with transaction.atomic():
+                    p = Profile.objects.select_for_update().get(id=self.author.id)
+                    p.unseen_calculations -= 1
+                    p.save()
+        else:
+            if new_unseen:
+                with transaction.atomic():
+                    p = Profile.objects.select_for_update().get(id=self.author.id)
+                    p.unseen_calculations += 1
+                    p.save()
+
+    def _status(self, num_queued, num_running, num_done, num_error):
+        if num_queued + num_running + num_done + num_error == 0:
+            return 0
+
+        if num_running > 0:
+            return 1
+
+        if num_queued == 0:
+            if num_error > 0 and num_done == 0:
+                return 3
+            else:
+                return 2
+
+        return 0
+
+    @property
+    def get_all_calcs(self):
+        res = {i: 0 for i in range(4)}
+
+        for calc in self.calculation_set.all().values("status"):
+            res[calc["status"]] += 1
+        return [res[i] for i in range(4)]
+
+    @property
+    def new_status(self):
+        if self.last_seen_status != self.status:
+            return True
+        else:
+            return False
 
 class CalculationOrder(models.Model):
     name = models.CharField(max_length=100)
@@ -1004,7 +1060,8 @@ class Calculation(models.Model):
     )
 
     step = models.ForeignKey(BasicStep, on_delete=models.SET_NULL, null=True)
-    order = models.ForeignKey(CalculationOrder, on_delete=models.CASCADE)
+    order = models.ForeignKey(CalculationOrder, on_delete=models.CASCADE, blank=True, null=True)
+    flowchart_order = models.ForeignKey(FlowchartOrder, on_delete=models.CASCADE, blank=True, null=True)
 
     parameters = models.ForeignKey(Parameters, on_delete=models.SET_NULL, null=True)
     result_ensemble = models.ForeignKey(
@@ -1039,11 +1096,21 @@ class Calculation(models.Model):
             print("Could not find molecule to update!")
 
     def save(self, *args, **kwargs):
-        old_status = self.order.status
-        old_unseen = self.order.new_status
+        if hasattr(self, 'flowchart_order') and self.flowchart_order is not None:
+            old_status = self.flowchart_order.status
+            old_unseen = self.flowchart_order.new_status
 
+        elif hasattr(self, 'order'):
+            old_status = self.order.status
+            old_unseen = self.order.new_status
+        
         super(Calculation, self).save(*args, **kwargs)
-        self.order.update_unseen(old_status, old_unseen)
+
+        if hasattr(self, 'flowchart_order') and self.flowchart_order is not None:
+            self.flowchart_order.update_unseen(old_status, old_unseen)
+
+        elif hasattr(self, 'order'):
+            self.order.update_unseen(old_status, old_unseen)
 
     def delete(self, *args, **kwargs):
         old_status = self.order.status
