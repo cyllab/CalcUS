@@ -397,6 +397,7 @@
 		result = result.replace(/&amp;gt;/g, replacewithGreaterThan)
 		result = result.replace(/&lt;/g, replacewithLessThan)
 		result = result.replace(/&gt;/g, replacewithGreaterThan)
+		result = result.replace("<i>", '<i onclick=\\"openInputModal()\\" style=\\"cursor: pointer;margin-left:5px;\\" class=\\"fa-solid fa-file\\">')
 		result = result.replace(/<i>/g, '<i onclick=\\"openParaModal()\\" style=\\"cursor: pointer;margin-left:5px;\\" class=\\"fa-solid fa-wrench\\">')
 		return result;
 	}
