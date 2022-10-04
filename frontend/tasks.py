@@ -3140,9 +3140,12 @@ def dispatcher_flowchart():
 
 
 @app.task(base=AbortableTask)
-def dispatcher(drawing, order_id, is_flowchart=False, stepFlowchart=None, flowchartStepObject = None):
+def dispatcher(drawing, order_id, is_flowchart=False, flowchartStepObjectId = None):
+    stepFlowchart = None
     if(is_flowchart):
         order = FlowchartOrder.objects.get(pk=order_id)
+        flowchartStepObject = Step.objects.get(pk = flowchartStepObjectId)
+        stepFlowchart = flowchartStepObject.step
     else:
         order = CalculationOrder.objects.get(pk=order_id)
     ensemble = order.ensemble

@@ -1,7 +1,7 @@
-from frontend.models import Step, Flowchart, Parameters, FlowchartOrder, Calculation
-allObjects = Calculation.objects.all()
+from frontend.models import Step, Flowchart, Parameters, FlowchartOrder, Calculation, CalculationOrder
+allObjects = CalculationOrder.objects.all()
 print(allObjects)
-Calculation.objects.all().delete()
+#CalculationOrder.objects.all().delete()
 # Flowchart.objects.all().delete()
 # Step.objects.all().delete()
 
