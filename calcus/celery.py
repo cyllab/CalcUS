@@ -46,7 +46,7 @@ def debug_task(self):
     print(f"Request: {self.request!r}")
 
 
-if not settings.IS_TEST:
+if not settings.IS_TEST and not settings.IS_CLOUD:
     app.conf.beat_schedule = {
         "backup-db": {
             "task": "frontend.tasks.backup_db",
@@ -57,14 +57,13 @@ if not settings.IS_TEST:
         },
     }
 
-
-if not settings.IS_TEST and settings.PING_SATELLITE.lower() == "true":
-    app.conf.beat_schedule = {
-        "ping-satellite": {
-            "task": "frontend.tasks.ping_satellite",
-            "schedule": crontab(minute=(datetime.now().minute + 1) % 60),
-            "options": {
-                "expires": 3600,
+    if settings.PING_SATELLITE.lower() == "true":
+        app.conf.beat_schedule = {
+            "ping-satellite": {
+                "task": "frontend.tasks.ping_satellite",
+                "schedule": crontab(minute=(datetime.now().minute + 1) % 60),
+                "options": {
+                    "expires": 3600,
+                },
             },
-        },
-    }
+        }

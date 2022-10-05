@@ -22,6 +22,7 @@ from django.db import models, transaction
 from django.db.models.signals import pre_save
 from django.utils import timezone
 from django.contrib.auth.models import User, Group
+from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import post_save, post_init
 from django.dispatch import receiver
 from django import template
@@ -569,17 +570,33 @@ class Property(models.Model):
     energy = models.FloatField(default=0)
     free_energy = models.FloatField(default=0)
 
-    homo_lumo_gap = models.FloatField(default=0)
+    uvvis = models.TextField(default="")
+    nmr = models.TextField(default="")
+    mo = models.TextField(default="")
+    freq_list = ArrayField(models.FloatField(), default=list)
+    freq_animations = ArrayField(models.TextField(), default=list)
+    ir_spectrum = models.TextField(default="")
 
-    uvvis = models.PositiveIntegerField(default=0)
-    nmr = models.PositiveIntegerField(default=0)
-    mo = models.PositiveIntegerField(default=0)
-    freq = models.PositiveIntegerField(default=0)
-
-    simple_nmr = models.CharField(default="", max_length=100000)
-    charges = models.CharField(default="", max_length=100000)
+    simple_nmr = models.CharField(default="", max_length=100000)  # TODO: to array
+    charges = models.CharField(default="", max_length=100000)  # TODO: to array
 
     geom = models.BooleanField(default=False)
+
+    @property
+    def has_freq(self):
+        return len(self.freq_list) > 0
+
+    @property
+    def has_uvvis(self):
+        return len(self.uvvis) > 0
+
+    @property
+    def has_nmr(self):
+        return len(self.nmr) > 0
+
+    @property
+    def has_mo(self):
+        return len(self.mo) > 0
 
 
 class Structure(models.Model):
@@ -979,6 +996,8 @@ class Calculation(models.Model):
     task_id = models.CharField(max_length=100, default="")
 
     remote_id = models.PositiveIntegerField(default=0)
+
+    output_files = models.TextField(default="")
 
     def __str__(self):
         return self.step.name

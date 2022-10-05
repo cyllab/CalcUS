@@ -17,7 +17,7 @@ nmrglue==0.8
 numpy
 paramiko==2.10.1
 periodictable
-pika==1.1.0
+pre-commit
 psutil==5.7.2
 psycopg2
 requests

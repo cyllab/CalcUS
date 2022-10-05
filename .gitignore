@@ -15,7 +15,9 @@ htmlcov/
 old/
 data/
 logs/
-backups/
+backup*
 test_run
 docs/build/
 celerybeat-schedule
+bin/*
+!bin/*.tar.bz2

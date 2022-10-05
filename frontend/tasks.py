@@ -37,6 +37,7 @@ import sys
 import shutil
 import invoke
 import tempfile
+import json
 
 import threading
 from threading import Lock
@@ -95,27 +96,33 @@ def direct_command(command, conn, lock, attempt_count=1):
             time.sleep(2)
             return direct_command(command, conn, lock, attempt_count + 1)
 
-    try:
-        response = conn[1].run("source ~/.bashrc; " + command, hide="both")
-    except invoke.exceptions.UnexpectedExit as e:
-        lock.release()
-        if e.result.exited == 1 and (
-            e.result.stderr.find("Invalid job id specified") != -1
-            or e.result.stdout.find("Invalid job id specified") != -1
-        ):
-            return []
+    # Do not run the actual calculation in a test
+    if not is_test or (
+        command.find("xtb") == -1
+        and command.find("stda") == -1
+        and command.find("crest") == -1
+    ):
+        try:
+            response = conn[1].run("source ~/.bashrc; " + command, hide="both")
+        except invoke.exceptions.UnexpectedExit as e:
+            lock.release()
+            if e.result.exited == 1 and (
+                e.result.stderr.find("Invalid job id specified") != -1
+                or e.result.stdout.find("Invalid job id specified") != -1
+            ):
+                return []
 
-        logger.info(f"Command {command} terminated with exception: {e}")
-        return []
-    except ConnectionResetError as e:
-        logger.debug("Connection reset while executing command")
-        return retry()
-    except TimeoutError as e:
-        logger.debug("Connection timed out while executing command")
-        return retry()
-    except OSError as e:
-        logger.debug("Socked closed while executing command")
-        return retry()
+            logger.info(f"Command {command} terminated with exception: {e}")
+            return []
+        except ConnectionResetError as e:
+            logger.debug("Connection reset while executing command")
+            return retry()
+        except TimeoutError as e:
+            logger.debug("Connection timed out while executing command")
+            return retry()
+        except OSError as e:
+            logger.debug("Socked closed while executing command")
+            return retry()
 
     lock.release()
 
@@ -689,17 +696,14 @@ def xtb_opt(in_file, calc):
         ind = len(lines) - 1
 
         try:
-            while lines[ind].find("HOMO-LUMO GAP") == -1:
-                ind -= 1
-            hl_gap = float(lines[ind].split()[3])
-        except IndexError:
-            ind = len(lines) - 1
             while lines[ind].find("TOTAL ENERGY") == -1:
                 ind -= 1
             E = float(lines[ind].split()[3])
-            hl_gap = 0.0
-        else:
-            E = float(lines[ind - 2].split()[3])
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
@@ -708,7 +712,6 @@ def xtb_opt(in_file, calc):
     )[0]
     s.degeneracy = 1
     prop = get_or_create(calc.parameters, s)
-    prop.homo_lumo_gap = hl_gap
     prop.energy = E
     prop.geom = True
     s.save()
@@ -732,8 +735,6 @@ def xtb_mep(in_file, calc):
 
     with open(f"{local_folder}/calc_MEP_trj.xyz") as f:
         lines = f.readlines()
-
-    save_to_results(os.path.join(local_folder, "calc_MEP_trj.xyz"), calc)
 
     num_atoms = lines[0]
     inds = []
@@ -780,13 +781,17 @@ def xtb_sp(in_file, calc):
         lines = f.readlines()
         ind = len(lines) - 1
 
-        while lines[ind].find("HOMO-LUMO GAP") == -1:
-            ind -= 1
-        hl_gap = float(lines[ind].split()[3])
-        E = float(lines[ind - 2].split()[3])
+        try:
+            while lines[ind].find("TOTAL ENERGY") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[3])
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
 
     prop = get_or_create(calc.parameters, calc.structure)
-    prop.homo_lumo_gap = hl_gap
     prop.energy = E
     prop.save()
     return ErrorCodes.SUCCESS
@@ -814,13 +819,15 @@ def xtb_ts(in_file, calc):
     with open(os.path.join(local_folder, "calc.out")) as f:
         olines = f.readlines()
         ind = len(olines) - 1
-        while olines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
-            ind -= 1
-        E = float(olines[ind].split()[4])
-
-        while olines[ind].find("HOMO-LUMO GAP") == -1:
-            ind -= 1
-        hl_gap = float(olines[ind].split()[3])
+        try:
+            while olines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+                ind -= 1
+            E = float(olines[ind].split()[4])
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
@@ -829,7 +836,6 @@ def xtb_ts(in_file, calc):
     )[0]
     s.degeneracy = calc.structure.degeneracy
     prop = get_or_create(calc.parameters, s)
-    prop.homo_lumo_gap = hl_gap
     prop.energy = E
     prop.geom = True
 
@@ -925,23 +931,18 @@ def xtb_scan(in_file, calc):
             ind = len(lines) - 1
 
             try:
-                while lines[ind].find("HOMO-LUMO GAP") == -1:
-                    ind -= 1
-                hl_gap = float(lines[ind].split()[3])
-            except IndexError:
-                ind = len(lines) - 1
                 while lines[ind].find("TOTAL ENERGY") == -1:
                     ind -= 1
                 E = float(lines[ind].split()[3])
-                hl_gap = 0.0
-            else:
-                E = float(lines[ind - 2].split()[3])
+            except IndexError:
+                logger.error(
+                    f"Could not parse the output of calculation {calc.id}: invalid format"
+                )
+                return ErrorCodes.INVALID_OUTPUT
 
             prop = get_or_create(calc.parameters, r)
             prop.energy = E
-            prop.homo_lumo_gap = hl_gap
 
-            r.homo_lumo_gap = hl_gap
             r.save()
             prop.save()
             calc.result_ensemble.structure_set.add(r)
@@ -961,19 +962,24 @@ def xtb_freq(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    a = save_to_results(os.path.join(local_folder, "vibspectrum"), calc)
-
     with open(f"{local_folder}/calc.out") as f:
         lines = f.readlines()
         ind = len(lines) - 1
 
-        while lines[ind].find("HOMO-LUMO GAP") == -1:
-            ind -= 1
-        hl_gap = float(lines[ind].split()[3])
-        E = float(lines[ind - 4].split()[3])
-        G = float(lines[ind - 2].split()[4])
+        try:
+            while lines[ind].find("TOTAL ENERGY") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[3])
+            G = float(lines[ind + 2].split()[4])
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
 
     vib_file = os.path.join(local_folder, "vibspectrum")
+
+    prop = get_or_create(calc.parameters, calc.structure)
 
     if os.path.isfile(vib_file):
         with open(vib_file) as f:
@@ -1001,19 +1007,16 @@ def xtb_freq(in_file, calc):
         if len(vibs) == len(intensities) and len(intensities) > 0:
             x = np.arange(500, 4000, 1)  # Wave number in cm^-1
             spectrum = plot_vibs(x, zip(vibs, intensities))
-            with open(
-                os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "IR.csv"), "w"
-            ) as out:
-                out.write("Wavenumber,Intensity\n")
-                intensities = 1000 * np.array(intensities) / max(intensities)
-                for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
-                    out.write(f"-{_x:.1f},{i:.5f}\n")
+            data = "Wavenumber,Intensity\n"
+            intensities = 1000 * np.array(intensities) / max(intensities)
+            for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
+                data += f"-{_x:.1f},{i:.5f}\n"
 
-    prop = get_or_create(calc.parameters, calc.structure)
+            prop.ir_spectrum = data
+            prop.freq_list = vibs
+
     prop.energy = E
     prop.free_energy = G
-    prop.freq = calc.id
-    prop.save()
 
     lines = [i + "\n" for i in calc.structure.xyz_structure.split("\n")]
     num_atoms = int(lines[0].strip())
@@ -1029,8 +1032,16 @@ def xtb_freq(in_file, calc):
     with open(os.path.join(local_folder, "g98.out")) as f:
         lines = f.readlines()
         ind = 0
-        while lines[ind].find("Atom AN") == -1:
-            ind += 1
+
+        try:
+            while lines[ind].find("Atom AN") == -1:
+                ind += 1
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
+
         ind += 1
 
         vibs = []
@@ -1056,20 +1067,16 @@ def xtb_freq(in_file, calc):
             ind += 1
 
         for ind in range(len(vibs)):
-            with open(
-                os.path.join(CALCUS_RESULTS_HOME, str(calc.id), f"freq_{ind}.xyz"),
-                "w",
-            ) as out:
-                out.write(f"{num_atoms}\n")
-                assert len(struct) == num_atoms
-                out.write("CalcUS\n")
-                for ind2, (a, x, y, z) in enumerate(struct):
-                    out.write(
-                        "{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(
-                            a, x, y, z, *vibs[ind][ind2]
-                        )
-                    )
+            anim = f"{num_atoms}\nCalcUS\n"
+            assert len(struct) == num_atoms
+            for ind2, (a, x, y, z) in enumerate(struct):
+                anim += "{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(
+                    a, x, y, z, *vibs[ind][ind2]
+                )
 
+            prop.freq_animations.append(anim)
+
+    prop.save()
     return ErrorCodes.SUCCESS
 
 
@@ -1085,8 +1092,16 @@ def crest(in_file, calc):
         lines = f.readlines()
         ind = len(lines) - 1
 
-        while lines[ind].find("total number unique points considered further") == -1:
-            ind -= 1
+        try:
+            while (
+                lines[ind].find("total number unique points considered further") == -1
+            ):
+                ind -= 1
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
 
         weighted_energy = 0.0
         ind += 1
@@ -1239,18 +1254,29 @@ def orca_mo_gen(in_file, calc):
         lines = f.readlines()
         ind = len(lines) - 1
 
-        while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
-            ind -= 1
-        E = float(lines[ind].split()[4])
-
-    save_to_results(f"{local_folder}/in-HOMO.cube", calc)
-    save_to_results(f"{local_folder}/in-LUMO.cube", calc)
-    save_to_results(f"{local_folder}/in-LUMOA.cube", calc)
-    save_to_results(f"{local_folder}/in-LUMOB.cube", calc)
+        try:
+            while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[4])
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
 
     prop = get_or_create(calc.parameters, calc.structure)
-    prop.mo = calc.id
+    cubes = {}
+    for mo in ["HOMO", "LUMO", "LUMOA", "LUMOB"]:
+        path = os.path.join(local_folder, f"in-{mo}.cube")
+        if not os.path.isfile(path):
+            logger.error(f"Cube file {path} does not exist!")
+            return ErrorCodes.MISSING_FILE
+        with open(path) as f:
+            cube = "".join(f.readlines())
+        cubes[mo] = cube
+
     prop.energy = E
+    prop.mo = json.dumps(cubes)
     prop.save()
 
     parse_orca_charges(calc, calc.structure)
@@ -1295,9 +1321,15 @@ def orca_opt(in_file, calc):
         lines = f.readlines()
         ind = len(lines) - 1
 
-        while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
-            ind -= 1
-        E = float(lines[ind].split()[4])
+        try:
+            while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[4])
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
@@ -1328,9 +1360,15 @@ def orca_sp(in_file, calc):
         lines = f.readlines()
         ind = len(lines) - 1
 
-        while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
-            ind -= 1
-        E = float(lines[ind].split()[4])
+        try:
+            while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[4])
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
 
     prop = get_or_create(calc.parameters, calc.structure)
     prop.energy = E
@@ -1356,9 +1394,15 @@ def orca_ts(in_file, calc):
         lines = f.readlines()
         ind = len(lines) - 1
 
-        while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
-            ind -= 1
-        E = float(lines[ind].split()[4])
+        try:
+            while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[4])
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
@@ -1389,18 +1433,24 @@ def orca_freq(in_file, calc):
         lines = f.readlines()
         ind = len(lines) - 1
 
-    while lines[ind].find("Final Gibbs free energy") == -1:
-        ind -= 1
+    try:
+        while lines[ind].find("Final Gibbs free energy") == -1:
+            ind -= 1
 
-    G = float(lines[ind].split()[5])
+        G = float(lines[ind].split()[5])
 
-    while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
-        ind -= 1
+        while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+            ind -= 1
 
-    E = float(lines[ind].split()[4])
+        E = float(lines[ind].split()[4])
 
-    while lines[ind].find("IR SPECTRUM") == -1 and ind > 0:
-        ind += 1
+        while lines[ind].find("IR SPECTRUM") == -1 and ind > 0:
+            ind += 1
+    except IndexError:
+        logger.error(
+            f"Could not parse the output of calculation {calc.id}: invalid format"
+        )
+        return ErrorCodes.INVALID_OUTPUT
 
     assert ind > 0
 
@@ -1423,18 +1473,17 @@ def orca_freq(in_file, calc):
     x = np.arange(500, 4000, 1)  # Wave number in cm^-1
     spectrum = plot_vibs(x, zip(vibs, intensities))
 
-    with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "IR.csv"), "w") as out:
-        out.write("Wavenumber,Intensity\n")
-        if len(intensities) > 0:
-            intensities = 1000 * np.array(intensities) / max(intensities)
-            for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
-                out.write(f"-{_x:.1f},{i:.5f}\n")
-
     prop = get_or_create(calc.parameters, calc.structure)
+
+    if len(intensities) > 0:
+        ir_spectrum = "Wavenumber,Intensity\n"
+        intensities = 1000 * np.array(intensities) / max(intensities)
+        for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
+            ir_spectrum += f"-{_x:.1f},{i:.5f}\n"
+        prop.ir_spectrum = ir_spectrum
+
     prop.energy = E
     prop.free_energy = G
-    prop.freq = calc.id
-    prop.save()
 
     raw_lines = calc.structure.xyz_structure.split("\n")
     xyz_lines = []
@@ -1472,11 +1521,7 @@ def orca_freq(in_file, calc):
 
         ind += 1
 
-    with open(
-        f"{os.path.join(CALCUS_RESULTS_HOME, str(calc.id))}/orcaspectrum", "w"
-    ) as out:
-        for vib in vibs:
-            out.write(f"{vib}\n")
+    prop.freq_list = vibs
 
     while lines[ind].find("NORMAL MODES") == -1 and ind < len(lines) - 1:
         ind += 1
@@ -1513,21 +1558,18 @@ def orca_freq(in_file, calc):
             if not is_all_null(v):
                 vibs += [v]
 
+    freq_animations = []
     for ind in range(len(vibs)):
-        with open(
-            os.path.join(CALCUS_RESULTS_HOME, str(calc.id), f"freq_{ind}.xyz"),
-            "w",
-        ) as out:
-            out.write(f"{num_atoms}\n")
-            assert len(struct) == num_atoms
-            out.write("CalcUS\n")
-            for ind2, (a, x, y, z) in enumerate(struct):
-                out.write(
-                    "{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(
-                        a, x, y, z, *vibs[ind][3 * ind2 : 3 * ind2 + 3]
-                    )
-                )
+        anim = f"{num_atoms}\nCalcUS\n"
+        assert len(struct) == num_atoms
+        for ind2, (a, x, y, z) in enumerate(struct):
+            anim += "{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(
+                a, x, y, z, *vibs[ind][3 * ind2 : 3 * ind2 + 3]
+            )
+        freq_animations.append(anim)
 
+    prop.freq_animations = freq_animations
+    prop.save()
     return ErrorCodes.SUCCESS
 
 
@@ -1538,7 +1580,9 @@ def orca_scan(in_file, calc):
 
     if has_scan:
         ret = launch_orca_calc(
-            in_file, calc, ["calc.out", "calc.relaxscanact.dat", "calc.allxyz"]
+            in_file,
+            calc,
+            ["calc.out", "calc.relaxscanact.dat", "calc.allxyz", "calc_trj.xyz"],
         )
     else:
         ret = launch_orca_calc(in_file, calc, ["calc.out", "calc.xyz"])
@@ -1558,10 +1602,17 @@ def orca_scan(in_file, calc):
             num_atoms = lines[0]
             inds = []
             ind = 0
-            while ind < len(lines) - 1:
-                if lines[ind] == num_atoms:
-                    inds.append(ind)
-                ind += 1
+            try:
+                while ind < len(lines) - 1:
+                    if lines[ind] == num_atoms:
+                        inds.append(ind)
+                    ind += 1
+            except IndexError:
+                logger.error(
+                    f"Could not parse the output of calculation {calc.id}: invalid format"
+                )
+                return ErrorCodes.INVALID_OUTPUT
+
             inds.append(len(lines) + 1)
 
             min_E = 0
@@ -1600,9 +1651,15 @@ def orca_scan(in_file, calc):
         with open(os.path.join(local_folder, "calc.out")) as f:
             lines = f.readlines()
             ind = len(lines) - 1
-            while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
-                ind -= 1
-            E = float(lines[ind].split()[4])
+            try:
+                while lines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
+                    ind -= 1
+                E = float(lines[ind].split()[4])
+            except IndexError:
+                logger.error(
+                    f"Could not parse the output of calculation {calc.id}: invalid format"
+                )
+                return ErrorCodes.INVALID_OUTPUT
 
             prop = get_or_create(calc.parameters, r)
             prop.energy = E
@@ -1625,9 +1682,16 @@ def orca_nmr(in_file, calc):
 
     with open(os.path.join(local_folder, "calc.out")) as f:
         lines = f.readlines()
-    ind = len(lines) - 1
-    while lines[ind].find("CHEMICAL SHIELDING SUMMARY (ppm)") == -1:
-        ind -= 1
+
+    try:
+        ind = len(lines) - 1
+        while lines[ind].find("CHEMICAL SHIELDING SUMMARY (ppm)") == -1:
+            ind -= 1
+    except IndexError:
+        logger.error(
+            f"Could not parse the output of calculation {calc.id}: invalid format"
+        )
+        return ErrorCodes.INVALID_OUTPUT
 
     nmr = ""
     ind += 6
@@ -1647,39 +1711,6 @@ def orca_nmr(in_file, calc):
 
     parse_orca_charges(calc, calc.structure)
 
-    return ErrorCodes.SUCCESS
-
-
-def save_to_results(f, calc_obj, multiple=False, out_name=""):
-    s = f.split(".")
-    fname = f.split("/")[-1]
-    if out_name == "":
-        out_name = fname
-    if len(s) == 2:
-        name, ext = s
-        if ext == "xyz":
-            if multiple:
-                a = system(
-                    "obabel {}/{} -O {}/conf.xyz -m".format(
-                        os.path.join(CALCUS_SCR_HOME, str(calc_obj.id)),
-                        f,
-                        os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id)),
-                    ),
-                    force_local=True,
-                )
-            else:
-                copyfile(
-                    os.path.join(CALCUS_SCR_HOME, str(calc_obj.id), fname),
-                    os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id), out_name),
-                )
-        else:
-            copyfile(f, os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id), out_name))
-    elif len(s) == 1:
-        name = s
-        copyfile(f, os.path.join(CALCUS_RESULTS_HOME, str(calc_obj.id), out_name))
-    else:
-        logger.error("Invalid file")
-        return ErrorCodes.INVALID_FILE
     return ErrorCodes.SUCCESS
 
 
@@ -1808,15 +1839,12 @@ def xtb_stda(in_file, calc):  # TO OPTIMIZE
     yy = plot_peaks(f_x, PP)
     yy = np.array(yy) / max(yy)
 
-    with open(
-        f"{os.path.join(CALCUS_RESULTS_HOME, str(calc.id))}/uvvis.csv", "w"
-    ) as out:
-        out.write("Wavelength (nm), Absorbance\n")
-        for ind, x in enumerate(f_x):
-            out.write(f"{x},{yy[ind]:.8f}\n")
+    uvvis = "Wavelength (nm), Absorbance\n"
+    for ind, x in enumerate(f_x):
+        uvvis += f"{x},{yy[ind]:.8f}\n"
 
     prop = get_or_create(calc.parameters, calc.structure)
-    prop.uvvis = calc.id
+    prop.uvvis = uvvis
     prop.save()
 
     return ErrorCodes.SUCCESS
@@ -1964,8 +1992,14 @@ def parse_hirshfeld_orca_charges(calc, s):
         lines = f.readlines()
     ind = len(lines) - 1
 
-    while lines[ind].find("HIRSHFELD ANALYSIS") == -1:
-        ind -= 1
+    try:
+        while lines[ind].find("HIRSHFELD ANALYSIS") == -1:
+            ind -= 1
+    except IndexError:
+        logger.error(
+            f"Could not parse the Hirshfeld charges of calculation {calc.id}: invalid format"
+        )
+        return ErrorCodes.INVALID_OUTPUT
 
     ind += 7
 
@@ -1986,8 +2020,14 @@ def parse_default_orca_charges(calc, s):
         lines = f.readlines()
     ind = len(lines) - 1
 
-    while lines[ind].find("MULLIKEN ATOMIC CHARGES") == -1:
-        ind -= 1
+    try:
+        while lines[ind].find("MULLIKEN ATOMIC CHARGES") == -1:
+            ind -= 1
+    except IndexError:
+        logger.error(
+            f"Could not parse the Mulliken charges of calculation {calc.id}: invalid format"
+        )
+        return ErrorCodes.INVALID_OUTPUT
 
     ind += 2
 
@@ -1999,8 +2039,14 @@ def parse_default_orca_charges(calc, s):
 
     prop.charges += f"Mulliken:{','.join(charges)};"
 
-    while lines[ind].find("LOEWDIN ATOMIC CHARGES") == -1:
-        ind -= 1
+    try:
+        while lines[ind].find("LOEWDIN ATOMIC CHARGES") == -1:
+            ind -= 1
+    except IndexError:
+        logger.error(
+            f"Could not parse the Löwdin charges of calculation {calc.id}: invalid format"
+        )
+        return ErrorCodes.INVALID_OUTPUT
 
     ind += 2
 
@@ -2060,6 +2106,9 @@ def parse_default_gaussian_charges(calc, s):
         while lines[ind].find("APT charges:") == -1:
             ind += 1
     except IndexError:
+        logger.warning(
+            f"Could not parse the APT charges of calculation {calc.id}: invalid format"
+        )
         pass
     else:
         ind += 2
@@ -2079,14 +2128,21 @@ def parse_ESP_gaussian_charges(calc, s):
     with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")) as f:
         lines = f.readlines()
     ind = len(lines) - 1
-    while lines[ind].find("ESP charges:") == -1:
-        ind -= 1
-    ind += 2
-    charges = []
-    while lines[ind].find("Sum of ESP charges") == -1:
-        a, n, chrg, *_ = lines[ind].split()
-        charges.append(f"{float(chrg):.2f}")
-        ind += 1
+
+    try:
+        while lines[ind].find("ESP charges:") == -1:
+            ind -= 1
+        ind += 2
+        charges = []
+        while lines[ind].find("Sum of ESP charges") == -1:
+            a, n, chrg, *_ = lines[ind].split()
+            charges.append(f"{float(chrg):.2f}")
+            ind += 1
+    except IndexError:
+        logger.error(
+            f"Could not parse the ESP charges of calculation {calc.id}: invalid format"
+        )
+        return ErrorCodes.INVALID_OUTPUT
 
     prop.charges += f"ESP:{','.join(charges)};"
     prop.save()
@@ -2106,8 +2162,14 @@ def parse_HLY_gaussian_charges(calc, s):
     ):
         ind -= 1
 
-    while lines[ind].find("ESP charges:") == -1:
-        ind += 1
+    try:
+        while lines[ind].find("ESP charges:") == -1:
+            ind += 1
+    except IndexError:
+        logger.error(
+            f"Could not parse the ESP charges of calculation {calc.id}: invalid format"
+        )
+        return ErrorCodes.INVALID_OUTPUT
 
     ind += 2
     charges = []
@@ -2145,11 +2207,20 @@ def parse_Hirshfeld_gaussian_charges(calc, s):
     with open(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")) as f:
         lines = f.readlines()
     ind = len(lines) - 1
-    while (
-        lines[ind].find("Hirshfeld charges, spin densities, dipoles, and CM5 charges")
-        == -1
-    ):
-        ind -= 1
+    try:
+        while (
+            lines[ind].find(
+                "Hirshfeld charges, spin densities, dipoles, and CM5 charges"
+            )
+            == -1
+        ):
+            ind -= 1
+    except IndexError:
+        logger.error(
+            f"Could not parse the Hirshfeld charges of calculation {calc.id}: invalid format"
+        )
+        return ErrorCodes.INVALID_OUTPUT
+
     ind += 2
     charges_hirshfeld = []
     charges_CM5 = []
@@ -2203,12 +2274,20 @@ def gaussian_td(in_file, calc):
         lines = f.readlines()
         ind = len(lines) - 1
 
-        while lines[ind].find("SCF Done") == -1:
-            ind -= 1
-        E = float(lines[ind].split()[4])
+        try:
+            while lines[ind].find("SCF Done") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[4])
 
-        while lines[ind].find("Excitation energies and oscillator strengths:") == -1:
-            ind += 1
+            while (
+                lines[ind].find("Excitation energies and oscillator strengths:") == -1
+            ):
+                ind += 1
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
 
         def parse_td_dft(lines, ind):
             while lines[ind].find("Leave Link  914") == -1:
@@ -2243,16 +2322,13 @@ def gaussian_td(in_file, calc):
     yy = plot_peaks(f_x, PP)
     yy = np.array(yy) / max(yy)
 
-    with open(
-        f"{os.path.join(CALCUS_RESULTS_HOME, str(calc.id))}/uvvis.csv", "w"
-    ) as out:
-        out.write("Wavelength (nm), Absorbance\n")
-        for ind, x in enumerate(f_x):
-            out.write(f"{x},{yy[ind]:.8f}\n")
+    uvvis = "Wavelength (nm), Absorbance\n"
+    for ind, x in enumerate(f_x):
+        uvvis += f"{x},{yy[ind]:.8f}\n"
 
     prop = get_or_create(calc.parameters, calc.structure)
+    prop.uvvis = uvvis
     prop.energy = E
-    prop.uvvis = calc.id
     prop.save()
 
     return ErrorCodes.SUCCESS
@@ -2270,17 +2346,23 @@ def gaussian_opt(in_file, calc):
         lines = f.readlines()
         ind = len(lines) - 1
 
-        while lines[ind].find("SCF Done") == -1:
-            ind -= 1
-        E = float(lines[ind].split()[4])
-        while (
-            lines[ind].find(
-                "Center     Atomic      Atomic             Coordinates (Angstroms)"
+        try:
+            while lines[ind].find("SCF Done") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[4])
+            while (
+                lines[ind].find(
+                    "Center     Atomic      Atomic             Coordinates (Angstroms)"
+                )
+                == -1
+            ):
+                ind += 1
+            ind += 3
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
             )
-            == -1
-        ):
-            ind += 1
-        ind += 3
+            return ErrorCodes.INVALID_OUTPUT
 
         xyz = []
         while lines[ind].find("----") == -1:
@@ -2318,27 +2400,31 @@ def gaussian_freq(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
-    with open(f"{local_folder}/calc.log") as f:
-        outlines = f.readlines()
-        ind = len(outlines) - 1
+    try:
+        with open(f"{local_folder}/calc.log") as f:
+            outlines = f.readlines()
+            ind = len(outlines) - 1
 
-    while outlines[ind].find("Zero-point correction") == -1:
-        ind -= 1
+        while outlines[ind].find("Zero-point correction") == -1:
+            ind -= 1
 
-    ZPE = outlines[ind].split()[-2]
-    H = outlines[ind + 2].split()[-1]
-    G = outlines[ind + 3].split()[-1]
+        ZPE = outlines[ind].split()[-2]
+        H = outlines[ind + 2].split()[-1]
+        G = outlines[ind + 3].split()[-1]
 
-    while outlines[ind].find("SCF Done") == -1:
-        ind -= 1
+        while outlines[ind].find("SCF Done") == -1:
+            ind -= 1
 
-    SCF = outlines[ind].split()[4]
+        SCF = outlines[ind].split()[4]
+    except IndexError:
+        logger.error(
+            f"Could not parse the output of calculation {calc.id}: invalid format"
+        )
+        return ErrorCodes.INVALID_OUTPUT
 
     prop = get_or_create(calc.parameters, calc.structure)
     prop.energy = SCF
     prop.free_energy = float(0.0030119 + float(G) + float(SCF))
-    prop.freq = calc.id
-    prop.save()
 
     try:
         while outlines[ind].find("Standard orientation:") == -1:
@@ -2409,37 +2495,30 @@ def gaussian_freq(in_file, calc):
         while ind < len(outlines) - 1 and outlines[ind].find("Frequencies --") == -1:
             ind += 1
 
-    for ind in range(len(vibs)):
-        with open(
-            os.path.join(CALCUS_RESULTS_HOME, str(calc.id), f"freq_{ind}.xyz"),
-            "w",
-        ) as out:
-            out.write(f"{num_atoms}\n")
-            # assert len(struct) == num_atoms
-            out.write("CalcUS\n")
-            for ind2, (a, x, y, z) in enumerate(struct):
-                out.write(
-                    "{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(
-                        a, x, y, z, *vibs[ind][ind2]
-                    )
-                )
+    freq_animations = []
 
-    with open(
-        f"{os.path.join(CALCUS_RESULTS_HOME, str(calc.id))}/orcaspectrum", "w"
-    ) as out:
-        for vib in wavenumbers:
-            out.write(f"{vib:.1f}\n")
+    for ind in range(len(vibs)):
+        anim = f"{num_atoms}\nCalcUS\n"
+        for ind2, (a, x, y, z) in enumerate(struct):
+            anim += "{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(
+                a, x, y, z, *vibs[ind][ind2]
+            )
+        freq_animations.append(anim)
 
     x = np.arange(500, 4000, 1)  # Wave number in cm^-1
     spectrum = plot_vibs(x, zip(wavenumbers, intensities))
 
-    with open(os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "IR.csv"), "w") as out:
-        out.write("Wavenumber,Intensity\n")
-        intensities = 1000 * np.array(intensities) / max(intensities)
-        for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
-            out.write(f"-{_x:.1f},{i:.5f}\n")
+    ir_spectrum = "Wavenumber,Intensity\n"
+
+    intensities = 1000 * np.array(intensities) / max(intensities)
+    for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
+        ir_spectrum += f"-{_x:.1f},{i:.5f}\n"
 
     parse_gaussian_charges(calc, calc.structure)
+    prop.freq_list = wavenumbers
+    prop.freq_animations = freq_animations
+    prop.ir_spectrum = ir_spectrum
+    prop.save()
     return ErrorCodes.SUCCESS
 
 
@@ -2455,17 +2534,23 @@ def gaussian_ts(in_file, calc):
         lines = f.readlines()
         ind = len(lines) - 1
 
-        while lines[ind].find("SCF Done") == -1:
-            ind -= 1
-        E = float(lines[ind].split()[4])
-        while (
-            lines[ind].find(
-                "Center     Atomic      Atomic             Coordinates (Angstroms)"
+        try:
+            while lines[ind].find("SCF Done") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[4])
+            while (
+                lines[ind].find(
+                    "Center     Atomic      Atomic             Coordinates (Angstroms)"
+                )
+                == -1
+            ):
+                ind += 1
+            ind += 3
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
             )
-            == -1
-        ):
-            ind += 1
-        ind += 3
+            return ErrorCodes.INVALID_OUTPUT
 
         xyz = []
         while lines[ind].find("----") == -1:
@@ -2519,24 +2604,30 @@ def gaussian_scan(in_file, calc):
         ind = 0
         done = False
         while not done:
-            while (
-                ind < len(lines) - 1
-                and lines[ind].find("Optimization completed.") == -1
-            ):
-                ind += 1
+            try:
+                while (
+                    ind < len(lines) - 1
+                    and lines[ind].find("Optimization completed.") == -1
+                ):
+                    ind += 1
 
-            if ind == len(lines) - 1:
-                done = True
-                break
+                if ind == len(lines) - 1:
+                    done = True
+                    break
 
-            ind2 = ind
+                ind2 = ind
 
-            while (
-                lines[ind].find("Input orientation:") == -1
-                and lines[ind].find("Standard orientation:") == -1
-            ):
-                ind += 1
-            ind += 5
+                while (
+                    lines[ind].find("Input orientation:") == -1
+                    and lines[ind].find("Standard orientation:") == -1
+                ):
+                    ind += 1
+                ind += 5
+            except IndexError:
+                logger.error(
+                    f"Could not parse the output of calculation {calc.id}: invalid format"
+                )
+                return ErrorCodes.INVALID_OUTPUT
 
             xyz = []
             while lines[ind].find("----") == -1:
@@ -2550,8 +2641,14 @@ def gaussian_scan(in_file, calc):
 
             xyz_structure = clean_xyz(xyz_structure)
 
-            while lines[ind2].find("SCF Done") == -1:
-                ind2 -= 1
+            try:
+                while lines[ind2].find("SCF Done") == -1:
+                    ind2 -= 1
+            except IndexError:
+                logger.error(
+                    f"Could not parse the output of calculation {calc.id}: invalid format"
+                )
+                return ErrorCodes.INVALID_OUTPUT
 
             E = float(lines[ind2].split()[4])
 
@@ -2580,17 +2677,23 @@ def gaussian_scan(in_file, calc):
     else:
         ind = len(lines) - 1
 
-        while lines[ind].find("SCF Done") == -1:
-            ind -= 1
-        E = float(lines[ind].split()[4])
-        while (
-            lines[ind].find(
-                "Center     Atomic      Atomic             Coordinates (Angstroms)"
+        try:
+            while lines[ind].find("SCF Done") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[4])
+            while (
+                lines[ind].find(
+                    "Center     Atomic      Atomic             Coordinates (Angstroms)"
+                )
+                == -1
+            ):
+                ind += 1
+            ind += 3
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
             )
-            == -1
-        ):
-            ind += 1
-        ind += 3
+            return ErrorCodes.INVALID_OUTPUT
 
         xyz = []
         while lines[ind].find("----") == -1:
@@ -2639,20 +2742,27 @@ def gaussian_nmr(in_file, calc):
 
     with open(os.path.join(local_folder, "calc.log")) as f:
         lines = f.readlines()
-    ind = len(lines) - 1
-    while lines[ind].find("SCF GIAO Magnetic shielding tensor (ppm):") == -1:
-        ind -= 1
 
-    nmr = ""
-    ind += 1
-    while lines[ind].find("End of Minotr") == -1:
-        sline = lines[ind].strip().split()
-        nmr += f"{int(sline[0])} {sline[1]} {sline[4]}\n"
-        ind += 5
+    try:
+        ind = len(lines) - 1
+        while lines[ind].find("SCF GIAO Magnetic shielding tensor (ppm):") == -1:
+            ind -= 1
 
-    while lines[ind].find("SCF Done") == -1:
-        ind -= 1
-    E = float(lines[ind].split()[4])
+        nmr = ""
+        ind += 1
+        while lines[ind].find("End of Minotr") == -1:
+            sline = lines[ind].strip().split()
+            nmr += f"{int(sline[0])} {sline[1]} {sline[4]}\n"
+            ind += 5
+
+        while lines[ind].find("SCF Done") == -1:
+            ind -= 1
+        E = float(lines[ind].split()[4])
+    except IndexError:
+        logger.error(
+            f"Could not parse the output of calculation {calc.id}: invalid format"
+        )
+        return ErrorCodes.INVALID_OUTPUT
 
     prop = get_or_create(calc.parameters, calc.structure)
     prop.simple_nmr = nmr
@@ -2859,15 +2969,9 @@ def analyse_opt_ORCA(calc):
 
 def analyse_opt_xtb(calc):
     if calc.step.name == "Minimum Energy Path":
-        if calc.status in [2, 3]:
-            path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "calc_MEP_trj.xyz")
-        else:
-            path = os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc_MEP_trj.xyz")
+        path = os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc_MEP_trj.xyz")
     else:
-        if calc.status in [2, 3]:
-            path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "xtbopt.out")
-        else:
-            path = os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbopt.log")
+        path = os.path.join(CALCUS_SCR_HOME, str(calc.id), "xtbopt.log")
 
     if not os.path.isfile(path):
         return
@@ -2927,12 +3031,7 @@ def analyse_opt_xtb(calc):
 
 
 def analyse_opt_Gaussian(calc):
-    if calc.status in [2, 3]:
-        calc_path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "calc.out")
-    elif calc.status == 1:
-        calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")
-    else:
-        return None
+    calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")
 
     if not os.path.isfile(calc_path):
         return
@@ -3135,7 +3234,7 @@ def filter(order, input_structures):
 
 
 @app.task(base=AbortableTask)
-def dispatcher(drawing, order_id):
+def dispatcher(order_id):
     order = CalculationOrder.objects.get(pk=order_id)
     ensemble = order.ensemble
 
@@ -3228,10 +3327,6 @@ def dispatcher(drawing, order_id):
         calc = order.start_calc
         fid = order.start_calc_frame
         mode = "c"
-        if calc.status in [2, 3]:
-            calc_path = os.path.join(CALCUS_RESULTS_HOME, str(calc.id), "calc.out")
-        else:
-            calc_path = os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")
 
         molecule = calc.result_ensemble.parent_molecule
         ensemble = Ensemble.objects.create(
@@ -3382,7 +3477,6 @@ def run_calc(calc_id):
 
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
 
-    res_dir = os.path.join(CALCUS_RESULTS_HOME, str(calc.id))
     workdir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     if calc.status == 3:  # Already revoked:
@@ -3402,7 +3496,6 @@ def run_calc(calc_id):
     in_file = os.path.join(workdir, "in.xyz")
 
     if calc.status == 0:
-        os.makedirs(res_dir, exist_ok=True)
         os.makedirs(workdir, exist_ok=True)
 
         with open(in_file, "w") as out:
@@ -3459,21 +3552,22 @@ def run_calc(calc_id):
             calc.status = 3
             calc.error_message = "Unknown termination"
 
-        calc.save()
-
     logger.info(f"Calc {calc_id} finished")
-
-    # just calc.out/calc.log?
-    for f in glob.glob(f"{workdir}/*.out"):
-        fname = f.split("/")[-1]
-        copyfile(f, f"{res_dir}/{fname}")
-
-    for f in glob.glob(f"{workdir}/*.log"):
-        fname = f.split("/")[-1].replace(".log", ".out")
-        copyfile(f, f"{res_dir}/{fname}")
 
     if calc.step.creates_ensemble:
         analyse_opt(calc.id)
+
+    output_files = {}
+    for log_name in glob.glob(
+        os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.log")
+    ) + glob.glob(os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.out")):
+        fname = os.path.basename(log_name)[:-4]
+        with open(log_name) as f:
+            log = "".join(f.readlines())
+        output_files[fname] = log
+
+    calc.output_files = json.dumps(output_files)
+    calc.save()
 
     global cache_ind
 
@@ -3568,10 +3662,6 @@ def _del_calculation(calc):
     calc.delete()
     try:
         rmtree(os.path.join(CALCUS_SCR_HOME, str(calc.id)))
-    except OSError:
-        pass
-    try:
-        rmtree(os.path.join(CALCUS_RESULTS_HOME, str(calc.id)))
     except OSError:
         pass
 

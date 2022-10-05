@@ -175,13 +175,11 @@ print("\n")
 software_list = {
     "g16": "# Path to the directory directly containing g16 (e.g. /home/user/software/gaussian)\nCALCUS_GAUSSIAN={}\n",
     "orca": "# Path to the directory directly containing orca\nCALCUS_ORCA={}\n",
-    "xtb": "# Path to the directory directly containing xtb, crest, stda, xtb4stda\nCALCUS_XTB={}\n",
 }
 
 override_list = {
     "g16": ["                        - ${CALCUS_GAUSSIAN}:/binaries/g16"],
     "orca": ["                        - ${CALCUS_ORCA}:/binaries/orca"],
-    "xtb": ["                        - ${CALCUS_XTB}:/binaries/xtb"],
 }
 
 software_paths = ""
@@ -283,7 +281,7 @@ with open("test-compose.override.yml", "w") as out:
     )
 
 print("Creating necessary folders")
-for d in ["scr", "results", "keys", "logs", "backups"]:
+for d in ["scr", "keys", "logs", "backups"]:
     if not os.path.isdir(d):
         os.mkdir(d)
 

@@ -46,18 +46,26 @@ CalcUS can also use external computing resources. The process of launching calcu
 
 Before launching calculations, you will need to configure the resource a bit. Firstly, create a folder named "calcus" in your remote home on the cluster via SSH (the full path should be ``/home/<username>/calcus``). 
 
-If you plan to run xtb calculations, make sure you the following programs in that folder:
+If you plan to run xtb calculations, make sure that the following programs are available:
 
 * `xtb <https://github.com/grimme-lab/xtb/releases>`_
 * `crest <https://github.com/grimme-lab/crest/releases>`_
 * `xtb4stda <https://github.com/grimme-lab/stda/releases>`_
 * `stda <https://github.com/grimme-lab/stda/releases>`_
 
-The easiest way to get the files is to use the ``wget`` command directly from the cluster. While in the ``calcus`` directory, run ``wget <link>`` to download each archive. Make sure that you use the direct URL to the archive or program (*e.g.* it should end in ``.tar.xz`` or ``.tgz`` for the archives.) Afterwards, unpack the archives (*e.g.* ``tar xvf <archive.tar.xz>`` or ``tar zxvf <archive.tgz>``). You might have to move some programs from their subfolder to the ``calcus`` folder directly (*e.g.* ``mv xtb-X.Y.Z/bin/xtb ~/calcus/``).
+The easiest way to get the files is to use the ``wget`` command directly from the cluster. While in a suitable directory (somewhere in your ``$HOME``, typically), run ``wget <link>`` to download each archive. Make sure that you use the direct URL to the archive or program (*e.g.* it should end in ``.tar.xz`` or ``.tgz`` for the archives.) Afterwards, unpack the archives (*e.g.* ``tar xvf <archive.tar.xz>`` or ``tar zxvf <archive.tgz>``). You should add the full paths to the directories *directly containing the binaries* to your ``$PATH`` in ``~/.bashrc``. For example, to add the main ``xtb`` program, you might have this line in your ``.bashrc``: 
 
-Make sure that every file is executable. If they are not, you can make them executable by executing the command ``chmod 700 *`` in the calcus folder. Then, add ``/home/<username>/calcus`` to your path variable, in your ``.bashrc`` file. This will ensure that CalcUS will be able to find and use these programs. You will also need the parameter files for xtb and xtb4stda (named ``.param_...``). You will find them in the Github repositories (`here <https://github.com/grimme-lab/xtb4stda>`__ and `here <https://github.com/grimme-lab/xtb>`__); they can be simply dropped in your home directory.
+.. code-block:: bash
+        :caption: ~/.bashrc
 
-Then, for any software, you will need to supply sample submission scripts. As of right now, only the SLURM cluster manager is supported. You need to provide one submission script per software, named ``submit_<software>.sh`` (be careful of the capitalization in the software name) and located in your calcus folder. For xtb and other related programs, the script might look like this:
+        [...]
+        export PATH=$PATH:/home/rtremblay/binaries/xtb-X.Y.Z/bin
+        [...]
+
+
+Make sure that every binary file is executable. If they are not, you can make them executable by executing the command ``chmod 700 <binary>``. You will also need the parameter files for ``xtb`` and ``xtb4stda`` (named ``.param_...``). You will find them in the Github repositories (`here <https://github.com/grimme-lab/xtb4stda>`__ and `here <https://github.com/grimme-lab/xtb>`__); they can be simply dropped in your home directory.
+
+Then, for any software, you will need to supply sample submission scripts. As of right now, only the SLURM cluster manager is supported. You need to provide one submission script per software, named ``submit_<software>.sh`` (be careful of the capitalization in the software name) and located in your calcus folder. For ``xtb`` and other related programs, the script might look like this:
 
 .. code-block:: bash
         :caption: submit_xtb.sh

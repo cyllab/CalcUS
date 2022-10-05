@@ -62,6 +62,7 @@ jobs:
         POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
         POSTGRES_PASSWORD: postgres
+        POSTGRES_USER: calcus
         CALCUS_TEST: True
         IS_TEST_CLUSTER_DAEMON: True
         CAN_USE_CACHED_LOGS: true

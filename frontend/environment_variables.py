@@ -36,15 +36,11 @@ if is_test:
     CALCUS_SCR_HOME = os.path.join(
         prefix, os.environ.get("CALCUS_TEST_SCR_HOME", "scratch/scr")
     )
-    CALCUS_RESULTS_HOME = os.path.join(
-        prefix, os.environ.get("CALCUS_TEST_RESULTS_HOME", "scratch/results")
-    )
     CALCUS_KEY_HOME = os.path.join(
         prefix, os.environ.get("CALCUS_TEST_KEY_HOME", "scratch/keys")
     )
 else:
     CALCUS_SCR_HOME = os.environ["CALCUS_SCR_HOME"]
-    CALCUS_RESULTS_HOME = os.environ["CALCUS_RESULTS_HOME"]
     CALCUS_KEY_HOME = os.environ["CALCUS_KEY_HOME"]
 
 try:

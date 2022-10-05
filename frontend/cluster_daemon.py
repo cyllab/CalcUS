@@ -36,7 +36,7 @@ import socket
 import threading
 from threading import Lock
 
-from django.utils.timezone import now
+from django.utils import timezone
 from django.db import close_old_connections
 from django.conf import settings
 
@@ -106,19 +106,7 @@ class ClusterDaemon:
         except ClusterAccess.DoesNotExist:
             return ConnectionCodes.INVALID_CLUSTER_ACCESS
 
-        a = self.setup_connection(conn, password)
-
-        if isinstance(a, int):
-            return a
-
-        self.locks[a[0].id] = Lock()
-
-        b = self.check_binaries(a)
-
-        if not isinstance(b, int):
-            self.connections[a[0].id] = a
-            return a
-        return b
+        return self.setup_connection(conn, password)
 
     def check_binaries(self, conn):
         lock = self.locks[conn[0].id]
@@ -160,6 +148,21 @@ class ClusterDaemon:
                 )
             )
             return ConnectionCodes.COULD_NOT_CONNECT
+
+        self.locks[conn.id] = Lock()
+
+        try:
+            b = self.check_binaries([conn, _conn])
+        except paramiko.ssh_exception.SSHException:
+            logger.warning(
+                f"Could not connect to cluster {addr} with username {username}: invalid password"
+            )
+            del self.locks[conn.id]
+            return ConnectionCodes.INVALID_KEY_PASSWORD
+
+        if b == ConnectionCodes.NO_CALCUS_FOLDER:
+            del self.locks[conn.id]
+            return b
 
         return [conn, _conn]
 
@@ -413,6 +416,15 @@ class ClusterDaemon:
                 access, conn = self.connections[conn_name]
 
                 access.refresh_from_db()
+                if access.last_connected - timezone.now() > timezone.timedelta(
+                    minutes=15
+                ):
+                    logger.warning(
+                        f"Access {access.id} has not pinged the remote server in 15 minutes, automatically disconnecting..."
+                    )
+                    self.disconnect(access.id)
+                    continue
+
                 access.last_connected = timezone.now()
                 access.status = "Connected"
                 access.save()

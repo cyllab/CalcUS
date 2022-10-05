@@ -15,7 +15,6 @@ services:
                         - 8000
                 volumes:
                         - ./scr:/calcus/scr
-                        - ./results:/calcus/results
                         - ./keys:/calcus/keys
                         - ./backups:/calcus/backups
                         - ./logs:/calcus/logs
@@ -43,8 +42,8 @@ services:
                 command: ./scripts/run_celery_main.sh
                 volumes:
                         - ./scr:/calcus/scr
-                        - ./results:/calcus/results
                         - ./keys:/calcus/keys
+                        - ./backups:/calcus/backups
                 env_file:
                         - ./.env
                 links:
@@ -57,7 +56,6 @@ services:
                 command: ./scripts/run_celery_comp.sh
                 volumes:
                         - ./scr:/calcus/scr
-                        - ./results:/calcus/results
                         - ./keys:/calcus/keys
                 env_file:
                         - ./.env
@@ -73,7 +71,6 @@ services:
                         - ./.env
                 volumes:
                         - ./scr:/calcus/scr
-                        - ./results:/calcus/results
                         - ./keys:/calcus/keys
                 links:
                         - web

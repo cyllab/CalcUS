@@ -15,7 +15,7 @@ Documentation and an overview of the platform are available on [ReadTheDocs](htt
 
 ## Installation
 
-For licensing reasons, **no QM software package is included with CalcUS.** In order to use CalcUS, you will need either to install the Linux version of a package locally or use the packages on remote clusters. Note however that [xtb](https://github.com/grimme-lab/xtb) is freely available and can be used with CalcUS for fast semi-empirical tight-binding calculations.
+For licensing reasons, **no software package requiring a user license can be included with CalcUS.** For convenience, we have included the LGPL-v3 licensed [xtb software package](https://github.com/grimme-lab/xtb) as well as related packages by the Grimme group ([crest](https://github.com/grimme-lab/crest), [stda](https://github.com/grimme-lab/stda) and [xtb4stda](https://github.com/grimme-lab/xtb4stda)). These enable fast semi-empirical tight-binding calculations in CalcUS by default. In order to use other software packages, you will need either to install the Linux version of a package locally or use the packages on remote clusters. 
 
 ### Linux and Mac
 Firstly, install and configure [Docker Engine](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/). On Linux, it is necessary to create a docker group and to add yourself to it:
@@ -64,9 +64,12 @@ If you use CalcUS in your research, please cite it:
 
 **Contributor to the conception and beta-testing**: Prof. Claude Y. Legault
 
+**Contributor of significant features**: 
+
++ Divyam Agarwal (automated multi-step calculations, *in progress*)
+
 **Contributors to the web frontend**: 
 
-+ Divyam Agarwal
 + Glen Forcha
 + Dhairya Khanna
 
@@ -79,7 +82,7 @@ If you use CalcUS in your research, please cite it:
 + Louis Schutz
 
 ## Dependencies
-CalcUS makes use of several third-party softwares. For convenience, all the non-Python packages are redistributed in this repository, along with their license and/or links to their homepage. These packages are however not part of CalcUS itself.
+CalcUS makes use of several third-party software. For convenience, all the non-Python packages are redistributed in this repository, along with their license and/or links to their homepage. These packages are however not part of CalcUS itself.
 
 ## License
 This program is free software: you can redistribute it and/or modify

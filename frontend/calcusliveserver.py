@@ -55,7 +55,6 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 # Somewhat pointless, could be cleaned up
 SCR_DIR = CALCUS_SCR_HOME
-RESULTS_DIR = CALCUS_RESULTS_HOME
 KEYS_DIR = CALCUS_KEY_HOME
 
 from calcus.celery import app
@@ -98,13 +97,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         if os.path.isdir(SCR_DIR):
             rmtree(SCR_DIR)
-        if os.path.isdir(RESULTS_DIR):
-            rmtree(RESULTS_DIR)
         if os.path.isdir(KEYS_DIR):
             rmtree(KEYS_DIR)
 
         os.mkdir(SCR_DIR)
-        os.mkdir(RESULTS_DIR)
         os.mkdir(KEYS_DIR)
 
         cls.patcher = mock.patch.dict(os.environ, {"CAN_USE_CACHED_LOGS": "true"})
