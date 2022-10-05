@@ -11,7 +11,7 @@ from .libxyz import *
 from .models import *
 from .gen_calc import gen_calc
 from .tasks import run_calc
-from .calcusliveserver import SCR_DIR, RESULTS_DIR
+from .calcusliveserver import SCR_DIR
 
 base_cwd = os.getcwd()
 
@@ -26,11 +26,8 @@ class CalculationUnitTest(TestCase):
 
         if os.path.isdir(SCR_DIR):
             rmtree(SCR_DIR)
-        if os.path.isdir(RESULTS_DIR):
-            rmtree(RESULTS_DIR)
 
         os.mkdir(SCR_DIR)
-        os.mkdir(RESULTS_DIR)
 
     def setUp(self):
         os.chdir(base_cwd)

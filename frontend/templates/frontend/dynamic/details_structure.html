@@ -64,7 +64,7 @@
 </div>
 {% endif %}
 
-{% if property.freq != 0 %}
+{% if property.has_freq %}
 <span class="tag is-warning is-large">Frequencies</span>
 <div class="columns box has-text-centered" id="frequency_structure_details" >
 		<div class="column">
@@ -80,7 +80,7 @@
 			<center>
 			<div id="ir_spectrum" style="width:500px; height:400px; margin-bottom: 30px;">
 			</div>
-			<a class="button is-info" href="/ir_spectrum/{{ property.freq }}">Download IR spectrum</a>
+			<a class="button is-info" href="/ir_spectrum/{{ property.id }}">Download IR spectrum</a>
 			</center>
 		</div>
 	</div>
@@ -105,7 +105,7 @@
 		$.ajax({
 			method: "POST",	 	 
 			url: "/get_vib_animation/",
-			data: {'id': {{ property.freq }}, 'num': num },
+			data: {'id': {{ property.id }}, 'num': num },
 
 			headers: {
 				"X-CSRFToken": '{{ csrf_token }}',
@@ -133,10 +133,10 @@
 	vib_viewer.setBackgroundColor(0xffffff);
 
 	
-	$("#vib_table").load("/vib_table/{{ property.freq }}");
+	$("#vib_table").load("/vib_table/{{ property.id }}");
 		g4 = new Dygraph(
 		document.getElementById("ir_spectrum"),
-			"/ir_spectrum/{{ property.freq }}", 
+			"/ir_spectrum/{{ property.id }}", 
 			{
 				strokeWidth: 2,	
 				xlabel: "Wavelength (cm^-1)",
@@ -159,7 +159,7 @@
 </script>
 {% endif %}
 
-{% if property.uvvis != 0 %}
+{% if property.has_uvvis %}
 <span class="tag is-warning is-large">UV-Vis</span>
 <div class="columns box is-desktop" id="uvvis_structure_details">
 	<div class="column">
@@ -170,7 +170,7 @@
 		$(document).ready(function(){
 					g2 = new Dygraph(
 			document.getElementById("uvvis_spectrum"),
-				"/uvvis/{{ property.uvvis }}", 
+				"/uvvis/{{ property.id }}", 
 				{
 					strokeWidth: 2,	
 					xlabel: "Wavelength (nm)",
@@ -183,7 +183,7 @@
 </div>
 {% endif %}
 
-{% if property.nmr != 0 %}
+{% if property.has_nmr %}
 <span class="tag is-warning is-large">NMR</span>
 <div class="columns box is-desktop" id="enso_structure_details">
 	<div class="column">
@@ -194,7 +194,7 @@
 		$(document).ready(function(){
 			g3 = new Dygraph(
 			document.getElementById("nmr_spectrum"),
-				"/nmr/{{ property.nmr }}", 
+				"/nmr/{{ property.id }}", 
 				{
 					strokeWidth: 2,	
 					xlabel: "Chemical shift (ppm)",
@@ -219,7 +219,7 @@
 </div>
 {% endif %}
 
-{% if property.mo != 0 %}
+{% if property.has_mo %}
 <span class="tag is-warning is-large">Molecular Orbitals</span>
 <div class="columns box is-desktop" id="mo_structure_details">
 	<div class="column">
@@ -262,7 +262,7 @@
 				method: "POST",	 	 
 				url: "/get_cube/",
 				data: {
-					'id': {{ property.mo }},
+					'id': {{ property.id }},
 					'orb': _orb,
 				},
 

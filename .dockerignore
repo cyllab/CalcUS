@@ -4,7 +4,7 @@ old
 keys
 logs
 data
-backups
+backup*
 test_run
 html_cov
 docs
@@ -18,3 +18,5 @@ frontend/tests/keys
 frontend/tests/scr
 frontend/tests/results
 .git
+bin/*
+!bin/*.tar.bz2

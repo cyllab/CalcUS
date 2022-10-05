@@ -139,8 +139,6 @@
 				const range = document.createRange();
 				range.selectNodeContents(node);
 				selection.removeAllRanges();
-				selection.addRange(range);
-			} else {
 				console.warn("Could not select text in node: Unsupported browser.");
 			}
 		}
@@ -186,7 +184,13 @@
 			}
 		}
 
+
 		$(document).ready(function() {
+			$("#ssh_password").on("keydown", function enter(e) {
+				if(e.keyCode == 13) {
+					connect_access();
+				}
+			});
 			refresh_status();
 		});
 	</script>

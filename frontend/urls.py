@@ -181,7 +181,6 @@ urlpatterns = [
     path("submit_calculation/", views.submit_calculation, name="submit_calculation"),
     path("get_structure/", views.get_structure, name="get_structure"),
     path("get_vib_animation/", views.get_vib_animation, name="get_vib_animation"),
-    path("get_scan_animation/", views.get_scan_animation, name="get_scan_animation"),
     path(
         "download_structures/<int:ee>",
         views.download_structures,

@@ -1,0 +1,24 @@
+FROM python:3.9 AS calcus_user
+
+ARG CALCUS_VERSION_HASH
+ENV CALCUS_VERSION_HASH=${CALCUS_VERSION_HASH}
+
+ENV PYTHONUNBUFFERED 1
+ENV CALCUS_CLOUD True
+
+ADD ./cloud_requirements.txt /calcus/cloud_requirements.txt
+RUN pip install -r /calcus/cloud_requirements.txt
+RUN apt update && apt install openbabel postgresql-client dos2unix -y
+
+COPY calcus /calcus/calcus
+COPY frontend /calcus/frontend
+COPY docker /calcus/docker
+COPY manage.py /calcus/manage.py
+
+WORKDIR /calcus/
+
+RUN dos2unix scripts/*
+
+RUN adduser --disabled-password --gecos '' calcus  
+
+CMD exec gunicorn calcus.wsgi:application --bind :$PORT --timeout 10 --workers 1 --threads 4

@@ -22,12 +22,8 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-try:
-    IS_TEST = os.environ["CALCUS_TEST"]
-except:
-    IS_TEST = False
-else:
-    IS_TEST = True
+IS_CLOUD = "CALCUS_CLOUD" in os.environ
+IS_TEST = "CALCUS_TEST" in os.environ
 
 if IS_TEST:
     SECRET_KEY = "testkey"
@@ -36,6 +32,7 @@ else:
 
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
+POSTGRES_USER = os.environ.get("POSTGRES_USER", "calcus")
 
 try:
     DEBUG = os.environ["CALCUS_DEBUG"]
@@ -58,13 +55,6 @@ else:
     except (FileNotFoundError, subprocess.CalledProcessError):
         CALCUS_VERSION_HASH = "unknown"
 
-PACKAGES = []
-if "CALCUS_XTB" in os.environ:
-    PACKAGES.append("xtb")
-if "CALCUS_ORCA" in os.environ:
-    PACKAGES.append("ORCA")
-if "CALCUS_GAUSSIAN" in os.environ:
-    PACKAGES.append("Gaussian")
 
 SSL = False
 
@@ -91,10 +81,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "axes",
-    "dbbackup",
     "bulma",
     #'debug_toolbar',
 ]
+
+if not IS_CLOUD:
+    INSTALLED_APPS.append("dbbackup")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -126,6 +118,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "frontend.context.default",
             ],
         },
     },
@@ -136,9 +129,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "ENGINE": "django.db.backends.postgresql",
         "NAME": "calcus",
-        "USER": "calcus",
+        "USER": POSTGRES_USER,
         "PASSWORD": POSTGRES_PASSWORD,
         "HOST": POSTGRES_HOST,
         "PORT": "5432",
@@ -179,8 +172,12 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
-DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
-DBBACKUP_STORAGE_OPTIONS = {"location": "backups/"}
+if not IS_CLOUD:
+    DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
+    DBBACKUP_STORAGE_OPTIONS = {"location": "/calcus/backups/"}
+    DBBACKUP_CLEANUP_KEEP = 10  # Number of old DBs to keep
+    DBBACKUP_INTERVAL = 1  # In days (can be a float)
+
 LOGIN_REDIRECT_URL = "/home"
 
 DEFAULT_FROM_EMAIL = "bot@CalcUS"
@@ -205,7 +202,6 @@ THROTTLE_ZONES = {
 }
 
 THROTTLE_BACKEND = "throttle.backends.cache.CacheBackend"
-
 THROTTLE_ENABLED = True
 
 MAX_UPLOAD_SIZE = "5242880"  # 5MB max
@@ -215,10 +211,60 @@ INTERNAL_IPS = [
 
 SESSION_COOKIE_NAME = "CALCUS_SESSION_COOKIE"
 
-ALLOW_LOCAL_CALC = True
+PACKAGES = ["xtb"]
 
-DBBACKUP_CLEANUP_KEEP = 10  # Number of old DBs to keep
-DBBACKUP_INTERVAL = 1  # In days (can be a float)
+if IS_CLOUD:
+    PING_SATELLITE = False
 
-PING_SATELLITE = os.getenv("CALCUS_PING_SATELLITE", "False")
-PING_CODE = os.getenv("CALCUS_PING_CODE", "default")
+    ALLOW_LOCAL_CALC = True
+    ALLOW_REMOTE_CALC = False
+
+    LOCAL_MAX_ATOMS = 20
+
+    LOCAL_ALLOWED_THEORY_LEVELS = [
+        "xtb",
+        "semiempirical",
+        # "hf",
+        # "special",  # hf3c, pbeh3c, r2scan3c, b973c
+        # "dft",
+        # "mp2",
+        # "cc",
+    ]
+
+    LOCAL_ALLOWED_STEPS = [
+        "Geometrical Optimisation",
+        # "Conformational Search",
+        "Constrained Optimisation",
+        "Frequency Calculation",
+        "TS Optimisation",
+        "UV-Vis Calculation",
+        "Single-Point Energy",
+        # "Minimum Energy Path",
+        # "Constrained Conformational Search",
+        # "NMR Prediction",
+        # "MO Calculation",
+    ]
+
+else:
+    ALLOW_LOCAL_CALC = True
+    ALLOW_REMOTE_CALC = True
+
+    # For local calculations, limit the size of systems to this number of atoms or disable the limitation with -1
+    LOCAL_MAX_ATOMS = -1
+
+    # For local calculations, only allow these theory levels to be used (using the ccinput theory levels)
+    LOCAL_ALLOWED_THEORY_LEVELS = [
+        "ALL",  # Allows all theory levels
+    ]
+
+    LOCAL_ALLOWED_STEPS = [
+        "ALL",  # Allows all steps
+    ]
+
+    PING_SATELLITE = os.getenv("CALCUS_PING_SATELLITE", "False")
+    PING_CODE = os.getenv("CALCUS_PING_CODE", "default")
+
+    if "CALCUS_ORCA" in os.environ:
+        PACKAGES.append("ORCA")
+    if "CALCUS_GAUSSIAN" in os.environ:
+        PACKAGES.append("Gaussian")
