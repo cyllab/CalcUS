@@ -346,7 +346,6 @@ def projects_by_user(request, user_id):
         target_user = User.objects.get(id=target_user_id)
     except User.DoesNotExist:
         return HttpResponse(status=404)
-    print(target_user_id)
 
     if request.user == target_user:
         return render(
@@ -2052,7 +2051,6 @@ def _submit_calculation(request, verify=False):
 
 
 def can_view_project(proj, user):
-    print(proj, user)
     if proj.author == user:
         return True
     else:
