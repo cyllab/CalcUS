@@ -244,14 +244,14 @@ if IS_CLOUD:
 
     LOCAL_ALLOWED_STEPS = [
         "Geometrical Optimisation",
-        # "Conformational Search",
+        "Conformational Search",
         "Constrained Optimisation",
         "Frequency Calculation",
         # "TS Optimisation",
         # "UV-Vis Calculation", # Not working right now
         "Single-Point Energy",
         # "Minimum Energy Path",
-        # "Constrained Conformational Search",
+        "Constrained Conformational Search",
         # "NMR Prediction",
         # "MO Calculation",
     ]
