@@ -624,6 +624,9 @@ def launch_xtb_calc(in_file, calc, files):
     if not os.path.isdir(local_folder):
         os.makedirs(local_folder, exist_ok=True)
 
+    with open(os.path.join(local_folder, "in.xyz"), "w") as out:
+        out.write(clean_xyz(calc.structure.xyz_structure))
+
     if calc.input_file != "":
         with open(os.path.join(local_folder, "input"), "w") as out:
             out.write(calc.input_file)
@@ -3583,6 +3586,7 @@ def run_calc(calc_id):
     if isinstance(ret, ErrorCodes):
         return ret
 
+    ####
     in_file = os.path.join(workdir, "in.xyz")
 
     if calc.status == 0:
@@ -3590,6 +3594,7 @@ def run_calc(calc_id):
 
         with open(in_file, "w") as out:
             out.write(clean_xyz(calc.structure.xyz_structure))
+    ####
 
     if not calc.local and calc.remote_id == 0:
         logger.debug(f"Preparing remote folder for calc {calc_id}")
