@@ -28,4 +28,4 @@ RUN python scripts/extract_xtb.py
 
 RUN adduser --disabled-password --gecos '' calcus  
 
-CMD exec gunicorn calcus.wsgi:application --bind :$PORT --timeout 10 --workers $NUM_WORKERS --threads $NUM_THREADS
+CMD exec gunicorn calcus.wsgi:application --bind :$PORT --timeout 10 --workers $NUM_WORKERS --threads $NUM_THREADS --timeout $GUNICORN_TIMEOUT
