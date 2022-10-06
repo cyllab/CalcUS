@@ -622,7 +622,7 @@ def launch_xtb_calc(in_file, calc, files):
     folder = f"scratch/calcus/{calc.id}"
 
     if not os.path.isdir(local_folder):
-        local_folder.makedirs(local_folder, exist_ok=True)
+        os.makedirs(local_folder, exist_ok=True)
 
     if calc.input_file != "":
         with open(os.path.join(local_folder, "input"), "w") as out:
@@ -1195,7 +1195,7 @@ def launch_orca_calc(in_file, calc, files):
     folder = f"scratch/calcus/{calc.id}"
 
     if not os.path.isdir(local_folder):
-        local_folder.makedirs(local_folder, exist_ok=True)
+        os.makedirs(local_folder, exist_ok=True)
 
     with open(os.path.join(local_folder, "calc.inp"), "w") as out:
         out.write(calc.input_file)
@@ -1956,7 +1956,7 @@ def launch_gaussian_calc(in_file, calc, files):
     folder = f"scratch/calcus/{calc.id}"
 
     if not os.path.isdir(local_folder):
-        local_folder.makedirs(local_folder, exist_ok=True)
+        os.makedirs(local_folder, exist_ok=True)
 
     with open(os.path.join(local_folder, "calc.com"), "w") as out:  ###
         out.write(calc.input_file)
