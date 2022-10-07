@@ -10,6 +10,7 @@ django-gmailapi-backend
 django-hashid-field
 django-pipeline==2.0.5
 django-ipware==3.0.1
+django-recaptcha
 django-throttle-requests==0.5.9
 google-cloud-tasks
 grpc-google-iam-v1

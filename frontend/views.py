@@ -972,7 +972,7 @@ def register(request):
 
     return render(
         request,
-        "registration/signup.html",
+        "registration/register.html",
         {
             "form_student": form_student,
             "form_researcher": form_researcher,

@@ -1,5 +1,12 @@
 {% extends "frontend/base.html" %}
 {% load i18n bulma_tags %}
+{% block extrahead %}
+    <style>
+        #id_captcha {
+            margin-bottom: 2em;
+        }
+    </style>
+{% endblock %}
 {% block content %}
 <div class="container">
     <div class="columns is-centered is-expanded">
@@ -14,7 +21,9 @@
                 <div class="field has-addons has-addons-centered">
                     <div class="box has-text-centered">
                         <form method="post" action="{% url 'login' %}">
+                            <center>
                             {% csrf_token %} {{ form|bulma }}
+                            </center>
                             <input class="control button is-primary" type="submit" value="Login" />
                             <input type="hidden" name="next" value="{{ next }}" />
                         </form>

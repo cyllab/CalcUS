@@ -95,6 +95,14 @@ INSTALLED_APPS = [
 
 if not IS_CLOUD:
     INSTALLED_APPS.append("dbbackup")
+else:
+    INSTALLED_APPS.append("captcha")
+    RECAPTCHA_PUBLIC_KEY = os.getenv(
+        "RECAPTCHA_PUBLIC_KEY", "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+    )
+    RECAPTCHA_PRIVATE_KEY = os.getenv(
+        "RECAPTCHA_PRIVATE_KEY", "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+    )
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -137,7 +145,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "calcus.wsgi.application"
-DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 DATABASES = {
     "default": {

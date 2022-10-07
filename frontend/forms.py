@@ -23,6 +23,9 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.contrib.auth.forms import AuthenticationForm, UsernameField
+
+from captcha.fields import ReCaptchaField
 
 from frontend.models import User, ClassGroup
 from frontend.helpers import get_random_string
@@ -39,6 +42,8 @@ class ResearcherCreateForm(UserCreationForm):
         label="Email",
         error_messages={"exists": "This email has already been used"},
     )
+
+    captcha = ReCaptchaField()
 
     class Meta:
         model = User
@@ -64,6 +69,8 @@ class StudentCreateForm(forms.ModelForm):
         required=True,
         label="Access code",
     )
+
+    captcha = ReCaptchaField()
 
     class Meta:
         model = User
@@ -113,3 +120,10 @@ class StudentCreateForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+
+class UserLoginForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super(UserLoginForm, self).__init__(*args, **kwargs)
+
+    captcha = ReCaptchaField()

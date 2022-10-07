@@ -23,11 +23,21 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
+from django.contrib.auth.views import LoginView
 
-from . import views
+from frontend import views
+from frontend.forms import UserLoginForm
 
 app_name = "frontend"
 urlpatterns = [
+    # Override the default login page in order to use the ReCaptcha
+    path(
+        "accounts/login/",
+        LoginView.as_view(
+            template_name="registration/login.html", authentication_form=UserLoginForm
+        ),
+        name="login",
+    ),
     # Home and index
     path("", views.home, name="home"),
     path("home/", views.home, name="home"),
