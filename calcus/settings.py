@@ -34,6 +34,10 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
 POSTGRES_USER = os.environ.get("POSTGRES_USER", "calcus")
 
+GMAIL_API_CLIENT_ID = os.getenv("CALCUS_EMAIL_ID", "")
+GMAIL_API_CLIENT_SECRET = os.getenv("CALCUS_EMAIL_SECRET", "")
+GMAIL_API_REFRESH_TOKEN = os.getenv("CALCUS_EMAIL_TOKEN", "")
+
 try:
     DEBUG = os.environ["CALCUS_DEBUG"]
 except:
@@ -85,6 +89,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "axes",
     "bulma",
+    "gmailapi_backend",
     #'debug_toolbar',
 ]
 
@@ -190,11 +195,13 @@ DEFAULT_FROM_EMAIL = "bot@CalcUS"
 if IS_TEST:
     EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
     EMAIL_FILE_PATH = os.path.join(BASE_DIR, "scratch", "sent_emails")
+else:
+    EMAIL_BACKEND = "gmailapi_backend.mail.GmailBackend"
 
 MEDIA_URL = "/media/"
 
 AXES_LOCKOUT_TEMPLATE = "registration/lockout.html"
-AXES_FAILURE_LIMIT = 5  ###
+AXES_FAILURE_LIMIT = 10
 AXES_COOLOFF_TIME = 1
 
 THROTTLE_ZONES = {

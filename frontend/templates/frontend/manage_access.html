@@ -24,14 +24,14 @@
     		headers:{
     			"X-CSRFToken": '{{ csrf_token }}',
     		},
-    		data: {'access_id': {{ access.id }}, 'password': password},
+    		data: {'access_id': "{{ access.id }}", 'password': password},
     		success: function()
     		{
     			var my_refresh = setInterval(function() {
     				$.ajax({
     					type: "POST",
     					url: "/get_command_status/",
-    					data: {'access_id': {{ access.id }}},
+    					data: {'access_id': "{{ access.id }}"},
     					headers:{
     						"X-CSRFToken": '{{ csrf_token }}',
     					},
@@ -58,7 +58,7 @@
     		headers:{
     			"X-CSRFToken": '{{ csrf_token }}',
     		},
-    		data: {'access_id': {{ access.id }}},
+    		data: {'access_id': "{{ access.id }}"},
     		success: function(data)
     		{
     			$("#test_msg").html("Access disconnected");
@@ -74,7 +74,7 @@
     		headers:{
     			"X-CSRFToken": '{{ csrf_token }}',
     		},
-    		data: {'access_id': {{ access.id }}},
+    		data: {'access_id': "{{ access.id }}"},
     		success: function(data)
     		{
     			if(data.search("Connected") != -1) {

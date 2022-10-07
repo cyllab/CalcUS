@@ -306,7 +306,7 @@ class ClusterDaemon:
         cmd = lines[0].strip()
 
         if cmd == "connect":
-            access_id = int(lines[1])
+            access_id = lines[1]
             password = lines[2]
             r = self.connect(access_id, password)
             if r in [1, 2, 3, 4, 5]:
@@ -316,14 +316,14 @@ class ClusterDaemon:
             else:
                 logger.info(f"Connection successful ({access_id})")
         elif cmd == "disconnect":
-            access_id = int(lines[1])
+            access_id = lines[1]
             self.disconnect(access_id)
         elif cmd == "delete_access":
-            access_id = int(lines[1])
+            access_id = lines[1]
             logger.info(f"Deleting connection {access_id}")
             self.delete_access(access_id)
         else:
-            calc_id = int(lines[1].strip())
+            calc_id = lines[1].strip()
 
             try:
                 calc = Calculation.objects.get(pk=calc_id)

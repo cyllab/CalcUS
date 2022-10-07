@@ -739,10 +739,10 @@ def xtb_opt(in_file, calc):
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
-        xyz_structure=xyz_structure,
         number=calc.structure.number,
     )[0]
     s.degeneracy = 1
+    s.xyz_structure = xyz_structure
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
     prop.geom = True
@@ -863,10 +863,10 @@ def xtb_ts(in_file, calc):
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
-        xyz_structure=clean_xyz("".join(lines)),
         number=calc.structure.number,
     )[0]
     s.degeneracy = calc.structure.degeneracy
+    s.xyz_structure = (clean_xyz("".join(lines)),)
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
     prop.geom = True
@@ -1329,10 +1329,10 @@ def orca_opt(in_file, calc):
     if len(lines) == 1:  # Single atom
         s = Structure.objects.get_or_create(
             parent_ensemble=calc.result_ensemble,
-            xyz_structure=calc.structure.xyz_structure,
             number=calc.structure.number,
         )[0]
         s.degeneracy = calc.structure.degeneracy
+        s.xyz_structure = calc.structure.xyz_structure
         s.save()
         calc.structure = s
         calc.step = BasicStep.objects.get(name="Single-Point Energy")
@@ -1368,10 +1368,10 @@ def orca_opt(in_file, calc):
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
-        xyz_structure=xyz_structure,
         number=calc.structure.number,
     )[0]
     s.degeneracy = calc.structure.degeneracy
+    s.xyz_structure = xyz_structure
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
     prop.geom = True
@@ -1441,9 +1441,9 @@ def orca_ts(in_file, calc):
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
-        xyz_structure=xyz_structure,
         number=calc.structure.number,
     )[0]
+    s.xyz_structure = xyz_structure
     s.degeneracy = calc.structure.degeneracy
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
@@ -2416,10 +2416,10 @@ def gaussian_opt(in_file, calc):
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
-        xyz_structure=xyz_structure,
         number=calc.structure.number,
     )[0]
     s.degeneracy = calc.structure.degeneracy
+    s.xyz_structure = xyz_structure
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
     prop.geom = True
@@ -2604,10 +2604,10 @@ def gaussian_ts(in_file, calc):
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
-        xyz_structure=xyz_structure,
         number=calc.structure.number,
     )[0]
     s.degeneracy = calc.structure.degeneracy
+    s.xyz_structure = xyz_structure
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
     prop.geom = True
@@ -2690,19 +2690,12 @@ def gaussian_scan(in_file, calc):
 
             E = float(lines[ind2].split()[4])
 
-            try:
-                s = Structure.objects.get(
-                    parent_ensemble=calc.result_ensemble, number=s_ind
-                )
-            except:
-                s = Structure.objects.get_or_create(
-                    parent_ensemble=calc.result_ensemble,
-                    xyz_structure=xyz_structure,
-                    number=s_ind,
-                )[0]
-            else:
-                s.xyz_structure = xyz_structure
+            s = Structure.objects.get_or_create(
+                parent_ensemble=calc.result_ensemble,
+                number=s_ind,
+            )[0]
 
+            s.xyz_structure = xyz_structure
             s.degeneracy = 1
 
             prop = get_or_create(calc.parameters, s)
@@ -2747,10 +2740,10 @@ def gaussian_scan(in_file, calc):
 
         s = Structure.objects.get_or_create(
             parent_ensemble=calc.result_ensemble,
-            xyz_structure=xyz_structure,
             number=calc.structure.number,
         )[0]
         s.degeneracy = calc.structure.degeneracy
+        s.xyz_structure = xyz_structure
         prop = get_or_create(calc.parameters, s)
         prop.energy = E
         prop.geom = True
@@ -3305,9 +3298,9 @@ def dispatcher(order_id):
             )
             structure = Structure.objects.get_or_create(
                 parent_ensemble=ensemble,
-                xyz_structure=order.structure.xyz_structure,
                 number=1,
             )[0]
+            structure.xyz_structure = order.structure.xyz_structure
             order.structure = structure
             molecule.save()
             ensemble.save()
@@ -3357,10 +3350,10 @@ def dispatcher(order_id):
                 for s in order.ensemble.structure_set.all():
                     _s = Structure.objects.get_or_create(
                         parent_ensemble=ensemble,
-                        xyz_structure=s.xyz_structure,
                         number=s.number,
                     )[0]
                     _s.degeneracy = s.degeneracy
+                    _s.xyz_structure = s.xyz_structure
                     _s.save()
                 order.ensemble = ensemble
                 order.save()
@@ -3381,10 +3374,10 @@ def dispatcher(order_id):
         f = calc.calculationframe_set.get(number=fid)
         s = Structure.objects.get_or_create(
             parent_ensemble=ensemble,
-            xyz_structure=f.xyz_structure,
             number=order.start_calc.structure.number,
         )[0]
         s.degeneracy = 1
+        s.xyz_structure = f.xyz_structure
         prop = Property.objects.create(
             parent_structure=s, parameters=calc.parameters, geom=True
         )

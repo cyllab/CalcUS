@@ -2333,7 +2333,7 @@ def add_clusteraccess(request):
 
         with open(os.path.join(CALCUS_KEY_HOME, str(access.id) + ".pub"), "wb") as out:
             out.write(public_key)
-            out.write(b" %b@CalcUS" % bytes(owner.username, "utf-8"))
+            out.write(b" %b@CalcUS" % bytes(owner.name, "utf-8"))
 
         return HttpResponse(public_key.decode("utf-8"))
     else:
