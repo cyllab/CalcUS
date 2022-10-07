@@ -4647,20 +4647,9 @@ def change_password(request):
     return render(request, "frontend/change_password.html", {"form": form})
 
 
-"""
 def handler404(request, *args, **argv):
-    return render(request, 'error/404.html', {
-            })
+    return render(request, "error/404.html", {})
 
-def handler403(request, *args, **argv):
-    return render(request, 'error/403.html', {
-            })
-
-def handler400(request, *args, **argv):
-    return render(request, 'error/400.html', {
-            })
 
 def handler500(request, *args, **argv):
-    return render(request, 'error/500.html', {
-            })
-"""
+    return render(request, "error/500.html", {})

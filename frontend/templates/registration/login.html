@@ -1,12 +1,15 @@
-{% extends "frontend/base.html" %} {% load i18n bulma_tags %} {% block content %}
+{% extends "frontend/base.html" %}
+{% load i18n bulma_tags %}
+{% block content %}
 <div class="container">
-    {% if form.errors %}
-    <p>Your username and password didn't match. Please try again.</p>
-    {% endif %} {% if next %}
-    <p>Please login to see this page.</p>
-    {% endif %}
     <div class="columns is-centered is-expanded">
         <div class="column is-centered">
+            {% if form.errors %}
+            <p><b>Your email and password didn't match. Please try again.</b></p>
+            {% endif %} 
+            {% if next %}
+            <p><b>Please login to see this page.</b></p>
+            {% endif %}
             <section class="section">
                 <div class="field has-addons has-addons-centered">
                     <div class="box has-text-centered">
