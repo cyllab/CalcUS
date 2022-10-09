@@ -219,7 +219,7 @@ if IS_CLOUD:
     ALLOW_LOCAL_CALC = True
     ALLOW_REMOTE_CALC = False
 
-    LOCAL_MAX_ATOMS = 20
+    LOCAL_MAX_ATOMS = 2000
 
     LOCAL_ALLOWED_THEORY_LEVELS = [
         "xtb",
@@ -250,7 +250,7 @@ else:
     ALLOW_REMOTE_CALC = True
 
     # For local calculations, limit the size of systems to this number of atoms or disable the limitation with -1
-    LOCAL_MAX_ATOMS = -1
+    LOCAL_MAX_ATOMS = 2000
 
     # For local calculations, only allow these theory levels to be used (using the ccinput theory levels)
     LOCAL_ALLOWED_THEORY_LEVELS = [

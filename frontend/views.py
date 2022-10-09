@@ -486,7 +486,7 @@ def submit_flowchart(request):
     flowchart_order_obj = flowchart_obj.flowchartorder_set.all()
     drawing = None
     for i in range(flowchart_obj.step_set.all().count()-1):
-        dispatcher.delay(drawing, flowchart_order_obj[0].id, is_flowchart=True, flowchartStepObjectId=flowchart_obj.step_set.all()[i+1].id)
+        dispatcher.delay(flowchart_order_obj[0].id, drawing, is_flowchart=True, flowchartStepObjectId=flowchart_obj.step_set.all()[i+1].id)
     return HttpResponse(status=200)
 
 @login_required

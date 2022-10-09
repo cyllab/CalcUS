@@ -1079,6 +1079,7 @@ class Calculation(models.Model):
     step = models.ForeignKey(BasicStep, on_delete=models.SET_NULL, null=True)
     order = models.ForeignKey(CalculationOrder, on_delete=models.CASCADE, blank=True, null=True)
     flowchart_order = models.ForeignKey(FlowchartOrder, on_delete=models.CASCADE, blank=True, null=True)
+    flowchart_step = models.ForeignKey(Step, on_delete=models.CASCADE, blank=True, null=True)
 
     parameters = models.ForeignKey(Parameters, on_delete=models.SET_NULL, null=True)
     result_ensemble = models.ForeignKey(

@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 from __future__ import absolute_import, unicode_literals
+# from asyncio.windows_events import NULL
 
 from calcus.celery import app
 import string
@@ -3239,15 +3240,24 @@ def dispatcher_flowchart():
 
 
 @app.task(base=AbortableTask)
-def dispatcher(drawing, order_id, is_flowchart=False, flowchartStepObjectId = None):
+def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId = None):
     stepFlowchart = None
+    should_create_ensemble = True
     if(is_flowchart):
         order = FlowchartOrder.objects.get(pk=order_id)
         flowchartStepObject = Step.objects.get(pk = flowchartStepObjectId)
+        if flowchartStepObject.parentId.step is not None:
+            if flowchartStepObject.parentId.step.creates_ensemble is True:
+                if len(flowchartStepObject.calculation_set.all()) != 0:
+                    step_ensemble = flowchartStepObject.calculation_set.all()[0].result_ensemble
+                    should_create_ensemble = False
         stepFlowchart = flowchartStepObject.step
     else:
         order = CalculationOrder.objects.get(pk=order_id)
-    ensemble = order.ensemble
+    if should_create_ensemble is True:
+        ensemble = order.ensemble
+    else :
+        ensemble = step_ensemble
 
     local = True
     if is_flowchart is not True:
@@ -3271,9 +3281,12 @@ def dispatcher(drawing, order_id, is_flowchart=False, flowchartStepObjectId = No
             molecule = Molecule.objects.create(
                 name=molecule.name, inchi=molecule.inchi, project=order.project
             )
-            ensemble = Ensemble.objects.create(
-                name=order.structure.parent_ensemble.name, parent_molecule=molecule
-            )
+            if is_flowchart is True and should_create_ensemble is False:
+                ensemble = step_ensemble
+            else:
+                ensemble = Ensemble.objects.create(
+                    name=order.structure.parent_ensemble.name, parent_molecule=molecule
+                )
             structure = Structure.objects.get_or_create(
                 parent_ensemble=ensemble,
                 xyz_structure=order.structure.xyz_structure,
@@ -3281,7 +3294,8 @@ def dispatcher(drawing, order_id, is_flowchart=False, flowchartStepObjectId = No
             )[0]
             order.structure = structure
             molecule.save()
-            ensemble.save()
+            if should_create_ensemble is True:
+                ensemble.save()
             structure.save()
             order.save()
             input_structures = [structure]
@@ -3322,9 +3336,12 @@ def dispatcher(drawing, order_id, is_flowchart=False, flowchartStepObjectId = No
                     inchi=ensemble.parent_molecule.inchi,
                     project=order.project,
                 )
-                ensemble = Ensemble.objects.create(
-                    name=ensemble.name, parent_molecule=molecule
-                )
+                if is_flowchart is True and should_create_ensemble is False:
+                    ensemble = step_ensemble
+                else:
+                    ensemble = Ensemble.objects.create(
+                        name=ensemble.name, parent_molecule=molecule
+                    )
                 for s in order.ensemble.structure_set.all():
                     _s = Structure.objects.get_or_create(
                         parent_ensemble=ensemble,
@@ -3335,7 +3352,8 @@ def dispatcher(drawing, order_id, is_flowchart=False, flowchartStepObjectId = No
                     _s.save()
                 order.ensemble = ensemble
                 order.save()
-                ensemble.save()
+                if should_create_ensemble is True:
+                    ensemble.save()
                 molecule.save()
                 input_structures = ensemble.structure_set.all()
     elif order.start_calc != None:
@@ -3344,11 +3362,14 @@ def dispatcher(drawing, order_id, is_flowchart=False, flowchartStepObjectId = No
         mode = "c"
 
         molecule = calc.result_ensemble.parent_molecule
-        ensemble = Ensemble.objects.create(
-            parent_molecule=molecule,
-            origin=calc.result_ensemble,
-            name=f"Extracted frame {fid}",
-        )
+        if is_flowchart is True and should_create_ensemble is False:
+            ensemble = step_ensemble
+        else:
+            ensemble = Ensemble.objects.create(
+                parent_molecule=molecule,
+                origin=calc.result_ensemble,
+                name=f"Extracted frame {fid}",
+            )
         f = calc.calculationframe_set.get(number=fid)
         s = Structure.objects.get_or_create(
             parent_ensemble=ensemble,
@@ -3360,7 +3381,8 @@ def dispatcher(drawing, order_id, is_flowchart=False, flowchartStepObjectId = No
             parent_structure=s, parameters=calc.parameters, geom=True
         )
         prop.save()
-        ensemble.save()
+        if should_create_ensemble is True:
+            ensemble.save()
         s.save()
         input_structures = [s]
     else:
@@ -3406,6 +3428,7 @@ def dispatcher(drawing, order_id, is_flowchart=False, flowchartStepObjectId = No
                     step=step,
                     parameters=flowchartStepObject.parameters,
                     result_ensemble=e,
+                    flowchart_step=flowchartStepObject,
                 )
             c.save()
             if local:
@@ -3443,6 +3466,7 @@ def dispatcher(drawing, order_id, is_flowchart=False, flowchartStepObjectId = No
                     date_submitted=timezone.now(),
                     parameters=flowchartStepObject.parameters,
                     step=step,
+                    flowchart_step = flowchartStepObject,
                 )
             c.save()
             if local:
