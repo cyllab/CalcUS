@@ -48,7 +48,7 @@ else:
         CALCUS_KEY_HOME = os.getenv("CALCUS_KEY_HOME", "")
 
 try:
-    PAL = os.environ["OMP_NUM_THREADS"][0]
+    PAL = os.environ["NUM_CPU"]
 except KeyError:
     PAL = 1
 

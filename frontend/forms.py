@@ -19,13 +19,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 
+from django.conf import settings
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.contrib.auth.forms import AuthenticationForm, UsernameField
 
-from captcha.fields import ReCaptchaField
+if settings.IS_CLOUD:
+    from captcha.fields import ReCaptchaField
 
 from frontend.models import User, ClassGroup
 from frontend.helpers import get_random_string
@@ -43,7 +45,8 @@ class ResearcherCreateForm(UserCreationForm):
         error_messages={"exists": "This email has already been used"},
     )
 
-    captcha = ReCaptchaField()
+    if settings.IS_CLOUD:
+        captcha = ReCaptchaField()
 
     class Meta:
         model = User
@@ -70,7 +73,8 @@ class StudentCreateForm(forms.ModelForm):
         label="Access code",
     )
 
-    captcha = ReCaptchaField()
+    if settings.IS_CLOUD:
+        captcha = ReCaptchaField()
 
     class Meta:
         model = User
@@ -126,4 +130,5 @@ class UserLoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super(UserLoginForm, self).__init__(*args, **kwargs)
 
-    captcha = ReCaptchaField()
+    if settings.IS_CLOUD:
+        captcha = ReCaptchaField()

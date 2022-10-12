@@ -2976,21 +2976,20 @@ def analyse_opt_ORCA(calc):
             RMSDs.append(rms)
             ind += 1
 
-    with open(os.path.join(prepath, "calc_trj.xyz")) as f:
-        lines = f.readlines()
-
-    num = int(lines[0])
-    nstructs = int(len(lines) / (num + 2))
-
+    structs, energies = parse_multixyz_from_file(os.path.join(prepath, "calc_trj.xyz"))
     new_frames = []
-    for i in range(1, nstructs):
-        xyz = "".join(lines[(num + 2) * i : (num + 2) * (i + 1)])
+
+    for ind, (s, E) in enumerate(zip(structs, energies)):
+        xyz = npxyz2strxyz(s)
         try:
-            f = calc.calculationframe_set.get(number=i)
+            f = calc.calculationframe_set.get(number=ind + 1)
         except CalculationFrame.DoesNotExist:
             new_frames.append(
                 CalculationFrame(
-                    number=i, xyz_structure=xyz, parent_calculation=calc, RMSD=RMSDs[i]
+                    number=ind + 1,
+                    xyz_structure=xyz,
+                    parent_calculation=calc,
+                    RMSD=RMSDs[ind],
                 )
             )
         else:

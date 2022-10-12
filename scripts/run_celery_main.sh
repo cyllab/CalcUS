@@ -1,7 +1,7 @@
 #!/bin/sh
 sleep 5
 
-if [ $CALCUS_CLOUD != "" ]
+if [[ -z $CALCUS_CLOUD ]];
 then
     echo "Cloud mode detected, no celery worker needed"
 else

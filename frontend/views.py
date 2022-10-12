@@ -1705,12 +1705,12 @@ def _submit_calculation(request, verify=False):
                         else:
                             unique_molecules[_mol_name] = [struct]
 
-                    for _mol_name, arr_structs in unique_molecules.items():
+                    for mol_name, arr_structs in unique_molecules.items():
                         used_numbers = []
                         # fing = gen_fingerprint(arr_structs[0])
                         fing = ""
                         mol = Molecule.objects.create(
-                            name=_mol_name, inchi=fing, project=project_obj
+                            name=mol_name, inchi=fing, project=project_obj
                         )
                         mol.save()
 
@@ -2856,7 +2856,9 @@ def format_frames(calc, user):
         scan_min = min(scan_energies)
         for n, E in zip(scan_frames, scan_energies):
             scan_energy += f"{n},{(E - scan_min) * user.unit_conversion_factor}\n"
-    return HttpResponse(multi_xyz + ";" + RMSD + ";" + scan_energy)
+        return HttpResponse(multi_xyz + ";" + RMSD + ";" + scan_energy)
+    else:
+        return HttpResponse(status=204)
 
 
 @login_required
@@ -4439,7 +4441,7 @@ def relaunch_calc(request):
     calc.save()
 
     if calc.local:
-        t = run_calc.s(calc.id).set(queue="comp")
+        t = run_calc.s(str(calc.id)).set(queue="comp")
         res = t.apply_async()
         calc.task_id = res
         calc.save()
