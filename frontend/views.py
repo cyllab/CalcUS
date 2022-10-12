@@ -2852,10 +2852,11 @@ def format_frames(calc, user):
             scan_frames.append(f["number"])
             scan_energies.append(f["energy"])
 
-    if len(scan_frames) > 0:
-        scan_min = min(scan_energies)
-        for n, E in zip(scan_frames, scan_energies):
-            scan_energy += f"{n},{(E - scan_min) * user.unit_conversion_factor}\n"
+    if len(multi_xyz) > 0:
+        if len(scan_energies) > 0:
+            scan_min = min(scan_energies)
+            for n, E in zip(scan_frames, scan_energies):
+                scan_energy += f"{n},{(E - scan_min) * user.unit_conversion_factor}\n"
         return HttpResponse(multi_xyz + ";" + RMSD + ";" + scan_energy)
     else:
         return HttpResponse(status=204)
