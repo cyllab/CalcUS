@@ -14,6 +14,20 @@
     .close_btn:hover {
         color: darkgray;
     }
+    #parameters_column {
+        max-width: 50em;
+        margin: 0 auto;
+    }
+    #main_columns {
+        max-width: calc(60em + 400px);
+        margin: 0 auto;
+    }
+    @media screen and (max-width: 1407px) {
+        #main_columns {
+            display: block;
+        }
+
+    }
     @-webkit-keyframes animatetop {
         from {
             top: -300px;
@@ -34,6 +48,23 @@
             opacity: 1;
         }
     }
+
+    @media screen and (min-width: 1408px) {
+        #content_container {
+            width: 80%;
+            margin-left: 10%;
+        }
+    }
+    #pick_bs_button {
+        margin-top: 1em;
+    }
+    .solv_select {
+        min-width: 8em;
+    }
+    .wide_select, #calc_software, #calc_type, #calc_theory_level {
+        width: 100%;
+    }
+
 </style>
 
 <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
@@ -43,8 +74,8 @@
 
 {% include 'frontend/calc_form_head.html' %} {% endblock %} {% block content %} {% csrf_token %}
 
-<div class="columns is-desktop">
-    <div class="column">
+<div class="columns" id="main_columns">
+    <div class="column is-narrow has-text-centered">
         {% if not ensemble and not structure and not calc %}
         <script>
             let sketcher = new ChemDoodle.SketcherCanvas("sketcher", 400, 300, {

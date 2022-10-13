@@ -20,6 +20,9 @@
         text-decoration: underline;
         color: black;
     }
+    button.is-danger {
+        margin-top: 3em;
+    }
 </style>
 <script>
     function calc_action(id, action) {
@@ -108,9 +111,9 @@
                 </tbody>
             </table>
             <a class="button is-primary" href="/download_all_logs/{{ order.id }}">Download all logs</a>
+            <button class="button is-danger" id="delete_order_button" onclick="delete_order()">Delete this calculation order</button>
         </center>
     </div>
-    <button class="button is-danger" id="delete_order_button" onclick="delete_order()">Delete this calculation order</button>
 </div>
 <br />
 {% endblock %}

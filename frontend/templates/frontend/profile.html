@@ -32,6 +32,24 @@
 			});
 		}
 
+	    function update_name() {
+			$.ajax({
+				type: 'POST',
+				url: "/update_name/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+                data: {"name": $("#full_name").val()}, 
+				success: function(response) { 
+					$("#full_name_msg").html(response);	
+				},
+				error: function(response) { 
+					$("#full_name_msg").html(response);	
+				},
+
+			});
+		}
+
 		function add_user(group_id) {
 			let user_id = $("#user_to_add").val();
 			$.ajax({
@@ -167,12 +185,17 @@
 
 	</script>
 	<style>
-    #change_password_button {
+    #full_name_msg {
+        margin-top: 0.5em;
+        margin-bottom: 1em;
+        font-weight: bold;
+    }
+    #update_name_button, #change_password_button {
         margin-top: 1em;
         margin-bottom: 1em;
     }
 	#pref_center {
-		max-width: 400px;
+		max-width: 25em;
 		margin: 10px auto;
 	}
     #research_group_div, #classes_div {
@@ -190,13 +213,14 @@
         margin-top: 2em;
     }
     .box {
-        max-width: 45em;
+        max-width: 55em;
         margin-left: auto;
         margin-right: auto;
     }
 
     input {
-        max-width: 20em !important;
+        max-width: 25em !important;
+        text-align: center;
     }
     .title.is-4 {
         margin-top: 3em;
@@ -219,6 +243,9 @@
     }
     #allocation_div, #redeem_allocation_div {
         margin-bottom: 3em;
+    }
+    .field {
+        margin-top: 1em;
     }
 	</style>
 {% endblock %}
@@ -272,7 +299,7 @@
 	{% if not IS_CLOUD %}
 	<div class="box">
 		<div class="columns">
-			<div class="column is-narrow has-text-centered">
+			<div class="column has-text-centered" id="add_cluster_column">
 				<h5 class="title is-5">Add new cluster access</h5>
 				<form class="form" id="add_clusteraccess_form" method="post">
 					{% csrf_token %}
@@ -350,6 +377,7 @@
 	<div class="box">
 		<center>
 			<h5 class="title is-5">Account</h5>
+            {% if IS_CLOUD %}
             <div id="allocation_div">
             </div>
             <div id="redeem_allocation_div">
@@ -364,18 +392,28 @@
                 </div>
                 <span class="ajax_msg" id="redeem_allocation_msg"></span>
             </div>
+            {% endif %}
             {% if request.user.is_temporary %}
             <p>You are logged in as temporary user <b>{{ request.user.email }}</b>.</p>
             {% else %}
             <p>You are logged in as <b>{{ request.user.email }}</b>.</p>
             {% endif %}
-		</center>
 
-        <div class="field">
-            <div class="control has-text-centered">
-                <a class="button is-danger" id="change_password_button" href="/change_password/">Change password</a>
+            <div class="field">
+                <label class="label">Full name</label>
+                <div class="control">
+                    <input type="text" class="input" id="full_name" value="{{ request.user.full_name }}">
+                </div>
+                <button class="button is-primary" onclick="update_name()" id="update_name_button">Update</button>
+                <div id="full_name_msg"></div>
             </div>
-        </div>
+
+            <div class="field">
+                <div class="control">
+                    <a class="button is-danger" id="change_password_button" href="/change_password/">Change password</a>
+                </div>
+            </div>
+		</center>
 	</div>
 
 	<script>

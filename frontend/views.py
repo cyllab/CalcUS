@@ -3149,6 +3149,22 @@ def gen_3D(request):
 
 
 @login_required
+def update_name(request):
+    if request.method == "POST":
+        name = clean(request.POST["name"])
+        if len(name) == 0:
+            return HttpResponse("No name given", status=400)
+        elif len(name) < 3:
+            return HttpResponse("The name entered is unreasonably short", status=400)
+        elif len(name) > 255:
+            return HttpResponse("The name entered is unreasonably long", status=400)
+
+        request.user.full_name = name
+        request.user.save()
+        return HttpResponse("Name updated")
+
+
+@login_required
 def rename_molecule(request):
     if request.method == "POST":
         id = clean(request.POST["id"])

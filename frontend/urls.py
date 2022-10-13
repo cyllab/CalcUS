@@ -84,6 +84,7 @@ urlpatterns = [
     path("register/", views.register, name="register"),
     path("profile/", views.profile, name="profile"),
     path("accounts/login", views.login, name="login"),
+    path("update_name/", views.update_name, name="update_name"),
     path("rename_project/", views.rename_project, name="rename_project"),
     path("rename_molecule/", views.rename_molecule, name="rename_molecule"),
     path("rename_ensemble/", views.rename_ensemble, name="rename_ensemble"),
