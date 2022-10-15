@@ -63,6 +63,7 @@ services:
                         - COMPUTE_HOST_URL=http://cloud-compute:8001
                         - CALCUS_SCR_HOME=/calcus/scr
                         - CALCUS_TEST_SCR_HOME=/calcus/scr
+                        - GUNICORN_TIMEOUT=15
         slurm:
                 build:
                         context: ./docker/slurm

@@ -1601,8 +1601,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def setup_test_group(self):
         g = ResearchGroup.objects.create(name="Test group", PI=self.user)
-        self.user.is_PI = True
-        self.user.save()
 
         self.student = User.objects.create_user(
             email="Student@test.com", password=self.password, member_of=g

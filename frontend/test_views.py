@@ -113,7 +113,6 @@ class LaunchTests(TestCase):
         self.user = User.objects.create_superuser(
             email=self.email,
             password=self.password,
-            is_PI=True,
         )
         self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
         self.client = Client()
@@ -341,7 +340,6 @@ class RestrictionTests(TestCase):
         self.user = User.objects.create_superuser(
             email=self.email,
             password=self.password,
-            is_PI=True,
         )
         self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
         self.client = Client()
@@ -444,16 +442,14 @@ class PermissionTestsStudent(TestCase):
         self.email = "Tester@test.com"
         self.password = "test1234"
 
-        self.user = User.objects.create_superuser(
+        self.user = User.objects.create_user(
             email=self.email,
             password=self.password,
         )
 
-        self.client = Client()
-        self.client.force_login(self.user)
-
         self.PI = User.objects.create_user(
-            email="PI@test.com", password=self.password, is_PI=True
+            email="PI@test.com",
+            password=self.password,
         )
         self.group = ResearchGroup.objects.create(name="Test group", PI=self.PI)
 
@@ -560,7 +556,6 @@ class PermissionTestsPI(TestCase):
         self.user = User.objects.create_superuser(
             email=self.email,
             password=self.password,
-            is_PI=True,
         )
         self.client = Client()
         self.client.force_login(self.user)
@@ -734,7 +729,6 @@ class AnalysisTests(TestCase):
         self.user = User.objects.create_superuser(
             email=self.email,
             password=self.password,
-            is_PI=True,
         )
         self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
         self.client = Client()
@@ -1174,7 +1168,6 @@ class CalculationTests(TestCase):
         self.user = User.objects.create_superuser(
             email=self.email,
             password=self.password,
-            is_PI=True,
         )
         self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
         self.client = Client()
@@ -1316,7 +1309,6 @@ class MiscTests(TestCase):
         self.user = User.objects.create_superuser(
             email=self.email,
             password=self.password,
-            is_PI=True,
         )
         self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
         self.client = Client()

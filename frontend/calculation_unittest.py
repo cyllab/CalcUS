@@ -36,7 +36,8 @@ class CalculationUnitTest(TestCase):
         self.password = "test1234"
 
         self.user = User.objects.create_user(
-            email=self.email, password=self.password, is_PI=True
+            email=self.email,
+            password=self.password,
         )
 
         self.name_patcher = mock.patch.dict(os.environ, {"TEST_NAME": self.id()})

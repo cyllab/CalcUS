@@ -466,6 +466,7 @@ def project_details(request, user_id, proj):
             project = target_user.project_set.get(name=target_project)
         except Project.DoesNotExist:
             return HttpResponseRedirect("/home/")
+
         if can_view_project(project, request.user):
             molecules = []
             for m in (
@@ -2057,7 +2058,7 @@ def can_view_project(proj, user):
     else:
         if not user_intersection(proj.author, user):
             return False
-        if proj.private and not (user.is_PI or user.professor_of):
+        if proj.private and not (user.is_PI or user.professor_of.count()):
             return False
         return True
 
