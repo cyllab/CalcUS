@@ -93,6 +93,7 @@ from .tasks import (
     generate_xyz_structure,
     gen_fingerprint,
     send_gcloud_task,
+    load_output_files,
 )
 from frontend import tasks
 from .decorators import superuser_required
@@ -2884,16 +2885,15 @@ def get_calc_data_remote(request, pk):
 
         send_cluster_command(f"load_log\n{calc.id}\n{calc.order.resource.id}\n")
 
-        ind = 0
-        while (
-            not os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"))
-            and ind < 60
-        ):
+        for i in range(10):
+            if os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")):
+                break
             time.sleep(1)
-            ind += 1
 
         if not os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")):
             return HttpResponse(status=404)
+
+        load_output_files(calc)
     else:
         logger.error("Not implemented")
         return HttpResponse(status=403)

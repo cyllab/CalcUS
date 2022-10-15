@@ -3532,6 +3532,20 @@ def add_input_to_calc(calc):
     calc.parameters.save()
 
 
+def load_output_files(calc):
+    output_files = {}
+    for log_name in glob.glob(
+        os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.log")
+    ) + glob.glob(os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.out")):
+        fname = os.path.basename(log_name)[:-4]
+        with open(log_name) as f:
+            log = "".join(f.readlines())
+        output_files[fname] = log
+
+    calc.output_files = json.dumps(output_files)
+    calc.save()
+
+
 @app.task(base=AbortableTask)
 def run_calc(calc_id):
     if not is_test:
@@ -3648,17 +3662,7 @@ def run_calc(calc_id):
     if calc.step.creates_ensemble:
         analyse_opt(calc.id)
 
-    output_files = {}
-    for log_name in glob.glob(
-        os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.log")
-    ) + glob.glob(os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.out")):
-        fname = os.path.basename(log_name)[:-4]
-        with open(log_name) as f:
-            log = "".join(f.readlines())
-        output_files[fname] = log
-
-    calc.output_files = json.dumps(output_files)
-    calc.save()
+    load_output_files(calc)
 
     global cache_ind
 

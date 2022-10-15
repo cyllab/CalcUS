@@ -1,15 +1,21 @@
-{% extends 'frontend/base.html' %} {% load i18n %} {% load static %} {% load details_tags %} {% block extrahead %}
+{% extends 'frontend/base.html' %}
+{% load i18n %} 
+{% load static %} 
+{% load details_tags %} 
+
+{% block extrahead %}
 <link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
 <script src="{% static 'frontend/jquery.min.js' %}"></script>
 
 <link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css" />
+
 <title>CalcUS - Calculation</title>
 <script src="{% static 'frontend/dygraph.min.js' %}"></script>
 <script src="{% static 'frontend/synchronizer.js' %}"></script>
 <script src="{% static 'frontend/3Dmol-min.js' %}"></script>
 <script>
     function get_opt_structs(url) {
-    	label = document.getElementById("throttle_label");
+    	label = document.getElementById("load_msg");
     	label.style.display = "none";
     	$.ajax({
     		method: "POST",
@@ -21,11 +27,17 @@
     			ring = document.getElementById("lds-ring");
     			ring.style.display = "none";
 
-    			if (data.includes("You do not have the permission to access this page")) {
-    				label = document.getElementById("throttle_label");
+                if(typeof data == "undefined") {
     				label.style.display = "block";
+                    label.innerHTML = "No data";
+                    return;
+                }
+    			else if (data.includes("You do not have the permission to access this page")) {
+    				label.style.display = "block";
+                    label.innerHTML = "Request throttled; try again in one minute";
     				return;
     			}
+
     			{% if calc.step.creates_ensemble %}
     			sp = data.split(";");
     			xyz = sp[0];
@@ -180,6 +192,9 @@
     #buttons_center {
         margin: 20px;
     }
+    #load_msg {
+        margin-top: 2em;
+    }
     .lds-ring {
         display: inline-block;
         position: relative;
@@ -273,7 +288,7 @@
     <div id="load_remote_div" style="display: none">
         <center>
             <button class="button is-info" id="load_remote_log_button" onclick="load_remote_log();">Load remote log</button>
-            <label class="label" style="display: none; color: red" id="throttle_label">Request throttled; try again in one minute</label>
+            <label class="label" style="display: none; color: red" id="load_msg"></label>
         </center>
     </div>
     <div id="access_not_connected_div" style="display: none">
