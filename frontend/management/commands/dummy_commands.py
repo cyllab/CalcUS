@@ -1,4 +1,12 @@
-from frontend.models import Step, Flowchart, Parameters, FlowchartOrder, Calculation, CalculationOrder
+from frontend.models import (
+    Step,
+    Flowchart,
+    Parameters,
+    FlowchartOrder,
+    Calculation,
+    CalculationOrder,
+)
+
 allObjects = Calculation.objects.all()
 print(allObjects)
 Calculation.objects.all().delete()
@@ -42,4 +50,3 @@ Calculation.objects.all().delete()
 #     print(allObjects[i].structure)
 #     print(allObjects[i].author)
 #     print(allObjects[i].project)
-

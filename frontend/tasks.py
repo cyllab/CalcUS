@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 from __future__ import absolute_import, unicode_literals
+
 # from asyncio.windows_events import NULL
 
 import string
@@ -3278,23 +3279,25 @@ def dispatcher_flowchart():
 
 
 @app.task(base=AbortableTask)
-def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId = None):
+def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId=None):
     stepFlowchart = None
     should_create_ensemble = True
-    if(is_flowchart):
+    if is_flowchart:
         order = FlowchartOrder.objects.get(pk=order_id)
-        flowchartStepObject = Step.objects.get(pk = flowchartStepObjectId)
+        flowchartStepObject = Step.objects.get(pk=flowchartStepObjectId)
         if flowchartStepObject.parentId.step is not None:
             if flowchartStepObject.parentId.step.creates_ensemble is True:
                 if len(flowchartStepObject.calculation_set.all()) != 0:
-                    step_ensemble = flowchartStepObject.calculation_set.all()[0].result_ensemble
+                    step_ensemble = flowchartStepObject.calculation_set.all()[
+                        0
+                    ].result_ensemble
                     should_create_ensemble = False
         stepFlowchart = flowchartStepObject.step
     else:
         order = CalculationOrder.objects.get(pk=order_id)
     if should_create_ensemble is True:
         ensemble = order.ensemble
-    else :
+    else:
         ensemble = step_ensemble
 
     local = True
@@ -3445,7 +3448,7 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
 
         order.result_ensemble = e
         order.save()
-        
+
         for s in input_structures:
             if is_flowchart is not True:
                 c = Calculation.objects.create(
@@ -3505,7 +3508,7 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
                     date_submitted=timezone.now(),
                     parameters=flowchartStepObject.parameters,
                     step=step,
-                    flowchart_step = flowchartStepObject,
+                    flowchart_step=flowchartStepObject,
                 )
             c.save()
             if local:

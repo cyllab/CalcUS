@@ -418,6 +418,7 @@ def create_project(request):
     else:
         return HttpResponse(status=404)
 
+
 @login_required
 def create_flowchart(request):
     if request.method == "POST":
@@ -426,10 +427,12 @@ def create_flowchart(request):
             flowchart_name = clean(request.POST["flowchart_name"])
         if "flowchart_data" in request.POST.keys():
             flowchart_dat = clean(request.POST["flowchart_data"])
-        flowchart_view = Flowchart.objects.create(name=flowchart_name, author=profile, flowchart=flowchart_dat)
+        flowchart_view = Flowchart.objects.create(
+            name=flowchart_name, author=profile, flowchart=flowchart_dat
+        )
         flowchart_view.save()
         flowchart_order_id = request.POST["flowchart_order_id"]
-        if (flowchart_order_id !=""):
+        if flowchart_order_id != "":
             flowchart_order_id = (int)(request.POST["flowchart_order_id"])
             flowchart_order_obj = FlowchartOrder.objects.get(pk=flowchart_order_id)
             flowchart_order_obj.flowchart = flowchart_view
@@ -444,7 +447,9 @@ def create_flowchart(request):
                 para_dict = {}
                 for j in i:
                     para_dict[j["name"]] = j["value"]
-                ret = parse_parameters(request, para_dict, verify=False, is_flowchart=True)
+                ret = parse_parameters(
+                    request, para_dict, verify=False, is_flowchart=True
+                )
                 if isinstance(ret, str):
                     print("Error in Parameters")
                 else:
@@ -457,36 +462,57 @@ def create_flowchart(request):
         calc_parent_id = [int(x) for x in calc_parent_id]
         max_id = max(calc_id)
         parent_dict = {}
-        for i in range(max_id+1):
-            if(i in calc_id):
+        for i in range(max_id + 1):
+            if i in calc_id:
                 index = calc_id.index(i)
                 parent_id = calc_parent_id[index]
-                if(parent_id in parent_dict.keys()):
+                if parent_id in parent_dict.keys():
                     obj_parent = parent_dict.get(parent_id)
                     if index in flowchart_para_dict:
                         obj_para = flowchart_para_dict[index]
                         obj_para.save()
-                        obj_view = Step.objects.create(name=calc_name[index], flowchart=flowchart_view, step=flowchart_step_dict[index], parameters=obj_para, parentId=obj_parent)
+                        obj_view = Step.objects.create(
+                            name=calc_name[index],
+                            flowchart=flowchart_view,
+                            step=flowchart_step_dict[index],
+                            parameters=obj_para,
+                            parentId=obj_parent,
+                        )
                     else:
-                        obj_view = Step.objects.create(name=calc_name[index], flowchart=flowchart_view, step=None, parameters=None, parentId=obj_parent)
+                        obj_view = Step.objects.create(
+                            name=calc_name[index],
+                            flowchart=flowchart_view,
+                            step=None,
+                            parameters=None,
+                            parentId=obj_parent,
+                        )
                     obj_view.save()
-                    parent_dict[i]=obj_view
+                    parent_dict[i] = obj_view
                 else:
-                    obj_view = Step.objects.create(name=calc_name[index], flowchart=flowchart_view, parentId=None)
+                    obj_view = Step.objects.create(
+                        name=calc_name[index], flowchart=flowchart_view, parentId=None
+                    )
                     obj_view.save()
-                    parent_dict[i]=obj_view
+                    parent_dict[i] = obj_view
         return HttpResponse(status=200)
+
 
 @login_required
 def submit_flowchart(request):
-    keysList = list(request.POST)    
+    keysList = list(request.POST)
     flowchart_id = (int)(keysList[0])
     flowchart_obj = Flowchart.objects.get(pk=flowchart_id)
     flowchart_order_obj = flowchart_obj.flowchartorder_set.all()
     drawing = None
-    for i in range(flowchart_obj.step_set.all().count()-1):
-        dispatcher.delay(flowchart_order_obj[0].id, drawing, is_flowchart=True, flowchartStepObjectId=flowchart_obj.step_set.all()[i+1].id)
+    for i in range(flowchart_obj.step_set.all().count() - 1):
+        dispatcher.delay(
+            flowchart_order_obj[0].id,
+            drawing,
+            is_flowchart=True,
+            flowchartStepObjectId=flowchart_obj.step_set.all()[i + 1].id,
+        )
     return HttpResponse(status=200)
+
 
 @login_required
 def create_folder(request):
@@ -990,12 +1016,25 @@ def learn(request):
         request, "frontend/learn.html", {"examples": examples, "recipes": recipes}
     )
 
+
 def flowchart(request):
     flag = True
     flowchartsData = Flowchart.objects.all()
-    return render(request, "frontend/flowchart.html", {"is_flowchart": flag, "flowchartsData": flowchartsData, "procs":BasicStep.objects.all(), "stepsData": Step.objects.all(), 
-    "profile": request.user.profile, "allow_local_calc": settings.ALLOW_LOCAL_CALC, "packages": settings.PACKAGES,})
-    
+    return render(
+        request,
+        "frontend/flowchart.html",
+        {
+            "is_flowchart": flag,
+            "flowchartsData": flowchartsData,
+            "procs": BasicStep.objects.all(),
+            "stepsData": Step.objects.all(),
+            "profile": request.user.profile,
+            "allow_local_calc": settings.ALLOW_LOCAL_CALC,
+            "packages": settings.PACKAGES,
+        },
+    )
+
+
 def example(request, pk):
     try:
         ex = Example.objects.get(pk=pk)
@@ -1485,6 +1524,7 @@ def handle_file_upload(ff, params, is_local):
     s.save()
     return s, filename
 
+
 def handle_file_upload_flowchart(ff):
     s = Structure.objects.create()
     drawing = False
@@ -1511,6 +1551,7 @@ def handle_file_upload_flowchart(ff):
         return "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf, .com, .gjf)"
     s.save()
     return s, filename
+
 
 def process_filename(filename):
     if filename.find("_conf") != -1:
@@ -1556,9 +1597,9 @@ def submit_flowchart_input(request):
             return "Missing molecule name"
     num_files = 0
     if "calc_project" in request.POST.keys():
-            project = clean(request.POST["calc_project"])
-            if project.strip() == "":
-                return "No calculation project"
+        project = clean(request.POST["calc_project"])
+        if project.strip() == "":
+            return "No calculation project"
     else:
         return "No calculation project"
     if len(project) > 100:
@@ -1568,9 +1609,7 @@ def submit_flowchart_input(request):
         try:
             project_obj = Project.objects.get(name=new_project_name, author=profile)
         except Project.DoesNotExist:
-            project_obj = Project.objects.create(
-                name=new_project_name, author=profile
-            )
+            project_obj = Project.objects.create(name=new_project_name, author=profile)
         else:
             logger.info("Project with that name already exists")
     else:
@@ -1589,8 +1628,8 @@ def submit_flowchart_input(request):
         except ValueError:
             logger.warning("Got invalid number of files")
     if (
-            len(request.FILES) > 0
-        ):  # Can't really verify file uploads before actually processing the files
+        len(request.FILES) > 0
+    ):  # Can't really verify file uploads before actually processing the files
         files = request.FILES.getlist("file_structure")
         if len(files) > 1:
             if combine == "on" and parse_filenames != "on":
@@ -1649,9 +1688,7 @@ def submit_flowchart_input(request):
                     )
                     mol.save()
 
-                    e = Ensemble.objects.create(
-                        name="File Upload", parent_molecule=mol
-                    )
+                    e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
                     for struct in arr_structs:
                         if struct.number == 0:
                             num = 1
@@ -1733,9 +1770,7 @@ def submit_flowchart_input(request):
                         mol = Molecule.objects.create(
                             name=mol_name, inchi=fing, project=project_obj
                         )
-                    e = Ensemble.objects.create(
-                        name="File Upload", parent_molecule=mol
-                    )
+                    e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
 
                     for s_num, struct in enumerate(arr_struct):
                         struct.parent_ensemble = e
@@ -1758,9 +1793,7 @@ def submit_flowchart_input(request):
 
             num = 1
             if parse_filenames == "on":
-                _mol_name, num = process_filename(
-                    names[struct.id]
-                )  # Disable mol_name
+                _mol_name, num = process_filename(names[struct.id])  # Disable mol_name
             else:
                 _mol_name = mol_name
 
@@ -1788,12 +1821,8 @@ def submit_flowchart_input(request):
     else:  # No file upload
         if "structure" in request.POST.keys():
             drawing = True
-            mol_obj = Molecule.objects.create(
-                name=mol_name, project=project_obj
-            )
-            e = Ensemble.objects.create(
-                name="Drawn Structure", parent_molecule=mol_obj
-            )
+            mol_obj = Molecule.objects.create(name=mol_name, project=project_obj)
+            e = Ensemble.objects.create(name="Drawn Structure", parent_molecule=mol_obj)
             s = Structure.objects.create(parent_ensemble=e, number=1)
             mol = clean(request.POST["structure"])
             s.mol_structure = mol
@@ -4205,6 +4234,7 @@ def load_params(request, pk):
         },
     )
 
+
 @login_required
 def load_flowchart_params(request, pk):
     flowchartObj = Flowchart.objects.get(pk=pk)
@@ -4220,7 +4250,7 @@ def load_flowchart_params(request, pk):
             params["calc_basis_set"] = j.parameters.basis_set
             if j.parameters.method == "PBEh-3c":
                 params["pbeh3c"] = True
-            elif j.parameters.method =="HF-3c":
+            elif j.parameters.method == "HF-3c":
                 params["hf3c"] = True
             else:
                 params["calc_functional"] = j.parameters.method
@@ -4237,6 +4267,7 @@ def load_flowchart_params(request, pk):
             "params_dict": json.dumps(params_dict),
         },
     )
+
 
 class CsvParameters:
     def __init__(self):

@@ -311,6 +311,7 @@ class Flowchart(models.Model):
     def __repr__(self):
         return self.name
 
+
 class Project(models.Model):
     id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100)
@@ -910,13 +911,16 @@ class Step(models.Model):
     parameters = models.ForeignKey(
         Parameters, on_delete=models.SET_NULL, blank=True, null=True
     )
-    parentId = models.ForeignKey("Step", related_name="+", on_delete = models.CASCADE, blank=True, null=True)
+    parentId = models.ForeignKey(
+        "Step", related_name="+", on_delete=models.CASCADE, blank=True, null=True
+    )
 
     def __str__(self):
         return self.name
 
     def __repr__(self):
         return self.name
+
 
 def gen_params_md5(obj):
     values = [(k, v) for k, v in obj.__dict__.items() if k != "_state" and k != "id"]
@@ -943,6 +947,7 @@ class Molecule(models.Model):
     def count_vis(self):
         return len(self.ensemble_set.filter(hidden=False))
 
+
 class FlowchartOrder(models.Model):
     name = models.CharField(max_length=100)
     structure = models.ForeignKey(
@@ -952,7 +957,9 @@ class FlowchartOrder(models.Model):
     project = models.ForeignKey(
         "Project", on_delete=models.CASCADE, blank=True, null=True
     )
-    flowchart = models.ForeignKey(Flowchart, on_delete=models.CASCADE, default=None, null=True)
+    flowchart = models.ForeignKey(
+        Flowchart, on_delete=models.CASCADE, default=None, null=True
+    )
     ensemble = models.ForeignKey(
         Ensemble, on_delete=models.SET_NULL, blank=True, null=True
     )
@@ -1012,6 +1019,7 @@ class FlowchartOrder(models.Model):
             return True
         else:
             return False
+
 
 class CalculationOrder(models.Model):
     id = BigHashidAutoField(primary_key=True)
@@ -1258,9 +1266,15 @@ class Calculation(models.Model):
     )
 
     step = models.ForeignKey(BasicStep, on_delete=models.SET_NULL, null=True)
-    order = models.ForeignKey(CalculationOrder, on_delete=models.CASCADE, blank=True, null=True)
-    flowchart_order = models.ForeignKey(FlowchartOrder, on_delete=models.CASCADE, blank=True, null=True)
-    flowchart_step = models.ForeignKey(Step, on_delete=models.CASCADE, blank=True, null=True)
+    order = models.ForeignKey(
+        CalculationOrder, on_delete=models.CASCADE, blank=True, null=True
+    )
+    flowchart_order = models.ForeignKey(
+        FlowchartOrder, on_delete=models.CASCADE, blank=True, null=True
+    )
+    flowchart_step = models.ForeignKey(
+        Step, on_delete=models.CASCADE, blank=True, null=True
+    )
 
     parameters = models.ForeignKey(Parameters, on_delete=models.SET_NULL, null=True)
     result_ensemble = models.ForeignKey(
@@ -1297,20 +1311,20 @@ class Calculation(models.Model):
             print("Could not find molecule to update!")
 
     def save(self, *args, **kwargs):
-        if hasattr(self, 'flowchart_order') and self.flowchart_order is not None:
+        if hasattr(self, "flowchart_order") and self.flowchart_order is not None:
             old_status = self.flowchart_order.status
             old_unseen = self.flowchart_order.new_status
 
-        elif hasattr(self, 'order'):
+        elif hasattr(self, "order"):
             old_status = self.order.status
             old_unseen = self.order.new_status
-        
+
         super(Calculation, self).save(*args, **kwargs)
 
-        if hasattr(self, 'flowchart_order') and self.flowchart_order is not None:
+        if hasattr(self, "flowchart_order") and self.flowchart_order is not None:
             self.flowchart_order.update_unseen(old_status, old_unseen)
 
-        elif hasattr(self, 'order'):
+        elif hasattr(self, "order"):
             self.order.update_unseen(old_status, old_unseen)
 
     def delete(self, *args, **kwargs):

@@ -369,8 +369,8 @@ class LaunchTests(TestCase):
         params["para_calc_id"] = ["1"]
         for i in params:
             temp_dict = {}
-            temp_dict['name'] = i
-            temp_dict['value'] = params[i][0]
+            temp_dict["name"] = i
+            temp_dict["value"] = params[i][0]
             para_list.append(temp_dict)
         print(para_list)
         calc_para_list = [None, para_list]
@@ -382,7 +382,6 @@ class LaunchTests(TestCase):
         for i in Flowchart.objects.all():
             response_2 = self.client.post(f"/load_flowchart_params/{i.id}")
             self.assertEqual(response_2.status_code, 200)
-
 
     def test_submit_long_name(self):
         params = basic_params.copy()
