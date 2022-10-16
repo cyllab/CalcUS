@@ -20,9 +20,7 @@
 	</div>
 
 	<form method="post" id="calcform" enctype="multipart/form-data">
-
 		{% if not ensemble and not structure %}
-
 		<div class="columns">
 			{% if is_flowchart is None %}
 			<div class="column">
@@ -170,7 +168,7 @@
 					<div class="control">
 						<div class="select" >
 						  <select name="calc_project" onchange="project_selection_changed(this)" id="calc_project">
-							  {% for proj in profile.project_set.all|dictsort:"name" %}
+							  {% for proj in request.user.project_set.all|dictsort:"name" %}
 							  <option name="{{ proj }}">{{ proj }}</option>
 							  {% endfor %}
 							  <option name="new_project">New Project</option>
@@ -192,31 +190,53 @@
 		</div>
 		{% endif %}
 
-		<div class="field">
-			<label class="label">Software</label>
-			<div class="control" >
-				<div class="select">
-					<select name="calc_software" id="calc_software" onchange="refresh_availabilities();">
-						<option {% if 'xtb' not in packages %}class="resource_specific avail_remote"{% endif %}>xtb</option>
-						<option {% if 'ORCA' not in packages %}class="resource_specific avail_remote"{% endif %}>ORCA</option>
-						<option {% if 'Gaussian' not in packages %}class="resource_specific avail_remote"{% endif %}>Gaussian</option>
-					</select>
-				</div>
+		<div class="columns">
+            <div class="column is-3">
+                <div class="field">
+                    <label class="label">Software</label>
+                    <div class="control" >
+                        <div class="select wide_select">
+                            <select name="calc_software" id="calc_software" onchange="refresh_availabilities();">
+                                <option {% if 'xtb' not in packages %}class="resource_specific avail_remote"{% endif %}>xtb</option>
+                                <option {% if 'ORCA' not in packages %}class="resource_specific avail_remote"{% endif %}>ORCA</option>
+                                <option {% if 'Gaussian' not in packages %}class="resource_specific avail_remote"{% endif %}>Gaussian</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column is-6">
+                <div class="field">
+                    <label class="label">Calculation Type</label>
+                    <div class="control" >
+                        <div class="select wide_select">
+                            <select name="calc_type" id="calc_type" onchange="calc_selection_changed();">
+                            {% for proc in procs %}
+                            <option class="software_specific {% if proc.avail_xtb %}avail_xtb{% endif %} {% if proc.avail_ORCA %}avail_ORCA{% endif %} {% if proc.avail_Gaussian %}avail_Gaussian{% endif %}">{{ proc.name }}</option>
+                            {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column software_specific avail_ORCA avail_Gaussian is-3">
+                <div class="field">
+                    <label class="label">Theory Level</label>
+                    <div class="control">
+                        <div class="select wide_select">
+                            <select name="calc_theory_level" id="calc_theory_level" onchange="refresh_availabilities();">
+                                <option class="hidden software_specific avail_xtb" value="xtb">xtb</option>
+                                <option class="type_exclusion not_avail_UV-Vis_Calculation" value="semiempirical">Semi-empirical</option>
+                                <option value="hf">HF</option>
+                                <option value="dft">DFT</option>
+                                <option class="software_specific avail_ORCA" value="mp2">RI-MP2</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 			</div>
 		</div>
 
-		<div class="field">
-			<label class="label">Calculation Type</label>
-			<div class="control" >
-				<div class="select">
-					<select name="calc_type" id="calc_type" onchange="calc_selection_changed();">
-					{% for proc in procs %}
-					<option class="software_specific {% if proc.avail_xtb %}avail_xtb{% endif %} {% if proc.avail_ORCA %}avail_ORCA{% endif %} {% if proc.avail_Gaussian %}avail_Gaussian{% endif %}">{{ proc.name }}</option>
-					{% endfor %}
-					</select>
-				</div>
-			</div>
-		</div>
 		<div class="type_specific avail_Minimum_Energy_Path" id="aux_structure_div">
 			<div class="field">
 				<label class="label">Existing auxiliary structure</label>
@@ -257,20 +277,6 @@
 		</div>
 
 		<div class="software_specific avail_ORCA avail_Gaussian">
-			<div class="field">
-				<label class="label">Theory Level</label>
-				<div class="control" >
-					<div class="select">
-						<select name="calc_theory_level" id="calc_theory_level" onchange="refresh_availabilities();">
-							<option class="hidden software_specific avail_xtb" value="xtb">xtb</option>
-							<option class="type_exclusion not_avail_UV-Vis_Calculation" value="semiempirical">Semi-empirical</option>
-							<option value="hf">HF</option>
-							<option value="dft">DFT</option>
-							<option class="software_specific avail_ORCA" value="mp2">RI-MP2</option>
-						</select>
-					</div>
-				</div>
-			</div>
 			<div class="columns">
 				<div class="method_specific avail_dft">
 					<div class="column is-narrow software_specific avail_ORCA ">
@@ -332,7 +338,53 @@
 
 			</div>
 		</div>
-		<br />
+		<div class="columns">
+			<div class="column">
+				<div class="field">
+					<label class="label">Solvent</label>
+					<div class="control">
+						<input class="input" name="calc_solvent" id="calc_solvent" type="text" oninput="refresh_availabilities();" list="solvent_options">
+					</div>
+					<p class="check_msg is-danger" id="solvent_check_msg"></p>
+				</div>
+			</div>
+			<div class="column is-narrow">
+				<div class="field" id="calc_solvation_model_field">
+					<label class="label">Solvation Model</label>
+						<div class="control">
+							<div class="select">
+							<select name="calc_solvation_model" id="calc_solvation_model" onchange="refresh_availabilities();" class="solv_select">
+								<option class="software_specific avail_xtb type_specific avail_Constrained_Optimisation avail_Constrained_Conformational_Search avail_Geometrical_Optimisation avail_Frequency_Calculation avail_UV-Vis_Calculation avail_Single-Point_Energy avail_Conformational_Search">GBSA</option>
+								<option class="software_specific avail_xtb">ALPB</option>
+								<option class="software_specific avail_Gaussian avail_ORCA">SMD</option>
+								<option class="software_specific avail_Gaussian">PCM</option>
+								<option class="software_specific avail_Gaussian avail_ORCA">CPCM</option>
+							</select>
+							</div>
+						</div>
+				</div>
+			</div>
+			<div class="column is-narrow">
+				<div class="field software_specific avail_Gaussian avail_ORCA" id="calc_solvation_radii_field">
+					<label class="label">Solvation Radii</label>
+					<div class="control">
+						<div class="select">
+							<select name="calc_solvation_radii" id="calc_solvation_radii" class="solv_select">
+								<option class="solvation_model_specific avail_SMD">SMD18</option>
+								<option>Default</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UFF</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UA0</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UAHF</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UAKS</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">Pauling</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">Bondi</option>
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<div>
 			<div>
 				<div class="field" id="custom_specifications_field">
@@ -377,17 +429,17 @@
 		{% else %}
 		<div class="field">
 			<label class="label">Resource</label>
-			<div class="control" >
+			<div class="control">
 				<div class="select">
 				<select name="calc_resource" id="calc_resource" onchange="refresh_availabilities();">
 					{% if ALLOW_LOCAL_CALC %}
-						{% if profile.group or profile.is_PI or request.user.is_superuser %}
+						{% if request.user.group or request.user.is_PI or request.user.is_superuser %}
 							<option>Local</option>
 						{% endif %}
 					{% endif %}
 
 					{% if ALLOW_REMOTE_CALC %}
-					{% for access in profile.accesses %}
+					{% for access in request.user.accesses %}
 						{% if access.connected %}
 							<option>{{ access.cluster_address }}</option>
 						{% endif %}
@@ -464,7 +516,7 @@
 		{% if ensemble or structures %}
 		$('<input />').attr('type', 'hidden')
 			.attr('name', "starting_ensemble")
-			.attr('value', {{ ensemble.id }})
+			.attr('value', "{{ ensemble.id }}")
 			.appendTo(this);
 		{% endif %}
 
@@ -478,7 +530,7 @@
 		{% if calc %}
 		$('<input />').attr('type', 'hidden')
 			.attr('name', "starting_calc")
-			.attr('value', {{ calc.id }})
+			.attr('value', "{{ calc.id }}")
 			.appendTo(this);
 		$('<input />').attr('type', 'hidden')
 			.attr('name', "starting_frame")
@@ -501,6 +553,7 @@ $( document ).ready(function() {
 	{% if not ensemble and not structure and is_flowchart is None%}
 	preselect_last_project();
 	project_selection_changed(document.getElementById("calc_project"));
+	set_availables();
 	{% endif %}
 
 	refresh_presets();
@@ -515,7 +568,7 @@ $( document ).ready(function() {
 	{% if init_params_id %}
 		$.ajax({
 			method: "POST",	 	 
-			url: "/load_params/" + {{ init_params_id }},
+			url: "/load_params/{{ init_params_id }}",
 			headers: {
 				"X-CSRFToken": '{{ csrf_token }}',
 			},
@@ -541,7 +594,7 @@ $( document ).ready(function() {
 				"X-CSRFToken": '{{ csrf_token }}',
 			},
 
-			data: {'id': {{ ensemble.id }}, 'num': 1},
+			data: {'id': "{{ ensemble.id }}", 'num': 1},
 			success: function(data, textStatus, xhr) {
 				let mol_read = ChemDoodle.readXYZ(data);
 				ChemDoodle.relabel(mol_read);

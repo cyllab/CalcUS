@@ -1,75 +1,87 @@
-{% if profile.researchgroup_PI.count == 0 and profile.group == None %}
-Your group code is {{ profile.code }}. Give this to your PI to be added to a research group.
+{% if request.user.PI_of.count == 0 and request.user.group == None %} 
+<div id="research_group_div">
+    You belong to no research group as of right now. Your user code is <b>{{ request.user.id }}</b>. Give this to your PI to be added to a research group.
+    <br />
+    Alternatively, you can create your own research group or class below.
+
+    <div id="create_group_div">
+        <div class="field">
+            <label class="label">Research group name</label>
+            <input type="text" class="input" id="group_name" />
+        </div>
+        <div class="field">
+            <div class="control has-text-centered">
+                <button class="button is-primary" id="create_group_button" onclick="create_group('group');">Create</button>
+            </div>
+        </div>
+        <span class="ajax_msg" id="create_group_msg"></span>
+    </div>
+</div>
+{% endif %} 
+
+{% if request.user.is_PI %} 
+{% for group in request.user.PI_of.all %}
+<center>You are the PI of {{ group.name }}</center>
+
+<div class="has-text-centered">
+    <div class="column has-text-centered">
+        <div>
+            <center>
+                {% if group.members.count > 0 %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Members</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in group.members.all %}
+                        <tr>
+                            <td>{{ member.username }}</td>
+                            <td>
+                                <button class="button is-danger" onclick="remove_user('{{ group.id }}', '{{ member.id }}', 'group');">Remove</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                    <button class="button is-danger dissolve-button" id="dissolve_{{ group.id }}" onclick="dissolve_group('{{ group.id }}', '{{ group.name }}', 'group');">Dissolve group</button>
+                    <span class="ajax_msg" id="dissolve_group_msg"></span>
+                {% endif %}
+            </center>
+        <div>
+            <div class="field">
+                <label class="label">User code</label>
+                <input type="text" class="input" id="user_to_add" />
+            </div>
+            <span class="ajax_msg" id="user_add_msg"></span>
+            <button class="button is-primary" onclick="add_user('{{ group.id }}');">Add user to group</button>
+        </div>
+    </div>
+
+        </div>
+    </div>
+</div>
+{% endfor %} 
+{% elif request.user.group != None %} 
+You are a member of {{ request.user.group.name }}
+<center>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Members</th>
+            </tr>
+        </thead>
+        <tbody>
+            <th>{{ request.user.group.PI.username }} (PI)</th>
+            {% for member in request.user.group.members.all %}
+            <tr>
+                <td>{{ member.username }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</center>
 {% endif %}
-
-{% if profile.researchgroup_PI.count > 0 %}
-	{% for group in profile.researchgroup_PI.all %}
-	<center>
-		You are the PI of {{ group.name }}
-	</center>
-
-		<div class="columns">
-			<div class="column is-narrow has-text-centered">
-				<div>
-					{% csrf_token %}
-					<div class="field">
-						<label class="label">Username</label>
-						<input type="text" class="input" id="user_to_add"></input>
-					</div>
-					<div class="field">
-						<label class="label">Individual Code</label>
-						<input type="text" class="input" id="code"></input>
-					</div>
-
-					<button class="button is-primary" onclick="add_user({{ group.id }});">Add user to group</button>
-				</div>
-			</div>
-			<div class="column has-text-centered">
-				<div>
-					<center>
-					{% if group.members.count > 0 %}
-						<table class="table">
-							<thead>
-								<tr>
-									<th>Members</th>
-									<th>Action</th>
-								</tr>
-							</thead>
-							<tbody>
-								{% for member in group.members.all %}
-								<tr>
-									<td>{{ member.username }}</td>
-									<td><button class="button is-danger" onclick="remove_user({{ group.id }}, {{ member.id }});">Remove</button>
-								</tr>
-								{% endfor %}
-							</tbody>
-						</table>
-					{% endif %}
-					</center>
-				</div>
-			</div>
-		</div>
-	{% endfor %}
-{% elif profile.group != None %}
-	You are a member of {{ profile.group.name }}
-	<center>
-		<table class="table">
-			<thead>
-				<tr>
-					<th>Members</th>
-				</tr>
-			</thead>
-			<tbody>
-				<th>{{ profile.group.PI.username }} (PI)</th>
-				{% for member in profile.group.members.all %}
-				<tr>
-					<td>{{ member.username }}</td>
-				</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	</center>
-{% else %}
-	You belong to no research group as of right now.
-{% endif %}
-

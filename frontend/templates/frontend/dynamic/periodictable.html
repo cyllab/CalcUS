@@ -1,729 +1,726 @@
 {% load static %}
 
 <style>
-	#periodictable {
-		display: grid;
-		grid-template-columns: repeat(17, 1fr);
-		grid-template-rows: repeat(10, 1fr);
-		width: 100%;
-		margin: 0 auto;
-		max-width: 100%;
-	}
-	#bs_select {
-		font-size: 10pt;
-	}
-	.element {
-	  cursor: pointer;
-	  width: 30px;
-	  height: 30px;
-	  text-align: center;
-	  line-height: 30px;
+    #periodictable {
+        display: grid;
+        grid-template-columns: repeat(17, 1fr);
+        grid-template-rows: repeat(10, 1fr);
+        width: 100%;
+        margin: 0 auto;
+        max-width: 100%;
+    }
+    #bs_select {
+        font-size: 10pt;
+    }
+    .element {
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 30px;
 
-	  margin: 5px;
-	  padding: 0 0;
-	  border: 1px solid #333333;
-	}
+        margin: 5px;
+        padding: 0 0;
+        border: 1px solid #333333;
+    }
 
-	.Badge {
-		padding: 0 0;
-		border-width: 0;
-	}
+    .Badge {
+        padding: 0 0;
+        border-width: 0;
+    }
 
-	#element-1 {
-	grid-column-start: 1;
-	grid-row-start: 1;
-	}
-	#element-2 {
-	grid-column-start: 18;
-	grid-row-start: 1;
-	}
-	#element-3 {
-	grid-column-start: 1;
-	grid-row-start: 2;
-	}
-	#element-4 {
-	grid-column-start: 2;
-	grid-row-start: 2;
-	}
-	#element-5 {
-	grid-column-start: 13;
-	grid-row-start: 2;
-	}
-	#element-6 {
-	grid-column-start: 14;
-	grid-row-start: 2;
-	}
-	#element-7 {
-	grid-column-start: 15;
-	grid-row-start: 2;
-	}
-	#element-8 {
-	grid-column-start: 16;
-	grid-row-start: 2;
-	}
-	#element-9 {
-	grid-column-start: 17;
-	grid-row-start: 2;
-	}
-	#element-10 {
-	grid-column-start: 18;
-	grid-row-start: 2;
-	}
-	#element-11 {
-	grid-column-start: 1;
-	grid-row-start: 3;
-	}
-	#element-12 {
-	grid-column-start: 2;
-	grid-row-start: 3;
-	}
-	#element-13 {
-	grid-column-start: 13;
-	grid-row-start: 3;
-	}
-	#element-14 {
-	grid-column-start: 14;
-	grid-row-start: 3;
-	}
-	#element-15 {
-	grid-column-start: 15;
-	grid-row-start: 3;
-	}
-	#element-16 {
-	grid-column-start: 16;
-	grid-row-start: 3;
-	}
-	#element-17 {
-	grid-column-start: 17;
-	grid-row-start: 3;
-	}
-	#element-18 {
-	grid-column-start: 18;
-	grid-row-start: 3;
-	}
-	#element-19 {
-	grid-column-start: 1;
-	grid-row-start: 4;
-	}
-	#element-20 {
-	grid-column-start: 2;
-	grid-row-start: 4;
-	}
-	#element-21 {
-	grid-column-start: 3;
-	grid-row-start: 4;
-	}
-	#element-22 {
-	grid-column-start: 4;
-	grid-row-start: 4;
-	}
-	#element-23 {
-	grid-column-start: 5;
-	grid-row-start: 4;
-	}
-	#element-24 {
-	grid-column-start: 6;
-	grid-row-start: 4;
-	}
-	#element-25 {
-	grid-column-start: 7;
-	grid-row-start: 4;
-	}
-	#element-26 {
-	grid-column-start: 8;
-	grid-row-start: 4;
-	}
-	#element-27 {
-	grid-column-start: 9;
-	grid-row-start: 4;
-	}
-	#element-28 {
-	grid-column-start: 10;
-	grid-row-start: 4;
-	}
-	#element-29 {
-	grid-column-start: 11;
-	grid-row-start: 4;
-	}
-	#element-30 {
-	grid-column-start: 12;
-	grid-row-start: 4;
-	}
-	#element-31 {
-	grid-column-start: 13;
-	grid-row-start: 4;
-	}
-	#element-32 {
-	grid-column-start: 14;
-	grid-row-start: 4;
-	}
-	#element-33 {
-	grid-column-start: 15;
-	grid-row-start: 4;
-	}
-	#element-34 {
-	grid-column-start: 16;
-	grid-row-start: 4;
-	}
-	#element-35 {
-	grid-column-start: 17;
-	grid-row-start: 4;
-	}
-	#element-36 {
-	grid-column-start: 18;
-	grid-row-start: 4;
-	}
-	#element-37 {
-	grid-column-start: 1;
-	grid-row-start: 5;
-	}
-	#element-38 {
-	grid-column-start: 2;
-	grid-row-start: 5;
-	}
-	#element-39 {
-	grid-column-start: 3;
-	grid-row-start: 5;
-	}
-	#element-40 {
-	grid-column-start: 4;
-	grid-row-start: 5;
-	}
-	#element-41 {
-	grid-column-start: 5;
-	grid-row-start: 5;
-	}
-	#element-42 {
-	grid-column-start: 6;
-	grid-row-start: 5;
-	}
-	#element-43 {
-	grid-column-start: 7;
-	grid-row-start: 5;
-	}
-	#element-44 {
-	grid-column-start: 8;
-	grid-row-start: 5;
-	}
-	#element-45 {
-	grid-column-start: 9;
-	grid-row-start: 5;
-	}
-	#element-46 {
-	grid-column-start: 10;
-	grid-row-start: 5;
-	}
-	#element-47 {
-	grid-column-start: 11;
-	grid-row-start: 5;
-	}
-	#element-48 {
-	grid-column-start: 12;
-	grid-row-start: 5;
-	}
-	#element-49 {
-	grid-column-start: 13;
-	grid-row-start: 5;
-	}
-	#element-50 {
-	grid-column-start: 14;
-	grid-row-start: 5;
-	}
-	#element-51 {
-	grid-column-start: 15;
-	grid-row-start: 5;
-	}
-	#element-52 {
-	grid-column-start: 16;
-	grid-row-start: 5;
-	}
-	#element-53 {
-	grid-column-start: 17;
-	grid-row-start: 5;
-	}
-	#element-54 {
-	grid-column-start: 18;
-	grid-row-start: 5;
-	}
-	#element-55 {
-	grid-column-start: 1;
-	grid-row-start: 6;
-	}
-	#element-56 {
-	grid-column-start: 2;
-	grid-row-start: 6;
-	}
-	#element-57 {
-	grid-column-start: 3;
-	grid-row-start: 9;
-	}
-	#element-58 {
-	grid-column-start: 4;
-	grid-row-start: 9;
-	}
-	#element-59 {
-	grid-column-start: 5;
-	grid-row-start: 9;
-	}
-	#element-60 {
-	grid-column-start: 6;
-	grid-row-start: 9;
-	}
-	#element-61 {
-	grid-column-start: 7;
-	grid-row-start: 9;
-	}
-	#element-62 {
-	grid-column-start: 8;
-	grid-row-start: 9;
-	}
-	#element-63 {
-	grid-column-start: 9;
-	grid-row-start: 9;
-	}
-	#element-64 {
-	grid-column-start: 10;
-	grid-row-start: 9;
-	}
-	#element-65 {
-	grid-column-start: 11;
-	grid-row-start: 9;
-	}
-	#element-66 {
-	grid-column-start: 12;
-	grid-row-start: 9;
-	}
-	#element-67 {
-	grid-column-start: 13;
-	grid-row-start: 9;
-	}
-	#element-68 {
-	grid-column-start: 14;
-	grid-row-start: 9;
-	}
-	#element-69 {
-	grid-column-start: 15;
-	grid-row-start: 9;
-	}
-	#element-70 {
-	grid-column-start: 16;
-	grid-row-start: 9;
-	}
-	#element-71 {
-	grid-column-start: 17;
-	grid-row-start: 9;
-	}
-	#element-72 {
-	grid-column-start: 4;
-	grid-row-start: 6;
-	}
-	#element-73 {
-	grid-column-start: 5;
-	grid-row-start: 6;
-	}
-	#element-74 {
-	grid-column-start: 6;
-	grid-row-start: 6;
-	}
-	#element-75 {
-	grid-column-start: 7;
-	grid-row-start: 6;
-	}
-	#element-76 {
-	grid-column-start: 8;
-	grid-row-start: 6;
-	}
-	#element-77 {
-	grid-column-start: 9;
-	grid-row-start: 6;
-	}
-	#element-78 {
-	grid-column-start: 10;
-	grid-row-start: 6;
-	}
-	#element-79 {
-	grid-column-start: 11;
-	grid-row-start: 6;
-	}
-	#element-80 {
-	grid-column-start: 12;
-	grid-row-start: 6;
-	}
-	#element-81 {
-	grid-column-start: 13;
-	grid-row-start: 6;
-	}
-	#element-82 {
-	grid-column-start: 14;
-	grid-row-start: 6;
-	}
-	#element-83 {
-	grid-column-start: 15;
-	grid-row-start: 6;
-	}
-	#element-84 {
-	grid-column-start: 16;
-	grid-row-start: 6;
-	}
-	#element-85 {
-	grid-column-start: 17;
-	grid-row-start: 6;
-	}
-	#element-86 {
-	grid-column-start: 18;
-	grid-row-start: 6;
-	}
-	#element-87 {
-	grid-column-start: 1;
-	grid-row-start: 7;
-	}
-	#element-88 {
-	grid-column-start: 2;
-	grid-row-start: 7;
-	}
-	#element-89 {
-	grid-column-start: 3;
-	grid-row-start: 10;
-	}
-	#element-90 {
-	grid-column-start: 4;
-	grid-row-start: 10;
-	}
-	#element-91 {
-	grid-column-start: 5;
-	grid-row-start: 10;
-	}
-	#element-92 {
-	grid-column-start: 6;
-	grid-row-start: 10;
-	}
-	#element-93 {
-	grid-column-start: 7;
-	grid-row-start: 10;
-	}
-	#element-94 {
-	grid-column-start: 8;
-	grid-row-start: 10;
-	}
-	#element-95 {
-	grid-column-start: 9;
-	grid-row-start: 10;
-	}
-	#element-96 {
-	grid-column-start: 10;
-	grid-row-start: 10;
-	}
-	#element-97 {
-	grid-column-start: 11;
-	grid-row-start: 10;
-	}
-	#element-98 {
-	grid-column-start: 12;
-	grid-row-start: 10;
-	}
-	#element-99 {
-	grid-column-start: 13;
-	grid-row-start: 10;
-	}
-	#element-100 {
-	grid-column-start: 14;
-	grid-row-start: 10;
-	}
-	#element-101 {
-	grid-column-start: 15;
-	grid-row-start: 10;
-	}
-	#element-102 {
-	grid-column-start: 16;
-	grid-row-start: 10;
-	}
-	#element-103 {
-	grid-column-start: 17;
-	grid-row-start: 10;
-	}
-	#element-104 {
-	grid-column-start: 4;
-	grid-row-start: 7;
-	}
-	#element-105 {
-	grid-column-start: 5;
-	grid-row-start: 7;
-	}
-	#element-106 {
-	grid-column-start: 6;
-	grid-row-start: 7;
-	}
-	#element-107 {
-	grid-column-start: 7;
-	grid-row-start: 7;
-	}
-	#element-108 {
-	grid-column-start: 8;
-	grid-row-start: 7;
-	}
-	#element-109 {
-	grid-column-start: 9;
-	grid-row-start: 7;
-	}
-	#element-110 {
-	grid-column-start: 10;
-	grid-row-start: 7;
-	}
-	#element-111 {
-	grid-column-start: 11;
-	grid-row-start: 7;
-	}
-	#element-112 {
-	grid-column-start: 12;
-	grid-row-start: 7;
-	}
-	#element-113 {
-	grid-column-start: 13;
-	grid-row-start: 7;
-	}
-	#element-114 {
-	grid-column-start: 14;
-	grid-row-start: 7;
-	}
-	#element-115 {
-	grid-column-start: 15;
-	grid-row-start: 7;
-	}
-	#element-116 {
-	grid-column-start: 16;
-	grid-row-start: 7;
-	}
-	#element-117 {
-	grid-column-start: 17;
-	grid-row-start: 7;
-	}
-	#element-118 {
-	grid-column-start: 18;
-	grid-row-start: 7;
-	}
-	</style>
-	<script>
-		function refresh_badges() {
-			bs = document.getElementById("bs_select").value;
-			$.ajax({
-				method: "POST",	 	 
-				url: "/get_available_elements/",
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
+    #element-1 {
+        grid-column-start: 1;
+        grid-row-start: 1;
+    }
+    #element-2 {
+        grid-column-start: 18;
+        grid-row-start: 1;
+    }
+    #element-3 {
+        grid-column-start: 1;
+        grid-row-start: 2;
+    }
+    #element-4 {
+        grid-column-start: 2;
+        grid-row-start: 2;
+    }
+    #element-5 {
+        grid-column-start: 13;
+        grid-row-start: 2;
+    }
+    #element-6 {
+        grid-column-start: 14;
+        grid-row-start: 2;
+    }
+    #element-7 {
+        grid-column-start: 15;
+        grid-row-start: 2;
+    }
+    #element-8 {
+        grid-column-start: 16;
+        grid-row-start: 2;
+    }
+    #element-9 {
+        grid-column-start: 17;
+        grid-row-start: 2;
+    }
+    #element-10 {
+        grid-column-start: 18;
+        grid-row-start: 2;
+    }
+    #element-11 {
+        grid-column-start: 1;
+        grid-row-start: 3;
+    }
+    #element-12 {
+        grid-column-start: 2;
+        grid-row-start: 3;
+    }
+    #element-13 {
+        grid-column-start: 13;
+        grid-row-start: 3;
+    }
+    #element-14 {
+        grid-column-start: 14;
+        grid-row-start: 3;
+    }
+    #element-15 {
+        grid-column-start: 15;
+        grid-row-start: 3;
+    }
+    #element-16 {
+        grid-column-start: 16;
+        grid-row-start: 3;
+    }
+    #element-17 {
+        grid-column-start: 17;
+        grid-row-start: 3;
+    }
+    #element-18 {
+        grid-column-start: 18;
+        grid-row-start: 3;
+    }
+    #element-19 {
+        grid-column-start: 1;
+        grid-row-start: 4;
+    }
+    #element-20 {
+        grid-column-start: 2;
+        grid-row-start: 4;
+    }
+    #element-21 {
+        grid-column-start: 3;
+        grid-row-start: 4;
+    }
+    #element-22 {
+        grid-column-start: 4;
+        grid-row-start: 4;
+    }
+    #element-23 {
+        grid-column-start: 5;
+        grid-row-start: 4;
+    }
+    #element-24 {
+        grid-column-start: 6;
+        grid-row-start: 4;
+    }
+    #element-25 {
+        grid-column-start: 7;
+        grid-row-start: 4;
+    }
+    #element-26 {
+        grid-column-start: 8;
+        grid-row-start: 4;
+    }
+    #element-27 {
+        grid-column-start: 9;
+        grid-row-start: 4;
+    }
+    #element-28 {
+        grid-column-start: 10;
+        grid-row-start: 4;
+    }
+    #element-29 {
+        grid-column-start: 11;
+        grid-row-start: 4;
+    }
+    #element-30 {
+        grid-column-start: 12;
+        grid-row-start: 4;
+    }
+    #element-31 {
+        grid-column-start: 13;
+        grid-row-start: 4;
+    }
+    #element-32 {
+        grid-column-start: 14;
+        grid-row-start: 4;
+    }
+    #element-33 {
+        grid-column-start: 15;
+        grid-row-start: 4;
+    }
+    #element-34 {
+        grid-column-start: 16;
+        grid-row-start: 4;
+    }
+    #element-35 {
+        grid-column-start: 17;
+        grid-row-start: 4;
+    }
+    #element-36 {
+        grid-column-start: 18;
+        grid-row-start: 4;
+    }
+    #element-37 {
+        grid-column-start: 1;
+        grid-row-start: 5;
+    }
+    #element-38 {
+        grid-column-start: 2;
+        grid-row-start: 5;
+    }
+    #element-39 {
+        grid-column-start: 3;
+        grid-row-start: 5;
+    }
+    #element-40 {
+        grid-column-start: 4;
+        grid-row-start: 5;
+    }
+    #element-41 {
+        grid-column-start: 5;
+        grid-row-start: 5;
+    }
+    #element-42 {
+        grid-column-start: 6;
+        grid-row-start: 5;
+    }
+    #element-43 {
+        grid-column-start: 7;
+        grid-row-start: 5;
+    }
+    #element-44 {
+        grid-column-start: 8;
+        grid-row-start: 5;
+    }
+    #element-45 {
+        grid-column-start: 9;
+        grid-row-start: 5;
+    }
+    #element-46 {
+        grid-column-start: 10;
+        grid-row-start: 5;
+    }
+    #element-47 {
+        grid-column-start: 11;
+        grid-row-start: 5;
+    }
+    #element-48 {
+        grid-column-start: 12;
+        grid-row-start: 5;
+    }
+    #element-49 {
+        grid-column-start: 13;
+        grid-row-start: 5;
+    }
+    #element-50 {
+        grid-column-start: 14;
+        grid-row-start: 5;
+    }
+    #element-51 {
+        grid-column-start: 15;
+        grid-row-start: 5;
+    }
+    #element-52 {
+        grid-column-start: 16;
+        grid-row-start: 5;
+    }
+    #element-53 {
+        grid-column-start: 17;
+        grid-row-start: 5;
+    }
+    #element-54 {
+        grid-column-start: 18;
+        grid-row-start: 5;
+    }
+    #element-55 {
+        grid-column-start: 1;
+        grid-row-start: 6;
+    }
+    #element-56 {
+        grid-column-start: 2;
+        grid-row-start: 6;
+    }
+    #element-57 {
+        grid-column-start: 3;
+        grid-row-start: 9;
+    }
+    #element-58 {
+        grid-column-start: 4;
+        grid-row-start: 9;
+    }
+    #element-59 {
+        grid-column-start: 5;
+        grid-row-start: 9;
+    }
+    #element-60 {
+        grid-column-start: 6;
+        grid-row-start: 9;
+    }
+    #element-61 {
+        grid-column-start: 7;
+        grid-row-start: 9;
+    }
+    #element-62 {
+        grid-column-start: 8;
+        grid-row-start: 9;
+    }
+    #element-63 {
+        grid-column-start: 9;
+        grid-row-start: 9;
+    }
+    #element-64 {
+        grid-column-start: 10;
+        grid-row-start: 9;
+    }
+    #element-65 {
+        grid-column-start: 11;
+        grid-row-start: 9;
+    }
+    #element-66 {
+        grid-column-start: 12;
+        grid-row-start: 9;
+    }
+    #element-67 {
+        grid-column-start: 13;
+        grid-row-start: 9;
+    }
+    #element-68 {
+        grid-column-start: 14;
+        grid-row-start: 9;
+    }
+    #element-69 {
+        grid-column-start: 15;
+        grid-row-start: 9;
+    }
+    #element-70 {
+        grid-column-start: 16;
+        grid-row-start: 9;
+    }
+    #element-71 {
+        grid-column-start: 17;
+        grid-row-start: 9;
+    }
+    #element-72 {
+        grid-column-start: 4;
+        grid-row-start: 6;
+    }
+    #element-73 {
+        grid-column-start: 5;
+        grid-row-start: 6;
+    }
+    #element-74 {
+        grid-column-start: 6;
+        grid-row-start: 6;
+    }
+    #element-75 {
+        grid-column-start: 7;
+        grid-row-start: 6;
+    }
+    #element-76 {
+        grid-column-start: 8;
+        grid-row-start: 6;
+    }
+    #element-77 {
+        grid-column-start: 9;
+        grid-row-start: 6;
+    }
+    #element-78 {
+        grid-column-start: 10;
+        grid-row-start: 6;
+    }
+    #element-79 {
+        grid-column-start: 11;
+        grid-row-start: 6;
+    }
+    #element-80 {
+        grid-column-start: 12;
+        grid-row-start: 6;
+    }
+    #element-81 {
+        grid-column-start: 13;
+        grid-row-start: 6;
+    }
+    #element-82 {
+        grid-column-start: 14;
+        grid-row-start: 6;
+    }
+    #element-83 {
+        grid-column-start: 15;
+        grid-row-start: 6;
+    }
+    #element-84 {
+        grid-column-start: 16;
+        grid-row-start: 6;
+    }
+    #element-85 {
+        grid-column-start: 17;
+        grid-row-start: 6;
+    }
+    #element-86 {
+        grid-column-start: 18;
+        grid-row-start: 6;
+    }
+    #element-87 {
+        grid-column-start: 1;
+        grid-row-start: 7;
+    }
+    #element-88 {
+        grid-column-start: 2;
+        grid-row-start: 7;
+    }
+    #element-89 {
+        grid-column-start: 3;
+        grid-row-start: 10;
+    }
+    #element-90 {
+        grid-column-start: 4;
+        grid-row-start: 10;
+    }
+    #element-91 {
+        grid-column-start: 5;
+        grid-row-start: 10;
+    }
+    #element-92 {
+        grid-column-start: 6;
+        grid-row-start: 10;
+    }
+    #element-93 {
+        grid-column-start: 7;
+        grid-row-start: 10;
+    }
+    #element-94 {
+        grid-column-start: 8;
+        grid-row-start: 10;
+    }
+    #element-95 {
+        grid-column-start: 9;
+        grid-row-start: 10;
+    }
+    #element-96 {
+        grid-column-start: 10;
+        grid-row-start: 10;
+    }
+    #element-97 {
+        grid-column-start: 11;
+        grid-row-start: 10;
+    }
+    #element-98 {
+        grid-column-start: 12;
+        grid-row-start: 10;
+    }
+    #element-99 {
+        grid-column-start: 13;
+        grid-row-start: 10;
+    }
+    #element-100 {
+        grid-column-start: 14;
+        grid-row-start: 10;
+    }
+    #element-101 {
+        grid-column-start: 15;
+        grid-row-start: 10;
+    }
+    #element-102 {
+        grid-column-start: 16;
+        grid-row-start: 10;
+    }
+    #element-103 {
+        grid-column-start: 17;
+        grid-row-start: 10;
+    }
+    #element-104 {
+        grid-column-start: 4;
+        grid-row-start: 7;
+    }
+    #element-105 {
+        grid-column-start: 5;
+        grid-row-start: 7;
+    }
+    #element-106 {
+        grid-column-start: 6;
+        grid-row-start: 7;
+    }
+    #element-107 {
+        grid-column-start: 7;
+        grid-row-start: 7;
+    }
+    #element-108 {
+        grid-column-start: 8;
+        grid-row-start: 7;
+    }
+    #element-109 {
+        grid-column-start: 9;
+        grid-row-start: 7;
+    }
+    #element-110 {
+        grid-column-start: 10;
+        grid-row-start: 7;
+    }
+    #element-111 {
+        grid-column-start: 11;
+        grid-row-start: 7;
+    }
+    #element-112 {
+        grid-column-start: 12;
+        grid-row-start: 7;
+    }
+    #element-113 {
+        grid-column-start: 13;
+        grid-row-start: 7;
+    }
+    #element-114 {
+        grid-column-start: 14;
+        grid-row-start: 7;
+    }
+    #element-115 {
+        grid-column-start: 15;
+        grid-row-start: 7;
+    }
+    #element-116 {
+        grid-column-start: 16;
+        grid-row-start: 7;
+    }
+    #element-117 {
+        grid-column-start: 17;
+        grid-row-start: 7;
+    }
+    #element-118 {
+        grid-column-start: 18;
+        grid-row-start: 7;
+    }
+</style>
+<script>
+    function refresh_badges() {
+        bs = document.getElementById("bs_select").value;
+        $.ajax({
+            method: "POST",
+            url: "/get_available_elements/",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
 
-				data: {'bs': bs},
-				statusCode: {
-					200: function(data) {
-						badges = document.querySelectorAll(".badge");
-						for (i=0; i < badges.length; i++) {
-							badges[i].style.display = "none";
-						}
+            data: {
+                bs: bs,
+            },
+            statusCode: {
+                200: function (data) {
+                    badges = document.querySelectorAll(".badge");
+                    for (i = 0; i < badges.length; i++) {
+                        badges[i].style.display = "none";
+                    }
 
-						els = data.split(' ');
-						for (i=0; i < els.length; i++) {
-							badge = document.getElementById("badge_" + els[i]);
-							badge.style.display = "block";
-						}
-					}
-				}
-			});
+                    els = data.split(" ");
+                    for (i = 0; i < els.length; i++) {
+                        badge = document.getElementById("badge_" + els[i]);
+                        badge.style.display = "block";
+                    }
+                },
+            },
+        });
+    }
+    function refresh_available_basis_sets() {
+        selected = document.querySelectorAll(".element.button.is-primary");
+        els = "";
+        for (i = 0; i < selected.length; i++) {
+            els += selected[i].textContent + " ";
+        }
+        get_bs({
+            elements: els,
+        });
+    }
+    function add_bs() {
+        selected = document.querySelectorAll(".element.button.is-primary");
+        tmp_output = document.getElementById("custom_bs");
+        bs = document.getElementById("bs_select").value;
+        for (i = 0; i < selected.length; i++) {
+            tmp_output.value += selected[i].textContent + "=" + bs + "; ";
+        }
+        for (i = 0; i < selected.length; i++) {
+            els += selected[i].classList.remove("is-primary");
+        }
+    }
+    function get_bs(opt) {
+        bs = document.getElementById("bs_select").value;
+        $.ajax({
+            method: "POST",
+            url: "/get_available_bs/",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
 
-		}
-		function refresh_available_basis_sets() {
-			selected = document.querySelectorAll(".element.button.is-primary");
-			els = ""
-			for (i=0; i < selected.length; i++) {
-				els += selected[i].textContent + " ";
-			}
-			get_bs({'elements': els});
-		}
-		function add_bs() {
-			selected = document.querySelectorAll(".element.button.is-primary");
-			tmp_output = document.getElementById("custom_bs");
-			bs = document.getElementById("bs_select").value;
-			for (i=0; i < selected.length; i++) {
-
-				tmp_output.value += selected[i].textContent + "=" + bs + "; ";
-			}
-			for (i=0; i < selected.length; i++) {
-				els += selected[i].classList.remove("is-primary");
-			}
-
-		}
-		function get_bs(opt) {
-			bs = document.getElementById("bs_select").value;
-			$.ajax({
-				method: "POST",	 	 
-				url: "/get_available_bs/",
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-
-				data: opt,
-				statusCode: {
-					200: function(data) {
-						$("#bs_select").html(data);
-						if(bs != "") {
-							document.getElementById("bs_select").value = bs;
-						}
-						else {
-							document.getElementById("bs_select").selectedIndex = 0;
-						}
-					}
-				}
-			});
-
-		}
-		function toggle_element(Z) {
-			el = document.getElementById("element-" + Z);
-			if (el.classList.contains("is-primary")) {
-				el.classList.remove("is-primary");
-			}
-			else {
-				el.classList.add("is-primary");
-			}
-			refresh_available_basis_sets()
-		}
-		$('document').ready(function() {
-			get_bs({});	
-		});
-	</script>
+            data: opt,
+            statusCode: {
+                200: function (data) {
+                    $("#bs_select").html(data);
+                    if (bs != "") {
+                        document.getElementById("bs_select").value = bs;
+                    } else {
+                        document.getElementById("bs_select").selectedIndex = 0;
+                    }
+                },
+            },
+        });
+    }
+    function toggle_element(Z) {
+        el = document.getElementById("element-" + Z);
+        if (el.classList.contains("is-primary")) {
+            el.classList.remove("is-primary");
+        } else {
+            el.classList.add("is-primary");
+        }
+        refresh_available_basis_sets();
+    }
+    $("document").ready(function () {
+        get_bs({});
+    });
+</script>
 <div>
-	<div id="periodictable">
-		<div class="element button" id="element-1" onclick="toggle_element(1)">H<span class="badge" title="Badge top right" id="badge_1"></span></div>
-		<div class="element button" id="element-2" onclick="toggle_element(2)">He<span class="badge" title="Badge top right" id="badge_2"></span></div>
-		<div class="element button" id="element-3" onclick="toggle_element(3)">Li<span class="badge" title="Badge top right" id="badge_3"></span></div>
-		<div class="element button" id="element-4" onclick="toggle_element(4)">Be<span class="badge" title="Badge top right" id="badge_4"></span></div>
-		<div class="element button" id="element-5" onclick="toggle_element(5)">B<span class="badge" title="Badge top right" id="badge_5"></span></div>
-		<div class="element button" id="element-6" onclick="toggle_element(6)">C<span class="badge" title="Badge top right" id="badge_6"></span></div>
-		<div class="element button" id="element-7" onclick="toggle_element(7)">N<span class="badge" title="Badge top right" id="badge_7"></span></div>
-		<div class="element button" id="element-8" onclick="toggle_element(8)">O<span class="badge" title="Badge top right" id="badge_8"></span></div>
-		<div class="element button" id="element-9" onclick="toggle_element(9)">F<span class="badge" title="Badge top right" id="badge_9"></span></div>
-		<div class="element button" id="element-10" onclick="toggle_element(10)">Ne<span class="badge" title="Badge top right" id="badge_10"></span></div>
-		<div class="element button" id="element-11" onclick="toggle_element(11)">Na<span class="badge" title="Badge top right" id="badge_11"></span></div>
-		<div class="element button" id="element-12" onclick="toggle_element(12)">Mg<span class="badge" title="Badge top right" id="badge_12"></span></div>
-		<div class="element button" id="element-13" onclick="toggle_element(13)">Al<span class="badge" title="Badge top right" id="badge_13"></span></div>
-		<div class="element button" id="element-14" onclick="toggle_element(14)">Si<span class="badge" title="Badge top right" id="badge_14"></span></div>
-		<div class="element button" id="element-15" onclick="toggle_element(15)">P<span class="badge" title="Badge top right" id="badge_15"></span></div>
-		<div class="element button" id="element-16" onclick="toggle_element(16)">S<span class="badge" title="Badge top right" id="badge_16"></span></div>
-		<div class="element button" id="element-17" onclick="toggle_element(17)">Cl<span class="badge" title="Badge top right" id="badge_17"></span></div>
-		<div class="element button" id="element-18" onclick="toggle_element(18)">Ar<span class="badge" title="Badge top right" id="badge_18"></span></div>
-		<div class="element button" id="element-19" onclick="toggle_element(19)">K<span class="badge" title="Badge top right" id="badge_19"></span></div>
-		<div class="element button" id="element-20" onclick="toggle_element(20)">Ca<span class="badge" title="Badge top right" id="badge_20"></span></div>
-		<div class="element button" id="element-21" onclick="toggle_element(21)">Sc<span class="badge" title="Badge top right" id="badge_21"></span></div>
-		<div class="element button" id="element-22" onclick="toggle_element(22)">Ti<span class="badge" title="Badge top right" id="badge_22"></span></div>
-		<div class="element button" id="element-23" onclick="toggle_element(23)">V<span class="badge" title="Badge top right" id="badge_23"></span></div>
-		<div class="element button" id="element-24" onclick="toggle_element(24)">Cr<span class="badge" title="Badge top right" id="badge_24"></span></div>
-		<div class="element button" id="element-25" onclick="toggle_element(25)">Mn<span class="badge" title="Badge top right" id="badge_25"></span></div>
-		<div class="element button" id="element-26" onclick="toggle_element(26)">Fe<span class="badge" title="Badge top right" id="badge_26"></span></div>
-		<div class="element button" id="element-27" onclick="toggle_element(27)">Co<span class="badge" title="Badge top right" id="badge_27"></span></div>
-		<div class="element button" id="element-28" onclick="toggle_element(28)">Ni<span class="badge" title="Badge top right" id="badge_28"></span></div>
-		<div class="element button" id="element-29" onclick="toggle_element(29)">Cu<span class="badge" title="Badge top right" id="badge_29"></span></div>
-		<div class="element button" id="element-30" onclick="toggle_element(30)">Zn<span class="badge" title="Badge top right" id="badge_30"></span></div>
-		<div class="element button" id="element-31" onclick="toggle_element(31)">Ga<span class="badge" title="Badge top right" id="badge_31"></span></div>
-		<div class="element button" id="element-32" onclick="toggle_element(32)">Ge<span class="badge" title="Badge top right" id="badge_32"></span></div>
-		<div class="element button" id="element-33" onclick="toggle_element(33)">As<span class="badge" title="Badge top right" id="badge_33"></span></div>
-		<div class="element button" id="element-34" onclick="toggle_element(34)">Se<span class="badge" title="Badge top right" id="badge_34"></span></div>
-		<div class="element button" id="element-35" onclick="toggle_element(35)">Br<span class="badge" title="Badge top right" id="badge_35"></span></div>
-		<div class="element button" id="element-36" onclick="toggle_element(36)">Kr<span class="badge" title="Badge top right" id="badge_36"></span></div>
-		<div class="element button" id="element-37" onclick="toggle_element(37)">Rb<span class="badge" title="Badge top right" id="badge_37"></span></div>
-		<div class="element button" id="element-38" onclick="toggle_element(38)">Sr<span class="badge" title="Badge top right" id="badge_38"></span></div>
-		<div class="element button" id="element-39" onclick="toggle_element(39)">Y<span class="badge" title="Badge top right" id="badge_39"></span></div>
-		<div class="element button" id="element-40" onclick="toggle_element(40)">Zr<span class="badge" title="Badge top right" id="badge_40"></span></div>
-		<div class="element button" id="element-41" onclick="toggle_element(41)">Nb<span class="badge" title="Badge top right" id="badge_41"></span></div>
-		<div class="element button" id="element-42" onclick="toggle_element(42)">Mo<span class="badge" title="Badge top right" id="badge_42"></span></div>
-		<div class="element button" id="element-43" onclick="toggle_element(43)">Tc<span class="badge" title="Badge top right" id="badge_43"></span></div>
-		<div class="element button" id="element-44" onclick="toggle_element(44)">Ru<span class="badge" title="Badge top right" id="badge_44"></span></div>
-		<div class="element button" id="element-45" onclick="toggle_element(45)">Rh<span class="badge" title="Badge top right" id="badge_45"></span></div>
-		<div class="element button" id="element-46" onclick="toggle_element(46)">Pd<span class="badge" title="Badge top right" id="badge_46"></span></div>
-		<div class="element button" id="element-47" onclick="toggle_element(47)">Ag<span class="badge" title="Badge top right" id="badge_47"></span></div>
-		<div class="element button" id="element-48" onclick="toggle_element(48)">Cd<span class="badge" title="Badge top right" id="badge_48"></span></div>
-		<div class="element button" id="element-49" onclick="toggle_element(49)">In<span class="badge" title="Badge top right" id="badge_49"></span></div>
-		<div class="element button" id="element-50" onclick="toggle_element(50)">Sn<span class="badge" title="Badge top right" id="badge_50"></span></div>
-		<div class="element button" id="element-51" onclick="toggle_element(51)">Sb<span class="badge" title="Badge top right" id="badge_51"></span></div>
-		<div class="element button" id="element-52" onclick="toggle_element(52)">Te<span class="badge" title="Badge top right" id="badge_52"></span></div>
-		<div class="element button" id="element-53" onclick="toggle_element(53)">I<span class="badge" title="Badge top right" id="badge_53"></span></div>
-		<div class="element button" id="element-54" onclick="toggle_element(54)">Xe<span class="badge" title="Badge top right" id="badge_54"></span></div>
-		<div class="element button" id="element-55" onclick="toggle_element(55)">Cs<span class="badge" title="Badge top right" id="badge_55"></span></div>
-		<div class="element button" id="element-56" onclick="toggle_element(56)">Ba<span class="badge" title="Badge top right" id="badge_56"></span></div>
-		<div class="element button" id="element-57" onclick="toggle_element(57)">La<span class="badge" title="Badge top right" id="badge_57"></span></div>
-		<div class="element button" id="element-58" onclick="toggle_element(58)">Ce<span class="badge" title="Badge top right" id="badge_58"></span></div>
-		<div class="element button" id="element-59" onclick="toggle_element(59)">Pr<span class="badge" title="Badge top right" id="badge_59"></span></div>
-		<div class="element button" id="element-60" onclick="toggle_element(60)">Nd<span class="badge" title="Badge top right" id="badge_60"></span></div>
-		<div class="element button" id="element-61" onclick="toggle_element(61)">Pm<span class="badge" title="Badge top right" id="badge_61"></span></div>
-		<div class="element button" id="element-62" onclick="toggle_element(62)">Sm<span class="badge" title="Badge top right" id="badge_62"></span></div>
-		<div class="element button" id="element-63" onclick="toggle_element(63)">Eu<span class="badge" title="Badge top right" id="badge_63"></span></div>
-		<div class="element button" id="element-64" onclick="toggle_element(64)">Gd<span class="badge" title="Badge top right" id="badge_64"></span></div>
-		<div class="element button" id="element-65" onclick="toggle_element(65)">Tb<span class="badge" title="Badge top right" id="badge_65"></span></div>
-		<div class="element button" id="element-66" onclick="toggle_element(66)">Dy<span class="badge" title="Badge top right" id="badge_66"></span></div>
-		<div class="element button" id="element-67" onclick="toggle_element(67)">Ho<span class="badge" title="Badge top right" id="badge_67"></span></div>
-		<div class="element button" id="element-68" onclick="toggle_element(68)">Er<span class="badge" title="Badge top right" id="badge_68"></span></div>
-		<div class="element button" id="element-69" onclick="toggle_element(69)">Tm<span class="badge" title="Badge top right" id="badge_69"></span></div>
-		<div class="element button" id="element-70" onclick="toggle_element(70)">Yb<span class="badge" title="Badge top right" id="badge_70"></span></div>
-		<div class="element button" id="element-71" onclick="toggle_element(71)">Lu<span class="badge" title="Badge top right" id="badge_71"></span></div>
-		<div class="element button" id="element-72" onclick="toggle_element(72)">Hf<span class="badge" title="Badge top right" id="badge_72"></span></div>
-		<div class="element button" id="element-73" onclick="toggle_element(73)">Ta<span class="badge" title="Badge top right" id="badge_73"></span></div>
-		<div class="element button" id="element-74" onclick="toggle_element(74)">W<span class="badge" title="Badge top right" id="badge_74"></span></div>
-		<div class="element button" id="element-75" onclick="toggle_element(75)">Re<span class="badge" title="Badge top right" id="badge_75"></span></div>
-		<div class="element button" id="element-76" onclick="toggle_element(76)">Os<span class="badge" title="Badge top right" id="badge_76"></span></div>
-		<div class="element button" id="element-77" onclick="toggle_element(77)">Ir<span class="badge" title="Badge top right" id="badge_77"></span></div>
-		<div class="element button" id="element-78" onclick="toggle_element(78)">Pt<span class="badge" title="Badge top right" id="badge_78"></span></div>
-		<div class="element button" id="element-79" onclick="toggle_element(79)">Au<span class="badge" title="Badge top right" id="badge_79"></span></div>
-		<div class="element button" id="element-80" onclick="toggle_element(80)">Hg<span class="badge" title="Badge top right" id="badge_80"></span></div>
-		<div class="element button" id="element-81" onclick="toggle_element(81)">Tl<span class="badge" title="Badge top right" id="badge_81"></span></div>
-		<div class="element button" id="element-82" onclick="toggle_element(82)">Pb<span class="badge" title="Badge top right" id="badge_82"></span></div>
-		<div class="element button" id="element-83" onclick="toggle_element(83)">Bi<span class="badge" title="Badge top right" id="badge_83"></span></div>
-		<div class="element button" id="element-84" onclick="toggle_element(84)">Po<span class="badge" title="Badge top right" id="badge_84"></span></div>
-		<div class="element button" id="element-85" onclick="toggle_element(85)">At<span class="badge" title="Badge top right" id="badge_85"></span></div>
-		<div class="element button" id="element-86" onclick="toggle_element(86)">Rn<span class="badge" title="Badge top right" id="badge_86"></span></div>
-		<div class="element button" id="element-87" onclick="toggle_element(87)">Fr<span class="badge" title="Badge top right" id="badge_87"></span></div>
-		<div class="element button" id="element-88" onclick="toggle_element(88)">Ra<span class="badge" title="Badge top right" id="badge_88"></span></div>
-		<div class="element button" id="element-89" onclick="toggle_element(89)">Ac<span class="badge" title="Badge top right" id="badge_89"></span></div>
-		<div class="element button" id="element-90" onclick="toggle_element(90)">Th<span class="badge" title="Badge top right" id="badge_90"></span></div>
-		<div class="element button" id="element-91" onclick="toggle_element(91)">Pa<span class="badge" title="Badge top right" id="badge_91"></span></div>
-		<div class="element button" id="element-92" onclick="toggle_element(92)">U<span class="badge" title="Badge top right" id="badge_92"></span></div>
-		<div class="element button" id="element-93" onclick="toggle_element(93)">Np<span class="badge" title="Badge top right" id="badge_93"></span></div>
-		<div class="element button" id="element-94" onclick="toggle_element(94)">Pu<span class="badge" title="Badge top right" id="badge_94"></span></div>
-		<div class="element button" id="element-95" onclick="toggle_element(95)">Am<span class="badge" title="Badge top right" id="badge_95"></span></div>
-		<div class="element button" id="element-96" onclick="toggle_element(96)">Cm<span class="badge" title="Badge top right" id="badge_96"></span></div>
-		<div class="element button" id="element-97" onclick="toggle_element(97)">Bk<span class="badge" title="Badge top right" id="badge_97"></span></div>
-		<div class="element button" id="element-98" onclick="toggle_element(98)">Cf<span class="badge" title="Badge top right" id="badge_98"></span></div>
-		<div class="element button" id="element-99" onclick="toggle_element(99)">Es<span class="badge" title="Badge top right" id="badge_99"></span></div>
-		<div class="element button" id="element-100" onclick="toggle_element(100)">Fm<span class="badge" title="Badge top right" id="badge_100"></span></div>
-		<div class="element button" id="element-101" onclick="toggle_element(101)">Md<span class="badge" title="Badge top right" id="badge_101"></span></div>
-		<div class="element button" id="element-102" onclick="toggle_element(102)">No<span class="badge" title="Badge top right" id="badge_102"></span></div>
-		<div class="element button" id="element-103" onclick="toggle_element(103)">Lr<span class="badge" title="Badge top right" id="badge_103"></span></div>
-		<div class="element button" id="element-104" onclick="toggle_element(104)">Rf<span class="badge" title="Badge top right" id="badge_104"></span></div>
-		<div class="element button" id="element-105" onclick="toggle_element(105)">Db<span class="badge" title="Badge top right" id="badge_105"></span></div>
-		<div class="element button" id="element-106" onclick="toggle_element(106)">Sg<span class="badge" title="Badge top right" id="badge_106"></span></div>
-		<div class="element button" id="element-107" onclick="toggle_element(107)">Bh<span class="badge" title="Badge top right" id="badge_107"></span></div>
-		<div class="element button" id="element-108" onclick="toggle_element(108)">Hs<span class="badge" title="Badge top right" id="badge_108"></span></div>
-		<div class="element button" id="element-109" onclick="toggle_element(109)">Mt<span class="badge" title="Badge top right" id="badge_109"></span></div>
-		<div class="element button" id="element-110" onclick="toggle_element(110)">Ds<span class="badge" title="Badge top right" id="badge_110"></span></div>
-		<div class="element button" id="element-111" onclick="toggle_element(111)">Rg<span class="badge" title="Badge top right" id="badge_111"></span></div>
-		<div class="element button" id="element-112" onclick="toggle_element(112)">Cn<span class="badge" title="Badge top right" id="badge_112"></span></div>
-		<div class="element button" id="element-113" onclick="toggle_element(113)">Nh<span class="badge" title="Badge top right" id="badge_113"></span></div>
-		<div class="element button" id="element-114" onclick="toggle_element(114)">Fl<span class="badge" title="Badge top right" id="badge_114"></span></div>
-		<div class="element button" id="element-115" onclick="toggle_element(115)">Mc<span class="badge" title="Badge top right" id="badge_115"></span></div>
-		<div class="element button" id="element-116" onclick="toggle_element(116)">Lv<span class="badge" title="Badge top right" id="badge_116"></span></div>
-		<div class="element button" id="element-117" onclick="toggle_element(117)">Ts<span class="badge" title="Badge top right" id="badge_117"></span></div>
-		<div class="element button" id="element-118" onclick="toggle_element(118)">Og<span class="badge" title="Badge top right" id="badge_118"></span></div>		
-	</div>
+    <div id="periodictable">
+        <div class="element button" id="element-1" onclick="toggle_element(1)">H<span class="badge" title="Badge top right" id="badge_1"></span></div>
+        <div class="element button" id="element-2" onclick="toggle_element(2)">He<span class="badge" title="Badge top right" id="badge_2"></span></div>
+        <div class="element button" id="element-3" onclick="toggle_element(3)">Li<span class="badge" title="Badge top right" id="badge_3"></span></div>
+        <div class="element button" id="element-4" onclick="toggle_element(4)">Be<span class="badge" title="Badge top right" id="badge_4"></span></div>
+        <div class="element button" id="element-5" onclick="toggle_element(5)">B<span class="badge" title="Badge top right" id="badge_5"></span></div>
+        <div class="element button" id="element-6" onclick="toggle_element(6)">C<span class="badge" title="Badge top right" id="badge_6"></span></div>
+        <div class="element button" id="element-7" onclick="toggle_element(7)">N<span class="badge" title="Badge top right" id="badge_7"></span></div>
+        <div class="element button" id="element-8" onclick="toggle_element(8)">O<span class="badge" title="Badge top right" id="badge_8"></span></div>
+        <div class="element button" id="element-9" onclick="toggle_element(9)">F<span class="badge" title="Badge top right" id="badge_9"></span></div>
+        <div class="element button" id="element-10" onclick="toggle_element(10)">Ne<span class="badge" title="Badge top right" id="badge_10"></span></div>
+        <div class="element button" id="element-11" onclick="toggle_element(11)">Na<span class="badge" title="Badge top right" id="badge_11"></span></div>
+        <div class="element button" id="element-12" onclick="toggle_element(12)">Mg<span class="badge" title="Badge top right" id="badge_12"></span></div>
+        <div class="element button" id="element-13" onclick="toggle_element(13)">Al<span class="badge" title="Badge top right" id="badge_13"></span></div>
+        <div class="element button" id="element-14" onclick="toggle_element(14)">Si<span class="badge" title="Badge top right" id="badge_14"></span></div>
+        <div class="element button" id="element-15" onclick="toggle_element(15)">P<span class="badge" title="Badge top right" id="badge_15"></span></div>
+        <div class="element button" id="element-16" onclick="toggle_element(16)">S<span class="badge" title="Badge top right" id="badge_16"></span></div>
+        <div class="element button" id="element-17" onclick="toggle_element(17)">Cl<span class="badge" title="Badge top right" id="badge_17"></span></div>
+        <div class="element button" id="element-18" onclick="toggle_element(18)">Ar<span class="badge" title="Badge top right" id="badge_18"></span></div>
+        <div class="element button" id="element-19" onclick="toggle_element(19)">K<span class="badge" title="Badge top right" id="badge_19"></span></div>
+        <div class="element button" id="element-20" onclick="toggle_element(20)">Ca<span class="badge" title="Badge top right" id="badge_20"></span></div>
+        <div class="element button" id="element-21" onclick="toggle_element(21)">Sc<span class="badge" title="Badge top right" id="badge_21"></span></div>
+        <div class="element button" id="element-22" onclick="toggle_element(22)">Ti<span class="badge" title="Badge top right" id="badge_22"></span></div>
+        <div class="element button" id="element-23" onclick="toggle_element(23)">V<span class="badge" title="Badge top right" id="badge_23"></span></div>
+        <div class="element button" id="element-24" onclick="toggle_element(24)">Cr<span class="badge" title="Badge top right" id="badge_24"></span></div>
+        <div class="element button" id="element-25" onclick="toggle_element(25)">Mn<span class="badge" title="Badge top right" id="badge_25"></span></div>
+        <div class="element button" id="element-26" onclick="toggle_element(26)">Fe<span class="badge" title="Badge top right" id="badge_26"></span></div>
+        <div class="element button" id="element-27" onclick="toggle_element(27)">Co<span class="badge" title="Badge top right" id="badge_27"></span></div>
+        <div class="element button" id="element-28" onclick="toggle_element(28)">Ni<span class="badge" title="Badge top right" id="badge_28"></span></div>
+        <div class="element button" id="element-29" onclick="toggle_element(29)">Cu<span class="badge" title="Badge top right" id="badge_29"></span></div>
+        <div class="element button" id="element-30" onclick="toggle_element(30)">Zn<span class="badge" title="Badge top right" id="badge_30"></span></div>
+        <div class="element button" id="element-31" onclick="toggle_element(31)">Ga<span class="badge" title="Badge top right" id="badge_31"></span></div>
+        <div class="element button" id="element-32" onclick="toggle_element(32)">Ge<span class="badge" title="Badge top right" id="badge_32"></span></div>
+        <div class="element button" id="element-33" onclick="toggle_element(33)">As<span class="badge" title="Badge top right" id="badge_33"></span></div>
+        <div class="element button" id="element-34" onclick="toggle_element(34)">Se<span class="badge" title="Badge top right" id="badge_34"></span></div>
+        <div class="element button" id="element-35" onclick="toggle_element(35)">Br<span class="badge" title="Badge top right" id="badge_35"></span></div>
+        <div class="element button" id="element-36" onclick="toggle_element(36)">Kr<span class="badge" title="Badge top right" id="badge_36"></span></div>
+        <div class="element button" id="element-37" onclick="toggle_element(37)">Rb<span class="badge" title="Badge top right" id="badge_37"></span></div>
+        <div class="element button" id="element-38" onclick="toggle_element(38)">Sr<span class="badge" title="Badge top right" id="badge_38"></span></div>
+        <div class="element button" id="element-39" onclick="toggle_element(39)">Y<span class="badge" title="Badge top right" id="badge_39"></span></div>
+        <div class="element button" id="element-40" onclick="toggle_element(40)">Zr<span class="badge" title="Badge top right" id="badge_40"></span></div>
+        <div class="element button" id="element-41" onclick="toggle_element(41)">Nb<span class="badge" title="Badge top right" id="badge_41"></span></div>
+        <div class="element button" id="element-42" onclick="toggle_element(42)">Mo<span class="badge" title="Badge top right" id="badge_42"></span></div>
+        <div class="element button" id="element-43" onclick="toggle_element(43)">Tc<span class="badge" title="Badge top right" id="badge_43"></span></div>
+        <div class="element button" id="element-44" onclick="toggle_element(44)">Ru<span class="badge" title="Badge top right" id="badge_44"></span></div>
+        <div class="element button" id="element-45" onclick="toggle_element(45)">Rh<span class="badge" title="Badge top right" id="badge_45"></span></div>
+        <div class="element button" id="element-46" onclick="toggle_element(46)">Pd<span class="badge" title="Badge top right" id="badge_46"></span></div>
+        <div class="element button" id="element-47" onclick="toggle_element(47)">Ag<span class="badge" title="Badge top right" id="badge_47"></span></div>
+        <div class="element button" id="element-48" onclick="toggle_element(48)">Cd<span class="badge" title="Badge top right" id="badge_48"></span></div>
+        <div class="element button" id="element-49" onclick="toggle_element(49)">In<span class="badge" title="Badge top right" id="badge_49"></span></div>
+        <div class="element button" id="element-50" onclick="toggle_element(50)">Sn<span class="badge" title="Badge top right" id="badge_50"></span></div>
+        <div class="element button" id="element-51" onclick="toggle_element(51)">Sb<span class="badge" title="Badge top right" id="badge_51"></span></div>
+        <div class="element button" id="element-52" onclick="toggle_element(52)">Te<span class="badge" title="Badge top right" id="badge_52"></span></div>
+        <div class="element button" id="element-53" onclick="toggle_element(53)">I<span class="badge" title="Badge top right" id="badge_53"></span></div>
+        <div class="element button" id="element-54" onclick="toggle_element(54)">Xe<span class="badge" title="Badge top right" id="badge_54"></span></div>
+        <div class="element button" id="element-55" onclick="toggle_element(55)">Cs<span class="badge" title="Badge top right" id="badge_55"></span></div>
+        <div class="element button" id="element-56" onclick="toggle_element(56)">Ba<span class="badge" title="Badge top right" id="badge_56"></span></div>
+        <div class="element button" id="element-57" onclick="toggle_element(57)">La<span class="badge" title="Badge top right" id="badge_57"></span></div>
+        <div class="element button" id="element-58" onclick="toggle_element(58)">Ce<span class="badge" title="Badge top right" id="badge_58"></span></div>
+        <div class="element button" id="element-59" onclick="toggle_element(59)">Pr<span class="badge" title="Badge top right" id="badge_59"></span></div>
+        <div class="element button" id="element-60" onclick="toggle_element(60)">Nd<span class="badge" title="Badge top right" id="badge_60"></span></div>
+        <div class="element button" id="element-61" onclick="toggle_element(61)">Pm<span class="badge" title="Badge top right" id="badge_61"></span></div>
+        <div class="element button" id="element-62" onclick="toggle_element(62)">Sm<span class="badge" title="Badge top right" id="badge_62"></span></div>
+        <div class="element button" id="element-63" onclick="toggle_element(63)">Eu<span class="badge" title="Badge top right" id="badge_63"></span></div>
+        <div class="element button" id="element-64" onclick="toggle_element(64)">Gd<span class="badge" title="Badge top right" id="badge_64"></span></div>
+        <div class="element button" id="element-65" onclick="toggle_element(65)">Tb<span class="badge" title="Badge top right" id="badge_65"></span></div>
+        <div class="element button" id="element-66" onclick="toggle_element(66)">Dy<span class="badge" title="Badge top right" id="badge_66"></span></div>
+        <div class="element button" id="element-67" onclick="toggle_element(67)">Ho<span class="badge" title="Badge top right" id="badge_67"></span></div>
+        <div class="element button" id="element-68" onclick="toggle_element(68)">Er<span class="badge" title="Badge top right" id="badge_68"></span></div>
+        <div class="element button" id="element-69" onclick="toggle_element(69)">Tm<span class="badge" title="Badge top right" id="badge_69"></span></div>
+        <div class="element button" id="element-70" onclick="toggle_element(70)">Yb<span class="badge" title="Badge top right" id="badge_70"></span></div>
+        <div class="element button" id="element-71" onclick="toggle_element(71)">Lu<span class="badge" title="Badge top right" id="badge_71"></span></div>
+        <div class="element button" id="element-72" onclick="toggle_element(72)">Hf<span class="badge" title="Badge top right" id="badge_72"></span></div>
+        <div class="element button" id="element-73" onclick="toggle_element(73)">Ta<span class="badge" title="Badge top right" id="badge_73"></span></div>
+        <div class="element button" id="element-74" onclick="toggle_element(74)">W<span class="badge" title="Badge top right" id="badge_74"></span></div>
+        <div class="element button" id="element-75" onclick="toggle_element(75)">Re<span class="badge" title="Badge top right" id="badge_75"></span></div>
+        <div class="element button" id="element-76" onclick="toggle_element(76)">Os<span class="badge" title="Badge top right" id="badge_76"></span></div>
+        <div class="element button" id="element-77" onclick="toggle_element(77)">Ir<span class="badge" title="Badge top right" id="badge_77"></span></div>
+        <div class="element button" id="element-78" onclick="toggle_element(78)">Pt<span class="badge" title="Badge top right" id="badge_78"></span></div>
+        <div class="element button" id="element-79" onclick="toggle_element(79)">Au<span class="badge" title="Badge top right" id="badge_79"></span></div>
+        <div class="element button" id="element-80" onclick="toggle_element(80)">Hg<span class="badge" title="Badge top right" id="badge_80"></span></div>
+        <div class="element button" id="element-81" onclick="toggle_element(81)">Tl<span class="badge" title="Badge top right" id="badge_81"></span></div>
+        <div class="element button" id="element-82" onclick="toggle_element(82)">Pb<span class="badge" title="Badge top right" id="badge_82"></span></div>
+        <div class="element button" id="element-83" onclick="toggle_element(83)">Bi<span class="badge" title="Badge top right" id="badge_83"></span></div>
+        <div class="element button" id="element-84" onclick="toggle_element(84)">Po<span class="badge" title="Badge top right" id="badge_84"></span></div>
+        <div class="element button" id="element-85" onclick="toggle_element(85)">At<span class="badge" title="Badge top right" id="badge_85"></span></div>
+        <div class="element button" id="element-86" onclick="toggle_element(86)">Rn<span class="badge" title="Badge top right" id="badge_86"></span></div>
+        <div class="element button" id="element-87" onclick="toggle_element(87)">Fr<span class="badge" title="Badge top right" id="badge_87"></span></div>
+        <div class="element button" id="element-88" onclick="toggle_element(88)">Ra<span class="badge" title="Badge top right" id="badge_88"></span></div>
+        <div class="element button" id="element-89" onclick="toggle_element(89)">Ac<span class="badge" title="Badge top right" id="badge_89"></span></div>
+        <div class="element button" id="element-90" onclick="toggle_element(90)">Th<span class="badge" title="Badge top right" id="badge_90"></span></div>
+        <div class="element button" id="element-91" onclick="toggle_element(91)">Pa<span class="badge" title="Badge top right" id="badge_91"></span></div>
+        <div class="element button" id="element-92" onclick="toggle_element(92)">U<span class="badge" title="Badge top right" id="badge_92"></span></div>
+        <div class="element button" id="element-93" onclick="toggle_element(93)">Np<span class="badge" title="Badge top right" id="badge_93"></span></div>
+        <div class="element button" id="element-94" onclick="toggle_element(94)">Pu<span class="badge" title="Badge top right" id="badge_94"></span></div>
+        <div class="element button" id="element-95" onclick="toggle_element(95)">Am<span class="badge" title="Badge top right" id="badge_95"></span></div>
+        <div class="element button" id="element-96" onclick="toggle_element(96)">Cm<span class="badge" title="Badge top right" id="badge_96"></span></div>
+        <div class="element button" id="element-97" onclick="toggle_element(97)">Bk<span class="badge" title="Badge top right" id="badge_97"></span></div>
+        <div class="element button" id="element-98" onclick="toggle_element(98)">Cf<span class="badge" title="Badge top right" id="badge_98"></span></div>
+        <div class="element button" id="element-99" onclick="toggle_element(99)">Es<span class="badge" title="Badge top right" id="badge_99"></span></div>
+        <div class="element button" id="element-100" onclick="toggle_element(100)">Fm<span class="badge" title="Badge top right" id="badge_100"></span></div>
+        <div class="element button" id="element-101" onclick="toggle_element(101)">Md<span class="badge" title="Badge top right" id="badge_101"></span></div>
+        <div class="element button" id="element-102" onclick="toggle_element(102)">No<span class="badge" title="Badge top right" id="badge_102"></span></div>
+        <div class="element button" id="element-103" onclick="toggle_element(103)">Lr<span class="badge" title="Badge top right" id="badge_103"></span></div>
+        <div class="element button" id="element-104" onclick="toggle_element(104)">Rf<span class="badge" title="Badge top right" id="badge_104"></span></div>
+        <div class="element button" id="element-105" onclick="toggle_element(105)">Db<span class="badge" title="Badge top right" id="badge_105"></span></div>
+        <div class="element button" id="element-106" onclick="toggle_element(106)">Sg<span class="badge" title="Badge top right" id="badge_106"></span></div>
+        <div class="element button" id="element-107" onclick="toggle_element(107)">Bh<span class="badge" title="Badge top right" id="badge_107"></span></div>
+        <div class="element button" id="element-108" onclick="toggle_element(108)">Hs<span class="badge" title="Badge top right" id="badge_108"></span></div>
+        <div class="element button" id="element-109" onclick="toggle_element(109)">Mt<span class="badge" title="Badge top right" id="badge_109"></span></div>
+        <div class="element button" id="element-110" onclick="toggle_element(110)">Ds<span class="badge" title="Badge top right" id="badge_110"></span></div>
+        <div class="element button" id="element-111" onclick="toggle_element(111)">Rg<span class="badge" title="Badge top right" id="badge_111"></span></div>
+        <div class="element button" id="element-112" onclick="toggle_element(112)">Cn<span class="badge" title="Badge top right" id="badge_112"></span></div>
+        <div class="element button" id="element-113" onclick="toggle_element(113)">Nh<span class="badge" title="Badge top right" id="badge_113"></span></div>
+        <div class="element button" id="element-114" onclick="toggle_element(114)">Fl<span class="badge" title="Badge top right" id="badge_114"></span></div>
+        <div class="element button" id="element-115" onclick="toggle_element(115)">Mc<span class="badge" title="Badge top right" id="badge_115"></span></div>
+        <div class="element button" id="element-116" onclick="toggle_element(116)">Lv<span class="badge" title="Badge top right" id="badge_116"></span></div>
+        <div class="element button" id="element-117" onclick="toggle_element(117)">Ts<span class="badge" title="Badge top right" id="badge_117"></span></div>
+        <div class="element button" id="element-118" onclick="toggle_element(118)">Og<span class="badge" title="Badge top right" id="badge_118"></span></div>
+    </div>
 
-	<br /> 	
-	<div class="columns">
-		<div class="column">
-			<div class="select">
-				<select id="bs_select" onchange="refresh_badges()">
-				</select>
-			</div>
-		</div>
-		<div class="column">
-			<center>
-				<button class="button is-info" type="button" onclick="add_bs()">Add custom basic set</button>
-				<input class="input" id="custom_bs" type="text" placeholder="">
-			</center>
-		</div>
-	</div>
+    <br />
+    <div class="columns">
+        <div class="column">
+            <div class="select">
+                <select id="bs_select" onchange="refresh_badges()"></select>
+            </div>
+        </div>
+        <div class="column">
+            <center>
+                <button class="button is-info" type="button" onclick="add_bs()">Add custom basic set</button>
+                <input class="input" id="custom_bs" type="text" placeholder="" />
+            </center>
+        </div>
+    </div>
 </div>

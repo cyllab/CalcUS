@@ -1,90 +1,83 @@
-{% extends 'frontend/base.html' %}
+{% extends 'frontend/base.html' %} {% load i18n %} {% load static %} {% block extrahead %}
+<title>CalcUS - Server Summary</title>
+<script src="{% static 'frontend/jquery.min.js' %}"></script>
+<script>
+    function refresh_status(a_id) {
+    	$.ajax({
+    		type: "POST",
+    		url: "/status_access/",
+    		headers:{
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+    		data: {'access_id': a_id},
+    		success: function(data)
+    		{
+    			if(data.search("Connected") != -1) {
+    				$("#status_" + a_id).html(data);
+    				$("#status_" + a_id).removeClass("has-background-danger");
+    				$("#status_" + a_id).addClass("has-background-success");
+    			}
+    			else {
+    				$("#status_" + a_id).html(data);
+    				$("#status_" + a_id).addClass("has-background-danger");
+    				$("#status_" + a_id).removeClass("has-background-success");
 
-{% load i18n %}
-{% load static %}
+    			}
+    		}});
+    }
 
-{% block extrahead %}
-	<title>CalcUS - Server Summary</title>
-	<script src="{% static 'frontend/jquery.min.js' %}"></script>
-	<script>
-		function refresh_status(a_id) {
-			$.ajax({
-				type: "POST",
-				url: "/status_access/",
-				headers:{
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				data: {'access_id': a_id}, 
-				success: function(data)
-				{
-					if(data.search("Connected") != -1) {
-						$("#status_" + a_id).html(data);		
-						$("#status_" + a_id).removeClass("has-background-danger");		
-						$("#status_" + a_id).addClass("has-background-success");		
-					}
-					else {
-						$("#status_" + a_id).html(data);		
-						$("#status_" + a_id).addClass("has-background-danger");		
-						$("#status_" + a_id).removeClass("has-background-success");		
-
-					}
-				}});
-		}
-
-		$(document).ready(function() {
-			{% for a in accesses %}
-			refresh_status({{ a.id }});
-			{% endfor %}
-		});
-	</script>
-{% endblock %}
-
-{% block content %}
-{% csrf_token %}
+    $(document).ready(function() {
+    	{% for a in accesses %}
+    	refresh_status({{ a.id }});
+    	{% endfor %}
+    });
+</script>
+{% endblock %} {% block content %} {% csrf_token %}
 
 <div class="container">
-	<h1 class="title is-1">Users</h1>
-	<table class="table is-fullwidth is-striped">
-		<thead>
-			<tr>
-			<th>Username</th>
-			<th>Group</th>
-			<th>Date joined</th>
-			<th>Last login</th>
-			</tr>
-		</thead>
-		<tbody>
-			{% for u in users %}
-				<tr>
-					<td>{{ u.username }}</td>
-					<td>{{ u.group }}</td>
-					<td>{{ u.user.date_joined }}</td>
-					<td>{{ u.user.last_login }}</td>
-				</tr>
-				
-			{% endfor %}	
-		</tbody>
-	</table>
+    <h1 class="title is-1">Users</h1>
+    <table class="table is-fullwidth is-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Group</th>
+                <th>Date joined</th>
+                <th>Last login</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.name }}</td>
+                <td>{{ u.group }}</td>
+                <td>{{ u.user.date_joined }}</td>
+                <td>{{ u.user.last_login }}</td>
+            </tr>
 
-	<h1 class="title is-1">Cluster Accesses</h1>
-	<table class="table is-fullwidth is-striped">
-		<thead>
-			<tr>
-				<th>Server</th>
-				<th>Owner</th>
-				<th>Status</th>
-			</tr>
-		</thead>
-		<tbody>
-			{% for a in accesses %}
-				<tr>
-					<td>{{ a.cluster_address }}</td>
-					<td>{{ a.owner.username }}</td>
-					<td><span id="status_{{ a.id }}"></span></td>
-				</tr>
-			{% endfor %}	
-		</tbody>
-	</table>
+            {% endfor %}
+        </tbody>
+    </table>
 
+    <h1 class="title is-1">Cluster Accesses</h1>
+    <table class="table is-fullwidth is-striped">
+        <thead>
+            <tr>
+                <th>Server</th>
+                <th>Owner</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in accesses %}
+            <tr>
+                <td>{{ a.cluster_address }}</td>
+                <td>{{ a.owner.name }}</td>
+                <td>
+                    <span id="status_{{ a.id }}"></span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock content %}

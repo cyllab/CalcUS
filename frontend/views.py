@@ -41,6 +41,7 @@ from cryptography.hazmat.backends import default_backend
 
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
+from django.views.decorators.csrf import csrf_exempt
 from django.views import generic
 from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
@@ -51,16 +52,18 @@ from django.utils.datastructures import MultiValueDictKeyError
 from django.db.models import Prefetch
 from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import login, authenticate
+from django.db.models import Q
 
-from .forms import UserCreateForm
+from .forms import ResearcherCreateForm, StudentCreateForm
 from .models import (
     Calculation,
-    Profile,
+    User,
     Project,
     ClusterAccess,
     Example,
-    PIRequest,
     ResearchGroup,
+    ClassGroup,
     Parameters,
     Structure,
     Ensemble,
@@ -76,6 +79,7 @@ from .models import (
     Flowchart,
     Step,
     FlowchartOrder,
+    ResourceAllocation,
 )
 from .tasks import (
     dispatcher,
@@ -96,11 +100,15 @@ from .tasks import (
     analyse_opt,
     generate_xyz_structure,
     gen_fingerprint,
+    send_gcloud_task,
+    load_output_files,
 )
+from frontend import tasks
+from .decorators import superuser_required
 from .constants import *
 from .libxyz import parse_xyz_from_text, equivalent_atoms
 from .environment_variables import *
-from .calculation_helper import get_xyz_from_Gaussian_input
+from .helpers import get_xyz_from_Gaussian_input
 
 from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
@@ -134,19 +142,21 @@ class IndexView(generic.ListView):
         proj = clean(self.request.GET.get("project"))
         type = clean(self.request.GET.get("type"))
         status = clean(self.request.GET.get("status"))
-        target_username = clean(self.request.GET.get("user"))
+        target_user_id = clean(self.request.GET.get("user_id"))
         mode = clean(self.request.GET.get("mode"))
 
         try:
-            target_profile = User.objects.get(username=target_username).profile
+            target_user = User.objects.get(id=target_user_id)
         except User.DoesNotExist:
             return []
 
-        if profile_intersection(self.request.user.profile, target_profile):
+        if user_intersection(target_user, self.request.user):
             if mode in ["Workspace", "Unseen only"]:
-                hits = target_profile.calculationorder_set.filter(hidden=False)
+                hits = target_user.calculationorder_set.filter(hidden=False).exclude(
+                    author=None
+                )
             elif mode == "All orders":
-                hits = target_profile.calculationorder_set.all()
+                hits = target_user.calculationorder_set.all().exclude(author=None)
 
             if proj != "All projects":
                 hits = hits.filter(project__name=proj)
@@ -182,11 +192,6 @@ def home(request):
 @login_required
 def periodictable(request):
     return render(request, "frontend/dynamic/periodictable.html")
-
-
-@login_required
-def specifications(request):
-    return render(request, "frontend/dynamic/specifications.html")
 
 
 @login_required
@@ -233,8 +238,8 @@ def aux_molecule(request):
         return HttpResponse(status=204)
 
     try:
-        project_set = request.user.profile.project_set.filter(name=project)
-    except Profile.DoesNotExist:
+        project_set = request.user.project_set.filter(name=project)
+    except User.DoesNotExist:
         return HttpResponse(status=404)
 
     if len(project_set) != 1:
@@ -258,14 +263,13 @@ def aux_ensemble(request):
     _id = clean(request.POST["mol_id"])
     if _id.strip() == "":
         return HttpResponse(status=204)
-    id = int(_id)
 
     try:
-        mol = Molecule.objects.get(pk=id)
+        mol = Molecule.objects.get(pk=_id)
     except Molecule.DoesNotExist:
         return HttpResponse(status=404)
 
-    if not can_view_molecule(mol, request.user.profile):
+    if not can_view_molecule(mol, request.user):
         return HttpResponse(status=404)
 
     return render(
@@ -283,14 +287,13 @@ def aux_structure(request):
     _id = clean(request.POST["e_id"])
     if _id.strip() == "":
         return HttpResponse(status=204)
-    id = int(_id)
 
     try:
-        e = Ensemble.objects.get(pk=id)
+        e = Ensemble.objects.get(pk=_id)
     except Ensemble.DoesNotExist:
         return HttpResponse(status=404)
 
-    if not can_view_ensemble(e, request.user.profile):
+    if not can_view_ensemble(e, request.user):
         return HttpResponse(status=404)
 
     return render(
@@ -302,30 +305,30 @@ def aux_structure(request):
 
 @login_required
 def calculations(request):
-    profile = request.user.profile
-
     teammates = []
-    if profile.member_of:
-        for t in profile.member_of.members.all():
-            teammates.append(t.username)
+    if request.user.member_of:
+        for t in request.user.member_of.members.all():
+            teammates.append((t.name, t.id))
 
-    if profile.member_of and profile.member_of.PI:
-        teammates.append(profile.member_of.PI.username)
+    if request.user.member_of and request.user.member_of.PI:
+        teammates.append((request.user.member_of.PI.name, request.user.member_of.PI.id))
 
-    if profile.researchgroup_PI:
-        for g in profile.researchgroup_PI.all():
+    if request.user.PI_of:
+        for g in request.user.PI_of.all():
             for t in g.members.all():
-                teammates.append(t.username)
+                teammates.append((t.username, t.id))
 
     teammates = list(set(teammates))
-    if profile.username in teammates:
-        teammates.remove(profile.username)
+
+    for ind, t in enumerate(teammates):
+        if t[1] == request.user.id:
+            del teammates[ind]
+            break
 
     return render(
         request,
         "frontend/calculations.html",
         {
-            "profile": request.user.profile,
             "steps": BasicStep.objects.all(),
             "teammates": teammates,
         },
@@ -338,40 +341,39 @@ def projects(request):
         request,
         "frontend/projects.html",
         {
-            "profile": request.user.profile,
-            "target_profile": request.user.profile,
-            "projects": request.user.profile.project_set.all(),
+            "target_user": request.user,
+            "projects": request.user.project_set.all(),
         },
     )
 
 
 @login_required
-def projects_username(request, username):
-    target_username = clean(username)
+def projects_by_user(request, user_id):
+    target_user_id = clean(user_id)
 
     try:
-        target_profile = User.objects.get(username=target_username).profile
+        target_user = User.objects.get(id=target_user_id)
     except User.DoesNotExist:
         return HttpResponse(status=404)
 
-    if request.user.profile == target_profile:
+    if request.user == target_user:
         return render(
             request,
             "frontend/projects.html",
             {
-                "profile": request.user.profile,
-                "target_profile": target_profile,
-                "projects": request.user.profile.project_set.all(),
+                "user": request.user,
+                "target_user": target_user,
+                "projects": request.user.project_set.all(),
             },
         )
-    elif profile_intersection(request.user.profile, target_profile):
+    elif user_intersection(target_user, request.user):
         return render(
             request,
             "frontend/projects.html",
             {
-                "profile": request.user.profile,
-                "target_profile": target_profile,
-                "projects": target_profile.project_set.filter(private=0),
+                "user": request.user,
+                "target_user": target_user,
+                "projects": target_user.project_set.filter(private=0),
             },
         )
 
@@ -382,25 +384,24 @@ def projects_username(request, username):
 @login_required
 def get_projects(request):
     if request.method == "POST":
-        target_username = clean(request.POST["username"])
-        profile = request.user.profile
+        target_user_id = clean(request.POST["user_id"])
 
         try:
-            target_profile = User.objects.get(username=target_username).profile
+            target_user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return HttpResponse(status=404)
 
-        if profile == target_profile:
+        if request.user == target_user:
             return render(
                 request,
                 "frontend/dynamic/project_list.html",
-                {"projects": target_profile.project_set.all()},
+                {"projects": target_user.project_set.all()},
             )
-        elif profile_intersection(profile, target_profile):
+        elif user_intersection(target_user, request.user):
             return render(
                 request,
                 "frontend/dynamic/project_list.html",
-                {"projects": target_profile.project_set.filter(private=0)},
+                {"projects": target_user.project_set.filter(private=0)},
             )
         else:
             return HttpResponse(status=404)
@@ -411,9 +412,7 @@ def get_projects(request):
 @login_required
 def create_project(request):
     if request.method == "POST":
-        profile = request.user.profile
-        proj = Project.objects.create(name="My Project", author=profile)
-        proj.save()
+        proj = Project.objects.create(name="My Project", author=request.user)
 
         return HttpResponse(f"{proj.id};{proj.name}")
     else:
@@ -492,12 +491,10 @@ def submit_flowchart(request):
 @login_required
 def create_folder(request):
     if request.method == "POST":
-        profile = request.user.profile
-
         if "current_folder_id" not in request.POST.keys():
             return HttpResponse(status=403)
 
-        current_folder_id = int(clean(request.POST["current_folder_id"]))
+        current_folder_id = clean(request.POST["current_folder_id"])
 
         try:
             current_folder = Folder.objects.get(pk=current_folder_id)
@@ -507,7 +504,7 @@ def create_folder(request):
         if current_folder.depth > MAX_FOLDER_DEPTH:
             return HttpResponse(status=403)
 
-        if current_folder.project.author != profile:
+        if current_folder.project.author != request.user:
             return HttpResponse(status=403)
 
         for i in range(1, 6):
@@ -532,21 +529,22 @@ def create_folder(request):
 
 
 @login_required
-def project_details(request, username, proj):
+def project_details(request, user_id, proj):
     target_project = clean(proj)
-    target_username = clean(username)
+    target_user_id = clean(user_id)
 
     try:
-        target_profile = User.objects.get(username=target_username).profile
+        target_user = User.objects.get(id=target_user_id)
     except User.DoesNotExist:
         return HttpResponseRedirect("/home/")
 
-    if profile_intersection(request.user.profile, target_profile):
+    if user_intersection(target_user, request.user):
         try:
-            project = target_profile.project_set.get(name=target_project)
+            project = target_user.project_set.get(name=target_project)
         except Project.DoesNotExist:
             return HttpResponseRedirect("/home/")
-        if can_view_project(project, request.user.profile):
+
+        if can_view_project(project, request.user):
             molecules = []
             for m in (
                 project.molecule_set.prefetch_related("ensemble_set")
@@ -585,14 +583,13 @@ def molecule(request, pk):
     except Molecule.DoesNotExist:
         return redirect("/home/")
 
-    if not can_view_molecule(mol, request.user.profile):
+    if not can_view_molecule(mol, request.user):
         return redirect("/home/")
 
     return render(
         request,
         "frontend/molecule.html",
         {
-            "profile": request.user.profile,
             "ensembles": mol.ensemble_set.filter(hidden=False),
             "molecule": mol,
         },
@@ -606,13 +603,13 @@ def ensemble_table_body(request, pk):
     except Molecule.DoesNotExist:
         return redirect("/home/")
 
-    if not can_view_molecule(mol, request.user.profile):
+    if not can_view_molecule(mol, request.user):
         return redirect("/home/")
 
     return render(
         request,
         "frontend/dynamic/ensemble_table_body.html",
-        {"profile": request.user.profile, "molecule": mol},
+        {"molecule": mol},
     )
 
 
@@ -623,13 +620,13 @@ def ensemble(request, pk):
     except Ensemble.DoesNotExist:
         return redirect("/home/")
 
-    if not can_view_ensemble(e, request.user.profile):
+    if not can_view_ensemble(e, request.user):
         return redirect("/home/")
 
     return render(
         request,
         "frontend/ensemble.html",
-        {"profile": request.user.profile, "ensemble": e},
+        {"ensemble": e},
     )
 
 
@@ -646,7 +643,7 @@ def get_related_calculations(request, pk):
     except Ensemble.DoesNotExist:
         return redirect("/home/")
 
-    if not can_view_ensemble(e, request.user.profile):
+    if not can_view_ensemble(e, request.user):
         return redirect("/home/")
 
     orders = _get_related_calculations(e)
@@ -654,7 +651,6 @@ def get_related_calculations(request, pk):
         request,
         "frontend/dynamic/get_related_calculations.html",
         {
-            "profile": request.user.profile,
             "ensemble": e,
             "orders": orders,
         },
@@ -668,7 +664,7 @@ def nmr_analysis(request, pk, pid):
     except Ensemble.DoesNotExist:
         return redirect("/home/")
 
-    if not can_view_ensemble(e, request.user.profile):
+    if not can_view_ensemble(e, request.user):
         return redirect("/home/")
 
     try:
@@ -676,13 +672,13 @@ def nmr_analysis(request, pk, pid):
     except Parameters.DoesNotExist:
         return redirect("/home/")
 
-    if not can_view_parameters(param, request.user.profile):
+    if not can_view_parameters(param, request.user):
         return redirect("/home/")
 
     return render(
         request,
         "frontend/nmr_analysis.html",
-        {"profile": request.user.profile, "ensemble": e, "parameters": param},
+        {"ensemble": e, "parameters": param},
     )
 
 
@@ -701,7 +697,7 @@ def _get_shifts(request):
     except Ensemble.DoesNotExist:
         return ""
 
-    if not can_view_ensemble(e, request.user.profile):
+    if not can_view_ensemble(e, request.user):
         return ""
 
     try:
@@ -709,7 +705,7 @@ def _get_shifts(request):
     except Parameters.DoesNotExist:
         return ""
 
-    if not can_view_parameters(param, request.user.profile):
+    if not can_view_parameters(param, request.user):
         return ""
 
     scaling_factors = {}
@@ -876,12 +872,10 @@ def link_order(request, pk):
     except CalculationOrder.DoesNotExist:
         return HttpResponseRedirect("/calculations/")
 
-    profile = request.user.profile
-
-    if not can_view_order(o, profile) or o.calculation_set.count() == 0:
+    if not can_view_order(o, request.user) or o.calculation_set.count() == 0:
         return HttpResponseRedirect("/calculations/")
 
-    if profile == o.author:
+    if request.user == o.author:
         if o.new_status:
             o.last_seen_status = o.status
             o.author.unseen_calculations = max(o.author.unseen_calculations - 1, 0)
@@ -902,9 +896,9 @@ def link_order(request, pk):
 @login_required
 def details_ensemble(request):
     if request.method == "POST":
-        pk = int(clean(request.POST["id"]))
+        pk = clean(request.POST["id"])
         try:
-            p_id = int(clean(request.POST["p_id"]))
+            p_id = clean(request.POST["p_id"])
         except KeyError:
             return HttpResponse(status=204)
 
@@ -917,7 +911,7 @@ def details_ensemble(request):
         except Parameters.DoesNotExist:
             return HttpResponse(status=403)
 
-        if not can_view_ensemble(e, request.user.profile):
+        if not can_view_ensemble(e, request.user):
             return HttpResponse(status=403)
 
         if e.has_nmr(p):
@@ -926,7 +920,6 @@ def details_ensemble(request):
                 request,
                 "frontend/dynamic/details_ensemble.html",
                 {
-                    "profile": request.user.profile,
                     "ensemble": e,
                     "parameters": p,
                     "shifts": shifts,
@@ -936,7 +929,7 @@ def details_ensemble(request):
             return render(
                 request,
                 "frontend/dynamic/details_ensemble.html",
-                {"profile": request.user.profile, "ensemble": e, "parameters": p},
+                {"ensemble": e, "parameters": p},
             )
 
     return HttpResponse(status=403)
@@ -945,9 +938,9 @@ def details_ensemble(request):
 @login_required
 def details_structure(request):
     if request.method == "POST":
-        pk = int(clean(request.POST["id"]))
+        pk = clean(request.POST["id"])
         try:
-            p_id = int(clean(request.POST["p_id"]))
+            p_id = clean(request.POST["p_id"])
             num = int(clean(request.POST["num"]))
         except KeyError:
             return HttpResponse(status=204)
@@ -957,7 +950,7 @@ def details_structure(request):
         except Ensemble.DoesNotExist:
             return HttpResponse(status=403)
 
-        if not can_view_ensemble(e, request.user.profile):
+        if not can_view_ensemble(e, request.user):
             return HttpResponse(status=403)
 
         try:
@@ -980,7 +973,6 @@ def details_structure(request):
             request,
             "frontend/dynamic/details_structure.html",
             {
-                "profile": request.user.profile,
                 "structure": s,
                 "property": prop,
                 "ensemble": e,
@@ -1022,11 +1014,55 @@ def recipe(request, pk):
     return render(request, "recipes/" + r.page_path, {})
 
 
-class RegisterView(generic.CreateView):
-    form_class = UserCreateForm
-    template_name = "registration/signup.html"
-    model = Profile
-    success_url = "/accounts/login/"
+def register(request):
+    acc_type = ""
+    if request.method == "POST" and "acc_type" in request.POST:
+        acc_type = clean(request.POST["acc_type"])
+        if acc_type == "student":
+            form_student = StudentCreateForm(request.POST)
+            if form_student.is_valid():
+                form_student.save()
+                user = authenticate(
+                    request,
+                    email=form_student.rand_email,
+                    password=form_student.rand_password,
+                )
+                if user:
+                    login(request, user)
+                    return redirect("/projects/")  # Quickstart page?
+                else:
+                    logger.error(f"Could not log in student")
+            form_researcher = ResearcherCreateForm()
+        elif acc_type == "researcher":
+            form_researcher = ResearcherCreateForm(request.POST)
+            if form_researcher.is_valid():
+                form_researcher.save()
+                email = form_researcher.cleaned_data.get("email")
+                password = form_researcher.cleaned_data.get("password1")
+                user = authenticate(request, email=email, password=password)
+                if user:
+                    login(request, user)
+                    return redirect("/projects/")  # Quickstart page?
+                else:
+                    logger.error(f"Could not log in researcher {email}")
+            form_student = StudentCreateForm()
+        else:
+            logger.error(f"Invalid account type: {acc_type}")
+            form_researcher = ResearcherCreateForm()
+            form_student = StudentCreateForm()
+    else:
+        form_researcher = ResearcherCreateForm()
+        form_student = StudentCreateForm()
+
+    return render(
+        request,
+        "registration/register.html",
+        {
+            "form_student": form_student,
+            "form_researcher": form_researcher,
+            "acc_type": acc_type,
+        },
+    )
 
 
 def please_register(request):
@@ -1040,16 +1076,90 @@ def error(request, msg):
         request,
         "frontend/error.html",
         {
-            "profile": request.user.profile,
             "error_message": msg,
         },
     )
 
 
-def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
-    profile = request.user.profile
+@csrf_exempt
+def cloud_order(request):
+    if not "X-Cloudtasks-QueueName" in request.headers.keys():
+        return HttpResponse(status=403)
 
-    if "calc_type" in parameters_dict.keys():
+    body = request.body.decode("utf-8")
+
+    try:
+        o = CalculationOrder.objects.get(pk=body)
+    except ValueError:
+        logger.error(f"Could not convert to int: {body}")
+        return HttpResponse(status=400)
+    except CalculationOrder.DoesNotExist:
+        logger.error(f"Could not find calculation order number {body}")
+        return HttpResponse(status=400)
+
+    dispatcher(o.id)
+
+    return HttpResponse(status=200)
+
+
+@csrf_exempt
+def cloud_calc(request):
+    if not "X-Cloudtasks-QueueName" in request.headers.keys():
+        return HttpResponse(status=403)
+
+    body = request.body.decode("utf-8")
+
+    try:
+        calc = Calculation.objects.get(pk=body)
+    except ValueError:
+        logger.error(f"Could not convert to int: {body}")
+        return HttpResponse(status=400)
+    except Calculation.DoesNotExist:
+        logger.error(f"Could not find calculation number {body}")
+        return HttpResponse(status=400)
+
+    try:
+        ret = run_calc(calc.id)
+    except Exception as e:
+        logger.error(f"Calculation {calc.id} finished with exception {str(e)}")
+        return HttpResponse(status=500)
+
+    if ret != 0:
+        logger.warning(f"Calculation {calc.id} finished with code {ret}")
+        calc.status = 3
+        calc.save()
+
+    return HttpResponse(status=200)
+
+
+@csrf_exempt
+def cloud_action(request):
+    if not "X-Cloudtasks-QueueName" in request.headers.keys():
+        return HttpResponse(status=403)
+
+    body = request.body.decode("utf-8")
+
+    try:
+        func_name, arg = body.split(";")
+    except TypeError:
+        logger.error(f"Invalid cloud action: {body}")
+        return HttpResponse(status=400)
+
+    if func_name not in [
+        "del_project",
+        "del_order",
+        "del_molecule",
+        "del_ensemble",
+    ]:
+        logger.error(f"Invalid cloud action: {body}")
+        return HttpResponse(status=400)
+
+    getattr(tasks, func_name)(arg)
+    return HttpResponse(status=200)
+
+
+def parse_parameters(request, verify=False):
+    if "calc_type" in request.POST.keys():
         try:
             step = BasicStep.objects.get(name=clean(parameters_dict["calc_type"]))
         except BasicStep.DoesNotExist:
@@ -1305,9 +1415,7 @@ def save_preset(request):
     else:
         return HttpResponse("No preset name")
 
-    preset = Preset.objects.create(
-        name=preset_name, author=request.user.profile, params=params
-    )
+    preset = Preset.objects.create(name=preset_name, author=request.user, params=params)
     preset.save()
     return HttpResponse("Preset created")
 
@@ -1323,7 +1431,7 @@ def set_project_default(request):
 
     preset = Preset.objects.create(
         name=f"{project_obj.name} Default",
-        author=request.user.profile,
+        author=request.user,
         params=params,
     )
     preset.save()
@@ -1350,7 +1458,11 @@ def handle_file_upload(ff, params, is_local):
     else:
         return "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf, .com, .gjf)"
 
-    if is_local and xyz.strip().count("\n") - 2 > settings.LOCAL_MAX_ATOMS:
+    if (
+        is_local
+        and xyz.strip().count("\n") - 2 > settings.LOCAL_MAX_ATOMS
+        and settings.LOCAL_MAX_ATOMS != -1
+    ):
         return (
             f"Input structures are limited to at most {settings.LOCAL_MAX_ATOMS} atoms"
         )
@@ -1725,8 +1837,6 @@ def _submit_calculation(request, verify=False):
     if isinstance(ret, str):
         return ret
 
-    profile = request.user.profile
-
     params, project_obj, step = ret
 
     if "calc_resource" in request.POST.keys():
@@ -1738,11 +1848,13 @@ def _submit_calculation(request, verify=False):
 
     if resource != "Local":
         try:
-            access = ClusterAccess.objects.get(cluster_address=resource, owner=profile)
+            access = ClusterAccess.objects.get(
+                cluster_address=resource, owner=request.user
+            )
         except ClusterAccess.DoesNotExist:
             return "No such cluster access"
 
-        if access.owner != profile:
+        if access.owner != request.user:
             return "You do not have the right to use this cluster access"
 
         is_local = False
@@ -1750,15 +1862,21 @@ def _submit_calculation(request, verify=False):
         if not settings.ALLOW_REMOTE_CALC:
             return "Remote calculations are disabled"
     else:
-        if (
-            not profile.is_PI
-            and profile.group == None
-            and not request.user.is_superuser
-        ):
-            return "You have no computing resource"
+        if settings.IS_CLOUD:
+            if not request.user.has_sufficient_resources(
+                10
+            ):  # Placeholder calculation time
+                return "You have insufficient calculation time to launch a calculation"
+        else:
+            if (
+                not request.user.is_PI
+                and request.user.group == None
+                and not request.user.is_superuser
+            ):
+                return "You have no computing resource"
 
-        if not settings.ALLOW_LOCAL_CALC:
-            return "Local calculations are disabled"
+            if not settings.ALLOW_LOCAL_CALC:
+                return "Local calculations are disabled"
 
         is_local = True
 
@@ -1787,14 +1905,14 @@ def _submit_calculation(request, verify=False):
         return "The chosen molecule name is too long"
 
     if "starting_ensemble" in request.POST:
-        start_id = int(clean(request.POST["starting_ensemble"]))
+        start_id = clean(request.POST["starting_ensemble"])
         try:
             start_e = Ensemble.objects.get(pk=start_id)
         except Ensemble.DoesNotExist:
             return "No starting ensemble found"
 
         start_author = start_e.parent_molecule.project.author
-        if not can_view_ensemble(start_e, profile):
+        if not can_view_ensemble(start_e, request.user):
             return "You do not have permission to access the starting calculation"
 
         if step.creates_ensemble:
@@ -1845,7 +1963,7 @@ def _submit_calculation(request, verify=False):
                     except Parameters.DoesNotExist:
                         return "Invalid filter parameters"
 
-                    if not can_view_parameters(filter_parameters, profile):
+                    if not can_view_parameters(filter_parameters, request.user):
                         return "Invalid filter parameters"
 
                     if not verify:
@@ -1863,7 +1981,8 @@ def _submit_calculation(request, verify=False):
                 name=order_name,
                 date=timezone.now(),
                 parameters=params,
-                author=profile,
+                author=request.user,
+                resource_provider=request.user.resource_provider,
                 step=step,
                 project=project_obj,
                 ensemble=start_e,
@@ -1877,14 +1996,14 @@ def _submit_calculation(request, verify=False):
         if not "starting_frame" in request.POST:
             return "Missing starting frame number"
 
-        c_id = int(clean(request.POST["starting_calc"]))
+        c_id = clean(request.POST["starting_calc"])
         frame_num = int(clean(request.POST["starting_frame"]))
 
         try:
             start_c = Calculation.objects.get(pk=c_id)
         except Calculation.DoesNotExist:
             return "No starting ensemble found"
-        if not can_view_calculation(start_c, profile):
+        if not can_view_calculation(start_c, request.user):
             return "You do not have permission to access the starting calculation"
 
         if step.creates_ensemble:
@@ -1897,7 +2016,8 @@ def _submit_calculation(request, verify=False):
                 name=order_name,
                 date=timezone.now(),
                 parameters=params,
-                author=profile,
+                author=request.user,
+                resource_provider=request.user.resource_provider,
                 step=step,
                 project=project_obj,
                 start_calc=start_c,
@@ -1957,7 +2077,8 @@ def _submit_calculation(request, verify=False):
                         name=name,
                         date=timezone.now(),
                         parameters=params,
-                        author=profile,
+                        author=request.user,
+                        resource_provider=request.user.resource_provider,
                         step=step,
                         project=project_obj,
                         ensemble=e,
@@ -1983,12 +2104,12 @@ def _submit_calculation(request, verify=False):
                         else:
                             unique_molecules[_mol_name] = [struct]
 
-                    for _mol_name, arr_structs in unique_molecules.items():
+                    for mol_name, arr_structs in unique_molecules.items():
                         used_numbers = []
                         # fing = gen_fingerprint(arr_structs[0])
                         fing = ""
                         mol = Molecule.objects.create(
-                            name=_mol_name, inchi=fing, project=project_obj
+                            name=mol_name, inchi=fing, project=project_obj
                         )
                         mol.save()
 
@@ -2011,7 +2132,8 @@ def _submit_calculation(request, verify=False):
                             name=name,
                             date=timezone.now(),
                             parameters=params,
-                            author=profile,
+                            author=request.user,
+                            resource_provider=request.user.resource_provider,
                             step=step,
                             project=project_obj,
                             ensemble=e,
@@ -2051,7 +2173,8 @@ def _submit_calculation(request, verify=False):
                         name=name,
                         date=timezone.now(),
                         parameters=params,
-                        author=profile,
+                        author=request.user,
+                        resource_provider=request.user.resource_provider,
                         step=step,
                         project=project_obj,
                         ensemble=e,
@@ -2099,7 +2222,8 @@ def _submit_calculation(request, verify=False):
                             name=name,
                             date=timezone.now(),
                             parameters=params,
-                            author=profile,
+                            author=request.user,
+                            resource_provider=request.user.resource_provider,
                             step=step,
                             project=project_obj,
                             ensemble=e,
@@ -2124,7 +2248,8 @@ def _submit_calculation(request, verify=False):
                     name=name,
                     date=timezone.now(),
                     parameters=params,
-                    author=profile,
+                    author=request.user,
+                    resource_provider=request.user.resource_provider,
                     step=step,
                     project=project_obj,
                 )
@@ -2146,12 +2271,25 @@ def _submit_calculation(request, verify=False):
                 orders.append(obj)
         else:  # No file upload
             if "structure" in request.POST.keys():
+                mol = clean(request.POST["structure"])
+                xyz = generate_xyz_structure(True, mol, "mol")
+                if len(xyz) == 0:
+                    return "Could not convert the input drawing to XYZ"
+
+                if (
+                    is_local
+                    and xyz.strip().count("\n") - 2 > settings.LOCAL_MAX_ATOMS
+                    and settings.LOCAL_MAX_ATOMS != -1
+                ):
+                    return f"Input structures are limited to at most {settings.LOCAL_MAX_ATOMS} atoms"
+
                 if not verify:
                     obj = CalculationOrder.objects.create(
                         name=name,
                         date=timezone.now(),
                         parameters=params,
-                        author=profile,
+                        author=request.user,
+                        resource_provider=request.user.resource_provider,
                         step=step,
                         project=project_obj,
                     )
@@ -2179,18 +2317,7 @@ def _submit_calculation(request, verify=False):
                     p.save()
                     params.save()
 
-                    mol = clean(request.POST["structure"])
-                    xyz = generate_xyz_structure(True, mol, "mol")
-                    if len(xyz) == 0:
-                        return "Could not convert the input drawing to XYZ"
-
-                    if (
-                        is_local
-                        and xyz.strip().count("\n") - 2 > settings.LOCAL_MAX_ATOMS
-                    ):
-                        return f"Input structures are limited to at most {settings.LOCAL_MAX_ATOMS} atoms"
-
-                    s.xyz_structure = mol
+                    s.xyz_structure = xyz
                     s.save()
                     orders.append(obj)
             else:
@@ -2209,11 +2336,11 @@ def _submit_calculation(request, verify=False):
                     return "No valid auxiliary structure"
                 try:
                     aux_struct = Structure.objects.get(
-                        pk=int(clean(request.POST["aux_struct"]))
+                        pk=clean(request.POST["aux_struct"])
                     )
                 except Structure.DoesNotExist:
                     return "No valid auxiliary structure"
-                if not can_view_structure(aux_struct, profile):
+                if not can_view_structure(aux_struct, request.user):
                     return "No valid auxiliary structure"
 
             elif num_aux_files > 1:
@@ -2234,11 +2361,11 @@ def _submit_calculation(request, verify=False):
                     return "No valid auxiliary structure"
                 try:
                     aux_struct = Structure.objects.get(
-                        pk=int(clean(request.POST["aux_struct"]))
+                        pk=clean(request.POST["aux_struct"])
                     )
                 except Structure.DoesNotExist:
                     return "No valid auxiliary structure"
-                if not can_view_structure(aux_struct, profile):
+                if not can_view_structure(aux_struct, request.user):
                     return "No valid auxiliary structure"
 
             aux_struct.save()
@@ -2309,106 +2436,115 @@ def _submit_calculation(request, verify=False):
 
         o.save()
 
-    if "test" not in request.POST.keys():
+    if "test" in request.POST.keys():
+        return redirect("/calculations/")
+
+    if settings.IS_CLOUD:
         for o in orders:
-            dispatcher.delay(o.id)
+            send_gcloud_task("/cloud_order/", str(o.id), compute=False)
+    else:
+        for o in orders:
+            dispatcher.delay(str(o.id))
 
     return redirect("/calculations/")
 
 
-def can_view_project(proj, profile):
-    if proj.author == profile:
+def can_view_project(proj, user):
+    if proj.author == user:
         return True
     else:
-        if not profile_intersection(proj.author, profile):
+        if not user_intersection(proj.author, user):
             return False
-        if proj.private and not profile.is_PI:
+        if proj.private and not (user.is_PI or user.professor_of.count()):
             return False
         return True
 
 
-def can_view_molecule(mol, profile):
-    return can_view_project(mol.project, profile)
+def can_view_molecule(mol, user):
+    return can_view_project(mol.project, user)
 
 
-def can_view_ensemble(e, profile):
-    return can_view_molecule(e.parent_molecule, profile)
+def can_view_ensemble(e, user):
+    return can_view_molecule(e.parent_molecule, user)
 
 
-def can_view_structure(s, profile):
-    return can_view_ensemble(s.parent_ensemble, profile)
+def can_view_structure(s, user):
+    return can_view_ensemble(s.parent_ensemble, user)
 
 
-def can_view_parameters(p, profile):
+def can_view_parameters(p, user):
     prop = p.property_set.first()
 
     if prop is not None:
-        return can_view_structure(prop.parent_structure, profile)
+        return can_view_structure(prop.parent_structure, user)
 
     c = p.calculation_set.first()
 
     if c is not None:
-        return can_view_calculation(c, profile)
+        return can_view_calculation(c, user)
 
 
-def can_view_preset(p, profile):
-    return profile_intersection(p.author, profile)
+def can_view_preset(p, user):
+    return user_intersection(p.author, user)
 
 
-def can_view_order(order, profile):
-    if order.author == profile:
+def can_view_order(order, user):
+    if order.author == user:
         return True
-    elif profile_intersection(order.author, profile):
-        if order.project.private and not profile.is_PI:
+    elif user_intersection(order.author, user):
+        if proj.private and not (user.is_PI or user.professor_of):
             return False
         return True
+    return False
 
 
-def can_view_calculation(calc, profile):
-    return can_view_order(calc.order, profile)
+def can_view_calculation(calc, user):
+    return can_view_order(calc.order, user)
 
 
-def profile_intersection(profile1, profile2):
-    if profile1 == profile2:
+def user_intersection(user1, user2):
+    """
+    user1 is the target
+    user2 is the user trying to access
+    """
+    if user1 == user2:
         return True
-    if profile1.group != None:
-        if profile2 in profile1.group.members.all():
-            return True
-        if profile2 == profile1.group.PI:
-            return True
-    else:
-        return False
 
-    if profile2.group == None:
-        return False
+    if user1.group is not None:
+        if user2 in user1.group.members.all():
+            return True
+        if user2 == user1.group.PI:
+            return True
 
-    if profile1.researchgroup_PI != None:
-        for group in profile1.researchgroup_PI:
-            if profile2 in group.members.all():
+    if user1.PI_of != None:
+        for group in user1.PI_of.all():
+            if user2 in group.members.all():
                 return True
+
+    if user1.in_class is not None:
+        if user1.in_class.professor == user2:
+            return True
+
     return False
 
 
 @login_required
 def project_list(request):
     if request.method == "POST":
-        target_username = clean(request.POST["user"])
+        target_user_id = clean(request.POST["user_id"])
         try:
-            target_profile = User.objects.get(username=target_username).profile
+            target_user = User.objects.get(id=target_user_id)
         except User.DoesNotExist:
             return HttpResponse(status=403)
 
-        profile = request.user.profile
-
-        if not profile_intersection(profile, target_profile):
+        if not user_intersection(target_user, request.user):
             return HttpResponse(status=403)
 
         return render(
             request,
             "frontend/dynamic/project_list.html",
             {
-                "profile": request.user.profile,
-                "target_profile": target_profile,
+                "target_use": target_user,
             },
         )
 
@@ -2420,7 +2556,7 @@ def project_list(request):
 def delete_project(request):
     if request.method == "POST":
         if "id" in request.POST.keys():
-            proj_id = int(clean(request.POST["id"]))
+            proj_id = clean(request.POST["id"])
         else:
             return HttpResponse(status=403)
 
@@ -2429,10 +2565,13 @@ def delete_project(request):
         except Project.DoesNotExist:
             return HttpResponse(status=403)
 
-        if to_delete.author != request.user.profile:
+        if to_delete.author != request.user:
             return HttpResponse(status=403)
 
-        del_project.delay(proj_id)
+        if settings.IS_CLOUD:
+            send_gcloud_task("/cloud_action/", f"del_project;{proj_id}", compute=False)
+        else:
+            del_project.delay(proj_id)
         return HttpResponse(status=204)
     else:
         return HttpResponse(status=403)
@@ -2442,7 +2581,7 @@ def delete_project(request):
 def delete_order(request):
     if request.method == "POST":
         if "id" in request.POST.keys():
-            order_id = int(clean(request.POST["id"]))
+            order_id = clean(request.POST["id"])
         else:
             return HttpResponse(status=403)
 
@@ -2451,10 +2590,13 @@ def delete_order(request):
         except Project.DoesNotExist:
             return HttpResponse(status=403)
 
-        if to_delete.author != request.user.profile:
+        if to_delete.author != request.user:
             return HttpResponse(status=403)
 
-        del_order.delay(order_id)
+        if settings.IS_CLOUD:
+            send_gcloud_task("/cloud_action/", f"del_order;{order_id}", compute=False)
+        else:
+            del_order.delay(order_id)
         return HttpResponse(status=204)
     else:
         return HttpResponse(status=403)
@@ -2464,7 +2606,7 @@ def delete_order(request):
 def delete_folder(request):
     if request.method == "POST":
         if "id" in request.POST.keys():
-            folder_id = int(clean(request.POST["id"]))
+            folder_id = clean(request.POST["id"])
         else:
             return HttpResponse(status=403)
 
@@ -2473,7 +2615,7 @@ def delete_folder(request):
         except Project.DoesNotExist:
             return HttpResponse(status=403)
 
-        if to_delete.project.author != request.user.profile:
+        if to_delete.project.author != request.user:
             return HttpResponse(status=403)
 
         if (
@@ -2491,7 +2633,7 @@ def delete_folder(request):
 def delete_molecule(request):
     if request.method == "POST":
         if "id" in request.POST.keys():
-            mol_id = int(clean(request.POST["id"]))
+            mol_id = clean(request.POST["id"])
         else:
             return HttpResponse(status=403)
 
@@ -2500,10 +2642,14 @@ def delete_molecule(request):
         except Molecule.DoesNotExist:
             return HttpResponse(status=403)
 
-        if to_delete.project.author != request.user.profile:
+        if to_delete.project.author != request.user:
             return HttpResponse(status=403)
 
-        del_molecule.delay(mol_id)
+        if settings.IS_CLOUD:
+            send_gcloud_task("/cloud_action/", f"del_molecule;{mol_id}", compute=False)
+        else:
+            del_molecule.delay(mol_id)
+
         return HttpResponse(status=204)
     else:
         return HttpResponse(status=403)
@@ -2513,7 +2659,7 @@ def delete_molecule(request):
 def delete_ensemble(request):
     if request.method == "POST":
         if "id" in request.POST.keys():
-            ensemble_id = int(clean(request.POST["id"]))
+            ensemble_id = clean(request.POST["id"])
         else:
             return HttpResponse(status=403)
 
@@ -2522,10 +2668,15 @@ def delete_ensemble(request):
         except Ensemble.DoesNotExist:
             return HttpResponse(status=404)
 
-        if to_delete.parent_molecule.project.author != request.user.profile:
+        if to_delete.parent_molecule.project.author != request.user:
             return HttpResponse(status=403)
 
-        del_ensemble.delay(ensemble_id)
+        if settings.IS_CLOUD:
+            send_gcloud_task(
+                "/cloud_action/", f"del_ensemble;{ensemble_id}", compute=False
+            )
+        else:
+            del_ensemble.delay(ensemble_id)
         return HttpResponse(status=204)
     else:
         return HttpResponse(status=403)
@@ -2540,7 +2691,7 @@ def add_clusteraccess(request):
         memory = int(clean(request.POST["cluster_memory"]))
         password = clean(request.POST["cluster_password"])
 
-        owner = request.user.profile
+        owner = request.user
 
         try:
             existing_access = owner.clusteraccess_owner.get(
@@ -2581,7 +2732,7 @@ def add_clusteraccess(request):
 
         with open(os.path.join(CALCUS_KEY_HOME, str(access.id) + ".pub"), "wb") as out:
             out.write(public_key)
-            out.write(b" %b@CalcUS" % bytes(owner.username, "utf-8"))
+            out.write(b" %b@CalcUS" % bytes(owner.name, "utf-8"))
 
         return HttpResponse(public_key.decode("utf-8"))
     else:
@@ -2598,9 +2749,7 @@ def connect_access(request):
     except ClusterAccess.DoesNotExist:
         return HttpResponse(status=403)
 
-    profile = request.user.profile
-
-    if access.owner != profile:
+    if access.owner != request.user:
         return HttpResponse(status=403)
 
     access.status = "Pending"
@@ -2617,9 +2766,7 @@ def disconnect_access(request):
 
     access = ClusterAccess.objects.get(pk=pk)
 
-    profile = request.user.profile
-
-    if access.owner != profile:
+    if access.owner != request.user:
         return HttpResponse(status=403)
 
     send_cluster_command(f"disconnect\n{pk}\n")
@@ -2633,9 +2780,7 @@ def status_access(request):
 
     access = ClusterAccess.objects.get(pk=pk)
 
-    profile = request.user.profile
-
-    if access.owner != profile and not profile.user.is_superuser:
+    if access.owner != request.user and not request.user.is_superuser:
         return HttpResponse(status=403)
 
     dt = timezone.now() - access.last_connected
@@ -2654,9 +2799,7 @@ def get_command_status(request):
     except ClusterAccess.DoesNotExist:
         return HttpResponse(status=403)
 
-    profile = request.user.profile
-
-    if access.owner != profile:
+    if access.owner != request.user:
         return HttpResponse(status=403)
 
     return HttpResponse(access.status)
@@ -2669,9 +2812,7 @@ def delete_access(request, pk):
     except ClusterAccess.DoesNotExist:
         return HttpResponse(status=403)
 
-    profile = request.user.profile
-
-    if access.owner != profile:
+    if access.owner != request.user:
         return HttpResponse(status=403)
 
     access.delete()
@@ -2688,9 +2829,7 @@ def load_pub_key(request, pk):
     except ClusterAccess.DoesNotExist:
         return HttpResponse(status=403)
 
-    profile = request.user.profile
-
-    if access.owner != profile:
+    if access.owner != request.user:
         return HttpResponse(status=403)
 
     key_path = os.path.join(CALCUS_KEY_HOME, f"{access.id}.pub")
@@ -2707,7 +2846,7 @@ def load_pub_key(request, pk):
 @login_required
 def update_access(request):
     vals = {}
-    for param in ["access_id", "pal", "mem"]:
+    for param in ["pal", "mem"]:
         if param not in request.POST.keys():
             return HttpResponse(status=400)
 
@@ -2716,14 +2855,20 @@ def update_access(request):
         except ValueError:
             return HttpResponse("Invalid value", status=400)
 
+    if "access_id" not in request.POST:
+        return HttpResponse(status=400)
+
+    try:
+        vals["access_id"] = clean(request.POST[param])
+    except ValueError:
+        return HttpResponse("Invalid value", status=400)
+
     try:
         access = ClusterAccess.objects.get(pk=vals["access_id"])
     except ClusterAccess.DoesNotExist:
         return HttpResponse(status=403)
 
-    profile = request.user.profile
-
-    if access.owner != profile:
+    if access.owner != request.user:
         return HttpResponse(status=403)
 
     if vals["pal"] < 1:
@@ -2753,31 +2898,8 @@ def update_access(request):
 
 @login_required
 @superuser_required
-def get_pi_requests(request):
-    reqs = PIRequest.objects.count()
-    return HttpResponse(str(reqs))
-
-
-@login_required
-@superuser_required
-def get_pi_requests_table(request):
-
-    reqs = PIRequest.objects.all()
-
-    return render(
-        request,
-        "frontend/dynamic/pi_requests_table.html",
-        {
-            "profile": request.user.profile,
-            "reqs": reqs,
-        },
-    )
-
-
-@login_required
-@superuser_required
 def server_summary(request):
-    users = Profile.objects.all()
+    users = User.objects.all()
     groups = ResearchGroup.objects.all()
     accesses = ClusterAccess.objects.all()
     return render(
@@ -2792,38 +2914,112 @@ def server_summary(request):
 
 
 @login_required
+def create_group(request):
+    if request.method == "POST":
+
+        try:
+            group_name = clean(request.POST["group_name"])
+        except KeyError:
+            return HttpResponse("No group name given", status=400)
+
+        if len(group_name) < 4:
+            return HttpResponse("Group name too short", status=400)
+
+        if len(group_name) > 64:
+            return HttpResponse("Group name too long", status=400)
+
+        try:
+            type = clean(request.POST["type"])
+        except KeyError:
+            return HttpResponse("No group type given", status=400)
+
+        if type == "group":
+            if request.user.is_PI:
+                return HttpResponse("You already have a research group", status=400)
+            group = ResearchGroup.objects.create(name=group_name, PI=request.user)
+        elif type == "class":
+            cls = ClassGroup.objects.create(name=group_name, professor=request.user)
+            cls.generate_code()
+
+        return HttpResponse(status=201)
+
+    return HttpResponse(status=403)
+
+
+@login_required
+def dissolve_group(request):
+    if request.method == "POST":
+        try:
+            group_id = clean(request.POST["group_id"])
+        except KeyError:
+            return HttpResponse("No group ID given", status=400)
+
+        try:
+            type = clean(request.POST["type"])
+        except KeyError:
+            return HttpResponse("No type given", status=400)
+
+        if type == "group":
+            try:
+                group = ResearchGroup.objects.get(pk=group_id)
+            except ResearchGroup.DoesNotExist:
+                return HttpResponse("No research group with this ID", status=404)
+
+            if not request.user.is_PI:
+                return HttpResponse("No research group to dissolve", status=400)
+
+            if group.PI != request.user:
+                return HttpResponse(
+                    "You do not have permission to dissolve this group", status=403
+                )
+
+            group.delete()
+        elif type == "class":
+            try:
+                cls = ClassGroup.objects.get(pk=group_id)
+            except ClassGroup.DoesNotExist:
+                return HttpResponse("No class with this ID", status=404)
+
+            if cls.professor != request.user:
+                return HttpResponse(
+                    "You do not have permission to dissolve this class", status=403
+                )
+
+            cls.delete()  # or make inactive?
+        else:
+            return HttpResponse("Invalid type given", status=400)
+
+        return HttpResponse(status=200)
+
+    return HttpResponse(status=403)
+
+
+@login_required
 def add_user(request):
     if request.method == "POST":
-        profile = request.user.profile
-
-        if not profile.is_PI:
+        if not request.user.is_PI:
             return HttpResponse(status=403)
 
-        username = clean(request.POST["username"])
-        group_id = int(clean(request.POST["group_id"]))
+        user_id = clean(request.POST["user_id"])
+        group_id = clean(request.POST["group_id"])
 
         try:
             group = ResearchGroup.objects.get(pk=group_id)
         except ResearchGroup.DoesNotExist:
             return HttpResponse(status=403)
 
-        if group.PI != profile:
+        if group.PI != request.user:
             return HttpResponse(status=403)
 
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return HttpResponse(status=403)
 
-        if user.profile == profile:
+        if user == request.user:
             return HttpResponse(status=403)
 
-        code = clean(request.POST["code"])
-
-        if user.profile.code != code:
-            return HttpResponse(status=403)
-
-        group.members.add(user.profile)
+        group.members.add(user)
 
         return HttpResponse(status=200)
 
@@ -2833,34 +3029,50 @@ def add_user(request):
 @login_required
 def remove_user(request):
     if request.method == "POST":
-        profile = request.user.profile
+        try:
+            type = clean(request.POST["type"])
+        except KeyError:
+            return HttpResponse("No group type given", status=400)
 
-        if not profile.is_PI:
-            return HttpResponse(status=403)
-
-        member_id = int(clean(request.POST["member_id"]))
-        group_id = int(clean(request.POST["group_id"]))
+        member_id = clean(request.POST["member_id"])
+        group_id = clean(request.POST["group_id"])
 
         try:
-            group = ResearchGroup.objects.get(pk=group_id)
-        except ResearchGroup.DoesNotExist:
+            member = User.objects.get(pk=member_id)
+        except User.DoesNotExist:
             return HttpResponse(status=403)
 
-        if group.PI != profile:
+        if member == request.user:
             return HttpResponse(status=403)
 
-        try:
-            member = Profile.objects.get(pk=member_id)
-        except Profile.DoesNotExist:
-            return HttpResponse(status=403)
+        if type == "group":
+            try:
+                group = ResearchGroup.objects.get(pk=group_id)
+            except ResearchGroup.DoesNotExist:
+                return HttpResponse(status=403)
 
-        if member == profile:
-            return HttpResponse(status=403)
+            if member not in group.members.all():
+                return HttpResponse(status=403)
 
-        if member not in group.members.all():
-            return HttpResponse(status=403)
+            if group.PI != request.user:
+                return HttpResponse(status=403)
 
-        group.members.remove(member)
+            group.members.remove(member)
+        elif type == "class":
+            try:
+                cls = ClassGroup.objects.get(pk=group_id)
+            except ClassGroup.DoesNotExist:
+                return HttpResponse(status=403)
+
+            if member not in cls.members.all():
+                return HttpResponse(status=403)
+
+            if cls.professor != request.user:
+                return HttpResponse(status=403)
+
+            cls.members.remove(member)
+        else:
+            return HttpResponse("Invalid group type given", status=400)
 
         return HttpResponse(status=200)
 
@@ -2868,62 +3080,45 @@ def remove_user(request):
 
 
 @login_required
+def redeem_allocation(request):
+    if request.method == "POST":
+        try:
+            code = clean(request.POST["code"])
+        except KeyError:
+            return HttpResponse("No code given", status=400)
+
+        try:
+            alloc = ResourceAllocation.objects.get(code=code)
+        except ResourceAllocation.DoesNotExist:
+            return HttpResponse("Invalid code given", status=400)
+
+        if not alloc.redeem(request.user):
+            return HttpResponse("Code already redeemed", status=400)
+
+        return HttpResponse("Resource redeemed!", status=204)
+
+
+@login_required
 def profile_groups(request):
     return render(
         request,
         "frontend/dynamic/profile_groups.html",
-        {
-            "profile": request.user.profile,
-        },
     )
 
 
 @login_required
-@superuser_required
-def accept_pi_request(request, pk):
-
-    a = PIRequest.objects.get(pk=pk)
-
-    try:
-        group = ResearchGroup.objects.get(name=a.group_name)
-    except ResearchGroup.DoesNotExist:
-        pass
-    else:
-        logger.error("Group with that name already exists")
-        return HttpResponse(status=403)
-    issuer = a.issuer
-    group = ResearchGroup.objects.create(name=a.group_name, PI=issuer)
-    group.save()
-    issuer.is_PI = True
-    issuer.save()
-
-    a.delete()
-
-    return HttpResponse(status=200)
-
-
-@login_required
-@superuser_required
-def deny_pi_request(request, pk):
-
-    a = PIRequest.objects.get(pk=pk)
-    a.delete()
-
-    return HttpResponse(status=200)
-
-
-@login_required
-@superuser_required
-def manage_pi_requests(request):
-    reqs = PIRequest.objects.all()
-
+def profile_classes(request):
     return render(
         request,
-        "frontend/manage_pi_requests.html",
-        {
-            "profile": request.user.profile,
-            "reqs": reqs,
-        },
+        "frontend/dynamic/profile_classes.html",
+    )
+
+
+@login_required
+def profile_allocation(request):
+    return render(
+        request,
+        "frontend/dynamic/profile_allocation.html",
     )
 
 
@@ -2934,18 +3129,14 @@ def conformer_table(request, pk):
         e = Ensemble.objects.get(pk=id)
     except Ensemble.DoesNotExist:
         return HttpResponse(status=403)
-    profile = request.user.profile
 
-    if e.parent_molecule.project.author != profile and not profile_intersection(
-        profile, e.parent_molecule.project.author
-    ):
+    if not can_view_ensemble(e, request.user):
         return HttpResponse(status=403)
 
     return render(
         request,
         "frontend/dynamic/conformer_table.html",
         {
-            "profile": request.user.profile,
             "ensemble": e,
         },
     )
@@ -2955,8 +3146,8 @@ def conformer_table(request, pk):
 def conformer_table_post(request):
     if request.method == "POST":
         try:
-            id = int(clean(request.POST["ensemble_id"]))
-            p_id = int(clean(request.POST["param_id"]))
+            id = clean(request.POST["ensemble_id"])
+            p_id = clean(request.POST["param_id"])
         except KeyError:
             return HttpResponse(status=204)
 
@@ -2964,12 +3155,10 @@ def conformer_table_post(request):
             e = Ensemble.objects.get(pk=id)
         except Ensemble.DoesNotExist:
             return HttpResponse(status=403)
-        profile = request.user.profile
 
-        if e.parent_molecule.project.author != profile and not profile_intersection(
-            profile, e.parent_molecule.project.author
-        ):
+        if not can_view_ensemble(e, request.user):
             return HttpResponse(status=403)
+
         try:
             p = Parameters.objects.get(pk=p_id)
         except Parameters.DoesNotExist:
@@ -2980,11 +3169,11 @@ def conformer_table_post(request):
         if p.md5 in full_summary.keys():
             summary = full_summary[p.md5]
 
-            fms = profile.pref_units_format_string
+            fms = request.user.pref_units_format_string
 
             rel_energies = [
                 fms.format(i)
-                for i in np.array(summary[5]) * profile.unit_conversion_factor
+                for i in np.array(summary[5]) * request.user.unit_conversion_factor
             ]
             structures = [e.structure_set.get(pk=i) for i in summary[4]]
             data = zip(structures, summary[2], rel_energies, summary[6])
@@ -2999,7 +3188,6 @@ def conformer_table_post(request):
             request,
             "frontend/dynamic/conformer_table.html",
             {
-                "profile": request.user.profile,
                 "data": data,
             },
         )
@@ -3015,9 +3203,7 @@ def uvvis(request, pk):
     except Property.DoesNotExist:
         return HttpResponse(status=404)
 
-    profile = request.user.profile
-
-    if not can_view_structure(prop.parent_structure, profile):
+    if not can_view_structure(prop.parent_structure, request.user):
         return HttpResponse(status=404)
 
     response = HttpResponse(prop.uvvis, content_type="text/csv")
@@ -3032,20 +3218,16 @@ def get_calc_data(request, pk):
     except Calculation.DoesNotExist:
         return HttpResponse(status=403)
 
-    profile = request.user.profile
-
-    if calc.order.author != profile and not profile_intersection(
-        profile, calc.order.author
-    ):
+    if not can_view_calculation(calc, request.user):
         return HttpResponse(status=403)
 
     if calc.status == 0:
         return HttpResponse(status=204)
 
-    return format_frames(calc, profile)
+    return format_frames(calc, request.user)
 
 
-def format_frames(calc, profile):
+def format_frames(calc, user):
     if calc.status == 1:
         analyse_opt(calc.id)
 
@@ -3069,11 +3251,14 @@ def format_frames(calc, profile):
             scan_frames.append(f["number"])
             scan_energies.append(f["energy"])
 
-    if len(scan_frames) > 0:
-        scan_min = min(scan_energies)
-        for n, E in zip(scan_frames, scan_energies):
-            scan_energy += f"{n},{(E - scan_min) * profile.unit_conversion_factor}\n"
-    return HttpResponse(multi_xyz + ";" + RMSD + ";" + scan_energy)
+    if len(multi_xyz) > 0:
+        if len(scan_energies) > 0:
+            scan_min = min(scan_energies)
+            for n, E in zip(scan_frames, scan_energies):
+                scan_energy += f"{n},{(E - scan_min) * user.unit_conversion_factor}\n"
+        return HttpResponse(multi_xyz + ";" + RMSD + ";" + scan_energy)
+    else:
+        return HttpResponse(status=204)
 
 
 @login_required
@@ -3084,9 +3269,7 @@ def get_calc_data_remote(request, pk):
     except Calculation.DoesNotExist:
         return HttpResponse(status=403)
 
-    profile = request.user.profile
-
-    if calc.order.author != profile:
+    if calc.order.author != request.user:
         return HttpResponse(status=403)
 
     if calc.status == 0:
@@ -3100,21 +3283,20 @@ def get_calc_data_remote(request, pk):
 
         send_cluster_command(f"load_log\n{calc.id}\n{calc.order.resource.id}\n")
 
-        ind = 0
-        while (
-            not os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"))
-            and ind < 60
-        ):
+        for i in range(10):
+            if os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")):
+                break
             time.sleep(1)
-            ind += 1
 
         if not os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")):
             return HttpResponse(status=404)
+
+        load_output_files(calc)
     else:
         logger.error("Not implemented")
         return HttpResponse(status=403)
 
-    return format_frames(calc, profile)
+    return format_frames(calc, request.user)
 
 
 def get_calc_frame(request, cid, fid):
@@ -3123,9 +3305,7 @@ def get_calc_frame(request, cid, fid):
     except Calculation.DoesNotExist:
         return redirect("/home/")
 
-    profile = request.user.profile
-
-    if not can_view_calculation(calc, profile):
+    if not can_view_calculation(calc, request.user):
         return HttpResponse(status=403)
 
     if calc.status == 0:
@@ -3138,7 +3318,7 @@ def get_calc_frame(request, cid, fid):
 @login_required
 def get_cube(request):
     if request.method == "POST":
-        id = int(clean(request.POST["id"]))
+        id = clean(request.POST["id"])
         orb = int(clean(request.POST["orb"]))
 
         try:
@@ -3146,9 +3326,7 @@ def get_cube(request):
         except Property.DoesNotExist:
             return HttpResponse(status=404)
 
-        profile = request.user.profile
-
-        if not can_view_structure(prop.parent_structure, profile):
+        if not can_view_structure(prop.parent_structure, request.user):
             return HttpResponse(status=404)
 
         if len(prop.mo) == 0:
@@ -3180,14 +3358,14 @@ def nmr(request):
 
     if "id" in request.POST.keys():
         try:
-            e = Ensemble.objects.get(pk=int(clean(request.POST["id"])))
+            e = Ensemble.objects.get(pk=clean(request.POST["id"]))
         except Ensemble.DoesNotExist:
             return HttpResponse(status=404)
     else:
         return HttpResponse(status=404)
     if "p_id" in request.POST.keys():
         try:
-            params = Parameters.objects.get(pk=int(clean(request.POST["p_id"])))
+            params = Parameters.objects.get(pk=clean(request.POST["p_id"]))
         except Parameters.DoesNotExist:
             return HttpResponse(status=404)
     else:
@@ -3198,9 +3376,7 @@ def nmr(request):
     else:
         return HttpResponse(status=404)
 
-    profile = request.user.profile
-
-    if not profile_intersection(profile, e.parent_molecule.project.author):
+    if not can_view_ensemble(e, request.user):
         return HttpResponse(status=403)
 
     if not e.has_nmr(params):
@@ -3232,9 +3408,7 @@ def ir_spectrum(request, pk):
     except Property.DoesNotExist:
         return HttpResponse(status=404)
 
-    profile = request.user.profile
-
-    if not can_view_structure(prop.parent_structure, profile):
+    if not can_view_structure(prop.parent_structure, request.user):
         return HttpResponse(status=404)
 
     if prop.ir_spectrum != "":
@@ -3252,9 +3426,7 @@ def vib_table(request, pk):
     except Property.DoesNotExist:
         return HttpResponse(status=404)
 
-    profile = request.user.profile
-
-    if not can_view_structure(prop.parent_structure, profile):
+    if not can_view_structure(prop.parent_structure, request.user):
         return HttpResponse(status=404)
 
     response = ""
@@ -3265,52 +3437,19 @@ def vib_table(request, pk):
 
 
 @login_required
-def apply_pi(request):
-    if request.method == "POST":
-        profile = request.user.profile
-
-        if profile.is_PI:
-            return render(
-                request,
-                "frontend/apply_pi.html",
-                {
-                    "profile": request.user.profile,
-                    "message": "You are already a PI!",
-                },
-            )
-        group_name = clean(request.POST["group_name"])
-        req = PIRequest.objects.create(
-            issuer=profile, group_name=group_name, date_issued=timezone.now()
-        )
-        return render(
-            request,
-            "frontend/apply_pi.html",
-            {
-                "profile": request.user.profile,
-                "message": "Your request has been received.",
-            },
-        )
-    else:
+def info_table(request, pk):
+    try:
+        calc = Calculation.objects.get(pk=pk)
+    except Calculation.DoesNotExist:
         return HttpResponse(status=403)
 
-
-@login_required
-def info_table(request, pk):
-    id = str(pk)
-    calc = Calculation.objects.get(pk=id)
-
-    profile = request.user.profile
-
-    if calc not in profile.calculation_set.all() and not profile_intersection(
-        profile, calc.author
-    ):
+    if not can_view_calculation(calc, request.user):
         return HttpResponse(status=403)
 
     return render(
         request,
         "frontend/dynamic/info_table.html",
         {
-            "profile": request.user.profile,
             "calculation": calc,
         },
     )
@@ -3318,14 +3457,12 @@ def info_table(request, pk):
 
 @login_required
 def next_step(request, pk):
-    id = str(pk)
-    calc = Calculation.objects.get(pk=id)
+    try:
+        calc = Calculation.objects.get(pk=pk)
+    except Calculation.DoesNotExist:
+        return HttpResponse(status=403)
 
-    profile = request.user.profile
-
-    if calc not in profile.calculation_set.all() and not profile_intersection(
-        profile, calc.author
-    ):
+    if not can_view_calculation(calc, request.user):
         return HttpResponse(status=403)
 
     return render(
@@ -3344,9 +3481,7 @@ def download_structures(request, ee):
     except Ensemble.DoesNotExist:
         return HttpResponse(status=404)
 
-    profile = request.user.profile
-
-    if not can_view_ensemble(e, profile):
+    if not can_view_ensemble(e, request.user):
         return HttpResponse(status=404)
 
     name = f"{clean_filename(e.parent_molecule.name)}.{clean_filename(e.name)}"
@@ -3354,7 +3489,7 @@ def download_structures(request, ee):
     for s in e.structure_set.all():
         if s.xyz_structure == "":
             structs += "1\nMissing Structure\nC 0 0 0"
-            logger.warning(f"Missing structure! ({profile.username}, {name})")
+            logger.warning(f"Missing structure! ({request.user.name}, {name})")
         structs += s.xyz_structure
 
     response = HttpResponse(structs)
@@ -3370,9 +3505,7 @@ def download_structure(request, ee, num):
     except Ensemble.DoesNotExist:
         return HttpResponse(status=404)
 
-    profile = request.user.profile
-
-    if not can_view_ensemble(e, profile):
+    if not can_view_ensemble(e, request.user):
         return HttpResponse(status=404)
 
     try:
@@ -3414,18 +3547,32 @@ def gen_3D(request):
 
 
 @login_required
+def update_name(request):
+    if request.method == "POST":
+        name = clean(request.POST["name"])
+        if len(name) == 0:
+            return HttpResponse("No name given", status=400)
+        elif len(name) < 3:
+            return HttpResponse("The name entered is unreasonably short", status=400)
+        elif len(name) > 255:
+            return HttpResponse("The name entered is unreasonably long", status=400)
+
+        request.user.full_name = name
+        request.user.save()
+        return HttpResponse("Name updated")
+
+
+@login_required
 def rename_molecule(request):
     if request.method == "POST":
-        id = int(clean(request.POST["id"]))
+        id = clean(request.POST["id"])
 
         try:
             mol = Molecule.objects.get(pk=id)
         except Molecule.DoesNotExist:
             return HttpResponse(status=403)
 
-        profile = request.user.profile
-
-        if mol.project.author != profile:
+        if mol.project.author != request.user:
             return HttpResponse(status=403)
 
         if "new_name" in request.POST.keys():
@@ -3444,16 +3591,14 @@ def rename_molecule(request):
 @login_required
 def rename_project(request):
     if request.method == "POST":
-        id = int(clean(request.POST["id"]))
+        id = clean(request.POST["id"])
 
         try:
             proj = Project.objects.get(pk=id)
         except Project.DoesNotExist:
             return HttpResponse(status=403)
 
-        profile = request.user.profile
-
-        if proj.author != profile:
+        if proj.author != request.user:
             return HttpResponse(status=403)
 
         if "new_name" in request.POST.keys():
@@ -3472,16 +3617,14 @@ def rename_project(request):
 @login_required
 def toggle_private(request):
     if request.method == "POST":
-        id = int(clean(request.POST["id"]))
+        id = clean(request.POST["id"])
 
         try:
             proj = Project.objects.get(pk=id)
         except Project.DoesNotExist:
             return HttpResponse(status=403)
 
-        profile = request.user.profile
-
-        if proj.author != profile:
+        if proj.author != request.user:
             return HttpResponse(status=403)
 
         if "val" in request.POST.keys():
@@ -3506,16 +3649,14 @@ def toggle_private(request):
 @login_required
 def toggle_flag(request):
     if request.method == "POST":
-        id = int(clean(request.POST["id"]))
+        id = clean(request.POST["id"])
 
         try:
             e = Ensemble.objects.get(pk=id)
         except Ensemble.DoesNotExist:
             return HttpResponse(status=403)
 
-        profile = request.user.profile
-
-        if e.parent_molecule.project.author != profile:
+        if e.parent_molecule.project.author != request.user:
             return HttpResponse(status=403)
 
         if "val" in request.POST.keys():
@@ -3540,16 +3681,14 @@ def toggle_flag(request):
 @login_required
 def rename_ensemble(request):
     if request.method == "POST":
-        id = int(clean(request.POST["id"]))
+        id = clean(request.POST["id"])
 
         try:
             e = Ensemble.objects.get(pk=id)
         except Ensemble.DoesNotExist:
             return HttpResponse(status=403)
 
-        profile = request.user.profile
-
-        if e.parent_molecule.project.author != profile:
+        if e.parent_molecule.project.author != request.user:
             return HttpResponse(status=403)
 
         if "new_name" in request.POST.keys():
@@ -3568,16 +3707,14 @@ def rename_ensemble(request):
 @login_required
 def rename_folder(request):
     if request.method == "POST":
-        id = int(clean(request.POST["id"]))
+        id = clean(request.POST["id"])
 
         try:
             f = Folder.objects.get(pk=id)
         except Folder.DoesNotExist:
             return HttpResponse(status=403)
 
-        profile = request.user.profile
-
-        if f.project.author != profile:
+        if f.project.author != request.user:
             return HttpResponse(status=403)
 
         if "new_name" in request.POST.keys():
@@ -3597,7 +3734,7 @@ def rename_folder(request):
 def get_structure(request):
     if request.method == "POST":
         try:
-            id = int(clean(request.POST["id"]))
+            id = clean(request.POST["id"])
         except ValueError:
             return HttpResponse(status=404)
 
@@ -3606,9 +3743,7 @@ def get_structure(request):
         except Ensemble.DoesNotExist:
             return HttpResponse(status=403)
 
-        profile = request.user.profile
-
-        if not can_view_ensemble(e, profile):
+        if not can_view_ensemble(e, request.user):
             return HttpResponse(status=403)
 
         structs = e.structure_set.all()
@@ -3643,7 +3778,7 @@ def get_vib_animation(request):
             return HttpResponse(status=400)
 
         try:
-            id = int(clean(request.POST["id"]))
+            id = clean(request.POST["id"])
         except ValueError:
             return HttpResponse(status=400)
 
@@ -3652,9 +3787,7 @@ def get_vib_animation(request):
         except Property.DoesNotExist:
             return HttpResponse(status=404)
 
-        profile = request.user.profile
-
-        if not can_view_structure(prop.parent_structure, profile):
+        if not can_view_structure(prop.parent_structure, request.user):
             return HttpResponse(status=403)
 
         num = int(clean(request.POST["num"]))
@@ -3670,9 +3803,7 @@ def download_log(request, pk):
     except Calculation.DoesNotExist:
         return HttpResponse(status=404)
 
-    profile = request.user.profile
-
-    if not can_view_calculation(calc, profile):
+    if not can_view_calculation(calc, request.user):
         return HttpResponse(status=403)
 
     name = f"{clean_filename(calc.order.molecule_name)}_calc{calc.id}"
@@ -3709,9 +3840,7 @@ def download_all_logs(request, pk):
     except CalculationOrder.DoesNotExist:
         return HttpResponse(status=404)
 
-    profile = request.user.profile
-
-    if not can_view_order(order, profile):
+    if not can_view_order(order, request.user):
         return HttpResponse(status=403)
 
     order_logs = {}
@@ -3730,7 +3859,7 @@ def download_all_logs(request, pk):
                     _logname = ""
                 else:
                     _logname = f"_{logname}"
-                zip.writestr(f"{order.molecule_name}_order{pk}_calc{cid}{_logname}", f)
+                zip.writestr(f"{order.molecule_name}_order{pk}_calc{cid}{_logname}")
 
     response = HttpResponse(mem.getvalue(), content_type="application/zip")
     response["Content-Disposition"] = f'attachment; filename="order_{pk}.zip"'
@@ -3753,9 +3882,7 @@ def log(request, pk):
     except Calculation.DoesNotExist:
         return HttpResponse(status=404)
 
-    profile = request.user.profile
-
-    if not can_view_calculation(calc, profile):
+    if not can_view_calculation(calc, request.user):
         return HttpResponse(status=403)
 
     if len(calc.output_files) == 0:
@@ -3771,18 +3898,18 @@ def log(request, pk):
 
 @login_required
 def manage_access(request, pk):
-    access = ClusterAccess.objects.get(pk=pk)
+    try:
+        access = ClusterAccess.objects.get(pk=pk)
+    except ClusterAccess.DoesNotExist:
+        return HttpResponse(status=404)
 
-    profile = request.user.profile
-
-    if access.owner != profile:
-        return HttpResponse(status=403)
+    if access.owner != request.user:
+        return HttpResponse(status=404)
 
     return render(
         request,
         "frontend/manage_access.html",
         {
-            "profile": request.user.profile,
             "access": access,
         },
     )
@@ -3793,9 +3920,6 @@ def owned_accesses(request):
     return render(
         request,
         "frontend/dynamic/owned_accesses.html",
-        {
-            "profile": request.user.profile,
-        },
     )
 
 
@@ -3804,37 +3928,33 @@ def profile(request):
     return render(
         request,
         "frontend/profile.html",
-        {
-            "profile": request.user.profile,
-        },
     )
 
 
 @login_required
 def update_preferences(request):
     if request.method == "POST":
-        profile = request.user.profile
 
         if "pref_units" not in request.POST.keys():
             return HttpResponse(status=204)
 
         if "default_gaussian" in request.POST.keys():
             default_gaussian = clean(request.POST["default_gaussian"]).replace("\n", "")
-            profile.default_gaussian = default_gaussian
+            request.user.default_gaussian = default_gaussian
 
         if "default_orca" in request.POST.keys():
             default_orca = clean(request.POST["default_orca"]).replace("\n", "")
-            profile.default_orca = default_orca
+            request.user.default_orca = default_orca
 
         units = clean(request.POST["pref_units"])
 
         try:
-            unit_code = profile.INV_UNITS[units]
+            unit_code = request.user.INV_UNITS[units]
         except KeyError:
             return HttpResponse(status=204)
 
-        profile.pref_units = unit_code
-        profile.save()
+        request.user.pref_units = unit_code
+        request.user.save()
         return HttpResponse(status=200)
     else:
         return HttpResponse(status=404)
@@ -3842,9 +3962,7 @@ def update_preferences(request):
 
 @login_required
 def launch(request):
-    profile = request.user.profile
     params = {
-        "profile": profile,
         "procs": BasicStep.objects.all().order_by(Lower("name")),
         "packages": settings.PACKAGES,
     }
@@ -3855,7 +3973,7 @@ def launch(request):
         except Ensemble.DoesNotExist:
             return redirect("/home/")
 
-        if not can_view_ensemble(e, profile):
+        if not can_view_ensemble(e, request.user):
             return HttpResponse(status=403)
 
         o = False
@@ -3893,7 +4011,7 @@ def launch(request):
 
             params["init_params_id"] = init_params.id
     elif "calc_id" in request.POST.keys():
-        calc_id = int(clean(request.POST["calc_id"]))
+        calc_id = clean(request.POST["calc_id"])
 
         if "frame_num" not in request.POST.keys():
             return HttpResponse(status=404)
@@ -3905,7 +4023,7 @@ def launch(request):
         except Calculation.DoesNotExist:
             return redirect("/home/")
 
-        if not can_view_calculation(calc, profile):
+        if not can_view_calculation(calc, request.user):
             return HttpResponse(status=403)
 
         if calc.order.resource is not None:
@@ -3931,9 +4049,7 @@ def launch_project(request, pk):
     except Project.DoesNotExist:
         return redirect("/home/")
 
-    profile = request.user.profile
-
-    if not can_view_project(proj, profile):
+    if not can_view_project(proj, request.user):
         return HttpResponse(status=403)
 
     if proj.preset is not None:
@@ -3944,7 +4060,6 @@ def launch_project(request, pk):
             "frontend/launch.html",
             {
                 "proj": proj,
-                "profile": request.user.profile,
                 "procs": BasicStep.objects.all(),
                 "init_params_id": init_params_id,
                 "packages": settings.PACKAGES,
@@ -3956,7 +4071,6 @@ def launch_project(request, pk):
             "frontend/launch.html",
             {
                 "proj": proj,
-                "profile": request.user.profile,
                 "procs": BasicStep.objects.all(),
                 "packages": settings.PACKAGES,
             },
@@ -4038,9 +4152,7 @@ def delete_preset(request, pk):
     except Preset.DoesNotExist:
         return HttpResponse(status=404)
 
-    profile = request.user.profile
-
-    if not can_view_preset(p, profile):
+    if not can_view_preset(p, request.user):
         return HttpResponse(status=403)
 
     p.delete()
@@ -4049,9 +4161,8 @@ def delete_preset(request, pk):
 
 @login_required
 def launch_presets(request):
-    profile = request.user.profile
 
-    presets = profile.preset_set.all().order_by("name")
+    presets = request.user.preset_set.all().order_by("name")
     return render(request, "frontend/dynamic/launch_presets.html", {"presets": presets})
 
 
@@ -4062,9 +4173,7 @@ def load_preset(request, pk):
     except Preset.DoesNotExist:
         return HttpResponse(status=404)
 
-    profile = request.user.profile
-
-    if not can_view_preset(p, profile):
+    if not can_view_preset(p, request.user):
         return HttpResponse(status=403)
 
     return render(
@@ -4084,7 +4193,7 @@ def load_params(request, pk):
     except Parameters.DoesNotExist:
         return HttpResponse(status=404)
 
-    if not can_view_parameters(params, request.user.profile):
+    if not can_view_parameters(params, request.user):
         return HttpResponse(status=403)
 
     return render(
@@ -4146,9 +4255,9 @@ class CsvEnsemble:
         self.data = []
 
 
-def get_csv(proj, profile, scope="flagged", details="full", folders=True):
-    pref_units = profile.pref_units
-    units = profile.pref_units_name
+def get_csv(proj, user, scope="flagged", details="full", folders=True):
+    pref_units = user.pref_units
+    units = user.pref_units_name
 
     if pref_units == 0:
         CONVERSION = HARTREE_FVAL
@@ -4351,9 +4460,9 @@ def get_csv(proj, profile, scope="flagged", details="full", folders=True):
     return csv
 
 
-def download_project_csv(proj, profile, scope, details, folders):
+def download_project_csv(proj, user, scope, details, folders):
 
-    csv = get_csv(proj, profile, scope, details, folders)
+    csv = get_csv(proj, user, scope, details, folders)
 
     proj_name = proj.name.replace(" ", "_")
     response = HttpResponse(csv, content_type="text/csv")
@@ -4367,11 +4476,9 @@ def cancel_calc(request):
     if request.method != "POST":
         return HttpResponse(status=403)
 
-    profile = request.user.profile
-
     if "id" in request.POST.keys():
         try:
-            id = int(clean(request.POST["id"]))
+            id = clean(request.POST["id"])
         except ValueError:
             return HttpResponse(status=404)
 
@@ -4380,21 +4487,26 @@ def cancel_calc(request):
     except Calculation.DoesNotExist:
         return HttpResponse(status=404)
 
-    if profile != calc.order.author:
+    if request.user != calc.order.author:
         return HttpResponse(status=403)
 
     if is_test:  ###
         cancel(calc.id)
     else:
-        cancel.delay(calc.id)
+        if settings.IS_CLOUD:
+            logger.warning(
+                f"Cannot cancel calc {calc.id}: not implemented for the cloud version"
+            )
+        else:
+            cancel.delay(str(calc.id))
 
     return HttpResponse(status=200)
 
 
-def download_project_logs(proj, profile, scope, details, folders):
+def download_project_logs(proj, user, scope, details, folders):
     # folders options makes this somewhat duplicate code
 
-    tmp_dir = f"/tmp/{profile.username}_{proj.author.username}_{time.time()}"
+    tmp_dir = f"/tmp/{user.id}_{proj.author.username}_{time.time()}"  ## tmpdir
     os.mkdir(tmp_dir)
     for mol in sorted(proj.molecule_set.all(), key=lambda l: l.name):
         for e in mol.ensemble_set.all():
@@ -4471,7 +4583,7 @@ def download_project_logs(proj, profile, scope, details, folders):
 def download_project_post(request):
     if "id" in request.POST.keys():
         try:
-            id = int(clean(request.POST["id"]))
+            id = clean(request.POST["id"])
         except ValueError:
             return error(request, "Invalid project")
     else:
@@ -4515,15 +4627,13 @@ def download_project_post(request):
     except Project.DoesNotExist:
         return error(request, "Invalid project")
 
-    profile = request.user.profile
-
-    if not profile_intersection(proj.author, profile):
+    if not can_view_project(proj, request.user):
         return HttpResponseRedirect("/home/")
 
     if data == "summary":
-        return download_project_csv(proj, profile, scope, details, folders)
+        return download_project_csv(proj, request.user, scope, details, folders)
     elif data == "logs":
-        return download_project_logs(proj, profile, scope, details, folders)
+        return download_project_logs(proj, request.user, scope, details, folders)
 
 
 @login_required
@@ -4533,16 +4643,14 @@ def download_project(request, pk):
     except Project.DoesNotExist:
         return HttpResponse(status=403)
 
-    profile = request.user.profile
-
-    if not profile_intersection(proj.author, profile):
+    if not can_view_project(proj, request.user):
         return HttpResponseRedirect("/home/")
 
     return render(request, "frontend/download_project.html", {"proj": proj})
 
 
 @login_required
-def project_folders(request, username, proj, folder_path):
+def project_folders(request, user_id, proj, folder_path):
     path = clean(folder_path).split("/")
 
     # Make trailing slashes mandatory
@@ -4550,22 +4658,22 @@ def project_folders(request, username, proj, folder_path):
         return HttpResponseRedirect(f"/projects/{username}/{proj}/{folder_path + '/'}")
 
     target_project = clean(proj)
-    target_username = clean(username)
+    target_user_id = clean(user_id)
 
     try:
-        target_profile = User.objects.get(username=target_username).profile
+        target_user = User.objects.get(id=target_user_id)
     except User.DoesNotExist:
         return HttpResponseRedirect("/home/")
 
-    if not profile_intersection(request.user.profile, target_profile):
+    if not user_intersection(target_user, request.user):
         return HttpResponseRedirect("/home/")
 
     try:
-        project = target_profile.project_set.get(name=target_project)
+        project = target_user.project_set.get(name=target_project)
     except Project.DoesNotExist:
         return HttpResponseRedirect("/home/")
 
-    if not can_view_project(project, request.user.profile):
+    if not can_view_project(project, request.user):
         return HttpResponseRedirect("/home/")
 
     folders = []
@@ -4613,7 +4721,7 @@ def download_folder(request, pk):
     except Folder.DoesNotExist:
         return HttpResponse(status=404)
 
-    if not can_view_project(folder.project, request.user.profile):
+    if not can_view_project(folder.project, request.user):
         return HttpResponse(status=403)
 
     def add_folder_data(zip, folder, path):
@@ -4685,12 +4793,12 @@ def move_element(request):
     if "id" not in request.POST.keys():
         return HttpResponse(status=400)
 
-    id = int(clean(request.POST["id"]))
+    id = clean(request.POST["id"])
 
     if "folder_id" not in request.POST.keys():
         return HttpResponse(status=400)
 
-    folder_id = int(clean(request.POST["folder_id"]))
+    folder_id = clean(request.POST["folder_id"])
 
     if "type" not in request.POST.keys():
         return HttpResponse(status=400)
@@ -4705,7 +4813,7 @@ def move_element(request):
     except Folder.DoesNotExist:
         return HttpResponse(status=404)
 
-    if request.user.profile != folder.project.author:
+    if request.user != folder.project.author:
         return HttpResponse(status=403)
 
     if type == "ensemble":
@@ -4714,7 +4822,7 @@ def move_element(request):
         except Ensemble.DoesNotExist:
             return HttpResponse(status=404)
 
-        if request.user.profile != e.parent_molecule.project.author:
+        if request.user != e.parent_molecule.project.author:
             return HttpResponse(status=404)
 
         if not e.flagged:
@@ -4732,7 +4840,7 @@ def move_element(request):
         except Folder.DoesNotExist:
             return HttpResponse(status=404)
 
-        if request.user.profile != f.project.author:
+        if request.user != f.project.author:
             return HttpResponse(status=403)
 
         if f.parent_folder != folder:
@@ -4748,11 +4856,9 @@ def relaunch_calc(request):
     if request.method != "POST":
         return HttpResponse(status=403)
 
-    profile = request.user.profile
-
     if "id" in request.POST.keys():
         try:
-            id = int(clean(request.POST["id"]))
+            id = clean(request.POST["id"])
         except ValueError:
             return HttpResponse(status=404)
 
@@ -4761,7 +4867,7 @@ def relaunch_calc(request):
     except Calculation.DoesNotExist:
         return HttpResponse(status=404)
 
-    if profile != calc.order.author:
+    if request.user != calc.order.author:
         return HttpResponse(status=403)
 
     if calc.status != 3:
@@ -4781,7 +4887,7 @@ def relaunch_calc(request):
     calc.save()
 
     if calc.local:
-        t = run_calc.s(calc.id).set(queue="comp")
+        t = run_calc.s(str(calc.id)).set(queue="comp")
         res = t.apply_async()
         calc.task_id = res
         calc.save()
@@ -4796,11 +4902,9 @@ def refetch_calc(request):
     if request.method != "POST":
         return HttpResponse(status=403)
 
-    profile = request.user.profile
-
     if "id" in request.POST.keys():
         try:
-            id = int(clean(request.POST["id"]))
+            id = clean(request.POST["id"])
         except ValueError:
             return HttpResponse(status=404)
 
@@ -4809,7 +4913,7 @@ def refetch_calc(request):
     except Calculation.DoesNotExist:
         return HttpResponse(status=404)
 
-    if profile != calc.order.author:
+    if request.user != calc.order.author:
         return HttpResponse(status=403)
 
     if calc.status < 2:
@@ -4833,8 +4937,7 @@ def ensemble_map(request, pk):
     except Molecule.DoesNotExist:
         return redirect("/home/")
 
-    profile = request.user.profile
-    if not can_view_molecule(mol, profile):
+    if not can_view_molecule(mol, request.user):
         return redirect("/home/")
     json = """{{
                 "nodes": [
@@ -4869,17 +4972,16 @@ def ensemble_map(request, pk):
 
 @login_required
 def analyse(request, project_id):
-    profile = request.user.profile
 
     try:
         proj = Project.objects.get(pk=project_id)
     except Project.DoesNotExist:
         return HttpResponse(status=403)
 
-    if not can_view_project(proj, profile):
+    if not can_view_project(proj, request.user):
         return HttpResponse(status=403)
 
-    csv = get_csv(proj, profile, folders=False)
+    csv = get_csv(proj, request.user, folders=False)
     js_csv = []
     for ind1, line in enumerate(csv.split("\n")):
         for ind2, el in enumerate(line.split(",")):
@@ -4897,8 +4999,7 @@ def calculationorder(request, pk):
     except CalculationOrder.DoesNotExist:
         return HttpResponse(status=404)
 
-    profile = request.user.profile
-    if not can_view_order(order, profile):
+    if not can_view_order(order, request.user):
         return HttpResponse(status=404)
 
     return render(request, "frontend/calculationorder.html", {"order": order})
@@ -4911,8 +5012,7 @@ def calculation(request, pk):
     except Calculation.DoesNotExist:
         return HttpResponse(status=404)
 
-    profile = request.user.profile
-    if not can_view_calculation(calc, profile):
+    if not can_view_calculation(calc, request.user):
         return HttpResponse(status=404)
 
     return render(request, "frontend/calculation.html", {"calc": calc})
@@ -4925,8 +5025,7 @@ def see(request, pk):
     except CalculationOrder.DoesNotExist:
         return HttpResponse(status=404)
 
-    profile = request.user.profile
-    if profile != order.author:
+    if request.user != order.author:
         return HttpResponse(status=404)
 
     order.see()
@@ -4936,9 +5035,8 @@ def see(request, pk):
 
 @login_required
 def see_all(request):
-    profile = request.user.profile
 
-    calcs = CalculationOrder.objects.filter(author=profile, hidden=False)
+    calcs = CalculationOrder.objects.filter(author=request.user, hidden=False)
 
     for c in calcs:
         if c.new_status:
@@ -4946,18 +5044,17 @@ def see_all(request):
 
     # This should be true if everything works.
     # If a glitch happens and the counter is off, this will reset it.
-    profile.unseen_calculations = 0
-    profile.save()
+    request.user.unseen_calculations = 0
+    request.user.save()
 
     return HttpResponse(status=200)
 
 
 @login_required
 def clean_all_successful(request):
-    profile = request.user.profile
 
     to_update = []
-    calcs = CalculationOrder.objects.filter(author=profile, hidden=False)
+    calcs = CalculationOrder.objects.filter(author=request.user, hidden=False)
     for c in calcs:
         if c.status == 2:
             c.hidden = True
@@ -4971,10 +5068,9 @@ def clean_all_successful(request):
 
 @login_required
 def clean_all_completed(request):
-    profile = request.user.profile
 
     to_update = []
-    calcs = CalculationOrder.objects.filter(author=profile, hidden=False)
+    calcs = CalculationOrder.objects.filter(author=request.user, hidden=False)
     for c in calcs:
         if c.status in [2, 3]:
             c.hidden = True
@@ -4999,20 +5095,9 @@ def change_password(request):
     return render(request, "frontend/change_password.html", {"form": form})
 
 
-"""
 def handler404(request, *args, **argv):
-    return render(request, 'error/404.html', {
-            })
+    return render(request, "error/404.html", {})
 
-def handler403(request, *args, **argv):
-    return render(request, 'error/403.html', {
-            })
-
-def handler400(request, *args, **argv):
-    return render(request, 'error/400.html', {
-            })
 
 def handler500(request, *args, **argv):
-    return render(request, 'error/500.html', {
-            })
-"""
+    return render(request, "error/500.html", {})

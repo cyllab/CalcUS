@@ -1,16 +1,7 @@
-{% extends 'frontend/base.html' %}
-
-{% load static %}
-
-{% block extrahead %}
-	<title>CalcUS - Error</title>
-{% endblock %}
-
-{% block content %}
+{% extends 'frontend/base.html' %} {% load static %} {% block extrahead %}
+<title>CalcUS - Error</title>
+{% endblock %} {% block content %}
 <div class="container">
-	<div class="box" id="error_box">
-		Error while submitting your calculation: {{ error_message }}
-	</div>
+    <div class="box" id="error_box">Error while submitting your calculation: {{ error_message }}</div>
 </div>
 {% endblock %}
-

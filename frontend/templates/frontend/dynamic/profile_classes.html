@@ -1,0 +1,74 @@
+{% if request.user.is_temporary %}
+<div id="classes_div">
+    {% if request.user.in_class %}
+    <div class="block">
+    You are in <b>{{ request.user.in_class.name }}</b>
+    </div>
+    {% if request.user.in_class.user_resource_threshold != 0 %}
+    <div class="field has-text-centered">
+        <label class="label">Usage of computational time:</label>
+        <p>{{ request.user.billed_seconds }}/{{ request.user.in_class.user_resource_threshold }} seconds</p>
+        <progress class="progress is-medium" value="{{ request.user.billed_seconds }}" max="{{ request.user.in_class.user_resource_threshold }}"></progress>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+
+{% else %}
+<div id="classes_div">
+    Create a class to enable students to access CalcUS and perform calculations.
+
+    <div id="create_class_div">
+        <div class="field">
+            <label class="label">Class name</label>
+            <input type="text" class="input" id="class_name" />
+        </div>
+        <div class="field">
+            <div class="control has-text-centered">
+                <button class="button is-primary" id="create_class_button" onclick="create_group('class');">Create</button>
+            </div>
+        </div>
+        <span class="ajax_msg" id="create_class_msg"></span>
+    </div>
+</div>
+
+{% for class in request.user.professor_of.all %}
+<div class="has-text-centered">
+    <div>
+        <center>
+            <h4 class="title is-4">{{ class.name }}</h4>
+            Students can register using the code <br />
+            <p class="box class_code" data-clipboard-text="{{ class.access_code }}"><b>{{ class.access_code }}</b><i class="fa fa-solid fa-clipboard fa-lg" ></i></p>
+
+            {% if class.members.count > 0 %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Members</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in class.members.all %}
+                    <tr>
+                        <td>{{ member.name }}</td>
+                        <td>
+                            <button class="button is-danger" onclick="remove_user('{{ class.id }}', '{{ member.id }}', 'class');">Remove</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <div class="field">
+                    <div class="control has-text-centered">
+                        <button class="button is-danger dissolve-class-button" id="dissolve_{{ class.id }}" onclick="dissolve_group('{{ class.id }}', '{{ class.name }}', 'class');">Dissolve class</button>
+                    </div>
+                </div>
+                <span class="ajax_msg" id="dissolve_class_{{ class.id }}_msg"></span>
+            {% endif %}
+        </center>
+    </div>
+</div>
+{% endfor %} 
+{% endif %}

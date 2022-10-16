@@ -1,271 +1,258 @@
-
+<!DOCTYPE html>
 {% load static %}
 {% load global_tags %}
 
-
 <html>
-	<head>
- 		<meta name="viewport" content="width=device-width, initial-scale=1.0" /> 
-		<meta charset="utf-8" />
-		<link rel="shortcut icon" type="image/png" href="{% static 'frontend/favicon.ico' %}"/>
-		<link rel="stylesheet" href="{% static 'frontend/bulma.min.css' %}" />
-		<link rel="stylesheet" href="{% static 'frontend/style.css' %}" />
-		<script src="https://kit.fontawesome.com/55d0fd4831.js" crossorigin="anonymous"></script>
-		<link rel="stylesheet" href="{% static 'frontend/bulma-badge.min.css' %}">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="utf-8" />
 
-		<style>
-			#calcus_logo {
-				margin-top: 20px;
-			}
-			#version_label {
-				font-variant: small-caps;
-				font-weight: bold;
-			}
-			@media screen and (min-width: 1408px) {
-			#calcus_logo {
-				width: 400px;
-			}
-			}
-			@media screen and (min-width: 1024px) and (max-width: 1407px) {
-			#calcus_logo {
-				width: 300px;
-			}
-			}
-			@media screen and (min-width: 769px) and (max-width: 1023px) {
-			#calcus_logo {
-				width: 250px;
-			}
-			}
-			@media screen and (max-width: 768px) {
-			#calcus_logo {
-				width: 200px;
-			}
-			}
+        {% if IS_CLOUD %}
+        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'cloud_favicon/apple-touch-icon.png' %}" />
+        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'cloud_favicon/favicon-32x32.png' %}" />
+        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'cloud_favicon/favicon-16x16.png' %}" />
+        <link rel="manifest" href="{% static 'cloud_favicon/site.webmanifest' %}" />
+        {% else %}
+        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}" />
+        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}" />
+        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}" />
+        <link rel="manifest" href="{% static 'favicon/site.webmanifest' %}" />
+        {% endif %}
 
-		</style>
-		{% block extrahead %}
-		{% endblock %}
-		{% if user.is_superuser %}
-			<script>
-				function refresh_pi_requests_notification() {
-					$.ajax({
-					url: "/get_pi_requests/",
-					type: 'GET',
-					success: function(data) {
-						if (data != "0") {
-							$("#pi_requests").html('<span class="badge is-bottom is-warning">' + data + '</span>');
-							
-						}
-						else {
-							$("#pi_requests").html("");
-						}
+        <link rel="stylesheet" href="{% static 'frontend/bulma.min.css' %}" />
+        <link rel="stylesheet" href="{% static 'frontend/style.css' %}" />
+        <script src="https://kit.fontawesome.com/55d0fd4831.js" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="{% static 'frontend/bulma-badge.min.css' %}" />
 
-					}
-				});
+        <style>
+            #calcus_logo {
+                margin-top: 20px;
+            }
+            #version_label {
+                font-variant: small-caps;
+                font-weight: bold;
+            }
+            @media screen and (min-width: 1408px) {
+                #calcus_logo {
+                    width: 400px;
+                }
+            }
+            @media screen and (min-width: 1024px) and (max-width: 1407px) {
+                #calcus_logo {
+                    width: 300px;
+                }
+            }
+            @media screen and (min-width: 769px) and (max-width: 1023px) {
+                #calcus_logo {
+                    width: 250px;
+                }
+            }
+            @media screen and (max-width: 768px) {
+                #calcus_logo {
+                    width: 200px;
+                }
+            }
+        </style>
+        {% block extrahead %} {% endblock %}
+        <style>
+            @media screen and (min-width: 1408px) {
+                .main_content {
+                    width: 70%;
+                    flex: 1;
+                    margin-left: 15%;
+                }
+            }
+            @media screen and (min-width: 1024px) and (max-width: 1407px) {
+                .main_content {
+                    width: 90%;
+                    flex: 1;
+                    margin-left: 5%;
+                }
+            }
+            @media screen and (max-width: 1023px) {
+                .main_content {
+                    width: 98%;
+                    flex: 1;
+                    margin-left: 1%;
+                }
+            }
 
-				}
-			$(document).ready(function() {
-				refresh_pi_requests_notification();
-				  $(".navbar-burger").click(function() {
+            nav {
+                margin-bottom: 20px;
+            }
+            a {
+                color: inherit;
+            }
 
-				      // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
-				      $(".navbar-burger").toggleClass("is-active");
-				      $(".navbar-menu").toggleClass("is-active");
+            .fas {
+                margin-left: 10px;
+            }
+            .fa-spinner,
+            .fa-check,
+            .fa-times,
+            .fa-hourglass-half {
+                margin-left: 0px;
+                margin-right: 10px;
+            }
 
-				  });
-});
-			</script>
-		{% endif %}
-		<style>
-			@media screen and (min-width: 1408px) {
-			.main_content {
-				width: 70%;
-				flex: 1;
-				margin-left: 15%;
-			}
-			}
-			@media screen and (min-width: 1024px) and (max-width: 1407px) {
-			.main_content {
-				width: 90%;
-				flex: 1;
-				margin-left: 5%;
-			}
-			}
-			@media screen and (max-width: 1023px) {
-			.main_content {
-				width: 98%;
-				flex: 1;
-				margin-left: 1%;
-			}
-			}
+            .slider {
+                -webkit-appearance: none;
+                background: #d3d3d3;
+                outline: none;
+                -webkit-transition: 0.2s;
+                border-radius: 5px;
+                height: 15px;
+                margin-top: 10px;
+            }
+            .slider::-moz-range-thumb {
+                border-radius: 50%;
+                background: #23d160;
+                width: 25px;
+                height: 25px;
+            }
+            .slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                border-radius: 50%;
+                background: #23d160;
+                cursor: pointer;
+                width: 25px;
+                height: 25px;
+            }
+            .main-grid-item {
+                float: left;
+                width: 30em;
+                margin: 10px;
+            }
+            .main-grid-item:hover {
+                opacity: 0.5;
+            }
 
-			nav {
-				margin-bottom: 20px;
-			}
-			a {
-				color: inherit;
-			}
+            .flex-container {
+                display: flex;
+                min-height: 100vh;
+                flex-direction: column;
+            }
+            .footer {
+                background-color: #ffffff;
+                margin-top: 20px;
+            }
+        </style>
+    </head>
 
-			.fas {
-				margin-left: 10px;
-			}
-			.fa-spinner, .fa-check, .fa-times, .fa-hourglass-half {
-				margin-left: 0px;
-				margin-right: 10px;
-			}
+    <body>
+        <div class="flex-container">
+            <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+                <div class="navbar-brand">
+                    <a
+                        role="button"
+                        class="navbar-burger burger"
+                        aria-label="menu"
+                        aria-expanded="false"
+                        data-target="calcusnavbar"
+                        onclick="document.querySelector('.navbar-menu').classList.toggle('is-active');"
+                    >
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                    </a>
+                </div>
+                <div id="calcusnavbar" class="navbar-menu">
+                    <div class="navbar-start">
+                        <a class="navbar-item" href="/home/">
+                            <img id="calcus_icon" src="{% static 'favicon/android-chrome-512x512.png' %}" />
+                        </a>
 
-			.slider {
-				-webkit-appearance: none;
-				background: #d3d3d3;
-				outline: none;
-				-webkit-transition: .2s;
-				border-radius: 5px;  
-				height: 15px;
-				margin-top: 10px;
-			}
-			.slider::-moz-range-thumb {
-				border-radius: 50%;
-				background: #23d160;
-				width: 25px;
-				height: 25px;
-			}
-			.slider::-webkit-slider-thumb {
-				-webkit-appearance: none;
-				appearance: none;
-				border-radius: 50%; 
-				background: #23d160;
-				cursor: pointer;
-				width: 25px;
-				height: 25px;
-			}
-			.main-grid-item {
-				float: left;
-				width: 30em;
-				margin: 10px;
-			}
-			.main-grid-item:hover {
-				opacity: 0.5;
-			}
+                        <a class="navbar-item" href="/projects/"> Projects </a>
 
-			.flex-container {
-  				display: flex;
-  				min-height: 100vh;
-  				flex-direction: column;
-			}
-			.footer {
-				background-color: #ffffff;
-				margin-top: 20px;
-			}
+                        <a class="navbar-item" href="/launch/"> Launch </a>
+                        <a class="navbar-item" href="/calculations/">
+                            Calculations {% if request.user.unseen_calculations > 0 %}
+                            <span id="unseen_calculations_badge" class="badge is-bottom is-warning">{{ request.user.unseen_calculations }}</span>
+                            {% endif %}
+                        </a>
 
+                        <div class="navbar-item has-dropdown is-hoverable">
+                            <a class="navbar-link">Learn</a>
+                            <div class="navbar-dropdown">
+                                <a class="navbar-item" href="https://calcus.readthedocs.io/en/latest/index.html" target="_blank" rel="noopener noreferrer"> Documentation </a>
 
-			</style>
-	</head>
+                                <a class="navbar-item" href="/learn/">Examples</a>
+                            </div>
+                        </div>
 
-	<body>
-	<div class="flex-container">
-		<nav class="navbar is-primary" role="navigation" aria-label="main navigation">
- 			<div class="navbar-brand">
-				<a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="calcusnavbar" onclick="document.querySelector('.navbar-menu').classList.toggle('is-active');">
-					<span aria-hidden="true"></span>
-					<span aria-hidden="true"></span>
-					<span aria-hidden="true"></span>
-				</a>
-			</div>
-			<div id="calcusnavbar" class="navbar-menu" >
-				<div class="navbar-start">
-					<a class="navbar-item" href="/projects/">
-						Projects
-					</a>
+                        {% if request.user.group != None %}
+                        <div class="navbar-item has-dropdown is-hoverable" id="navbar_group">
+                            <a class="navbar-link">Research Group</a>
+                            <div class="navbar-dropdown">
+                                <a class="navbar-item" href="/projects/{{ request.user.group.PI.id }}">{{ request.user.group.PI.name }}</a>
+                                {% for u in request.user.group.members.all %}
+                                <a class="navbar-item" href="/projects/{{ u.id }}">{{ u.name }}</a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %} 
 
-					<a class="navbar-item" href="/launch/">
-						Launch
-					</a>
-					<a class="navbar-item" href="/calculations/">
-						Calculations
-						{% if user.profile.unseen_calculations > 0 %}
-							<span id="unseen_calculations_badge" class="badge is-bottom is-warning">{{ user.profile.unseen_calculations }}</span>
-						{% endif %}
-					</a>
+                        {% if request.user.professor_of.count > 0 %}
+                            {% for class in request.user.professor_of.all %}
+                            <div class="navbar-item has-dropdown is-hoverable">
+                                <a class="navbar-link">{{ class.name }}</a>
+                                <div class="navbar-dropdown">
+                                    {% for u in class.members.all %}
+                                    <a class="navbar-item" href="/projects/{{ u.id }}">{{ u.name }}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% endif %} 
 
-					<div class="navbar-item has-dropdown is-hoverable">
-						<a class="navbar-link">Learn</a>
-						<div class="navbar-dropdown">
-							<a class="navbar-item" href="https://calcus.readthedocs.io/en/latest/index.html" target="_blank" rel="noopener noreferrer">
-								Documentation
-							</a>
+                        {% if ALLOW_REMOTE_CALC and request.user.clusteraccess_owner.count > 0 %}
+                        <div class="navbar-item has-dropdown is-hoverable" id="navbar_accesses">
+                            <a class="navbar-link">Cluster Accesses</a>
+                            <div class="navbar-dropdown">
+                                {% for a in request.user.clusteraccess_owner.all|dictsort:"cluster_address" %}
+                                <a class="navbar-item" href="/manage_access/{{ a.id }}">{{ a.cluster_address }}</a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %} {% if user.is_superuser %}
+                        <a class="navbar-item" href="/server_summary/"> Server Summary </a>
+                        {% endif %}
+                    </div>
+                    <div class="navbar-end">
+                        <div class="navbar-item">
+                            <div class="buttons">
+                                {% if user.is_authenticated %}
+                                <a href="{% url 'frontend:profile' %}"> &nbsp;<strong>My Profile</strong></a>
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+                                <a href="{% url 'logout'%}?next={{request.path}}">Logout <i class="fas fa-sign-out-alt"></i></a>
+                                {% else %}
+                                <a class="button is-primary" href="{% url 'frontend:register' %}">
+                                    <strong>Register</strong>
+                                </a>
+                                <a class="button is-light" href="{% url 'login' %}">
+                                    Log in
+                                    <i class="fas fa-sign-in-alt"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
 
-							<a class="navbar-item" href="/learn/">Examples</a>
-						</div>
-					</div>
-
-
-					{% if user.profile.group != None %}
-					<div class="navbar-item has-dropdown is-hoverable" id="navbar_group">
-						<a class="navbar-link">Research Group</a>
-						<div class="navbar-dropdown">
-							<a class="navbar-item" href="/projects/{{ user.profile.group.PI.username }}">{{ user.profile.group.PI.username }}</a>
-							{% for u in user.profile.group.members.all %}
-								<a class="navbar-item" href="/projects/{{ u.username }}">{{ u.username }}</a>
-							{% endfor %}
-						</div>
-					</div>
-					{% endif %}
-
-					{% if ALLOW_REMOTE_CALC and user.profile.clusteraccess_owner.count > 0 %}
-					<div class="navbar-item has-dropdown is-hoverable" id="navbar_accesses">
-						<a class="navbar-link">Cluster Accesses</a>
-						<div class="navbar-dropdown">
-							{% for a in user.profile.clusteraccess_owner.all|dictsort:"cluster_address" %}
-								<a class="navbar-item" href="/manage_access/{{ a.id }}">{{ a.cluster_address }}</a>
-							{% endfor %}
-						</div>
-					</div>
-					{% endif %}
-
-					{% if user.is_superuser %}
-						<a class="navbar-item" href="/manage_pi_requests/">
-							Manage PI requests <font id="pi_requests"></font>
-						</a>
-						<a class="navbar-item" href="/server_summary/">
-							Server Summary	
-						</a>
-					{% endif %}
-
-					<a class="navbar-item" href="/flowchart/">
-						Flowchart
-					</a>	
-				</div>
-				<div class="navbar-end">
-					<div class="navbar-item">
-						<div class="buttons">
-						{% if user.is_authenticated %}
-							<a href="{% url 'frontend:profile' %}"> &nbsp;<strong>My Profile</strong></a>
-							&nbsp;&nbsp;&nbsp;&nbsp;
-							<a href="{% url 'logout'%}?next={{request.path}}">Logout <i class="fas fa-sign-out-alt"></i></a>
-						{% else %}
-							<a class="button is-primary" href="{% url 'frontend:register' %}">
-							<strong>Sign up</strong>
-							</a>
-							<a class="button is-light" href="{% url 'login' %}">
-							Log in  <i class="fas fa-sign-in-alt"></i>
-							</a>
-						{% endif %} 
-						</div>
-					</div>
-				</div>
-			</div>
-		</nav>
-
-		<div class="main_content" id="content_container">
-			{% block content %}
-
-			{% endblock %}
-		</div>
-		<section class="footer is-success has-text-centered" style="clear: both;">  
-				<img id="calcus_logo" src="{% static 'frontend/calcus.png' %}" />
-				<br />
-				<span id="version_label">Version {% get_calcus_version %}</span>
-		</section>
-	</div>
-</body>
+            <div class="main_content" id="content_container">{% block content %} {% endblock %}</div>
+            <section class="footer is-success has-text-centered" style="clear: both">
+                {% if IS_CLOUD %}
+                <img id="calcus_logo" src="{% static 'frontend/calcus_cloud_logo.png' %}" />
+                <br />
+                <span id="version_label">Version alpha {% get_calcus_version %}</span>
+                {% else %}
+                <img id="calcus_logo" src="{% static 'frontend/calcus.png' %}" />
+                <br />
+                <span id="version_label">Version {% get_calcus_version %}</span>
+                {% endif %}
+            </section>
+        </div>
+    </body>
 </html>

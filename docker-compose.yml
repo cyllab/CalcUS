@@ -26,6 +26,9 @@ services:
                         - ./.env
                 depends_on:
                         - postgres
+                environment:
+                        - GUNICORN_TIMEOUT=30
+
         nginx:
                 image: nginx:latest
                 ports:

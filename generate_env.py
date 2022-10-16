@@ -9,6 +9,9 @@ ENV_TEMPLATE = """
 # Django cryptographic salt
 CALCUS_SECRET_KEY='{}'
 
+# Object hash ids cryptographic salt
+CALCUS_HASH_ID_SALT='{}'
+
 {}
 # Number of OpenMPI threads to use (xTB)
 OMP_NUM_THREADS={},1
@@ -17,7 +20,7 @@ OMP_NUM_THREADS={},1
 NUM_CPU={}
 
 # Amount of memory allocated per core/thread in Gb (must be whole number)
-OMP_STACKSIZE={}G
+OMP_STACKSIZE={}M
 
 # Use cached calculation logs during testing (for developers)
 USE_CACHED_LOGS=true
@@ -32,7 +35,7 @@ UID={}
 GID={}
 
 # Username of the superuser account (automatically created on startup if does not already exist)
-CALCUS_SU_NAME={}
+CALCUS_SU_EMAIL={}
 
 # Ping server to participate in user statistics (True/False)
 CALCUS_PING_SATELLITE={}
@@ -154,18 +157,17 @@ if os.path.isfile(".env"):
     exit(0)
 
 secret_key = gen_key()
-print("Secret key generated")
-print("\n")
+hash_salt = gen_key()
+print("Secret key and hash salt generated\n")
 
 postgres = gen_chars()
-print("PostgreSQL password generated")
-print("\n")
+print("PostgreSQL password generated\n")
 
 while True:
-    su_name = input(
-        "Choose a username for the superuser account. This account will have the password 'default'. Make sure to change this password in the profile.\n"
+    su_email = input(
+        "Enter an email for the superuser account. This account will have the password 'default'. Make sure to change this password in the profile.\n"
     )
-    if su_name.strip() == "":
+    if su_email.strip() == "":
         print("Invalid username\n")
     else:
         break
@@ -211,21 +213,21 @@ if local_calc:
     print("\n")
     while True:
         n = input(
-            "How many GB of RAM per core do you want CalcUS to use for local calculations? (e.g. 1)\n"
+            "How many MB of RAM per core do you want CalcUS to use for local calculations? (e.g. 1)\n"
         )
         try:
             mem = int(n)
         except ValueError:
-            print("Invalid number of GB\n")
+            print("Invalid number of MB\n")
         else:
             if mem < 1:
-                print("Invalid number of GB\n")
+                print("Invalid number of MB\n")
             else:
                 break
     print("\n")
 else:
     num_cpu = 1
-    mem = 1
+    mem = 1024
 
 while True:
     ans = input(
@@ -264,7 +266,7 @@ with open(".env", "w") as out:
             postgres,
             uid,
             gid,
-            su_name,
+            su_email,
             ping,
             ping_code,
         )
@@ -291,6 +293,7 @@ with open(env_backup_path, "w") as out:
     out.write(
         ENV_TEMPLATE.format(
             secret_key,
+            hash_salt,
             software_paths,
             num_cpu,
             num_cpu,
@@ -298,7 +301,7 @@ with open(env_backup_path, "w") as out:
             postgres,
             uid,
             gid,
-            su_name,
+            su_email,
             ping,
             ping_code,
         )

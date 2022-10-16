@@ -1,33 +1,27 @@
-{% extends 'frontend/base.html' %}
+{% extends 'frontend/base.html' %} {% load i18n %} {% load static %} {% load details_tags %} {% block extrahead %}
+<title>CalcUS - NMR Analysis</title>
+<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
+<script src="{% static 'frontend/jquery.min.js' %}"></script>
 
-{% load i18n %}
+<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css" />
+<script src="{% static 'frontend/dygraph.min.js' %}"></script>
+<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
 
-{% load static %}
-{% load details_tags %}
+<script>
+    String.prototype.format = function () {
+        a = this;
+        for (i = 0; i < 30; i++) {
+            a = a.replace("{}", arguments[0]);
+        }
+        return a;
+    };
 
-{% block extrahead %}
-	<title>CalcUS - NMR Analysis</title>
-	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
-	<script src="{% static 'frontend/jquery.min.js' %}"></script>
+    let scaling_num = 1;
 
-	<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
-	<script src="{% static 'frontend/dygraph.min.js' %}"></script>
-	<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
-
-	<script>
-	String.prototype.format = function() {
-  		a = this;
-		for (i=0; i < 30; i++) {
-    			a = a.replace("{}", arguments[0])
-		}
-  		return a
-	}
-
-	let scaling_num = 1;
-
-	function add_scaling() {
-		scaling_num += 1;
-		$("#scaling_div").append(`<div class="columns" id="columns_{}">
+    function add_scaling() {
+        scaling_num += 1;
+        $("#scaling_div").append(
+            `<div class="columns" id="columns_{}">
 			<div class="column is-2">
 				<input class="input" type="text" id="element_{}">
 			</div>
@@ -40,216 +34,216 @@
 			<div class="column">
 				<button type="button" class="button is-danger" onclick="remove_scaling({});">-</button>
 			</div>
-		</div>`.format(scaling_num));
-	}
-	function remove_scaling(id) {
-		$("#columns_" + id).remove();
-	}
-	</script>
-{% endblock %}
-
-{% block content %}
-
-{% csrf_token %}
+		</div>`.format(scaling_num)
+        );
+    }
+    function remove_scaling(id) {
+        $("#columns_" + id).remove();
+    }
+</script>
+{% endblock %} {% block content %} {% csrf_token %}
 
 <div class="container">
-	<nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
-	 	<ul>
-			<li><a href="/projects/">Projects</a></li>
-			<li><a href="/projects/{{ ensemble.parent_molecule.project.author }}">{{ ensemble.parent_molecule.project.author }}</a></li>
-			<li><a href="/projects/{{ ensemble.parent_molecule.project.author }}/{{ ensemble.parent_molecule.project }}">{{ ensemble.parent_molecule.project }}</a></li>
-			<li><a href="/molecule/{{ ensemble.parent_molecule.id }}">{{ ensemble.parent_molecule.name }}</a></li>
-			<li><a href="/ensemble/{{ ensemble.id }}">{{ ensemble.name }}</a></li>
-			<li class="is-active"><a aria-current="page" href="#">NMR Analysis</a></li>
-	    	</ul>
-	</nav>
+    <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+        <ul>
+            <li>
+                <a href="/projects/">Projects</a>
+            </li>
+            <li>
+                <a href="/projects/{{ ensemble.parent_molecule.project.author }}">{{ ensemble.parent_molecule.project.author }}</a>
+            </li>
+            <li>
+                <a href="/projects/{{ ensemble.parent_molecule.project.author }}/{{ ensemble.parent_molecule.project }}">{{ ensemble.parent_molecule.project }}</a>
+            </li>
+            <li>
+                <a href="/molecule/{{ ensemble.parent_molecule.id }}">{{ ensemble.parent_molecule.name }}</a>
+            </li>
+            <li>
+                <a href="/ensemble/{{ ensemble.id }}">{{ ensemble.name }}</a>
+            </li>
+            <li class="is-active">
+                <a aria-current="page" href="#">NMR Analysis</a>
+            </li>
+        </ul>
+    </nav>
 
-	<div>
-		<div class="columns">
-			<div class="column has-text-centered">
-				<center>
-				<div style="width: 600px;">
-					<div id="viewer_div" style="width: 400px; height: 400px; position: relative;"></div>
-				</div>
-				</center>
+    <div>
+        <div class="columns">
+            <div class="column has-text-centered">
+                <center>
+                    <div style="width: 600px">
+                        <div id="viewer_div" style="width: 400px; height: 400px; position: relative"></div>
+                    </div>
+                </center>
+            </div>
+            <div class="column has-text-centered">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Atom number</th>
+                            <th>Atom type</th>
+                            <th>Calculated Shift</th>
+                            <th>Predicted Shift</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shifts_body"></tbody>
+                </table>
+                <div id="scaling_div">
+                    <div class="columns">
+                        <div class="column is-2">
+                            <label class="label">Element</label>
+                        </div>
+                        <div class="column">
+                            <label class="label">Scaling slope</label>
+                        </div>
+                        <div class="column">
+                            <label class="label">Scaling intercept</label>
+                        </div>
+                        <div class="column"></div>
+                    </div>
+                    <div class="columns">
+                        <div class="column is-2">
+                            <input class="input" type="text" id="element_1" />
+                        </div>
+                        <div class="column">
+                            <input class="input" type="text" id="slope_1" />
+                        </div>
+                        <div class="column">
+                            <input class="input" type="text" id="intercept_1" />
+                        </div>
+                        <div class="column">
+                            <button type="button" class="button is-primary" onclick="add_scaling();">+</button>
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <button class="button is-info" id="get_shifts_button" onclick="get_shifts()">Get shifts</button>
+            </div>
+        </div>
+        <center>
+            <div id="exp_spectrum" style="width: 80%"></div>
+            <br />
+            <form id="fileinfo" enctype="multipart/form-data" method="post" name="fileinfo">
+                <input type="file" name="exp_spectrum_dir" webkitdirectory mozdirectory />
+            </form>
+            <button class="button is-info" onclick="load_exp_spectrum();">Compare with experiment</button>
+        </center>
+        <script>
 
-			</div>
-			<div class="column has-text-centered">
-				<table class="table">
-					<thead>
-						<tr>
-							<th>Atom number</th>
-							<th>Atom type</th>
-							<th>Calculated Shift</th>
-							<th>Predicted Shift</th>
-						</tr>
-					</thead>
-					<tbody id="shifts_body">
+            var viewer = $3Dmol.createViewer("viewer_div");
+            var selected = [];
 
-					</tbody>
-				</table>
-				<div id="scaling_div">
-					<div class="columns">
-						<div class="column is-2">
-							<label class="label">Element</label>
-						</div>
-						<div class="column">
-							<label class="label">Scaling slope</label>
-						</div>
-						<div class="column">
-							<label class="label">Scaling intercept</label>
-						</div>
-						<div class="column">
-						</div>
+            viewer.setBackgroundColor(0xffffff);
 
-					</div>
-					<div class="columns">
-						<div class="column is-2">
-							<input class="input" type="text" id="element_1">
-						</div>
-						<div class="column">
-							<input class="input" type="text" id="slope_1">
-						</div>
-						<div class="column">
-							<input class="input" type="text" id="intercept_1">
-						</div>
-						<div class="column">
-							<button type="button" class="button is-primary" onclick="add_scaling();">+</button>
-						</div>
-
-					</div>
-				</div>
-				<br />
-				<button class="button is-info" id="get_shifts_button" onclick="get_shifts()">Get shifts</button>
-			</div>
-
-
-		</div>
-		<center>
-			<div id="exp_spectrum" style="width: 80%;">
-			</div>
-			<br />
-			<form id="fileinfo" enctype="multipart/form-data" method="post" name="fileinfo">
-				<input type="file" name="exp_spectrum_dir" webkitdirectory mozdirectory>
-</form>
-			<button class="button is-info" onclick="load_exp_spectrum();">Compare with experiment</button>
-		</center>
-		<script>
-
-			var viewer = $3Dmol.createViewer("viewer_div");
-			var selected = [];
-
-			viewer.setBackgroundColor(0xffffff);
-
-			function get_structure() {
-				$.ajax({
-					method: "POST",	 	 
-					url: "/get_structure/",
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					data: {
-						'id': {{ ensemble.id }},
-						'num': 1,
-					},
-					success: function(data, textStatus, xhr) {
-						viewer.addModel(data, "xyz");
-						viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
-						viewer.addPropertyLabels('serial', {}, {showBackground: false, 'fontColor': {'color': '#00000000'}, 'fontSize': 20, 'alignment': 'center'});
-						viewer.zoomTo();
-						viewer.render();
-					}
-				});
-			}
+            function get_structure() {
+            	$.ajax({
+            		method: "POST",
+            		url: "/get_structure/",
+            		headers: {
+            			"X-CSRFToken": '{{ csrf_token }}',
+            		},
+            		data: {
+            			'id': {{ ensemble.id }},
+            			'num': 1,
+            		},
+            		success: function(data, textStatus, xhr) {
+            			viewer.addModel(data, "xyz");
+            			viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
+            			viewer.addPropertyLabels('serial', {}, {showBackground: false, 'fontColor': {'color': '#00000000'}, 'fontSize': 20, 'alignment': 'center'});
+            			viewer.zoomTo();
+            			viewer.render();
+            		}
+            	});
+            }
 
 
-			function parse_shifts() {
-				scaling_factors = "";
-				for (i=1; i < scaling_num+1; i++) {
-					try {
-						el = document.getElementById("element_" + i).value;
-						m = document.getElementById("slope_" + i).value;
-						b = document.getElementById("intercept_" + i).value;
-						scaling_factors += el + ',' + m + ',' + b + ';';
-					}
-					catch (err) {
-					}
-				}
-				return scaling_factors;
+            function parse_shifts() {
+            	scaling_factors = "";
+            	for (i=1; i < scaling_num+1; i++) {
+            		try {
+            			el = document.getElementById("element_" + i).value;
+            			m = document.getElementById("slope_" + i).value;
+            			b = document.getElementById("intercept_" + i).value;
+            			scaling_factors += el + ',' + m + ',' + b + ';';
+            		}
+            		catch (err) {
+            		}
+            	}
+            	return scaling_factors;
 
-			}
-			function get_shifts() {
-				scaling_factors = parse_shifts();
-				$.ajax({
-					method: "POST",	 	 
-					url: "/get_shifts/",
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					data: {
-						'id': {{ ensemble.id }},
-						'pid': {{ parameters.id }},
-						'scaling_factors': scaling_factors,
-					},
-					success: function(data, textStatus, xhr) {
-						$("#shifts_body").html(data);
-					}
-				});
+            }
+            function get_shifts() {
+            	scaling_factors = parse_shifts();
+            	$.ajax({
+            		method: "POST",
+            		url: "/get_shifts/",
+            		headers: {
+            			"X-CSRFToken": '{{ csrf_token }}',
+            		},
+            		data: {
+            			'id': {{ ensemble.id }},
+            			'pid': {{ parameters.id }},
+            			'scaling_factors': scaling_factors,
+            		},
+            		success: function(data, textStatus, xhr) {
+            			$("#shifts_body").html(data);
+            		}
+            	});
 
-			}
-			
-			$(document).ready(function(){
-				get_structure();
-			});
+            }
 
-			function load_exp_spectrum() {
-				scaling_factors = parse_shifts();
-				var exp_dir = new FormData();
-				for(i=0; i < $('input[type=file]')[0].files.length; i++) {
-					exp_dir.append('file', $('input[type=file]')[0].files[i]);
-				}
-				exp_dir.append('id', {{ ensemble.id }});
-				exp_dir.append('pid', {{ parameters.id }});
-				exp_dir.append('scaling_factors', scaling_factors);
+            $(document).ready(function(){
+            	get_structure();
+            });
 
-				$.ajax({
-					method: "POST",	 	 
-					url: "/get_exp_spectrum/",
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					data: exp_dir,
-            				cache: false,
-            				contentType: false,
-            				processData: false,
-					success: function(data, textStatus, xhr) {
-						g1 = new Dygraph(
-						document.getElementById("exp_spectrum"),
-							data, 
-							{
-								strokeWidth: 2,	
-								xlabel: "Chemical Shift (PPM)",
-								ylabel: "Intensity",
+            function load_exp_spectrum() {
+            	scaling_factors = parse_shifts();
+            	var exp_dir = new FormData();
+            	for(i=0; i < $('input[type=file]')[0].files.length; i++) {
+            		exp_dir.append('file', $('input[type=file]')[0].files[i]);
+            	}
+            	exp_dir.append('id', {{ ensemble.id }});
+            	exp_dir.append('pid', {{ parameters.id }});
+            	exp_dir.append('scaling_factors', scaling_factors);
 
-							axes: {
-								x: {
-									axisLabelFormatter: function(cm) {
-										return -cm.toPrecision(3);
-									},
-									valueFormatter: function(cm) {
-										return -cm.toPrecision(3);
-									}
-								},
-							}
-							}
+            	$.ajax({
+            		method: "POST",
+            		url: "/get_exp_spectrum/",
+            		headers: {
+            			"X-CSRFToken": '{{ csrf_token }}',
+            		},
+            		data: exp_dir,
+                     				cache: false,
+                     				contentType: false,
+                     				processData: false,
+            		success: function(data, textStatus, xhr) {
+            			g1 = new Dygraph(
+            			document.getElementById("exp_spectrum"),
+            				data,
+            				{
+            					strokeWidth: 2,
+            					xlabel: "Chemical Shift (PPM)",
+            					ylabel: "Intensity",
 
-						);
-					}
-				});
+            				axes: {
+            					x: {
+            						axisLabelFormatter: function(cm) {
+            							return -cm.toPrecision(3);
+            						},
+            						valueFormatter: function(cm) {
+            							return -cm.toPrecision(3);
+            						}
+            					},
+            				}
+            				}
 
-			}
-		</script>
-	</div>
+            			);
+            		}
+            	});
+
+            }
+        </script>
+    </div>
 </div>
 
 {% endblock content %}

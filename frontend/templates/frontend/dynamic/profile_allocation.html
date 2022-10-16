@@ -1,0 +1,9 @@
+{% if request.user.allocated_seconds %}
+<div class="field has-text-centered">
+    <label class="label">Usage of computational time:</label>
+    <p>{{ request.user.billed_seconds }}/{{ request.user.allocated_seconds }} seconds</p>
+    <progress class="progress is-medium" value="{{ request.user.billed_seconds }}" max="{{ request.user.allocated_seconds }}"></progress>
+</div>
+{% else %}
+<p id="no_alloc_msg"><b>You have no computational allocation</b></p>
+{% endif %}

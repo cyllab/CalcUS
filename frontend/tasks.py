@@ -21,11 +21,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import absolute_import, unicode_literals
 # from asyncio.windows_events import NULL
 
-from calcus.celery import app
 import string
 import signal
 import psutil
-import redis
 import requests
 import os
 import numpy as np
@@ -36,29 +34,55 @@ import shlex
 import glob
 import sys
 import shutil
-import invoke
 import tempfile
 import json
+from django.conf import settings
 
 import threading
 from threading import Lock
 
 from shutil import copyfile, rmtree
 import time
-from celery.signals import task_prerun, task_postrun
+
+if not settings.IS_CLOUD:
+    from calcus.celery import app
+    from celery.signals import task_prerun, task_postrun
+    from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
+    from celery import group
+    import redis
+    import invoke
+else:
+    import functools
+
+    from unittest.mock import MagicMock
+
+    def dummy_decorator(f=None, base=None):
+        if f:
+
+            @functools.wraps(f)
+            def wrapper(*args, **kwargs):
+                return f(*args, **kwargs)
+
+            return wrapper
+        else:
+            return functools.partial(dummy_decorator, base=None)
+
+    app = MagicMock()
+    app.task = dummy_decorator
+    AbortableTask = MagicMock()
+    AbortableAsyncResult = MagicMock()
+
+
 from django.utils import timezone
-from django.conf import settings
 from django.core import management
 from django.db.utils import IntegrityError
-from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
-from celery import group
 
 from ccinput.wrapper import generate_calculation
 from ccinput.exceptions import CCInputException
 
 from .libxyz import *
 from .models import *
-from .calculation_helper import *
+from .helpers import *
 from .environment_variables import *
 
 import traceback
@@ -442,7 +466,9 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     logger.info(f"Got returncode {t.returncode}")
                     return ErrorCodes.UNKNOWN_TERMINATION
 
-            if calc_id != -1 and res.is_aborted():
+            if (
+                calc_id != -1 and res.is_aborted() and not settings.IS_CLOUD
+            ):  # Job cancellation not implemented in the cloud version
                 logger.info(f"Stopping calculation {calc_id}")
                 signal_to_send = signal.SIGTERM
 
@@ -472,6 +498,8 @@ def files_are_equal(f, input_file):
 
     for l1, l2 in zip(lines, sinput):
         if l1.find("nproc") != -1 and l2.find("nproc") != -1:
+            continue
+        if l1.find("maxcore") != -1 and l2.find("maxcore") != -1:
             continue
 
         if l1 != l2:
@@ -596,6 +624,12 @@ def launch_xtb_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     folder = f"scratch/calcus/{calc.id}"
 
+    if not os.path.isdir(local_folder):
+        os.makedirs(local_folder, exist_ok=True)
+
+    with open(os.path.join(local_folder, "in.xyz"), "w") as out:
+        out.write(clean_xyz(calc.structure.xyz_structure))
+
     if calc.input_file != "":
         with open(os.path.join(local_folder, "input"), "w") as out:
             out.write(calc.input_file)
@@ -708,10 +742,10 @@ def xtb_opt(in_file, calc):
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
-        xyz_structure=xyz_structure,
         number=calc.structure.number,
     )[0]
     s.degeneracy = 1
+    s.xyz_structure = xyz_structure
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
     prop.geom = True
@@ -832,10 +866,10 @@ def xtb_ts(in_file, calc):
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
-        xyz_structure=clean_xyz("".join(lines)),
         number=calc.structure.number,
     )[0]
     s.degeneracy = calc.structure.degeneracy
+    s.xyz_structure = (clean_xyz("".join(lines)),)
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
     prop.geom = True
@@ -1166,6 +1200,9 @@ def launch_orca_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     folder = f"scratch/calcus/{calc.id}"
 
+    if not os.path.isdir(local_folder):
+        os.makedirs(local_folder, exist_ok=True)
+
     with open(os.path.join(local_folder, "calc.inp"), "w") as out:
         out.write(calc.input_file)
 
@@ -1295,10 +1332,10 @@ def orca_opt(in_file, calc):
     if len(lines) == 1:  # Single atom
         s = Structure.objects.get_or_create(
             parent_ensemble=calc.result_ensemble,
-            xyz_structure=calc.structure.xyz_structure,
             number=calc.structure.number,
         )[0]
         s.degeneracy = calc.structure.degeneracy
+        s.xyz_structure = calc.structure.xyz_structure
         s.save()
         calc.structure = s
         calc.step = BasicStep.objects.get(name="Single-Point Energy")
@@ -1334,10 +1371,10 @@ def orca_opt(in_file, calc):
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
-        xyz_structure=xyz_structure,
         number=calc.structure.number,
     )[0]
     s.degeneracy = calc.structure.degeneracy
+    s.xyz_structure = xyz_structure
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
     prop.geom = True
@@ -1407,9 +1444,9 @@ def orca_ts(in_file, calc):
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
-        xyz_structure=xyz_structure,
         number=calc.structure.number,
     )[0]
+    s.xyz_structure = xyz_structure
     s.degeneracy = calc.structure.degeneracy
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
@@ -1924,6 +1961,9 @@ def launch_gaussian_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     folder = f"scratch/calcus/{calc.id}"
 
+    if not os.path.isdir(local_folder):
+        os.makedirs(local_folder, exist_ok=True)
+
     with open(os.path.join(local_folder, "calc.com"), "w") as out:  ###
         out.write(calc.input_file)
 
@@ -2379,10 +2419,10 @@ def gaussian_opt(in_file, calc):
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
-        xyz_structure=xyz_structure,
         number=calc.structure.number,
     )[0]
     s.degeneracy = calc.structure.degeneracy
+    s.xyz_structure = xyz_structure
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
     prop.geom = True
@@ -2567,10 +2607,10 @@ def gaussian_ts(in_file, calc):
 
     s = Structure.objects.get_or_create(
         parent_ensemble=calc.result_ensemble,
-        xyz_structure=xyz_structure,
         number=calc.structure.number,
     )[0]
     s.degeneracy = calc.structure.degeneracy
+    s.xyz_structure = xyz_structure
     prop = get_or_create(calc.parameters, s)
     prop.energy = E
     prop.geom = True
@@ -2653,19 +2693,12 @@ def gaussian_scan(in_file, calc):
 
             E = float(lines[ind2].split()[4])
 
-            try:
-                s = Structure.objects.get(
-                    parent_ensemble=calc.result_ensemble, number=s_ind
-                )
-            except:
-                s = Structure.objects.get_or_create(
-                    parent_ensemble=calc.result_ensemble,
-                    xyz_structure=xyz_structure,
-                    number=s_ind,
-                )[0]
-            else:
-                s.xyz_structure = xyz_structure
+            s = Structure.objects.get_or_create(
+                parent_ensemble=calc.result_ensemble,
+                number=s_ind,
+            )[0]
 
+            s.xyz_structure = xyz_structure
             s.degeneracy = 1
 
             prop = get_or_create(calc.parameters, s)
@@ -2710,10 +2743,10 @@ def gaussian_scan(in_file, calc):
 
         s = Structure.objects.get_or_create(
             parent_ensemble=calc.result_ensemble,
-            xyz_structure=xyz_structure,
             number=calc.structure.number,
         )[0]
         s.degeneracy = calc.structure.degeneracy
+        s.xyz_structure = xyz_structure
         prop = get_or_create(calc.parameters, s)
         prop.energy = E
         prop.geom = True
@@ -2946,26 +2979,28 @@ def analyse_opt_ORCA(calc):
             RMSDs.append(rms)
             ind += 1
 
-    with open(os.path.join(prepath, "calc_trj.xyz")) as f:
-        lines = f.readlines()
-
-    num = int(lines[0])
-    nstructs = int(len(lines) / (num + 2))
-
+    structs, energies = parse_multixyz_from_file(os.path.join(prepath, "calc_trj.xyz"))
     new_frames = []
-    for i in range(1, nstructs):
-        xyz = "".join(lines[(num + 2) * i : (num + 2) * (i + 1)])
+
+    for ind, (s, E) in enumerate(zip(structs, energies)):
+        xyz = npxyz2strxyz(s)
         try:
-            f = calc.calculationframe_set.get(number=i)
+            f = calc.calculationframe_set.get(number=ind + 1)
         except CalculationFrame.DoesNotExist:
             new_frames.append(
                 CalculationFrame(
-                    number=i, xyz_structure=xyz, parent_calculation=calc, RMSD=RMSDs[i]
+                    number=ind + 1,
+                    xyz_structure=xyz,
+                    parent_calculation=calc,
+                    RMSD=RMSDs[ind],
                 )
             )
         else:
             continue
+
     CalculationFrame.objects.bulk_create(new_frames)
+
+    return ErrorCodes.SUCCESS
 
 
 def analyse_opt_xtb(calc):
@@ -3029,6 +3064,8 @@ def analyse_opt_xtb(calc):
                 continue
         CalculationFrame.objects.bulk_update(to_update, ["xyz_structure", "RMSD"])
         CalculationFrame.objects.bulk_create(to_create)
+
+    return ErrorCodes.SUCCESS
 
 
 def analyse_opt_Gaussian(calc):
@@ -3127,7 +3164,8 @@ def analyse_opt_Gaussian(calc):
                     to_update, ["xyz_structure", "energy"], batch_size=100
                 )
                 CalculationFrame.objects.bulk_create(to_create)
-                return
+                return ErrorCodes.SUCCESS
+    return ErrorCodes.SUCCESS
 
 
 def get_Gaussian_xyz(text):
@@ -3289,9 +3327,9 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
                 )
             structure = Structure.objects.get_or_create(
                 parent_ensemble=ensemble,
-                xyz_structure=order.structure.xyz_structure,
                 number=1,
             )[0]
+            structure.xyz_structure = order.structure.xyz_structure
             order.structure = structure
             molecule.save()
             if should_create_ensemble is True:
@@ -3345,10 +3383,10 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
                 for s in order.ensemble.structure_set.all():
                     _s = Structure.objects.get_or_create(
                         parent_ensemble=ensemble,
-                        xyz_structure=s.xyz_structure,
                         number=s.number,
                     )[0]
                     _s.degeneracy = s.degeneracy
+                    _s.xyz_structure = s.xyz_structure
                     _s.save()
                 order.ensemble = ensemble
                 order.save()
@@ -3373,10 +3411,10 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
         f = calc.calculationframe_set.get(number=fid)
         s = Structure.objects.get_or_create(
             parent_ensemble=ensemble,
-            xyz_structure=f.xyz_structure,
             number=order.start_calc.structure.number,
         )[0]
         s.degeneracy = 1
+        s.xyz_structure = f.xyz_structure
         prop = Property.objects.create(
             parent_structure=s, parameters=calc.parameters, geom=True
         )
@@ -3433,10 +3471,11 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
             c.save()
             if local:
                 calculations.append(c)
-                if not is_test:
-                    group_order.append(run_calc.s(c.id).set(queue="comp"))
-                else:
-                    group_order.append(run_calc.s(c.id))
+                if not settings.IS_CLOUD:
+                    if not is_test:
+                        group_order.append(run_calc.s(str(c.id)).set(queue="comp"))
+                    else:
+                        group_order.append(run_calc.s(str(c.id)))
             else:
                 calculations.append(c)
                 c.local = False
@@ -3471,10 +3510,11 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
             c.save()
             if local:
                 calculations.append(c)
-                if not is_test:
-                    group_order.append(run_calc.s(c.id).set(queue="comp"))
-                else:
-                    group_order.append(run_calc.s(c.id))
+                if not settings.IS_CLOUD:
+                    if not is_test:
+                        group_order.append(run_calc.s(str(c.id)).set(queue="comp"))
+                    else:
+                        group_order.append(run_calc.s(str(c.id)))
             else:
                 c.local = False
                 c.save()
@@ -3482,10 +3522,55 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
                 cmd = f"launch\n{c.id}\n"
                 send_cluster_command(cmd)
 
-    for task, c in zip(group_order, calculations):
-        res = task.apply_async()
-        c.task_id = res
-        c.save()
+    if settings.IS_CLOUD:
+        # TODO: add some way to be able to cancel calcs?
+        for c in calculations:
+            send_gcloud_task("/cloud_calc/", str(c.id))
+    else:
+        for task, c in zip(group_order, calculations):
+            res = task.apply_async()
+            c.task_id = res
+            c.save()
+
+
+def send_gcloud_task(url, payload, compute=True):
+    if is_test:
+        import grpc
+        from google.cloud import tasks_v2
+        from google.cloud.tasks_v2.services.cloud_tasks.transports import (
+            CloudTasksGrpcTransport,
+        )
+
+        client = tasks_v2.CloudTasksClient(
+            transport=CloudTasksGrpcTransport(
+                channel=grpc.insecure_channel("taskqueue:8123")
+            )
+        )
+    else:
+        from google.cloud import tasks_v2
+
+        client = tasks_v2.CloudTasksClient()
+
+    if compute:
+        queue = "xtb-compute"
+        url = settings.COMPUTE_HOST_URL + url
+    else:
+        queue = "actions"
+        url = settings.ACTION_HOST_URL + url
+
+    parent = client.queue_path(settings.GCP_PROJECT_ID, settings.GCP_LOCATION, queue)
+
+    task = {
+        "http_request": {
+            "http_method": "POST",
+            "url": url,
+            "oidc_token": {"service_account_email": settings.GCP_SERVICE_ACCOUNT_EMAIL},
+        }
+    }
+    converted_payload = payload.encode()
+    task["http_request"]["body"] = converted_payload
+
+    client.create_task(parent=parent, task=task)
 
 
 def add_input_to_calc(calc):
@@ -3509,6 +3594,20 @@ def add_input_to_calc(calc):
     calc.parameters.save()
 
 
+def load_output_files(calc):
+    output_files = {}
+    for log_name in glob.glob(
+        os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.log")
+    ) + glob.glob(os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.out")):
+        fname = os.path.basename(log_name)[:-4]
+        with open(log_name) as f:
+            log = "".join(f.readlines())
+        output_files[fname] = log
+
+    calc.output_files = json.dumps(output_files)
+    calc.save()
+
+
 @app.task(base=AbortableTask)
 def run_calc(calc_id):
     if not is_test:
@@ -3521,15 +3620,19 @@ def run_calc(calc_id):
             except Calculation.DoesNotExist:
                 time.sleep(1)
             else:
-                if not is_test and calc.task_id == "" and calc.local:
+                if (
+                    not settings.IS_CLOUD
+                    and not is_test
+                    and calc.task_id == ""
+                    and calc.local
+                ):
                     time.sleep(1)
                 else:
                     return calc
-        raise Exception("Could not get calculation to run")
 
-    try:
-        calc = get_calc(calc_id)
-    except Exception:
+    calc = get_calc(calc_id)
+
+    if not calc:
         logger.info(f"Could not get calculation {calc_id}")
         return ErrorCodes.UNKNOWN_TERMINATION
 
@@ -3551,6 +3654,7 @@ def run_calc(calc_id):
     if isinstance(ret, ErrorCodes):
         return ret
 
+    ####
     in_file = os.path.join(workdir, "in.xyz")
 
     if calc.status == 0:
@@ -3558,6 +3662,7 @@ def run_calc(calc_id):
 
         with open(in_file, "w") as out:
             out.write(clean_xyz(calc.structure.xyz_structure))
+    ####
 
     if not calc.local and calc.remote_id == 0:
         logger.debug(f"Preparing remote folder for calc {calc_id}")
@@ -3584,11 +3689,9 @@ def run_calc(calc_id):
 
         calc.status = 3
         calc.error_message = f"Incorrect termination ({str(e)})"
-        calc.save()
         logger.info(f"Error while running calc {calc_id}: '{str(e)}'")
     else:
         calc.refresh_from_db()
-        calc.date_finished = timezone.now()
 
         if ret == ErrorCodes.JOB_CANCELLED:
             pid = int(threading.get_ident())
@@ -3610,22 +3713,18 @@ def run_calc(calc_id):
             calc.status = 3
             calc.error_message = "Unknown termination"
 
+        calc.date_finished = timezone.now()
+
     logger.info(f"Calc {calc_id} finished")
+
+    calc.billed_seconds = max(
+        1, round((calc.date_finished - calc.date_started).total_seconds())
+    )
 
     if calc.step.creates_ensemble:
         analyse_opt(calc.id)
 
-    output_files = {}
-    for log_name in glob.glob(
-        os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.log")
-    ) + glob.glob(os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.out")):
-        fname = os.path.basename(log_name)[:-4]
-        with open(log_name) as f:
-            log = "".join(f.readlines())
-        output_files[fname] = log
-
-    calc.output_files = json.dumps(output_files)
-    calc.save()
+    load_output_files(calc)
 
     global cache_ind
 
@@ -3655,7 +3754,23 @@ def run_calc(calc_id):
 
     cache_ind += 1
 
+    if settings.IS_CLOUD:
+        bill_calculation(calc)
+
     return ret
+
+
+def bill_calculation(calc):
+    calc_time = calc.billed_seconds
+    calc.order.resource_provider.bill_time(calc_time)
+    logger.info(
+        f"{calc.order.resource_provider.name} ({calc.order.resource_provider.id}) has been billed {calc_time} seconds for calc {calc.id}"
+    )
+    if calc.order.author != calc.order.resource_provider:
+        calc.order.author.bill_time(calc_time)
+        logger.info(
+            f"{calc.order.author.name} ({calc.order.author.id}) has also been billed {calc_time} seconds for calc {calc.id}"
+        )
 
 
 @app.task
@@ -3679,7 +3794,11 @@ def del_ensemble(ensemble_id):
 
 
 def _del_order(id):
-    o = CalculationOrder.objects.get(pk=id)
+    try:
+        o = CalculationOrder.objects.get(pk=id)
+    except CalculationOrder.DoesNotExist:
+        return
+
     for c in o.calculation_set.all():
         _del_calculation(c)
 
@@ -3698,7 +3817,11 @@ def _del_order(id):
 
 
 def _del_project(id):
-    proj = Project.objects.get(pk=id)
+    try:
+        proj = Project.objects.get(pk=id)
+    except Project.DoesNotExist:
+        return
+
     proj.author = None
     proj.save()
     for m in proj.molecule_set.all():
@@ -3707,7 +3830,10 @@ def _del_project(id):
 
 
 def _del_molecule(id):
-    mol = Molecule.objects.get(pk=id)
+    try:
+        mol = Molecule.objects.get(pk=id)
+    except Molecule.DoesNotExist:
+        return
     for e in mol.ensemble_set.all():
         _del_ensemble(e.id)
     mol.delete()
@@ -3762,6 +3888,9 @@ def cancel(calc_id):
 
 
 def kill_calc(calc):
+    if settings.IS_CLOUD:
+        # Not implemented yet
+        return
     if calc.local:
         if calc.task_id != "":
             if calc.status == 1:
@@ -3794,6 +3923,6 @@ def backup_db():
 @app.task
 def ping_satellite():
     r = requests.post(
-        "https://calcus-satellite-tg3y3xrnxq-uc.a.run.app/ping",
+        "https://ping.calcus.cloud/ping",
         data={"code": settings.PING_CODE},
     )

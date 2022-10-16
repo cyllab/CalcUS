@@ -175,9 +175,9 @@ NAME = calc.inp
 |  2> *xyz -1 1
 |  3> Cl   0.00000000   0.00000000   0.00000000
 |  4> *
-|  5> %MaxCore 2000
+|  5> %MaxCore 500
 |  6> %pal
-|  7> nprocs 1
+|  7> nprocs 4
 |  8> endd                         ****END OF INPUT****
 ================================================================================
 
@@ -222,6 +222,12 @@ There are 1 groups of distinct atoms
  Group   1 Type Cl  : 14s5p5d2f1g contracted to 8s4p3d1f1g pattern {71111111/2111/311/2/1}
 
 Atom   0Cl   basis set group =>   1
+
+
+           ************************************************************
+           *        Program running with 4 parallel MPI-processes     *
+           *              working on a common directory               *
+           ************************************************************
 ------------------------------------------------------------------------------
                            ORCA GTO INTEGRAL CALCULATION
                            -- RI-GTO INTEGRALS CHOSEN --
@@ -292,9 +298,15 @@ Calculating one electron integrals          ... done (  0.0 sec)
 Calculating RI/J V-Matrix + Cholesky decomp.... done (  0.0 sec)
 Calculating Nuclear repulsion               ... done (  0.0 sec) ENN=      0.000000000000 Eh
 
-SHARK setup successfully completed in   0.0 seconds
+SHARK setup successfully completed in   0.1 seconds
 
 Maximum memory used throughout the entire GTOINT-calculation: 8.7 MB
+
+
+           ************************************************************
+           *        Program running with 4 parallel MPI-processes     *
+           *              working on a common directory               *
+           ************************************************************
 -------------------------------------------------------------------------------
                                  ORCA SCF
 -------------------------------------------------------------------------------
@@ -391,10 +403,10 @@ Smallest eigenvalue                        ... 1.160e-01
 Time for diagonalization                   ...    0.000 sec
 Threshold for overlap eigenvalues          ... 1.000e-08
 Number of eigenvalues below threshold      ... 0
-Time for construction of square roots      ...    0.000 sec
-Total time needed                          ...    0.000 sec
+Time for construction of square roots      ...    0.001 sec
+Total time needed                          ...    0.001 sec
 
-Time for model grid setup =    0.004 sec
+Time for model grid setup =    0.008 sec
 
 ------------------------------
 INITIAL GUESS: MODEL POTENTIAL
@@ -438,7 +450,7 @@ Total number of grid points                  ...     7368
 Total number of batches                      ...      116
 Average number of points per batch           ...       63
 Average number of grid points per atom       ...     7368
-Time for grid setup =    0.029 sec
+Time for grid setup =    0.037 sec
 
 --------------------
 COSX GRID GENERATION
@@ -501,7 +513,7 @@ Average number of points per batch           ...       63
 Average number of grid points per atom       ...     5032
 UseSFitting                                  ... on
 
-Time for X-Grid setup             =    0.019 sec
+Time for X-Grid setup             =    0.017 sec
 
 --------------
 SCF ITERATIONS
@@ -535,7 +547,7 @@ Old exchange energy                            =    -15.050753294 Eh
 New exchange energy                            =    -15.050755277 Eh
 Exchange energy change after final integration =     -0.000001983 Eh
 Total energy after final integration           =   -460.068086407 Eh
-Final COS-X integration done in                =     0.028 sec
+Final COS-X integration done in                =     0.014 sec
 
 ----------------
 TOTAL SCF ENERGY
@@ -567,9 +579,9 @@ DFET-embed. en.    :        0.000000000000 Eh
 SCF CONVERGENCE
 ---------------
 
-  Last Energy change         ...   -7.0617e-09  Tolerance :   1.0000e-06
-  Last MAX-Density change    ...    2.6645e-15  Tolerance :   1.0000e-05
-  Last RMS-Density change    ...    2.6150e-16  Tolerance :   1.0000e-06
+  Last Energy change         ...   -7.0611e-09  Tolerance :   1.0000e-06
+  Last MAX-Density change    ...    2.2204e-15  Tolerance :   1.0000e-05
+  Last RMS-Density change    ...    1.7816e-16  Tolerance :   1.0000e-06
   Last Orbital Gradient      ...    2.8926e-05  Tolerance :   5.0000e-05
   Last Orbital Rotation      ...    1.4481e-05  Tolerance :   5.0000e-05
 
@@ -752,28 +764,28 @@ TIMINGS
 
 Total SCF time: 0 days 0 hours 0 min 0 sec 
 
-Total time                  ....       0.401 sec
-Sum of individual times     ....       0.367 sec  ( 91.4%)
+Total time                  ....       0.334 sec
+Sum of individual times     ....       0.277 sec  ( 83.0%)
 
-Fock matrix formation       ....       0.312 sec  ( 77.9%)
-  Split-RI-J                ....       0.054 sec  ( 17.2% of F)
-  Chain of spheres X        ....       0.157 sec  ( 50.2% of F)
-  XC integration            ....       0.100 sec  ( 32.1% of F)
-    Basis function eval.    ....       0.017 sec  ( 17.4% of XC)
-    Density eval.           ....       0.021 sec  ( 20.6% of XC)
-    XC-Functional eval.     ....       0.043 sec  ( 42.6% of XC)
-    XC-Potential eval.      ....       0.015 sec  ( 15.2% of XC)
-Diagonalization             ....       0.000 sec  (  0.1%)
+Fock matrix formation       ....       0.204 sec  ( 61.1%)
+  Split-RI-J                ....       0.062 sec  ( 30.3% of F)
+  Chain of spheres X        ....       0.109 sec  ( 53.7% of F)
+  XC integration            ....       0.029 sec  ( 14.0% of F)
+    Basis function eval.    ....       0.004 sec  ( 14.9% of XC)
+    Density eval.           ....       0.005 sec  ( 18.5% of XC)
+    XC-Functional eval.     ....       0.011 sec  ( 38.1% of XC)
+    XC-Potential eval.      ....       0.004 sec  ( 13.5% of XC)
+Diagonalization             ....       0.002 sec  (  0.6%)
 Density matrix formation    ....       0.000 sec  (  0.0%)
-Population analysis         ....       0.000 sec  (  0.1%)
-Initial guess               ....       0.002 sec  (  0.5%)
+Population analysis         ....       0.001 sec  (  0.2%)
+Initial guess               ....       0.003 sec  (  0.9%)
 Orbital Transformation      ....       0.000 sec  (  0.0%)
 Orbital Orthonormalization  ....       0.000 sec  (  0.0%)
-DIIS solution               ....       0.000 sec  (  0.0%)
-SOSCF solution              ....       0.000 sec  (  0.0%)
-Grid generation             ....       0.051 sec  ( 12.8%)
+DIIS solution               ....       0.003 sec  (  0.8%)
+SOSCF solution              ....       0.002 sec  (  0.5%)
+Grid generation             ....       0.062 sec  ( 18.7%)
 
-Maximum memory used throughout the entire SCF-calculation: 43.2 MB
+Maximum memory used throughout the entire SCF-calculation: 42.7 MB
 
 -------------------------   --------------------
 FINAL SINGLE POINT ENERGY      -460.068086406898
@@ -830,8 +842,8 @@ x,y,z [Debye]:     0.000010    -0.000020    -0.000025
 
 Timings for individual modules:
 
-Sum of individual times         ...        0.466 sec (=   0.008 min)
-GTO integral calculation        ...        0.052 sec (=   0.001 min)  11.1 %
-SCF iterations                  ...        0.415 sec (=   0.007 min)  88.9 %
+Sum of individual times         ...        1.099 sec (=   0.018 min)
+GTO integral calculation        ...        0.427 sec (=   0.007 min)  38.8 %
+SCF iterations                  ...        0.673 sec (=   0.011 min)  61.2 %
                              ****ORCA TERMINATED NORMALLY****
-TOTAL RUN TIME: 0 days 0 hours 0 minutes 0 seconds 538 msec
+TOTAL RUN TIME: 0 days 0 hours 0 minutes 1 seconds 494 msec

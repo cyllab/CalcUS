@@ -1,74 +1,74 @@
 {% load static %}
 
-
 <style>
-.pick_bs_div {
-	display: none;
-	position: fixed; 
-	padding-top: 50px;
-	left: 0; 
-	top: 0;
-	width: 100%;
-	height: 100%; 
-	background-color: rgb(0, 0, 0);
-	background-color: rgba(0, 0, 0, 0.5);
-}
+    .pick_bs_div {
+        display: none;
+        position: fixed;
+        padding-top: 50px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgb(0, 0, 0);
+        background-color: rgba(0, 0, 0, 0.5);
+    }
 
+    .button {
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+    .constraint_btn {
+        margin-top: 0;
+        margin-bottom: 0;
+        width: 40px;
+        height: 40px;
+    }
 
-.button {
-	margin-top: 5px;
-	margin-bottom: 5px;
-}
-.constraint_btn {
-	margin-top: 0;
-	margin-bottom: 0;
-	width: 40px;
-	height: 40px;
-}
-
-#calc_charge, #calc_multiplicity {
-	width: 50px;
-}
-#form_error_msg {
-	font-weight: bold;
-	color: red;
-}
-.file-name {
-	max-width: 100%;
-	width: 100%;
-}
-.file-label  {
-	width: 100%;
-}
-#calc_combine_files {
-	margin: auto 0;
-}
-.check_msg {
-	color: red;
-	font-size: 10pt;
-	padding-left: 5px;
-}
+    #calc_charge,
+    #calc_multiplicity {
+        width: 50px;
+    }
+    #form_error_msg {
+        font-weight: bold;
+        color: red;
+    }
+    .file-name {
+        max-width: 100%;
+        width: 100%;
+    }
+    .file-label {
+        width: 100%;
+    }
+    #calc_combine_files {
+        margin: auto 0;
+    }
+    .check_msg {
+        color: red;
+        font-size: 10pt;
+        padding-left: 5px;
+    }
 </style>
 
 <script>
-function debounce(callback, wait) {
-	let timeout;
-	return (...args) => {
-		const context = this;
-		clearTimeout(timeout);
-		timeout = setTimeout(() => callback.apply(context, args), wait);
-	};
-}
+    function debounce(callback, wait) {
+        let timeout;
+        return (...args) => {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => callback.apply(context, args), wait);
+        };
+    }
 
-/* Sets atomic labels as the atomic numbers in the xyz structure */
-(function(ChemDoodle) {
-	ChemDoodle.relabel = function(molecule){
-		for(let i = 0, ii = molecule.atoms.length; i<ii; i++){
-			molecule.atoms[i].altLabel = String(i+1);
-		}
-	};
-})(ChemDoodle);
+    /* Sets atomic labels as the atomic numbers in the xyz structure */
+    (function (ChemDoodle) {
+        ChemDoodle.relabel = function (molecule) {
+            for (let i = 0, ii = molecule.atoms.length; i < ii; i++) {
+                molecule.atoms[i].altLabel = String(i + 1);
+            }
+        };
+    })(ChemDoodle);
 
+<<<<<<< HEAD
 
 let constraint_num = 0;
 String.prototype.format = function() {
@@ -793,4 +793,723 @@ String.prototype.format = function() {
 	{% else %}
 	let ensemble = false;
 	{% endif %}
+=======
+    let constraint_num = 0;
+    String.prototype.format = function () {
+        a = this;
+        for (i = 0; i < 30; i++) {
+            a = a.replace("{}", arguments[0]);
+        }
+        return a;
+    };
+</script>
+<script>
+    function check(param) {
+    	val = $("#calc_" + param).val();
+    	data = {};
+    	data[param] = val;
+    	data['software'] = $("#calc_software").val();
+    	$.ajax({
+    		method: "POST",
+    		url: "/check_" + param + "/",
+    		data: data,
+    		headers: {
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+    		success: function(msg) {
+    			is_red = $("#calc_" + param).hasClass("is-danger");
+    			if(msg == "" && is_red) {
+    				$("#calc_" + param).removeClass("is-danger");
+    			}
+    			else if(msg != "" && !is_red){
+    				$("#calc_" + param).addClass("is-danger");
+    			}
+    			$("#" + param + "_check_msg").html(msg);
+    		},
+    	});
+
+    }
+    var project_presets = {
+    	{% for proj in request.user.project_set.all %}
+    	'{{ proj.name }}': {% if proj.preset %}"{{ proj.preset.id }}" {% else %} -1 {% endif %},
+    	{% endfor %}
+    }
+
+    const allow_local_calc = {{ ALLOW_LOCAL_CALC|yesno:"true,false" }};
+    const allow_remote_calc = {{ ALLOW_REMOTE_CALC|yesno:"true,false" }};
+    const local_allowed_theory_levels = [{% for l in LOCAL_ALLOWED_THEORY_LEVELS %}"{{ l }}", {% endfor %}];
+    const local_allowed_steps = [{% for s in LOCAL_ALLOWED_STEPS %}"{{ s }}", {% endfor %}];
+
+    function verify_form() {
+    	$("#submit_button").addClass("is-loading");
+
+    	//Adding the selected Project to localStorage on pressing Submit Button
+    	choice = document.getElementById("calc_project");
+    	localStorage.setItem("lastSelectedProject", choice.value);
+
+    	data = $("#calcform").serializeArray(),
+
+    	data.push({"name": "constraint_num", "value": constraint_num});
+
+    	{% if ensemble or structures %}
+    	data.push({"name": "starting_ensemble", "value": "{{ ensemble.id }}"});
+    	{% endif %}
+
+    	{% if structures %}
+    	data.push({"name": "starting_structs", "value": "{{ structures }}"});
+    	{% endif %}
+
+    	{% if calc %}
+    	data.push({"name": "starting_calc", "value": "{{ calc.id }}"});
+    	data.push({"name": "starting_frame", "value": {{ frame_num }}});
+    	{% endif %}
+
+    	{% if not ensemble and not structure and not calc %}
+    	if (sketcher.molecules.length > 0) {
+    		let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
+    		data.push({"name": "structure", "value": mol});
+    	}
+    	{% endif %}
+
+    	upload_el = $("#file_structure");
+    	if(upload_el.length != 0) {
+    		num_files = upload_el[0].files.length;
+    	}
+    	else {
+    		num_files = 0;
+    	}
+    	data.push({"name": "num_files", "value": num_files});
+
+    	upload_aux_el = $("#aux_file_structure");
+    	if(upload_aux_el.length != 0) {
+    		num_aux_files = upload_aux_el[0].files.length;
+    	}
+    	else {
+    		num_aux_files = 0;
+    	}
+    	data.push({"name": "num_aux_files", "value": num_aux_files});
+
+    	$.ajax({
+    		data: data,
+    		headers: {
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+
+    		type: "POST",
+    		url: "/verify_calculation/",
+    		success: function (response) {
+    			$("#calcform").submit();
+    			$("#form_error_msg").html("");
+    		},
+    		error: function (response) {
+    			$("#form_error_msg").html("Could not submit the calculation: " + response.responseText);
+    			$("#submit_button").removeClass("is-loading");
+    		}
+    	});
+
+    }
+    function load_preset(id) {
+    	$.ajax({
+    		method: "POST",
+    		url: "/load_preset/" + id,
+    		headers: {
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+    		success: function(data) {
+    			eval(data);
+    			refresh_availabilities();
+    			check("functional");
+    			check("basis_set");
+    			check("solvent");
+    		},
+    	});
+    }
+
+    {% if ensemble and not structures %}
+    	function filter_changed() {
+    		choice = document.getElementById("calc_filter");
+    		value_input = document.getElementById("calc_filter_value");
+    		param_input = document.getElementById("calc_filter_params");
+    		label = document.getElementById("filter_label");
+    		if(choice.value == "None") {
+    			value_input.style.display = "none";
+    			param_input.style.display = "none";
+    		}
+    		else if(choice.value == "By Boltzmann Weight") {
+    			value_input.style.display = "block";
+    			param_input.style.display = "block";
+    			label.innerHTML = "Higher than";
+    		}
+    		else if(choice.value == "By Relative Energy") {
+    			value_input.style.display = "block";
+    			param_input.style.display = "block";
+    			label.innerHTML = "Lower than (" + "{{ request.user.pref_units_name }}" + ")";
+    		}
+    	}
+
+    {% endif %}
+
+    function calc_selection_changed() {
+    	choice = document.getElementById("calc_type");
+    	if(choice.value == "Constrained Optimisation" || choice.value == "Constrained Conformational Search") {
+    		editor.styles.atoms_displayLabels_3D = true;
+    	}
+    	else if(choice.value == "Minimum Energy Path") {
+    		editor.styles.atoms_displayLabels_3D = false;
+    		refresh_aux_mol();
+    	}
+    	else {
+    		editor.styles.atoms_displayLabels_3D = false;
+    	}
+    	set_visibility_name();
+    	refresh_availabilities();
+    }
+
+    function set_visibility_name() {
+    	choice = document.getElementById("calc_type");
+    	field = document.getElementById("calc_name_field");
+    	if(ensemble == true) {
+    		if(choice.value == "Geometrical Optimisation" ||  choice.value == "Constrained Optimisation" || choice.value == "Conformational Search" ||  choice.value == "TS Optimisation" || choice.value == "Constrained Conformational Search" || choice.value == "Minimum Energy Path") {
+    			field.style.display = "block";
+    		}
+    		else {
+    			field.style.display = "none";
+    		}
+    	}
+    	else {
+    		field.style.display = "block";
+    	}
+    }
+
+
+    function constraint_type_selection_changed(id) {
+    	choice = document.getElementById("constraint_type_{}".format(id));
+    	inp2 = document.getElementById("calc_constraint_{}_2".format(id));
+    	inp3 = document.getElementById("calc_constraint_{}_3".format(id));
+    	inp4 = document.getElementById("calc_constraint_{}_4".format(id));
+    	from = document.getElementById("calc_label_from_{}".format(id));
+    	to = document.getElementById("calc_label_to_{}".format(id));
+
+    	if (choice.value == "Distance") {
+    		inp2.style.display = "block";
+    		inp3.style.display = "none";
+    		inp4.style.display = "none";
+    		from.innerHTML = "From (Å)";
+    		to.innerHTML = "To (Å)";
+    	}
+    	else if (choice.value == "Angle") {
+    		inp2.style.display = "block";
+    		inp3.style.display = "block";
+    		inp4.style.display = "none";
+    		from.innerHTML = "From (°)";
+    		to.innerHTML = "To (°)";
+    	}
+    	else {
+    		inp2.style.display = "block";
+    		inp3.style.display = "block";
+    		inp4.style.display = "block";
+    		from.innerHTML = "From (°)";
+    		to.innerHTML = "To (°)";
+    	}
+    }
+
+    function constraint_mode_changed(id) {
+    	choice = document.getElementById("constraint_mode_{}".format(id));
+    	div = document.getElementById("calc_scan_div_{}".format(id));
+    	if (choice.value == "Freeze") {
+    		div.style.display = "none";
+    	}
+    	else if (choice.value == "Scan") {
+    		div.style.display = "block";
+    	}
+    	refresh_availabilities();
+    }
+
+    function project_selection_changed(choice) {
+    	field = document.getElementById("new_project_name_field");
+    	if(choice.value == "New Project") {
+    		field.style.display = "block";
+    	}
+    	else {
+    		field.style.display = "none";
+    		if(project_presets[choice.value] != -1) {
+    			load_preset(project_presets[choice.value]);
+    		}
+    		type = document.getElementById("calc_type");
+    		if(type.value == "Minimum Energy Path") {
+    			refresh_aux_mol();
+    		}
+
+    	}
+    }
+
+    function preselect_last_project() {
+    	choice = document.getElementById("calc_project");
+    	for(var i=0;i<choice.options.length;i++)
+    	{
+    		option = choice.options[i];
+    		if(option.text == localStorage.getItem("lastSelectedProject") && option.text != "New Project")
+    		{
+    			option.setAttribute('selected', true);
+    			project_selection_changed(option);
+    			return;
+    		}
+    	}
+    }
+
+    function refresh_availabilities() {
+
+    	full_options = document.querySelectorAll(".unavailable");
+    	full_options.forEach(element => {
+    		element.classList.remove("unavailable");
+    		element.style.display = 'block';
+    	});
+
+    	full_options = document.querySelectorAll(".resource_specific");
+    	choice = document.getElementById("calc_resource");
+
+    	full_options.forEach(element => {
+    		if((element.classList.contains('avail_local') && (choice.value != "Local" || !allow_local_calc)) || (element.classList.contains('avail_remote') && (choice.value == "Local" || !allow_remote_calc))) {
+    			element.style.display = 'none';
+    			element.classList.add("unavailable");
+    		}
+    	});
+
+    	set_availables();
+
+    	full_options = document.querySelectorAll(".software_specific");
+    	choice = document.getElementById("calc_software");
+
+    	full_options.forEach(element => {
+    		if(!element.classList.contains('avail_' + choice.value)) {
+    			element.style.display = 'none';
+    			element.classList.add("unavailable");
+    		}
+    	});
+
+    	set_availables();
+
+    	choice = document.getElementById("calc_solvation_model");
+
+    	full_options = document.querySelectorAll(".solvation_model_specific:not(unavailable)");
+
+    	full_options.forEach(element => {
+    		if(!element.classList.contains('avail_' + choice.value)) {
+    			element.style.display = 'none';
+    			element.classList.add("unavailable");
+    		}
+    	});
+
+    	set_availables();
+
+    	choice = document.getElementById("calc_theory_level");
+
+    	full_options = document.querySelectorAll(".method_specific:not(unavailable)");
+
+    	full_options.forEach(element => {
+    		if(!element.classList.contains('avail_' + choice.value)) {
+    			element.style.display = 'none';
+    			element.classList.add("unavailable");
+    		}
+    	});
+
+    	set_availables();
+
+    	if(choice.value == "hf"){
+    		hf3c = document.getElementById("hf3c").checked;
+    		software = document.getElementById("calc_software").value;
+    		if (hf3c == true && software == "ORCA") {
+    			document.getElementById("calc_basis_set_field").style.display = "none";
+    			document.getElementById("custom_bs_field").style.display = "none";
+    		}
+    		else {
+    			document.getElementById("calc_basis_set_field").style.display = "block";
+    			document.getElementById("custom_bs_field").style.display = "block";
+    		}
+    	}
+    	else if(choice.value == "dft") {
+    		pbeh3c = document.getElementById("pbeh3c").checked;
+    		software = document.getElementById("calc_software").value;
+    		if (pbeh3c == true && software == "ORCA") {
+    			document.getElementById("calc_basis_set_field").style.display = "none";
+    			document.getElementById("calc_functional_field").style.display = "none";
+    			document.getElementById("custom_bs_field").style.display = "none";
+    		}
+    		else {
+    			document.getElementById("calc_basis_set_field").style.display = "block";
+    			document.getElementById("calc_functional_field").style.display = "block";
+    			document.getElementById("custom_bs_field").style.display = "block";
+    		}
+    	}
+
+    	set_availables();
+
+    	solvent = document.getElementById("calc_solvent").value;
+    	if(solvent.toLowerCase() == "vacuum" || solvent.trim() == "") {
+    		document.getElementById("calc_solvation_model_field").style.display = "none";
+    		document.getElementById("calc_solvation_radii_field").style.display = "none";
+    	}
+    	else {
+    		document.getElementById("calc_solvation_model_field").style.display = "block";
+    		radii_field = document.getElementById("calc_solvation_radii_field");
+    		if(radii_field.querySelectorAll("option:not(.unavailable)").length > 0) {
+    			radii_field.style.display = "block";
+    		}
+    	}
+
+
+    	choice = document.getElementById("calc_type");
+
+    	full_options = document.querySelectorAll(".type_specific:not(unavailable)");
+
+    	full_options.forEach(element => {
+    		if(!element.classList.contains('avail_' + choice.value.replace(/ /g, '_'))) {
+    			element.style.display = 'none';
+    			element.classList.add("unavailable");
+    		}
+
+    	});
+
+    	full_options = document.querySelectorAll(".type_exclusion:not(unavailable)");
+
+    	full_options.forEach(element => {
+    		if(element.classList.contains('not_avail_' + choice.value.replace(/ /g, '_'))) {
+    			element.style.display = 'none';
+    			element.classList.add("unavailable");
+    		}
+
+    	});
+
+    	set_availables();
+
+    	check("functional");
+    	check("basis_set");
+    	check("solvent");
+    }
+
+    function set_availables() {
+    	[].forEach.call(document.getElementById("parameters_column").querySelectorAll('select'), function(sel) {
+    		ind = sel.selectedIndex;
+    		if(ind != -1) {
+    			opt = sel.options[ind];
+    			if(opt.style.display != "none" && !opt.disabled) {
+    				return;
+    			}
+    		}
+
+    		for(i=0; i < sel.options.length; i++) {
+    			opt = sel.options[i];
+    			if(opt.style.display != "none"  && !opt.disabled) {
+    				sel.selectedIndex = i;
+    			}
+    		}
+    	});
+    }
+
+    function add_constraint(first) {
+    	constraint_num += 1;
+
+    	_line = `
+    	<div class="control" id="constraint_{}"> \
+    		<div class="columns"> \
+    			<div class="column"> \
+    				<div class="select"> \
+    					<select name="constraint_mode_{}" id="constraint_mode_{}" onchange="constraint_mode_changed({})"> \
+    					<option>Freeze</option> \
+    					<option>Scan</option> \
+    					</select> \
+    				</div> \
+    			</div> \
+    			<div class="column"> \
+    				<div class="select"> \
+    		<select name="constraint_type_{}" id="constraint_type_{}" onchange="constraint_type_selection_changed({});"> \
+    					<option>Distance</option> \
+    					<option>Angle</option> \
+    					<option>Dihedral</option> \
+    					</select> \
+    				</div> \
+    			</div> \
+    			<div class="column"> \
+    				<input class="input" type="text" width="5" name="calc_constraint_{}_1" id="calc_constraint_{}_1"> \
+    			</div> \
+    			<div class="column"> \
+    				<input class="input" type="text" width="5" name="calc_constraint_{}_2" id="calc_constraint_{}_2"> \
+    			</div> \
+    			<div class="column"> \
+    				<input class="input" type="text" width="5" name="calc_constraint_{}_3" id="calc_constraint_{}_3" style="display: none;"> \
+    			</div> \
+    			<div class="column"> \
+    				<input class="input" type="text" width="5" name="calc_constraint_{}_4" id="calc_constraint_{}_4" style="display: none;"> \
+    			</div> \
+    			<div class="column"> \
+    		<button type="button" class="button is-danger constraint_btn" onclick="$('#calc_scan_div_{}').remove(); $(this).parent().parent().parent().remove();">-</button> \
+    			</div> \
+    		</div> \
+    	</div> \
+    		<div style="display: none;" id="calc_scan_div_{}"> \
+    		<div class="columns"> \
+    		<div class="column"> \
+    			<p id="calc_label_from_{}"> From (Å)</p> \
+    		<input class="input software_specific avail_xtb avail_ORCA scan_from" type="text" width="5" name="calc_scan_{}_1" id="calc_scan_{}_1"> \
+    		</div> \
+    		<div class="column"> \
+    			<p id="calc_label_to_{}"> To (Å)</p> \
+    		<input class="input" type="text" width="5" name="calc_scan_{}_2" id="calc_scan_{}_2"> \
+    		</div> \
+    		<div class="column"> \
+    			# Steps \
+    		<input class="input" type="text" width="5" name="calc_scan_{}_3" id="calc_scan_{}_3"> \
+    		</div> \
+    	</div> \
+    	</div>`.format(constraint_num);
+    	if(first) {
+    		_line = _line.replace(`<button type="button" class="button is-danger constraint_btn" onclick="$('#calc_scan_div_{}').remove(); $(this).parent().parent().parent().remove();">-</button>`.format(constraint_num), `<button type="button" class="button is-primary constraint_btn" id="add_constraint_btn" onclick="add_constraint();">+</button>`);
+    	}
+
+    	$("#constraint_list").append(_line);
+    }
+
+    function get_3D() {
+    	let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
+
+    	$.ajax({
+    		method: "POST",
+    		url: "/gen_3D/",
+    		headers: {
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+
+    		data: {'mol': mol},
+    		statusCode: {
+    			404: function(data) {
+    				$("#3d_msg").html("Error while generating structure");
+    			},
+    			200: function(data) {
+    				$("#3d_msg").html("");
+    				let mol_read = ChemDoodle.readXYZ(data);
+    				ChemDoodle.relabel(mol_read);
+    				editor.loadMolecule(mol_read);
+    			}
+    		}
+    	});
+    }
+
+
+    function add_file_name() {
+    	path = $("#file_structure").val();
+    	file_name = path.replace('C:\\fakepath\\', '').split('.')[0];
+    	curr_name = document.getElementById("calc_mol_name").value;
+    	if(curr_name == "") {
+    		$("#calc_mol_name").val(file_name);
+    	}
+    }
+
+    function toggle_visibility_molname(check) {
+    	if(check.checked) {
+    		$("#calc_mol_name_field").hide();
+    	}
+    	else{
+    		$("#calc_mol_name_field").show();
+    	}
+    }
+
+    function preview_upload(file_list) {
+    	if(file_list.length == 1 && file_list[0].type == "chemical/x-xyz") {
+    		var reader = new FileReader();
+    		reader.readAsText(file_list[0], "UTF-8");
+    		reader.onload = function(e) {
+    			let mol_read = ChemDoodle.readXYZ(e.target.result);
+    			ChemDoodle.relabel(mol_read);
+    			editor.loadMolecule(mol_read);
+    		}
+    	}
+    	else if(file_list.length == 1 && file_list[0].type == "chemical/x-mdl-molfile") {
+    		var reader = new FileReader();
+    		reader.readAsText(file_list[0], "UTF-8");
+    		reader.onload = function(e) {
+    			let mol_read = ChemDoodle.readMOL(e.target.result, multiplier=1);
+    			ChemDoodle.relabel(mol_read);
+    			editor.loadMolecule(mol_read);
+    		}
+
+    	}
+    	else if(file_list.length == 1) {
+    		var reader = new FileReader();
+    		reader.readAsText(file_list[0], "UTF-8");
+    		reader.onload = function(e) {
+    			ext = file_list[0].name.split('.').pop();
+    			$.ajax({
+    				data: {"mol": e.target.result, "ext": ext},
+    				headers: {
+    					"X-CSRFToken": '{{ csrf_token }}',
+    				},
+
+    				type: "POST",
+    				url: "/get_mol_preview/",
+    				statusCode: {
+    					200: function (response) {
+    						let mol_read = ChemDoodle.readXYZ(response, multiplier=1);
+    						ChemDoodle.relabel(mol_read);
+    						editor.loadMolecule(mol_read);
+    					},
+    					204: function (response) {
+    						$("#3d_msg").html("Could not generate preview: unsupported file format");
+    					},
+    					400: function(response) {
+    						$("#3d_msg").html("Could not generate preview: the file is too large");
+    					}
+    				}
+    			});
+
+    		}
+    	}
+    }
+
+    function file_upload_changed() {
+    	file_list = this.files;
+    	add_file_name();
+    	preview_upload(file_list);
+
+    	ff = file_list[0].name;
+    	fname = ff.replace('C:\\fakepath\\', '');
+    	if(file_list.length > 1) {
+    		fname += ', ...';
+    	}
+
+    	$("#file_upload_name").html(fname);
+
+    	combine = document.getElementById("calc_combine_files_column");
+    	parse  = document.getElementById("calc_parse_filenames_column");
+    	if (file_list.length > 1) {
+    		combine.style.display = "block";
+    		parse.style.display = "block";
+    	}
+    	else {
+    		combine.style.display = "none";
+    		parse.style.display = "none";
+    	}
+    }
+
+    function set_project_default() {
+    	$.ajax({
+    		data: $("#calcform").serialize(),
+    		headers: {
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+
+    		type: "POST",
+    		url: "/set_project_default/",
+    		success: function (response) {
+    			$("#preset_msg").html(response);
+    			refresh_presets();
+    		}
+    	});
+    }
+
+    function save_preset() {
+    	preset_name = prompt("Name of the preset?", "")
+    	if(preset_name != null) {
+    		data = $("#calcform").serializeArray();
+    		data.push({ name: 'preset_name', value: preset_name});
+    		$.ajax({
+    			data: data,
+    			headers: {
+    				"X-CSRFToken": '{{ csrf_token }}',
+    			},
+
+    			type: "POST",
+    			url: "/save_preset/",
+    			success: function (response) {
+    				$("#preset_msg").html(response);
+    				refresh_presets();
+    			}
+    		});
+    	}
+
+    }
+
+    function load_selected_preset() {
+    	preset = document.getElementById("presets").value;
+    	load_preset(preset);
+    }
+    function delete_preset() {
+    	preset = document.getElementById("presets").value;
+    	$.ajax({
+    		headers: {
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+
+    		type: "POST",
+    		url: "/delete_preset/" + preset,
+    		success: function (response) {
+    			$("#preset_msg").html(response);
+    			refresh_presets();
+    		}
+    	});
+
+    }
+
+    function refresh_presets() {
+    	$("#presets").load("/presets/");
+    }
+    function refresh_aux_mol() {
+    	proj = document.getElementById("calc_project");
+    	$.ajax({
+    		headers: {
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+
+    		type: "POST",
+    		data: {
+    			'proj': proj.value,
+    		},
+    		url: "/aux_molecule/",
+    		success: function (response) {
+    			$("#aux_mol").html(response);
+    			refresh_aux_ensemble();
+    		}
+    	});
+    }
+    function refresh_aux_ensemble() {
+    	aux_mol = document.getElementById("aux_mol");
+    	$.ajax({
+    		headers: {
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+
+    		type: "POST",
+    		data: {
+    			'mol_id': aux_mol.value,
+    		},
+    		url: "/aux_ensemble/",
+    		success: function (response) {
+    			$("#aux_ensemble").html(response);
+    			refresh_aux_structure();
+    		}
+    	});
+    }
+    function refresh_aux_structure() {
+    	aux_mol = document.getElementById("aux_ensemble");
+    	$.ajax({
+    		headers: {
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+
+    		type: "POST",
+    		data: {
+    			'e_id': aux_ensemble.value,
+    		},
+    		url: "/aux_structure/",
+    		success: function (response) {
+    			$("#aux_struct").html(response);
+    		}
+    	});
+
+    }
+    {% if ensemble or structure %}
+    let ensemble = true;
+    {% else %}
+    let ensemble = false;
+    {% endif %}
+>>>>>>> calcus2.0
 </script>

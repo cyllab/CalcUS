@@ -151,13 +151,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.addCleanup(self.cleanupCalculations)
         os.chdir(base_cwd)
         call_command("init_static_obj")
-        self.username = "Selenium"
+        self.email = "Selenium@test.com"
         self.password = "test1234"
 
-        u = User.objects.create_user(username=self.username, password=self.password)
-        u.save()
-        self.login(self.username, self.password)
-        self.profile = Profile.objects.get(user__username=self.username)
+        self.user = User.objects.create_user(email=self.email, password=self.password)
+        self.login(self.email, self.password)
         time.sleep(0.1)  # Reduces glitches (I think?)
 
         self.name_patcher = mock.patch.dict(
@@ -170,25 +168,25 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             res = AbortableAsyncResult(c.task_id)
             res.abort()
 
-    def login(self, username, password):
+    def login(self, email, password):
         self.lget("/accounts/login/")
 
-        element = WebDriverWait(self.driver, 10).until(
+        element = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located((By.ID, "id_username"))
         )
-        element = WebDriverWait(self.driver, 10).until(
+        element = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located((By.ID, "id_password"))
         )
 
-        username_f = self.driver.find_element(By.ID, "id_username")
+        email_f = self.driver.find_element(By.ID, "id_username")
         password_f = self.driver.find_element(By.ID, "id_password")
         submit = self.driver.find_element(By.CSS_SELECTOR, "input.control")
-        username_f.send_keys(username)
+        email_f.send_keys(email)
         password_f.send_keys(password)
         submit.send_keys(Keys.RETURN)
 
         self.lget("/projects")
-        element = WebDriverWait(self.driver, 10).until(
+        element = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located((By.ID, "projects_list"))
         )
 
@@ -719,8 +717,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         panel.click()
         users = panel.find_elements(By.CSS_SELECTOR, ".navbar-dropdown > .navbar-item")
         for u in users:
-            username = u.text
-            if username == name:
+            if u.text == name:
                 u.click()
                 return
         raise Exception("No such user")
@@ -821,18 +818,18 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         cluster = clusters[num - 1]
         cluster.find_element(By.CSS_SELECTOR, "th > a.button").click()
 
-    def is_user(self, username):
+    def is_user(self, user_id):
         try:
-            u = Profile.objects.get(user__username=username)
-        except Profile.DoesNotExist:
+            u = User.objects.get(id=user_id)
+        except User.DoesNotExist:
             return False
         else:
             return True
 
-    def is_user_project(self, username, project_name):
+    def is_user_project(self, user_id, project_name):
         try:
-            u = Profile.objects.get(user__username=username)
-        except Profile.DoesNotExist:
+            u = User.objects.get(id=user_id)
+        except User.DoesNotExist:
             return False
         else:
             try:
@@ -941,25 +938,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         return False
 
-    def is_on_page_managePI(self):
-        for i in range(3):
-            url = self.get_split_url()
-            if url[0] == "manage_pi_requests" and url[1] == "":
-                return True
-            time.sleep(1)
-
-        return False
-
     def is_on_page_molecule(self):
         for i in range(3):
             url = self.get_split_url()
-            try:
-                mol_id = int(url[1])
-            except ValueError:
-                pass
-            else:
-                if url[0] == "molecule" and self.is_molecule_id(mol_id):
-                    return True
+            if len(url) >= 2 and url[0] == "molecule" and self.is_molecule_id(url[1]):
+                return True
             time.sleep(1)
 
         return False
@@ -967,13 +950,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_ensemble(self):
         for i in range(3):
             url = self.driver.current_url.split("/")[3:]
-            try:
-                e_id = int(url[1])
-            except ValueError:
-                pass
-            else:
-                if url[0] == "ensemble" and self.is_ensemble_id(e_id):
-                    return True
+            if len(url) >= 2 and url[0] == "ensemble" and self.is_ensemble_id(url[1]):
+                return True
             time.sleep(1)
 
         return False
@@ -1278,35 +1256,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         return statuses
 
-    def apply_PI(self, group_name):
-        assert self.is_on_page_profile()
-        self.wait_for_ajax()
-        group_name = self.driver.find_element(By.NAME, "group_name")
-        submit = self.driver.find_element(By.CSS_SELECTOR, "button.button:nth-child(3)")
-        group_name.send_keys("Test group")
-        submit.send_keys(Keys.RETURN)
-
-        element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, "PI_application_message"))
-        )
-
-    def accept_PI_request(self):
-        assert self.is_on_page_managePI()
-        element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "table"))
-        )
-
-        table = self.driver.find_element(By.CLASS_NAME, "table")
-
-        self.assertTrue(table.text.find("Accept") != -1)
-        self.assertTrue(table.text.find("Deny") != -1)
-
-        accept_button = self.driver.find_element(
-            By.CSS_SELECTOR,
-            "#requests_table > table > tbody > tr > td:nth-child(1) > button",
-        )
-        accept_button.send_keys(Keys.RETURN)
-
     def wait_latest_calc_done(self, timeout):
         assert self.is_on_page_calculations()
         self.wait_for_ajax()
@@ -1440,7 +1389,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 return False
         return True
 
-    def add_user_to_group(self, username):
+    def add_user_to_group(self, user_id):
         assert self.is_on_page_profile()
 
         element = WebDriverWait(self.driver, 10).until(
@@ -1450,15 +1399,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             EC.presence_of_element_located((By.ID, "user_to_add"))
         )
 
-        p = Profile.objects.get(user__username=username)
-        code = p.code
+        p = User.objects.get(id=user_id)
         field_username = self.driver.find_element(By.ID, "user_to_add")
         field_code = self.driver.find_element(By.ID, "code")
         button_submit = self.driver.find_element(
             By.CSS_SELECTOR, "button.button:nth-child(4)"
         )
-        field_username.send_keys(username)
-        field_code.send_keys(code)
+        field_username.send_keys(str(user_id))
         button_submit.send_keys(Keys.RETURN)
 
     def launch_ensemble_next_step(self):
@@ -1653,36 +1600,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             return False
 
     def setup_test_group(self):
-        g = ResearchGroup.objects.create(name="Test group", PI=self.profile)
-        self.profile.is_PI = True
-        self.profile.save()
+        g = ResearchGroup.objects.create(name="Test group", PI=self.user)
 
-        u = User.objects.create_user(username="Student", password=self.password)
-        p = Profile.objects.get(user__username="Student")
-        p.member_of = g
-        p.save()
-
-    def setup_test_group_manual(self):
-        self.lget("/profile/")
-
-        self.apply_PI("Test group")
-        self.logout()
-
-        u = User.objects.create_superuser(username="SU", password=self.password)
-        u.save()
-        p = Profile.objects.get(user__username="SU")
-        p.save()
-
-        self.login("SU", self.password)
-        self.lget("/manage_pi_requests/")
-
-        self.accept_PI_request()
-        self.logout()
-
-        self.login(self.username, self.password)
-        u = User.objects.create_user(username="Student", password=self.password)
-        self.lget("/profile/")
-        self.add_user_to_group("Student")
+        self.student = User.objects.create_user(
+            email="Student@test.com", password=self.password, member_of=g
+        )
 
     def is_loaded_frequencies(self):
         assert self.is_on_page_ensemble()
@@ -1802,7 +1724,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         trees = related_calculations_div.find_elements(By.CSS_SELECTOR, "ul.tree > li")
         for t in trees:
             link = t.find_element(By.CSS_SELECTOR, "li > a")
-            t_id = int(link.text.split()[1])
+            t_id = link.text.split()[1]
             if t_id == order_id:
                 tree = t
                 break

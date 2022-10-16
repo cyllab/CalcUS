@@ -2,147 +2,142 @@
 
 <span class="tag is-warning is-large">Parameters</span>
 <div class="columns box">
-		<div class="column">
-		<center>
-			<table class="table is-bordered">
-				<tbody>
-					<tr>
-						<th>Charge</th>
-						<td>{{ parameters.charge }}</td>
+    <div class="column">
+        <center>
+            <table class="table is-bordered">
+                <tbody>
+                    <tr>
+                        <th>Charge</th>
+                        <td>{{ parameters.charge }}</td>
 
-						<th>Multiplicity</th>
-						<td>{{ parameters.multiplicity }}</td>
+                        <th>Multiplicity</th>
+                        <td>{{ parameters.multiplicity }}</td>
 
-						<th>Program</th>
-						<td>{{ parameters.software }}</td>
+                        <th>Program</th>
+                        <td>{{ parameters.software }}</td>
+                    </tr>
+                    <tr>
+                        <th>Method/Functional</th>
+                        <td>{{ parameters.method }}</td>
 
-					</tr>
-					<tr>
-						<th>Method/Functional</th>
-						<td>{{ parameters.method }}</td>
+                        <th>Basis set</th>
+                        <td>{{ parameters.basis_set }}</td>
 
-						<th>Basis set</th>
-						<td>{{ parameters.basis_set }}</td>
+                        <th>Custom basis sets</th>
+                        <td>{{ parameters.custom_basis_sets }}</td>
+                    </tr>
+                    <tr>
+                        <th>Solvent</th>
+                        <td>{{ parameters.solvent }}</td>
 
+                        <th>Solvation model</th>
+                        <td>{{ parameters.solvation_model }}</td>
 
-						<th>Custom basis sets</th>
-						<td>{{ parameters.custom_basis_sets }}</td>
-					</tr>
-					<tr>
-						<th>Solvent</th>
-						<td>{{ parameters.solvent }}</td>
-
-						<th>Solvation model</th>
-						<td>{{ parameters.solvation_model }}</td>
-
-						<th>Solvation radii</th>
-						<td>{{ parameters.solvation_radii }}</td>
-
-					</tr>
-					<tr>
-						<th>Specifications</th>
-						<td id="param_specifications_cell">{{ parameters.specifications }}</td>
-					</tr>
-				</tbody>
-			</table>
-		</center>
-	</div>
+                        <th>Solvation radii</th>
+                        <td>{{ parameters.solvation_radii }}</td>
+                    </tr>
+                    <tr>
+                        <th>Specifications</th>
+                        <td id="param_specifications_cell">{{ parameters.specifications }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </center>
+    </div>
 </div>
 
 <span class="tag is-warning is-large">Ensemble properties</span>
 <div class="columns box">
-	<div class="column">
-		<table class="table" id="info_table">
-			<tbody>
-				<tr>
-					{% get_ensemble_weighted_energy parameters ensemble as w_energy%}
-					<th>Boltzmann weighted energy</th>
-					<td>{{ w_energy|floatformat:-8 }}</td>
-				</tr>
-				<tr>
-					{% get_ensemble_weighted_free_energy parameters ensemble as w_f_energy%}
-					<th>Boltzmann weighted free energy</th>
-					<td>{{ w_f_energy|floatformat:-8 }}</td>
-				</tr>
-				{% if shifts %}
-				<div class="columns">
-					<div class="column">
-						<table class="table">
-							<thead>
-								<tr>
-									<th>Atom number</th>
-									<th>Atom type</th>
-									<th>Calculated Shift</th>
-									<th>Predicted Shift</th>
-								</tr>
-							</thead>
-							<tbody>
-								{% for shift in shifts %}
-									<tr>
-										<td>{{ shift.0 }}</td>
-										<td>{{ shift.1 }}</td>
-										<td>{{ shift.2|floatformat:-3 }}</td>
-										<td>{{ shift.3|floatformat:-3 }}</td>
-									</tr>
-								{% endfor %}
-							</tbody>
-						</table>
-						<center>
-							<a class="button is-info" id="advanced_nmr_analysis_button" href="/nmr_analysis/{{ ensemble.id }}/{{ parameters.id }}">Advanced analysis</a>
-						</center>
-					</div>
-					<div class="column">
-						<center>
-							<div id="simple_nmr_spectrum" style="width:80%; height:400px; margin-bottom: 30px;"></div>
-							<button class="button" onclick="load_simple_nmr('H');">Proton</button>
-							<button class="button" onclick="load_simple_nmr('C');">Carbon</button>
-						</center>
-						<script>
-							function load_simple_nmr(nucleus) {
-								$.ajax({
-									method: "POST",	 	 
-									url: "/nmr/",
-									headers: {
-										"X-CSRFToken": '{{ csrf_token }}',
-									},
-									data: {'id': {{ ensemble.id }}, 'p_id': {{ parameters.id }}, 'nucleus': nucleus},
-									success: function(data, textStatus, xhr) {
-										g4 = new Dygraph(
-										document.getElementById("simple_nmr_spectrum"),
-											data, 
-											{
-												strokeWidth: 2,	
-												xlabel: "Chemical Shift (ppm)",
+    <div class="column">
+        <table class="table" id="info_table">
+            <tbody>
+                <tr>
+                    {% get_ensemble_weighted_energy parameters ensemble as w_energy%}
+                    <th>Boltzmann weighted energy</th>
+                    <td>{{ w_energy|floatformat:-8 }}</td>
+                </tr>
+                <tr>
+                    {% get_ensemble_weighted_free_energy parameters ensemble as w_f_energy%}
+                    <th>Boltzmann weighted free energy</th>
+                    <td>{{ w_f_energy|floatformat:-8 }}</td>
+                </tr>
+                {% if shifts %}
+                <div class="columns">
+                    <div class="column">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Atom number</th>
+                                    <th>Atom type</th>
+                                    <th>Calculated Shift</th>
+                                    <th>Predicted Shift</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for shift in shifts %}
+                                <tr>
+                                    <td>{{ shift.0 }}</td>
+                                    <td>{{ shift.1 }}</td>
+                                    <td>{{ shift.2|floatformat:-3 }}</td>
+                                    <td>{{ shift.3|floatformat:-3 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <center>
+                            <a class="button is-info" id="advanced_nmr_analysis_button" href="/nmr_analysis/{{ ensemble.id }}/{{ parameters.id }}">Advanced analysis</a>
+                        </center>
+                    </div>
+                    <div class="column">
+                        <center>
+                            <div id="simple_nmr_spectrum" style="width: 80%; height: 400px; margin-bottom: 30px"></div>
+                            <button class="button" onclick="load_simple_nmr('H');">Proton</button>
+                            <button class="button" onclick="load_simple_nmr('C');">Carbon</button>
+                        </center>
+                        <script>
+                            function load_simple_nmr(nucleus) {
+                                $.ajax({
+                                    method: "POST",
+                                    url: "/nmr/",
+                                    headers: {
+                                        "X-CSRFToken": "{{ csrf_token }}",
+                                    },
+                                    data: {
+                                        id: "{{ ensemble.id }}",
+                                        p_id: "{{ parameters.id }}",
+                                        nucleus: nucleus,
+                                    },
+                                    success: function (data, textStatus, xhr) {
+                                        g4 = new Dygraph(document.getElementById("simple_nmr_spectrum"), data, {
+                                            strokeWidth: 2,
+                                            xlabel: "Chemical Shift (ppm)",
 
-											axes: {
-												x: {
-													axisLabelFormatter: function(cm) {
-															return -cm.toPrecision(2);
-														},
-													valueFormatter: function(cm) {
-															return -cm.toPrecision(3);
-														}
-													},
-												},
-												y: {
-													drawAxis: false,
-												}
+                                            axes: {
+                                                x: {
+                                                    axisLabelFormatter: function (cm) {
+                                                        return -cm.toPrecision(2);
+                                                    },
+                                                    valueFormatter: function (cm) {
+                                                        return -cm.toPrecision(3);
+                                                    },
+                                                },
+                                            },
+                                            y: {
+                                                drawAxis: false,
+                                            },
+                                        });
+                                    },
+                                });
+                            }
 
-											}
-										);
-									}
-								});
-
-							}
-
-							$(document).ready(function() {
-								load_simple_nmr('H');
-							});
-						</script>
-					</div>
-				</div>
-				{% endif %}
-			</tbody>
-		</table>
-	</div>
+                            $(document).ready(function () {
+                                load_simple_nmr("H");
+                            });
+                        </script>
+                    </div>
+                </div>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
 </div>

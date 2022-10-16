@@ -1,34 +1,26 @@
-{% extends 'frontend/base.html' %}
-
-{% load static %}
-
-{% block extrahead %}
-	<script src="{% static 'frontend/jquery-2.2.4.min.js' %}"></script>
-	<script src="{% static 'frontend/jquery-ui-1.9.2.custom.min.js' %}"></script>
-	<script src="{% static 'frontend/ip.grid.min.js' %}"></script>
-	<link href="{% static 'frontend/ip.grid.css' %}" rel="stylesheet" />
-	<title>CalcUS - Analyse</title>
-{% endblock %}
-
-{% block content %}
+{% extends 'frontend/base.html' %} {% load static %} {% block extrahead %}
+<script src="{% static 'frontend/jquery-2.2.4.min.js' %}"></script>
+<script src="{% static 'frontend/jquery-ui-1.9.2.custom.min.js' %}"></script>
+<script src="{% static 'frontend/ip.grid.min.js' %}"></script>
+<link href="{% static 'frontend/ip.grid.css' %}" rel="stylesheet" />
+<title>CalcUS - Analyse</title>
+{% endblock %} {% block content %}
 <div class="container">
-	<center>
-		<h1 class="title is-1">{{ proj.name }}</h1>
-		<br />
-	</center>
+    <center>
+        <h1 class="title is-1">{{ proj.name }}</h1>
+        <br />
+    </center>
 
-	<div id="spreadsheet" style="width: 100%; height: 120%;">
-	</div>
+    <div id="spreadsheet" style="width: 100%; height: 120%"></div>
 </div>
-	<script>
-		$(document).ready(function() {
-			$("#spreadsheet").ip_Grid({rows: {{ len }}, cols: 50});
-			{% for entry in data %}
-				$("#spreadsheet").ip_CellInput({ valueRAW: '{{ entry.0 }}', row: {{ entry.1 }}, col: {{ entry.2 }} });
-			{% endfor %}
-			$('#spreadsheet').ip_ResizeColumn({ columns: [-1], size: 200 })
-		});
-	</script>
+<script>
+    $(document).ready(function() {
+    	$("#spreadsheet").ip_Grid({rows: {{ len }}, cols: 50});
+    	{% for entry in data %}
+    		$("#spreadsheet").ip_CellInput({ valueRAW: '{{ entry.0 }}', row: {{ entry.1 }}, col: {{ entry.2 }} });
+    	{% endfor %}
+    	$('#spreadsheet').ip_ResizeColumn({ columns: [-1], size: 200 })
+    });
+</script>
 
 {% endblock %}
-

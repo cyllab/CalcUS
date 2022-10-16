@@ -34,6 +34,10 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
 POSTGRES_USER = os.environ.get("POSTGRES_USER", "calcus")
 
+GMAIL_API_CLIENT_ID = os.getenv("CALCUS_EMAIL_ID", "")
+GMAIL_API_CLIENT_SECRET = os.getenv("CALCUS_EMAIL_SECRET", "")
+GMAIL_API_REFRESH_TOKEN = os.getenv("CALCUS_EMAIL_TOKEN", "")
+
 try:
     DEBUG = os.environ["CALCUS_DEBUG"]
 except:
@@ -58,7 +62,10 @@ else:
 
 SSL = False
 
-ALLOWED_HOSTS = "*.*.*.*"
+ALLOWED_HOSTS = ["*.*.*.*", "0.0.0.0"]
+
+if IS_CLOUD or IS_TEST:
+    ALLOWED_HOSTS.append("*")
 
 if not DEBUG and SSL:
     ALLOWED_HOSTS = "*.*.*.*"
@@ -82,11 +89,20 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "axes",
     "bulma",
+    "gmailapi_backend",
     #'debug_toolbar',
 ]
 
 if not IS_CLOUD:
     INSTALLED_APPS.append("dbbackup")
+else:
+    INSTALLED_APPS.append("captcha")
+    RECAPTCHA_PUBLIC_KEY = os.getenv(
+        "RECAPTCHA_PUBLIC_KEY", "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+    )
+    RECAPTCHA_PRIVATE_KEY = os.getenv(
+        "RECAPTCHA_PRIVATE_KEY", "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+    )
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -99,6 +115,10 @@ MIDDLEWARE = [
     "axes.middleware.AxesMiddleware",
     #'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
+
+HASHID_FIELD_SALT = os.getenv("CALCUS_HASHID_SALT", "test_salt")
+
+AUTH_USER_MODEL = "frontend.User"
 
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesBackend",
@@ -125,11 +145,10 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "calcus.wsgi.application"
-DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
         "NAME": "calcus",
         "USER": POSTGRES_USER,
         "PASSWORD": POSTGRES_PASSWORD,
@@ -156,17 +175,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+DEFAULT_AUTO_FIELD = "hashid_field.BigHashidAutoField"
+
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "EST"
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
-STATIC_URL = "/static/"
+STATIC_URL = os.getenv("STATIC_URL", "/static/")
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
@@ -185,11 +202,13 @@ DEFAULT_FROM_EMAIL = "bot@CalcUS"
 if IS_TEST:
     EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
     EMAIL_FILE_PATH = os.path.join(BASE_DIR, "scratch", "sent_emails")
+else:
+    EMAIL_BACKEND = "gmailapi_backend.mail.GmailBackend"
 
 MEDIA_URL = "/media/"
 
 AXES_LOCKOUT_TEMPLATE = "registration/lockout.html"
-AXES_FAILURE_LIMIT = 5
+AXES_FAILURE_LIMIT = 10
 AXES_COOLOFF_TIME = 1
 
 THROTTLE_ZONES = {
@@ -216,14 +235,20 @@ PACKAGES = ["xtb"]
 if IS_CLOUD:
     PING_SATELLITE = False
 
+    GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
+    GCP_LOCATION = os.getenv("GCP_LOCATION")
+    GCP_SERVICE_ACCOUNT_EMAIL = os.getenv("GCP_SERVICE_ACCOUNT_EMAIL")
+    COMPUTE_HOST_URL = os.getenv("COMPUTE_HOST_URL")
+    ACTION_HOST_URL = os.getenv("ACTION_HOST_URL", COMPUTE_HOST_URL)
+
     ALLOW_LOCAL_CALC = True
     ALLOW_REMOTE_CALC = False
 
-    LOCAL_MAX_ATOMS = 2000
+    LOCAL_MAX_ATOMS = 30
 
     LOCAL_ALLOWED_THEORY_LEVELS = [
         "xtb",
-        "semiempirical",
+        # "semiempirical",
         # "hf",
         # "special",  # hf3c, pbeh3c, r2scan3c, b973c
         # "dft",
@@ -233,14 +258,14 @@ if IS_CLOUD:
 
     LOCAL_ALLOWED_STEPS = [
         "Geometrical Optimisation",
-        # "Conformational Search",
+        "Conformational Search",
         "Constrained Optimisation",
         "Frequency Calculation",
-        "TS Optimisation",
-        "UV-Vis Calculation",
+        # "TS Optimisation",
+        # "UV-Vis Calculation", # Not working right now
         "Single-Point Energy",
         # "Minimum Energy Path",
-        # "Constrained Conformational Search",
+        "Constrained Conformational Search",
         # "NMR Prediction",
         # "MO Calculation",
     ]

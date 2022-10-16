@@ -6,9 +6,14 @@ Django==3.2.15
 django-appconf==1.0.4
 django-axes==5.27.0
 django-bulma
+django-gmailapi-backend
+django-hashid-field
 django-pipeline==2.0.5
 django-ipware==3.0.1
+django-recaptcha
 django-throttle-requests==0.5.9
+google-cloud-tasks
+grpc-google-iam-v1
 gunicorn
 nmrglue==0.8
 numpy
@@ -18,3 +23,4 @@ psycopg2
 requests
 scipy
 wheel
+xkcdpass

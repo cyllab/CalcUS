@@ -89,7 +89,7 @@ def gen_param(params):
     return p
 
 
-def gen_calc(params, profile):
+def gen_calc(params, user):
     step = BasicStep.objects.get(name=params["type"])
 
     p = gen_param(params)
@@ -108,7 +108,7 @@ def gen_calc(params, profile):
         s.save()
 
     proj = Project.objects.create()
-    dummy = CalculationOrder.objects.create(project=proj, author=profile)
+    dummy = CalculationOrder.objects.create(project=proj, author=user)
     calc = Calculation.objects.create(
         structure=s, step=step, parameters=p, order=dummy, task_id=1
     )

@@ -6,11 +6,16 @@
 {% block extrahead %}
 	<title>CalcUS - Profile</title>
 	<script src="{% static 'frontend/jquery.min.js' %}"></script>
+	<script src="{% static 'frontend/clipboard.min.js' %}"></script>
 
 	<script charset="utf-8">
 		$(document).ready(function() {
-			$("#owned_accesses").load("/owned_accesses/")
-    			refresh_groups();
+	        {% if not IS_CLOUD %}
+			$("#owned_accesses").load("/owned_accesses/");
+            {% endif %}
+    		refresh_groups();
+            refresh_allocation();
+            new ClipboardJS('.class_code');
 		});
 
 		function update_pref() {
@@ -27,9 +32,26 @@
 			});
 		}
 
+	    function update_name() {
+			$.ajax({
+				type: 'POST',
+				url: "/update_name/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+                data: {"name": $("#full_name").val()}, 
+				success: function(response) { 
+					$("#full_name_msg").html(response);	
+				},
+				error: function(response) { 
+					$("#full_name_msg").html(response);	
+				},
+
+			});
+		}
+
 		function add_user(group_id) {
-			let username = $("#user_to_add").val();
-			let code = $("#code").val();
+			let user_id = $("#user_to_add").val();
 			$.ajax({
 				method: "POST",	 	 
 				url: "/add_user/",
@@ -37,19 +59,16 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 
-				data: {'username': username, 'group_id': group_id, 'code': code},
+				data: {'user_id': user_id, 'group_id': group_id},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						refresh_groups();
 					}
-
 				}
-		  
 			});
-
 		}
 
-		function remove_user(group_id, member_id) {
+		function remove_user(group_id, member_id, type) {
 			$.ajax({
 				method: "POST",	 	 
 				url: "/remove_user/",
@@ -57,27 +76,177 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 
-				data: {'member_id': member_id, 'group_id': group_id},
+				data: {'member_id': member_id, 'group_id': group_id, 'type': type},
 				success: function(data, textStatus, xhr) {
 					if (xhr.status != 204) {
 						refresh_groups();
 					}
-
 				}
-		  
 			});
-
 		}
+
+        function create_group(type) {
+            $("#create_" + type + "_button").addClass("is-loading");
+            group_name = $("#" + type + "_name").val();
+            $.ajax({
+				method: "POST",	 	 
+				url: "/create_group/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+
+				data: {'group_name': group_name, 'type': type},
+				success: function(data, textStatus, xhr) {
+                    if (xhr.status != 201) {
+                        $("#create_" + type + "_msg").text(data.responseText);
+                    }
+                    else {
+					    refresh_groups();
+                    }
+				},
+				error: function(data, textStatus, xhr) {
+                    $("#create_" + type + "_msg").text(data.responseText);
+                },
+                complete: function() {
+                    $("#create_" + type + "_button").removeClass("is-loading");
+                },
+
+			});
+        }
+
+        function dissolve_group(group_id, group_name, type) {
+            $("#dissolve_" + group_id).addClass("is-loading");
+            var res = confirm("Dissolve " + group_name + "?");
+            if (res) {
+                $.ajax({
+                    method: "POST",
+                    url: "/dissolve_group/",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                    },
+                    data: {
+                        group_id: group_id,
+                        type: type
+                    },
+                    success: function(data, textStatus, xhr) {
+                        if (xhr.status != 201) {
+                            $("#dissolve_" + type + "_msg").text(data.responseText);
+                        }
+                        else {
+                            refresh_groups();
+                        }
+                    },
+                    error: function(data, textStatus, xhr) {
+                        $("#dissolve_" + type + "_msg").text(data.responseText);
+                    },
+                    complete: function() {
+                        $("#dissolve_" + group_id).removeClass("is-loading");
+                    },
+                });
+            }
+        }
 
 		function refresh_groups() {
+            {% if not request.user.is_temporary %}
 			$("#groups_div").load("/profile_groups/");
+            {% endif %}
+			$("#classes_div").load("/profile_classes/");
 		}
+		function refresh_allocation() {
+			$("#allocation_div").load("/profile_allocation/");
+        }
+        function redeem_allocation() {
+            $("#redeem_button").addClass("is-loading");
+            code = $("#allocation_code").val();
+            $.ajax({
+				method: "POST",	 	 
+				url: "/redeem_allocation/",
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+				data: {'code': code},
+				success: function(data, textStatus, xhr) {
+                    if (xhr.status != 201) {
+                        $("#redeem_allocation_msg").text(data.responseText);
+                    }
+                    else {
+					    refresh_allocation();
+                    }
+				},
+				error: function(data, textStatus, xhr) {
+                    $("#redeem_allocation_msg").text(data.responseText);
+                },
+                complete: function() {
+                    $("#redeem_button").removeClass("is-loading");
+                },
+
+			});
+        }
+
 	</script>
 	<style>
+    #full_name_msg {
+        margin-top: 0.5em;
+        margin-bottom: 1em;
+        font-weight: bold;
+    }
+    #update_name_button, #change_password_button {
+        margin-top: 1em;
+        margin-bottom: 1em;
+    }
 	#pref_center {
-		max-width: 400px;
+		max-width: 25em;
 		margin: 10px auto;
 	}
+    #research_group_div, #classes_div {
+        max-width: 30em;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    #create_group_div, #create_class_div {
+        text-align: center;
+    }
+    .dissolve-button {
+        margin-bottom: 2em;
+    }
+    .dissolve-class-button {
+        margin-top: 2em;
+    }
+    .box {
+        max-width: 55em;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    input {
+        max-width: 25em !important;
+        text-align: center;
+    }
+    .title.is-4 {
+        margin-top: 3em;
+    }
+    table.table {
+        margin-top: 1em;
+    }
+    .class_code {
+        background-color: #eeffee;
+    }
+    .class_code:hover {
+        background-color: #ddffdd;
+        cursor: pointer;
+    }
+    .fa-clipboard {
+        margin-left: 1em;
+    }
+    #no_alloc_msg {
+        margin-bottom: 1em;
+    }
+    #allocation_div, #redeem_allocation_div {
+        margin-bottom: 3em;
+    }
+    .field {
+        margin-top: 1em;
+    }
 	</style>
 {% endblock %}
 
@@ -98,22 +267,23 @@
 				<div class="control">
 					<div class="select">
 					 	<select name="pref_units" id="pref_units">
-							<option {% if profile.pref_units == 0 %}selected="selected"{% endif %} value="kJ/mol">kJ/mol</option>
-					    		<option {% if profile.pref_units == 1 %}selected="selected"{% endif %} value="kcal/mol">kcal/mol</option>
-					    		<option {% if profile.pref_units == 2 %}selected="selected"{% endif %} value="Eh">Eh</option>
+							<option {% if request.user.pref_units == 0 %}selected="selected"{% endif %} value="kJ/mol">kJ/mol</option>
+					    		<option {% if request.user.pref_units == 1 %}selected="selected"{% endif %} value="kcal/mol">kcal/mol</option>
+					    		<option {% if request.user.pref_units == 2 %}selected="selected"{% endif %} value="Eh">Eh</option>
 					  	</select>
 					</div>
 				</div>
 			</div>
+            {% if not IS_CLOUD %}
 			<div class="field">
 				<label class="label">Default options for Gaussian</label>
-				<input type="text" class="input" value="{{ profile.default_gaussian }}" name="default_gaussian">
+				<input type="text" class="input" value="{{ request.user.default_gaussian }}" name="default_gaussian">
 			</div>
 			<div class="field">
 				<label class="label">Default options for ORCA</label>
-				<input type="text" class="input" value="{{ profile.default_orca }}" name="default_orca">
+				<input type="text" class="input" value="{{ request.user.default_orca }}" name="default_orca">
 			</div>
-
+            {% endif %}
 			<div class="field">
 				<div class="control">
 					<button class="button is-primary" id="submit_button">Update</button>
@@ -126,31 +296,10 @@
 	</div>
 	<br>
 
-	{% if not profile.is_PI %}
-	<div class="box">
-		<div class="columns is-vcentered">
-			<div class="column is-4">
-				<form action="/apply_pi/" method="POST">
-					{% csrf_token %}
-					<div class="field">
-						<div class="control">
-							<label class="label">Group name</label>
-							<input type="text" name="group_name"></input>
-						</div>
-					</div>
-					<button class="button is-primary">Apply for a PI account</button>
-				</form>
-			</div>
-
-			<div class="column">
-				Your account will have to be approved by the administrator before you are able to launch calculations.	
-			</div>
-		</div>
-	</div>
-	{% endif %}
+	{% if not IS_CLOUD %}
 	<div class="box">
 		<div class="columns">
-			<div class="column is-narrow has-text-centered">
+			<div class="column has-text-centered" id="add_cluster_column">
 				<h5 class="title is-5">Add new cluster access</h5>
 				<form class="form" id="add_clusteraccess_form" method="post">
 					{% csrf_token %}
@@ -206,22 +355,69 @@
 			</div>
 		</div>
 	</div>
+	{% endif %}
 
+    {% if not request.user.is_temporary %}
 	<div class="box">
 		<center>
-			<h5 class="title is-5">Group</h5>
+			<h5 class="title is-5">Research Group</h5>
 		</center>
 		<div id="groups_div">
 		</div>
 	</div>
+    {% endif %}
+	<div class="box">
+		<center>
+			<h5 class="title is-5">Classes</h5>
+		</center>
+		<div id="classes_div">
+		</div>
+	</div>
+
 	<div class="box">
 		<center>
 			<h5 class="title is-5">Account</h5>
-			<a class="button is-danger" href="/change_password/">Change password</a>
+            {% if IS_CLOUD %}
+            <div id="allocation_div">
+            </div>
+            <div id="redeem_allocation_div">
+                <div class="field">
+                    <label class="label">Redeem allocation</label>
+                    <input type="text" class="input" id="allocation_code" />
+                </div>
+                <div class="field">
+                    <div class="control has-text-centered">
+                        <button class="button is-primary" id="redeem_button" onclick="redeem_allocation();">Redeem</button>
+                    </div>
+                </div>
+                <span class="ajax_msg" id="redeem_allocation_msg"></span>
+            </div>
+            {% endif %}
+            {% if request.user.is_temporary %}
+            <p>You are logged in as temporary user <b>{{ request.user.email }}</b>.</p>
+            {% else %}
+            <p>You are logged in as <b>{{ request.user.email }}</b>.</p>
+            {% endif %}
+
+            <div class="field">
+                <label class="label">Full name</label>
+                <div class="control">
+                    <input type="text" class="input" id="full_name" value="{{ request.user.full_name }}">
+                </div>
+                <button class="button is-primary" onclick="update_name()" id="update_name_button">Update</button>
+                <div id="full_name_msg"></div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <a class="button is-danger" id="change_password_button" href="/change_password/">Change password</a>
+                </div>
+            </div>
 		</center>
 	</div>
 
 	<script>
+        {% if not IS_CLOUD %}
 		$("#add_clusteraccess_form").submit(function(e) {
 
 		    e.preventDefault(); 
@@ -235,11 +431,12 @@
 			   {
 				$("#public_key_div").removeClass('is-hidden');
 				$("#public_key_area").html(data);
+
 				$("#owned_accesses").load("/owned_accesses/")
 			   }
 			 });
 		});
-
+        {% endif %}
 	</script>
 </div>
 {% endblock content %}

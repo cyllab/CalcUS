@@ -21,20 +21,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from django.core.management.base import BaseCommand
 from frontend.models import *
 
-su_name = os.environ.get("CALCUS_SU_NAME", "")
+su_email = os.environ.get("CALCUS_SU_EMAIL", "")
 
 
 class Command(BaseCommand):
     help = "Verifies if the default superuser account is created"
 
     def handle(self, *args, **options):
-        if su_name == "":
+        if su_email == "":
             print("No superuser name provided, creation aborted")
             return
         try:
-            su = User.objects.get(username=su_name)
+            su = User.objects.get(email=su_email)
         except User.DoesNotExist:
-            su = User.objects.create_superuser(username=su_name, password="default")
-            print(f"Superuser with name '{su_name}' created")
+            su = User.objects.create_superuser(email=su_email, password="default")
+            print(f"Superuser with email '{su_email}' created")
         else:
             print("Superuser account found, creation aborted")

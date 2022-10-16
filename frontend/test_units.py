@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 
 from .models import *
-from .calculation_helper import get_xyz_from_Gaussian_input
+from .helpers import get_xyz_from_Gaussian_input
 from django.core.management import call_command
 from django.test import TestCase, Client
 

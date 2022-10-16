@@ -1,23 +1,24 @@
-{% if profile.clusteraccess_owner.count > 0 %}
-	<center>
-		<table class="table">
-			<thead>
-				<tr>
-					<th>Server</th>
-					<th>Username</th>
-					<th>Actions</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for access in profile.clusteraccess_owner.all %}
-				<tr>
-					<th>{{ access.cluster_address }}</th>
-					<th>{{ access.cluster_username }}</th>
-					<th><a class="button is-warning" href="/manage_access/{{ access.id }}">Manage</a></th>
-				</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	</center>
+{% if request.user.clusteraccess_owner.count > 0 %}
+<center>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Server</th>
+                <th>Username</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for access in request.user.clusteraccess_owner.all %}
+            <tr>
+                <th>{{ access.cluster_address }}</th>
+                <th>{{ access.cluster_username }}</th>
+                <th>
+                    <a class="button is-warning" href="/manage_access/{{ access.id }}">Manage</a>
+                </th>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</center>
 {% endif %}
-

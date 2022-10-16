@@ -21,3 +21,4 @@ docs/build/
 celerybeat-schedule
 bin/*
 !bin/*.tar.bz2
+gcloud.sh

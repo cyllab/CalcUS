@@ -1,246 +1,240 @@
-{% extends 'frontend/base.html' %}
+{% extends 'frontend/base.html' %} {% load static %} {% load folder_tags %} {% block extrahead %}
+<title>CalcUS - {{ folder.name }}</title>
+<script type="text/javascript" src="{% static 'frontend/jquery.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'frontend/jquery-ui.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui.min.css' %}" type="text/css" />
 
-{% load static %}
-{% load folder_tags %}
+<style>
+    .box {
+        /* Thanks Stackoverflow */
+        user-select: none; /* standard syntax */
+        -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+        -moz-user-select: none; /* mozilla browsers */
+        -khtml-user-select: none; /* webkit (konqueror) browsers */
+        -ms-user-select: none; /* IE10+ */
+    }
+</style>
+<script>
+    String.prototype.format = function() {
+    	a = this;
+    	for (i=0; i < arguments.length; i++) {
+    		a = a.replace("{}", arguments[i])
+    	}
+    	return a
+    }
+    var types = {
+    	'e': 'ensemble',
+    	'f': 'folder',
+    }
+    function selectText(node) {
+        	node = document.getElementById(node);
 
-{% block extrahead %}
-	<title>CalcUS - {{ folder.name }}</title>
-	<script type="text/javascript" src="{% static 'frontend/jquery.min.js' %}"></script>
-	<script type="text/javascript" src="{% static 'frontend/jquery-ui.min.js' %}"></script>
-	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui.min.css' %}" type="text/css">
+        	if (document.body.createTextRange) {
+    		const range = document.body.createTextRange();
+    		range.moveToElementText(node);
+    		range.select();
+        	} else if (window.getSelection) {
+    		const selection = window.getSelection();
+    		const range = document.createRange();
+    		range.selectNodeContents(node);
+    		selection.removeAllRanges();
+    		selection.addRange(range);
+    	} else {
+    		console.warn("Could not select text in node: Unsupported browser.");
+    	}
+    }
+    function edit_field(type, id) {
+    	tname = types[type];
+    	el = document.getElementById(tname + "_name_" + id);
+    	url = "/rename_" + types[type] + "/";
 
-	<style>
-		.box {
-			/* Thanks Stackoverflow */	
-			user-select: none; /* standard syntax */
-			-webkit-user-select: none; /* webkit (safari, chrome) browsers */
-			-moz-user-select: none; /* mozilla browsers */
-			-khtml-user-select: none; /* webkit (konqueror) browsers */
-			-ms-user-select: none; /* IE10+ */
-		}
-	</style>
-	<script>
-		String.prototype.format = function() {
-			a = this;
-			for (i=0; i < arguments.length; i++) {
-				a = a.replace("{}", arguments[i])
-			}
-			return a
-		}
-		var types = {
-			'e': 'ensemble',
-			'f': 'folder',
-		}
-		function selectText(node) {
-		    	node = document.getElementById(node);
+    	if (el.getAttribute("contentEditable") == "true") {
+    		el.setAttribute("contentEditable", "false");
+    		$("#icon_" + tname + id).removeClass("fa-check");
+    		$("#icon_" + tname + id).addClass("fa-edit");
+    		name = el.textContent;
+    		$.ajax({
+    			method: "POST",
+    			url: url,
+    			headers: {
+    				"X-CSRFToken": '{{ csrf_token }}',
+    			},
+    			data: {'id': id, 'new_name': name}
+    		});
 
-		    	if (document.body.createTextRange) {
-				const range = document.body.createTextRange();
-				range.moveToElementText(node);
-				range.select();
-		    	} else if (window.getSelection) {
-				const selection = window.getSelection();
-				const range = document.createRange();
-				range.selectNodeContents(node);
-				selection.removeAllRanges();
-				selection.addRange(range);
-			} else {
-				console.warn("Could not select text in node: Unsupported browser.");
-			}
-		}
-		function edit_field(type, id) {
-			tname = types[type];
-			el = document.getElementById(tname + "_name_" + id);
-			url = "/rename_" + types[type] + "/";
+    	}
+    	else {
+    		el.setAttribute("contentEditable", "true");
+    		$("#icon_" + tname + id).removeClass("fa-edit");
+    		$("#icon_" + tname + id).addClass("fa-check");
+    		selectText(tname + '_name_' + id);
+    		$('[contenteditable=true]').on('keypress', function(e) {
+    			if (e.keyCode == 13) {
+    				e.preventDefault();
+    				edit_field(type, id);
+    			}
+    		});
 
-			if (el.getAttribute("contentEditable") == "true") {
-				el.setAttribute("contentEditable", "false");
-				$("#icon_" + tname + id).removeClass("fa-check");
-				$("#icon_" + tname + id).addClass("fa-edit");
-				name = el.textContent;
-				$.ajax({
-					method: "POST",	 	 
-					url: url,
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					data: {'id': id, 'new_name': name}
-				});
+    	}
 
-			}
-			else {
-				el.setAttribute("contentEditable", "true");
-				$("#icon_" + tname + id).removeClass("fa-edit");
-				$("#icon_" + tname + id).addClass("fa-check");
-				selectText(tname + '_name_' + id);
-				$('[contenteditable=true]').on('keypress', function(e) {
-					if (e.keyCode == 13) {
-						e.preventDefault();
-						edit_field(type, id);
-					}
-				});
+    }
+    function del(type, id) {
+    	var res = confirm("Delete this " + types[type] + "?");
+    	url = "/delete_" + types[type] + "/";
+    	if (res) {
+    		$.ajax({
+    			method: "POST",
+    			url: url,
+    			headers: {
+    				"X-CSRFToken": '{{ csrf_token }}',
+    			},
+    			data: {'id': id},
+    			success: function() {
+    				document.getElementById(types[type] + "_box_" + id).remove();
+    			}
 
-			}
-			
-		}
-		function del(type, id) {
-			var res = confirm("Delete this " + types[type] + "?");	
-			url = "/delete_" + types[type] + "/";
-			if (res) {
-				$.ajax({
-					method: "POST",	 	 
-					url: url,
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					data: {'id': id},
-					success: function() {
-						document.getElementById(types[type] + "_box_" + id).remove();	
-					}
+    		});
+    	}
+    }
+    function dropped_in_folder(event, ui) {
+    	sf = event.target.id.split('_');
+    	folder_id = sf[sf.length-1];
 
-				});
-			}
-		}
-		function dropped_in_folder(event, ui) {
-			sf = event.target.id.split('_');
-			folder_id = sf[sf.length-1];
+    	element = ui.draggable[0];
+    	sel = element.id.split('_');
+    	element_type = sel[0]
+    	element_id = sel[sel.length-1];
+    	element.remove();
 
-			element = ui.draggable[0];
-			sel = element.id.split('_');
-			element_type = sel[0]
-			element_id = sel[sel.length-1];
-			element.remove();
+    	move_element(element_id, element_type, folder_id);
+    }
 
-			move_element(element_id, element_type, folder_id);
-		}
+    function move_element(id, type, folder_id) {
+    	$.post({
+    		url: "/move_element/",
+    		data: {
+    			id: id,
+    			type: type,
+    			folder_id: folder_id,
+    		},
+    		headers: {
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+    	});
 
-		function move_element(id, type, folder_id) {
-			$.post({
-				url: "/move_element/",
-				data: {
-					id: id,
-					type: type,
-					folder_id: folder_id,
-				},
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-			});
+    }
 
-		}
+    function add_folder(id, name, is_author) {
+    	folder_template = `
+    		<div class="box has-background-warning" id="folder_box_{}">
+    			<p style="float: right;">
+    					<a onclick="edit_field('f', {});"><i class="fas fa-edit" id="icon_folder_{}"></i></a>
+    					<a onclick="del('f', {});"><i class="fas fa-trash-alt"></i></a>
+    			</p>
+    			<a href="{{ request.path }}{}/">
+    				<strong><p id="folder_name_{}">{}</p></strong>
+    			</a>
+    		</div>`
+    	$("#folder_list").append(folder_template.format(id, id, id, id, name, id, name));
 
-		function add_folder(id, name, is_author) {
-			folder_template = `
-				<div class="box has-background-warning" id="folder_box_{}">
-					<p style="float: right;">
-							<a onclick="edit_field('f', {});"><i class="fas fa-edit" id="icon_folder_{}"></i></a>
-							<a onclick="del('f', {});"><i class="fas fa-trash-alt"></i></a>
-					</p>
-					<a href="{{ request.path }}{}/">
-						<strong><p id="folder_name_{}">{}</p></strong>
-					</a>
-				</div>`
-			$("#folder_list").append(folder_template.format(id, id, id, id, name, id, name));
+    	$('#folder_box_{}'.format(id)).draggable({handle: 'p', revert: true, cancel: 'i'});
+    	$('#folder_box_{}'.format(id)).droppable({drop: dropped_in_folder});
+    	// is author
+    }
 
-			$('#folder_box_{}'.format(id)).draggable({handle: 'p', revert: true, cancel: 'i'});
-			$('#folder_box_{}'.format(id)).droppable({drop: dropped_in_folder});
-			// is author
-		}
+    function create_folder() {
 
-		function create_folder() {
+    	$.ajax({
+    		method: "POST",
+    		url: "/create_folder/",
+    		data: {
+    			"current_folder_id": "{{ folder.id }}",
+    		},
+    		headers: {
+    			"X-CSRFToken": '{{ csrf_token }}',
+    		},
+    		success: function(data) {
+    			sp = data.split(';');
+    			add_folder(sp[0], sp[1], {% if request.user == project.author %} true {% else %} false {% endif %});
+    		}
+    	});
+    }
+    $(document).ready(function() {
 
-			$.ajax({
-				method: "POST",	 	 
-				url: "/create_folder/",
-				data: {
-					"current_folder_id": {{ folder.id }},
-				},
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				success: function(data) {
-					sp = data.split(';');
-					add_folder(sp[0], sp[1], {% if request.user.profile == project.author %} true {% else %} false {% endif %});
-				}
-			});
-		}
-		$(document).ready(function() {
+    	$('div.box').draggable({handle: 'p', revert: true, cancel: 'i'});
+    	{% for f in folders|dictsort:"name" %}
+    		add_folder("{{ f.id }}", "{{ f.name }}", {% if request.user == project.author %} true {% else %} false {% endif %});
+    	{% endfor %}
 
-			$('div.box').draggable({handle: 'p', revert: true, cancel: 'i'});
-			{% for f in folders|dictsort:"name" %}
-				add_folder({{ f.id }}, "{{ f.name }}", {% if request.user.profile == project.author %} true {% else %} false {% endif %});
-			{% endfor %}
+    	{% if request.user == project.author and folder.depth > 0 %}
+    		$('#folder_box_{{ folder.parent_folder.id }}').droppable({drop: dropped_in_folder});
+    	{% endif %}
 
-			{% if request.user.profile == project.author and folder.depth > 0 %}
-				$('#folder_box_{{ folder.parent_folder.id }}').droppable({drop: dropped_in_folder});
-			{% endif %}
-
-		});
-		
-
-	</script>
-{% endblock %}
-
-{% block content %}
+    });
+</script>
+{% endblock %} {% block content %}
 <div class="container">
-	<nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
-	 	<ul>
-	    		<li><a href="/projects/">Projects</a></li>
-			<li><a href="/projects/{{ project.author }}">{{ project.author }}</a></li>
-			<li><a href="/projects/{{ project.author }}/{{ project.name }}">{{ project.name }}</a></li>
-			<li class="is-active"><a aria-current="page" href="#">Folders</a></li>
-	  	</ul>
-	<hr />	
+    <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+        <ul>
+            <li>
+                <a href="/projects/">Projects</a>
+            </li>
+            <li>
+                <a href="/projects/{{ project.author }}">{{ project.author }}</a>
+            </li>
+            <li>
+                <a href="/projects/{{ project.author }}/{{ project.name }}">{{ project.name }}</a>
+            </li>
+            <li class="is-active">
+                <a aria-current="page" href="#">Folders</a>
+            </li>
+        </ul>
+        <hr />
+    </nav>
+    <div class="grid">
+        {% if request.user == project.author and folder.depth > 0 %}
+        <div style="margin-top: 30px; margin-bottom: 30px">
+            <center>
+                <a id="parent_folder_link" href="{% get_parent_url request.path %}">
+                    <div class="box has-background-warning" style="opacity: 0.5" id="folder_box_{{ folder.parent_folder.id }}">...</div>
+                </a>
+            </center>
+        </div>
+        {% endif %}
 
-	</nav>
-	<div class="grid">
-		{% if request.user.profile == project.author and folder.depth > 0 %}
-		<div style="margin-top: 30px; margin-bottom: 30px;">
-			<center>
-				<a id="parent_folder_link" href="{% get_parent_url request.path %}">
-				<div class="box has-background-warning" style="opacity: 0.5;" id="folder_box_{{ folder.parent_folder.id }}">
-					...
-				</div>
-				</a>
-			</center>
-		</div>
-		{% endif %}
+        <div id="folder_list"></div>
+        {% if request.user == project.author %}
+        <div style="margin-top: 30px; margin-bottom: 30px">
+            <center>
+                <a id="create_folder_link" onclick="create_folder();">
+                    <div class="box has-background-warning" style="opacity: 0.5">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                </a>
+            </center>
+        </div>
+        {% endif %} {% for e in ensembles %}
+        <div class="box has-background-primary-light" id="ensemble_box_{{ e.id }}">
+            {% if e.parent_molecule.project.author == request.user %}
+            <p style="float: right">
+                <a onclick="edit_field('e', '{{ e.id }}');"><i class="fas fa-edit" id="icon_folder_{{ f.id}}" title="Rename"></i></a>
+                <a onclick="del('e', '{{ e.id }}');"><i class="fas fa-trash-alt" title="Delete"></i></a>
+            </p>
+            {% endif %}
+            <a href="/ensemble/{{ e.id }}">
+                <strong
+                    ><p style="float: left; margin-right: 5px">{{ e.parent_molecule.name }} -</p>
+                    <p id="ensemble_name_{{ e.id }}">{{ e.name }}</p></strong
+                >
+            </a>
+        </div>
 
-		<div id="folder_list">
-		</div>
-		{% if request.user.profile == project.author %}
-		<div style="margin-top: 30px; margin-bottom: 30px;">
-			<center>
-				<a id="create_folder_link" onclick="create_folder();">
-					<div class="box has-background-warning" style="opacity: 0.5;">
-						<i class="fas fa-plus"></i>
-					</div>
-				</a>
-			</center>
-		</div>
-		{% endif %}
-
-		{% for e in ensembles %}
-			<div class="box has-background-primary-light" id="ensemble_box_{{ e.id }}">
-				{% if e.parent_molecule.project.author == request.user.profile %}
-				<p style="float: right;">
-					<a onclick="edit_field('e', {{ e.id }});"><i class="fas fa-edit" id="icon_folder_{{ f.id}}" title="Rename"></i></a>
-					<a onclick="del('e', {{ e.id }});"><i class="fas fa-trash-alt" title="Delete"></i></a>
-				</p>
-				{% endif %}
-					<a href="/ensemble/{{ e.id }}">
-						<strong><p style="float: left; margin-right: 5px;">{{ e.parent_molecule.name }} - </p><p id="ensemble_name_{{ e.id }}">{{ e.name }}</p></strong>
-				</a>
-			</div>
-
-		{% endfor %}
-
-	</div>
-	<hr>
-	<center>
-		<a class="button is-info" href="/download_folder/{{ folder.id }}">Download</a>
-	</center>
+        {% endfor %}
+    </div>
+    <hr />
+    <center>
+        <a class="button is-info" href="/download_folder/{{ folder.id }}">Download</a>
+    </center>
 </div>
 
 {% endblock %}
-

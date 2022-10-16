@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
+import json
 import numpy as np
 import periodictable
 from .constants import *
@@ -82,6 +83,40 @@ def parse_xyz_from_file(f):
         xyz.append([a, np.array([float(x), float(y), float(z)])])
 
     return xyz
+
+
+def parse_multixyz_from_file(f, ind=0):
+    """Parses a multixyz file into a suitable structure for calculations"""
+    with open(f) as ff:
+        lines = ff.readlines()
+    multixyz = []
+    energies = []
+
+    natoms = int(lines[0])
+
+    assert len(lines) % (natoms + 2) == 0
+
+    nstructs = int(len(lines) / (natoms + 2))
+    for i in range(nstructs):
+        xyz = []
+        for line in lines[i * (natoms + 2) + 2 : (i + 1) * (natoms + 2)]:
+            a, x, y, z = line.split()
+            xyz.append([a, np.array([float(x), float(y), float(z)])])
+
+        E_split = lines[i * (natoms + 2) + 1].strip().split()
+        if len(E_split) == 0:
+            # print("No energy in file {}".format(f))
+            E = 0
+        else:
+            try:
+                E_txt = E_split[ind]
+                E = float(E_txt)
+            except (IndexError, ValueError):
+                E = 0
+        multixyz.append(xyz)
+        energies.append(E)
+
+    return multixyz, energies
 
 
 def get_connectivity(xyz):
@@ -172,6 +207,14 @@ def get_networkx_graph_from_xyz(xyz):
         G.add_edge(*b)
 
     return G
+
+
+def npxyz2strxyz(xyz):
+    return json.dumps([[a, list(l)] for a, l in xyz])
+
+
+def strxyz2npxyz(xyz):
+    return [[a, np.array(l)] for a, l in json.loads(xyz)]
 
 
 def reorder_xyz(ref, xyz):

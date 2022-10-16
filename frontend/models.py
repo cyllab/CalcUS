@@ -23,17 +23,24 @@ from django.db import models, transaction
 from django.db.models.signals import pre_save
 from django.forms import JSONField
 from django.utils import timezone
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+
 from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import post_save, post_init
 from django.dispatch import receiver
 from django import template
+
 import random, string
 import numpy as np
 import os
 import hashlib
+import time
+
+from hashid_field import BigHashidAutoField
 
 from .constants import *
+from .helpers import get_random_readable_code
 
 import ccinput
 
@@ -42,10 +49,49 @@ register = template.Library()
 STATUS_COLORS = {0: "#AAAAAA", 1: "#FFE515", 2: "#1EE000", 3: "#FD1425"}
 
 
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+class UserManager(BaseUserManager):
+    use_in_migrations = True
 
-    is_PI = models.BooleanField(default=False)
+    def _create_user(self, email, password, **extra_fields):
+        if not email:
+            raise ValueError("No email provided")
+
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_user(self, email, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", False)
+        extra_fields.setdefault("is_superuser", False)
+        return self._create_user(email, password, **extra_fields)
+
+    def create_superuser(self, email, password, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must be staff")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must be superuser")
+
+        return self._create_user(email, password, **extra_fields)
+
+
+class User(AbstractUser):
+    id = BigHashidAutoField(primary_key=True)
+
+    username = None
+    email = models.EmailField("email", unique=True)
+    full_name = models.CharField(max_length=256, default="")
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+
+    objects = UserManager()
+
+    is_temporary = models.BooleanField(default=False)
 
     member_of = models.ForeignKey(
         "ResearchGroup",
@@ -55,10 +101,18 @@ class Profile(models.Model):
         related_name="members",
     )
 
+    in_class = models.ForeignKey(
+        "ClassGroup",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="members",
+    )
+
     default_gaussian = models.CharField(max_length=1000, default="")
     default_orca = models.CharField(max_length=1000, default="")
 
-    code = models.CharField(max_length=16)
+    code = models.CharField(max_length=16)  ### ?
 
     pref_units = models.PositiveIntegerField(default=0)
     unseen_calculations = models.PositiveIntegerField(default=0)
@@ -68,6 +122,62 @@ class Profile(models.Model):
     UNITS_FORMAT_STRING = {0: "{:.1f}", 1: "{:.1f}", 2: "{:.6f}"}
 
     INV_UNITS = {v: k for k, v in UNITS.items()}
+
+    # Total/allocated computation time and time consumed by user or class/group
+    # These numbers should be accurate, but are not the official references
+    # Instead, allocated_seconds should be recalculated from ResourceAllocation objects
+    # and billed_seconds from Calculation objects whose resource_provider is the current user
+    allocated_seconds = models.PositiveIntegerField(default=0)
+    # For temporary users, both their billed_seconds and the professor's will be incremented in order to enforce the usage limit
+    billed_seconds = models.PositiveIntegerField(default=0)
+
+    @property
+    def resource_provider(self):
+        if self.is_PI:
+            return self
+
+        if self.is_temporary:
+            if self.in_class:
+                return self.in_class.professor
+            else:
+                raise Exception(
+                    f"Unexpected case for the resource provider of user {self.id} (self.name)"
+                )
+
+        if self.member_of:
+            return self.member_of.PI
+
+        return self
+
+    def has_sufficient_resources(self, expected_time):
+        if self.resource_provider != self:
+            return self.resource_provider.has_sufficient_resources(expected_time)
+
+        # Not fool-proof or entirely safe, but good enough for now
+        if self.allocated_seconds - self.billed_seconds > expected_time:
+            return True
+        return False
+
+    def bill_time(self, time):
+        """
+        Directly bills the user for computation time
+        """
+        with transaction.atomic():
+            user = User.objects.select_for_update().get(id=self.id)
+            user.billed_seconds += time
+            user.save()
+
+        return user
+
+    @property
+    def is_PI(self):
+        return self.PI_of.first() is not None
+
+    @property
+    def name(self):
+        if self.full_name:
+            return self.full_name
+        return f"User {self.id}"
 
     @property
     def pref_units_name(self):
@@ -92,23 +202,53 @@ class Profile(models.Model):
         else:
             raise Exception("Unknown units")
 
-    @property
-    def username(self):
-        return self.user.username
-
     def __str__(self):
-        return self.user.username
+        return self.name
 
     @property
     def group(self):
         if self.is_PI:
-            return self.researchgroup_PI.all()[0]
+            if self.PI_of.count() > 0:
+                # TODO: handle multiple groups
+                return self.PI_of.all()[0]
+            else:
+                return None
         else:
             return self.member_of
 
     @property
     def accesses(self):
         return self.clusteraccess_owner.all()
+
+
+class ResourceAllocation(models.Model):
+    id = BigHashidAutoField(primary_key=True)
+
+    # Code to redeem the allocation manually
+    code = models.CharField(max_length=256)
+    redeemer = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+
+    allocation_seconds = models.PositiveIntegerField()
+
+    def redeem(self, user, stall=0):
+        with transaction.atomic():
+            alloc = ResourceAllocation.objects.select_for_update().get(id=self.id)
+
+            # For testing purposes
+            if stall != 0:
+                time.sleep(stall)
+
+            if alloc.redeemer:
+                return False
+            alloc.redeemer = user
+            alloc.save()
+
+        with transaction.atomic():
+            u = User.objects.select_for_update().get(id=user.id)
+            u.allocated_seconds += alloc.allocation_seconds
+            u.save()
+
+        return True
 
 
 class Example(models.Model):
@@ -123,21 +263,41 @@ class Recipe(models.Model):
 
 class ResearchGroup(Group):
     PI = models.ForeignKey(
-        Profile,
+        User,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name="researchgroup_PI",
+        related_name="PI_of",
     )
 
     def __repr__(self):
         return self.name
 
 
-class PIRequest(models.Model):
-    issuer = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
-    group_name = models.CharField(max_length=100)
-    date_issued = models.DateTimeField("date")
+class ClassGroup(Group):
+    professor = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="professor_of",
+    )
+
+    # Maximal computation time per user or per group, in seconds
+    # 0 means no limit
+    user_resource_threshold = models.PositiveIntegerField(default=5 * 60)
+    group_resource_threshold = models.PositiveIntegerField(default=0)
+
+    # Randomly generated code upon group creation
+    # Allows student to join the group
+    access_code = models.CharField(max_length=256)
+
+    def __repr__(self):
+        return self.name
+
+    def generate_code(self):
+        self.access_code = get_random_readable_code()
+        self.save()
 
 
 class Flowchart(models.Model):
@@ -152,8 +312,9 @@ class Flowchart(models.Model):
         return self.name
 
 class Project(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100)
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     private = models.PositiveIntegerField(default=0)
 
     preset = models.ForeignKey(
@@ -185,6 +346,7 @@ def create_main_folder(sender, instance, created, **kwargs):
 
 
 class Folder(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100)
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, blank=True, null=True
@@ -196,8 +358,9 @@ class Folder(models.Model):
 
 
 class ClusterAccess(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     owner = models.ForeignKey(
-        Profile,
+        User,
         on_delete=models.CASCADE,
         blank=True,
         null=True,
@@ -237,16 +400,16 @@ class BasicStep(models.Model):
 
 
 class Preset(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100, default="My Preset")
     params = models.ForeignKey(
         "Parameters", on_delete=models.SET_NULL, blank=True, null=True
     )
-    author = models.ForeignKey(
-        "Profile", on_delete=models.CASCADE, blank=True, null=True
-    )
+    author = models.ForeignKey("User", on_delete=models.CASCADE, blank=True, null=True)
 
 
 class Ensemble(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100, default="Nameless ensemble")
     parent_molecule = models.ForeignKey(
         "Molecule", on_delete=models.CASCADE, blank=True, null=True
@@ -569,6 +732,7 @@ def handle_folder(sender, instance, **kwargs):
 
 
 class Property(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     parameters = models.ForeignKey(
         "Parameters", on_delete=models.SET_NULL, blank=True, null=True
     )
@@ -613,6 +777,7 @@ class Property(models.Model):
 
 
 class Structure(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     parent_ensemble = models.ForeignKey(
         Ensemble, on_delete=models.CASCADE, blank=True, null=True
     )
@@ -624,6 +789,7 @@ class Structure(models.Model):
 
 
 class CalculationFrame(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     parent_calculation = models.ForeignKey(
         "Calculation", on_delete=models.CASCADE, blank=True, null=True
     )
@@ -637,6 +803,7 @@ class CalculationFrame(models.Model):
 
 
 class Parameters(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100, default="Nameless parameters")
     charge = models.IntegerField()
     multiplicity = models.IntegerField()
@@ -765,6 +932,7 @@ def gen_params_md5(obj):
 
 
 class Molecule(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100)
     inchi = models.CharField(max_length=1000, default="", blank=True, null=True)
     project = models.ForeignKey(
@@ -846,6 +1014,7 @@ class FlowchartOrder(models.Model):
             return False
 
 class CalculationOrder(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     name = models.CharField(max_length=100)
 
     structure = models.ForeignKey(
@@ -878,7 +1047,18 @@ class CalculationOrder(models.Model):
         BasicStep, on_delete=models.SET_NULL, blank=True, null=True
     )
 
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+
+    # Account billed for the resource usage
+    # Set when creating the order, then never modified
+    resource_provider = models.ForeignKey(
+        User,
+        related_name="provider_of",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+
     project = models.ForeignKey(
         "Project", on_delete=models.CASCADE, blank=True, null=True
     )
@@ -906,7 +1086,7 @@ class CalculationOrder(models.Model):
             self.save()
 
             with transaction.atomic():
-                p = Profile.objects.select_for_update().get(id=self.author.id)
+                p = User.objects.select_for_update().get(id=self.author.id)
                 p.unseen_calculations = max(
                     p.unseen_calculations - 1, 0
                 )  # Glitches may screw up the count...
@@ -985,13 +1165,13 @@ class CalculationOrder(models.Model):
         if old_unseen:
             if not new_unseen:
                 with transaction.atomic():
-                    p = Profile.objects.select_for_update().get(id=self.author.id)
+                    p = User.objects.select_for_update().get(id=self.author.id)
                     p.unseen_calculations -= 1
                     p.save()
         else:
             if new_unseen:
                 with transaction.atomic():
-                    p = Profile.objects.select_for_update().get(id=self.author.id)
+                    p = User.objects.select_for_update().get(id=self.author.id)
                     p.unseen_calculations += 1
                     p.save()
 
@@ -1044,14 +1224,14 @@ class CalculationOrder(models.Model):
     def delete(self, *args, **kwargs):
         if self.new_status:
             with transaction.atomic():
-                p = Profile.objects.select_for_update().get(id=self.author.id)
+                p = User.objects.select_for_update().get(id=self.author.id)
                 p.unseen_calculations = max(0, p.unseen_calculations - 1)
                 p.save()
         super(CalculationOrder, self).delete(*args, **kwargs)
 
 
 class Calculation(models.Model):
-
+    id = BigHashidAutoField(primary_key=True)
     CALC_STATUSES = {
         "Queued": 0,
         "Running": 1,
@@ -1067,6 +1247,7 @@ class Calculation(models.Model):
     date_submitted = models.DateTimeField("date", null=True, blank=True)
     date_started = models.DateTimeField("date", null=True, blank=True)
     date_finished = models.DateTimeField("date", null=True, blank=True)
+    billed_seconds = models.PositiveIntegerField(default=0)
 
     status = models.PositiveIntegerField(default=0)
     error_message = models.CharField(max_length=400, default="", blank=True, null=True)
@@ -1170,6 +1351,7 @@ class Calculation(models.Model):
 
 
 class Filter(models.Model):
+    id = BigHashidAutoField(primary_key=True)
     type = models.CharField(max_length=500)
     parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, null=True)
     value = models.CharField(max_length=500)
@@ -1182,17 +1364,3 @@ def update_parameters_hash(sender, instance, **kwargs):
         instance._md5 = hash
     # Parameters are not really modified, but the case where they are updated could be handled
     # Changing just to _md5 field should not trigger anything
-
-
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        code = "".join(
-            random.choice(string.ascii_uppercase + string.digits) for _ in range(16)
-        )
-        Profile.objects.create(user=instance, code=code)
-
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()

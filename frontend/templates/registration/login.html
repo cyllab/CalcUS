@@ -1,46 +1,54 @@
 {% extends "frontend/base.html" %}
-
+{% load i18n bulma_tags %}
+{% block extrahead %}
+    <style>
+        #id_captcha {
+            margin-bottom: 2em;
+        }
+        .notification {
+            margin-bottom: 4em;
+            text-align: center;
+        }
+        .input {
+            width: 24em;
+        }
+    </style>
+{% endblock %}
 {% block content %}
 <div class="container">
-	{% if form.errors %}
-  		<p>Your username and password didn't match. Please try again.</p>
-	{% endif %}
-
-	{% if next %}
-		<p>Please login to see this page.</p>
-	{% endif %}
-	<div class="columns is-centered is-expanded">
-		<div class="column is-centered">
-			<section class="section">
-				<div class="field has-addons has-addons-centered">
-					<div class="box has-text-centered">
-						<form method="post" action="{% url 'login' %}">
-						{% csrf_token %}
-							<div class="field">
-								<label class="label">{{ form.username.label_tag }}</label>
-								<div class="control">
-								{{ form.username }}
-								</div>
-							</div>
-							<div class="field">
-								<label class="label">{{ form.password.label_tag }}</label>
-								<div class="control">
-								  {{ form.password }}
-								</div>
-								<br>
-
-								<input class="control button is-primary" type="submit" value="Login" />
-								<input type="hidden" name="next" value="{{ next }}" />
-							</div>
-						</form>
-					</div>
-
-				</div>
-				<div class="container has-text-centered">
-					<p><a href="{% url 'password_reset' %}">Lost password?</a></p>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="columns is-centered is-expanded">
+        <div class="column is-centered">
+            <section class="section">
+                {% if form.errors or next %}
+                <div class="field has-addons has-addons-centered">
+                    <div class="notification is-danger">
+                        {% if form.errors %}
+                        <p><b>Your email and password didn't match. Please try again.</b></p> 
+                        {% endif %} 
+                        {% if next %}
+                        <p><b>Please login to see this page.</b></p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                <div class="field has-addons has-addons-centered">
+                    <div class="box has-text-centered">
+                        <form method="post" action="{% url 'login' %}">
+                            <center>
+                            {% csrf_token %} {{ form|bulma }}
+                            </center>
+                            <input class="control button is-primary" type="submit" value="Login" />
+                            <input type="hidden" name="next" value="{{ next }}" />
+                        </form>
+                    </div>
+                </div>
+                <div class="container has-text-centered">
+                    <p>
+                        <a href="{% url 'password_reset' %}">Lost password?</a>
+                    </p>
+                </div>
+            </section>
+        </div>
+    </div>
 </div>
 {% endblock %}

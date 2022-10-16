@@ -1,107 +1,119 @@
-{% extends 'frontend/base.html' %}
+{% extends 'frontend/base.html' %} 
 
-{% load static %}
+{% load static %} 
 
 {% block extrahead %}
-	<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
-	<script src="{% static 'frontend/jquery.min.js' %}"></script>
-	<style>
-		#delete_order_button {
-			margin: 50 auto;
-			margin-bottom: 10px;
-			display: block;
-		}
-		h5 > a {
-			text-decoration: underline;
-			color: grey;
-		}
+<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
+<script src="{% static 'frontend/jquery.min.js' %}"></script>
+<style>
+    #delete_order_button {
+        margin: 50 auto;
+        margin-bottom: 10px;
+        display: block;
+    }
+    h5 > a {
+        text-decoration: underline;
+        color: grey;
+    }
 
-		h5 > a:hover {
-			text-decoration: underline;
-			color: black;
-		}
-	</style>
-	<script>
-		function calc_action(id, action) {
-			$("#" + action + "_button_" + id).addClass("is-loading");
-			$.ajax({
-				method: "POST",	 	 
-				url: "/" + action + "_calc/",
-				headers: {
-					"X-CSRFToken": '{{ csrf_token }}',
-				},
-				data: {'id': id},
-				success: function() {
-					$("#" + action + "_button_" + id).removeClass("is-loading");
-					$("#" + action + "_button_" + id).addClass("has-background-success");
-				}
-			});
+    h5 > a:hover {
+        text-decoration: underline;
+        color: black;
+    }
+    button.is-danger {
+        margin-top: 3em;
+    }
+</style>
+<script>
+    function calc_action(id, action) {
+        $("#" + action + "_button_" + id).addClass("is-loading");
+        $.ajax({
+            method: "POST",
+            url: "/" + action + "_calc/",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+            data: {
+                id: id,
+            },
+            success: function () {
+                $("#" + action + "_button_" + id).removeClass("is-loading");
+                $("#" + action + "_button_" + id).addClass("has-background-success");
+            },
+        });
+    }
 
-		}
-
-		function delete_order(id) {
-			var res = confirm('Delete this calculation order and all its calculations (including resulting structures and ensembles)"?');	
-			if (res) {
-				$("#delete_order_button_").addClass("is-loading");
-				$.ajax({
-					method: "POST",	 	 
-					url: "/delete_order/",
-					headers: {
-						"X-CSRFToken": '{{ csrf_token }}',
-					},
-					data: {'id': {{ order.pk }}},
-					success: function() {
-						window.location.replace("/calculations/");
-					}
-				});
-			}
-		}
-
-	</script>
-	{% endblock %}
-
+    function delete_order(id) {
+        var res = confirm('Delete this calculation order and all its calculations (including resulting structures and ensembles)"?');
+        if (res) {
+            $("#delete_order_button_").addClass("is-loading");
+            $.ajax({
+                method: "POST",
+                url: "/delete_order/",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                data: {
+                    id: "{{ order.id }}",
+                },
+                success: function () {
+                    window.location.replace("/calculations/");
+                },
+            });
+        }
+    }
+</script>
+{% endblock %} 
 {% block content %}
 <div class="container">
-	<div class="box">
-		<center>
-			<header class="title is-3">{{ order.molecule_name }}</header>
-			{% with order.source as source %}
-			<h4 class="title is-4">Calculation Order {{ order.id }} - {{ order.step.name }}</h4>
-			<h5 class="title is-5">Starting from: <a href={{ source.1 }}>{{ source.0 }}</a></h5>
-			{% endwith %}
+    <div class="box">
+        <center>
+            <header class="title is-3">{{ order.molecule_name }}</header>
+            {% with order.source as source %}
+            <h4 class="title is-4">Calculation Order {{ order.id }} - {{ order.step.name }}</h4>
+            <h5 class="title is-5">
+                Starting from:
+                <a href="{{ source.1 }}">{{ source.0 }}</a>
+            </h5>
+            {% endwith %} {% if order.resource.cluster_address %} Remote calculation ({{ order.resource.cluster_address }})
+            <br />
+            {% else %} Local calculation
+            <br />
+            {% endif %}
 
-			{% if order.resource.cluster_address %}
-				Remote calculation ({{ order.resource.cluster_address }}) <br />
-			{% else %}
-				Local calculation <br />
-			{% endif %}
-				
-			<table class="table">
-				<thead>
-					<tr>
-						<th>Calculation id</th>
-						<th>Status</th>
-						<th>CPU time (s)</th>
-						<th>Actions</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for calc in order.calculation_set.all %}
-					<tr>
-						<th><a class="button is-warning" href="/calculation/{{ calc.id}}">{{ calc.id }}</a></th>
-						<th>{{ calc.text_status }}{% if calc.status == 3%} - {{ calc.error_message }}{% endif %}</th>
-						<th>{{ calc.execution_time }}</th>
-						<th>{% if request.user.profile == order.author %}<a class="button is-danger" id="cancel_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'cancel');">Kill</a> <a class="button" id="relaunch_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'relaunch');">Relaunch</a>{% if not calc.local %} <a class="button" id="refetch_button_{{ calc.id }}" onclick="calc_action({{ calc.id }}, 'refetch');">Refetch</a> {% endif %}{% endif %}</th>
-					</tr>
-					{% endfor %}
-				</tbody>
-			</table>
-			<a class="button is-primary" href="/download_all_logs/{{ order.id }}">Download all logs</a>	
-		</center>
-	</div>
-	<button class="button is-danger" id="delete_order_button" onclick="delete_order()">Delete this calculation order</button>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Calculation id</th>
+                        <th>Status</th>
+                        <th>CPU time (s)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for calc in order.calculation_set.all %}
+                    <tr>
+                        <th>
+                            <a class="button is-warning" href="/calculation/{{ calc.id}}">{{ calc.id }}</a>
+                        </th>
+                        <th>{{ calc.text_status }}{% if calc.status == 3%} - {{ calc.error_message }}{% endif %}</th>
+                        <th>{{ calc.execution_time }}</th>
+                        <th>
+                            {% if request.user == order.author %}<a class="button is-danger" id="cancel_button_{{ calc.id }}" onclick="calc_action('{{ calc.id }}', 'cancel');">Kill</a>
+                            <a class="button" id="relaunch_button_{{ calc.id }}" onclick="calc_action('{{ calc.id }}', 'relaunch');">Relaunch</a>
+			                    {% if not calc.local %}
+                                <a class="button" id="refetch_button_{{ calc.id }}" onclick="calc_action('{{ calc.id }}', 'refetch');">Refetch</a>
+                                {% endif %}
+			                {% endif %}
+                        </th>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a class="button is-primary" href="/download_all_logs/{{ order.id }}">Download all logs</a>
+            <button class="button is-danger" id="delete_order_button" onclick="delete_order()">Delete this calculation order</button>
+        </center>
+    </div>
 </div>
 <br />
 {% endblock %}
-
-

@@ -32,14 +32,13 @@ class CalculationUnitTest(TestCase):
     def setUp(self):
         os.chdir(base_cwd)
         call_command("init_static_obj")
-        self.username = "TestRunner"
+        self.email = "TestRunner@test.com"
         self.password = "test1234"
 
-        u = User.objects.create_user(username=self.username, password=self.password)
-        u.save()
-        self.profile = Profile.objects.get(user__username=self.username)
-        self.profile.is_PI = True
-        self.profile.save()
+        self.user = User.objects.create_user(
+            email=self.email,
+            password=self.password,
+        )
 
         self.name_patcher = mock.patch.dict(os.environ, {"TEST_NAME": self.id()})
         self.name_patcher.start()
@@ -61,7 +60,7 @@ class CalculationUnitTest(TestCase):
         tasks.cache_ind = 1
         params = self.get_params(**modifications)
 
-        calc = gen_calc(params, self.profile)
+        calc = gen_calc(params, self.user)
 
         ret = run_calc(calc.id)
 
