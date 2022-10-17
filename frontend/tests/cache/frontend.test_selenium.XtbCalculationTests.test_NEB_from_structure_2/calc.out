@@ -184,9 +184,9 @@ NAME = calc.inp
 | 15> product "struct2.xyz"
 | 16> nimages 3
 | 17> end
-| 18> %MaxCore 2000
+| 18> %MaxCore 500
 | 19> %pal
-| 20> nprocs 1
+| 20> nprocs 4
 | 21> endd                         ****END OF INPUT****
 ================================================================================
 
@@ -449,14 +449,14 @@ Number of SCF / gradient calculations:
 
 For the individual parts of the NEB, NEB-CI or NEB-TS run:
 
-Total                                  ...       93.920 sec
-NEB                                    ...       93.920 sec  100.0%
+Total                                  ...       32.699 sec
+NEB                                    ...       32.699 sec  100.0%
 
 
 Timings for individual modules:
 
-Sum of individual times         ...       94.016 sec (=   1.567 min)
-XTB module                      ...        0.096 sec (=   0.002 min)   0.1 %
-NEB Iterations                  ...       93.920 sec (=   1.565 min)  99.9 %
+Sum of individual times         ...       32.755 sec (=   0.546 min)
+XTB module                      ...        0.056 sec (=   0.001 min)   0.2 %
+NEB Iterations                  ...       32.699 sec (=   0.545 min)  99.8 %
                              ****ORCA TERMINATED NORMALLY****
-TOTAL RUN TIME: 0 days 0 hours 1 minutes 33 seconds 995 msec
+TOTAL RUN TIME: 0 days 0 hours 0 minutes 33 seconds 740 msec

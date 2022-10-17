@@ -640,12 +640,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         button = self.driver.find_element(By.ID, "advanced_nmr_analysis_button")
         button.click()
+        self.wait_for_ajax()
 
     def click_get_shifts(self):
         assert self.is_on_page_nmr_analysis()
 
         button = self.driver.find_element(By.ID, "get_shifts_button")
         button.click()
+        self.wait_for_ajax()
 
     def get_conformers(self):
         assert self.is_on_page_ensemble()
@@ -1393,18 +1395,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_profile()
 
         element = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, "code"))
-        )
-        element = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "user_to_add"))
         )
 
-        p = User.objects.get(id=user_id)
         field_username = self.driver.find_element(By.ID, "user_to_add")
-        field_code = self.driver.find_element(By.ID, "code")
-        button_submit = self.driver.find_element(
-            By.CSS_SELECTOR, "button.button:nth-child(4)"
-        )
+        button_submit = self.driver.find_element(By.ID, "user_add_button")
         field_username.send_keys(str(user_id))
         button_submit.send_keys(Keys.RETURN)
 

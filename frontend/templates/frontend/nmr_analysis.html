@@ -143,7 +143,7 @@
             			"X-CSRFToken": '{{ csrf_token }}',
             		},
             		data: {
-            			'id': {{ ensemble.id }},
+            			'id': "{{ ensemble.id }}",
             			'num': 1,
             		},
             		success: function(data, textStatus, xhr) {
@@ -181,8 +181,8 @@
             			"X-CSRFToken": '{{ csrf_token }}',
             		},
             		data: {
-            			'id': {{ ensemble.id }},
-            			'pid': {{ parameters.id }},
+            			'id': "{{ ensemble.id }}",
+            			'pid': "{{ parameters.id }}",
             			'scaling_factors': scaling_factors,
             		},
             		success: function(data, textStatus, xhr) {
@@ -202,8 +202,8 @@
             	for(i=0; i < $('input[type=file]')[0].files.length; i++) {
             		exp_dir.append('file', $('input[type=file]')[0].files[i]);
             	}
-            	exp_dir.append('id', {{ ensemble.id }});
-            	exp_dir.append('pid', {{ parameters.id }});
+            	exp_dir.append('id', "{{ ensemble.id }}");
+            	exp_dir.append('pid', "{{ parameters.id }}");
             	exp_dir.append('scaling_factors', scaling_factors);
 
             	$.ajax({

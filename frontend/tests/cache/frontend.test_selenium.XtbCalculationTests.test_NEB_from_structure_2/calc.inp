@@ -15,7 +15,7 @@ H   -1.92653911   0.89354531   2.87895947
 product "struct2.xyz"
 nimages 3
 end
-%MaxCore 2000
+%MaxCore 500
 %pal
-nprocs 1
+nprocs 4
 end

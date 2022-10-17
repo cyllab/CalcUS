@@ -1552,9 +1552,7 @@ def _submit_calculation(request, verify=False):
 
                 if "filter_parameters" in request.POST.keys():
                     try:
-                        filter_parameters_id = int(
-                            clean(request.POST["filter_parameters"])
-                        )
+                        filter_parameters_id = clean(request.POST["filter_parameters"])
                     except ValueError:
                         return "Invalid filter parameters"
 
@@ -3462,7 +3460,9 @@ def download_all_logs(request, pk):
                     _logname = ""
                 else:
                     _logname = f"_{logname}"
-                zip.writestr(f"{order.molecule_name}_order{pk}_calc{cid}{_logname}")
+                zip.writestr(
+                    f"{order.molecule_name}_order{pk}_calc{cid}{_logname}", log
+                )
 
     response = HttpResponse(mem.getvalue(), content_type="application/zip")
     response["Content-Disposition"] = f'attachment; filename="order_{pk}.zip"'
