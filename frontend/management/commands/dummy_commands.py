@@ -7,7 +7,7 @@ from frontend.models import (
     CalculationOrder,
 )
 
-allObjects = Calculation.objects.all()
+allObjects = Flowchart.objects.all()
 print(allObjects)
 Calculation.objects.all().delete()
 # Flowchart.objects.all().delete()

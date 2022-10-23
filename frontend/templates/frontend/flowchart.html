@@ -410,7 +410,6 @@
 	function loadFlowchart() {
 		const flowchartOption = document.getElementById("flowchart-load-select")
 		data_id = flowchartOption.options[flowchartOption.selectedIndex].getAttribute("data-id")
-		data_id = parseInt(data_id)
 		var frontend_id_array = []
 		var db_id_array = []
 		var para_map = new Map()
@@ -427,7 +426,7 @@
 				flowchart_id = data_id;
 				$.ajax({
 					method: "POST",	 	 
-					url: "/load_flowchart_params/" + {{ i.id }},
+					url: "/load_flowchart_params/" + "{{ i.id }}",
 					headers: {
 						"X-CSRFToken": '{{ csrf_token }}',
 					},

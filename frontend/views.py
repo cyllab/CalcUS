@@ -418,11 +418,12 @@ def create_project(request):
     else:
         return HttpResponse(status=404)
 
-
+# Flowchart.objects.all().delete()
+# Step.objects.all().delete()
 @login_required
 def create_flowchart(request):
     if request.method == "POST":
-        profile = request.user.profile
+        profile = request.user
         if "flowchart_name" in request.POST.keys():
             flowchart_name = clean(request.POST["flowchart_name"])
         if "flowchart_data" in request.POST.keys():
@@ -433,7 +434,7 @@ def create_flowchart(request):
         flowchart_view.save()
         flowchart_order_id = request.POST["flowchart_order_id"]
         if flowchart_order_id != "":
-            flowchart_order_id = (int)(request.POST["flowchart_order_id"])
+            flowchart_order_id = request.POST["flowchart_order_id"]
             flowchart_order_obj = FlowchartOrder.objects.get(pk=flowchart_order_id)
             flowchart_order_obj.flowchart = flowchart_view
             flowchart_order_obj.save()
@@ -500,16 +501,16 @@ def create_flowchart(request):
 @login_required
 def submit_flowchart(request):
     keysList = list(request.POST)
-    flowchart_id = (int)(keysList[0])
+    flowchart_id = keysList[0]
     flowchart_obj = Flowchart.objects.get(pk=flowchart_id)
     flowchart_order_obj = flowchart_obj.flowchartorder_set.all()
     drawing = None
     for i in range(flowchart_obj.step_set.all().count() - 1):
         dispatcher.delay(
-            flowchart_order_obj[0].id,
+            str(flowchart_order_obj[0].id),
             drawing,
             is_flowchart=True,
-            flowchartStepObjectId=flowchart_obj.step_set.all()[i + 1].id,
+            flowchartStepObjectId=str(flowchart_obj.step_set.all()[i + 1].id),
         )
     return HttpResponse(status=200)
 
@@ -1028,7 +1029,7 @@ def flowchart(request):
             "flowchartsData": flowchartsData,
             "procs": BasicStep.objects.all(),
             "stepsData": Step.objects.all(),
-            "profile": request.user.profile,
+            "profile": request.user,
             "allow_local_calc": settings.ALLOW_LOCAL_CALC,
             "packages": settings.PACKAGES,
         },
@@ -1197,8 +1198,8 @@ def cloud_action(request):
     return HttpResponse(status=200)
 
 
-def parse_parameters(request, verify=False):
-    if "calc_type" in request.POST.keys():
+def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
+    if "calc_type" in parameters_dict.keys():
         try:
             step = BasicStep.objects.get(name=clean(parameters_dict["calc_type"]))
         except BasicStep.DoesNotExist:
@@ -1581,7 +1582,7 @@ def verify_calculation(request):
 @login_required
 def submit_flowchart_input(request):
     obj_id = ""
-    profile = request.user.profile
+    profile = request.user
     if "calc_mol_name" in request.POST.keys():
         mol_name = clean(request.POST["calc_mol_name"])
     else:

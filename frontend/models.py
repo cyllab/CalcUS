@@ -302,7 +302,7 @@ class ClassGroup(Group):
 
 class Flowchart(models.Model):
     name = models.CharField(max_length=100)
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     flowchart = models.JSONField(null=True)
 
     def __str__(self):
@@ -953,7 +953,7 @@ class FlowchartOrder(models.Model):
     structure = models.ForeignKey(
         Structure, on_delete=models.SET_NULL, blank=True, null=True
     )
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     project = models.ForeignKey(
         "Project", on_delete=models.CASCADE, blank=True, null=True
     )
@@ -980,13 +980,13 @@ class FlowchartOrder(models.Model):
         if old_unseen:
             if not new_unseen:
                 with transaction.atomic():
-                    p = Profile.objects.select_for_update().get(id=self.author.id)
+                    p = User.objects.select_for_update().get(id=self.author.id)
                     p.unseen_calculations -= 1
                     p.save()
         else:
             if new_unseen:
                 with transaction.atomic():
-                    p = Profile.objects.select_for_update().get(id=self.author.id)
+                    p = User.objects.select_for_update().get(id=self.author.id)
                     p.unseen_calculations += 1
                     p.save()
 

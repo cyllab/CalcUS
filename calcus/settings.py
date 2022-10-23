@@ -62,7 +62,7 @@ else:
 
 SSL = False
 
-ALLOWED_HOSTS = ["*.*.*.*", "0.0.0.0"]
+ALLOWED_HOSTS = ["*.*.*.*", "0.0.0.0", '.localhost']
 
 if IS_CLOUD or IS_TEST:
     ALLOWED_HOSTS.append("*")
