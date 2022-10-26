@@ -259,6 +259,7 @@ with open(".env", "w") as out:
     out.write(
         ENV_TEMPLATE.format(
             secret_key,
+            hash_salt,
             software_paths,
             num_cpu,
             num_cpu,
