@@ -669,7 +669,7 @@
 		data.push({"name": "constraint_num", "value": constraint_num});
 
 		{% if ensemble or structures %}
-		data.push({"name": "starting_ensemble", "value": {{ ensemble.id }}});
+		data.push({"name": "starting_ensemble", "value": "{{ ensemble.id }}"});
 		{% endif %}
 
 		{% if structures %}
@@ -677,7 +677,7 @@
 		{% endif %}
 
 		{% if calc %}
-		data.push({"name": "starting_calc", "value": {{ calc.id }}});
+		data.push({"name": "starting_calc", "value": "{{ calc.id }}"});
 		data.push({"name": "starting_frame", "value": {{ frame_num }}});
 		{% endif %}
 

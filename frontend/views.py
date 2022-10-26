@@ -92,7 +92,6 @@ from .tasks import (
     cancel,
     run_calc,
     send_cluster_command,
-    dispatcher_flowchart,
 )
 from .decorators import superuser_required
 from .tasks import (
@@ -1840,7 +1839,6 @@ def submit_flowchart_input(request):
             obj_id = obj.id
         else:
             return "No input structure"
-    dispatcher_flowchart()
     ret = obj_id
     return HttpResponse(ret, status=200)
 

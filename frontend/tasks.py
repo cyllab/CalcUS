@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import, unicode_literals
 
-# from asyncio.windows_events import NULL
 
 import string
 import signal
@@ -3274,11 +3273,6 @@ def filter(order, input_structures):
 
 
 @app.task(base=AbortableTask)
-def dispatcher_flowchart():
-    print("Just for testing tasks")
-
-
-@app.task(base=AbortableTask)
 def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId=None):
     stepFlowchart = None
     should_create_ensemble = True
@@ -3287,11 +3281,11 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
         flowchartStepObject = Step.objects.get(pk=flowchartStepObjectId)
         if flowchartStepObject.parentId.step is not None:
             if flowchartStepObject.parentId.step.creates_ensemble is True:
-                if len(flowchartStepObject.calculation_set.all()) != 0:
-                    step_ensemble = flowchartStepObject.calculation_set.all()[
-                        0
-                    ].result_ensemble
+                if flowchartStepObject.calculation_set.count() != 0:
+                    step_ensemble = flowchartStepObject.calculation_set.first().result_ensemble
                     should_create_ensemble = False
+                elif flowchartStepObject.calculation_set.count() > 1:
+                    raise Exception("Currently takes only one input")
         stepFlowchart = flowchartStepObject.step
     else:
         order = CalculationOrder.objects.get(pk=order_id)

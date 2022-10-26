@@ -18,7 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
-from tkinter import CASCADE
 from django.db import models, transaction
 from django.db.models.signals import pre_save
 from django.forms import JSONField
@@ -1311,21 +1310,31 @@ class Calculation(models.Model):
             print("Could not find molecule to update!")
 
     def save(self, *args, **kwargs):
-        if hasattr(self, "flowchart_order") and self.flowchart_order is not None:
+        if self.flowchart_order is not None:
             old_status = self.flowchart_order.status
             old_unseen = self.flowchart_order.new_status
 
-        elif hasattr(self, "order"):
+        elif self.order is not None:
             old_status = self.order.status
             old_unseen = self.order.new_status
 
+        else:
+            raise Exception(
+                "No calculation order"
+            )
+
         super(Calculation, self).save(*args, **kwargs)
 
-        if hasattr(self, "flowchart_order") and self.flowchart_order is not None:
+        if self.flowchart_order is not None:
             self.flowchart_order.update_unseen(old_status, old_unseen)
 
-        elif hasattr(self, "order"):
+        elif self.order is not None:
             self.order.update_unseen(old_status, old_unseen)
+
+        else:
+            raise Exception(
+                "No calculation order"
+            )
 
     def delete(self, *args, **kwargs):
         old_status = self.order.status
