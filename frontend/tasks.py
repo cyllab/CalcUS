@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import, unicode_literals
 
-
 import string
 import signal
 import psutil
@@ -3273,38 +3272,15 @@ def filter(order, input_structures):
 
 
 @app.task(base=AbortableTask)
-def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId=None):
-    stepFlowchart = None
-    should_create_ensemble = True
-    if is_flowchart:
-        order = FlowchartOrder.objects.get(pk=order_id)
-        flowchartStepObject = Step.objects.get(pk=flowchartStepObjectId)
-        if flowchartStepObject.parentId.step is not None:
-            if flowchartStepObject.parentId.step.creates_ensemble is True:
-                if flowchartStepObject.calculation_set.count() != 0:
-                    step_ensemble = (
-                        flowchartStepObject.calculation_set.first().result_ensemble
-                    )
-                    should_create_ensemble = False
-                elif flowchartStepObject.calculation_set.count() > 1:
-                    raise Exception("Currently takes only one input")
-        stepFlowchart = flowchartStepObject.step
-    else:
-        order = CalculationOrder.objects.get(pk=order_id)
-    if should_create_ensemble is True:
-        ensemble = order.ensemble
-    else:
-        ensemble = step_ensemble
+def dispatcher(order_id):
+    order = CalculationOrder.objects.get(pk=order_id)
+    ensemble = order.ensemble
 
     local = True
-    if is_flowchart is not True:
-        if order.resource is not None:
-            local = False
+    if order.resource is not None:
+        local = False
 
-    if stepFlowchart is None:
-        step = order.step
-    else:
-        step = stepFlowchart
+    step = order.step
 
     mode = "e"  # Mode for input structure (Ensemble/Structure)
     input_structures = None
@@ -3318,12 +3294,9 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
             molecule = Molecule.objects.create(
                 name=molecule.name, inchi=molecule.inchi, project=order.project
             )
-            if is_flowchart is True and should_create_ensemble is False:
-                ensemble = step_ensemble
-            else:
-                ensemble = Ensemble.objects.create(
-                    name=order.structure.parent_ensemble.name, parent_molecule=molecule
-                )
+            ensemble = Ensemble.objects.create(
+                name=order.structure.parent_ensemble.name, parent_molecule=molecule
+            )
             structure = Structure.objects.get_or_create(
                 parent_ensemble=ensemble,
                 number=1,
@@ -3331,8 +3304,7 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
             structure.xyz_structure = order.structure.xyz_structure
             order.structure = structure
             molecule.save()
-            if should_create_ensemble is True:
-                ensemble.save()
+            ensemble.save()
             structure.save()
             order.save()
             input_structures = [structure]
@@ -3373,12 +3345,9 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
                     inchi=ensemble.parent_molecule.inchi,
                     project=order.project,
                 )
-                if is_flowchart is True and should_create_ensemble is False:
-                    ensemble = step_ensemble
-                else:
-                    ensemble = Ensemble.objects.create(
-                        name=ensemble.name, parent_molecule=molecule
-                    )
+                ensemble = Ensemble.objects.create(
+                    name=ensemble.name, parent_molecule=molecule
+                )
                 for s in order.ensemble.structure_set.all():
                     _s = Structure.objects.get_or_create(
                         parent_ensemble=ensemble,
@@ -3389,8 +3358,7 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
                     _s.save()
                 order.ensemble = ensemble
                 order.save()
-                if should_create_ensemble is True:
-                    ensemble.save()
+                ensemble.save()
                 molecule.save()
                 input_structures = ensemble.structure_set.all()
     elif order.start_calc != None:
@@ -3399,14 +3367,11 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
         mode = "c"
 
         molecule = calc.result_ensemble.parent_molecule
-        if is_flowchart is True and should_create_ensemble is False:
-            ensemble = step_ensemble
-        else:
-            ensemble = Ensemble.objects.create(
-                parent_molecule=molecule,
-                origin=calc.result_ensemble,
-                name=f"Extracted frame {fid}",
-            )
+        ensemble = Ensemble.objects.create(
+            parent_molecule=molecule,
+            origin=calc.result_ensemble,
+            name=f"Extracted frame {fid}",
+        )
         f = calc.calculationframe_set.get(number=fid)
         s = Structure.objects.get_or_create(
             parent_ensemble=ensemble,
@@ -3418,8 +3383,7 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
             parent_structure=s, parameters=calc.parameters, geom=True
         )
         prop.save()
-        if should_create_ensemble is True:
-            ensemble.save()
+        ensemble.save()
         s.save()
         input_structures = [s]
     else:
@@ -3446,28 +3410,16 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
         order.save()
 
         for s in input_structures:
-            if is_flowchart is not True:
-                c = Calculation.objects.create(
-                    structure=s,
-                    order=order,
-                    date_submitted=timezone.now(),
-                    step=step,
-                    parameters=order.parameters,
-                    result_ensemble=e,
-                    constraints=order.constraints,
-                    aux_structure=order.aux_structure,
-                )
-            else:
-                c = Calculation.objects.create(
-                    structure=s,
-                    flowchart_order=order,
-                    date_submitted=timezone.now(),
-                    step=step,
-                    parameters=flowchartStepObject.parameters,
-                    result_ensemble=e,
-                    flowchart_step=flowchartStepObject,
-                )
-            c.save()
+            c = Calculation.objects.create(
+                structure=s,
+                order=order,
+                date_submitted=timezone.now(),
+                step=step,
+                parameters=order.parameters,
+                result_ensemble=e,
+                constraints=order.constraints,
+                aux_structure=order.aux_structure,
+            )
             if local:
                 calculations.append(c)
                 if not settings.IS_CLOUD:
@@ -3487,26 +3439,15 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
             order.result_ensemble = ensemble
             order.save()
         for s in input_structures:
-            if is_flowchart is not True:
-                c = Calculation.objects.create(
-                    structure=s,
-                    order=order,
-                    date_submitted=timezone.now(),
-                    parameters=order.parameters,
-                    step=step,
-                    constraints=order.constraints,
-                    aux_structure=order.aux_structure,
-                )
-            else:
-                c = Calculation.objects.create(
-                    structure=s,
-                    flowchart_order=order,
-                    date_submitted=timezone.now(),
-                    parameters=flowchartStepObject.parameters,
-                    step=step,
-                    flowchart_step=flowchartStepObject,
-                )
-            c.save()
+            c = Calculation.objects.create(
+                structure=s,
+                order=order,
+                date_submitted=timezone.now(),
+                parameters=order.parameters,
+                step=step,
+                constraints=order.constraints,
+                aux_structure=order.aux_structure,
+            )
             if local:
                 calculations.append(c)
                 if not settings.IS_CLOUD:
