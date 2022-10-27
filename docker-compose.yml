@@ -41,7 +41,7 @@ services:
                         - web        
         celery_main:
                 image: raphaelrobidas/calcus:latest
-                user: "${UID}:${GID}"
+                user: calcus
                 command: ./scripts/run_celery_main.sh
                 volumes:
                         - ./scr:/calcus/scr
@@ -55,7 +55,7 @@ services:
                         - redis
         celery_comp:
                 image: raphaelrobidas/calcus:latest
-                user: "${UID}:${GID}"
+                user: calcus
                 command: ./scripts/run_celery_comp.sh
                 volumes:
                         - ./scr:/calcus/scr

@@ -94,6 +94,7 @@ from .tasks import (
     gen_fingerprint,
     send_gcloud_task,
     load_output_files,
+    plot_peaks,
 )
 from frontend import tasks
 from .decorators import superuser_required
@@ -714,8 +715,11 @@ def get_shifts(request):
     return HttpResponse(response)
 
 
+### Legacy, might be removed
 @login_required
-def get_exp_spectrum(request):
+def get_exp_spectrum_from_raw_data(request):
+    import nmrglue as ng
+
     t = time.time()
     d = f"/tmp/nmr_{t}"
     os.mkdir(d)
@@ -785,6 +789,52 @@ def get_exp_spectrum(request):
         response = "PPM,Signal,Prediction\n"
         for x, y, z in zip(_ppms, _fid, pred):
             response += f"{-x:.3f},{np.real(y):.3f},{z:.3f}\n"
+        return HttpResponse(response)
+
+
+@login_required
+def get_exp_spectrum(request):
+    with tempfile.TemporaryDirectory() as d:
+        if "spectrum" not in request.FILES:
+            return HttpResponse(status=400)
+
+        spectrum = request.FILES["spectrum"].read().decode()
+
+    points = spectrum.strip().split("\n")
+
+    if len(points) > 20000:
+        step = len(points) // 20000
+    else:
+        step = 1
+
+    ppms = []
+    signal = []
+    for text in points[0::step]:
+        shift, sig = text.split()
+        ppms.append(float(shift))
+        signal.append(float(sig))
+
+    start = ppms[0]
+    end = ppms[-1]
+
+    signal = np.array(signal) / max(signal)
+
+    shifts = _get_shifts(request)
+    if shifts == "":
+        response = "PPM,Signal\n"
+        for x, y in zip(ppms, signal):
+            response += f"{-x:.5f},{y:.5f}\n"
+
+        return HttpResponse(response)
+    else:
+        l_shifts = [(float(shifts[i][2]), 1) for i in shifts if shifts[i][0] == "H"]
+
+        pred = plot_peaks(np.array(ppms), l_shifts, sigma=0.001)
+        pred = pred / max(pred)
+        response = "PPM,Signal,Prediction\n"
+
+        for x, y, z in zip(ppms, signal, pred):
+            response += f"{-x:.5f},{y:.5f},{z:.5f}\n"
         return HttpResponse(response)
 
 
@@ -2460,17 +2510,19 @@ def update_access(request):
         return HttpResponse(status=400)
 
     try:
-        vals["access_id"] = clean(request.POST[param])
+        vals["access_id"] = clean(request.POST["access_id"])
     except ValueError:
         return HttpResponse("Invalid value", status=400)
 
     try:
         access = ClusterAccess.objects.get(pk=vals["access_id"])
     except ClusterAccess.DoesNotExist:
-        return HttpResponse(status=403)
+        return HttpResponse("No such cluster access", status=404)
 
     if access.owner != request.user:
-        return HttpResponse(status=403)
+        return HttpResponse(
+            "You do not have the permission to modify this cluster access", status=403
+        )
 
     if vals["pal"] < 1:
         return HttpResponse("Invalid number of cores", status=400)

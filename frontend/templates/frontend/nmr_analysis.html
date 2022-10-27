@@ -6,6 +6,11 @@
 <link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css" />
 <script src="{% static 'frontend/dygraph.min.js' %}"></script>
 <script src="{% static 'frontend/3Dmol-min.js' %}"></script>
+<style>
+    #compare_button {
+        margin-top: 2em;
+    }
+</style>
 
 <script>
     String.prototype.format = function () {
@@ -124,9 +129,27 @@
             <div id="exp_spectrum" style="width: 80%"></div>
             <br />
             <form id="fileinfo" enctype="multipart/form-data" method="post" name="fileinfo">
-                <input type="file" name="exp_spectrum_dir" webkitdirectory mozdirectory />
+				<div class="field">
+					<label class="label">Experimental NMR spectrum</label>
+					<div class="file has-name is-centered">
+						<label class="file-label">
+							<input class="file-input" type="file" name="spectrum" id="spectrum">
+							<span class="file-cta">
+								<span class="file-icon">
+									<i class="fas fa-upload"></i>
+								</span>
+								<span class="file-label">
+								File upload
+								</span>
+							</span>
+							<span class="file-name" id="file_upload_name">
+							No input file selected
+							</span>
+						</label>
+					</div>
+				</div>
             </form>
-            <button class="button is-info" onclick="load_exp_spectrum();">Compare with experiment</button>
+            <button class="button is-info" onclick="load_exp_spectrum();" id="compare_button">Compare with experiment</button>
         </center>
         <script>
 
@@ -199,9 +222,7 @@
             function load_exp_spectrum() {
             	scaling_factors = parse_shifts();
             	var exp_dir = new FormData();
-            	for(i=0; i < $('input[type=file]')[0].files.length; i++) {
-            		exp_dir.append('file', $('input[type=file]')[0].files[i]);
-            	}
+            	exp_dir.append('spectrum', $('#spectrum')[0].files[0]);
             	exp_dir.append('id', "{{ ensemble.id }}");
             	exp_dir.append('pid', "{{ parameters.id }}");
             	exp_dir.append('scaling_factors', scaling_factors);

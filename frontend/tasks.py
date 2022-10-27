@@ -1764,7 +1764,7 @@ FUZZ_INT = 1.0 / 30
 FUZZ_WIDTH = 50000
 
 
-def plot_peaks(_x, PP):
+def plot_peaks(_x, PP, sigma=SIGMA):
     val = 0
     for w, T in PP:
         val += (

@@ -16,7 +16,6 @@ django-throttle-requests==0.5.9
 fabric
 google-cloud-tasks>=2.10.2
 gunicorn
-nmrglue==0.8
 numpy
 paramiko==2.10.1
 periodictable

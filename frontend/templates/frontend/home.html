@@ -104,7 +104,7 @@
     #waiting_list_div {
         margin-top: 2em;
     }
-    #waiting_list_tile {
+    .tile {
         margin-top: 4em;
     }
 </style>
@@ -144,6 +144,18 @@
             <img id="teaser1" src="{% static 'home/pentane.png' %}" />
         </div>
     </div>
+    <div class="tile is-ancestor">
+        <div class="tile is-6">
+            <img id="teaser2" src="{% static 'home/launch.png' %}" />
+        </div>
+        <div class="tile is-6 is-parent">
+            <div class="tile is-child">
+                <p class="title">Focus on concepts, not details</p>
+                <p class="subtitle">The user-friendly interface handles input file creation and management so you can concentrate on the bigger picture</p>
+            </div>
+        </div>
+    </div>
+
     <div class="tile is-ancestor" id="waiting_list_tile">
         <center style="width: 100%">
             <h2 class="title is-2">Join the Waiting List</h2>
