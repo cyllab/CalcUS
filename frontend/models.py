@@ -1319,9 +1319,7 @@ class Calculation(models.Model):
             old_unseen = self.order.new_status
 
         else:
-            raise Exception(
-                "No calculation order"
-            )
+            raise Exception("No calculation order")
 
         super(Calculation, self).save(*args, **kwargs)
 
@@ -1332,9 +1330,7 @@ class Calculation(models.Model):
             self.order.update_unseen(old_status, old_unseen)
 
         else:
-            raise Exception(
-                "No calculation order"
-            )
+            raise Exception("No calculation order")
 
     def delete(self, *args, **kwargs):
         old_status = self.order.status

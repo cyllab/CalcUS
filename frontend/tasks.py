@@ -3282,7 +3282,9 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
         if flowchartStepObject.parentId.step is not None:
             if flowchartStepObject.parentId.step.creates_ensemble is True:
                 if flowchartStepObject.calculation_set.count() != 0:
-                    step_ensemble = flowchartStepObject.calculation_set.first().result_ensemble
+                    step_ensemble = (
+                        flowchartStepObject.calculation_set.first().result_ensemble
+                    )
                     should_create_ensemble = False
                 elif flowchartStepObject.calculation_set.count() > 1:
                     raise Exception("Currently takes only one input")
