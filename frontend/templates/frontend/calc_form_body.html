@@ -338,53 +338,6 @@
 
 			</div>
 		</div>
-		<div class="columns">
-			<div class="column">
-				<div class="field">
-					<label class="label">Solvent</label>
-					<div class="control">
-						<input class="input" name="calc_solvent" id="calc_solvent" type="text" oninput="refresh_availabilities();" list="solvent_options">
-					</div>
-					<p class="check_msg is-danger" id="solvent_check_msg"></p>
-				</div>
-			</div>
-			<div class="column is-narrow">
-				<div class="field" id="calc_solvation_model_field">
-					<label class="label">Solvation Model</label>
-						<div class="control">
-							<div class="select">
-							<select name="calc_solvation_model" id="calc_solvation_model" onchange="refresh_availabilities();" class="solv_select">
-								<option class="software_specific avail_xtb type_specific avail_Constrained_Optimisation avail_Constrained_Conformational_Search avail_Geometrical_Optimisation avail_Frequency_Calculation avail_UV-Vis_Calculation avail_Single-Point_Energy avail_Conformational_Search">GBSA</option>
-								<option class="software_specific avail_xtb">ALPB</option>
-								<option class="software_specific avail_Gaussian avail_ORCA">SMD</option>
-								<option class="software_specific avail_Gaussian">PCM</option>
-								<option class="software_specific avail_Gaussian avail_ORCA">CPCM</option>
-							</select>
-							</div>
-						</div>
-				</div>
-			</div>
-			<div class="column is-narrow">
-				<div class="field software_specific avail_Gaussian avail_ORCA" id="calc_solvation_radii_field">
-					<label class="label">Solvation Radii</label>
-					<div class="control">
-						<div class="select">
-							<select name="calc_solvation_radii" id="calc_solvation_radii" class="solv_select">
-								<option class="solvation_model_specific avail_SMD">SMD18</option>
-								<option>Default</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UFF</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UA0</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UAHF</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UAKS</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">Pauling</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">Bondi</option>
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
 		<div>
 			<div>
 				<div class="field" id="custom_specifications_field">

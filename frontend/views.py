@@ -1322,7 +1322,7 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
                         return "No basis set chosen"
                 else:
                     basis_set = ""
-        elif theory == "Semi-empirical":
+        elif theory == "semiempirical":
             if "calc_se_method" in parameters_dict.keys():
                 functional = clean(parameters_dict["calc_se_method"])
                 if functional.strip() == "":
