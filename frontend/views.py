@@ -1406,7 +1406,7 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
                 logger.info("Project with that name already exists")
         else:
             try:
-                project_set = profile.project_set.filter(name=project)
+                project_set = request.user.project_set.filter(name=project)
             except Profile.DoesNotExist:
                 return "No such project"
 
