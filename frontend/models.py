@@ -1159,7 +1159,7 @@ class Calculation(models.Model):
     )
 
     step = models.ForeignKey(BasicStep, on_delete=models.SET_NULL, null=True)
-    order = models.ForeignKey(CalculationOrder, on_delete=models.CASCADE)
+    order = models.ForeignKey(CalculationOrder, on_delete=models.CASCADE, null=True)
 
     parameters = models.ForeignKey(Parameters, on_delete=models.SET_NULL, null=True)
     result_ensemble = models.ForeignKey(
