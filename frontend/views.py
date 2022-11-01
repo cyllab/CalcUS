@@ -1284,8 +1284,8 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
 
     if software == "ORCA" or software == "Gaussian":
         if "calc_theory_level" in parameters_dict.keys():
-            theory = clean(parameters_dict["calc_theory_level"])
-            if theory.strip() == "":
+            _theory = clean(parameters_dict["calc_theory_level"])
+            if _theory.strip() == "":
                 return "No theory level chosen"
             theory = ccinput.utilities.get_theory_level(_theory)
         else:
