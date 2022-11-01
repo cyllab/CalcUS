@@ -1393,14 +1393,14 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
         if project == "New Project":
             new_project_name = clean(parameters_dict["new_project_name"])
             try:
-                project_obj = Project.objects.get(name=new_project_name, author=profile)
+                project_obj = Project.objects.get(name=new_project_name, author=request.user)
             except Project.DoesNotExist:
                 if not verify:
                     project_obj = Project.objects.create(
-                        name=new_project_name, author=profile
+                        name=new_project_name, author=request.user
                     )
                 else:
-                    project_obj = Project(name=new_project_name, author=profile)
+                    project_obj = Project(name=new_project_name, author=request.user)
                     # project_obj.save(commit=False)
             else:
                 logger.info("Project with that name already exists")
