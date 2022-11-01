@@ -72,8 +72,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertFalse(self.group_panel_present())
 
     def test_group_panel_appears_as_PI(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.lget("/profile/")
@@ -82,8 +80,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.group_num_members(), 1)
 
     def test_group_panel_appears_as_PI2(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.lget("/profile/")
@@ -97,8 +93,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.group_num_members(), 2)
 
     def test_group_panel_absent_without_adding(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.lget("/profile/")
@@ -109,8 +103,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.group_num_members(), 1)
 
     def test_group_panel_appears_as_student(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.lget("/profile/")
@@ -124,8 +116,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.group_num_members(), 2)
 
     def test_group_panel_appears_everywhere_as_student(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.lget("/profile/")
@@ -166,8 +156,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.group_num_members(), 2)
 
     def test_group_panel_appears_everywhere_as_PI(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.lget("/profile/")
@@ -209,8 +197,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertEqual(self.group_num_members(), 2)
 
     def test_group_access_projects_as_PI(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.lget("/profile/")
@@ -229,8 +215,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_projects())
 
     def test_group_access_project_as_PI(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.lget("/profile/")
@@ -250,8 +234,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_user_project())
 
     def test_group_access_molecule_as_PI(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.lget("/profile/")
@@ -272,8 +254,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_molecule())
 
     def test_group_access_ensemble_as_PI(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.lget("/profile/")
@@ -295,8 +275,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_ensemble())
 
     def test_group_access_projects_as_student(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.lget("/profile/")
@@ -317,8 +295,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_projects())
 
     def test_group_access_project_as_student(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.lget("/profile/")
@@ -339,8 +315,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_user_project())
 
     def test_group_access_molecule_as_PI(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         u = User.objects.create_user(email="Student@test.com", password=self.password)
@@ -360,8 +334,6 @@ class InterfaceTests(CalcusLiveServer):
         self.assertTrue(self.is_on_page_molecule())
 
     def test_group_access_ensemble_as_PI(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.lget("/profile/")
@@ -1392,8 +1364,6 @@ class UserPermissionsTests(CalcusLiveServer):
         self.assertIn("No computing resource chosen", str(e.exception))
 
     def test_manage_PI_request(self):
-        self.user.is_PI = True
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.lget("/profile/")
@@ -1458,8 +1428,6 @@ class XtbCalculationTests(CalcusLiveServer):
 
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
         g.save()
-        self.user.is_PI = True
-        self.user.save()
 
         self.login(self.email, self.password)
 
@@ -2205,9 +2173,6 @@ class StudentTests(CalcusLiveServer):
             email="Student@test.com", password=self.password, member_of=g
         )
 
-        self.user.is_PI = True
-        self.user.save()
-
         self.login("Student@test.com", self.password)
 
     def test_opt(self):
@@ -2254,8 +2219,6 @@ class OrcaCalculationTests(CalcusLiveServer):
 
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
         g.save()
-        self.user.is_PI = True
-        self.user.save()
 
         self.login(self.email, self.password)
 
@@ -2998,8 +2961,6 @@ class GaussianCalculationTests(CalcusLiveServer):
 
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
         g.save()
-        self.user.is_PI = True
-        self.user.save()
 
         self.login(self.email, self.password)
 
@@ -3796,8 +3757,6 @@ class MiscCalculationTests(CalcusLiveServer):
 
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
         g.save()
-        self.user.is_PI = True
-        self.user.save()
 
         self.login(self.email, self.password)
 
@@ -4328,7 +4287,7 @@ class MiscCalculationTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
 
-        self.wait_latest_calc_done(300)
+        self.wait_latest_calc_done(30)
         self.assertTrue(self.latest_calc_successful())
         self.details_latest_order()
         self.assertEqual(self.get_number_calc_in_order(), 2)
@@ -4340,8 +4299,6 @@ class ComplexCalculationTests(CalcusLiveServer):
 
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
         g.save()
-        self.user.is_PI = True
-        self.user.save()
 
         self.login(self.email, self.password)
 
