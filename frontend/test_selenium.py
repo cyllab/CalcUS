@@ -3563,7 +3563,10 @@ class GaussianCalculationTests(CalcusLiveServer):
         }
 
         self.lget("/launch/")
-        self.calc_input_params(params)
+        try:
+            self.calc_input_params(params)
+        except selenium.common.exceptions.ElementNotInteractableException:
+            time.sleep(60)
         self.calc_launch()
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
@@ -3609,7 +3612,10 @@ class GaussianCalculationTests(CalcusLiveServer):
         }
 
         self.lget("/launch/")
-        self.calc_input_params(params)
+        try:
+            self.calc_input_params(params)
+        except selenium.common.exceptions.ElementNotInteractableException:
+            time.sleep(60)
         self.calc_launch()
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
@@ -3633,7 +3639,10 @@ class GaussianCalculationTests(CalcusLiveServer):
         }
 
         self.lget("/launch/")
-        self.calc_input_params(params)
+        try:
+            self.calc_input_params(params)
+        except selenium.common.exceptions.ElementNotInteractableException:
+            time.sleep(60)
         self.calc_launch()
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
@@ -3659,7 +3668,10 @@ class GaussianCalculationTests(CalcusLiveServer):
         }
 
         self.lget("/launch/")
-        self.calc_input_params(params)
+        try:
+            self.calc_input_params(params)
+        except selenium.common.exceptions.ElementNotInteractableException:
+            time.sleep(60)
         self.calc_launch()
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)

@@ -496,9 +496,9 @@ def files_are_equal(f, input_file):
         return False
 
     for l1, l2 in zip(lines, sinput):
-        if l1.find("nproc") != -1 and l2.find("nproc") != -1:
+        if l1.lower().find("nproc") != -1 and l2.lower().find("nproc") != -1:
             continue
-        if l1.find("maxcore") != -1 and l2.find("maxcore") != -1:
+        if l1.lower().find("maxcore") != -1 and l2.lower().find("maxcore") != -1:
             continue
 
         if l1 != l2:

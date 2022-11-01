@@ -345,12 +345,22 @@ class RestrictionTests(TestCase):
         self.client = Client()
         self.client.force_login(self.user)
 
+        self.prev_LOCAL_MAX_ATOMS = settings.LOCAL_MAX_ATOMS
+        self.prev_LOCAL_ALLOWED_THEORY_LEVELS = settings.LOCAL_ALLOWED_THEORY_LEVELS
+        self.prev_LOCAL_ALLOWED_STEPS = settings.LOCAL_ALLOWED_STEPS
+
         settings.LOCAL_MAX_ATOMS = 15
         settings.LOCAL_ALLOWED_THEORY_LEVELS = ["xtb", "semiempirical"]
         settings.LOCAL_ALLOWED_STEPS = [
             "Single-Point Energy",
             "Geometrical Optimisation",
         ]
+
+    def tearDown(self):
+        # The settings would effect next tests
+        settings.LOCAL_MAX_ATOMS = self.prev_LOCAL_MAX_ATOMS
+        settings.LOCAL_ALLOWED_THEORY_LEVELS = self.prev_LOCAL_ALLOWED_THEORY_LEVELS
+        settings.LOCAL_ALLOWED_STEPS = self.prev_LOCAL_ALLOWED_STEPS
 
     def test_baseline_drawing(self):
         params = basic_params.copy()

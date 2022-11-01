@@ -83,6 +83,9 @@ services:
                 links:
                         - web
                 shm_size: '1gb' # Necessary to ensure that selenium does not crash
+                environment:
+                        - SCREEN_WIDTH=1920
+                        - SCREEN_HEIGHT=1080
         cluster:
                 build:
                         context: .

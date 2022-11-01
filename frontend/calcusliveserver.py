@@ -62,6 +62,8 @@ from frontend import tasks
 
 base_cwd = os.getcwd()
 
+ZOOM = 1
+
 
 class CalcusLiveServer(StaticLiveServerTestCase):
 
@@ -77,17 +79,17 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             chrome_options = Options()
             from pyvirtualdisplay import Display
 
-            cls.display = Display(visible=0, size=(1920, 1080))
+            cls.display = Display(visible=0, size=(ZOOM * 1920, ZOOM * 1080))
             cls.display.start()
 
             cls.driver = webdriver.Chrome(chrome_options=chrome_options)
-            cls.driver.set_window_size(1920, 1080)
+            cls.driver.set_window_size(ZOOM * 1920, ZOOM * 1080)
         else:
             cls.driver = webdriver.Remote(
                 command_executor="http://selenium:4444/wd/hub",
                 desired_capabilities=DesiredCapabilities.CHROME,
             )
-        cls.driver.set_window_size(1920, 1080)
+        cls.driver.set_window_size(ZOOM * 1920, ZOOM * 1080)
 
         tasks.REMOTE = False
         app.loader.import_module("celery.contrib.testing.tasks")
@@ -363,7 +365,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     select,
                 )
                 time.sleep(0.1)
+                self.wait_for_ajax()
                 select.find_element(By.XPATH, f"option[text()='{c_mode}']").click()
+                self.wait_for_ajax()
 
                 c_type = constraint[1]
                 select = self.driver.find_element(By.ID, f"constraint_type_{ind}")
@@ -372,7 +376,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     select,
                 )
                 time.sleep(0.1)
+                self.wait_for_ajax()
                 select.find_element(By.XPATH, f"option[text()='{c_type}']").click()
+                self.wait_for_ajax()
 
                 atoms = constraint[2]
 
@@ -390,6 +396,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     )
                     constr_c1.click()
                     constr_c1.send_keys(str(atoms[0]))
+                    self.wait_for_ajax()
                     time.sleep(0.5)
                 else:
                     print("Could not input the calculation constraint...")
@@ -450,6 +457,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 By.XPATH,
                 f"//*[@id='calc_theory_level']/option[text()='{params['theory']}']",
             ).click()
+            self.wait_for_ajax()
 
         if "method" in params.keys():
             self.driver.find_element(
