@@ -429,7 +429,7 @@ def create_flowchart(request):
         if "flowchart_data" in request.POST.keys():
             flowchart_dat = clean(request.POST["flowchart_data"])
         flowchart_view = Flowchart.objects.create(
-            name=flowchart_name, author=profile, flowchart=flowchart_dat
+            name=flowchart_name, author=request.user, flowchart=flowchart_dat
         )
         flowchart_view.save()
         flowchart_order_id = request.POST["flowchart_order_id"]
