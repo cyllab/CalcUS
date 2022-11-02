@@ -455,14 +455,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             )
             time.sleep(0.1)
             self.wait_for_ajax()
-            try:
-                select.find_element(
-                    By.XPATH,
-                    f"option[text()='{params['theory']}']",
-                ).click()
-            except selenium.common.exceptions.ElementNotInteractableException:
-                select = self.driver.find_element(By.ID, "calc_software")
-                print("SOFTWARE IS ", select.choice)
+            select.find_element(
+                By.XPATH,
+                f"option[text()='{params['theory']}']",
+            ).click()
             self.wait_for_ajax()
 
         if "method" in params.keys():

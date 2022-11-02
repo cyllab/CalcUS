@@ -67,4 +67,4 @@ jobs:
         IS_TEST_CLUSTER_DAEMON: True
         CAN_USE_CACHED_LOGS: true
         USE_CACHED_LOGS: true
-        CALCUS_TEST_MAX_ATTEMPTS: 1
+        CALCUS_TEST_MAX_ATTEMPTS: 3
