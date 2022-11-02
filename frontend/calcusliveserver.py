@@ -453,9 +453,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 select,
             )
             time.sleep(0.1)
-            self.driver.find_element(
+            select.find_element(
                 By.XPATH,
-                f"//*[@id='calc_theory_level']/option[text()='{params['theory']}']",
+                f"option[text()='{params['theory']}']",
             ).click()
             self.wait_for_ajax()
 
