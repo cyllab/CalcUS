@@ -1,7 +1,7 @@
 %chk=in.chk
 %nproc=4
 %mem=2000MB
-#p sp PM3
+#p freq PM3
 
 File created by ccinput
 

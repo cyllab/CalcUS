@@ -2,8 +2,8 @@
  Input=calc.com
  Output=calc.log
  Initial command:
- /binaries/g16/l1.exe "/calcus/scratch/scr/23/Gau-142.inp" -scrdir="/calcus/scratch/scr/23/"
- Entering Link 1 = /binaries/g16/l1.exe PID=       144.
+ /binaries/g16/l1.exe "/calcus/scratch/scr/Gv6XK8nGp5Ex4/Gau-29.inp" -scrdir="/calcus/scratch/scr/Gv6XK8nGp5Ex4/"
+ Entering Link 1 = /binaries/g16/l1.exe PID=        31.
   
  Copyright (c) 1988-2019, Gaussian, Inc.  All Rights Reserved.
   
@@ -76,11 +76,11 @@
  
  ******************************************
  Gaussian 16:  ES64L-G16RevC.01  3-Jul-2019
-                 5-Sep-2022 
+                 2-Nov-2022 
  ******************************************
  %chk=in.chk
- %nproc=1
- Will use up to    1 processors via shared memory.
+ %nproc=4
+ Will use up to    4 processors via shared memory.
  %mem=2000MB
  -----------
  #p freq PM3
@@ -97,7 +97,7 @@
  7/8=1,10=1,25=1/1,2,3,16;
  1/10=4,30=1/3;
  99//99;
- Leave Link    1 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link    1 at Wed Nov  2 11:03:48 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l101.exe)
  -----------------------
  File created by ccinput
@@ -125,7 +125,7 @@
  NQMom=    0.0000000   0.0000000   0.0000000   0.0000000
  NMagM=    0.0000000   2.7928460   2.7928460   2.7928460
  AtZNuc=   6.0000000   1.0000000   1.0000000   1.0000000
- Leave Link  101 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  101 at Wed Nov  2 11:03:48 2022, MaxMem=   262144000 cpu:               0.3 elap:               0.1
  (Enter /binaries/g16/l103.exe)
 
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
@@ -135,7 +135,7 @@
  Number of steps in this run=      2 maximum allowed number of steps=      2.
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- Leave Link  103 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  103 at Wed Nov  2 11:03:48 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l202.exe)
                           Input orientation:                          
  ---------------------------------------------------------------------
@@ -170,7 +170,7 @@
       4          1           0       -0.504413   -0.237796   -0.873700
  ---------------------------------------------------------------------
  Rotational constants (GHZ):         273.8084056         273.7921782         164.2339101
- Leave Link  202 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  202 at Wed Nov  2 11:03:48 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l301.exe)
  Standard basis: VSTO-6G (5D, 7F)
  Ernie: Thresh=  0.10000D-02 Tol=  0.10000D-05 Strict=F.
@@ -191,7 +191,7 @@
  Integral buffers will be    131072 words long.
  Regular integral format.
  Two-electron integral symmetry is turned off.
- Leave Link  301 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  301 at Wed Nov  2 11:03:48 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
  (Enter /binaries/g16/l302.exe)
  Do NDO integrals.
  NPDir=0 NMtPBC=     1 NCelOv=     1 NCel=       1 NClECP=     1 NCelD=      1
@@ -199,10 +199,10 @@
  One-electron integrals computed using PRISM.
  NBasis=     7 RedAO= T EigKep=  1.00D+00  NBF=     5     2
  NBsUse=     7 1.00D-06 EigRej= -1.00D+00 NBFU=     5     2
- Leave Link  302 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  302 at Wed Nov  2 11:03:48 2022, MaxMem=   262144000 cpu:               0.2 elap:               0.0
  (Enter /binaries/g16/l303.exe)
  DipDrv:  MaxL=1.
- Leave Link  303 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  303 at Wed Nov  2 11:03:48 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
  (Enter /binaries/g16/l401.exe)
  Simple Huckel Guess.
  JPrj=0 DoOrth=F DoCkMO=F.
@@ -210,7 +210,7 @@
        Occupied  (A') (A') (A")
        Virtual   (A') (A") (A') (A')
  The electronic state of the initial guess is 1-A'.
- Leave Link  401 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  401 at Wed Nov  2 11:03:48 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
  (Enter /binaries/g16/l502.exe)
  Keep J ints in memory in canonical form, NReq=859273.
  FoFCou: FMM=F IPFlag=           0 FMFlag=           0 FMFlg1=           0
@@ -341,20 +341,20 @@
  SCF Done:  E(RPM3) =  0.448831432166     A.U. after   10 cycles
             NFock=  9  Conv=0.82D-08     -V/T= 1.0615
  KE=-7.292637098171D+00 PE=-8.528600993802D+00 EE= 4.923682330572D+00
- Leave Link  502 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  502 at Wed Nov  2 11:03:49 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
  (Enter /binaries/g16/l801.exe)
  Range of M.O.s used for correlation:     1     7
  NBasis=     7 NAE=     3 NBE=     3 NFC=     0 NFV=     0
  NROrb=      7 NOA=     3 NOB=     3 NVA=     4 NVB=     4
- Leave Link  801 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  801 at Wed Nov  2 11:03:49 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
  (Enter /binaries/g16/l1101.exe)
  Using compressed storage, NAtomX=     4.
  Will process      5 centers per pass.
- Leave Link 1101 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link 1101 at Wed Nov  2 11:03:49 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
  (Enter /binaries/g16/l1102.exe)
  Symmetrizing basis deriv contribution to polar:
  IMax=3 JMax=2 DiffMx= 0.00D+00
- Leave Link 1102 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link 1102 at Wed Nov  2 11:03:49 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l1110.exe)
  Forming Gx(P) for the SCF density, NAtomX=     4.
  Integral derivatives from FoFJK, PRISM(SPDF).
@@ -372,7 +372,7 @@
  End of G2Drv F.D. properties file   721 does not exist.
  End of G2Drv F.D. properties file   722 does not exist.
  End of G2Drv F.D. properties file   788 does not exist.
- Leave Link 1110 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link 1110 at Wed Nov  2 11:03:49 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
  (Enter /binaries/g16/l1002.exe)
  Minotr:  Closed shell wavefunction.
           IDoAtm=1111
@@ -409,7 +409,7 @@
  End of Minotr F.D. properties file   721 does not exist.
  End of Minotr F.D. properties file   722 does not exist.
  End of Minotr F.D. properties file   788 does not exist.
- Leave Link 1002 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link 1002 at Wed Nov  2 11:03:49 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
  (Enter /binaries/g16/l601.exe)
  Copying SCF densities to generalized density rwf, IOpCl= 0 IROHF=0.
 
@@ -459,14 +459,14 @@
  Symmetry A"   KE=-2.026003762809D+00
   Exact polarizability:       6.299       0.000       4.780      -0.000       0.000       6.299
  Approx polarizability:       3.600       0.000       3.267      -0.000       0.000       3.601
- Leave Link  601 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  601 at Wed Nov  2 11:03:49 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
  (Enter /binaries/g16/l701.exe)
  ... and contract with generalized density number  0.
  Compute integral second derivatives.
- Leave Link  701 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  701 at Wed Nov  2 11:03:49 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
  (Enter /binaries/g16/l702.exe)
  L702 exits ... SP integral derivatives will be done elsewhere.
- Leave Link  702 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  702 at Wed Nov  2 11:03:49 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l703.exe)
  Integral derivatives from FoFJK, PRISM(SPDF).
  Compute integral second derivatives, UseDBF=F ICtDFT=           0.
@@ -478,7 +478,7 @@
          wScrn=  0.000000 ICntrl=    100127 IOpCl=  0 I1Cent=           0 NGrid=           0
          NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
  Petite list used in FoFCou.
- Leave Link  703 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  703 at Wed Nov  2 11:03:49 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
  (Enter /binaries/g16/l716.exe)
  Dipole        =-2.31231607D-05 2.76390662D-01 0.00000000D+00
  Polarizability= 6.29877784D+00 2.80224207D-04 4.77985726D+00
@@ -516,7 +516,7 @@
   Atom  AN      X      Y      Z        X      Y      Z        X      Y      Z
      1   6     0.00   0.00  -0.09    -0.09  -0.00  -0.00    -0.00   0.03   0.00
      2   1    -0.35  -0.22   0.57     0.16   0.13  -0.36    -0.28  -0.13   0.49
-     3   1    -0.00   0.00  -0.05     0.77  -0.26  -0.00     0.56  -0.13   0.00
+     3   1    -0.00   0.00  -0.05     0.77  -0.26  -0.00     0.56  -0.13  -0.00
      4   1     0.35   0.22   0.57     0.16   0.13   0.36    -0.28  -0.13  -0.49
 
  -------------------
@@ -634,7 +634,7 @@
                11            12 
      11  0.720305D-01
      12 -0.119690D+00  0.278219D+00
- Leave Link  716 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  716 at Wed Nov  2 11:03:49 2022, MaxMem=   262144000 cpu:               0.1 elap:               0.0
  (Enter /binaries/g16/l103.exe)
 
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
@@ -674,16 +674,16 @@
  Quadratic step=7.361D-01 exceeds max=3.000D-01 adjusted using Lamda=-2.270D-01.
  Angle between NR and scaled steps=   1.67 degrees.
  Angle between quadratic step and forces=  18.09 degrees.
- ClnCor:  largest displacement from symmetrization is 9.15D-16 for atom     4.
+ ClnCor:  largest displacement from symmetrization is 1.01D-15 for atom     4.
  Linear search not attempted -- first point.
- ClnCor:  largest displacement from symmetrization is 2.98D-15 for atom     3.
- B after Tr=    -0.014721    0.041675    0.000000
-         Rot=    1.000000    0.000000    0.000000   -0.000001 Ang=  -0.00 deg.
+ ClnCor:  largest displacement from symmetrization is 2.81D-15 for atom     3.
+ B after Tr=    -0.014721    0.041675   -0.000000
+         Rot=    1.000000    0.000000   -0.000000   -0.000001 Ang=  -0.00 deg.
  Variable       Old X    -DE/DX   Delta X   Delta X   Delta X     New X
                                  (Linear)    (Quad)   (Total)
     X1       -5.49476  -0.03269   0.00000  -0.05890  -0.07363  -5.56838
     Y1        3.14280   0.09257   0.00000   0.16667   0.20834   3.35115
-    Z1       -0.00000   0.00000   0.00000   0.00000   0.00000   0.00000
+    Z1       -0.00000   0.00000   0.00000   0.00000   0.00000  -0.00000
     X2       -4.82069   0.02297   0.00000   0.07521   0.06048  -4.76021
     Y2        4.09598  -0.02659   0.00000  -0.09841  -0.05674   4.03924
     Z2        1.65105   0.02216   0.00000   0.06600   0.06600   1.71705
@@ -701,7 +701,7 @@
  Predicted change in Energy=-2.764392D-02
  GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
 
- Leave Link  103 at Mon Sep  5 10:34:21 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
+ Leave Link  103 at Wed Nov  2 11:03:49 2022, MaxMem=   262144000 cpu:               0.0 elap:               0.0
  (Enter /binaries/g16/l9999.exe)
 
  ----------------------------------------------------------------------
@@ -804,7 +804,7 @@
 
  ----------------------------------------------------------------------
  Unable to Open any file for archive entry.
- 1\1\GINC-WEB\Freq\RPM3\ZDO\C1H3(1+)\CALCUS\05-Sep-2022\0\\#p freq PM3\
+ 1\1\GINC-WEB\Freq\RPM3\ZDO\C1H3(1+)\CALCUS\02-Nov-2022\0\\#p freq PM3\
  \File created by ccinput\\1,1\C,-2.9077,1.6631,0.\H,-2.551,2.1675,0.87
  37\H,-3.9777,1.6631,0.\H,-2.551,2.1675,-0.8737\\Version=ES64L-G16RevC.
  01\State=1-A'\HF=0.4488314\RMSD=8.173e-09\RMSF=3.514e-02\ZeroPoint=0.0
@@ -834,9 +834,10 @@
  The archive entry for this job was punched.
 
 
- THE SECRET OF SUCCESS IN LIFE IS TO EAT WHAT YOU LIKE, AND LET THE FOOD
- FIGHT IT OUT INSIDE YOU. -- FROM A FORTUNE COOKIE
- Job cpu time:       0 days  0 hours  0 minutes  0.5 seconds.
- Elapsed time:       0 days  0 hours  0 minutes  0.5 seconds.
+ The impersonal hand of government can
+ never replace the helping hand of a neighbor.
+                        -- Hubert H. Humphrey
+ Job cpu time:       0 days  0 hours  0 minutes  1.8 seconds.
+ Elapsed time:       0 days  0 hours  0 minutes  0.6 seconds.
  File lengths (MBytes):  RWF=      6 Int=      0 D2E=      0 Chk=      2 Scr=      1
- Normal termination of Gaussian 16 at Mon Sep  5 10:34:21 2022.
+ Normal termination of Gaussian 16 at Wed Nov  2 11:03:49 2022.
