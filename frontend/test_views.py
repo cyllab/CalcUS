@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import time
 import os
+import copy
 from shutil import copyfile, rmtree
 
 from .models import *
@@ -346,8 +347,10 @@ class RestrictionTests(TestCase):
         self.client.force_login(self.user)
 
         self.prev_LOCAL_MAX_ATOMS = settings.LOCAL_MAX_ATOMS
-        self.prev_LOCAL_ALLOWED_THEORY_LEVELS = settings.LOCAL_ALLOWED_THEORY_LEVELS
-        self.prev_LOCAL_ALLOWED_STEPS = settings.LOCAL_ALLOWED_STEPS
+        self.prev_LOCAL_ALLOWED_THEORY_LEVELS = copy.deepcopy(
+            settings.LOCAL_ALLOWED_THEORY_LEVELS
+        )
+        self.prev_LOCAL_ALLOWED_STEPS = copy.deepcopy(settings.LOCAL_ALLOWED_STEPS)
 
         settings.LOCAL_MAX_ATOMS = 15
         settings.LOCAL_ALLOWED_THEORY_LEVELS = ["xtb", "semiempirical"]

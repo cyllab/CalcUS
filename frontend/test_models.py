@@ -82,7 +82,7 @@ class ResourceAllocationTests(TransactionTestCase):
         t = Thread(target=redeem, args=(alloc, u1, 0.5))
         t.start()
 
-        time.sleep(0.01)  # Give time to lock the object
+        time.sleep(0.05)  # Give time to lock the object
 
         # This should do nothing, since u1 is redeeming the resource already.
         # This call will finish after the past one. Without locking, the redeemer would be u2.

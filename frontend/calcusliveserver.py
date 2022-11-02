@@ -453,6 +453,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 select,
             )
             time.sleep(0.1)
+            self.wait_for_ajax()
             select.find_element(
                 By.XPATH,
                 f"option[text()='{params['theory']}']",
