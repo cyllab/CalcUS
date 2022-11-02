@@ -289,7 +289,7 @@ else:
     PING_SATELLITE = os.getenv("CALCUS_PING_SATELLITE", "False")
     PING_CODE = os.getenv("CALCUS_PING_CODE", "default")
 
-    if "CALCUS_ORCA" in os.environ:
+    if "CALCUS_ORCA" in os.environ or IS_TEST:
         PACKAGES.append("ORCA")
-    if "CALCUS_GAUSSIAN" in os.environ:
+    if "CALCUS_GAUSSIAN" in os.environ or IS_TEST:
         PACKAGES.append("Gaussian")
