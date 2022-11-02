@@ -83,13 +83,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             cls.display.start()
 
             cls.driver = webdriver.Chrome(chrome_options=chrome_options)
-            cls.driver.set_window_size(ZOOM * 1920, ZOOM * 1080)
         else:
             cls.driver = webdriver.Remote(
                 command_executor="http://selenium:4444/wd/hub",
                 desired_capabilities=DesiredCapabilities.CHROME,
             )
+
         cls.driver.set_window_size(ZOOM * 1920, ZOOM * 1080)
+        cls.driver.maximize_window()
 
         tasks.REMOTE = False
         app.loader.import_module("celery.contrib.testing.tasks")
