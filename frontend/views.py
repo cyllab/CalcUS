@@ -419,8 +419,6 @@ def create_project(request):
         return HttpResponse(status=404)
 
 
-# Flowchart.objects.all().delete()
-# Step.objects.all().delete()
 @login_required
 def create_flowchart(request):
     if request.method == "POST":
@@ -433,12 +431,13 @@ def create_flowchart(request):
             name=flowchart_name, author=request.user, flowchart=flowchart_dat
         )
         flowchart_view.save()
-        flowchart_order_id = request.POST["flowchart_order_id"]
-        if flowchart_order_id != "":
+        if "flowchart_order_id" in request.POST.keys():
             flowchart_order_id = request.POST["flowchart_order_id"]
-            flowchart_order_obj = FlowchartOrder.objects.get(pk=flowchart_order_id)
-            flowchart_order_obj.flowchart = flowchart_view
-            flowchart_order_obj.save()
+            if flowchart_order_id != "":
+                flowchart_order_id = request.POST["flowchart_order_id"]
+                flowchart_order_obj = FlowchartOrder.objects.get(pk=flowchart_order_id)
+                flowchart_order_obj.flowchart = flowchart_view
+                flowchart_order_obj.save()
         calc_name = request.POST.getlist("calc_name[]")
         calc_para_list = request.POST["calc_para_array"]
         y = json.loads(calc_para_list)

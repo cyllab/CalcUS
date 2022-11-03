@@ -431,7 +431,8 @@
 						"X-CSRFToken": '{{ csrf_token }}',
 					},
 					success: function(data) {
-						eval(data, para_map_map, db_id_array, db_id_map)
+						//eval(data, para_map_map, db_id_array, db_id_map)
+						//Currently does nothing
 					},
 				});
 				{% for j in i.step_set.all%}
