@@ -1,0 +1,902 @@
+{% extends 'frontend/base.html' %}
+
+{% load static %}
+
+{% block extrahead %}
+	<title>CalcUS - Flowchart</title>
+	<script src="{% static 'frontend/jquery.min.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'frontend/flowy.min.css' %}" type="text/css">
+	<script src="{% static 'frontend/flowy.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
+	<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+    <script src="https://kit.fontawesome.com/8bfdbc9f0e.js" crossorigin="anonymous"></script>
+	{% include 'frontend/calc_form_head.html' %}
+	<style>
+		.title {
+			margin-top: 50px;
+			margin-bottom: 20px;
+		}
+
+		h1 {
+			text-align: center;
+		}
+
+        .blockelem:first-child {
+            margin-top: 20px;
+        }
+
+        .blockelem {
+            cursor: pointer;
+            text-align: center;
+            padding-top: 10px;
+            border: 1px solid transparent;
+            transition-property: box-shadow, height;
+            transition-duration: .2s;
+            transition-timing-function: cubic-bezier(.05, .03, .35, 1);
+            border-radius: 5px;
+            box-shadow: 0px 0px 30px rgba(22, 33, 74, 0);
+            box-sizing: border-box;
+        }
+
+        .block {
+            margin-top: 0px!important;
+            white-space: nowrap;
+            cursor: pointer;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
+        }
+
+        .no-select {
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
+        }
+
+        .footer {
+            display: none;
+        }
+
+        .flowy-button {
+            margin: 5px;
+        }
+
+        #canvas {
+            position: absolute;
+            width: calc(100% - 38%);
+            height: calc(100% - 71px);
+            top: 71px;
+            left: 23%;
+            z-index: 0;
+            overflow: auto;
+            outline: 2px solid black;
+        }
+        .main_content {
+            width: 90%!important;
+            flex: 1;
+            margin-left: 5%!important;
+        }
+	</style>
+{% endblock %}
+
+{% block content %}
+<div class="content" >
+    <div class="no-select" style="width:20%;float:left;">
+		{% for proc in procs %}
+		<div style="margin:-10px;">
+            <div style="display:inline-block" class="create-flowy blockelem is-size-7">{{ proc.name }}
+				<i onclick="openParaModal()" style="cursor: pointer;margin-left:5px;" class="fa-solid fa-wrench"></i>
+			</div>
+        </div>
+		{% endfor %}
+    </div>
+    <div style="width:10%;float:right">
+        <button class="button flowy-button" onclick="deleteAllBlocks()">Delete All</button>
+		<button class="button is-small flowy-button js-modal-trigger" data-target="modal-load-flowchart">Load Flowchart from DB</button>
+		<button class="button is-small flowy-button js-modal-trigger" data-target="modal-open-naming-flowchart-modal">Save Flowchart to DB</button>
+		<button class="button flowy-button" onclick="flowchartOutput()">Output</button>
+		<button class="button flowy-button" onclick="submitFlowchart()">Submit</button>
+		<label class="label">Import a flowchart</label>
+		<div class="file is-small is-boxed has-name">
+			<label class="file-label">
+			  <input id="importJsonFile" class="file-input" type="file" name="resume">
+			  <span class="file-cta">
+				<span class="file-icon">
+				  <i class="fas fa-upload"></i>
+				</span>
+				<span class="file-label">
+				  File Upload
+				</span>
+			  </span>
+			  <span id="importedFlowchartName" class="file-name">
+				No file chosen
+			  </span>
+			</label>
+		</div>
+    </div>
+    <div id="canvas">
+
+    </div>
+</div>
+<div id="modal-open-naming-flowchart-modal" class="modal">
+	<div class="modal-background"></div>
+  	<div class="modal-card">
+    	<header class="modal-card-head">
+      		<p class="modal-card-title">Enter Flowchart Title</p>
+    	</header>
+    	<section class="modal-card-body">
+      		<input id="flowchart-title" class="input is-primary" type="text" placeholder="Unnamed Flowchart">
+    	</section>
+    	<footer class="modal-card-foot">
+     		<button onclick="saveFlowchartName()" class="button is-success">Save changes</button>
+      		<button class="button">Cancel</button>
+    	</footer>
+  	</div>
+	<button class="modal-close is-large" aria-label="close"></button>
+</div>
+<div id="modal-load-flowchart" class="modal">
+	<div class="modal-background"></div>
+  	<div class="modal-card">
+    	<header class="modal-card-head">
+      		<p class="modal-card-title">Load Flowcharts</p>
+    	</header>
+    	<section class="modal-card-body">
+			<div class="select">
+				<select id="flowchart-load-select">
+				{% for flowchart in flowchartsData %}
+					<option data-id="{{flowchart.id}}" value="{{ flowchart.flowchart }}">{{ flowchart.name }}</option>
+				{% endfor %}
+				</select>
+			</div>
+    	</section>
+    	<footer class="modal-card-foot">
+     		<button onclick="loadFlowchart()" class="button is-success">Load Flowchart</button>
+      		<button class="button">Cancel</button>
+    	</footer>
+  	</div>
+	<button class="modal-close is-large" aria-label="close"></button>
+</div>
+<div class="modal modal-para" id="modal-js-example">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+    	<header class="modal-card-head">
+        	<p class="modal-card-title">Set Parameters</p>
+        	<button class="delete" aria-label="close"></button>
+      	</header>
+      	<section class="modal-card-body">
+			{% include 'frontend/calc_form_body.html' %}
+	  	</section>
+    </div>
+</div>
+
+<div class="modal modal-input" id="modal-js-example">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+    	<header class="modal-card-head">
+        	<p class="modal-card-title">Input</p>
+        	<button class="delete" aria-label="close"></button>
+      	</header>
+      	<section class="modal-card-body">
+			<div class="columns is-centered">
+				<div class="column ml-5">
+					{% if not ensemble and not structure and not calc %}
+					<div class="column is-centered px-2">
+						<script>
+							let sketcher = new ChemDoodle.SketcherCanvas('sketcher', 400, 300, {useServices:false, oneMolecule:false});
+							sketcher.styles.atoms_usePYMOLColors = true;
+							sketcher.oneMolecule = false;
+							sketcher.styles.bonds_clearOverlaps_2D = true;
+							sketcher.styles.shapes_color = 'c10000';
+							sketcher.repaint();
+						</script>
+					</div>
+					<br/>
+					<div class="columns is-centered">
+						<button class="button" onclick="get_3D();">Generate 3D representation</button>
+					</div>
+					{% endif %}
+					<div class="column is-centered pl-6">
+						<script>
+							let editor = new ChemDoodle.EditorCanvas3D('editor', 400, 300, {useServices:false, oneMolecule:false});
+							editor.styles.atoms_usePYMOLColors = true;
+							editor.oneMolecule = false;
+							editor.styles.set3DRepresentation('Stick');
+							editor.styles.shapes_color = 'c10000';
+							editor.repaint();
+						</script>
+					</div>
+					<div id="3d_msg">
+					</div>
+				</div>
+			</div>
+			<form method="post" id="inputform" enctype="multipart/form-data">
+				{% if not ensemble and not structure %}
+				<div class="columns">
+					<div class="column">
+						<div class="field">
+							<label class="label">Draw a structure or choose a file</label>
+							<div class="file has-name">
+								<label class="file-label">
+									{% csrf_token %}
+									<input class="file-input" type="file" name="file_structure" id="file_structure" multiple="multiple">
+									<span class="file-cta">
+										<span class="file-icon">
+											<i class="fas fa-upload"></i>
+										</span>
+										<span class="file-label">
+										File upload
+										</span>
+									</span>
+									<span class="file-name" id="file_upload_name">
+									No input file selected
+									</span>
+								</label>
+							</div>
+						</div>
+					</div>
+					<div class="column is-narrow has-text-centered" id="calc_parse_filenames_column" style="display: none;">
+						<label class="label">Use filename(s)</label>
+						<div class="control">
+							<input type="checkbox" class="checkbox" id="calc_parse_filenames" name="calc_parse_filenames" onchange="toggle_visibility_molname(this);">
+						</div>
+					</div>
+					<div class="column is-narrow has-text-centered" id="calc_combine_files_column" style="display: none;">
+						<label class="label">Single ensemble</label>
+						<div class="control">
+							<input type="checkbox" class="checkbox" id="calc_combine_files" name="calc_combine_files">
+						</div>
+					</div>
+				</div>
+				<div class="field type_specific avail_Minimum_Energy_Path" style="display: none;">
+					<div class="file">
+						<label class="file-label">
+							<input class="file-input" type="file" name="aux_file_structure" id="aux_file_structure">
+								<span class="file-cta">
+								<span class="file-icon">
+									<i class="fas fa-upload"></i>
+								</span>
+								<span class="file-label">
+								Upload auxiliary structure
+								</span>
+							</span>
+						</label>
+					</div>
+				</div>
+				{% endif %}
+				<div class="columns">
+					<div class="column">
+						{% if not calc and not ensemble and not structure%}
+						<div class="field" id="calc_mol_name_field">
+							<label class="label">Molecule Name</label>
+							<div class="control">
+								<input class="input" name="calc_mol_name" id="calc_mol_name" type="text">
+							</div>
+						</div>
+						{% endif %}
+					</div>
+					<div class="column is-narrow">
+						<div class="field">
+							<label class="label">Charge</label>
+							<div class="control" >
+								<input class="input" name="calc_charge" style="width: 50px;" type="text" value="0">
+							</div>
+						</div>
+					</div>
+					<div class="column is-narrow">
+						<div class="field">
+							<label class="label">Multiplicity</label>
+							<div class="control" >
+								<input class="input" name="calc_multiplicity" style="width: 50px;" type="text" value="1">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="columns">
+					<div class="column">
+						<label class="checkbox">
+							<div class="control">
+								<input type="checkbox" class="checkbox" name="override_flowchart_charge_multiplicity" >
+								Override flowchart charge and multiplicity
+							</div>
+					</div>
+				</div>
+				<div class="columns">
+					<div class="column is-narrow">
+						<div class="field">
+							<label class="label">Project</label>
+							<div class="control">
+								<div class="select" >
+									<select name="calc_project" onchange="project_selection_changed(this)" id="calc_project">
+										{% for proj in profile.project_set.all|dictsort:"name" %}
+										<option name="{{ proj }}">{{ proj }}</option>
+										{% endfor %}
+										<option name="new_project">New Project</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="column">
+						<div class="field" style="display: none;" id="new_project_name_field">
+							<label class="label">Name of new project</label>
+							<div class="control">
+								<input class="input" name="new_project_name" type="text" placeholder="My Project">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="field">
+					<label class="label">Resource</label>
+					<div class="control" >
+						<div class="select">
+						<select name="calc_resource" id="calc_resource" onchange="refresh_availabilities();">
+							{% if allow_local_calc %}
+								{% if profile.group or profile.is_PI or request.user.is_superuser %}
+									<option>Local</option>
+								{% endif %}
+							{% endif %}
+							{% for access in profile.accesses %}
+								{% if access.connected %}
+									<option>{{ access.cluster_address }}</option>
+								{% endif %}
+							{% endfor %}
+							</select>
+						</div>
+					</div>
+				</div>
+				<div class="columns">
+					<div class="column">
+						<label class="checkbox">
+							<input class="checkbox" name="override_resource" type="checkbox">
+							Override resource
+					</div>
+				</div>
+				<div class="field">
+					<div class="control">
+						<a class="button is-primary" onclick="submit_input()">Submit</a>
+					</div>
+				</div>
+			</form>
+			<script>
+				{% if not ensemble and not structure and not calc%}
+					const inputElement = document.getElementById("file_structure");
+					inputElement.addEventListener("change", file_upload_changed, false);
+				{% endif %}
+				$( document ).ready(function() {
+					{% if not ensemble and not structure%}
+						preselect_last_project();
+						project_selection_changed(document.getElementById("calc_project"));
+					{% endif %}
+
+					refresh_presets();
+
+					refresh_availabilities();
+
+					{% if proj %}
+						proj = document.getElementById("calc_project");
+						proj.value = "{{ proj.name }}";
+					{% endif %}	
+
+					{% if resource %}
+						resource = document.getElementById("calc_resource");
+						resource.value = "{{ resource }}";
+					{% endif %}
+				})
+			</script>
+	  	</section>
+    </div>
+</div>
+<script>
+
+	function decodeJSON(inputJSON) {
+		const replaceWithcomma = '"'
+		var result = inputJSON.replace(/&quot;/g, replaceWithcomma)
+		const replacewithLessThan = '<'
+		result = result.replace(/&amp;lt;/g, replacewithLessThan)
+		const replacewithGreaterThan = '>'
+		result = result.replace(/&amp;gt;/g, replacewithGreaterThan)
+		result = result.replace(/&lt;/g, replacewithLessThan)
+		result = result.replace(/&gt;/g, replacewithGreaterThan)
+		result = result.replace("<i>", '<i onclick=\\"openInputModal()\\" style=\\"cursor: pointer;margin-left:5px;\\" class=\\"fa-solid fa-file\\">')
+		result = result.replace(/<i>/g, '<i onclick=\\"openParaModal()\\" style=\\"cursor: pointer;margin-left:5px;\\" class=\\"fa-solid fa-wrench\\">')
+		return result;
+	}
+
+	function saveFlowchartName() {
+		const flowchartTitleUser = document.getElementById("flowchart-title").value
+		Submit(flowchartTitleUser)
+	}
+
+	function loadFlowchart() {
+		const flowchartOption = document.getElementById("flowchart-load-select")
+		data_id = flowchartOption.options[flowchartOption.selectedIndex].getAttribute("data-id")
+		var frontend_id_array = []
+		var db_id_array = []
+		var para_map = new Map()
+		var para_map_map =new Map()
+		var id_db_map = new Map()
+		var JSON_object = JSON.parse(decodeJSON(document.getElementById("flowchart-load-select").value))
+		for(i = 0;i<JSON_object.blockarr.length;i++)
+			frontend_id_array.push(parseInt(JSON_object.blockarr[i].id))
+		frontend_id_array.sort();
+		{% for i in flowchartsData %}
+			data_id = data_id.toString()
+			if("{{i.id}}"==data_id)
+			{
+				flowchart_id = data_id;
+				$.ajax({
+					method: "POST",	 	 
+					url: "/load_flowchart_params/" + "{{ i.id }}",
+					headers: {
+						"X-CSRFToken": '{{ csrf_token }}',
+					},
+					success: function(data) {
+						eval(data, para_map_map, db_id_array, db_id_map)
+					},
+				});
+				{% for j in i.step_set.all%}
+					db_id_array.push(parseInt("{{j.id}}"))
+				{% endfor %}
+			}
+		{% endfor %}
+		db_id_array.sort();
+		for(i=0;i<db_id_array.length;i++)
+		{
+			id_db_map.set(frontend_id_array[i], db_id_array[i])
+			db_id_map.set(db_id_array[i], frontend_id_array[i])
+		}
+		flowy.deleteBlocks()
+		flowy.import(JSON.parse(decodeJSON(document.getElementById("flowchart-load-select").value)))
+	}
+
+	var spacing_x = 40;
+    var spacing_y = 100;
+    var flowyOut;
+	var saveCalculationName = new Map();
+	var saveCalculationParentId = new Map();
+	var db_id_map = new Map();
+	var calc_para_map = new Map();
+	var calc_name_array = [];
+	var calc_parentId_array = [];
+	var calc_objectId_array = [];
+	var ajax_para_map = new Map()
+	var flowchart_order_id
+	var flowchart_id
+    document.addEventListener("DOMContentLoaded", function(){
+        hardCodedInput();
+    })
+    // Initialize Flowy
+    flowy(document.getElementById("canvas"), onGrab, onRelease, onSnap, onRearrange, spacing_x, spacing_y);
+    function onGrab(block){
+        // When the user grabs a block
+    }
+
+    function onRelease(){
+        // When the user releases a block
+    }
+
+    function onSnap(block, first, parent){
+        // When a block snaps with another one
+		var inner_text = block.innerHTML;
+		var index_of_Opening_tag = inner_text.indexOf("<");
+		inner_text = inner_text.substring(0, index_of_Opening_tag);
+		inner_text = inner_text.trim();
+		saveCalculationName.set(block.children[1].value, inner_text)
+		return true;
+    }
+
+    function onRearrange(block, parent){
+        // When a block is rearranged
+		saveCalculationName.delete(block.children[1].value)
+        return false;
+    }
+
+    function deleteAllBlocks() {
+        flowy.deleteBlocks();
+        hardCodedInput();
+    }
+
+    function flowchartOutput() {
+        flowyOut = flowy.output();
+		for(var i=0;i<flowyOut.blocks.length;i++)
+		{
+			flowyOut.blocks[i].calculationType = saveCalculationName.get(flowyOut.blocks[i].id.toString())
+			calc_name_array.push(saveCalculationName.get(flowyOut.blocks[i].id.toString()))
+			calc_parentId_array.push(flowyOut.blocks[i].parent)
+			calc_objectId_array.push(flowyOut.blocks[i].id)
+		}
+        var htmlContent = JSON.stringify(flowyOut);
+        var bl = new Blob([htmlContent], {type: "text/json"});
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(bl);
+        a.download = "flowchart.json"
+        a.hidden = true;
+        document.body.appendChild(a);
+        a.innerHTML = "File Link";
+        a.click();
+    }
+
+    function flowchartInput() {
+        flowy.import(flowyOut);
+    }
+
+    function Submit(flowchartTitle) {
+		var calc_para_array = []
+		if(flowchartTitle!="")
+			name = flowchartTitle
+		else
+			name = "Unnamed Flowchart"
+		flowyOut = flowy.output();
+		for(var i=0;i<flowyOut.blocks.length;i++)
+		{
+			flowyOut.blocks[i].calculationType = saveCalculationName.get(flowyOut.blocks[i].id.toString())
+			calc_name_array.push(saveCalculationName.get(flowyOut.blocks[i].id.toString()))
+			calc_parentId_array.push(flowyOut.blocks[i].parent)
+			calc_objectId_array.push(flowyOut.blocks[i].id)
+			if(ajax_para_map.has(flowyOut.blocks[i].id.toString()))
+				calc_para_array.push(ajax_para_map.get(flowyOut.blocks[i].id.toString()))
+			else
+				calc_para_array.push(null)
+		}
+		flowchart_data = JSON.stringify(flowy.output());
+		if(flowchart_order_id==undefined)
+			flowchart_order_id = null
+		$.ajax({
+			method: "POST",
+			url: "/create_flowchart/",
+			headers: {
+				"X-CSRFToken": '{{ csrf_token }}',
+			},
+			data: {'flowchart_name': name, 'flowchart_data': flowchart_data, "calc_name[]": calc_name_array, "calc_id[]": calc_objectId_array, "calc_parent_id[]": calc_parentId_array, "calc_para_array": JSON.stringify(calc_para_array), "flowchart_order_id": flowchart_order_id, },
+			success: function() {
+			}
+		});
+    }
+
+	$("#inputform").submit(function(event){
+		event.preventDefault();
+		data = $("#inputform").serializeArray()
+		$.ajax({
+			data: data,
+			headers: {
+				"X-CSRFToken": '{{ csrf_token }}',
+			},
+			async: true,
+			enctype: 'multipart/form-data',
+			type: "POST",
+			url: "/submit_flowchart_input/",
+			success: function (response) {
+				console.log("Success in submitting the input form")
+			},
+			error: function (response) {
+				console.log("Error in submitting the input form")
+			}
+		});
+	})
+
+
+	function submitFlowchart()
+	{
+		data = flowchart_id
+		if(flowchart_id!=undefined)
+		{
+			$.ajax({
+				data: data,
+				headers: {
+					"X-CSRFToken": '{{ csrf_token }}',
+				},
+	
+				type: "POST",
+				url: "/submit_flowchart/",
+				success: function (response) {
+					console.log("Success Flowchart")
+				},
+				error: function (response) {
+					console.log("Failure Flowchart")
+				}
+			});
+		}
+		else
+			alert("No flowchart to submit!")
+	}
+	
+
+	var input_calc_charge = null, input_calc_multiplicity = null, input_calc_resource = null, override_charge_multiplicity = null, override_resource = null
+	function submit_input() {
+		data = $("#inputform").serializeArray()
+		var override_charge_multiplicity_found = false;
+		var override_resource_found = false;
+		for(var i=0;i<data.length;i++)
+		{
+			if(data[i].name=="calc_charge")
+				input_calc_charge = data[i].value
+			if(data[i].name=="calc_multiplicity")
+				input_calc_multiplicity = data[i].value
+			if(data[i].name=="calc_resource")
+				input_calc_resource = data[i].value;
+			if(data[i].name=="override_flowchart_charge_multiplicity")
+			{
+				override_charge_multiplicity = data[i].value
+				override_charge_multiplicity_found = true;
+			}
+			else if(!override_charge_multiplicity_found)
+				override_charge_multiplicity = null;
+			if(data[i].name=="override_resource")
+			{
+				override_resource = data[i].value
+				override_resource_found = true;
+			}
+			else if(!override_resource_found)
+				override_resource=null;
+		}
+		{% if not ensemble and not structure and not calc%}
+		if (sketcher.molecules.length > 0) {
+			let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
+			data.push({"name": "structure", "value": mol});
+		}
+		{% endif %}
+
+		upload_el = $("#file_structure");
+		if(upload_el.length != 0) {
+			num_files = upload_el[0].files.length;
+		}
+		data.push({"name": "num_files", "value": num_files});
+		$.ajax({
+			data: data,
+			headers: {
+				"X-CSRFToken": '{{ csrf_token }}',
+			},
+
+			type: "POST",
+			url: "/submit_flowchart_input/",
+			success: function (response) {
+				console.log("Success in submitting the flowchart form")
+				flowchart_order_id = response;
+			},
+			error: function (response) {
+				console.log("Error in submitting the flowchart form")
+			}
+		});
+		$(".modal-input").removeClass("is-active");
+	}
+
+	var para_calc_id
+	function verify_form_flowchart() {
+		data = $("#calcform").serializeArray()
+		form = $("#calcform");
+		formData = new FormData(form[0])
+		calc_para_map.set(parseInt(para_calc_id), formData)
+		data.push({"name": "constraint_num", "value": constraint_num});
+
+		{% if ensemble or structures %}
+		data.push({"name": "starting_ensemble", "value": "{{ ensemble.id }}"});
+		{% endif %}
+
+		{% if structures %}
+		data.push({"name": "starting_structs", "value": "{{ structures }}"});
+		{% endif %}
+
+		{% if calc %}
+		data.push({"name": "starting_calc", "value": "{{ calc.id }}"});
+		data.push({"name": "starting_frame", "value": {{ frame_num }}});
+		{% endif %}
+
+		upload_el = $("#file_structure");
+		if(upload_el.length != 0) {
+			num_files = upload_el[0].files.length;
+		}
+		else {
+			num_files = 0;
+		}
+		data.push({"name": "num_files", "value": num_files});
+
+		upload_aux_el = $("#aux_file_structure");
+		if(upload_aux_el.length != 0) {
+			num_aux_files = upload_aux_el[0].files.length;
+		}
+		else {
+			num_aux_files = 0;
+		}
+		data.push({"name": "num_aux_files", "value": num_aux_files});
+		data.push({"name": "para_calc_id", "value": para_calc_id});
+		$.ajax({
+			data: data, 
+			headers: {
+				"X-CSRFToken": '{{ csrf_token }}',
+			},
+
+			type: "POST", 
+			url: "/verify_flowchart_calculation/",
+			success: function (response) { 
+				$(".modal-para").removeClass("is-active");
+				$("#form_error_msg").html("");
+				ajax_para_map.set(para_calc_id, data)
+			},
+			error: function (response) {
+				$("#form_error_msg").html("Could not submit the calculation: " + response.responseText);
+			}
+		});
+	}
+
+	function openParaModal() {
+		document.getElementById('calcform').reset();
+		var inner_text = event.target.parentElement.innerHTML;
+		var index_of_Opening_tag = inner_text.indexOf("<");
+		inner_text = inner_text.substring(0, index_of_Opening_tag);
+		inner_text = inner_text.trim();
+		var select_calculation = document.getElementById('calc_type');
+		for(i=0;i<select_calculation.length;i++)
+		{
+			if(select_calculation[i].value==inner_text)
+			{
+				select_calculation[i].disabled = false;
+				select_calculation[i].selected = true;
+			}
+			else
+				select_calculation[i].disabled = true;
+		}
+		calc_selection_changed();
+		para_calc_id = event.target.parentElement.children[1].value
+		form_data = calc_para_map.get(parseInt(event.target.parentElement.children[1].value))
+		if (form_data)
+		{
+			for(var key of form_data.keys()) {
+				var newVal = form_data.get(key)
+				if(newVal)
+				{
+					if(document.getElementById(key))
+					{
+						if(document.getElementById(key).type != "file")
+						{
+							document.getElementById(key).value = newVal
+
+							if(key=="calc_functional")
+								check("functional")
+
+							if(key=="calc_basis_set")
+								check("basis_set")
+
+							if(key=="calc_solvent")
+								check("solvent")
+
+							refresh_availabilities();
+						}
+					}
+				}
+			}
+		}
+		if(override_charge_multiplicity!=null && input_calc_charge!="" && input_calc_multiplicity!="")
+		{
+			document.getElementById("calc_charge").value = input_calc_charge;
+			document.getElementById("calc_charge").disabled = true;
+			document.getElementById("calc_multiplicity").value = input_calc_multiplicity;
+			document.getElementById("calc_multiplicity").disabled = true;
+		}
+		else
+		{
+			document.getElementById("calc_charge").disabled = false;
+			document.getElementById("calc_multiplicity").disabled = false;
+		}
+		var select_resource = document.getElementById('calc_resource');
+		var inner_resource = input_calc_resource;
+		if(input_calc_resource!=null)
+		{
+			for(i=0;i<select_resource.length;i++)
+			{
+				if(select_resource[i].value==input_calc_resource)
+				{
+					select_resource[i].disabled = false;
+					select_resource[i].selected = true;
+				}
+				else
+					select_resource[i].disabled = true;
+			}
+		}
+		$(".modal-para").addClass("is-active");
+    }
+    
+    function hardCodedInput() { 
+        var hardCodedObject = {
+			"html": "\n\n    <div class=\"indicator invisible\"></div><div style=\"display: inline-block; left: 369.141px; top: 4px;\" class=\"blockelem is-size-7 block\">Input\n\t\t\t<i onclick=\"openInputModal()\" style=\"cursor: pointer;margin-left:5px;\" class=\"fa-solid fa-file\"></i>\n\t\t<input type=\"hidden\" name=\"blockid\" class=\"blockid\" value=\"0\"></div>",
+			"blockarr": [
+				{
+					"parent": -1,
+					"childwidth": 0,
+					"id": 0,
+					"x": 401.640625,
+					"y": 22,
+					"width": 65,
+					"height": 36
+				}
+			],
+			"blocks": [
+				{
+					"id": 0,
+					"parent": -1,
+					"data": [
+						{
+							"name": "blockid",
+							"value": "0"
+						}
+					],
+					"attr": [
+						{
+							"style": "display: inline-block; left: 369.141px; top: 4px;"
+						},
+						{
+							"class": "blockelem is-size-7 block"
+						}
+					],
+					"calculationType": "Input"
+				}
+			]
+		}
+        flowy.import(hardCodedObject);
+    }
+
+	function openInputModal()
+	{
+		$(".modal-input").addClass("is-active");
+	}
+
+	document.querySelector('#importJsonFile').addEventListener('change', function() {
+		if (this.files && this.files[0]) {
+			var reader = new FileReader();
+		  	reader.onload = function(e) {
+				annotationsObject = JSON.parse(reader.result);
+				flowy.deleteBlocks();
+				flowy.import(annotationsObject)
+				document.getElementById("importedFlowchartName").textContent = document.getElementById("importJsonFile").files[0].name;
+				importedFlowchart = annotationsObject;
+		  	};
+		  	reader.readAsText(this.files[0])
+		}
+	});
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Functions to open and close a modal
+        function openModal($el) {
+          $el.classList.add('is-active');
+        }
+      
+        function closeModal($el) {
+          $el.classList.remove('is-active');
+        }
+      
+        function closeAllModals() {
+          (document.querySelectorAll('.modal') || []).forEach(($modal) => {
+            closeModal($modal);
+          });
+        }
+      
+        // Add a click event on buttons to open a specific modal
+        (document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
+          const modal = $trigger.dataset.target;
+          const $target = document.getElementById(modal);
+      
+          $trigger.addEventListener('click', () => {
+            openModal($target);
+          });
+        });
+      
+        // Add a click event on various child elements to close the parent modal
+        (document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button') || []).forEach(($close) => {
+          const $target = $close.closest('.modal');
+      
+          $close.addEventListener('click', () => {
+            closeModal($target);
+          });
+        });
+      
+        // Add a keyboard event to close all modals
+        document.addEventListener('keydown', (event) => {
+          const e = event || window.event;
+      
+          if (e.keyCode === 27) { // Escape key
+            closeAllModals();
+          }
+        });
+    });
+</script>
+{% endblock %}
+
