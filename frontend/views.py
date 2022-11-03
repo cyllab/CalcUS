@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
+import json
 import os
 import glob
 import random
@@ -75,6 +76,9 @@ from .models import (
     Recipe,
     Folder,
     CalculationFrame,
+    Flowchart,
+    Step,
+    FlowchartOrder,
     ResourceAllocation,
 )
 from .tasks import (
@@ -88,6 +92,9 @@ from .tasks import (
     cancel,
     run_calc,
     send_cluster_command,
+)
+from .decorators import superuser_required
+from .tasks import (
     system,
     analyse_opt,
     generate_xyz_structure,
@@ -410,6 +417,102 @@ def create_project(request):
         return HttpResponse(f"{proj.id};{proj.name}")
     else:
         return HttpResponse(status=404)
+
+
+@login_required
+def create_flowchart(request):
+    if request.method == "POST":
+        profile = request.user
+        if "flowchart_name" in request.POST.keys():
+            flowchart_name = clean(request.POST["flowchart_name"])
+        if "flowchart_data" in request.POST.keys():
+            flowchart_dat = clean(request.POST["flowchart_data"])
+        flowchart_view = Flowchart.objects.create(
+            name=flowchart_name, author=request.user, flowchart=flowchart_dat
+        )
+        flowchart_view.save()
+        if "flowchart_order_id" in request.POST.keys():
+            flowchart_order_id = request.POST["flowchart_order_id"]
+            if flowchart_order_id != "":
+                flowchart_order_id = request.POST["flowchart_order_id"]
+                flowchart_order_obj = FlowchartOrder.objects.get(pk=flowchart_order_id)
+                flowchart_order_obj.flowchart = flowchart_view
+                flowchart_order_obj.save()
+        calc_name = request.POST.getlist("calc_name[]")
+        calc_para_list = request.POST["calc_para_array"]
+        y = json.loads(calc_para_list)
+        flowchart_para_dict = {}
+        flowchart_step_dict = {}
+        for i in y:
+            if i is not None:
+                para_dict = {}
+                for j in i:
+                    para_dict[j["name"]] = j["value"]
+                ret = parse_parameters(
+                    request, para_dict, verify=False, is_flowchart=True
+                )
+                if isinstance(ret, str):
+                    print("Error in Parameters")
+                else:
+                    params, step = ret
+                    flowchart_para_dict[int(para_dict["para_calc_id"])] = params
+                    flowchart_step_dict[int(para_dict["para_calc_id"])] = step
+        calc_id = request.POST.getlist("calc_id[]")
+        calc_parent_id = request.POST.getlist("calc_parent_id[]")
+        calc_id = [int(x) for x in calc_id]
+        calc_parent_id = [int(x) for x in calc_parent_id]
+        max_id = max(calc_id)
+        parent_dict = {}
+        for i in range(max_id + 1):
+            if i in calc_id:
+                index = calc_id.index(i)
+                parent_id = calc_parent_id[index]
+                if parent_id in parent_dict.keys():
+                    obj_parent = parent_dict.get(parent_id)
+                    if index in flowchart_para_dict:
+                        obj_para = flowchart_para_dict[index]
+                        obj_para.save()
+                        obj_view = Step.objects.create(
+                            name=calc_name[index],
+                            flowchart=flowchart_view,
+                            step=flowchart_step_dict[index],
+                            parameters=obj_para,
+                            parentId=obj_parent,
+                        )
+                    else:
+                        obj_view = Step.objects.create(
+                            name=calc_name[index],
+                            flowchart=flowchart_view,
+                            step=None,
+                            parameters=None,
+                            parentId=obj_parent,
+                        )
+                    obj_view.save()
+                    parent_dict[i] = obj_view
+                else:
+                    obj_view = Step.objects.create(
+                        name=calc_name[index], flowchart=flowchart_view, parentId=None
+                    )
+                    obj_view.save()
+                    parent_dict[i] = obj_view
+        return HttpResponse(status=200)
+
+
+@login_required
+def submit_flowchart(request):
+    keysList = list(request.POST)
+    flowchart_id = keysList[0]
+    flowchart_obj = Flowchart.objects.get(pk=flowchart_id)
+    flowchart_order_obj = flowchart_obj.flowchartorder_set.all()
+    drawing = None
+    for i in range(flowchart_obj.step_set.all().count() - 1):
+        dispatcher.delay(
+            str(flowchart_order_obj[0].id),
+            drawing,
+            is_flowchart=True,
+            flowchartStepObjectId=str(flowchart_obj.step_set.all()[i + 1].id),
+        )
+    return HttpResponse(status=200)
 
 
 @login_required
@@ -964,6 +1067,24 @@ def learn(request):
     )
 
 
+def flowchart(request):
+    flag = True
+    flowchartsData = Flowchart.objects.all()
+    return render(
+        request,
+        "frontend/flowchart.html",
+        {
+            "is_flowchart": flag,
+            "flowchartsData": flowchartsData,
+            "procs": BasicStep.objects.all(),
+            "stepsData": Step.objects.all(),
+            "profile": request.user,
+            "allow_local_calc": settings.ALLOW_LOCAL_CALC,
+            "packages": settings.PACKAGES,
+        },
+    )
+
+
 def example(request, pk):
     try:
         ex = Example.objects.get(pk=pk)
@@ -1126,10 +1247,10 @@ def cloud_action(request):
     return HttpResponse(status=200)
 
 
-def parse_parameters(request, verify=False):
-    if "calc_type" in request.POST.keys():
+def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
+    if "calc_type" in parameters_dict.keys():
         try:
-            step = BasicStep.objects.get(name=clean(request.POST["calc_type"]))
+            step = BasicStep.objects.get(name=clean(parameters_dict["calc_type"]))
         except BasicStep.DoesNotExist:
             return "No such procedure"
 
@@ -1141,25 +1262,25 @@ def parse_parameters(request, verify=False):
 
     else:
         return "No calculation type"
-
-    if "calc_project" in request.POST.keys():
-        project = clean(request.POST["calc_project"])
-        if project.strip() == "":
+    if is_flowchart is None:
+        if "calc_project" in parameters_dict.keys():
+            project = clean(parameters_dict["calc_project"])
+            if project.strip() == "":
+                return "No calculation project"
+        else:
             return "No calculation project"
-    else:
-        return "No calculation project"
 
-    if "calc_charge" in request.POST.keys():
+    if "calc_charge" in parameters_dict.keys():
         try:
-            charge = int(clean(request.POST["calc_charge"]).replace("+", ""))
+            charge = int(clean(parameters_dict["calc_charge"]).replace("+", ""))
         except ValueError:
             return "Invalid calculation charge"
     else:
         return "No calculation charge"
 
-    if "calc_multiplicity" in request.POST.keys():
+    if "calc_multiplicity" in parameters_dict.keys():
         try:
-            mult = int(clean(request.POST["calc_multiplicity"]))
+            mult = int(clean(parameters_dict["calc_multiplicity"]))
         except ValueError:
             return "Invalid multiplicity"
         if mult < 1:
@@ -1167,22 +1288,22 @@ def parse_parameters(request, verify=False):
     else:
         return "No calculation multiplicity"
 
-    if "calc_solvent" in request.POST.keys():
-        solvent = clean(request.POST["calc_solvent"])
+    if "calc_solvent" in parameters_dict.keys():
+        solvent = clean(parameters_dict["calc_solvent"])
         if solvent.strip() == "":
             solvent = "Vacuum"
     else:
         solvent = "Vacuum"
 
     if solvent != "Vacuum":
-        if "calc_solvation_model" in request.POST.keys():
-            solvation_model = clean(request.POST["calc_solvation_model"])
+        if "calc_solvation_model" in parameters_dict.keys():
+            solvation_model = clean(parameters_dict["calc_solvation_model"])
             if solvation_model not in ["SMD", "PCM", "CPCM", "GBSA", "ALPB"]:
                 return "Invalid solvation model"
             if solvation_model in ["GBSA", "ALPB"]:
                 solvation_radii = "Default"
-            elif "calc_solvation_radii" in request.POST.keys():
-                solvation_radii = clean(request.POST["calc_solvation_radii"])
+            elif "calc_solvation_radii" in parameters_dict.keys():
+                solvation_radii = clean(parameters_dict["calc_solvation_radii"])
             else:
                 return "No solvation radii"
         else:
@@ -1191,8 +1312,8 @@ def parse_parameters(request, verify=False):
         solvation_model = ""
         solvation_radii = ""
 
-    if "calc_software" in request.POST.keys():
-        software = clean(request.POST["calc_software"])
+    if "calc_software" in parameters_dict.keys():
+        software = clean(parameters_dict["calc_software"])
         if software.strip() == "":
             return "No software chosen"
         if software not in BASICSTEP_TABLE.keys():
@@ -1200,19 +1321,19 @@ def parse_parameters(request, verify=False):
     else:
         return "No software chosen"
 
-    if "calc_df" in request.POST.keys():
-        df = clean(request.POST["calc_df"])
+    if "calc_df" in parameters_dict.keys():
+        df = clean(parameters_dict["calc_df"])
     else:
         df = ""
 
-    if "calc_custom_bs" in request.POST.keys():
-        bs = clean(request.POST["calc_custom_bs"])
+    if "calc_custom_bs" in parameters_dict.keys():
+        bs = clean(parameters_dict["calc_custom_bs"])
     else:
         bs = ""
 
     if software == "ORCA" or software == "Gaussian":
-        if "calc_theory_level" in request.POST.keys():
-            _theory = clean(request.POST["calc_theory_level"])
+        if "calc_theory_level" in parameters_dict.keys():
+            _theory = clean(parameters_dict["calc_theory_level"])
             if _theory.strip() == "":
                 return "No theory level chosen"
             theory = ccinput.utilities.get_theory_level(_theory)
@@ -1227,23 +1348,23 @@ def parse_parameters(request, verify=False):
 
         if theory == "dft":
             special_functional = False
-            if "pbeh3c" in request.POST.keys() and software == "ORCA":
-                field_pbeh3c = clean(request.POST["pbeh3c"])
+            if "pbeh3c" in parameters_dict.keys() and software == "ORCA":
+                field_pbeh3c = clean(parameters_dict["pbeh3c"])
                 if field_pbeh3c == "on":
                     special_functional = True
                     functional = "PBEh-3c"
                     basis_set = ""
 
             if not special_functional:
-                if "calc_functional" in request.POST.keys():
-                    functional = clean(request.POST["calc_functional"])
+                if "calc_functional" in parameters_dict.keys():
+                    functional = clean(parameters_dict["calc_functional"])
                     if functional.strip() == "":
                         return "No method"
                 else:
                     return "No method"
                 if functional not in SPECIAL_FUNCTIONALS:
-                    if "calc_basis_set" in request.POST.keys():
-                        basis_set = clean(request.POST["calc_basis_set"])
+                    if "calc_basis_set" in parameters_dict.keys():
+                        basis_set = clean(parameters_dict["calc_basis_set"])
                         if basis_set.strip() == "":
                             return "No basis set chosen"
                     else:
@@ -1251,8 +1372,8 @@ def parse_parameters(request, verify=False):
                 else:
                     basis_set = ""
         elif theory == "semiempirical":
-            if "calc_se_method" in request.POST.keys():
-                functional = clean(request.POST["calc_se_method"])
+            if "calc_se_method" in parameters_dict.keys():
+                functional = clean(parameters_dict["calc_se_method"])
                 if functional.strip() == "":
                     return "No semi-empirical method chosen"
                 basis_set = ""
@@ -1260,8 +1381,8 @@ def parse_parameters(request, verify=False):
                 return "No semi-empirical method chosen"
         elif theory == "hf":
             special_functional = False
-            if "hf3c" in request.POST.keys() and software == "ORCA":
-                field_hf3c = clean(request.POST["hf3c"])
+            if "hf3c" in parameters_dict.keys() and software == "ORCA":
+                field_hf3c = clean(parameters_dict["hf3c"])
                 if field_hf3c == "on":
                     special_functional = True
                     functional = "HF-3c"
@@ -1269,8 +1390,8 @@ def parse_parameters(request, verify=False):
 
             if not special_functional:
                 functional = "HF"
-                if "calc_basis_set" in request.POST.keys():
-                    basis_set = clean(request.POST["calc_basis_set"])
+                if "calc_basis_set" in parameters_dict.keys():
+                    basis_set = clean(parameters_dict["calc_basis_set"])
                     if basis_set.strip() == "":
                         return "No basis set chosen"
                 else:
@@ -1280,8 +1401,8 @@ def parse_parameters(request, verify=False):
                 return "RI-MP2 is only available for ORCA"
 
             functional = "RI-MP2"
-            if "calc_basis_set" in request.POST.keys():
-                basis_set = clean(request.POST["calc_basis_set"])
+            if "calc_basis_set" in parameters_dict.keys():
+                basis_set = clean(parameters_dict["calc_basis_set"])
                 if basis_set.strip() == "":
                     return "No basis set chosen"
             else:
@@ -1296,8 +1417,8 @@ def parse_parameters(request, verify=False):
             functional = "GFN2-xTB"
             basis_set = "min"
             if step.name == "Conformational Search":
-                if "calc_conf_option" in request.POST.keys():
-                    conf_option = clean(request.POST["calc_conf_option"])
+                if "calc_conf_option" in parameters_dict.keys():
+                    conf_option = clean(parameters_dict["calc_conf_option"])
                     if conf_option not in ["GFN2-xTB", "GFN-FF", "GFN2-xTB//GFN-FF"]:
                         return "Error in the option for the conformational search"
                     functional = conf_option
@@ -1305,42 +1426,45 @@ def parse_parameters(request, verify=False):
             functional = ""
             basis_set = ""
 
-    if len(project) > 100:
-        return "The chosen project name is too long"
+    if is_flowchart is None:
+        if len(project) > 100:
+            return "The chosen project name is too long"
 
     if step.name not in BASICSTEP_TABLE[software].keys():
         return "Invalid calculation type"
 
-    if "calc_specifications" in request.POST.keys():
-        specifications = clean(request.POST["calc_specifications"]).lower()
+    if "calc_specifications" in parameters_dict.keys():
+        specifications = clean(parameters_dict["calc_specifications"]).lower()
     else:
         specifications = ""
 
-    if project == "New Project":
-        new_project_name = clean(request.POST["new_project_name"])
-        try:
-            project_obj = Project.objects.get(
-                name=new_project_name, author=request.user
-            )
-        except Project.DoesNotExist:
-            if not verify:
-                project_obj = Project.objects.create(
+    if is_flowchart is None:
+        if project == "New Project":
+            new_project_name = clean(parameters_dict["new_project_name"])
+            try:
+                project_obj = Project.objects.get(
                     name=new_project_name, author=request.user
                 )
+            except Project.DoesNotExist:
+                if not verify:
+                    project_obj = Project.objects.create(
+                        name=new_project_name, author=request.user
+                    )
+                else:
+                    project_obj = Project(name=new_project_name, author=request.user)
+                    # project_obj.save(commit=False)
             else:
-                project_obj = Project(name=new_project_name, author=request.user)
+                logger.info("Project with that name already exists")
         else:
-            logger.info("Project with that name already exists")
-    else:
-        try:
-            project_set = request.user.project_set.filter(name=project)
-        except User.DoesNotExist:
-            return "No such project"
+            try:
+                project_set = request.user.project_set.filter(name=project)
+            except Profile.DoesNotExist:
+                return "No such project"
 
-        if len(project_set) != 1:
-            return "More than one project with the same name found!"
-        else:
-            project_obj = project_set[0]
+            if len(project_set) != 1:
+                return "More than one project with the same name found!"
+            else:
+                project_obj = project_set[0]
 
     _params = {
         "charge": charge,
@@ -1363,12 +1487,15 @@ def parse_parameters(request, verify=False):
         params = Parameters(**_params)
         # params.save(commit=False)
 
-    return params, project_obj, step
+    if is_flowchart is None:
+        return params, project_obj, step
+    else:
+        return params, step
 
 
 @login_required
 def save_preset(request):
-    ret = parse_parameters(request)
+    ret = parse_parameters(request, request.POST)
 
     if isinstance(ret, str):
         return HttpResponse(ret)
@@ -1386,7 +1513,7 @@ def save_preset(request):
 
 @login_required
 def set_project_default(request):
-    ret = parse_parameters(request)
+    ret = parse_parameters(request, request.POST)
 
     if isinstance(ret, str):
         return HttpResponse(ret)
@@ -1450,6 +1577,34 @@ def handle_file_upload(ff, params, is_local):
     return s, filename
 
 
+def handle_file_upload_flowchart(ff):
+    s = Structure.objects.create()
+    drawing = False
+    in_file = clean(ff.read().decode("utf-8"))
+    fname = clean(ff.name)
+    filename = ".".join(fname.split(".")[:-1])
+    ext = fname.split(".")[-1]
+    if ext == "mol":
+        s.mol_structure = in_file
+        generate_xyz_structure(False, s)
+    elif ext == "xyz":
+        s.xyz_structure = in_file
+    elif ext == "sdf":
+        s.sdf_structure = in_file
+        generate_xyz_structure(False, s)
+    elif ext == "mol2":
+        s.mol2_structure = in_file
+        generate_xyz_structure(False, s)
+    elif ext in ["log", "out"]:
+        s.xyz_structure = get_Gaussian_xyz(in_file)
+    elif ext in ["com", "gjf"]:
+        s.xyz_structure = get_xyz_from_Gaussian_input(in_file)
+    else:
+        return "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf, .com, .gjf)"
+    s.save()
+    return s, filename
+
+
 def process_filename(filename):
     if filename.find("_conf") != -1:
         sname = filename.split("_conf")
@@ -1476,6 +1631,283 @@ def verify_calculation(request):
 
 
 @login_required
+def submit_flowchart_input(request):
+    obj_id = ""
+    profile = request.user
+    if "calc_mol_name" in request.POST.keys():
+        mol_name = clean(request.POST["calc_mol_name"])
+    else:
+        mol_name = ""
+    combine = ""
+    if "calc_combine_files" in request.POST.keys():
+        combine = clean(request.POST["calc_combine_files"])
+    parse_filenames = ""
+    if "calc_parse_filenames" in request.POST.keys():
+        parse_filenames = clean(request.POST["calc_parse_filenames"])
+    else:
+        if mol_name == "":
+            return "Missing molecule name"
+    num_files = 0
+    if "calc_project" in request.POST.keys():
+        project = clean(request.POST["calc_project"])
+        if project.strip() == "":
+            return "No calculation project"
+    else:
+        return "No calculation project"
+    if len(project) > 100:
+        return "The chosen project name is too long"
+    if project == "New Project":
+        new_project_name = clean(request.POST["new_project_name"])
+        try:
+            project_obj = Project.objects.get(
+                name=new_project_name, author=request.user
+            )
+        except Project.DoesNotExist:
+            project_obj = Project.objects.create(
+                name=new_project_name, author=request.user
+            )
+        else:
+            logger.info("Project with that name already exists")
+    else:
+        try:
+            project_set = profile.project_set.filter(name=project)
+        except Profile.DoesNotExist:
+            return "No such project"
+
+        if len(project_set) != 1:
+            return "More than one project with the same name found!"
+        else:
+            project_obj = project_set[0]
+    if "num_files" in request.POST:
+        try:
+            num_files = int(clean(request.POST["num_files"]))
+        except ValueError:
+            logger.warning("Got invalid number of files")
+    if (
+        len(request.FILES) > 0
+    ):  # Can't really verify file uploads before actually processing the files
+        files = request.FILES.getlist("file_structure")
+        if len(files) > 1:
+            if combine == "on" and parse_filenames != "on":
+                mol = Molecule.objects.create(name=mol_name, project=project_obj)
+                e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+                for ind, ff in enumerate(files):
+                    ss = handle_file_upload_flowchart(ff)
+                    if isinstance(ss, str):
+                        e.structure_set.all().delete()
+                        e.delete()
+                        mol.delete()
+                        return ss
+                    struct, filename = ss
+
+                    if ind == 0:
+                        fing = gen_fingerprint(struct)
+                        mol.inchi = fing
+                        mol.save()
+
+                    struct.number = ind + 1
+                    struct.parent_ensemble = e
+                    struct.save()
+
+                obj = FlowchartOrder.objects.create(
+                    name=mol_name,
+                    structure=struct,
+                    author=request.user,
+                    project=project_obj,
+                    ensemble=e,
+                )
+            elif combine != "on" and parse_filenames == "on":
+                unique_molecules = {}
+                for ff in files:
+                    ss = handle_file_upload_flowchart(ff)
+                    if isinstance(ss, str):
+                        for _mol_name, arr_structs in unique_molecules.items():
+                            for struct in arr_structs:
+                                struct.delete()
+                        return ss
+                    struct, filename = ss
+
+                    _mol_name, num = process_filename(filename)
+
+                    struct.number = num
+                    struct.save()
+                    if _mol_name in unique_molecules.keys():
+                        unique_molecules[_mol_name].append(struct)
+                    else:
+                        unique_molecules[_mol_name] = [struct]
+
+                for _mol_name, arr_structs in unique_molecules.items():
+                    used_numbers = []
+                    fing = gen_fingerprint(arr_structs[0])
+                    mol = Molecule.objects.create(
+                        name=_mol_name, inchi=fing, project=project_obj
+                    )
+                    mol.save()
+
+                    e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+                    for struct in arr_structs:
+                        if struct.number == 0:
+                            num = 1
+                            while num in used_numbers:
+                                num += 1
+                            struct.number = num
+                            used_numbers.append(num)
+                        else:
+                            used_numbers.append(struct.number)
+
+                        struct.parent_ensemble = e
+                        struct.save()
+                    obj = FlowchartOrder.objects.create(
+                        name=mol_name,
+                        structure=struct,
+                        author=request.user,
+                        project=project_obj,
+                        ensemble=e,
+                    )
+            elif combine == "on" and parse_filenames == "on":
+                ss = handle_file_upload_flowchart(files[0])
+                if isinstance(ss, HttpResponse):
+                    return ss
+                struct, filename = ss
+                _mol_name, num = process_filename(filename)
+                fing = gen_fingerprint(struct)
+
+                mol = Molecule.objects.create(
+                    name=_mol_name, project=project_obj, inchi=fing
+                )
+                e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+                struct.number = 1
+                struct.parent_ensemble = e
+                struct.save()
+
+                for ind, ff in enumerate(files[1:]):
+                    ss = handle_file_upload_flowchart(ff)
+                    if isinstance(ss, HttpResponse):
+                        e.structure_set.all().delete()
+                        e.delete()
+                        mol.delete()
+                        return ss
+                    struct, filename = ss
+                    struct.number = ind + 2
+                    struct.parent_ensemble = e
+                    struct.save()
+                obj = FlowchartOrder.objects.create(
+                    name=mol_name,
+                    structure=struct,
+                    author=request.user,
+                    project=project_obj,
+                    ensemble=e,
+                )
+            else:
+                unique_molecules = {}
+                for ff in files:
+                    ss = handle_file_upload_flowchart(ff)
+                    if isinstance(ss, HttpResponse):
+                        for _mol_name, arr_structs in unique_molecules.items():
+                            for struct in arr_structs:
+                                struct.delete()
+                        return ss
+                    struct, filename = ss
+
+                    fing = gen_fingerprint(struct)
+                    if fing in unique_molecules.keys():
+                        unique_molecules[fing].append(struct)
+                    else:
+                        unique_molecules[fing] = [struct]
+
+                for ind, (fing, arr_struct) in enumerate(unique_molecules.items()):
+                    if len(unique_molecules.keys()) > 1:
+                        mol = Molecule.objects.create(
+                            name=f"{mol_name} set {ind + 1}",
+                            inchi=fing,
+                            project=project_obj,
+                        )
+                    else:
+                        mol = Molecule.objects.create(
+                            name=mol_name, inchi=fing, project=project_obj
+                        )
+                    e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+
+                    for s_num, struct in enumerate(arr_struct):
+                        struct.parent_ensemble = e
+                        struct.number = s_num + 1
+                        struct.save()
+
+                    obj = FlowchartOrder.objects.create(
+                        name=mol_name,
+                        structure=struct,
+                        author=request.user,
+                        project=project_obj,
+                        ensemble=e,
+                    )
+        elif len(files) == 1:
+            ff = files[0]
+            ss = handle_file_upload_flowchart(ff)
+            if isinstance(ss, HttpResponse):
+                return ss
+            struct, filename = ss
+
+            num = 1
+            if parse_filenames == "on":
+                _mol_name, num = process_filename(names[struct.id])  # Disable mol_name
+            else:
+                _mol_name = mol_name
+
+            obj = FlowchartOrder.objects.create(
+                name=mol_name,
+                structure=struct,
+                author=request.user,
+                project=project_obj,
+            )
+
+            fing = gen_fingerprint(struct)
+            mol = Molecule.objects.create(
+                name=_mol_name, inchi=fing, project=project_obj
+            )
+            mol.save()
+
+            e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+            obj.ensemble = e
+            struct.parent_ensemble = e
+            struct.number = num
+            struct.save()
+
+            obj.save()
+            obj_id = obj.id
+    else:  # No file upload
+        if "structure" in request.POST.keys():
+            drawing = True
+            mol_obj = Molecule.objects.create(name=mol_name, project=project_obj)
+            e = Ensemble.objects.create(name="Drawn Structure", parent_molecule=mol_obj)
+            s = Structure.objects.create(parent_ensemble=e, number=1)
+            mol = clean(request.POST["structure"])
+            s.mol_structure = mol
+            s.save()
+            obj = FlowchartOrder.objects.create(
+                name=mol_name,
+                structure=s,
+                author=request.user,
+                project=project_obj,
+                ensemble=e,
+            )
+            obj.save()
+            obj_id = obj.id
+        else:
+            return "No input structure"
+    ret = obj_id
+    return HttpResponse(ret, status=200)
+
+
+@login_required
+def verify_flowchart_calculation(request):
+    ret = parse_parameters(request, request.POST, verify=False, is_flowchart=True)
+    if isinstance(ret, str):
+        logger.warning(f"Invalid calculation: {ret}")
+        return HttpResponse(ret, status=400)
+    return HttpResponse(status=200)
+
+
+@login_required
 def submit_calculation(request):
     ret = _submit_calculation(request, verify=False)
     if isinstance(ret, str):
@@ -1484,7 +1916,7 @@ def submit_calculation(request):
 
 
 def _submit_calculation(request, verify=False):
-    ret = parse_parameters(request, verify=verify)
+    ret = parse_parameters(request, request.POST, verify=verify)
 
     if isinstance(ret, str):
         return ret
@@ -1698,7 +2130,6 @@ def _submit_calculation(request, verify=False):
         elif (
             len(request.FILES) > 0
         ):  # Can't really verify file uploads before actually processing the files
-
             files = request.FILES.getlist("file_structure")
             if len(files) > 1:
                 if combine == "on" and parse_filenames != "on":
@@ -3694,7 +4125,6 @@ def launch(request):
         params["calc"] = calc
         params["frame_num"] = frame_num
         params["init_params_id"] = init_params.id
-
     return render(request, "frontend/launch.html", params)
 
 
@@ -3858,6 +4288,40 @@ def load_params(request, pk):
         {
             "params": params,
             "load_charge": True,
+        },
+    )
+
+
+@login_required
+def load_flowchart_params(request, pk):
+    flowchartObj = Flowchart.objects.get(pk=pk)
+    params_dict = {}
+    for j in flowchartObj.step_set.all():
+        params = {}
+        if j.parameters is not None:
+            params["calc_solvent"] = j.parameters.solvent
+            params["calc_solvation_model"] = j.parameters.solvation_model
+            params["calc_solvation_radii"] = j.parameters.solvation_radii
+            params["calc_software"] = j.parameters.software
+            params["calc_theory_level"] = j.parameters.theory_level
+            params["calc_basis_set"] = j.parameters.basis_set
+            if j.parameters.method == "PBEh-3c":
+                params["pbeh3c"] = True
+            elif j.parameters.method == "HF-3c":
+                params["hf3c"] = True
+            else:
+                params["calc_functional"] = j.parameters.method
+            params["calc_charge"] = j.parameters.charge
+            params["calc_multiplicity"] = j.parameters.multiplicity
+            params["calc_df"] = j.parameters.density_fitting
+            params["calc_custom_bs"] = j.parameters.custom_basis_sets
+            params["calc_specifications"] = j.parameters.specifications
+        params_dict[j.id] = params
+    return render(
+        request,
+        "frontend/dynamic/load_flowchart_params.js",
+        {
+            "params_dict": json.dumps(params_dict),
         },
     )
 

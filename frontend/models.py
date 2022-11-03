@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from django.db import models, transaction
 from django.db.models.signals import pre_save
+from django.forms import JSONField
 from django.utils import timezone
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import AbstractUser, BaseUserManager
@@ -296,6 +297,18 @@ class ClassGroup(Group):
     def generate_code(self):
         self.access_code = get_random_readable_code()
         self.save()
+
+
+class Flowchart(models.Model):
+    name = models.CharField(max_length=100)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    flowchart = models.JSONField(null=True)
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
 
 
 class Project(models.Model):
@@ -888,6 +901,26 @@ class Parameters(models.Model):
         return self._md5
 
 
+class Step(models.Model):
+    name = models.CharField(max_length=50)
+    flowchart = models.ForeignKey(Flowchart, on_delete=models.CASCADE, default=None)
+    step = models.ForeignKey(
+        BasicStep, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    parameters = models.ForeignKey(
+        Parameters, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    parentId = models.ForeignKey(
+        "Step", related_name="+", on_delete=models.CASCADE, blank=True, null=True
+    )
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
+
+
 def gen_params_md5(obj):
     values = [(k, v) for k, v in obj.__dict__.items() if k != "_state" and k != "id"]
     params_str = ""
@@ -912,6 +945,79 @@ class Molecule(models.Model):
     @property
     def count_vis(self):
         return len(self.ensemble_set.filter(hidden=False))
+
+
+class FlowchartOrder(models.Model):
+    name = models.CharField(max_length=100)
+    structure = models.ForeignKey(
+        Structure, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    author = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    project = models.ForeignKey(
+        "Project", on_delete=models.CASCADE, blank=True, null=True
+    )
+    flowchart = models.ForeignKey(
+        Flowchart, on_delete=models.CASCADE, default=None, null=True
+    )
+    ensemble = models.ForeignKey(
+        Ensemble, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    filter = models.ForeignKey(
+        "Filter", on_delete=models.SET_NULL, blank=True, null=True
+    )
+    last_seen_status = models.PositiveIntegerField(default=0)
+    date = models.DateTimeField("date", null=True, blank=True)
+
+    @property
+    def status(self):
+        return self._status(*self.get_all_calcs)
+
+    def update_unseen(self, old_status, old_unseen):
+        new_status = self.status
+        new_unseen = self.new_status
+
+        if old_unseen:
+            if not new_unseen:
+                with transaction.atomic():
+                    p = User.objects.select_for_update().get(id=self.author.id)
+                    p.unseen_calculations -= 1
+                    p.save()
+        else:
+            if new_unseen:
+                with transaction.atomic():
+                    p = User.objects.select_for_update().get(id=self.author.id)
+                    p.unseen_calculations += 1
+                    p.save()
+
+    def _status(self, num_queued, num_running, num_done, num_error):
+        if num_queued + num_running + num_done + num_error == 0:
+            return 0
+
+        if num_running > 0:
+            return 1
+
+        if num_queued == 0:
+            if num_error > 0 and num_done == 0:
+                return 3
+            else:
+                return 2
+
+        return 0
+
+    @property
+    def get_all_calcs(self):
+        res = {i: 0 for i in range(4)}
+
+        for calc in self.calculation_set.all().values("status"):
+            res[calc["status"]] += 1
+        return [res[i] for i in range(4)]
+
+    @property
+    def new_status(self):
+        if self.last_seen_status != self.status:
+            return True
+        else:
+            return False
 
 
 class CalculationOrder(models.Model):
@@ -1159,7 +1265,15 @@ class Calculation(models.Model):
     )
 
     step = models.ForeignKey(BasicStep, on_delete=models.SET_NULL, null=True)
-    order = models.ForeignKey(CalculationOrder, on_delete=models.CASCADE, null=True)
+    order = models.ForeignKey(
+        CalculationOrder, on_delete=models.CASCADE, blank=True, null=True
+    )
+    flowchart_order = models.ForeignKey(
+        FlowchartOrder, on_delete=models.CASCADE, blank=True, null=True
+    )
+    flowchart_step = models.ForeignKey(
+        Step, on_delete=models.CASCADE, blank=True, null=True
+    )
 
     parameters = models.ForeignKey(Parameters, on_delete=models.SET_NULL, null=True)
     result_ensemble = models.ForeignKey(
@@ -1196,11 +1310,27 @@ class Calculation(models.Model):
             print("Could not find molecule to update!")
 
     def save(self, *args, **kwargs):
-        old_status = self.order.status
-        old_unseen = self.order.new_status
+        if self.flowchart_order is not None:
+            old_status = self.flowchart_order.status
+            old_unseen = self.flowchart_order.new_status
+
+        elif self.order is not None:
+            old_status = self.order.status
+            old_unseen = self.order.new_status
+
+        else:
+            raise Exception("No calculation order")
 
         super(Calculation, self).save(*args, **kwargs)
-        self.order.update_unseen(old_status, old_unseen)
+
+        if self.flowchart_order is not None:
+            self.flowchart_order.update_unseen(old_status, old_unseen)
+
+        elif self.order is not None:
+            self.order.update_unseen(old_status, old_unseen)
+
+        else:
+            raise Exception("No calculation order")
 
     def delete(self, *args, **kwargs):
         old_status = self.order.status

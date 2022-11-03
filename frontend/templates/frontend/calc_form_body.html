@@ -22,6 +22,7 @@
 	<form method="post" id="calcform" enctype="multipart/form-data">
 		{% if not ensemble and not structure %}
 		<div class="columns">
+			{% if is_flowchart is None %}
 			<div class="column">
 				<div class="field">
 					<label class="label">Draw a structure or choose a file</label>
@@ -43,6 +44,7 @@
 					</div>
 				</div>
 			</div>
+			{% endif %}
 			<div class="column is-narrow has-text-centered" id="calc_parse_filenames_column" style="display: none;">
 				<label class="label">Use filename(s)</label>
 				<div class="control">
@@ -79,7 +81,7 @@
 
 		<div class="columns">
 			<div class="column">
-				{% if not calc and not ensemble and not structure %}
+				{% if not calc and not ensemble and not structure  and is_flowchart is None%}
 				<div class="field" id="calc_mol_name_field">
 					<label class="label">Molecule Name</label>
 					<div class="control">
@@ -115,6 +117,53 @@
 		<div class="columns">
 			<div class="column is-narrow">
 				<div class="field">
+					<label class="label">Solvent</label>
+					<div class="control">
+						<input class="input" name="calc_solvent" id="calc_solvent" type="text" oninput="refresh_availabilities();" list="solvent_options">
+					</div>
+					<p class="check_msg is-danger" id="solvent_check_msg"></p>
+				</div>
+			</div>
+			<div class="column is-narrow">
+				<div class="field" id="calc_solvation_model_field">
+					<label class="label">Solvation Model</label>
+						<div class="control">
+							<div class="select">
+							<select name="calc_solvation_model" id="calc_solvation_model" onchange="refresh_availabilities();">
+								<option class="software_specific avail_xtb type_specific avail_Constrained_Optimisation avail_Constrained_Conformational_Search avail_Geometrical_Optimisation avail_Frequency_Calculation avail_UV-Vis_Calculation avail_Single-Point_Energy avail_Conformational_Search">GBSA</option>
+								<option class="software_specific avail_xtb">ALPB</option>
+								<option class="software_specific avail_Gaussian avail_ORCA">SMD</option>
+								<option class="software_specific avail_Gaussian">PCM</option>
+								<option class="software_specific avail_Gaussian avail_ORCA">CPCM</option>
+							</select>
+							</div>
+						</div>
+				</div>
+			</div>
+			<div class="column is-narrow">
+				<div class="field software_specific avail_Gaussian avail_ORCA" id="calc_solvation_radii_field">
+					<label class="label">Solvation Radii</label>
+					<div class="control">
+						<div class="select">
+							<select name="calc_solvation_radii" id="calc_solvation_radii">
+								<option class="solvation_model_specific avail_SMD">SMD18</option>
+								<option>Default</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UFF</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UA0</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UAHF</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UAKS</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">Pauling</option>
+								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">Bondi</option>
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		{% if is_flowchart is None %}
+		<div class="columns">
+			<div class="column is-narrow">
+				<div class="field">
 					<label class="label">Project</label>
 					<div class="control">
 						<div class="select" >
@@ -139,6 +188,7 @@
 			</div>
 
 		</div>
+		{% endif %}
 
 		<div class="columns">
             <div class="column is-3">
@@ -288,53 +338,6 @@
 
 			</div>
 		</div>
-		<div class="columns">
-			<div class="column">
-				<div class="field">
-					<label class="label">Solvent</label>
-					<div class="control">
-						<input class="input" name="calc_solvent" id="calc_solvent" type="text" oninput="refresh_availabilities();" list="solvent_options">
-					</div>
-					<p class="check_msg is-danger" id="solvent_check_msg"></p>
-				</div>
-			</div>
-			<div class="column is-narrow" id="calc_solvation_model_field">
-				<div class="field">
-					<label class="label">Solvation Model</label>
-						<div class="control">
-							<div class="select">
-							<select name="calc_solvation_model" id="calc_solvation_model" onchange="refresh_availabilities();" class="solv_select">
-								<option class="software_specific avail_xtb type_specific avail_Constrained_Optimisation avail_Constrained_Conformational_Search avail_Geometrical_Optimisation avail_Frequency_Calculation avail_UV-Vis_Calculation avail_Single-Point_Energy avail_Conformational_Search">GBSA</option>
-								<option class="software_specific avail_xtb">ALPB</option>
-								<option class="software_specific avail_Gaussian avail_ORCA">SMD</option>
-								<option class="software_specific avail_Gaussian">PCM</option>
-								<option class="software_specific avail_Gaussian avail_ORCA">CPCM</option>
-							</select>
-							</div>
-						</div>
-				</div>
-			</div>
-			<div class="column is-narrow"  id="calc_solvation_radii_field">
-				<div class="field software_specific avail_Gaussian avail_ORCA">
-					<label class="label">Solvation Radii</label>
-					<div class="control">
-						<div class="select">
-							<select name="calc_solvation_radii" id="calc_solvation_radii" class="solv_select">
-								<option class="solvation_model_specific avail_SMD">SMD18</option>
-								<option>Default</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UFF</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UA0</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UAHF</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UAKS</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">Pauling</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">Bondi</option>
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
 		<div>
 			<div>
 				<div class="field" id="custom_specifications_field">
@@ -447,7 +450,11 @@
 		<div class="field">
 			<span id="form_error_msg"></span>
 			<div class="control">
-				<a class="button is-primary" id="submit_button" onclick="verify_form()">Submit</a>
+				{% if is_flowchart is None %}
+					<a class="button is-primary" id="submit_button" onclick="verify_form()">Submit</a>
+				{% else %}
+					<a class="button is-primary" onclick="verify_form_flowchart()">Save</a>
+				{% endif %}
 			</div>
 		</div>
 	</form>
@@ -496,7 +503,7 @@
 	}); 
 
 $( document ).ready(function() {
-	{% if not ensemble and not structure %}
+	{% if not ensemble and not structure and is_flowchart is None%}
 	preselect_last_project();
 	project_selection_changed(document.getElementById("calc_project"));
 	set_availables();
@@ -636,7 +643,7 @@ $('#calc_software').change(function(e){
 
 add_constraint(true);	
 
-{% if not ensemble and not structure and not calc %}
+{% if not ensemble and not structure and not calc and is_flowchart is None%}
 	const inputElement = document.getElementById("file_structure");
 	inputElement.addEventListener("change", file_upload_changed, false);
 {% endif %}
