@@ -430,7 +430,7 @@ def create_flowchart(request):
         if "flowchart_data" in request.POST.keys():
             flowchart_dat = clean(request.POST["flowchart_data"])
         flowchart_view = Flowchart.objects.create(
-            name=flowchart_name, author=profile, flowchart=flowchart_dat
+            name=flowchart_name, author=request.user, flowchart=flowchart_dat
         )
         flowchart_view.save()
         flowchart_order_id = request.POST["flowchart_order_id"]
@@ -1334,8 +1334,8 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
 
     if software == "ORCA" or software == "Gaussian":
         if "calc_theory_level" in parameters_dict.keys():
-            theory = clean(parameters_dict["calc_theory_level"])
-            if theory.strip() == "":
+            _theory = clean(parameters_dict["calc_theory_level"])
+            if _theory.strip() == "":
                 return "No theory level chosen"
             theory = ccinput.utilities.get_theory_level(_theory)
         else:
@@ -1372,7 +1372,7 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
                         return "No basis set chosen"
                 else:
                     basis_set = ""
-        elif theory == "Semi-empirical":
+        elif theory == "semiempirical":
             if "calc_se_method" in parameters_dict.keys():
                 functional = clean(parameters_dict["calc_se_method"])
                 if functional.strip() == "":
@@ -1443,20 +1443,22 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
         if project == "New Project":
             new_project_name = clean(parameters_dict["new_project_name"])
             try:
-                project_obj = Project.objects.get(name=new_project_name, author=profile)
+                project_obj = Project.objects.get(
+                    name=new_project_name, author=request.user
+                )
             except Project.DoesNotExist:
                 if not verify:
                     project_obj = Project.objects.create(
-                        name=new_project_name, author=profile
+                        name=new_project_name, author=request.user
                     )
                 else:
-                    project_obj = Project(name=new_project_name, author=profile)
+                    project_obj = Project(name=new_project_name, author=request.user)
                     # project_obj.save(commit=False)
             else:
                 logger.info("Project with that name already exists")
         else:
             try:
-                project_set = profile.project_set.filter(name=project)
+                project_set = request.user.project_set.filter(name=project)
             except Profile.DoesNotExist:
                 return "No such project"
 
@@ -1658,9 +1660,13 @@ def submit_flowchart_input(request):
     if project == "New Project":
         new_project_name = clean(request.POST["new_project_name"])
         try:
-            project_obj = Project.objects.get(name=new_project_name, author=profile)
+            project_obj = Project.objects.get(
+                name=new_project_name, author=request.user
+            )
         except Project.DoesNotExist:
-            project_obj = Project.objects.create(name=new_project_name, author=profile)
+            project_obj = Project.objects.create(
+                name=new_project_name, author=request.user
+            )
         else:
             logger.info("Project with that name already exists")
     else:
@@ -1707,7 +1713,7 @@ def submit_flowchart_input(request):
                 obj = FlowchartOrder.objects.create(
                     name=mol_name,
                     structure=struct,
-                    author=profile,
+                    author=request.user,
                     project=project_obj,
                     ensemble=e,
                 )
@@ -1755,7 +1761,7 @@ def submit_flowchart_input(request):
                     obj = FlowchartOrder.objects.create(
                         name=mol_name,
                         structure=struct,
-                        author=profile,
+                        author=request.user,
                         project=project_obj,
                         ensemble=e,
                     )
@@ -1789,7 +1795,7 @@ def submit_flowchart_input(request):
                 obj = FlowchartOrder.objects.create(
                     name=mol_name,
                     structure=struct,
-                    author=profile,
+                    author=request.user,
                     project=project_obj,
                     ensemble=e,
                 )
@@ -1831,7 +1837,7 @@ def submit_flowchart_input(request):
                     obj = FlowchartOrder.objects.create(
                         name=mol_name,
                         structure=struct,
-                        author=profile,
+                        author=request.user,
                         project=project_obj,
                         ensemble=e,
                     )
@@ -1851,7 +1857,7 @@ def submit_flowchart_input(request):
             obj = FlowchartOrder.objects.create(
                 name=mol_name,
                 structure=struct,
-                author=profile,
+                author=request.user,
                 project=project_obj,
             )
 
@@ -1881,7 +1887,7 @@ def submit_flowchart_input(request):
             obj = FlowchartOrder.objects.create(
                 name=mol_name,
                 structure=s,
-                author=profile,
+                author=request.user,
                 project=project_obj,
                 ensemble=e,
             )
