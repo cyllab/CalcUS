@@ -186,6 +186,9 @@ String.prototype.format = function() {
 
 	}
 	function load_preset(id) {
+        if(id == undefined) {
+            return;
+        }
 		$.ajax({
 			method: "POST",	 	 
 			url: "/load_preset/" + id,

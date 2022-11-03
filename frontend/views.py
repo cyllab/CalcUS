@@ -2565,6 +2565,15 @@ def can_view_parameters(p, user):
     if c is not None:
         return can_view_calculation(c, user)
 
+    pr = p.preset_set.first()
+
+    if pr is not None:
+        return can_view_preset(pr, user)
+
+    raise Exception(
+        f"Could not evaluate the visibility of parameters {p.id} for user {user.id}"
+    )
+
 
 def can_view_preset(p, user):
     return user_intersection(p.author, user)
