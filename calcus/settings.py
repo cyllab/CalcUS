@@ -27,6 +27,7 @@ IS_TEST = "CALCUS_TEST" in os.environ
 
 if IS_TEST:
     SECRET_KEY = "testkey"
+    SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]
 else:
     SECRET_KEY = os.environ["CALCUS_SECRET_KEY"]
 

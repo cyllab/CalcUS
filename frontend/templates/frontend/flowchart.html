@@ -417,7 +417,7 @@
 		var id_db_map = new Map()
 		var JSON_object = JSON.parse(decodeJSON(document.getElementById("flowchart-load-select").value))
 		for(i = 0;i<JSON_object.blockarr.length;i++)
-			frontend_id_array.push(parseInt(JSON_object.blockarr[i].id))
+			frontend_id_array.push(JSON_object.blockarr[i].id)
 		frontend_id_array.sort();
 		{% for i in flowchartsData %}
 			data_id = data_id.toString()
@@ -426,7 +426,7 @@
 				flowchart_id = data_id;
 				$.ajax({
 					method: "POST",	 	 
-					url: "/load_flowchart_params/" + "{{ i.id }}",
+					url: "/load_flowchart_params/{{ i.id }}",
 					headers: {
 						"X-CSRFToken": '{{ csrf_token }}',
 					},
@@ -436,7 +436,7 @@
 					},
 				});
 				{% for j in i.step_set.all%}
-					db_id_array.push(parseInt("{{j.id}}"))
+					db_id_array.push("{{j.id}}")
 				{% endfor %}
 			}
 		{% endfor %}

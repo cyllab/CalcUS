@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 sleep 5
 
 # Fix for OpenMPI in Docker

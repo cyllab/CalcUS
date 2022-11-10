@@ -106,7 +106,7 @@ String.prototype.format = function() {
 	}
 	var project_presets = {
 		{% for proj in profile.project_set.all %}
-		'{{ proj.name }}': {% if proj.preset %}{{ proj.preset.id }} {% else %} -1 {% endif %},
+		'{{ proj.name }}': {% if proj.preset %}"{{ proj.preset.id }}"{% else %} -1 {% endif %},
 		{% endfor %}
 	}
 

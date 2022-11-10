@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 sleep 5
 
 if [[ -z $CALCUS_CLOUD ]];
