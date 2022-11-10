@@ -28,6 +28,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import post_save, post_init
 from django.dispatch import receiver
+from django.conf import settings
 from django import template
 
 import random, string
@@ -79,7 +80,9 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="User_hashid_" + settings.HASHID_FIELD_SALT
+    )
 
     username = None
     email = models.EmailField("email", unique=True)
@@ -221,7 +224,9 @@ class User(AbstractUser):
 
 
 class ResourceAllocation(models.Model):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="ResourceAllocation_hashid_" + settings.HASHID_FIELD_SALT
+    )
 
     # Code to redeem the allocation manually
     code = models.CharField(max_length=256)
@@ -312,7 +317,9 @@ class Flowchart(models.Model):
 
 
 class Project(models.Model):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="Project_hashid_" + settings.HASHID_FIELD_SALT
+    )
     name = models.CharField(max_length=100)
     author = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     private = models.PositiveIntegerField(default=0)
@@ -346,7 +353,9 @@ def create_main_folder(sender, instance, created, **kwargs):
 
 
 class Folder(models.Model):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="Folder_hashid_" + settings.HASHID_FIELD_SALT
+    )
     name = models.CharField(max_length=100)
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, blank=True, null=True
@@ -358,7 +367,9 @@ class Folder(models.Model):
 
 
 class ClusterAccess(models.Model):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="ClusterAccess_hashid_" + settings.HASHID_FIELD_SALT
+    )
     owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -400,7 +411,9 @@ class BasicStep(models.Model):
 
 
 class Preset(models.Model):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="Preset_hashid_" + settings.HASHID_FIELD_SALT
+    )
     name = models.CharField(max_length=100, default="My Preset")
     params = models.ForeignKey(
         "Parameters", on_delete=models.SET_NULL, blank=True, null=True
@@ -409,7 +422,9 @@ class Preset(models.Model):
 
 
 class Ensemble(models.Model):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="Ensemble_hashid_" + settings.HASHID_FIELD_SALT
+    )
     name = models.CharField(max_length=100, default="Nameless ensemble")
     parent_molecule = models.ForeignKey(
         "Molecule", on_delete=models.CASCADE, blank=True, null=True
@@ -732,7 +747,9 @@ def handle_folder(sender, instance, **kwargs):
 
 
 class Property(models.Model):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="Property_hashid_" + settings.HASHID_FIELD_SALT
+    )
     parameters = models.ForeignKey(
         "Parameters", on_delete=models.SET_NULL, blank=True, null=True
     )
@@ -777,7 +794,9 @@ class Property(models.Model):
 
 
 class Structure(models.Model):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="Structure_hashid_" + settings.HASHID_FIELD_SALT
+    )
     parent_ensemble = models.ForeignKey(
         Ensemble, on_delete=models.CASCADE, blank=True, null=True
     )
@@ -789,7 +808,9 @@ class Structure(models.Model):
 
 
 class CalculationFrame(models.Model):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="CalculationFrame_hashid_" + settings.HASHID_FIELD_SALT
+    )
     parent_calculation = models.ForeignKey(
         "Calculation", on_delete=models.CASCADE, blank=True, null=True
     )
@@ -803,7 +824,9 @@ class CalculationFrame(models.Model):
 
 
 class Parameters(models.Model):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="Parameters_hashid_" + settings.HASHID_FIELD_SALT
+    )
     name = models.CharField(max_length=100, default="Nameless parameters")
     charge = models.IntegerField()
     multiplicity = models.IntegerField()
@@ -935,7 +958,9 @@ def gen_params_md5(obj):
 
 
 class Molecule(models.Model):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="Molecule_hashid_" + settings.HASHID_FIELD_SALT
+    )
     name = models.CharField(max_length=100)
     inchi = models.CharField(max_length=1000, default="", blank=True, null=True)
     project = models.ForeignKey(
@@ -1021,7 +1046,9 @@ class FlowchartOrder(models.Model):
 
 
 class CalculationOrder(models.Model):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="CalculationOrder_hashid_" + settings.HASHID_FIELD_SALT
+    )
     name = models.CharField(max_length=100)
 
     structure = models.ForeignKey(
@@ -1238,7 +1265,9 @@ class CalculationOrder(models.Model):
 
 
 class Calculation(models.Model):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="Calculation_hashid_" + settings.HASHID_FIELD_SALT
+    )
     CALC_STATUSES = {
         "Queued": 0,
         "Running": 1,
@@ -1370,7 +1399,9 @@ class Calculation(models.Model):
 
 
 class Filter(models.Model):
-    id = BigHashidAutoField(primary_key=True)
+    id = BigHashidAutoField(
+        primary_key=True, salt="Calculation_hashid_" + settings.HASHID_FIELD_SALT
+    )
     type = models.CharField(max_length=500)
     parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, null=True)
     value = models.CharField(max_length=500)
