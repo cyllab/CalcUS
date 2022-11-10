@@ -1065,6 +1065,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_user_project()
         link = self.driver.find_element(By.CSS_SELECTOR, "#molecule_in_project")
         link.click()
+        self.wait_for_ajax()
 
     def click_project(self, name):
         projects = self.get_projects()

@@ -4148,7 +4148,7 @@ def launch_project(request, pk):
         return HttpResponse(status=403)
 
     if proj.preset is not None:
-        init_params_id = proj.preset.id
+        init_params_id = proj.preset.params.id
 
         return render(
             request,
