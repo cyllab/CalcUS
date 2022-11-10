@@ -26,4 +26,8 @@ register = template.Library()
 
 @register.simple_tag
 def get_calcus_version():
-    return settings.CALCUS_VERSION_HASH
+    version = settings.CALCUS_VERSION_HASH
+    if version == "":
+        return "unknown"
+    else:
+        return version
