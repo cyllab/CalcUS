@@ -51,7 +51,6 @@ A typical ``.env`` will look something like this:
         CALCUS_SECRET_KEY='de^%k+mia@*%fxl*n6zp^vghxnj4))30q9+h8e3_no-xb0*k40'
         CALCUS_GAUSSIAN=/home/user/software/g16_folder
         CALCUS_ORCA=/home/user/software/orca_folder
-        CALCUS_XTB=/home/user/software/xtb/bin
         OMP_NUM_THREADS=8,1
         NUM_CPU=8
         OMP_STACKSIZE=1G

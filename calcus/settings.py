@@ -62,7 +62,7 @@ else:
 
 SSL = False
 
-ALLOWED_HOSTS = ["*.*.*.*", "0.0.0.0", '.localhost']
+ALLOWED_HOSTS = ["*.*.*.*", "0.0.0.0", ".localhost"]
 
 if IS_CLOUD or IS_TEST:
     ALLOWED_HOSTS.append("*")
@@ -244,7 +244,7 @@ if IS_CLOUD:
     ALLOW_LOCAL_CALC = True
     ALLOW_REMOTE_CALC = False
 
-    LOCAL_MAX_ATOMS = 30
+    LOCAL_MAX_ATOMS = 60
 
     LOCAL_ALLOWED_THEORY_LEVELS = [
         "xtb",
@@ -275,7 +275,7 @@ else:
     ALLOW_REMOTE_CALC = True
 
     # For local calculations, limit the size of systems to this number of atoms or disable the limitation with -1
-    LOCAL_MAX_ATOMS = 2000
+    LOCAL_MAX_ATOMS = -1
 
     # For local calculations, only allow these theory levels to be used (using the ccinput theory levels)
     LOCAL_ALLOWED_THEORY_LEVELS = [

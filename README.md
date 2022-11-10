@@ -66,7 +66,7 @@ If you use CalcUS in your research, please cite it:
 
 **Contributor of significant features**: 
 
-+ Divyam Agarwal (automated multi-step calculations, *in progress*)
++ Divyam Agarwal (automated multi-step calculations)
 
 **Contributors to the web frontend**: 
 

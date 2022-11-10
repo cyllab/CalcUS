@@ -53,5 +53,5 @@ As many tests require the output files of quantum chemistry packages, the requir
 **Integration tests:**
 
 - ``frontend/test_selenium.py``
-- ``frontend/test_cluster.py``
+- ``frontend/test_cluster.py`` (disabled in CI)
 

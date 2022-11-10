@@ -9,14 +9,13 @@ If you use CalcUS in your research, please cite it:
 Contributors
 ------------
 
-====================================== ================
+====================================== ========================================
 Role                                    Name          
-====================================== ================
+====================================== ========================================
 Project lead and main contributor      Raphaël Robidas
 Conception contributor and beta-tester Prof. Claude Y. Legault
-Contributors to the web frontend       Divyam Agarwal
-
-                                       Glen Forcha
+Contributors of significant features   Divyam Agarwal (multi-step calculations)
+Contributors to the web frontend       Glen Forcha
 
                                        Dhairya Khanna
 Beta-testers                           Léo Hall
@@ -28,5 +27,4 @@ Beta-testers                           Léo Hall
                                        Tommy Lussier
 
                                        Louis Schutz
-====================================== ================
-
+====================================== ========================================

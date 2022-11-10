@@ -3,11 +3,11 @@
 # -- Project information
 
 project = "CalcUS"
-copyright = "2021, Raphaël Robidas"
+copyright = "2022, Raphaël Robidas"
 author = "Raphaël Robidas"
 
-release = "1.0"
-version = "1.0.0"
+release = "2.0"
+version = "2.0.0"
 
 # -- General configuration
 
