@@ -13,6 +13,9 @@ Documentation and an overview of the platform are available on [ReadTheDocs](htt
 	<img width="600" src="https://calcus.readthedocs.io/en/latest/_images/new_molecule_overview.png">
 </p>
 
+## Updating from Version 1.2.1
+Due to major changes in the underlying code, **it is not possible to migrate the database to CalcUS version 2**. A new Docker repository has been created from the images of version 2 and thus you must update your local code (either with `git pull` or by redownloading this repository) in order to start using CalcUS version 2. Otherwise, you will keep using version 1.2.1, which will not be updated further.
+
 ## Installation
 
 For licensing reasons, **no software package requiring a user license can be included with CalcUS.** For convenience, we have included the LGPL-v3 licensed [xtb software package](https://github.com/grimme-lab/xtb) as well as related packages by the Grimme group ([crest](https://github.com/grimme-lab/crest), [stda](https://github.com/grimme-lab/stda) and [xtb4stda](https://github.com/grimme-lab/xtb4stda)). These enable fast semi-empirical tight-binding calculations in CalcUS by default. In order to use other software packages, you will need either to install the Linux version of a package locally or use the packages on remote clusters. 
