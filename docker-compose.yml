@@ -85,7 +85,7 @@ services:
                 user: "${UID}:${GID}"
                 volumes:
                         - ./data:/var/lib/postgresql/data/:rw
-                        - ./data/postgresql.conf:/var/lib/postgresql/data/postgresql.conf:r
+                        - ./docker/postgres/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
                         - ./backups:/calcus/backups
                         - ./logs:/calcus/logs
                 env_file:
