@@ -1,0 +1,12 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$_PROJECT_ID:$COMMIT_SHA', '-f', 'Cloud_dockerfile', '.']
+  timeout: 500s
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$_PROJECT_ID:$COMMIT_SHA']
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args: ['run', 'deploy', 'calcus-cloud', '--image', 'gcr.io/$_PROJECT_ID:$COMMIT_SHA', '--region', 'us-central1', '--update-env-vars=CALCUS_VERSION_HASH=$SHORT_SHA']
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args: ['run', 'deploy', 'calcus-cloud-compute', '--image', 'gcr.io/$_PROJECT_ID:$COMMIT_SHA', '--region', 'us-central1', '--update-env-vars=CALCUS_VERSION_HASH=$SHORT_SHA']

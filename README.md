@@ -3,7 +3,7 @@
 </p>
 
 # CalcUS - Quantum Chemistry Web Platform
-CalcUS is a quantum chemistry plateform. It strives for simplicity, clarity and efficiency. It brings all the necessary tools to perform quantum chemistry in a user-friendly web interface.
+CalcUS brings all the necessary tools to perform quantum chemistry in a user-friendly web interface. It strives for simplicity, clarity and efficiency.
 
 This project is developed by the Legault group at the Université de Sherbrooke (Sherbrooke, Canada).
 
