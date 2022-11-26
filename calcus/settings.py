@@ -233,6 +233,7 @@ SESSION_COOKIE_NAME = "CALCUS_SESSION_COOKIE"
 
 PACKAGES = ["xtb"]
 
+print("is_cloud", IS_CLOUD)
 if IS_CLOUD:
     PING_SATELLITE = False
 

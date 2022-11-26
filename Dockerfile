@@ -47,8 +47,9 @@ RUN adduser --disabled-password --gecos '' calcus
 FROM calcus_user as calcus_dev
 
 ADD ./test-requirements.txt /calcus/test-requirements.txt
+ADD ./cloud_requirements.txt /calcus/cloud_requirements.txt
 RUN  pip install -r /calcus/test-requirements.txt
+RUN  pip install -r /calcus/cloud_requirements.txt
 RUN mkdir -p /calcus/scratch/keys
 RUN mkdir -p /calcus/scratch/scr
-RUN mkdir -p /calcus/scratch/results
 RUN chown -R calcus:calcus /calcus/scratch

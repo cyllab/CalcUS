@@ -57,7 +57,11 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 SCR_DIR = CALCUS_SCR_HOME
 KEYS_DIR = CALCUS_KEY_HOME
 
-from calcus.celery import app
+IS_CLOUD = "CALCUS_CLOUD" in os.environ
+
+if not IS_CLOUD:
+    from calcus.celery import app
+
 from frontend import tasks
 
 base_cwd = os.getcwd()
@@ -93,10 +97,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         cls.driver.maximize_window()
 
         tasks.REMOTE = False
-        app.loader.import_module("celery.contrib.testing.tasks")
 
-        cls.celery_worker = start_worker(app, perform_ping_check=False)
-        cls.celery_worker.__enter__()
+        if not IS_CLOUD:
+            app.loader.import_module("celery.contrib.testing.tasks")
+
+            cls.celery_worker = start_worker(app, perform_ping_check=False)
+            cls.celery_worker.__enter__()
 
         if os.path.isdir(SCR_DIR):
             rmtree(SCR_DIR)
@@ -112,7 +118,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     @classmethod
     def tearDownClass(cls):
         cls.driver.quit()
-        cls.celery_worker.__exit__(None, None, None)
+        if not IS_CLOUD:
+            cls.celery_worker.__exit__(None, None, None)
         os.chdir(base_cwd)  # Prevent coverage.py crash
         super().tearDownClass()
 
@@ -180,12 +187,28 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         element = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located((By.ID, "id_password"))
         )
-
         email_f = self.driver.find_element(By.ID, "id_username")
         password_f = self.driver.find_element(By.ID, "id_password")
         submit = self.driver.find_element(By.CSS_SELECTOR, "input.control")
         email_f.send_keys(email)
         password_f.send_keys(password)
+
+        if IS_CLOUD:
+            WebDriverWait(self.driver, 2).until(
+                EC.frame_to_be_available_and_switch_to_it(
+                    (By.XPATH, "//*[@title='reCAPTCHA']")
+                )
+            )
+            time.sleep(1)
+            WebDriverWait(self.driver, 2).until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, "//div[@class='recaptcha-checkbox-border']")
+                )
+            ).click()
+            self.wait_for_ajax()
+            self.driver.switch_to.default_content()
+            time.sleep(1)
+
         submit.send_keys(Keys.RETURN)
 
         self.lget("/projects")

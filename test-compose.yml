@@ -24,6 +24,10 @@ services:
                         - ./.env
                 environment:
                         - CALCUS_TEST=True
+                        - ACTION_HOST_URL=http://cloud-compute:8001
+                        - COMPUTE_HOST_URL=http://cloud-compute:8001
+                        - GCP_PROJECT_ID=test-project
+                        - GCP_LOCATION=us-central1
                 links:
                         - slurm
                         - redis
@@ -31,7 +35,7 @@ services:
                         - cloud-compute
         taskqueue:
               image: ghcr.io/aertje/cloud-tasks-emulator:latest
-              command: -host 0.0.0.0 -port 8123 -queue "projects/test-project/locations/us-central1/queues/xtb-compute"
+              command: -host 0.0.0.0 -port 8123 -queue projects/test-project/locations/us-central1/queues/xtb-compute -queue projects/test-project/locations/us-central1/queues/actions
               expose:
                     - 8123
         cloud-compute:
