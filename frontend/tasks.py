@@ -315,6 +315,21 @@ def testing_delay_remote(calc_id):
     return ErrorCodes.SUCCESS
 
 
+def testing_delay_cloud(calc_id):
+    """
+    Same as `testing_delay_local`, but for the Cloud mode.
+    """
+    wait = int(os.environ.get("CACHE_POST_WAIT", "0"))
+    for i in range(wait):
+        time.sleep(1)
+        calc = Calculation.objects.get(id=calc_id)
+        if calc.status == 3:
+            logger.info(f"Stopping calculation after loading the cache")
+            return ErrorCodes.JOB_CANCELLED
+
+    return ErrorCodes.SUCCESS
+
+
 def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
     if REMOTE and not force_local:
         assert calc_id != -1
@@ -454,35 +469,45 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
             calc.save()
             return ErrorCodes.FAILED_TO_RUN_LOCAL_SOFTWARE
 
+        def kill_task():
+            logger.info(f"Stopping calculation {calc_id}")
+            signal_to_send = signal.SIGTERM
+
+            parent = psutil.Process(t.pid)
+            children = parent.children(recursive=True)
+            for process in children:
+                process.send_signal(signal.SIGTERM)
+
+            # t.kill()
+            t.send_signal(signal_to_send)
+            t.wait()
+
+            return ErrorCodes.JOB_CANCELLED
+
         while True:
             poll = t.poll()
 
-            if not poll is None:
+            if poll is not None:
                 if t.returncode == 0:
                     if calc_id != -1:
-                        return testing_delay_local(res)
+                        if settings.IS_CLOUD:
+                            return testing_delay_cloud(calc_id)
+                        else:
+                            return testing_delay_local(res)
                     return ErrorCodes.SUCCESS
                 else:
                     logger.info(f"Got returncode {t.returncode}")
                     return ErrorCodes.UNKNOWN_TERMINATION
 
-            if (
-                calc_id != -1 and res.is_aborted() and not settings.IS_CLOUD
-            ):  # Job cancellation not implemented in the cloud version
-                logger.info(f"Stopping calculation {calc_id}")
-                signal_to_send = signal.SIGTERM
-
-                parent = psutil.Process(t.pid)
-                children = parent.children(recursive=True)
-                for process in children:
-                    process.send_signal(signal.SIGTERM)
-
-                # t.kill()
-                t.send_signal(signal_to_send)
-                t.wait()
-
-                return ErrorCodes.JOB_CANCELLED
-
+            if calc_id != -1:
+                if settings.IS_CLOUD:
+                    calc = Calculation.objects.get(id=calc_id)
+                    if calc.status == 3:
+                        return kill_task()
+                    time.sleep(settings.DATABASE_STATUS_CHECK_DELAY - 1)
+                else:
+                    if res.is_aborted():
+                        return kill_task()
             time.sleep(1)
 
 
@@ -3522,7 +3547,6 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
                 send_cluster_command(cmd)
 
     if settings.IS_CLOUD:
-        # TODO: add some way to be able to cancel calcs?
         for c in calculations:
             send_gcloud_task("/cloud_calc/", str(c.id))
     else:
@@ -3888,8 +3912,8 @@ def cancel(calc_id):
 
 def kill_calc(calc):
     if settings.IS_CLOUD:
-        # Not implemented yet
-        return
+        raise Exception(f"Cannot kill calculation {calc.id} this way in Cloud mode")
+
     if calc.local:
         if calc.task_id != "":
             if calc.status == 1:

@@ -1397,6 +1397,12 @@ class Calculation(models.Model):
     def all_inputs(self):
         return f"{self.command}\n{self.input_file}"
 
+    def set_as_cancelled(self):
+        with transaction.atomic():
+            calc = Calculation.objects.select_for_update().get(id=self.id)
+            calc.status = 3
+            calc.save()
+
 
 class Filter(models.Model):
     id = BigHashidAutoField(

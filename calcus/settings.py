@@ -158,6 +158,11 @@ DATABASES = {
     }
 }
 
+# In Cloud mode, we need to constantly query the database to check if the
+# running calculation has been cancelled. This is the delay between checks in seconds.
+DATABASE_STATUS_CHECK_DELAY = 2
+
+
 if os.environ.get("IS_TEST_CLUSTER_DAEMON", "") != "":
     DATABASES["default"]["NAME"] = "test_calcus"
 

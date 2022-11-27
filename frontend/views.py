@@ -4587,13 +4587,12 @@ def cancel_calc(request):
     if request.user != calc.order.author:
         return HttpResponse(status=403)
 
-    if is_test:  ###
-        cancel(calc.id)
+    if settings.IS_CLOUD:
+        logger.info(f"Killing calc {calc.id}")
+        calc.set_as_cancelled()
     else:
-        if settings.IS_CLOUD:
-            logger.warning(
-                f"Cannot cancel calc {calc.id}: not implemented for the cloud version"
-            )
+        if is_test:
+            cancel(calc.id)
         else:
             cancel.delay(str(calc.id))
 
