@@ -238,7 +238,6 @@ SESSION_COOKIE_NAME = "CALCUS_SESSION_COOKIE"
 
 PACKAGES = ["xtb"]
 
-print("is_cloud", IS_CLOUD)
 if IS_CLOUD:
     PING_SATELLITE = False
 
@@ -251,7 +250,7 @@ if IS_CLOUD:
     ALLOW_LOCAL_CALC = True
     ALLOW_REMOTE_CALC = False
 
-    LOCAL_MAX_ATOMS = 60
+    LOCAL_MAX_ATOMS = 200
 
     LOCAL_ALLOWED_THEORY_LEVELS = [
         "xtb",

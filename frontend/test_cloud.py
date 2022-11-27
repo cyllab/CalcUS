@@ -41,18 +41,13 @@ from django.conf import settings
 
 from .models import *
 from .libxyz import *
-from .calcusliveserver import CalcusLiveServer, SCR_DIR, tests_dir
+from .calcusliveserver import CalcusCloudLiveServer, SCR_DIR, tests_dir
 
 
-class XtbCalculationTests(CalcusLiveServer):
+class XtbCalculationTests(CalcusCloudLiveServer):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        settings.IS_CLOUD = True
-        settings.GCP_LOCATION = "us-central1"
-        settings.GCP_PROJECT_ID = "test-project"
-        settings.GCP_SERVICE_ACCOUNT_EMAIL = "selenium@calcus.com"
-        settings.COMPUTE_HOST_URL = "http://cloud-compute:8000"
 
     def setUp(self):
         super().setUp()
@@ -71,12 +66,17 @@ class XtbCalculationTests(CalcusLiveServer):
             "in_file": "CH4.mol",
         }
 
+        self.assertEqual(self.user.billed_seconds, 0)
+
         self.lget("/launch/")
         self.calc_input_params(params)
         self.calc_launch()
         self.lget("/calculations/")
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
+
+        self.user.refresh_from_db()
+        self.assertNotEqual(self.user.billed_seconds, 0)
 
     def test_sp(self):
         params = {
@@ -666,6 +666,8 @@ class XtbCalculationTests(CalcusLiveServer):
             "charge": "1",
         }
 
+        self.assertEqual(self.user.billed_seconds, 0)
+
         self.lget("/launch/")
         self.calc_input_params(params)
         self.calc_launch()
@@ -682,6 +684,9 @@ class XtbCalculationTests(CalcusLiveServer):
         self.click_latest_calc()
         self.wait_for_ajax()
         self.assertGreaterEqual(self.get_number_conformers(), 1)
+
+        self.user.refresh_from_db()
+        self.assertNotEqual(self.user.billed_seconds, 0)
 
     def test_default_settings_from_ensemble(self):
         params = {
@@ -795,12 +800,10 @@ class XtbCalculationTests(CalcusLiveServer):
         self.assertEqual(software.get_attribute("value"), params["software"])
 
 
-class StudentTests(CalcusLiveServer):
+class StudentTests(CalcusCloudLiveServer):
     def setUp(self):
         super().setUp()
 
-        self.user.allocated_seconds = 100
-        self.user.save()
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         self.student = User.objects.create_user(

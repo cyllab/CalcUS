@@ -194,20 +194,20 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         password_f.send_keys(password)
 
         if IS_CLOUD:
-            WebDriverWait(self.driver, 2).until(
+            WebDriverWait(self.driver, 1).until(
                 EC.frame_to_be_available_and_switch_to_it(
                     (By.XPATH, "//*[@title='reCAPTCHA']")
                 )
             )
-            time.sleep(1)
-            WebDriverWait(self.driver, 2).until(
+            time.sleep(0.3)
+            WebDriverWait(self.driver, 1).until(
                 EC.element_to_be_clickable(
                     (By.XPATH, "//div[@class='recaptcha-checkbox-border']")
                 )
             ).click()
             self.wait_for_ajax()
             self.driver.switch_to.default_content()
-            time.sleep(1)
+            time.sleep(0.3)
 
         submit.send_keys(Keys.RETURN)
 
@@ -1884,3 +1884,35 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def clean_all_completed(self):
         btn = self.driver.find_element(By.ID, "clean_all_completed_btn")
         btn.click()
+
+
+class CalcusCloudLiveServer(CalcusLiveServer):
+    def setUp(self):
+        super().setUp()
+        self.user.allocated_seconds = 100
+        self.user.save()
+
+        settings.IS_CLOUD = True
+        settings.GCP_LOCATION = "us-central1"
+        settings.GCP_PROJECT_ID = "test-project"
+        settings.GCP_SERVICE_ACCOUNT_EMAIL = "selenium@calcus.com"
+        settings.COMPUTE_HOST_URL = "http://cloud-compute:8001"
+        settings.ACTION_HOST_URL = "http://cloud-compute:8001"
+        settings.ALLOW_REMOTE_CALC = False
+        settings.LOCAL_MAX_ATOMS = 60
+
+        settings.LOCAL_ALLOWED_THEORY_LEVELS = [
+            "xtb",
+        ]
+
+    def tearDown(self):
+        super().tearDown()
+
+        settings.IS_CLOUD = False
+        settings.ALLOW_REMOTE_CALC = True
+
+        settings.LOCAL_MAX_ATOMS = -1
+
+        settings.LOCAL_ALLOWED_THEORY_LEVELS = ["ALL"]
+
+        settings.LOCAL_ALLOWED_STEPS = ["ALL"]

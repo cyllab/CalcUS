@@ -24,10 +24,6 @@ services:
                         - ./.env
                 environment:
                         - CALCUS_TEST=True
-                        - ACTION_HOST_URL=http://cloud-compute:8001
-                        - COMPUTE_HOST_URL=http://cloud-compute:8001
-                        - GCP_PROJECT_ID=test-project
-                        - GCP_LOCATION=us-central1
                 links:
                         - slurm
                         - redis
