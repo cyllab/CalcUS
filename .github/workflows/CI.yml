@@ -57,7 +57,7 @@ jobs:
         python3 manage.py makemigrations frontend
         python3 manage.py migrate
         python3 manage.py init_static_obj
-        coverage run --omit frontend/test_cluster.py manage.py test
+        coverage run --omit=frontend/test_cluster.py,frontend/test_cloud.py manage.py test
       env:
         POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
