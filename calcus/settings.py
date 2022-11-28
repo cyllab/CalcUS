@@ -63,7 +63,8 @@ else:
 
 SSL = False
 
-ALLOWED_HOSTS = ["*.*.*.*", "https://calcus.cloud", "localhost"]
+ALLOWED_HOSTS = ["*.*.*.*", "https://calcus.cloud", "calcus.cloud", "localhost"]
+CSRF_TRUSTED_ORIGINS = ["calcus.cloud"]
 
 if IS_CLOUD or IS_TEST:
     ALLOWED_HOSTS.append("*")

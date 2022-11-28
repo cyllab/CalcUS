@@ -3,7 +3,7 @@ bleach
 ccinput>=1.5.3
 celery[redis]
 cryptography
-Django>=3.2.16
+Django>=3.2.16,<4
 django-appconf==1.0.4
 django-axes==5.27.0
 django-bulma

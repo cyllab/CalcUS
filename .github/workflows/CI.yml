@@ -66,7 +66,7 @@ jobs:
         IS_TEST_CLUSTER_DAEMON: True
         CAN_USE_CACHED_LOGS: true
         USE_CACHED_LOGS: true
-        CALCUS_TEST_MAX_ATTEMPTS: 3
+        CALCUS_TEST_MAX_ATTEMPTS: 5
   trigger_cloud_build:
     needs: build
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
