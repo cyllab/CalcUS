@@ -3548,7 +3548,7 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
 
     if settings.IS_CLOUD:
         for c in calculations:
-            send_gcloud_task("/cloud_calc/", str(c.id))
+            send_gcloud_task("/cloud_calc/", str(c.id), size=get_calc_size(c))
     else:
         for task, c in zip(group_order, calculations):
             res = task.apply_async()
@@ -3556,7 +3556,15 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
             c.save()
 
 
-def send_gcloud_task(url, payload, compute=True):
+def get_calc_size(calc):
+    if calc.step.name in ["Conformational Search", "Constrained Conformational Search"]:
+        if "gfnff" in calc.parameters.specifications.lower():
+            return "MEDIUM"
+        return "LARGE"
+    return "SMALL"
+
+
+def send_gcloud_task(url, payload, compute=True, size="SMALL"):
     if is_test:
         import grpc
         from google.cloud import tasks_v2
@@ -3576,7 +3584,7 @@ def send_gcloud_task(url, payload, compute=True):
 
     if compute:
         queue = "xtb-compute"
-        url = settings.COMPUTE_HOST_URL + url
+        url = getattr(settings, f"COMPUTE_{size}_HOST_URL") + url
     else:
         queue = "actions"
         url = settings.ACTION_HOST_URL + url

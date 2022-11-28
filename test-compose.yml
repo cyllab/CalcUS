@@ -60,7 +60,9 @@ services:
                         - GCP_LOCATION=us-central1
                         - GCP_PROJECT_ID=test-project
                         - GCP_SERVICE_ACCOUNT_EMAIL=selenium@calcus.com
-                        - COMPUTE_HOST_URL=http://cloud-compute:8001
+                        - COMPUTE_SMALL_HOST_URL=http://cloud-compute:8001
+                        - COMPUTE_MEDIUM_HOST_URL=http://cloud-compute:8001
+                        - COMPUTE_LARGE_HOST_URL=http://cloud-compute:8001
                         - CALCUS_SCR_HOME=/calcus/scr
                         - CALCUS_TEST_SCR_HOME=/calcus/scr
                         - GUNICORN_TIMEOUT=15
