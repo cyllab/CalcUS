@@ -49,7 +49,6 @@ jobs:
         dos2unix scripts/*
         mkdir -p scratch/keys
         mkdir -p scratch/scr
-        mkdir -p scratch/results
         PGPASSWORD=postgres createdb -h localhost -p 5432 -U calcus test_calcus
     - name: Run tests
       run: |
@@ -57,7 +56,7 @@ jobs:
         python3 manage.py makemigrations frontend
         python3 manage.py migrate
         python3 manage.py init_static_obj
-        coverage run --omit=frontend/test_cluster.py,frontend/test_cloud.py manage.py test
+        coverage run manage.py test
       env:
         POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
