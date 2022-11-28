@@ -31,14 +31,6 @@ if IS_TEST:
 else:
     SECRET_KEY = os.environ["CALCUS_SECRET_KEY"]
 
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
-POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
-POSTGRES_USER = os.environ.get("POSTGRES_USER", "calcus")
-
-GMAIL_API_CLIENT_ID = os.getenv("CALCUS_EMAIL_ID", "")
-GMAIL_API_CLIENT_SECRET = os.getenv("CALCUS_EMAIL_SECRET", "")
-GMAIL_API_REFRESH_TOKEN = os.getenv("CALCUS_EMAIL_TOKEN", "")
-
 try:
     DEBUG = os.environ["CALCUS_DEBUG"]
 except:
@@ -61,25 +53,16 @@ else:
         CALCUS_VERSION_HASH = "unknown"
 
 
-SSL = False
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
+POSTGRES_USER = os.environ.get("POSTGRES_USER", "calcus")
+
+GMAIL_API_CLIENT_ID = os.getenv("CALCUS_EMAIL_ID", "")
+GMAIL_API_CLIENT_SECRET = os.getenv("CALCUS_EMAIL_SECRET", "")
+GMAIL_API_REFRESH_TOKEN = os.getenv("CALCUS_EMAIL_TOKEN", "")
 
 ALLOWED_HOSTS = ["*.*.*.*", "https://calcus.cloud", "calcus.cloud", "localhost"]
 CSRF_TRUSTED_ORIGINS = ["calcus.cloud"]
-
-if IS_CLOUD or IS_TEST:
-    ALLOWED_HOSTS.append("*")
-
-if not DEBUG and SSL:
-    ALLOWED_HOSTS = "*.*.*.*"
-    SECURE_SSL_REDIRECT = True
-    SECURE_HSTS_SECONDS = 3600
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_BROWSER_XSS_FILTER = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    X_FRAME_OPTIONS = "DENY"
 
 INSTALLED_APPS = [
     "frontend",
@@ -95,9 +78,10 @@ INSTALLED_APPS = [
     #'debug_toolbar',
 ]
 
-if not IS_CLOUD:
-    INSTALLED_APPS.append("dbbackup")
-else:
+if IS_CLOUD:
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
     INSTALLED_APPS.append("captcha")
     RECAPTCHA_PUBLIC_KEY = os.getenv(
         "RECAPTCHA_PUBLIC_KEY", "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
@@ -105,6 +89,13 @@ else:
     RECAPTCHA_PRIVATE_KEY = os.getenv(
         "RECAPTCHA_PRIVATE_KEY", "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
     )
+else:
+    INSTALLED_APPS.append("dbbackup")
+
+    DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
+    DBBACKUP_STORAGE_OPTIONS = {"location": "/calcus/backups/"}
+    DBBACKUP_CLEANUP_KEEP = 10  # Number of old DBs to keep
+    DBBACKUP_INTERVAL = 1  # In days (can be a float)
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -196,15 +187,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
-if not IS_CLOUD:
-    DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
-    DBBACKUP_STORAGE_OPTIONS = {"location": "/calcus/backups/"}
-    DBBACKUP_CLEANUP_KEEP = 10  # Number of old DBs to keep
-    DBBACKUP_INTERVAL = 1  # In days (can be a float)
-
 LOGIN_REDIRECT_URL = "/home"
 
-DEFAULT_FROM_EMAIL = "bot@CalcUS"
+DEFAULT_FROM_EMAIL = "bot@calcus.cloud"
 
 if IS_TEST:
     EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
