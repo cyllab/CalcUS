@@ -74,6 +74,10 @@ ALLOWED_HOSTS = [
 
 CSRF_TRUSTED_ORIGINS = ["calcus.cloud"]
 
+if "CALCUS_CLOUD_INTERNAL" in os.environ:
+    ALLOWED_HOSTS.append("*")
+    CSRF_TRUSTED_ORIGINS.append("*")
+
 if IS_TEST:
     ALLOWED_HOSTS.append("*")
     ALLOWED_HOSTS.append("*.*.*.*")
