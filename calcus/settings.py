@@ -63,14 +63,25 @@ GMAIL_API_CLIENT_SECRET = os.getenv("CALCUS_EMAIL_SECRET", "")
 GMAIL_API_REFRESH_TOKEN = os.getenv("CALCUS_EMAIL_TOKEN", "")
 
 ALLOWED_HOSTS = [
-    "*.*.*.*",
     "0.0.0.0",
+    "0.0.0.0:*",
     "https://calcus.cloud",
     "calcus.cloud",
     "localhost",
     "cloud-compute",
+    "cloud-compute:*",
 ]
+
 CSRF_TRUSTED_ORIGINS = ["calcus.cloud"]
+
+if IS_TEST:
+    ALLOWED_HOSTS.append("*")
+    ALLOWED_HOSTS.append("*.*.*.*")
+    ALLOWED_HOSTS.append("*.*.*.*:*")
+
+    CSRF_TRUSTED_ORIGINS.append("*")
+    CSRF_TRUSTED_ORIGINS.append("*.*.*.*")
+    CSRF_TRUSTED_ORIGINS.append("*.*.*.*:*")
 
 INSTALLED_APPS = [
     "frontend",
