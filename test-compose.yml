@@ -16,7 +16,6 @@ services:
                         - 8000
                 depends_on:
                         - redis
-                        - slurm
                 volumes:
                         - scratch:/calcus/scratch
                         - ./frontend/tests/cache:/calcus/cache:rw
@@ -24,6 +23,7 @@ services:
                         - ./.env
                 environment:
                         - CALCUS_DEBUG=True
+                        - CALCUS_TEST=True
                         - ACTIONS_HOST_URL=http://web:8000
                         - COMPUTE_SMALL_HOST_URL=http://cloud-compute:8001
                         - COMPUTE_MEDIUM_HOST_URL=http://cloud-compute:8001
@@ -31,9 +31,9 @@ services:
                         - GCP_LOCATION=us-central1
                         - GCP_PROJECT_ID=test-project
                         - GCP_SERVICE_ACCOUNT_EMAIL=selenium@calcus.com
+                        - USE_CACHED_LOGS=true
 
                 links:
-                        - slurm
                         - redis
                         - taskqueue
                         - cloud-compute
@@ -52,7 +52,6 @@ services:
                         - 8001
                 depends_on:
                         - redis
-                        - slurm
                 volumes:
                         - scratch:/calcus/scratch
                         - ./frontend/tests/cache:/calcus/cache:rw
@@ -60,6 +59,7 @@ services:
                         - ./.env
                 environment:
                         - CALCUS_DEBUG=True
+                        - CALCUS_TEST=True
                         - CALCUS_CLOUD=True
                         - NUM_THREADS=4
                         - NUM_WORKERS=1
@@ -75,6 +75,7 @@ services:
                         - CALCUS_SCR_HOME=/calcus/scr
                         - CALCUS_TEST_SCR_HOME=/calcus/scr
                         - GUNICORN_TIMEOUT=15
+                        - USE_CACHED_LOGS=true
         selenium:
                 container_name: selenium
                 image: selenium/standalone-chrome:latest

@@ -3795,8 +3795,8 @@ def add_input_to_calc(calc):
     if hasattr(inp, "command"):
         calc.command = inp.command
 
-    if hasattr(
-        inp, "command_line"
+    if (
+        hasattr(inp, "command_line") and calc.parameters.software == "xtb"
     ):  # TODO: remove with next version of ccinput (1.6.1)
         calc.command = inp.command_line
 
@@ -3976,6 +3976,12 @@ def run_calc(calc_id):
 
 def bill_calculation(calc):
     calc_time = calc.billed_seconds
+    if settings.IS_CLOUD and calc.order.resource_provider is None:
+        if is_test:
+            return
+        else:
+            logger.error(f"There is no resource provider for order {calc.order.id}")
+            return
     calc.order.resource_provider.bill_time(calc_time)
     logger.info(
         f"{calc.order.resource_provider.name} ({calc.order.resource_provider.id}) has been billed {calc_time} seconds for calc {calc.id}"
