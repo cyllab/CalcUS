@@ -645,6 +645,121 @@ def generate_xyz_structure(drawing, inp, ext):
         return ErrorCodes.UNIMPLEMENTED
 
 
+def launch_pysis_calc(in_file, calc, files):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    folder = f"scratch/calcus/{calc.id}"
+
+    if not os.path.isdir(local_folder):
+        os.makedirs(local_folder, exist_ok=True)
+
+    with open(os.path.join(local_folder, "calc.xyz"), "w") as out:
+        out.write(clean_xyz(calc.structure.xyz_structure))
+
+    if calc.input_file != "":
+        with open(os.path.join(local_folder, "calc.inp"), "w") as out:
+            out.write(calc.input_file)
+
+    os.chdir(local_folder)
+
+    if not calc.local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+
+        if calc.remote_id == 0:
+            sftp_put(
+                f"{local_folder}/calc.xyz",
+                os.path.join(folder, "calc.xyz"),
+                conn,
+                lock,
+            )
+        if calc.input_file != "":
+            sftp_put(
+                f"{local_folder}/calc.inp",
+                os.path.join(folder, "calc.inp"),
+                conn,
+                lock,
+            )
+    else:
+        os.chdir(local_folder)
+
+    ret = system(calc.command, "calc.out", software="pysis", calc_id=calc.id)
+
+    cancelled = False
+    if ret != ErrorCodes.SUCCESS:
+        if ret == ErrorCodes.JOB_CANCELLED:
+            cancelled = True
+        else:
+            return ret
+
+    if not calc.local:
+        for f in files:
+            a = sftp_get(
+                f"{folder}/{f}",
+                os.path.join(CALCUS_SCR_HOME, str(calc.id), f),
+                conn,
+                lock,
+            )
+            if not cancelled and a != ErrorCodes.SUCCESS:
+                return a
+
+    if not cancelled:
+        for f in files:
+            if not os.path.isfile(f"{local_folder}/{f}"):
+                return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
+
+        # Frequency calculations on unoptimized geometries (or TSs) give an error
+        if calc.step.creates_ensemble:
+            analyse_opt(calc.id)
+
+        return ErrorCodes.SUCCESS
+    else:
+        return ErrorCodes.JOB_CANCELLED
+
+
+def xtb_opt(in_file, calc):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+
+    ret = launch_xtb_calc(in_file, calc, ["calc.out", "xtbopt.xyz"])
+
+    if ret != ErrorCodes.SUCCESS:
+        return ret
+
+    with open(f"{local_folder}/xtbopt.xyz") as f:
+        lines = f.readlines()
+
+    xyz_structure = clean_xyz("".join(lines))
+
+    with open(f"{local_folder}/calc.out") as f:
+        lines = f.readlines()
+        ind = len(lines) - 1
+
+        try:
+            while lines[ind].find("TOTAL ENERGY") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[3])
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
+
+    s = Structure.objects.get_or_create(
+        parent_ensemble=calc.result_ensemble,
+        number=calc.structure.number,
+    )[0]
+    s.degeneracy = 1
+    s.xyz_structure = xyz_structure
+    prop = get_or_create(calc.parameters, s)
+    prop.energy = E
+    prop.geom = True
+    s.save()
+    prop.save()
+
+    return ErrorCodes.SUCCESS
+
+
 def launch_xtb_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     folder = f"scratch/calcus/{calc.id}"
@@ -864,7 +979,16 @@ def get_or_create(params, struct):
         return Property.objects.create(parameters=params, parent_structure=struct)
 
 
-def xtb_ts(in_file, calc):
+def xtb_handle_ts(in_file, calc):
+    """Used to choose the right driver for the calculation (ORCA or Pysisyphus)"""
+
+    if settings.IS_CLOUD:
+        return xtb_ts_pysis(in_file, calc)
+    else:
+        return xtb_ts_orca(in_file, calc)
+
+
+def xtb_ts_orca(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
@@ -883,6 +1007,48 @@ def xtb_ts(in_file, calc):
             while olines[ind].find("FINAL SINGLE POINT ENERGY") == -1:
                 ind -= 1
             E = float(olines[ind].split()[4])
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
+
+    s = Structure.objects.get_or_create(
+        parent_ensemble=calc.result_ensemble,
+        number=calc.structure.number,
+    )[0]
+    s.degeneracy = calc.structure.degeneracy
+    s.xyz_structure = (clean_xyz("".join(lines)),)
+    prop = get_or_create(calc.parameters, s)
+    prop.energy = E
+    prop.geom = True
+
+    s.xyz_structure = "\n".join([i.strip() for i in lines])
+
+    s.save()
+    prop.save()
+    return ErrorCodes.SUCCESS
+
+
+def xtb_ts_pysis(in_file, calc):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
+
+    ret = launch_pysis_calc(in_file, calc, ["calc.out", "ts_final_geometry.xyz"])
+
+    if ret != ErrorCodes.SUCCESS:
+        return ret
+
+    with open(os.path.join(local_folder, "ts_final_geometry.xyz")) as f:
+        lines = f.readlines()
+
+    with open(os.path.join(local_folder, "calc.out")) as f:
+        olines = f.readlines()
+        ind = len(olines) - 1
+        try:
+            while olines[ind].find("Final summary:") == -1:
+                ind -= 1
+            E = float(olines[ind + 5].split()[1])
         except IndexError:
             logger.error(
                 f"Could not parse the output of calculation {calc.id}: invalid format"
@@ -1974,6 +2140,10 @@ def calc_to_ccinput(calc):
         "aux_name": "struct2",
         "name": "in",
     }
+
+    if software == "xtb" and calc.step.short_name == "optts":
+        params["driver"] = "pysis"
+
     try:
         inp = generate_calculation(**params)
     except CCInputException as e:
@@ -3219,7 +3389,7 @@ BASICSTEP_TABLE = {
         "Conformational Search": crest,
         "Constrained Optimisation": xtb_scan,
         "Frequency Calculation": xtb_freq,
-        "TS Optimisation": xtb_ts,
+        "TS Optimisation": xtb_handle_ts,
         "UV-Vis Calculation": xtb_stda,
         "Single-Point Energy": xtb_sp,
         "Minimum Energy Path": xtb_mep,
@@ -3565,7 +3735,7 @@ def get_calc_size(calc):
 
 
 def send_gcloud_task(url, payload, compute=True, size="SMALL"):
-    if is_test:
+    if is_test or settings.DEBUG:
         import grpc
         from google.cloud import tasks_v2
         from google.cloud.tasks_v2.services.cloud_tasks.transports import (
@@ -3608,7 +3778,7 @@ def add_input_to_calc(calc):
     inp = calc_to_ccinput(calc)
     if isinstance(inp, CCInputException):
         msg = f"CCInput error: {str(inp)}"
-        if is_test:
+        if is_test or settings.DEBUG:
             print(msg)
         calc.error_message = msg
         calc.status = 3
@@ -3616,10 +3786,19 @@ def add_input_to_calc(calc):
         return ErrorCodes.FAILED_TO_CREATE_INPUT
 
     calc.input_file = inp.input_file
-    calc.parameters.specifications = inp.confirmed_specifications
+
+    if (
+        calc.parameters.software != "xtb"
+    ):  # TODO: have a 'driver' field in the calculations
+        calc.parameters.specifications = inp.confirmed_specifications
 
     if hasattr(inp, "command"):
         calc.command = inp.command
+
+    if hasattr(
+        inp, "command_line"
+    ):  # TODO: remove with next version of ccinput (1.6.1)
+        calc.command = inp.command_line
 
     calc.save()
     calc.parameters.save()
@@ -3675,7 +3854,11 @@ def run_calc(calc_id):
         logger.info(f"Calc {calc_id} already revoked")
         return ErrorCodes.JOB_CANCELLED
 
-    if calc.parameters.software == "xtb" and calc.step.short_name in ["mep", "optts"]:
+    if (
+        calc.parameters.software == "xtb"
+        and calc.step.short_name in ["mep", "optts"]
+        and not settings.IS_CLOUD
+    ):
         calc.parameters.software = "ORCA"
         ret = add_input_to_calc(calc)
         calc.parameters.software = "xtb"

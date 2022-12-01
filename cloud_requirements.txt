@@ -1,6 +1,6 @@
 basis-set-exchange
 bleach
-ccinput
+ccinput>=1.6.0
 cryptography
 Django>=3.2.16,<4
 django-appconf==1.0.4
@@ -20,6 +20,7 @@ numpy
 periodictable
 psutil==5.7.2
 psycopg2
+pysisyphus
 requests
 scipy
 wheel

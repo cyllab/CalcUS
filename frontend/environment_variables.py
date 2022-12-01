@@ -20,10 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 
-try:
-    is_test = os.environ["CALCUS_TEST"]
-except:
-    is_test = False
+is_test = "CALCUS_TEST" in os.environ
 
 if is_test:
     if "GITHUB_WORKSPACE" in os.environ:

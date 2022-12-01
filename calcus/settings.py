@@ -25,11 +25,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IS_CLOUD = "CALCUS_CLOUD" in os.environ
 IS_TEST = "CALCUS_TEST" in os.environ
 
-if IS_TEST:
-    SECRET_KEY = "testkey"
-    SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]
-else:
-    SECRET_KEY = os.environ["CALCUS_SECRET_KEY"]
 
 try:
     DEBUG = os.environ["CALCUS_DEBUG"]
@@ -37,6 +32,12 @@ except:
     DEBUG = False
 else:
     DEBUG = True
+
+if IS_TEST or DEBUG:
+    SECRET_KEY = "testkey"
+    SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]
+else:
+    SECRET_KEY = os.environ["CALCUS_SECRET_KEY"]
 
 if "CALCUS_VERSION_HASH" in os.environ.keys():
     CALCUS_VERSION_HASH = os.environ["CALCUS_VERSION_HASH"]
@@ -61,7 +62,14 @@ GMAIL_API_CLIENT_ID = os.getenv("CALCUS_EMAIL_ID", "")
 GMAIL_API_CLIENT_SECRET = os.getenv("CALCUS_EMAIL_SECRET", "")
 GMAIL_API_REFRESH_TOKEN = os.getenv("CALCUS_EMAIL_TOKEN", "")
 
-ALLOWED_HOSTS = ["*.*.*.*", "https://calcus.cloud", "calcus.cloud", "localhost"]
+ALLOWED_HOSTS = [
+    "*.*.*.*",
+    "0.0.0.0",
+    "https://calcus.cloud",
+    "calcus.cloud",
+    "localhost",
+    "cloud-compute",
+]
 CSRF_TRUSTED_ORIGINS = ["calcus.cloud"]
 
 INSTALLED_APPS = [
@@ -79,16 +87,17 @@ INSTALLED_APPS = [
 ]
 
 if IS_CLOUD:
-    SECURE_SSL_REDIRECT = True
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
     INSTALLED_APPS.append("captcha")
-    RECAPTCHA_PUBLIC_KEY = os.getenv(
-        "RECAPTCHA_PUBLIC_KEY", "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-    )
-    RECAPTCHA_PRIVATE_KEY = os.getenv(
-        "RECAPTCHA_PRIVATE_KEY", "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
-    )
+
+    if not DEBUG:
+        SECURE_SSL_REDIRECT = True
+        SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+        RECAPTCHA_PUBLIC_KEY = os.getenv(
+            "RECAPTCHA_PUBLIC_KEY", "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+        )
+        RECAPTCHA_PRIVATE_KEY = os.getenv(
+            "RECAPTCHA_PRIVATE_KEY", "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+        )
 else:
     INSTALLED_APPS.append("dbbackup")
 
@@ -255,7 +264,7 @@ if IS_CLOUD:
         "Conformational Search",
         "Constrained Optimisation",
         "Frequency Calculation",
-        # "TS Optimisation",
+        "TS Optimisation",
         # "UV-Vis Calculation", # Not working right now
         "Single-Point Energy",
         # "Minimum Energy Path",

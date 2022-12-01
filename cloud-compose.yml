@@ -8,21 +8,29 @@ services:
         web:
                 build:
                         context: .
-                        dockerfile: Dockerfile
-                        target: calcus_dev
+                        dockerfile: Cloud_dockerfile
+                        target: calcus_user
+                restart: always
                 hostname: web
                 user: "${UID}:${GID}"
+                command: ./scripts/run_web.sh
                 expose:
                         - 8000
-                depends_on:
-                        - redis
-                        - slurm
                 volumes:
-                        - scratch:/calcus/scratch
-                        - ./frontend/tests/cache:/calcus/cache:rw
+                        - .:/calcus/
+                        - ./scr:/calcus/scr
+                        - ./keys:/calcus/keys
+                        - ./backups:/calcus/backups
+                        - ./logs:/calcus/logs
+                        - ./frontend:/calcus/frontend
+                links:
+                        - redis
                 env_file:
                         - ./.env
+                depends_on:
+                        - postgres
                 environment:
+                        - GUNICORN_TIMEOUT=30
                         - CALCUS_DEBUG=True
                         - ACTIONS_HOST_URL=http://web:8000
                         - COMPUTE_SMALL_HOST_URL=http://cloud-compute:8001
@@ -32,11 +40,16 @@ services:
                         - GCP_PROJECT_ID=test-project
                         - GCP_SERVICE_ACCOUNT_EMAIL=selenium@calcus.com
 
-                links:
-                        - slurm
-                        - redis
-                        - taskqueue
-                        - cloud-compute
+        nginx:
+                image: nginx:latest
+                ports:
+                        - "8080:8080"
+                volumes:
+                        - ./docker/nginx/:/etc/nginx/conf.d
+                        - ./static:/static
+                        - .:/calcus
+                depends_on: 
+                        - web        
         taskqueue:
               image: ghcr.io/aertje/cloud-tasks-emulator:latest
               command: -host 0.0.0.0 -port 8123 -queue projects/test-project/locations/us-central1/queues/xtb-compute -queue projects/test-project/locations/us-central1/queues/actions
@@ -52,10 +65,13 @@ services:
                         - 8001
                 depends_on:
                         - redis
-                        - slurm
                 volumes:
-                        - scratch:/calcus/scratch
-                        - ./frontend/tests/cache:/calcus/cache:rw
+                        - ./scr:/calcus/scr
+                        - ./keys:/calcus/keys
+                        - ./backups:/calcus/backups
+                        - ./logs:/calcus/logs
+                        - ./frontend:/calcus/frontend
+
                 env_file:
                         - ./.env
                 environment:
@@ -63,7 +79,6 @@ services:
                         - CALCUS_CLOUD=True
                         - NUM_THREADS=4
                         - NUM_WORKERS=1
-                        - IS_TEST_CLUSTER_DAEMON=True
                         - PORT=8001
                         - GCP_LOCATION=us-central1
                         - GCP_PROJECT_ID=test-project
@@ -75,28 +90,20 @@ services:
                         - CALCUS_SCR_HOME=/calcus/scr
                         - CALCUS_TEST_SCR_HOME=/calcus/scr
                         - GUNICORN_TIMEOUT=15
-        selenium:
-                container_name: selenium
-                image: selenium/standalone-chrome:latest
-                ports:
-                        - "4444:4444"
-                        - "5900:5900"
-                links:
-                        - web
-                shm_size: '1gb' # Necessary to ensure that selenium does not crash
-                environment:
-                        - SCREEN_WIDTH=1920
-                        - SCREEN_HEIGHT=1080
+
         postgres:
                 image: postgres:11-bullseye
                 restart: always
                 user: "${UID}:${GID}"
                 volumes:
                         - ./data:/var/lib/postgresql/data/:rw
+                        - ./docker/postgres/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
+                        - ./backups:/calcus/backups
+                        - ./logs:/calcus/logs
                 env_file:
                         - ./.env
                 environment:
-                        - PGDATA=./var/lib/postgresql/data/
+                        - PGDATA=/var/lib/postgresql/data/
                         - POSTGRES_USER=calcus
                         - POSTGRES_DB=calcus
 

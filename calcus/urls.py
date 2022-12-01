@@ -35,7 +35,7 @@ handler500 = "frontend.views.handler500"
 from django.conf import settings
 from django.urls import include, path
 
-if settings.DEBUG:
+if settings.DEBUG and False:
     import debug_toolbar
 
     urlpatterns += [
