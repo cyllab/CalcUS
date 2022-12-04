@@ -97,3 +97,15 @@ NMR_REGRESSIONS = {
 #           spec_name: [num_params, [software1, software2]]
 #       }
 #   }
+
+
+short_tos = """
+TERMS OF SERVICE - SHORT VERSION
+
+1. We do not guarantee that the service will be uninterrupted or error free; nor do we make any warranty as to the results that may be obtained from use of the service.
+2. Any information sent to the platform cannot be guaranteed to be kept strictly confidential. As such, please do not send any sensitive information (e.g., structures of confidential molecules).
+
+You will be provided 60 CPU-seconds to perform calculations on CalcUS cloud, with common calculations taking between 2 and 10 seconds. Conformational searches use much more computing power; to avoid spending all your computation time, use them only for small molecules with the "--gfnff" specification.
+
+Feedback is greatly appreciated: raphael@calcus.cloud
+"""

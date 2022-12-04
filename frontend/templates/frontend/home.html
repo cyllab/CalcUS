@@ -73,12 +73,17 @@
         margin-right: 10px;
     }
     #gh_button,
-    #paper_button {
+    #paper_button,
+    #trial_button {
         font-size: 1em;
         text-align: center;
     }
     #paper_button {
         margin-left: 1em;
+    }
+
+    #trial_button {
+        margin-top: 2em;
     }
 
     #tag_title {
@@ -112,7 +117,7 @@
 <div class="content">
     <div id="logo_div">
         <center>
-            {% if IS_CLOUD or True %}
+            {% if IS_CLOUD %}
             <img id="home_logo" src="{% static 'frontend/calcus_cloud_logo.png' %}" />
             <br />
             {% else %}
@@ -124,10 +129,12 @@
                 <p id="tagline">Quantum Chemistry Web Platform</p>
             </div>
 
-            <a class="button is-primary" href="https://github.com/cyllab/CalcUS" id="gh_button" target="_blank"><i class="fa fa-lg fa-brands fa-github"></i> View Project</a>
-            <a class="button is-info" href="https://doi.org/10.1021/acs.jcim.1c01502" id="paper_button" target="_blank"
-                ><i class="fa fa-lg fa-solid fa-scroll"></i>View Publication</a
-            >
+            <a class="button is-info" href="https://github.com/cyllab/CalcUS" id="gh_button" target="_blank"><i class="fa fa-lg fa-brands fa-github"></i> View Project</a>
+            <a class="button is-info" href="https://doi.org/10.1021/acs.jcim.1c01502" id="paper_button" target="_blank"><i class="fa fa-lg fa-solid fa-scroll"></i>View Publication</a>
+            {% if IS_CLOUD and ALLOW_TRIAL and not request.user.is_authenticated %}
+            <br>
+            <a class="button is-primary" href="/start_trial/" id="trial_button"><i class="fa fa-lg fa-solid fa-gift"></i>Try for free now</a>
+            {% endif %}
         </center>
     </div>
     <hr id="logo_sep" />

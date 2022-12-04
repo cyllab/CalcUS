@@ -94,6 +94,7 @@ class User(AbstractUser):
     objects = UserManager()
 
     is_temporary = models.BooleanField(default=False)
+    is_trial = models.BooleanField(default=False)
 
     member_of = models.ForeignKey(
         "ResearchGroup",
@@ -141,6 +142,8 @@ class User(AbstractUser):
         if self.is_temporary:
             if self.in_class:
                 return self.in_class.professor
+            if self.is_trial:
+                return self
             else:
                 raise Exception(
                     f"Unexpected case for the resource provider of user {self.id} (self.name)"

@@ -55,7 +55,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import login, authenticate
 from django.db.models import Q
 
-from .forms import ResearcherCreateForm, StudentCreateForm
+from .forms import ResearcherCreateForm, StudentCreateForm, TrialUserCreateForm
 from .models import (
     Calculation,
     User,
@@ -187,6 +187,90 @@ class IndexView(generic.ListView):
 
 def home(request):
     return render(request, "frontend/home.html")
+
+
+def register(request):
+    acc_type = ""
+    if request.method == "POST" and "acc_type" in request.POST:
+        acc_type = clean(request.POST["acc_type"])
+        if acc_type == "student":
+            form_student = StudentCreateForm(request.POST)
+            if form_student.is_valid():
+                form_student.save()
+                user = authenticate(
+                    request,
+                    email=form_student.rand_email,
+                    password=form_student.rand_password,
+                )
+                if user:
+                    login(request, user)
+                    return redirect("/projects/")  # Quickstart page?
+                else:
+                    logger.error(f"Could not log in student")
+            form_researcher = ResearcherCreateForm()
+        elif acc_type == "researcher":
+            form_researcher = ResearcherCreateForm(request.POST)
+            if form_researcher.is_valid():
+                form_researcher.save()
+                email = form_researcher.cleaned_data.get("email")
+                password = form_researcher.cleaned_data.get("password1")
+                user = authenticate(request, email=email, password=password)
+                if user:
+                    login(request, user)
+                    return redirect("/projects/")  # Quickstart page?
+                else:
+                    logger.error(f"Could not log in researcher {email}")
+            form_student = StudentCreateForm()
+        else:
+            logger.error(f"Invalid account type: {acc_type}")
+            form_researcher = ResearcherCreateForm()
+            form_student = StudentCreateForm()
+    else:
+        form_researcher = ResearcherCreateForm()
+        form_student = StudentCreateForm()
+
+    return render(
+        request,
+        "registration/register.html",
+        {
+            "form_student": form_student,
+            "form_researcher": form_researcher,
+            "acc_type": acc_type,
+        },
+    )
+
+
+def start_trial(request):
+    if request.user.is_authenticated:
+        return HttpResponseRedirect("/launch/")
+    if not settings.ALLOW_TRIAL:
+        return HttpResponseRedirect("/home/")
+
+    if request.method == "POST":
+        form = TrialUserCreateForm(request.POST)
+        if form.is_valid():
+            form.save()
+            user = authenticate(
+                request,
+                email=form.rand_email,
+                password=form.rand_password,
+            )
+            if user:
+                login(request, user)
+                return redirect("/launch/")
+            else:
+                logger.error(f"Could not log in trial user")
+    else:
+        form = TrialUserCreateForm()
+
+    # If not, create his account
+    # Show short terms of services ("don't upload sensitive material") - link to full terms
+    # Redirect to the launch page
+    # Trigger intro/demo?
+
+    return render(
+        request, "frontend/start_trial.html", {"form": form, "short_tos": short_tos}
+    )
 
 
 @login_required
@@ -1262,6 +1346,7 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
 
     else:
         return "No calculation type"
+
     if is_flowchart is None:
         if "calc_project" in parameters_dict.keys():
             project = clean(parameters_dict["calc_project"])
@@ -1948,7 +2033,7 @@ def _submit_calculation(request, verify=False):
     else:
         if settings.IS_CLOUD:
             if not request.user.has_sufficient_resources(
-                10
+                1
             ):  # Placeholder calculation time
                 return "You have insufficient calculation time to launch a calculation"
         else:

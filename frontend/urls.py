@@ -41,6 +41,7 @@ urlpatterns = [
     # Home and index
     path("", views.home, name="home"),
     path("home/", views.home, name="home"),
+    path("start_trial/", views.start_trial, name="start_trial"),
     path("list/", views.IndexView.as_view(), name="list"),
     path("calculations/", views.calculations, name="calculations"),
     path("cloud_order/", views.cloud_order, name="cloud_order"),

@@ -29,7 +29,7 @@ from django.contrib.auth.forms import AuthenticationForm, UsernameField
 if settings.IS_CLOUD:
     from captcha.fields import ReCaptchaField
 
-from frontend.models import User, ClassGroup
+from frontend.models import User, ClassGroup, ResourceAllocation
 from frontend.helpers import get_random_string
 
 logging.basicConfig(
@@ -123,6 +123,46 @@ class StudentCreateForm(forms.ModelForm):
 
         if commit:
             user.save()
+        return user
+
+
+class TrialUserCreateForm(forms.ModelForm):
+    accepts_tos = forms.BooleanField(
+        required=True, label="I accept the Terms of Service"
+    )
+
+    if settings.IS_CLOUD:
+        captcha = ReCaptchaField()
+
+    class Meta:
+        model = User
+        fields = ()
+
+    def clean_accepts_tos(self):
+        accepts = self.cleaned_data["accepts_tos"]
+        if not accepts:
+            raise ValidationError(
+                f"You must accept the Terms of Service in order to use the platform"
+            )
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+
+        self.rand_email = get_random_string() + "@calcus.cloud"
+        self.rand_password = get_random_string()
+
+        user.email = self.rand_email
+        user.set_password(self.rand_password)
+        user.is_temporary = True
+        user.is_trial = True
+        user.allocated_seconds = 60
+
+        if commit:
+            user.save()
+            r = ResourceAllocation.objects.create(
+                code=get_random_string(), redeemer=user, allocation_seconds=60
+            )
+
         return user
 
 

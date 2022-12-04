@@ -8,6 +8,7 @@ def default(request):
             "IS_CLOUD",
             "ALLOW_LOCAL_CALC",
             "ALLOW_REMOTE_CALC",
+            "ALLOW_TRIAL",
             "LOCAL_MAX_ATOMS",
             "LOCAL_ALLOWED_THEORY_LEVELS",
             "LOCAL_ALLOWED_STEPS",

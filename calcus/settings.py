@@ -262,6 +262,10 @@ if IS_CLOUD:
     ALLOW_LOCAL_CALC = True
     ALLOW_REMOTE_CALC = False
 
+    ALLOW_TRIAL = True
+    # Give 60 free CPU-seconds for trial
+    TRIAL_DEFAULT_COMP_SECONDS = 60
+
     LOCAL_MAX_ATOMS = 200
 
     LOCAL_ALLOWED_THEORY_LEVELS = [
@@ -291,6 +295,7 @@ if IS_CLOUD:
 else:
     ALLOW_LOCAL_CALC = True
     ALLOW_REMOTE_CALC = True
+    ALLOW_TRIAL = False
 
     # For local calculations, limit the size of systems to this number of atoms or disable the limitation with -1
     LOCAL_MAX_ATOMS = -1
