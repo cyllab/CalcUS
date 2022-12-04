@@ -2100,21 +2100,16 @@ def calc_to_ccinput(calc):
         _solvation_radii = ""
 
     try:
-        _PAL = int(PAL)
-    except ValueError:
-        _PAL = 1
-
-    try:
         _MEM = int(MEM)
     except ValueError:
         _MEM = 1000
 
     if is_test:
-        _nproc = min(4, _PAL)
+        _nproc = min(4, PAL)
         _mem = 2000
     else:
         if calc.local:
-            _nproc = _PAL
+            _nproc = PAL
             _mem = _MEM
         else:
             _nproc = calc.order.resource.pal
@@ -3727,6 +3722,9 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
 
 
 def get_calc_size(calc):
+    if calc.order.author.is_trial:
+        return "SMALL"
+
     if calc.step.name in ["Conformational Search", "Constrained Conformational Search"]:
         if "gfnff" in calc.parameters.specifications.lower():
             return "MEDIUM"
@@ -3931,9 +3929,10 @@ def run_calc(calc_id):
 
     logger.info(f"Calc {calc_id} finished")
 
-    calc.billed_seconds = max(
-        1, round((calc.date_finished - calc.date_started).total_seconds())
-    )
+    if calc.local:
+        calc.billed_seconds = PAL * max(
+            1, round((calc.date_finished - calc.date_started).total_seconds())
+        )
 
     if calc.step.creates_ensemble:
         analyse_opt(calc.id)

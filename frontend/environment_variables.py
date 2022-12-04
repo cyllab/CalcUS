@@ -44,10 +44,7 @@ else:
         CALCUS_SCR_HOME = os.getenv("CALCUS_SCR_HOME", "")
         CALCUS_KEY_HOME = os.getenv("CALCUS_KEY_HOME", "")
 
-try:
-    PAL = os.environ["NUM_CPU"]
-except KeyError:
-    PAL = 1
+PAL = int(os.getenv("NUM_CPU", "1"))
 
 STACKSIZE = os.environ.get("OMP_STACKSIZE", "1G")
 
