@@ -55,8 +55,17 @@ class ResearcherCreateForm(UserCreationForm):
     def save(self, commit=True):
         user = super(ResearcherCreateForm, self).save(commit=False)
         user.email = self.cleaned_data["email"]
+        user.allocated_seconds = 600
+
         if commit:
             user.save()
+            r = ResourceAllocation.objects.create(
+                code=get_random_string(),
+                redeemer=user,
+                allocation_seconds=600,
+                note="NEW_ACCOUNT",
+            )
+
         return user
 
     def clean_email(self):
@@ -160,7 +169,10 @@ class TrialUserCreateForm(forms.ModelForm):
         if commit:
             user.save()
             r = ResourceAllocation.objects.create(
-                code=get_random_string(), redeemer=user, allocation_seconds=60
+                code=get_random_string(),
+                redeemer=user,
+                allocation_seconds=60,
+                note="TRIAL",
             )
 
         return user

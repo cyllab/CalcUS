@@ -237,6 +237,16 @@ class ResourceAllocation(models.Model):
 
     allocation_seconds = models.PositiveIntegerField()
 
+    NOTES = (
+        ("TRIAL", 0),
+        ("NEW_ACCOUNT", 1),
+        ("TESTER", 2),
+        ("PURCHASE", 3),
+        ("SUBSCRIPTION", 4),
+        ("MANUAL", 99),
+    )
+    note = models.PositiveSmallIntegerField(choices=NOTES, default="MANUAL")
+
     def redeem(self, user, stall=0):
         with transaction.atomic():
             alloc = ResourceAllocation.objects.select_for_update().get(id=self.id)
