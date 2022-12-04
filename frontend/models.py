@@ -237,15 +237,22 @@ class ResourceAllocation(models.Model):
 
     allocation_seconds = models.PositiveIntegerField()
 
-    NOTES = (
-        ("TRIAL", 0),
-        ("NEW_ACCOUNT", 1),
-        ("TESTER", 2),
-        ("PURCHASE", 3),
-        ("SUBSCRIPTION", 4),
-        ("MANUAL", 99),
-    )
-    note = models.PositiveSmallIntegerField(choices=NOTES, default="MANUAL")
+    TRIAL = 1
+    NEW_ACCOUNT = 2
+    TESTER = 3
+    PURCHASE = 4
+    SUBSCRIPTION = 5
+    MANUAL = 99
+
+    NOTES = [
+        (TRIAL, "Trial"),
+        (NEW_ACCOUNT, "New account"),
+        (TESTER, "Tester"),
+        (PURCHASE, "Purchase"),
+        (SUBSCRIPTION, "Subscription"),
+        (MANUAL, "Manually issued allocation"),
+    ]
+    note = models.PositiveSmallIntegerField(choices=NOTES, default=99)
 
     def redeem(self, user, stall=0):
         with transaction.atomic():

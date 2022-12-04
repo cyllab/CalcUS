@@ -63,7 +63,7 @@ class ResearcherCreateForm(UserCreationForm):
                 code=get_random_string(),
                 redeemer=user,
                 allocation_seconds=600,
-                note="NEW_ACCOUNT",
+                note=ResourceAllocation.NEW_ACCOUNT,
             )
 
         return user
@@ -172,7 +172,7 @@ class TrialUserCreateForm(forms.ModelForm):
                 code=get_random_string(),
                 redeemer=user,
                 allocation_seconds=60,
-                note="TRIAL",
+                note=ResourceAllocation.TRIAL,
             )
 
         return user
