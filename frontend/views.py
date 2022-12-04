@@ -102,6 +102,7 @@ from .tasks import (
     send_gcloud_task,
     load_output_files,
     plot_peaks,
+    get_calc_size,
 )
 from frontend import tasks
 from .decorators import superuser_required
@@ -5068,10 +5069,13 @@ def relaunch_calc(request):
     calc.save()
 
     if calc.local:
-        t = run_calc.s(str(calc.id)).set(queue="comp")
-        res = t.apply_async()
-        calc.task_id = res
-        calc.save()
+        if settings.IS_CLOUD:
+            send_gcloud_task("/cloud_calc/", str(calc.id), size=get_calc_size(calc))
+        else:
+            t = run_calc.s(str(calc.id)).set(queue="comp")
+            res = t.apply_async()
+            calc.task_id = res
+            calc.save()
     else:
         send_cluster_command(f"launch\n{calc.id}\n{calc.order.resource_id}\n")
 
