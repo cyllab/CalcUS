@@ -1,4 +1,4 @@
-if ("{{ params.program }}" != "Unknown" && "{{ params.program}}" != "Open Babel") {
+if ("{{ params.software }}" != "Unknown" && "{{ params.software }}" != "Open Babel") {
 	solvent = document.getElementById("calc_solvent");
 	solvent.value = "{{ params.solvent }}";
 
@@ -41,6 +41,8 @@ if ("{{ params.program }}" != "Unknown" && "{{ params.program}}" != "Open Babel"
 	bs = document.getElementById("calc_custom_bs");
 	bs.value = "{{ params.custom_basis_sets }}";
 
-	specifications = document.getElementById("calc_specifications");
-	specifications.value = "{{ params.specifications }}";
+    if("{{ params.software }}" != "xtb") {
+        specifications = document.getElementById("calc_specifications");
+        specifications.value = "{{ params.specifications }}";
+    }
 }
