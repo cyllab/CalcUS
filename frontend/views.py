@@ -55,7 +55,12 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import login, authenticate
 from django.db.models import Q
 
-from .forms import ResearcherCreateForm, StudentCreateForm, TrialUserCreateForm
+from .forms import (
+    ResearcherCreateForm,
+    StudentCreateForm,
+    TrialUserCreateForm,
+    CreateFullAccountForm,
+)
 from .models import (
     Calculation,
     User,
@@ -264,13 +269,8 @@ def start_trial(request):
     else:
         form = TrialUserCreateForm()
 
-    # If not, create his account
-    # Show short terms of services ("don't upload sensitive material") - link to full terms
-    # Redirect to the launch page
-    # Trigger intro/demo?
-
     return render(
-        request, "frontend/start_trial.html", {"form": form, "short_tos": short_tos}
+        request, "registration/start_trial.html", {"form": form, "trial_tos": trial_tos}
     )
 
 
@@ -3455,25 +3455,26 @@ def get_calc_data_remote(request, pk):
         return HttpResponse(status=204)
 
     if calc.parameters.software == "Gaussian":
-        try:
-            os.remove(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"))
-        except OSError:
-            pass
-
-        send_cluster_command(f"load_log\n{calc.id}\n{calc.order.resource.id}\n")
-
-        for i in range(10):
-            if os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")):
-                break
-            time.sleep(1)
-
-        if not os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log")):
-            return HttpResponse(status=404)
-
-        load_output_files(calc)
+        logname = "calc.log"
     else:
-        logger.error("Not implemented")
-        return HttpResponse(status=403)
+        logname = "calc.out"
+
+    try:
+        os.remove(os.path.join(CALCUS_SCR_HOME, str(calc.id), logname))
+    except OSError:
+        pass
+
+    send_cluster_command(f"load_log\n{calc.id}\n{calc.order.resource.id}\n")
+
+    for i in range(10):
+        if os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), logname)):
+            break
+        time.sleep(1)
+
+    if not os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), logname)):
+        return HttpResponse(status=404)
+
+    load_output_files(calc)
 
     return format_frames(calc, request.user)
 
@@ -5267,6 +5268,7 @@ def clean_all_completed(request):
     return HttpResponse(status=200)
 
 
+@login_required
 def change_password(request):
     if request.method == "POST":
         form = PasswordChangeForm(request.user, request.POST)
@@ -5278,6 +5280,24 @@ def change_password(request):
     else:
         form = PasswordChangeForm(request.user)
     return render(request, "frontend/change_password.html", {"form": form})
+
+
+@login_required
+def create_full_account(request):
+    if request.method == "POST":
+        form = CreateFullAccountForm(request.user, request.POST)
+        if form.is_valid():
+            form.save()
+            update_session_auth_hash(request, request.user)
+            return redirect("/profile/")
+    else:
+        form = CreateFullAccountForm(request.user)
+
+    return render(
+        request,
+        "registration/create_full_account.html",
+        {"form": form, "tos": full_tos},
+    )
 
 
 def handler404(request, *args, **argv):

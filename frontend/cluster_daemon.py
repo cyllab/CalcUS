@@ -387,14 +387,22 @@ class ClusterDaemon:
                     except KeyError:
                         logger.warning("Cannot load log: invalid access")
 
-                    tasks.sftp_get(
-                        "/home/{}/scratch/calcus/{}/calc.log".format(
-                            access.cluster_username, calc.id
-                        ),
-                        os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.log"),
-                        remote_conn,
-                        self.locks[access.id],
-                    )
+                    if calc.parameters.software == "Gaussian":
+                        files = ["calc.log"]
+                    elif calc.parameters.software == "ORCA":
+                        files = ["calc.out", "calc_trj.xyz"]
+                    elif calc.parameters.software == "xtb":
+                        files = ["calc.out", "xtbopt.log"]
+                    else:
+                        raise Exception(f"Unknown software: {calc.parameters.software}")
+
+                    for f in files:
+                        tasks.sftp_get(
+                            f"/home/{access.cluster_username}/scratch/calcus/{calc.id}/{f}",
+                            os.path.join(CALCUS_SCR_HOME, str(calc.id), f),
+                            remote_conn,
+                            self.locks[access.id],
+                        )
 
                 else:
                     logger.warning("Cannot load log: unknown calculation")

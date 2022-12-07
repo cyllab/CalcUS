@@ -3154,6 +3154,7 @@ def analyse_opt_ORCA(calc):
 
     with open(os.path.join(prepath, "calc.out")) as f:
         lines = f.readlines()
+
     ind = 0
     flag = False
     while not flag:
@@ -3171,9 +3172,10 @@ def analyse_opt_ORCA(calc):
 
     structs, energies = parse_multixyz_from_file(os.path.join(prepath, "calc_trj.xyz"))
     new_frames = []
+    update_frames = []
 
     for ind, (s, E) in enumerate(zip(structs, energies)):
-        xyz = npxyz2strxyz(s)
+        xyz = format_xyz(s)
         try:
             f = calc.calculationframe_set.get(number=ind + 1)
         except CalculationFrame.DoesNotExist:
@@ -3186,9 +3188,12 @@ def analyse_opt_ORCA(calc):
                 )
             )
         else:
-            continue
+            f.xyz_structure = xyz
+            f.RMSD = RMSDs[ind]
+            update_frames.append(f)
 
     CalculationFrame.objects.bulk_create(new_frames)
+    CalculationFrame.objects.bulk_update(update_frames, ["xyz_structure", "RMSD"])
 
     return ErrorCodes.SUCCESS
 
