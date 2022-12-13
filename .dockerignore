@@ -21,3 +21,4 @@ frontend/tests/results
 bin/*
 !bin/*.tar.bz2
 gcloud.sh
+frontend/cloud_config.py

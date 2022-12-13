@@ -223,3 +223,10 @@ def reorder_xyz(ref, xyz):
     new_order = {i: -1 for i in range(len(xyz))}
 
     elements = {i: e[0] for i, e in enumerate(ref)}
+
+
+def format_xyz(xyz):
+    str_xyz = f"{len(xyz)}\n\n"
+    for line in xyz:
+        str_xyz += "{} {:.4f} {:.4f} {:.4f}\n".format(line[0], *line[1])
+    return str_xyz

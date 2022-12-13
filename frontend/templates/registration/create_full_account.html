@@ -1,0 +1,42 @@
+{% extends 'frontend/base.html' %}
+{% load i18n bulma_tags static %}
+
+{% block extrahead %}
+<style>
+    .box {
+        width: 40em;
+    }
+    #id_captcha {
+        margin-bottom: 2em;
+    }
+    .textarea {
+        margin-bottom: 1em;
+        height: 25em;
+    }
+    .button {
+        margin-top: 1em;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="columns is-centered is-expanded">
+    <div class="column is-centered">
+        <section class="section">
+            <div class="field has-addons has-addons-centered">
+                <div class="box has-text-centered">
+                    <h1 class="title is-4">Create a full account</h1>
+                    <form method="post" id="form_trial">
+                        <center>
+                            <div class="control">
+                                <textarea class="textarea has-fixed-size" readonly>{{ tos }}</textarea>
+                            </div>
+                        {% csrf_token %} {{ form|bulma }}
+                        </center>
+                        <button class="control button is-primary" type="Submit">Convert account to full account</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

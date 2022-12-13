@@ -247,6 +247,10 @@
     .field {
         margin-top: 1em;
     }
+    #convert_link {
+        margin-top: 1em;
+        margin-bottom: 1em;
+    }
 	</style>
 {% endblock %}
 
@@ -395,6 +399,9 @@
             {% endif %}
             {% if request.user.is_temporary %}
             <p>You are logged in as temporary user <b>{{ request.user.email }}</b>.</p>
+            {% if request.user.is_trial %}
+            <a class="button is-info" id="convert_link" href="/create_full_account/">Convert account to full account</a>
+            {% endif %}
             {% else %}
             <p>You are logged in as <b>{{ request.user.email }}</b>.</p>
             {% endif %}

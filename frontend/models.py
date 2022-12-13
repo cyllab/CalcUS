@@ -242,11 +242,14 @@ class ResourceAllocation(models.Model):
     TESTER = 3
     PURCHASE = 4
     SUBSCRIPTION = 5
+    TRIAL_CONVERSION = 6
+
     MANUAL = 99
 
     NOTES = [
         (TRIAL, "Trial"),
         (NEW_ACCOUNT, "New account"),
+        (TRIAL_CONVERSION, "Trial conversion"),
         (TESTER, "Tester"),
         (PURCHASE, "Purchase"),
         (SUBSCRIPTION, "Subscription"),

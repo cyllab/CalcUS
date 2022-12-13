@@ -21,10 +21,12 @@ import logging
 
 from django.conf import settings
 from django import forms
+from django.forms import ModelForm
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.contrib.auth.forms import AuthenticationForm, UsernameField
+from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
 if settings.IS_CLOUD:
     from captcha.fields import ReCaptchaField
@@ -184,3 +186,45 @@ class UserLoginForm(AuthenticationForm):
 
     if settings.IS_CLOUD:
         captcha = ReCaptchaField()
+
+
+from django.contrib.auth.forms import SetPasswordForm
+
+
+class CreateFullAccountForm(SetPasswordForm, ModelForm):
+    error_messages = dict(
+        SetPasswordForm.error_messages,
+        **{
+            "password_incorrect": "Your old password was entered incorrectly. "
+            "Please enter it again.",
+        },
+    )
+
+    class Meta:
+        model = User
+        fields = ["email"]
+
+    def clean_email(self):
+        validate_email(self.cleaned_data["email"])
+        if User.objects.filter(email=self.cleaned_data["email"]).exists():
+            raise ValidationError(self.fields["email"].error_messages["exists"])
+        return self.cleaned_data["email"]
+
+    def save(self, commit=True):
+        user = super(CreateFullAccountForm, self).save(commit=False)
+        user.email = self.cleaned_data["email"]
+
+        user.is_temporary = False
+        user.is_trial = False
+        user.allocated_seconds += 540
+
+        if commit:
+            user.save()
+            r = ResourceAllocation.objects.create(
+                code=get_random_string(),
+                redeemer=user,
+                allocation_seconds=540,
+                note=ResourceAllocation.TRIAL_CONVERSION,
+            )
+
+        return user

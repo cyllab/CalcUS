@@ -25,7 +25,7 @@
                     <form method="post" id="form_trial">
                         <center>
                             <div class="control">
-                                <textarea class="textarea has-fixed-size" readonly>{{ short_tos }}</textarea>
+                                <textarea class="textarea has-fixed-size" readonly>{{ trial_tos }}</textarea>
                             </div>
                         {% csrf_token %} {{ form|bulma }}
                         </center>
