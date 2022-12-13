@@ -506,10 +506,10 @@
                 <a href="/projects/">Projects</a>
             </li>
             <li>
-                <a href="/projects/{{ ensemble.parent_molecule.project.author }}">{{ ensemble.parent_molecule.project.author }}</a>
+                <a href="/projects/{{ ensemble.parent_molecule.project.author.id }}">{{ ensemble.parent_molecule.project.author }}</a>
             </li>
             <li>
-                <a href="/projects/{{ ensemble.parent_molecule.project.author }}/{{ ensemble.parent_molecule.project }}">{{ ensemble.parent_molecule.project }}</a>
+                <a href="/projects/{{ ensemble.parent_molecule.project.author.id }}/{{ ensemble.parent_molecule.project }}">{{ ensemble.parent_molecule.project }}</a>
             </li>
             <li>
                 <a href="/molecule/{{ ensemble.parent_molecule.id }}">{{ ensemble.parent_molecule.name }}</a>
