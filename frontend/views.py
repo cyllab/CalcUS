@@ -4951,7 +4951,7 @@ def download_folder(request, pk):
                                 os.path.join(
                                     path,
                                     clean_filename(folder.name),
-                                    f"{name}.xyz",
+                                    f"{log_name}.xyz",
                                 ),
                                 c.structure.xyz_structure,
                             )

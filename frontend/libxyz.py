@@ -23,6 +23,8 @@ import numpy as np
 import periodictable
 from .constants import *
 
+from hashlib import md5
+
 # Structure of xyz:
 # [<EL>, [x, y, z]]
 # Atom indices are given starting at 1
@@ -182,10 +184,36 @@ def morgan_numbering(xyz):
     return indices
 
 
+def morgan_hashz_numbering(xyz):
+    neighbors = get_neighbors_lists(xyz)
+
+    indices = np.array([str(ATOMIC_NUMBER[i[0]]) for i in xyz], dtype=np.dtype("<U32"))
+    num = len(xyz)
+    num_unique_indices = 1
+
+    while True:
+        new_indices = indices.copy()
+        for i in range(num):
+            bonded = neighbors[i]
+            txt = [new_indices[i]]
+            for b in bonded:
+                txt.append(indices[b])
+            new_indices[i] = md5("".join(sorted(txt)).encode()).hexdigest()
+
+        new_num_unique_indices = len(set(new_indices))
+        if new_num_unique_indices == num_unique_indices:
+            break
+
+        indices = new_indices
+        num_unique_indices = new_num_unique_indices
+
+    return indices
+
+
 def equivalent_atoms(xyz, algorithm="morgan"):
     equivalent = []
     if algorithm == "morgan":
-        indices = morgan_numbering(xyz)
+        indices = morgan_hashz_numbering(xyz)
         for val in set(indices):
             eqs = np.where(indices == val)[0]
             if len(eqs) > 1:

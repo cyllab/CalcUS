@@ -43,6 +43,23 @@ class XyzTests(TestCase):
         for ind, i in enumerate(REF):
             self.assertEqual(indices[ind], i)
 
+    def test_morgan_hashz(self):
+        xyz = parse_xyz_from_file(os.path.join(tests_dir, "ethanol.xyz"))
+        REF = [54, 23, 23, 23, 57, 24, 24, 32, 15]
+        indices = morgan_hashz_numbering(xyz)
+        groups = [[0], [1, 2, 3], [4], [5, 6], [7], [8]]
+
+        for g in groups:
+            for o in groups:
+                if o == g:
+                    for n in g:
+                        for m in o:
+                            self.assertEqual(indices[n], indices[m])
+                else:
+                    for n in g:
+                        for m in o:
+                            self.assertNotEqual(indices[n], indices[m])
+
     def equivalent_equivalence(self, test, ref):
         test_d = {}
         ref_d = {}
