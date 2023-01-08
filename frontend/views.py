@@ -3466,10 +3466,17 @@ def get_calc_data_remote(request, pk):
 
     send_cluster_command(f"load_log\n{calc.id}\n{calc.order.resource.id}\n")
 
-    for i in range(10):
+    last_size = 0
+    # We need to wait until the file download is complete, although we cannot directly communicate with the cluster daemon
+    for i in range(20):
         if os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), logname)):
-            break
-        time.sleep(1)
+            fsize = os.path.getsize(
+                os.path.join(CALCUS_SCR_HOME, str(calc.id), logname)
+            )
+            if fsize == last_size:
+                break
+            last_size = fsize
+        time.sleep(0.5)
 
     if not os.path.isfile(os.path.join(CALCUS_SCR_HOME, str(calc.id), logname)):
         return HttpResponse(status=404)

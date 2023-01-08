@@ -3144,13 +3144,16 @@ def analyse_opt(calc_id):
 def analyse_opt_ORCA(calc):
     prepath = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    RMSDs = [0]
+    # RMSDs = [0]
+    RMSDs = []  # Not sure
 
     if not os.path.isfile(os.path.join(prepath, "calc.out")):
         return
 
     if not os.path.isfile(os.path.join(prepath, "calc_trj.xyz")):
         return
+
+    print(f"Size is {os.path.getsize(os.path.join(prepath, 'calc.out'))}")
 
     with open(os.path.join(prepath, "calc.out")) as f:
         lines = f.readlines()
@@ -3173,6 +3176,7 @@ def analyse_opt_ORCA(calc):
     structs, energies = parse_multixyz_from_file(os.path.join(prepath, "calc_trj.xyz"))
     new_frames = []
     update_frames = []
+    print(f"RMSDs: {len(RMSDs)}, structs: {len(structs)}")
 
     for ind, (s, E) in enumerate(zip(structs, energies)):
         xyz = format_xyz(s)

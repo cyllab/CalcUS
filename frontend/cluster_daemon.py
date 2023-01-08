@@ -98,7 +98,7 @@ class ClusterDaemon:
     stopped = False
 
     def access_test(self, id, password):
-        if id in self.connections.keys():
+        if id in self.connections:
             return ConnectionCodes.ALREADY_CONNECTED
 
         try:
@@ -239,9 +239,9 @@ class ClusterDaemon:
 
     def disconnect(self, access_id):
         logger.info(f"Disconnecting cluster access {access_id}")
-        if access_id in self.connections.keys():
+        if access_id in self.connections:
             del self.connections[access_id]
-        if access_id in self.locks.keys():
+        if access_id in self.locks:
             del self.locks[access_id]
 
         pid_to_remove = []
@@ -334,7 +334,7 @@ class ClusterDaemon:
             if cmd == "kill":
                 logger.info(f"Killing calculation {calc.id}")
                 if calc.order.resource is not None:
-                    if calc.id in self.calculations.keys():
+                    if calc.id in self.calculations:
                         pid = self.calculations[calc.id]
                         if pid not in tasks.kill_sig:
                             tasks.kill_sig.append(pid)
@@ -359,7 +359,7 @@ class ClusterDaemon:
                 )
                 return
 
-            if access.id not in self.connections.keys():
+            if access.id not in self.connections:
                 logger.warning(
                     f"Cannot execute command: access {access.id} not connected"
                 )
@@ -378,7 +378,7 @@ class ClusterDaemon:
 
                 del self.calculations[calc.id]
 
-                if pid in tasks.connections.keys():
+                if pid in tasks.connections:
                     del tasks.connections[pid]
             elif cmd == "load_log":
                 if calc.id in self.calculations:
