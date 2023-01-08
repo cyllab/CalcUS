@@ -124,38 +124,29 @@ String.prototype.format = function() {
 			localStorage.setItem("lastSelectedProject", choice.value);
 		{% endif %}
 
-		data = $("#calcform").serializeArray(),
+        data = new FormData(document.forms.namedItem("calcform"));
 
-		data.push({"name": "constraint_num", "value": constraint_num});
+		data.append("constraint_num", "value");
 
 		{% if ensemble or structures %}
-		data.push({"name": "starting_ensemble", "value": "{{ ensemble.id }}"});
+		data.append("starting_ensemble", "{{ ensemble.id }}");
 		{% endif %}
 
 		{% if structures %}
-		data.push({"name": "starting_structs", "value": "{{ structures }}"});
+		data.append("starting_structs", "{{ structures }}");
 		{% endif %}
 
 		{% if calc %}
-		data.push({"name": "starting_calc", "value": "{{ calc.id }}"});
-		data.push({"name": "starting_frame", "value": {{ frame_num }}});
+		data.append("starting_calc", "{{ calc.id }}");
+		data.append("starting_frame", {{ frame_num }});
 		{% endif %}
 
 		{% if not ensemble and not structure and not calc and is_flowchart is None%}
 		if (sketcher.molecules.length > 0) {
 			let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
-			data.push({"name": "structure", "value": mol});
+			data.append("structure", mol);
 		}
 		{% endif %}
-
-		upload_el = $("#file_structure");
-		if(upload_el.length != 0) {
-			num_files = upload_el[0].files.length;
-		}
-		else {
-			num_files = 0;
-		}
-		data.push({"name": "num_files", "value": num_files});
 
 		upload_aux_el = $("#aux_file_structure");
 		if(upload_aux_el.length != 0) {
@@ -164,27 +155,25 @@ String.prototype.format = function() {
 		else {
 			num_aux_files = 0;
 		}
-		data.push({"name": "num_aux_files", "value": num_aux_files});
+		data.append("num_aux_files", num_aux_files);
 
-		$.ajax({
-			data: data, 
-			headers: {
-				"X-CSRFToken": '{{ csrf_token }}',
-			},
-
-			type: "POST", 
-			url: "/verify_calculation/",
-			success: function (response) { 
+        const request = new XMLHttpRequest();
+        request.onload = function() {
+            if(request.status == 200) {
 				$("#calcform").submit();
 				$("#form_error_msg").html("");
-			},
-			error: function (response) {
-				$("#form_error_msg").html("Could not submit the calculation: " + response.responseText);
+            }
+            else {
+		        $("#form_error_msg").html("Could not submit the calculation: " + request.response);
 				$("#submit_button").removeClass("is-loading");
-			}
-		});
+            }
+        };
+
+        request.open("POST", "/verify_calculation/");
+        request.send(data);
 
 	}
+
 	function load_preset(id) {
         if(id == undefined) {
             return;
