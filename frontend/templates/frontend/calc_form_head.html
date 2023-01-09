@@ -126,7 +126,7 @@ String.prototype.format = function() {
 
         data = new FormData(document.forms.namedItem("calcform"));
 
-		data.append("constraint_num", "value");
+		data.append("constraint_num", constraint_num);
 
 		{% if ensemble or structures %}
 		data.append("starting_ensemble", "{{ ensemble.id }}");
