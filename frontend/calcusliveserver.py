@@ -534,7 +534,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.wait_for_ajax()
         submit = self.driver.find_element(By.ID, "submit_button")
         submit.click()
-        self.wait_for_ajax()
+
+        self.wait_for_submission()
         try:
             msg = self.driver.find_element(By.ID, "form_error_msg")
         except selenium.common.exceptions.NoSuchElementException:
@@ -595,6 +596,20 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         tabs_list = self.driver.find_element(By.CSS_SELECTOR, "#tabs")
         tabs = tabs_list.find_elements(By.CSS_SELECTOR, "li")
         return len(tabs)
+
+    def wait_for_submission(self):
+        for i in range(20):
+            try:
+                submit = self.driver.find_element(By.ID, "submit_button")
+            except selenium.common.exceptions.NoSuchElementException:
+                return
+
+            try:
+                if "is-loading" not in submit.get_attribute("class"):
+                    return
+            except selenium.common.exceptions.StaleElementReferenceException:
+                return
+            time.sleep(0.2)
 
     def wait_for_ajax(self):
         for i in range(10):
