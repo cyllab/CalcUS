@@ -3153,8 +3153,6 @@ def analyse_opt_ORCA(calc):
     if not os.path.isfile(os.path.join(prepath, "calc_trj.xyz")):
         return
 
-    print(f"Size is {os.path.getsize(os.path.join(prepath, 'calc.out'))}")
-
     with open(os.path.join(prepath, "calc.out")) as f:
         lines = f.readlines()
 
