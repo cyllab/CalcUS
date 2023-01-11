@@ -1,19 +1,61 @@
 {% extends 'frontend/base.html' %} {% load static %} {% block extrahead %}
 <script src="{% static 'frontend/jquery-2.2.4.min.js' %}"></script>
 <script src="{% static 'frontend/jquery-ui-1.9.2.custom.min.js' %}"></script>
+<!--
 <script src="{% static 'frontend/ip.grid.min.js' %}"></script>
 <link href="{% static 'frontend/ip.grid.css' %}" rel="stylesheet" />
+--!>
+
+<script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script>
+<script src="https://jsuites.net/v4/jsuites.js"></script>
+<link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
+<link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" />
+
+<style>
+    #spreadsheet {
+        font-size: 10pt;
+        margin: 0;
+    }
+    #content_container {
+        width: 100%;
+        margin-left: 0%;
+    }
+</style>
+
 <title>CalcUS - Analyse</title>
+
 {% endblock %} {% block content %}
-<div class="container">
+<div>
     <center>
         <h1 class="title is-1">{{ proj.name }}</h1>
         <br />
-    </center>
 
-    <div id="spreadsheet" style="width: 100%; height: 120%"></div>
-</div>
+    <div id="spreadsheet"></div>
+    </div>
+    </center>
 <script>
+    $(document).ready(function() {
+        data = JSON.parse(`{{ data|safe }}`);
+            jspreadsheet(document.getElementById('spreadsheet'), {
+                data: data,
+                columns: [
+                    { type: 'text', width: 250, title: "Parameters" },
+                    { type: 'text', width: 220, title: "Molecule" },
+                    { type: 'text', width: 220, title: "Ensemble" },
+                    { type: 'numeric', width:190 },
+                    { type: 'numeric', width:190 },
+                    { type: 'numeric', width:80 },
+                    { type: 'numeric', width:80 },
+                    { type: 'numeric', width:80 },
+                    { type: 'numeric', width:80 },
+
+                    { type: 'numeric', width:80 },
+                    { type: 'numeric', width:80 },
+                    { type: 'numeric', width:80 },
+                ]
+            });
+        });
+    /*
     $(document).ready(function() {
     	$("#spreadsheet").ip_Grid({rows: {{ len }}, cols: 50});
     	{% for entry in data %}
@@ -21,6 +63,7 @@
     	{% endfor %}
     	$('#spreadsheet').ip_ResizeColumn({ columns: [-1], size: 200 })
     });
+   */
 </script>
 
 {% endblock %}

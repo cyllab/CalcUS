@@ -3174,7 +3174,6 @@ def analyse_opt_ORCA(calc):
     structs, energies = parse_multixyz_from_file(os.path.join(prepath, "calc_trj.xyz"))
     new_frames = []
     update_frames = []
-    print(f"RMSDs: {len(RMSDs)}, structs: {len(structs)}")
 
     for ind, (s, E) in enumerate(zip(structs, energies)):
         xyz = format_xyz(s)

@@ -5209,12 +5209,20 @@ def analyse(request, project_id):
 
     csv = get_csv(proj, request.user, folders=False)
     js_csv = []
+    """
+    # Generates a list of cells in the format [value, xcoord, ycoord]
     for ind1, line in enumerate(csv.split("\n")):
         for ind2, el in enumerate(line.split(",")):
             js_csv.append([el, ind1, ind2])
+    """
+    for ind1, line in enumerate(csv.split("\n")[1:]):
+        js_csv.append(line.replace("Relative Energy", "Rel. Energy").split(","))
+
     l = len(csv.split("\n")) + 5
     return render(
-        request, "frontend/analyse.html", {"data": js_csv, "len": l, "proj": proj}
+        request,
+        "frontend/analyse.html",
+        {"data": json.dumps(js_csv), "len": l, "proj": proj},
     )
 
 
