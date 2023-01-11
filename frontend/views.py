@@ -1637,7 +1637,12 @@ def handle_file_upload(ff, params, is_local, verify=False):
     ext = fname.split(".")[-1]
 
     if ext == "xyz":
-        xyz = in_file
+        slines = [i.strip() for i in in_file.split("\n") if i.strip() != ""]
+        if len(slines[0].split()) > 2:
+            # The two first lines are probably missing
+            xyz = f"{len(slines)}\n\n" + in_file
+        else:
+            xyz = in_file
     elif ext in ["mol", "mol2", "sdf", "log", "out", "com", "gjf"]:
         xyz = generate_xyz_structure(False, in_file, ext)
     else:
@@ -1685,7 +1690,12 @@ def handle_file_upload_flowchart(ff):
         s.mol_structure = in_file
         generate_xyz_structure(False, s)
     elif ext == "xyz":
-        s.xyz_structure = in_file
+        slines = [i.strip() for i in in_file.split("\n") if i.strip() != ""]
+        if len(slines[0].split()) < 2:
+            # The two first lines are probably missing
+            s.xyz_structure = f"{len(slines)}\n\n" + in_file
+        else:
+            s.xyz_structure = in_file
     elif ext == "sdf":
         s.sdf_structure = in_file
         generate_xyz_structure(False, s)

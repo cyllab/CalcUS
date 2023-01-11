@@ -141,7 +141,7 @@ String.prototype.format = function() {
 		data.append("starting_frame", {{ frame_num }});
 		{% endif %}
 
-		{% if not ensemble and not structure and not calc and is_flowchart is None%}
+		{% if not ensemble and not structure and not calc and is_flowchart is None %}
 		if (sketcher.molecules.length > 0) {
 			let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
 			data.append("structure", mol);
@@ -590,7 +590,20 @@ String.prototype.format = function() {
 			var reader = new FileReader();
 			reader.readAsText(file_list[0], "UTF-8");
 			reader.onload = function(e) {
-				let mol_read = ChemDoodle.readXYZ(e.target.result);
+                let xyz = e.target.result;
+                let sxyz = xyz.split('\n');
+                let mol_read = null;
+                if(sxyz[0].split(' ').length < 2) {
+				    mol_read = ChemDoodle.readXYZ(xyz);
+                }
+                else {
+                    let l;
+                    for(l=0;l < sxyz.length; l++) {
+                        if(sxyz[l].trim() == "")
+                            break;
+                    }
+				    mol_read = ChemDoodle.readXYZ(String(l) + "\n\n" + xyz);
+                }
 				ChemDoodle.relabel(mol_read);
 				editor.loadMolecule(mol_read);	
 			}
