@@ -22,6 +22,7 @@ periodictable
 pre-commit
 psutil==5.7.2
 psycopg2
+pysisyphus
 requests
 scipy
 wheel

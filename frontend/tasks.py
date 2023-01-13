@@ -982,10 +982,10 @@ def get_or_create(params, struct):
 def xtb_handle_ts(in_file, calc):
     """Used to choose the right driver for the calculation (ORCA or Pysisyphus)"""
 
-    if settings.IS_CLOUD:
-        return xtb_ts_pysis(in_file, calc)
-    else:
-        return xtb_ts_orca(in_file, calc)
+    # if settings.IS_CLOUD:
+    return xtb_ts_pysis(in_file, calc)
+    # else:
+    #    return xtb_ts_orca(in_file, calc)
 
 
 def xtb_ts_orca(in_file, calc):
@@ -3860,7 +3860,7 @@ def run_calc(calc_id):
 
     if (
         calc.parameters.software == "xtb"
-        and calc.step.short_name in ["mep", "optts"]
+        and calc.step.short_name in ["mep"]
         and not settings.IS_CLOUD
     ):
         calc.parameters.software = "ORCA"
