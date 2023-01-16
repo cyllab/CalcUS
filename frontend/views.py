@@ -97,6 +97,7 @@ from .tasks import (
     cancel,
     run_calc,
     send_cluster_command,
+    load_output_files,
 )
 from .decorators import superuser_required
 from .tasks import (
@@ -4124,6 +4125,8 @@ def log(request, pk):
 
     if len(calc.output_files) == 0:
         return HttpResponse(status=204)
+
+    load_output_files(calc)
 
     data = json.loads(calc.output_files)
 

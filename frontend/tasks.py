@@ -79,6 +79,7 @@ from django.db.utils import IntegrityError
 
 from ccinput.wrapper import generate_calculation
 from ccinput.exceptions import CCInputException
+from ccinput.utilities import get_solvent
 
 from .libxyz import *
 from .models import *
@@ -1989,7 +1990,7 @@ def xtb_stda(in_file, calc):  # TO OPTIMIZE
     local = calc.local
 
     if calc.parameters.solvent != "Vacuum":
-        solvent_add = f"-g {SOLVENT_TABLE[calc.parameters.solvent]}"
+        solvent_add = f"-g {get_solvent(calc.parameters.solvent, 'xtb')}"
     else:
         solvent_add = ""
 
@@ -3860,12 +3861,14 @@ def run_calc(calc_id):
 
     if (
         calc.parameters.software == "xtb"
-        and calc.step.short_name in ["mep"]
+        and calc.step.short_name == "mep"
         and not settings.IS_CLOUD
     ):
         calc.parameters.software = "ORCA"
         ret = add_input_to_calc(calc)
         calc.parameters.software = "xtb"
+    elif calc.parameters.software == "xtb" and calc.step.short_name == "uvvis":
+        ret = None
     else:
         ret = add_input_to_calc(calc)
 

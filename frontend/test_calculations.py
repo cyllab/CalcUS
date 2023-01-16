@@ -212,6 +212,16 @@ class XtbCalculationTests(CalculationUnitTest):
             )
         )
 
+    def test_xtb4stda(self):
+        self.assertTrue(
+            self.run_test(
+                type="UV-Vis Calculation",
+            )
+        )
+
+        prop = Property.objects.latest("id")
+        self.assertTrue(prop.has_uvvis)
+
 
 class OrcaCalculationTests(CalculationUnitTest):
     @classmethod
