@@ -1490,6 +1490,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         button.click()  # Less flaky than "send_keys(Keys.RETURN)" in headless mode?
 
+    def accept_alert(self):
+        alert = self.driver.find_element(By.CSS_SELECTOR, ".alert.modal.is-active")
+        alert.find_element(By.CSS_SELECTOR, "button.is-danger").click()
+
     def delete_project(self, name):
         assert self.is_on_page_projects()
         main_window_handle = None
@@ -1506,8 +1510,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 trash = proj.find_element(By.CSS_SELECTOR, "a > i.fa-trash-alt")
                 trash.click()
 
-                alert = Alert(self.driver)
-                alert.accept()
+                self.accept_alert()
                 return
 
     def get_molecules(self):
@@ -1561,8 +1564,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 trash = mol.find_element(By.CSS_SELECTOR, "i.fa-trash-alt")
                 trash.click()
 
-                alert = Alert(self.driver)
-                alert.accept()
+                self.accept_alert()
                 return
         else:
             raise Exception("Could not delete molecule")
@@ -1619,8 +1621,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 trash = e.find_element(By.CSS_SELECTOR, "i.fa-trash-alt")
                 trash.click()
 
-                alert = Alert(self.driver)
-                alert.accept()
+                self.accept_alert()
                 self.wait_for_ajax()
                 return
         else:

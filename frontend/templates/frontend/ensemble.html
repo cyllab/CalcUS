@@ -434,22 +434,32 @@
     }
 
     function del_ensemble() {
-        var res = confirm("Delete the ensemble?");
-        if (res) {
-            $.ajax({
-                method: "POST",
-                url: "/delete_ensemble/",
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}",
-                },
-                data: {
-                    id: "{{ ensemble.id }}",
-                },
-                success: function () {
-                    window.location = "/molecule/{{ ensemble.parent_molecule.id }}";
-                },
-            });
-        }
+        Bulma().alert({
+            type: 'danger',
+            title: 'Confirm deletion',
+            body: 'Delete the ensemble?',
+            confirm: {
+                label: "Delete",
+                onClick: function() {
+                    $.ajax({
+                        method: "POST",
+                        url: "/delete_ensemble/",
+                        headers: {
+                            "X-CSRFToken": "{{ csrf_token }}",
+                        },
+                        data: {
+                            id: "{{ ensemble.id }}",
+                        },
+                        success: function () {
+                            window.location = "/molecule/{{ ensemble.parent_molecule.id }}";
+                        },
+                    });
+                }
+            },
+            cancel: {
+                label: "Cancel"
+            }
+        });
     }
     function flag() {
         icon = document.getElementById("icon_flag");

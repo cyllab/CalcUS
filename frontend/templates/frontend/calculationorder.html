@@ -20,7 +20,7 @@
         text-decoration: underline;
         color: black;
     }
-    button.is-danger {
+    center > button.is-danger {
         margin-top: 3em;
     }
 </style>
@@ -44,23 +44,33 @@
     }
 
     function delete_order(id) {
-        var res = confirm('Delete this calculation order and all its calculations (including resulting structures and ensembles)"?');
-        if (res) {
-            $("#delete_order_button_").addClass("is-loading");
-            $.ajax({
-                method: "POST",
-                url: "/delete_order/",
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}",
+        Bulma().alert({
+            type: 'danger',
+            title: 'Confirm deletion',
+            body: 'Delete this calculation order and all its calculations (including resulting structures and ensembles)"?',
+            confirm: {
+                label: "Delete",
+                onClick: function() {
+                    $("#delete_order_button_").addClass("is-loading");
+                    $.ajax({
+                        method: "POST",
+                        url: "/delete_order/",
+                        headers: {
+                            "X-CSRFToken": "{{ csrf_token }}",
+                        },
+                        data: {
+                            id: "{{ order.id }}",
+                        },
+                        success: function () {
+                            window.location.replace("/calculations/");
+                        },
+                    });
                 },
-                data: {
-                    id: "{{ order.id }}",
-                },
-                success: function () {
-                    window.location.replace("/calculations/");
-                },
-            });
-        }
+            },
+            cancel: {
+                label: "Cancel"
+            }
+        });
     }
 </script>
 {% endblock %} 

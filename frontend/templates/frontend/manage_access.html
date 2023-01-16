@@ -92,21 +92,31 @@
     }
 
     function delete_access() {
-    	var res = confirm("Delete access?");
-    	if (res) {
-    		$.ajax({
-    			method: "GET",
-    			url: "/delete_access/{{ access.id }}",
-    			headers: {
-    				"X-CSRFToken": '{{ csrf_token }}',
-    			},
-    			success: function() {
-    				window.location.replace("/profile");
-    			}
-    		});
-    	}
-
+        Bulma().alert({
+            type: 'danger',
+            title: 'Confirm deletion',
+            body: 'Delete access?',
+            confirm: {
+                label: "Delete",
+                onClick: function() {
+                    $.ajax({
+                        method: "GET",
+                        url: "/delete_access/{{ access.id }}",
+                        headers: {
+                            "X-CSRFToken": '{{ csrf_token }}',
+                        },
+                        success: function() {
+                            window.location.replace("/profile");
+                        }
+                    });
+                }
+            },
+            cancel: {
+                label: "Cancel"
+            }
+        });
     }
+
     function load_pub_key(btn) {
     	$(btn).addClass("is-loading");
     	$.ajax({

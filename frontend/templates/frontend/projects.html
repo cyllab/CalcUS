@@ -73,20 +73,30 @@
 
     function del(proj_id) {
     	proj_name = $("#proj_name_"+proj_id).text();
-    	var res = confirm('Delete the entire project called "' + proj_name + '"?');
-    	if (res) {
-    		$.ajax({
-    			method: "POST",
-    			url: "/delete_project/",
-    			headers: {
-    				"X-CSRFToken": '{{ csrf_token }}',
-    			},
-    			data: {'id': proj_id},
-    			success: function() {
-    				document.getElementById("proj_box_" + proj_id).remove();
-    			}
-    		});
-    	}
+        Bulma().alert({
+            type: 'danger',
+            title: 'Confirm deletion',
+            body: 'Delete the entire project called "' + proj_name + '"?',
+            confirm: {
+                label: "Delete",
+                onClick: function() {
+                    $.ajax({
+                        method: "POST",
+                        url: "/delete_project/",
+                        headers: {
+                            "X-CSRFToken": '{{ csrf_token }}',
+                        },
+                        data: {'id': proj_id},
+                        success: function() {
+                            document.getElementById("proj_box_" + proj_id).remove();
+                        }
+                    });
+                }
+            },
+            cancel: {
+                label: "Cancel"
+            }
+        });
     }
     function create_project() {
     	$.ajax({

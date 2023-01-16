@@ -116,34 +116,44 @@
 
         function dissolve_group(group_id, group_name, type) {
             $("#dissolve_" + group_id).addClass("is-loading");
-            var res = confirm("Dissolve " + group_name + "?");
-            if (res) {
-                $.ajax({
-                    method: "POST",
-                    url: "/dissolve_group/",
-                    headers: {
-                        "X-CSRFToken": "{{ csrf_token }}",
-                    },
-                    data: {
-                        group_id: group_id,
-                        type: type
-                    },
-                    success: function(data, textStatus, xhr) {
-                        if (xhr.status != 201) {
-                            $("#dissolve_" + type + "_msg").text(data.responseText);
-                        }
-                        else {
-                            refresh_groups();
-                        }
-                    },
-                    error: function(data, textStatus, xhr) {
-                        $("#dissolve_" + type + "_msg").text(data.responseText);
-                    },
-                    complete: function() {
-                        $("#dissolve_" + group_id).removeClass("is-loading");
-                    },
-                });
-            }
+            Bulma().alert({
+                type: 'danger',
+                title: 'Confirm deletion',
+                body: 'Dissolve ' + group_name + '?',
+                confirm: {
+                    label: "Delete",
+                    onClick: function() {
+                        $.ajax({
+                            method: "POST",
+                            url: "/dissolve_group/",
+                            headers: {
+                                "X-CSRFToken": "{{ csrf_token }}",
+                            },
+                            data: {
+                                group_id: group_id,
+                                type: type
+                            },
+                            success: function(data, textStatus, xhr) {
+                                if (xhr.status != 201) {
+                                    $("#dissolve_" + type + "_msg").text(data.responseText);
+                                }
+                                else {
+                                    refresh_groups();
+                                }
+                            },
+                            error: function(data, textStatus, xhr) {
+                                $("#dissolve_" + type + "_msg").text(data.responseText);
+                            },
+                            complete: function() {
+                                $("#dissolve_" + group_id).removeClass("is-loading");
+                            },
+                        });
+                    }
+                },
+                cancel: {
+                    label: "Cancel"
+                }
+            });
         }
 
 		function refresh_groups() {

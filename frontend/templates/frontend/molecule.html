@@ -181,23 +181,33 @@
     });
 
     function del(e_id) {
-        var res = confirm("Delete the ensemble?");
-        if (res) {
-            $.ajax({
-                method: "POST",
-                url: "/delete_ensemble/",
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}",
-                },
-                data: {
-                    id: e_id,
-                },
-                success: function () {
-                    setTimeout(refresh_map(), 1000);
-                    refresh_ensemble_table();
-                },
-            });
-        }
+        Bulma().alert({
+            type: 'danger',
+            title: 'Confirm deletion',
+            body: 'Delete the ensemble?',
+            confirm: {
+                label: "Delete",
+                onClick: function() {
+                    $.ajax({
+                        method: "POST",
+                        url: "/delete_ensemble/",
+                        headers: {
+                            "X-CSRFToken": "{{ csrf_token }}",
+                        },
+                        data: {
+                            id: e_id,
+                        },
+                        success: function () {
+                            setTimeout(refresh_map(), 1000);
+                            refresh_ensemble_table();
+                        },
+                    });
+                }
+            },
+            cancel: {
+                label: "Cancel"
+            }
+        });
     }
 </script>
 

@@ -79,22 +79,32 @@
 
     }
     function del(type, id) {
-    	var res = confirm("Delete this " + types[type] + "?");
-    	url = "/delete_" + types[type] + "/";
-    	if (res) {
-    		$.ajax({
-    			method: "POST",
-    			url: url,
-    			headers: {
-    				"X-CSRFToken": '{{ csrf_token }}',
-    			},
-    			data: {'id': id},
-    			success: function() {
-    				document.getElementById(types[type] + "_box_" + id).remove();
-    			}
+        Bulma().alert({
+            type: 'danger',
+            title: 'Confirm deletion',
+            body: "Delete this " + types[type] + "?",
+            confirm: {
+                label: "Delete",
+                onClick: function() {
+    	            url = "/delete_" + types[type] + "/";
+                    $.ajax({
+                        method: "POST",
+                        url: url,
+                        headers: {
+                            "X-CSRFToken": '{{ csrf_token }}',
+                        },
+                        data: {'id': id},
+                        success: function() {
+                            document.getElementById(types[type] + "_box_" + id).remove();
+                        }
 
-    		});
-    	}
+                    });
+                }
+            },
+            cancel: {
+                label: "Cancel"
+            }
+        });
     }
     function dropped_in_folder(event, ui) {
     	sf = event.target.id.split('_');

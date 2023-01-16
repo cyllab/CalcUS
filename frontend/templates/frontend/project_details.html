@@ -53,22 +53,32 @@
         }
     }
     function del(mol_id) {
-        var res = confirm("Delete this molecule?");
-        if (res) {
-            $.ajax({
-                method: "POST",
-                url: "/delete_molecule/",
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}",
-                },
-                data: {
-                    id: mol_id,
-                },
-                success: function () {
-                    document.getElementById("mol_box_" + mol_id).remove();
-                },
-            });
-        }
+        Bulma().alert({
+            type: 'danger',
+            title: 'Confirm deletion',
+            body: 'Delete this molecule?',
+            confirm: {
+                label: "Delete",
+                onClick: function() {
+                    $.ajax({
+                        method: "POST",
+                        url: "/delete_molecule/",
+                        headers: {
+                            "X-CSRFToken": "{{ csrf_token }}",
+                        },
+                        data: {
+                            id: mol_id,
+                        },
+                        success: function () {
+                            document.getElementById("mol_box_" + mol_id).remove();
+                        },
+                    });
+                }
+            },
+            cancel: {
+                label: "Cancel"
+            }
+        });
     }
 </script>
 {% endblock %} {% block content %}
