@@ -2219,7 +2219,10 @@ def _submit_calculation(request, verify=False):
             combine = clean(request.POST["calc_combine_files"])
 
         parse_filenames = ""
-        if "calc_parse_filenames" in request.POST:
+        if (
+            "calc_parse_filenames" in request.POST
+            and clean(request.POST["calc_parse_filenames"]) == "on"
+        ):
             parse_filenames = clean(request.POST["calc_parse_filenames"])
         else:
             if mol_name == "":
