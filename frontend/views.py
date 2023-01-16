@@ -1717,13 +1717,13 @@ def process_filename(filename):
         sname = filename.split("_conf")
         if len(sname) > 2:
             return filename, 0
-        filename = sname[0]
+        name = sname[0]
         try:
             num = int(sname[1])
         except ValueError:
-            return filename, 0
+            return name, 0
         else:
-            return filename, num
+            return name, num
     else:
         return filename, 0
 
@@ -2269,12 +2269,14 @@ def _submit_calculation(request, verify=False):
                                 return ss
                             struct, filename = ss
 
+                            """
                             if ind == 0:
                                 # fing = gen_fingerprint(struct)
                                 # InChI fingerprints are disabled for now
                                 fing = ""
                                 mol.inchi = fing
                                 mol.save()
+                            """
 
                             struct.number = ind + 1
                             struct.parent_ensemble = e
@@ -2401,7 +2403,7 @@ def _submit_calculation(request, verify=False):
                             struct, filename = ss
 
                             # fing = gen_fingerprint(struct)
-                            fing = str(time.time())  # (struct)
+                            fing = str(random.random())
                             if fing in unique_molecules.keys():
                                 unique_molecules[fing].append(struct)
                             else:

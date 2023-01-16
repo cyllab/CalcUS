@@ -24,21 +24,25 @@ import os
 import copy
 from shutil import copyfile, rmtree
 
-from .models import *
-from . import views
-from .constants import *
 from django.core.management import call_command
 from django.contrib.auth import authenticate
 from django.test import TestCase, Client
 from django.http import HttpRequest
 from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
+
 from .gen_calc import gen_calc, gen_param
 from .calcusliveserver import SCR_DIR
+from .constants import *
+from .models import *
+from . import views
 
 tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 
 basic_params = {
     "file_structure": [""],
+    "calc_combine_files": [""],
+    "calc_parse_filenames": [""],
     "calc_mol_name": ["Test"],
     "calc_name": ["Test"],
     "calc_solvent": ["Vacuum"],
@@ -124,7 +128,7 @@ M  END
 """
 
 
-class LaunchTests(TestCase):
+class CalculationLaunchTests(TestCase):
     def setUp(self):
         call_command("init_static_obj")
         self.email = "Tester@test.com"
@@ -160,6 +164,204 @@ class LaunchTests(TestCase):
             "/submit_calculation/", data=basic_params, follow=True
         )
         self.assertNotContains(response, "Error while submitting your calculation")
+
+    def test_submit_long_name(self):
+        params = basic_params.copy()
+        params["calc_name"] = "A" * 200
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_long_project_name(self):
+        params = basic_params.copy()
+        params["calc_project"] = "A" * 200
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_empty_mol_name(self):
+        params = basic_params.copy()
+        params["calc_mol_name"] = ""
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_empty_charge(self):
+        params = basic_params.copy()
+        params["calc_charge"] = ""
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_empty_project(self):
+        params = basic_params.copy()
+        params["calc_project"] = ""
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_empty_software(self):
+        params = basic_params.copy()
+        params["calc_software"] = ""
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_empty_type(self):
+        params = basic_params.copy()
+        params["calc_type"] = ""
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_empty_resource(self):
+        params = basic_params.copy()
+        params["calc_resource"] = ""
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_no_mol_name(self):
+        params = basic_params.copy()
+        del params["calc_mol_name"]
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_no_charge(self):
+        params = basic_params.copy()
+        del params["calc_charge"]
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_no_project(self):
+        params = basic_params.copy()
+        del params["calc_project"]
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_no_software(self):
+        params = basic_params.copy()
+        del params["calc_software"]
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_no_type(self):
+        params = basic_params.copy()
+        del params["calc_type"]
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_no_resource(self):
+        params = basic_params.copy()
+        del params["calc_resource"]
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_ORCA_no_theory(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_gaussian_valid_specification(self):
+        params = basic_params.copy()
+        params["calc_software"] = "Gaussian"
+        params["specifications"] = "opt(loose)"
+        params["calc_theory_level"] = "DFT"
+        params["calc_functional"] = "M06-2X"
+        params["calc_basis_set"] = "Def2-SVP"
+
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertNotContains(response, "Error while submitting your calculation")
+
+    def test_constrained_opt_no_constraint(self):
+        params = basic_params.copy()
+        params["calc_type"] = "Constrained Optimisation"
+
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_ORCA_empty_theory(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = ""
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_ORCA_DFT_no_functional(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = "DFT"
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_ORCA_DFT_no_basis_set(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = "DFT"
+        params["calc_functional"] = "M06-2X"
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_ORCA_DFT_empty_functional(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = "DFT"
+        params["calc_functional"] = ""
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_ORCA_DFT_correct(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = "DFT"
+        params["calc_functional"] = "M06-2X"
+        params["calc_basis_set"] = "Def2-SVP"
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertNotContains(response, "Error while submitting your calculation")
+
+    def test_submit_ORCA_DFT_empty_basis_set(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = "DFT"
+        params["calc_functional"] = "M06-2X"
+        params["calc_basis_set"] = ""
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertContains(response, "Error while submitting your calculation")
+
+    def test_clean_name1(self):
+        params = basic_params.copy()
+        params["calc_mol_name"] = "name"
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertNotContains(response, "Error while submitting your calculation")
+
+        o = CalculationOrder.objects.latest("id")
+        self.assertEqual(o.ensemble.parent_molecule.name, "name")
+
+    def test_clean_name2(self):
+        params = basic_params.copy()
+        params["calc_mol_name"] = "<br>name"
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+
+        self.assertNotContains(response, "Error while submitting your calculation")
+        o = CalculationOrder.objects.latest("id")
+        self.assertEqual(o.ensemble.parent_molecule.name, "&lt;br&gt;name")
+
+    def test_clean_name3(self):
+        params = basic_params.copy()
+        params["calc_mol_name"] = "name/details-."
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+
+        self.assertNotContains(response, "Error while submitting your calculation")
+        o = CalculationOrder.objects.latest("id")
+        self.assertEqual(o.ensemble.parent_molecule.name, "name/details-.")
+
+
+class FlowchartLaunchTests(TestCase):
+    def setUp(self):
+        call_command("init_static_obj")
+        self.email = "Tester@test.com"
+        self.password = "test1234"
+
+        self.user = User.objects.create_superuser(
+            email=self.email,
+            password=self.password,
+        )
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
+        self.client = Client()
+        self.client.force_login(self.user)
 
     def test_verify_correct_flowchart(self):
         response = self.client.post(
@@ -384,188 +586,247 @@ class LaunchTests(TestCase):
             response_2 = self.client.post(f"/load_flowchart_params/{i.id}")
             self.assertEqual(response_2.status_code, 200)
 
-    def test_submit_long_name(self):
-        params = basic_params.copy()
-        params["calc_name"] = "A" * 200
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
 
-    def test_submit_long_project_name(self):
-        params = basic_params.copy()
-        params["calc_project"] = "A" * 200
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
+class FileInputTests(TestCase):
+    def setUp(self):
+        call_command("init_static_obj")
+        self.email = "Tester@test.com"
+        self.password = "test1234"
 
-    def test_submit_empty_mol_name(self):
-        params = basic_params.copy()
-        params["calc_mol_name"] = ""
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
+        self.user = User.objects.create_superuser(
+            email=self.email,
+            password=self.password,
+        )
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
+        self.client = Client()
+        self.client.force_login(self.user)
 
-    def test_submit_empty_charge(self):
-        params = basic_params.copy()
-        params["calc_charge"] = ""
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
+    def test_single_file(self):
+        with open(os.path.join(tests_dir, "Cl.xyz")) as f:
+            xyz = bytes(f.read(), "UTF-8")
 
-    def test_submit_empty_project(self):
-        params = basic_params.copy()
-        params["calc_project"] = ""
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
+        f = SimpleUploadedFile("Cl.xyz", xyz, content_type="chemical/x-xyz")
 
-    def test_submit_empty_software(self):
         params = basic_params.copy()
-        params["calc_software"] = ""
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_empty_type(self):
-        params = basic_params.copy()
-        params["calc_type"] = ""
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_empty_resource(self):
-        params = basic_params.copy()
-        params["calc_resource"] = ""
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_no_mol_name(self):
-        params = basic_params.copy()
-        del params["calc_mol_name"]
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_no_charge(self):
-        params = basic_params.copy()
-        del params["calc_charge"]
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_no_project(self):
-        params = basic_params.copy()
-        del params["calc_project"]
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_no_software(self):
-        params = basic_params.copy()
-        del params["calc_software"]
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_no_type(self):
-        params = basic_params.copy()
-        del params["calc_type"]
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_no_resource(self):
-        params = basic_params.copy()
-        del params["calc_resource"]
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_ORCA_no_theory(self):
-        params = basic_params.copy()
-        params["calc_software"] = "ORCA"
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_gaussian_valid_specification(self):
-        params = basic_params.copy()
-        params["calc_software"] = "Gaussian"
-        params["specifications"] = "opt(loose)"
-        params["calc_theory_level"] = "DFT"
-        params["calc_functional"] = "M06-2X"
-        params["calc_basis_set"] = "Def2-SVP"
+        params["structure"] = ""
+        params["calc_charge"] = "-1"
+        params["file_structure"] = [f]
+        params["calc_combine_files"] = ("",)
+        params["calc_parse_filenames"] = ""
 
         response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "Error while submitting your calculation")
 
-    def test_constrained_opt_no_constraint(self):
+        self.assertEqual(CalculationOrder.objects.count(), 1)
+        self.assertEqual(Molecule.objects.count(), 1)
+        self.assertEqual(Ensemble.objects.count(), 1)
+
+    def test_two_files(self):
+        with open(os.path.join(tests_dir, "Cl.xyz")) as f:
+            xyz_a = bytes(f.read(), "UTF-8")
+        with open(os.path.join(tests_dir, "I.xyz")) as f:
+            xyz_b = bytes(f.read(), "UTF-8")
+
+        f_a = SimpleUploadedFile("Cl.xyz", xyz_a, content_type="chemical/x-xyz")
+        f_b = SimpleUploadedFile("I.xyz", xyz_b, content_type="chemical/x-xyz")
+
         params = basic_params.copy()
-        params["calc_type"] = "Constrained Optimisation"
+        params["structure"] = ""
+        params["calc_charge"] = "-1"
+        params["file_structure"] = [f_a, f_b]
+        params["calc_combine_files"] = ("",)
+        params["calc_parse_filenames"] = ""
 
         response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_ORCA_empty_theory(self):
-        params = basic_params.copy()
-        params["calc_software"] = "ORCA"
-        params["calc_theory_level"] = ""
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_ORCA_DFT_no_functional(self):
-        params = basic_params.copy()
-        params["calc_software"] = "ORCA"
-        params["calc_theory_level"] = "DFT"
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_ORCA_DFT_no_basis_set(self):
-        params = basic_params.copy()
-        params["calc_software"] = "ORCA"
-        params["calc_theory_level"] = "DFT"
-        params["calc_functional"] = "M06-2X"
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_ORCA_DFT_empty_functional(self):
-        params = basic_params.copy()
-        params["calc_software"] = "ORCA"
-        params["calc_theory_level"] = "DFT"
-        params["calc_functional"] = ""
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
-
-    def test_submit_ORCA_DFT_correct(self):
-        params = basic_params.copy()
-        params["calc_software"] = "ORCA"
-        params["calc_theory_level"] = "DFT"
-        params["calc_functional"] = "M06-2X"
-        params["calc_basis_set"] = "Def2-SVP"
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "Error while submitting your calculation")
 
-    def test_submit_ORCA_DFT_empty_basis_set(self):
-        params = basic_params.copy()
-        params["calc_software"] = "ORCA"
-        params["calc_theory_level"] = "DFT"
-        params["calc_functional"] = "M06-2X"
-        params["calc_basis_set"] = ""
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
-        self.assertContains(response, "Error while submitting your calculation")
+        self.assertEqual(CalculationOrder.objects.count(), 2)
+        self.assertEqual(Molecule.objects.count(), 2)
+        self.assertEqual(Ensemble.objects.count(), 2)
 
-    def test_clean_name1(self):
+    def test_two_files_force_combine(self):
+        with open(os.path.join(tests_dir, "Cl.xyz")) as f:
+            xyz_a = bytes(f.read(), "UTF-8")
+        with open(os.path.join(tests_dir, "I.xyz")) as f:
+            xyz_b = bytes(f.read(), "UTF-8")
+
+        f_a = SimpleUploadedFile("Cl.xyz", xyz_a, content_type="chemical/x-xyz")
+        f_b = SimpleUploadedFile("I.xyz", xyz_b, content_type="chemical/x-xyz")
+
         params = basic_params.copy()
-        params["calc_mol_name"] = "name"
+        params["structure"] = ""
+        params["calc_charge"] = "-1"
+        params["file_structure"] = [f_a, f_b]
+        params["calc_combine_files"] = ("on",)
+        params["calc_parse_filenames"] = ""
+
         response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "Error while submitting your calculation")
 
-        o = CalculationOrder.objects.latest("id")
-        self.assertEqual(o.ensemble.parent_molecule.name, "name")
+        self.assertEqual(CalculationOrder.objects.count(), 1)
+        self.assertEqual(Molecule.objects.count(), 1)
+        self.assertEqual(Ensemble.objects.count(), 1)
 
-    def test_clean_name2(self):
+    def test_two_files_parse_names_different(self):
+        with open(os.path.join(tests_dir, "Cl.xyz")) as f:
+            xyz_a = bytes(f.read(), "UTF-8")
+        with open(os.path.join(tests_dir, "I.xyz")) as f:
+            xyz_b = bytes(f.read(), "UTF-8")
+
+        f_a = SimpleUploadedFile("Cl.xyz", xyz_a, content_type="chemical/x-xyz")
+        f_b = SimpleUploadedFile("I.xyz", xyz_b, content_type="chemical/x-xyz")
+
         params = basic_params.copy()
-        params["calc_mol_name"] = "<br>name"
+        params["structure"] = ""
+        params["calc_charge"] = "-1"
+        params["file_structure"] = [f_a, f_b]
+        params["calc_combine_files"] = ("",)
+        params["calc_parse_filenames"] = "on"
+
         response = self.client.post("/submit_calculation/", data=params, follow=True)
-
+        self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "Error while submitting your calculation")
-        o = CalculationOrder.objects.latest("id")
-        self.assertEqual(o.ensemble.parent_molecule.name, "&lt;br&gt;name")
 
-    def test_clean_name3(self):
+        self.assertEqual(CalculationOrder.objects.count(), 2)
+        self.assertEqual(Molecule.objects.count(), 2)
+        self.assertEqual(Ensemble.objects.count(), 2)
+
+    def test_two_files_parse_names_same(self):
+        with open(os.path.join(tests_dir, "Cl.xyz")) as f:
+            xyz = bytes(f.read(), "UTF-8")
+
+        f_a = SimpleUploadedFile("CH4_conf1.xyz", xyz, content_type="chemical/x-xyz")
+        f_b = SimpleUploadedFile("CH4_conf2.xyz", xyz, content_type="chemical/x-xyz")
+
         params = basic_params.copy()
-        params["calc_mol_name"] = "name/details-."
-        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        params["structure"] = ""
+        params["calc_charge"] = "-1"
+        params["file_structure"] = [f_a, f_b]
+        params["calc_combine_files"] = ("",)
+        params["calc_parse_filenames"] = "on"
 
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "Error while submitting your calculation")
-        o = CalculationOrder.objects.latest("id")
-        self.assertEqual(o.ensemble.parent_molecule.name, "name/details-.")
+
+        self.assertEqual(CalculationOrder.objects.count(), 1)
+        self.assertEqual(Molecule.objects.count(), 1)
+        self.assertEqual(Ensemble.objects.count(), 1)
+
+    def test_two_files_parse_names_same_with_period(self):
+        with open(os.path.join(tests_dir, "Cl.xyz")) as f:
+            xyz = bytes(f.read(), "UTF-8")
+
+        f_a = SimpleUploadedFile(
+            "CH4.stuff_conf1.xyz", xyz, content_type="chemical/x-xyz"
+        )
+        f_b = SimpleUploadedFile(
+            "CH4.stuff_conf2.xyz", xyz, content_type="chemical/x-xyz"
+        )
+
+        params = basic_params.copy()
+        params["structure"] = ""
+        params["calc_charge"] = "-1"
+        params["file_structure"] = [f_a, f_b]
+        params["calc_combine_files"] = ("",)
+        params["calc_parse_filenames"] = "on"
+
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Error while submitting your calculation")
+
+        self.assertEqual(CalculationOrder.objects.count(), 1)
+        self.assertEqual(Molecule.objects.count(), 1)
+        self.assertEqual(Ensemble.objects.count(), 1)
+
+    def test_two_files_parse_names_different_with_period(self):
+        with open(os.path.join(tests_dir, "Cl.xyz")) as f:
+            xyz = bytes(f.read(), "UTF-8")
+
+        f_a = SimpleUploadedFile(
+            "CH4.stuff_conf1.xyz", xyz, content_type="chemical/x-xyz"
+        )
+        f_b = SimpleUploadedFile(
+            "CH4.stoff_conf2.xyz", xyz, content_type="chemical/x-xyz"
+        )
+
+        params = basic_params.copy()
+        params["structure"] = ""
+        params["calc_charge"] = "-1"
+        params["file_structure"] = [f_a, f_b]
+        params["calc_combine_files"] = ("",)
+        params["calc_parse_filenames"] = "on"
+
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Error while submitting your calculation")
+
+        self.assertEqual(CalculationOrder.objects.count(), 2)
+        self.assertEqual(Molecule.objects.count(), 2)
+        self.assertEqual(Ensemble.objects.count(), 2)
+
+    def test_two_files_parse_names_different_with_period2(self):
+        with open(os.path.join(tests_dir, "Cl.xyz")) as f:
+            xyz = bytes(f.read(), "UTF-8")
+
+        f_a = SimpleUploadedFile(
+            "CH4.stuff_conf1.xyz", xyz, content_type="chemical/x-xyz"
+        )
+        f_b = SimpleUploadedFile(
+            "CH3.stuff_conf2.xyz", xyz, content_type="chemical/x-xyz"
+        )
+
+        params = basic_params.copy()
+        params["structure"] = ""
+        params["calc_charge"] = "-1"
+        params["file_structure"] = [f_a, f_b]
+        params["calc_combine_files"] = ("",)
+        params["calc_parse_filenames"] = "on"
+
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Error while submitting your calculation")
+
+        self.assertEqual(CalculationOrder.objects.count(), 2)
+        self.assertEqual(Molecule.objects.count(), 2)
+        self.assertEqual(Ensemble.objects.count(), 2)
+
+    def test_two_files_parse_names_different_bug(self):
+        with open(os.path.join(tests_dir, "Cl.xyz")) as f:
+            xyz = bytes(f.read(), "UTF-8")
+
+        structures = []
+        for name in [
+            "a)Int1_OAc_cis_chair_conf1.xyz",
+            "a)Int1_OAc_cis_flat_conf2.xyz",
+            "a)Int1_OAc_trans_ext_conf2.xyz",
+            "a)Int1_OAc_trans_para_conf1.xyz",
+            "b)Int1_OAc_cis_chair_conf1.xyz",
+            "b)Int1_OAc_cis_flat_conf2.xyz",
+            "b)Int1_OAc_trans_ext_conf2.xyz",
+            "b)Int1_OAc_trans_para_conf1.xyz",
+        ]:
+            structures.append(
+                SimpleUploadedFile(name, xyz, content_type="chemical/x-xyz")
+            )
+
+        params = basic_params.copy()
+        params["structure"] = ""
+        params["calc_charge"] = "-1"
+        params["file_structure"] = structures
+        params["calc_combine_files"] = ("",)
+        params["calc_parse_filenames"] = "on"
+
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Error while submitting your calculation")
+
+        self.assertEqual(CalculationOrder.objects.count(), 8)
+        self.assertEqual(Molecule.objects.count(), 8)
+        self.assertEqual(Ensemble.objects.count(), 8)
 
 
 class RestrictionTests(TestCase):
