@@ -1995,9 +1995,10 @@ def xtb_stda(in_file, calc):  # TO OPTIMIZE
         solvent_add = ""
 
     os.chdir(local_folder)
+
     ret1 = system(
         f"xtb4stda {in_file} -chrg {calc.parameters.charge} {solvent_add}",
-        "calc.out",
+        os.path.join(local_folder, "calc.out"),
         calc_id=calc.id,
     )
 
@@ -2006,7 +2007,7 @@ def xtb_stda(in_file, calc):  # TO OPTIMIZE
 
     ret2 = system(
         "stda -xtb -e 12".format(in_file, calc.parameters.charge, solvent_add),
-        "calc2.out",
+        os.path.join(local_folder, "calc2.out"),
         calc_id=calc.id,
     )
 

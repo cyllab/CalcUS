@@ -3937,7 +3937,7 @@ class MiscCalculationTests(CalcusLiveServer):
             "type": "Geometrical Optimisation",
             "project": "New Project",
             "new_project_name": "SeleniumProject",
-            "in_files": ["CH4.mol", "H2.mol2", "H2.sdf", "ethanol.xyz"],
+            "in_files": ["CH4.mol", "H2.mol2", "NH3.mol", "ethanol.xyz"],
             "software": "xtb",
         }
 
@@ -3960,7 +3960,7 @@ class MiscCalculationTests(CalcusLiveServer):
             "mol_name": "my_mol",
             "type": "Geometrical Optimisation",
             "project": "MyProj",
-            "in_files": ["CH4.mol", "H2.mol2", "H2.sdf", "ethanol.xyz"],
+            "in_files": ["CH4.mol", "H2.mol2", "NH3.mol", "ethanol.xyz"],
             "software": "xtb",
         }
 
