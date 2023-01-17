@@ -5386,8 +5386,13 @@ def create_full_account(request):
 
 
 def handler404(request, *args, **argv):
+    if request.method == "POST":
+        return HttpResponse("Content not found")
     return render(request, "error/404.html", {})
 
 
 def handler500(request, *args, **argv):
+    if request.method == "POST":
+        return HttpResponse("Content could not be loaded: internal server error")
+
     return render(request, "error/500.html", {})
