@@ -20,27 +20,27 @@ ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/binaries/orca"
 ENV PATH=$PATH:$XTB4STDAHOME/xtb/bin:$XTB4STDAHOME:$EBROOTORCA:$GAUSS_EXEDIR
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/binaries/orca:/usr/lib/openmpi/
 
-ADD ./requirements.txt /calcus/requirements.txt
-RUN pip install -r /calcus/requirements.txt
 RUN apt update && apt install openbabel sshpass postgresql-client dos2unix openmpi-bin -y
 
+ADD ./requirements.txt /calcus/requirements.txt
+RUN pip install -r /calcus/requirements.txt
+
 RUN mkdir -p /binaries/
+COPY bin /binaries/xtb
+COPY scripts /calcus/scripts
+RUN dos2unix /calcus/scripts/*
+RUN python /calcus/scripts/extract_xtb.py
 
 COPY calcus /calcus/calcus
-COPY scripts /calcus/scripts
 COPY static /calcus/static
 COPY frontend /calcus/frontend
 COPY docker /calcus/docker
-COPY bin /binaries/xtb
 COPY manage.py /calcus/manage.py
 COPY docker/cluster/config /etc/ssh/ssh_config
 
 WORKDIR /calcus/
 
 RUN ls /calcus/
-
-RUN dos2unix scripts/*
-RUN python scripts/extract_xtb.py
 
 RUN adduser --disabled-password --gecos '' calcus  
 

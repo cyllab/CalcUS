@@ -1,6 +1,6 @@
 basis-set-exchange
 bleach
-ccinput>=1.6.2
+ccinput>=1.6.3
 celery[redis]
 cryptography
 Django>=3.2.16,<4
