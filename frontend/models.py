@@ -22,7 +22,7 @@ from django.db import models, transaction
 from django.db.models.signals import pre_save
 from django.forms import JSONField
 from django.utils import timezone
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import GroupManager, Permission, Group
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 
 from django.contrib.postgres.fields import ArrayField
@@ -37,7 +37,7 @@ import os
 import hashlib
 import time
 
-from hashid_field import BigHashidAutoField
+from hashid_field import HashidAutoField, BigHashidAutoField
 
 from .constants import *
 from .helpers import get_random_readable_code
@@ -288,7 +288,26 @@ class Recipe(models.Model):
     page_path = models.CharField(max_length=100)
 
 
-class ResearchGroup(Group):
+class ResearchGroup(models.Model):
+    name = models.CharField("name", max_length=150, unique=True)
+    permissions = models.ManyToManyField(
+        Permission,
+        verbose_name="permissions",
+        blank=True,
+    )
+
+    objects = GroupManager()
+
+    def __str__(self):
+        return self.name
+
+    def natural_key(self):
+        return (self.name,)
+
+    id = HashidAutoField(
+        primary_key=True, salt="ResearchGroup_hashid_" + settings.HASHID_FIELD_SALT
+    )
+
     PI = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -301,7 +320,26 @@ class ResearchGroup(Group):
         return self.name
 
 
-class ClassGroup(Group):
+class ClassGroup(models.Model):
+    name = models.CharField("name", max_length=150, unique=True)
+    permissions = models.ManyToManyField(
+        Permission,
+        verbose_name="permissions",
+        blank=True,
+    )
+
+    objects = GroupManager()
+
+    def __str__(self):
+        return self.name
+
+    def natural_key(self):
+        return (self.name,)
+
+    id = HashidAutoField(
+        primary_key=True, salt="ClassGroup_hashid_" + settings.HASHID_FIELD_SALT
+    )
+
     professor = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,

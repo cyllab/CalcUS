@@ -3435,7 +3435,9 @@ def uvvis(request, pk):
         return HttpResponse(status=404)
 
     response = HttpResponse(prop.uvvis, content_type="text/csv")
-    response["Content-Disposition"] = f"attachment; filename={id}.csv"
+    response[
+        "Content-Disposition"
+    ] = f"attachment; filename=uvvis_{prop.parent_structure.id}.csv"
     return response
 
 
