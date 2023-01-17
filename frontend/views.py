@@ -2259,6 +2259,9 @@ def _submit_calculation(request, verify=False):
                     if pm != 1:
                         _multiplicity = pm
 
+                _params["charge"] = _charge
+                _params["multiplicity"] = _multiplicity
+
                 electrons -= _charge
                 odd_e = electrons % 2
                 odd_m = _multiplicity % 2
@@ -2266,188 +2269,39 @@ def _submit_calculation(request, verify=False):
                 if odd_e == odd_m:
                     return "Impossible charge/multiplicity combination"
 
-                struct.properties.first().parameters.charge = _charge
-                struct.properties.first().parameters.multiplicity = _multiplicity
-                struct.properties.first().parameters.save()
+                sparams = struct.properties.first().parameters
+                sparams.charge = _charge
+                sparams.multiplicity = _multiplicity
+                sparams.save()
                 uploaded_files[filename] = struct
 
-            # Process the files
-            if len(uploaded_files) > 1:
-                if combine == "on" and parse_filenames != "on":
-                    mol = Molecule.objects.create(name=mol_name, project=project_obj)
-                    e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
-
-                    params = Parameters.objects.create(**_params)
-
-                    for ind, (filename, struct) in enumerate(uploaded_files.items()):
-                        """
-                        if ind == 0:
-                            # fing = gen_fingerprint(struct)
-                            # InChI fingerprints are disabled for now
-                            fing = ""
-                            mol.inchi = fing
-                            mol.save()
-                        """
-
-                        struct.number = ind + 1
-                        struct.parent_ensemble = e
-                        struct.save()
-
-                    obj = CalculationOrder.objects.create(
-                        name=name,
-                        date=timezone.now(),
-                        parameters=params,
-                        author=request.user,
-                        resource_provider=request.user.resource_provider,
-                        step=step,
-                        project=project_obj,
-                        ensemble=e,
-                    )
-                    orders.append(obj)
-                elif combine != "on" and parse_filenames == "on":
-                    unique_molecules = {}
-                    unique_params = {}
-
-                    for ind, (filename, struct) in enumerate(uploaded_files.items()):
-                        _mol_name, num = process_filename(filename)
-
-                        struct.number = num
-                        struct.save()
-                        if _mol_name in unique_molecules:
-                            unique_molecules[_mol_name].append(struct)
-                        else:
-                            unique_molecules[_mol_name] = [struct]
-
-                            # Since the charge/multiplicity keywords are considered when detecting molecules,
-                            # all the structures of a given molecule must necessarily have the same charge/multiplicity
-                            __params = _params.copy()
-                            __params[
-                                "charge"
-                            ] = struct.properties.first().parameters.charge
-                            __params[
-                                "multiplicity"
-                            ] = struct.properties.first().parameters.multiplicity
-                            unique_params[_mol_name] = Parameters.objects.create(
-                                **__params
-                            )
-
-                    for mol_name, arr_structs in unique_molecules.items():
-                        used_numbers = []
-                        # fing = gen_fingerprint(arr_structs[0])
-                        fing = ""
+            if not verify:
+                # Process the files
+                if len(uploaded_files) > 1:
+                    if combine == "on" and parse_filenames != "on":
                         mol = Molecule.objects.create(
-                            name=mol_name, inchi=fing, project=project_obj
+                            name=mol_name, project=project_obj
                         )
-                        mol.save()
-
-                        e = Ensemble.objects.create(
-                            name="File Upload", parent_molecule=mol
-                        )
-                        for struct in arr_structs:
-                            if struct.number == 0:
-                                num = 1
-                                while num in used_numbers:
-                                    num += 1
-                                struct.number = num
-                                used_numbers.append(num)
-                            else:
-                                used_numbers.append(struct.number)
-
-                            struct.parent_ensemble = e
-                            struct.save()
-                        obj = CalculationOrder.objects.create(
-                            name=name,
-                            date=timezone.now(),
-                            parameters=unique_params[_mol_name],
-                            author=request.user,
-                            resource_provider=request.user.resource_provider,
-                            step=step,
-                            project=project_obj,
-                            ensemble=e,
-                        )
-
-                        orders.append(obj)
-                elif combine == "on" and parse_filenames == "on":
-                    all_filenames = list(uploaded_files.keys())
-                    filename = all_filenames.pop(0)
-                    struct = uploaded_files[filename]
-                    _mol_name, num = process_filename(filename)
-
-                    # fing = gen_fingerprint(struct)
-                    fing = ""
-
-                    mol = Molecule.objects.create(
-                        name=_mol_name, project=project_obj, inchi=fing
-                    )
-                    e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
-                    struct.number = 1
-                    struct.parent_ensemble = e
-                    struct.save()
-
-                    c = struct.properties.first().parameters.charge
-                    m = struct.properties.first().parameters.multiplicity
-
-                    # Verify that all the files have the same charge/multiplicity specifications
-                    for other_filename, other_struct in uploaded_files.items():
-                        c = other_struct.properties.first().parameters.charge
-                        m = other_struct.properties.first().parameters.multiplicity
-                        if c != charge:
-                            return f"Cannot combine files with different charge specifications ({filename}: charge={charge}, {other_filename}: charge={c})"
-                        if m != mult:
-                            return f"Cannot combine files with different multiplicity specifications ({filename}: multiplicity={mult}, {other_filename}: multiplicity={m})"
-                    # Create the Parameters object for all the inputs
-                    __params = _params.copy()
-                    __params["charge"] = charge
-                    __params["multiplicity"] = mult
-                    params = Parameters.objects.create(**__params)
-
-                    for ind, filename in enumerate(all_filenames):
-                        struct = uploaded_files[filename]
-                        struct.number = ind + 2
-                        struct.parent_ensemble = e
-                        struct.save()
-
-                    obj = CalculationOrder.objects.create(
-                        name=name,
-                        date=timezone.now(),
-                        parameters=params,
-                        author=request.user,
-                        resource_provider=request.user.resource_provider,
-                        step=step,
-                        project=project_obj,
-                        ensemble=e,
-                    )
-                    orders.append(obj)
-                else:
-                    unique_molecules = {}
-                    for ind, (filename, struct) in enumerate(uploaded_files.items()):
-                        # fing = gen_fingerprint(struct)
-                        fing = str(random.random())
-                        if fing in unique_molecules.keys():
-                            unique_molecules[fing].append(struct)
-                        else:
-                            unique_molecules[fing] = [struct]
-
-                    params = Parameters.objects.create(**_params)
-
-                    for ind, (fing, arr_struct) in enumerate(unique_molecules.items()):
-                        if len(unique_molecules.keys()) > 1:
-                            mol = Molecule.objects.create(
-                                name=f"{mol_name} set {ind + 1}",
-                                inchi=fing,
-                                project=project_obj,
-                            )
-                        else:
-                            mol = Molecule.objects.create(
-                                name=mol_name, inchi=fing, project=project_obj
-                            )
                         e = Ensemble.objects.create(
                             name="File Upload", parent_molecule=mol
                         )
 
-                        for s_num, struct in enumerate(arr_struct):
+                        params = Parameters.objects.create(**_params)
+
+                        for ind, (filename, struct) in enumerate(
+                            uploaded_files.items()
+                        ):
+                            """
+                            if ind == 0:
+                                # fing = gen_fingerprint(struct)
+                                # InChI fingerprints are disabled for now
+                                fing = ""
+                                mol.inchi = fing
+                                mol.save()
+                            """
+
+                            struct.number = ind + 1
                             struct.parent_ensemble = e
-                            struct.number = s_num + 1
                             struct.save()
 
                         obj = CalculationOrder.objects.create(
@@ -2461,49 +2315,208 @@ def _submit_calculation(request, verify=False):
                             ensemble=e,
                         )
                         orders.append(obj)
-            elif len(uploaded_files) == 1:
-                filename, struct = list(uploaded_files.items())[0]
+                    elif combine != "on" and parse_filenames == "on":
+                        unique_molecules = {}
+                        unique_params = {}
 
-                __params = _params.copy()
-                __params["charge"] = struct.properties.first().parameters.charge
-                __params[
-                    "multiplicity"
-                ] = struct.properties.first().parameters.multiplicity
-                params = Parameters.objects.create(**__params)
+                        for ind, (filename, struct) in enumerate(
+                            uploaded_files.items()
+                        ):
+                            _mol_name, num = process_filename(filename)
 
-                num = 1
-                if parse_filenames == "on":
-                    _mol_name, num = process_filename(filename)  # Disable mol_name
-                else:
-                    _mol_name = mol_name
+                            struct.number = num
+                            struct.save()
+                            if _mol_name in unique_molecules:
+                                unique_molecules[_mol_name].append(struct)
+                            else:
+                                unique_molecules[_mol_name] = [struct]
 
-                obj = CalculationOrder.objects.create(
-                    name=name,
-                    date=timezone.now(),
-                    parameters=params,
-                    author=request.user,
-                    resource_provider=request.user.resource_provider,
-                    step=step,
-                    project=project_obj,
-                )
+                                # Since the charge/multiplicity keywords are considered when detecting molecules,
+                                # all the structures of a given molecule must necessarily have the same charge/multiplicity
+                                __params = _params.copy()
+                                __params[
+                                    "charge"
+                                ] = struct.properties.first().parameters.charge
+                                __params[
+                                    "multiplicity"
+                                ] = struct.properties.first().parameters.multiplicity
+                                unique_params[_mol_name] = Parameters.objects.create(
+                                    **__params
+                                )
 
-                # fing = gen_fingerprint(struct)
-                fing = ""
-                mol = Molecule.objects.create(
-                    name=_mol_name, inchi=fing, project=project_obj
-                )
-                mol.save()
+                        for mol_name, arr_structs in unique_molecules.items():
+                            used_numbers = []
+                            # fing = gen_fingerprint(arr_structs[0])
+                            fing = ""
+                            mol = Molecule.objects.create(
+                                name=mol_name, inchi=fing, project=project_obj
+                            )
+                            mol.save()
 
-                e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
-                struct.parent_ensemble = e
-                struct.number = num
-                struct.save()
+                            e = Ensemble.objects.create(
+                                name="File Upload", parent_molecule=mol
+                            )
+                            for struct in arr_structs:
+                                if struct.number == 0:
+                                    num = 1
+                                    while num in used_numbers:
+                                        num += 1
+                                    struct.number = num
+                                    used_numbers.append(num)
+                                else:
+                                    used_numbers.append(struct.number)
 
-                obj.ensemble = e
-                obj.save()
-                orders.append(obj)
+                                struct.parent_ensemble = e
+                                struct.save()
+                            obj = CalculationOrder.objects.create(
+                                name=name,
+                                date=timezone.now(),
+                                parameters=unique_params[_mol_name],
+                                author=request.user,
+                                resource_provider=request.user.resource_provider,
+                                step=step,
+                                project=project_obj,
+                                ensemble=e,
+                            )
+
+                            orders.append(obj)
+                    elif combine == "on" and parse_filenames == "on":
+                        all_filenames = list(uploaded_files.keys())
+                        filename = all_filenames.pop(0)
+                        struct = uploaded_files[filename]
+                        _mol_name, num = process_filename(filename)
+
+                        # fing = gen_fingerprint(struct)
+                        fing = ""
+
+                        mol = Molecule.objects.create(
+                            name=_mol_name, project=project_obj, inchi=fing
+                        )
+                        e = Ensemble.objects.create(
+                            name="File Upload", parent_molecule=mol
+                        )
+                        struct.number = 1
+                        struct.parent_ensemble = e
+                        struct.save()
+
+                        charge = struct.properties.first().parameters.charge
+                        multiplicity = struct.properties.first().parameters.multiplicity
+
+                        # Verify that all the files have the same charge/multiplicity specifications
+                        for other_filename, other_struct in uploaded_files.items():
+                            c = other_struct.properties.first().parameters.charge
+                            m = other_struct.properties.first().parameters.multiplicity
+                            if c != charge:
+                                return f"Cannot combine files with different charge specifications ({filename}: charge={charge}, {other_filename}: charge={c})"
+                            if m != mult:
+                                return f"Cannot combine files with different multiplicity specifications ({filename}: multiplicity={mult}, {other_filename}: multiplicity={m})"
+                        # Create the Parameters object for all the inputs
+                        __params = _params.copy()
+                        __params["charge"] = charge
+                        __params["multiplicity"] = mult
+                        params = Parameters.objects.create(**__params)
+
+                        for ind, filename in enumerate(all_filenames):
+                            struct = uploaded_files[filename]
+                            struct.number = ind + 2
+                            struct.parent_ensemble = e
+                            struct.save()
+
+                        obj = CalculationOrder.objects.create(
+                            name=name,
+                            date=timezone.now(),
+                            parameters=params,
+                            author=request.user,
+                            resource_provider=request.user.resource_provider,
+                            step=step,
+                            project=project_obj,
+                            ensemble=e,
+                        )
+                        orders.append(obj)
+                    else:
+                        unique_molecules = {}
+                        for ind, (filename, struct) in enumerate(
+                            uploaded_files.items()
+                        ):
+                            # fing = gen_fingerprint(struct)
+                            fing = str(random.random())
+                            if fing in unique_molecules.keys():
+                                unique_molecules[fing].append(struct)
+                            else:
+                                unique_molecules[fing] = [struct]
+
+                        params = Parameters.objects.create(**_params)
+
+                        for ind, (fing, arr_struct) in enumerate(
+                            unique_molecules.items()
+                        ):
+                            if len(unique_molecules.keys()) > 1:
+                                mol = Molecule.objects.create(
+                                    name=f"{mol_name} set {ind + 1}",
+                                    inchi=fing,
+                                    project=project_obj,
+                                )
+                            else:
+                                mol = Molecule.objects.create(
+                                    name=mol_name, inchi=fing, project=project_obj
+                                )
+                            e = Ensemble.objects.create(
+                                name="File Upload", parent_molecule=mol
+                            )
+
+                            for s_num, struct in enumerate(arr_struct):
+                                struct.parent_ensemble = e
+                                struct.number = s_num + 1
+                                struct.save()
+
+                            obj = CalculationOrder.objects.create(
+                                name=name,
+                                date=timezone.now(),
+                                parameters=params,
+                                author=request.user,
+                                resource_provider=request.user.resource_provider,
+                                step=step,
+                                project=project_obj,
+                                ensemble=e,
+                            )
+                            orders.append(obj)
+                elif len(uploaded_files) == 1:
+                    filename, struct = list(uploaded_files.items())[0]
+
+                    params = Parameters.objects.create(**_params)
+
+                    num = 1
+                    if parse_filenames == "on":
+                        _mol_name, num = process_filename(filename)  # Disable mol_name
+                    else:
+                        _mol_name = mol_name
+
+                    obj = CalculationOrder.objects.create(
+                        name=name,
+                        date=timezone.now(),
+                        parameters=params,
+                        author=request.user,
+                        resource_provider=request.user.resource_provider,
+                        step=step,
+                        project=project_obj,
+                    )
+
+                    # fing = gen_fingerprint(struct)
+                    fing = ""
+                    mol = Molecule.objects.create(
+                        name=_mol_name, inchi=fing, project=project_obj
+                    )
+                    mol.save()
+
+                    e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
+                    struct.parent_ensemble = e
+                    struct.number = num
+                    struct.save()
+
+                    obj.ensemble = e
+                    obj.save()
+                    orders.append(obj)
         else:  # No file upload
-
             if "structure" in request.POST.keys():
                 mol = clean(request.POST["structure"])
                 xyz = generate_xyz_structure(True, mol, "mol")
@@ -2585,7 +2598,7 @@ def _submit_calculation(request, verify=False):
             if len(request.FILES.getlist("aux_file_structure")) == 1:
                 if not verify:
                     _aux_struct = handle_file_upload(
-                        request.FILES.getlist("aux_file_structure")[0], params, is_local
+                        request.FILES.getlist("aux_file_structure")[0], is_local
                     )
                     if isinstance(_aux_struct, str):
                         return _aux_struct
@@ -2602,7 +2615,7 @@ def _submit_calculation(request, verify=False):
                 if not can_view_structure(aux_struct, request.user):
                     return "No valid auxiliary structure"
 
-            aux_struct.save()
+            aux_struct.save()  # to remove, not useful
             orders[0].aux_structure = aux_struct
 
     TYPE_LENGTH = {"Distance": 2, "Angle": 3, "Dihedral": 4}
@@ -2640,7 +2653,7 @@ def _submit_calculation(request, verify=False):
                         obj.has_scan = True
                         obj.save()
 
-                    if params.software != "Gaussian":
+                    if _params["software"] != "Gaussian":
                         try:
                             begin = float(clean(request.POST[f"calc_scan_{ind}_1"]))
                         except ValueError:
