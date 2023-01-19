@@ -3665,7 +3665,9 @@ def nmr(request):
                 content += f"{-(shift[3] + 0.001)},{0}\n"
 
     response = HttpResponse(content, content_type="text/csv")
-    response["Content-Disposition"] = f"attachment; filename={id}.csv"
+    response[
+        "Content-Disposition"
+    ] = f"attachment; filename=nmr_{clean_filename(e.name)}.csv"
     return response
 
 
@@ -3681,7 +3683,9 @@ def ir_spectrum(request, pk):
 
     if prop.ir_spectrum != "":
         response = HttpResponse(prop.ir_spectrum, content_type="text/csv")
-        response["Content-Disposition"] = f"attachment; filename={id}.csv"
+        response[
+            "Content-Disposition"
+        ] = f"attachment; filename=ir_{prop.parent_structure.id}.csv"
         return response
     else:
         return HttpResponse(status=204)

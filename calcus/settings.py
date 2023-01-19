@@ -284,7 +284,7 @@ if IS_CLOUD:
         "Constrained Optimisation",
         "Frequency Calculation",
         "TS Optimisation",
-        # "UV-Vis Calculation", # Not working right now
+        "UV-Vis Calculation",
         "Single-Point Energy",
         # "Minimum Energy Path",
         "Constrained Conformational Search",
