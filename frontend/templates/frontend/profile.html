@@ -422,9 +422,10 @@
 	<div class="box">
 		<center>
 			<h5 class="title is-5">Account</h5>
-            {% if IS_CLOUD %}
+            {% if IS_CLOUD and not request.user.is_temporary%}
             <div id="allocation_div">
             </div>
+
             <div id="redeem_allocation_div">
                 <div class="field">
                     <label class="label">Redeem allocation</label>
@@ -438,6 +439,7 @@
                 <span class="ajax_msg" id="redeem_allocation_msg"></span>
             </div>
             {% endif %}
+
             {% if request.user.is_temporary %}
             <p>You are logged in as temporary user <b>{{ request.user.email }}</b>.</p>
             {% if request.user.is_trial %}
