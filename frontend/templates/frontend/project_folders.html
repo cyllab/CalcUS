@@ -1,8 +1,13 @@
-{% extends 'frontend/base.html' %} {% load static %} {% load folder_tags %} {% block extrahead %}
+{% extends 'frontend/base.html' %} 
+
+{% load static %} 
+{% load folder_tags %} 
+
+{% block extrahead %}
 <title>CalcUS - {{ folder.name }}</title>
 <script type="text/javascript" src="{% static 'frontend/jquery.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'frontend/jquery-ui.min.js' %}"></script>
-<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui.min.css' %}" type="text/css" />
+<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
 
 <style>
     .box {
@@ -138,8 +143,8 @@
     	folder_template = `
     		<div class="box has-background-warning" id="folder_box_{}">
     			<p style="float: right;">
-    					<a onclick="edit_field('f', {});"><i class="fas fa-edit" id="icon_folder_{}"></i></a>
-    					<a onclick="del('f', {});"><i class="fas fa-trash-alt"></i></a>
+    					<a onclick="edit_field('f', '{}');"><i class="fas fa-edit" id="icon_folder_{}"></i></a>
+    					<a onclick="del('f', '{}');"><i class="fas fa-trash-alt"></i></a>
     			</p>
     			<a href="{{ request.path }}{}/">
     				<strong><p id="folder_name_{}">{}</p></strong>
@@ -227,7 +232,7 @@
         <div class="box has-background-primary-light" id="ensemble_box_{{ e.id }}">
             {% if e.parent_molecule.project.author == request.user %}
             <p style="float: right">
-                <a onclick="edit_field('e', '{{ e.id }}');"><i class="fas fa-edit" id="icon_folder_{{ f.id}}" title="Rename"></i></a>
+                <a onclick="edit_field('e', '{{ e.id }}');"><i class="fas fa-edit" id="icon_folder_{{ f.id }}" title="Rename"></i></a>
                 <a onclick="del('e', '{{ e.id }}');"><i class="fas fa-trash-alt" title="Delete"></i></a>
             </p>
             {% endif %}
