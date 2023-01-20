@@ -192,6 +192,23 @@
 
 			});
         }
+        function load_password(btn) {
+            $(btn).addClass("is-loading");
+            $.ajax({
+                    method: "GET",
+                    url: "/load_password/",
+                    headers: {
+                        "X-CSRFToken": '{{ csrf_token }}',
+                    },
+                    success: function(data) {
+                        $(btn).remove();
+                        div = $("#load_password_box");
+                        key = '<p class="box rand_password" data-clipboard-text="' + data + '"><b>' + data + '</b><i class="fa fa-solid fa-clipboard fa-lg" ></i></p>';
+                        div.html(key);
+                    },
+            });
+        }
+
 
 	</script>
 	<style>
@@ -203,6 +220,9 @@
     #update_name_button, #change_password_button {
         margin-top: 1em;
         margin-bottom: 1em;
+    }
+    #change_password_button, #load_password_box {
+        margin-top: 3em;
     }
 	#pref_center {
 		max-width: 25em;
@@ -245,6 +265,17 @@
         background-color: #ddffdd;
         cursor: pointer;
     }
+    #load_password_box {
+        max-width: 16em;
+    }
+    .rand_password {
+        background-color: #ffeeee;
+    }
+    .rand_password:hover {
+        background-color: #ffdddd;
+        cursor: pointer;
+    }
+
     .fa-clipboard {
         margin-left: 1em;
     }
@@ -424,6 +455,12 @@
                 <button class="button is-primary" onclick="update_name()" id="update_name_button">Update</button>
                 <div id="full_name_msg"></div>
             </div>
+
+            {% if IS_CLOUD and request.user.is_temporary %}
+            <div id="load_password_box">
+                <button class="button is-info" onclick="load_password(this);">View default password</button>
+            </div>
+            {% endif %}
 
             <div class="field">
                 <div class="control">

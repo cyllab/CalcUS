@@ -3100,6 +3100,23 @@ def load_pub_key(request, pk):
 
 
 @login_required
+def load_password(request):
+    if request.user.is_trial:
+        return HttpResponse(status=403)
+    if not request.user.is_temporary:
+        return HttpResponse(status=403)
+
+    if request.user.email is None or request.user.email.find("@calcus.cloud") == -1:
+        return HttpResponse(status=403)
+
+    if request.user.random_password == "":
+        logger.warning(f"Temporary user {request.user.id} has a blank random password")
+        return HttpResponse(status=403)
+
+    return HttpResponse(request.user.random_password)
+
+
+@login_required
 def update_access(request):
     vals = {}
     for param in ["pal", "mem"]:

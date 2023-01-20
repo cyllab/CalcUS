@@ -27,6 +27,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.contrib.auth.forms import AuthenticationForm, UsernameField
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
+from django.contrib.auth.forms import SetPasswordForm
 
 if settings.IS_CLOUD:
     from captcha.fields import ReCaptchaField
@@ -128,6 +129,7 @@ class StudentCreateForm(forms.ModelForm):
         self.rand_password = get_random_string()
 
         user.email = self.rand_email
+        user.random_password = self.rand_password
         user.set_password(self.rand_password)
         user.in_class = self.student_class
         user.is_temporary = True
@@ -163,6 +165,7 @@ class TrialUserCreateForm(forms.ModelForm):
         self.rand_password = get_random_string()
 
         user.email = self.rand_email
+        user.random_password = self.rand_password
         user.set_password(self.rand_password)
         user.is_temporary = True
         user.is_trial = True
@@ -186,9 +189,6 @@ class UserLoginForm(AuthenticationForm):
 
     if settings.IS_CLOUD:
         captcha = ReCaptchaField()
-
-
-from django.contrib.auth.forms import SetPasswordForm
 
 
 class CreateFullAccountForm(SetPasswordForm, ModelForm):

@@ -88,6 +88,10 @@ class User(AbstractUser):
     email = models.EmailField("email", unique=True)
     full_name = models.CharField(max_length=256, default="")
 
+    # Randomly generated password for temporary accounts.
+    # Can be displayed to the user in order to have "semi-temporary" accounts
+    random_password = models.CharField(max_length=64, default="")
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 

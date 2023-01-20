@@ -6,8 +6,8 @@ project = "CalcUS"
 copyright = "2022, Raphaël Robidas"
 author = "Raphaël Robidas"
 
-release = "2.0"
-version = "2.0.0"
+release = "2.1"
+version = "2.1.0"
 
 # -- General configuration
 

@@ -144,6 +144,7 @@ urlpatterns = [
     path("get_command_status/", views.get_command_status, name="get_command_status"),
     path("delete_access/<str:pk>", views.delete_access, name="delete_access"),
     path("load_pub_key/<str:pk>", views.load_pub_key, name="load_pub_key"),
+    path("load_password/", views.load_password, name="load_password"),
     path("update_access/", views.update_access, name="update_access"),
     path("status_access/", views.status_access, name="status_access"),
     # Calculations
