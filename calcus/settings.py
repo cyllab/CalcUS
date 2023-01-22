@@ -98,6 +98,7 @@ INSTALLED_APPS = [
     "axes",
     "bulma",
     "gmailapi_backend",
+    "corsheaders",
     #'debug_toolbar',
 ]
 
@@ -124,6 +125,7 @@ else:
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -132,6 +134,17 @@ MIDDLEWARE = [
     "axes.middleware.AxesMiddleware",
     #'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
+
+if IS_CLOUD:
+    CORS_ALLOWED_ORIGINS = [
+        "https://www.googleanalytics.com",
+        "https://www.google-analytics.com",
+        "https://www.googleoptimize.com",
+        "https://www.google-analytics.com",
+        "https://www.googletagmanager.com",
+        "https://optimize.google.com",
+        "https://fonts.googleapis.com",
+    ]
 
 HASHID_FIELD_SALT = os.getenv("CALCUS_HASHID_SALT", "test_salt")
 

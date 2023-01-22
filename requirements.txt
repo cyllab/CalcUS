@@ -2,6 +2,7 @@ basis-set-exchange
 bleach
 ccinput>=1.6.3
 celery[redis]
+django-cors-headers
 cryptography
 Django>=3.2.16,<4
 django-appconf==1.0.4
