@@ -21,6 +21,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from django import template
 from django.conf import settings
 
+from frontend.constants import cloud_config
+
 register = template.Library()
 
 
@@ -31,3 +33,11 @@ def get_calcus_version():
         return "unknown"
     else:
         return version
+
+
+@register.simple_tag
+def get_extra_head_code():
+    if "extra_head_code" in cloud_config:
+        return cloud_config["extra_head_code"]
+    else:
+        return ""

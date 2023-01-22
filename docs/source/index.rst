@@ -18,6 +18,7 @@ Contents
    installation
    usage
    software-packages
+   cloud
    troubleshooting
    developer-guide
    citation

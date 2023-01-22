@@ -79,6 +79,8 @@ class ErrorCodes(IntEnum):
 
     FAILED_TO_RUN_LOCAL_SOFTWARE = 30
 
+    CONNECTION_KEY_NOT_FOUND = 40
+
 
 # Software->Method/Functional->Basis set->Atom->[m, b, R2]
 NMR_REGRESSIONS = {
@@ -105,9 +107,10 @@ cloud_config_path = os.path.join(
 )
 if os.path.isfile(cloud_config_path):
     with open(cloud_config_path) as f:
-        config = json.load(f)
-    for k, v in config.items():
+        cloud_config = json.load(f)
+    for k, v in cloud_config.items():
         globals()[k] = v
 else:
+    cloud_config = {}
     trial_tos = ""
     full_tos = ""

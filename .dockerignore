@@ -1,6 +1,6 @@
 results
 scr
-old
+old*
 keys
 logs
 data
@@ -22,3 +22,4 @@ bin/*
 !bin/*.tar.bz2
 gcloud.sh
 frontend/cloud_config.py
+frontend/cloud_config.json

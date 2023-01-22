@@ -149,6 +149,10 @@ def direct_command(command, conn, lock, attempt_count=1):
         except OSError as e:
             logger.debug("Socked closed while executing command")
             return retry()
+        except FileNotFoundError as e:
+            logger.error(f"The required key for connection {conn[0].id} is not found!")
+            lock.release()
+            return ErrorCodes.CONNECTION_KEY_NOT_FOUND
 
     lock.release()
 
@@ -251,6 +255,7 @@ def wait_until_done(calc, conn, lock, ind=0):
 
     while True:
         output = direct_command(f"squeue -j {job_id}", conn, lock)
+        # TODO: if output if an error code
         _output = [i for i in output if i.strip() != ""]
         if not isinstance(output, ErrorCodes) and len(_output) > 1:
             logger.info(f"Waiting ({job_id})")
