@@ -5,6 +5,7 @@ def default(request):
     return {
         k: getattr(settings, k)
         for k in [
+            "IS_TEST",
             "IS_CLOUD",
             "ALLOW_LOCAL_CALC",
             "ALLOW_REMOTE_CALC",

@@ -3356,21 +3356,23 @@ def remove_user(request):
 
 @login_required
 def redeem_allocation(request):
-    if request.method == "POST":
-        try:
-            code = clean(request.POST["code"])
-        except KeyError:
-            return HttpResponse("No code given", status=400)
+    if request.method != "POST":
+        return HttpResponse(status=400)
 
-        try:
-            alloc = ResourceAllocation.objects.get(code=code)
-        except ResourceAllocation.DoesNotExist:
-            return HttpResponse("Invalid code given", status=400)
+    if "code" not in request.POST or clean(request.POST["code"]).strip() == "":
+        return HttpResponse("No code given", status=400)
 
-        if not alloc.redeem(request.user):
-            return HttpResponse("Code already redeemed", status=400)
+    code = clean(request.POST["code"]).strip()
 
-        return HttpResponse("Resource redeemed!", status=204)
+    try:
+        alloc = ResourceAllocation.objects.get(code=code)
+    except ResourceAllocation.DoesNotExist:
+        return HttpResponse("Invalid code given", status=400)
+
+    if not alloc.redeem(request.user):
+        return HttpResponse("Code already redeemed", status=400)
+
+    return HttpResponse("Resource redeemed!", status=200)
 
 
 @login_required

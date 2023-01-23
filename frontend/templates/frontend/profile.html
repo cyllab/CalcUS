@@ -175,22 +175,14 @@
 					"X-CSRFToken": '{{ csrf_token }}',
 				},
 				data: {'code': code},
-				success: function(data, textStatus, xhr) {
-                    if (xhr.status != 201) {
-                        $("#redeem_allocation_msg").text(data.responseText);
-                    }
-                    else {
-					    refresh_allocation();
-                    }
-				},
-				error: function(data, textStatus, xhr) {
-                    $("#redeem_allocation_msg").text(data.responseText);
-                },
-                complete: function() {
+                success: function(msg, textStatus, xhr) {
+                    $("#redeem_allocation_msg").text(xhr.responseText);
+                }
+            }).fail(function(xhr, textStatus) {
+                $("#redeem_allocation_msg").text(xhr.responseText);
+            }).always(function () {
                     $("#redeem_button").removeClass("is-loading");
-                },
-
-			});
+            });
         }
         function load_password(btn) {
             $(btn).addClass("is-loading");

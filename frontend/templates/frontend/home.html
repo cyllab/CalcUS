@@ -100,6 +100,7 @@
     .tile {
         padding-left: 1em;
         padding-right: 1em;
+        margin-bottom: 4em !important;
     }
     #logo_sep {
         margin-bottom: 5em;
@@ -111,8 +112,8 @@
     #waiting_list_div {
         margin-top: 2em;
     }
-    .tile {
-        margin-top: 4em;
+    #contact_tile > a {
+        text-decoration: underline;
     }
 </style>
 {% endblock %} {% block content %}
@@ -131,11 +132,11 @@
                 <p id="tagline">Quantum Chemistry Web Platform</p>
             </div>
 
-            <a class="button is-info" href="https://github.com/cyllab/CalcUS" id="gh_button" target="_blank"><i class="fa fa-lg fa-brands fa-github"></i> View Project</a>
-            <a class="button is-info" href="https://doi.org/10.1021/acs.jcim.1c01502" id="paper_button" target="_blank"><i class="fa fa-lg fa-solid fa-scroll"></i>View Publication</a>
+            <a class="button is-info is-large" href="https://github.com/cyllab/CalcUS" id="gh_button" target="_blank"><i class="fa fa-lg fa-brands fa-github"></i> View Project</a>
+            <a class="button is-info is-large" href="https://doi.org/10.1021/acs.jcim.1c01502" id="paper_button" target="_blank"><i class="fa fa-lg fa-solid fa-scroll"></i>View Publication</a>
             {% if IS_CLOUD and ALLOW_TRIAL and not request.user.is_authenticated %}
             <br>
-            <a class="button is-primary" href="/start_trial/" id="trial_button"><i class="fa fa-lg fa-solid fa-gift"></i>Try for free now</a>
+            <a class="button is-primary is-large" href="/start_trial/" id="trial_button"><i class="fa fa-lg fa-solid fa-gift"></i>Try for free now</a>
             {% endif %}
         </center>
     </div>
@@ -162,6 +163,16 @@
                 <p class="subtitle">The user-friendly interface handles input file creation and management so you can concentrate on the bigger picture</p>
             </div>
         </div>
+    </div>
+    <div class="tile is-ancestor" id="contact_tile">
+        <center style="width: 100%">
+            <h2 class="title is-2">You have questions?</h2>
+            <br />
+            Feel free to contact us for any inquiry at contact@calcus.cloud
+            <br />
+            <br />
+            <a class="button is-primary is-large" href="mailto:contact@calcus.cloud">Contact us</a>
+        <center>
     </div>
 
     <div class="tile is-ancestor" id="waiting_list_tile">

@@ -1932,3 +1932,22 @@ class CalcusCloudLiveServer(CalcusLiveServer):
         settings.LOCAL_ALLOWED_THEORY_LEVELS = ["ALL"]
 
         settings.LOCAL_ALLOWED_STEPS = ["ALL"]
+
+    def redeem_code(self, code):
+        self.lget("/profile/")
+
+        code_inp = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.ID, "allocation_code"))
+        )
+        btn = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.ID, "redeem_button"))
+        )
+
+        code_inp.send_keys(code)
+        btn.click()
+        self.wait_for_ajax()
+
+        msg = self.driver.find_element(By.ID, "redeem_allocation_msg").text
+
+        if msg != "Resource redeemed!":
+            raise Exception(f"Error while redeeming code: {msg}")
