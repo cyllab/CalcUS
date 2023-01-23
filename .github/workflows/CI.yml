@@ -30,6 +30,11 @@ jobs:
         image: redis
         ports:
           - 6379:6379
+      taskqueue:
+        image: ghcr.io/aertje/cloud-tasks-emulator:latest
+        command: -host 0.0.0.0 -port 8123 -queue projects/test-project/locations/us-central1/queues/xtb-compute -queue projects/test-project/locations/us-central1/queues/actions
+        ports:
+          - 8123
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.9
@@ -56,7 +61,7 @@ jobs:
         python3 manage.py makemigrations frontend
         python3 manage.py migrate
         python3 manage.py init_static_obj
-        coverage run manage.py test
+        coverage run manage.py test frontend.test_cloud
       env:
         POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
