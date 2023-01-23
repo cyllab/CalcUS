@@ -123,9 +123,9 @@ else:
     DBBACKUP_INTERVAL = 1  # In days (can be a float)
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -144,6 +144,7 @@ if IS_CLOUD:
         "https://www.googletagmanager.com",
         "https://optimize.google.com",
         "https://fonts.googleapis.com",
+        "https://storage.googleapis.com",
     ]
 
 HASHID_FIELD_SALT = os.getenv("CALCUS_HASHID_SALT", "test_salt")
