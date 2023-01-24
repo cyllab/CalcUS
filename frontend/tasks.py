@@ -3753,9 +3753,14 @@ def send_gcloud_task(url, payload, compute=True, size="SMALL"):
             CloudTasksGrpcTransport,
         )
 
+        if "GITHUB_WORKSPACE" in os.environ:
+            hostname = "localhost"
+        else:
+            hostname = "taskqueue"
+
         client = tasks_v2.CloudTasksClient(
             transport=CloudTasksGrpcTransport(
-                channel=grpc.insecure_channel("taskqueue:8123")
+                channel=grpc.insecure_channel(f"{hostname}:8123")
             )
         )
     else:

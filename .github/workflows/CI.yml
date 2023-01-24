@@ -31,10 +31,13 @@ jobs:
         ports:
           - 6379:6379
       taskqueue:
-        image: ghcr.io/aertje/cloud-tasks-emulator:latest
-        command: -host 0.0.0.0 -port 8123 -queue projects/test-project/locations/us-central1/queues/xtb-compute -queue projects/test-project/locations/us-central1/queues/actions
+        image: raphaelrobidas/cloud-tasks-emulator:latest
+        env: 
+          QUEUE_HOST: localhost
+          QUEUE_PORT: 8123 
+          QUEUE_NAME: projects/test-project/locations/us-central1/queues/xtb-compute,projects/test-project/locations/us-central1/queues/actions
         ports:
-          - 8123
+          - 8123:8123
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.9
@@ -62,6 +65,7 @@ jobs:
         python3 manage.py migrate
         python3 manage.py init_static_obj
         coverage run manage.py test frontend.test_cloud
+        docker logs "${{ job.services.taskqueue.id }}"
       env:
         POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
@@ -72,6 +76,11 @@ jobs:
         CAN_USE_CACHED_LOGS: true
         USE_CACHED_LOGS: true
         CALCUS_TEST_MAX_ATTEMPTS: 5
+        GCP_LOCATION: us-central1
+        GCP_PROJECT_ID: test-project
+        GCP_SERVICE_ACCOUNT_EMAIL: github@calcus.cloud
+        COMPUTE_SMALL_HOST_URL: localhost:8000
+        ACTION_HOST_URL: localhost:8000
   trigger_cloud_build:
     needs: build
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'

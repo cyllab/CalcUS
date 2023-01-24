@@ -1,5 +1,6 @@
 <div class="column" id="parameters_column">
 	<div class="column" >
+        {% if not IS_CLOUD %}
 		<div class="box">
 			<center>
 				<div class="select">
@@ -17,6 +18,7 @@
 				</div>
 			</center>
 		</div>
+        {% endif %}
 	</div>
 
 	<form method="post" id="calcform" enctype="multipart/form-data">

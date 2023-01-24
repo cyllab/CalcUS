@@ -1911,7 +1911,7 @@ class CalcusCloudLiveServer(CalcusLiveServer):
         settings.IS_CLOUD = True
         settings.GCP_LOCATION = "us-central1"
         settings.GCP_PROJECT_ID = "test-project"
-        settings.GCP_SERVICE_ACCOUNT_EMAIL = "selenium@calcus.com"
+        settings.GCP_SERVICE_ACCOUNT_EMAIL = "selenium@calcus.cloud"
         settings.COMPUTE_SMALL_HOST_URL = "http://cloud-compute:8001"
         settings.ACTION_HOST_URL = "http://cloud-compute:8001"
         settings.ALLOW_REMOTE_CALC = False
