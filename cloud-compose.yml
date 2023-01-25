@@ -51,8 +51,12 @@ services:
                 depends_on: 
                         - web        
         taskqueue:
-              image: ghcr.io/aertje/cloud-tasks-emulator:latest
-              command: -host 0.0.0.0 -port 8123 -queue projects/test-project/locations/us-central1/queues/xtb-compute -queue projects/test-project/locations/us-central1/queues/actions
+              image: raphaelrobidas/cloud-tasks-emulator:latest
+              env:
+                    QUEUE_HOST: localhost
+                    QUEUE_PORT: 8123
+                    QUEUE_NAME: projects/test-project/locations/us-central1/queues/xtb-compute,projects/test-project/locations/us-central1/queues/actions
+
               expose:
                     - 8123
         cloud-compute:
