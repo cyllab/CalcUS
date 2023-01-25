@@ -98,18 +98,16 @@ from .tasks import (
     run_calc,
     send_cluster_command,
     load_output_files,
-)
-from .decorators import superuser_required
-from .tasks import (
     system,
     analyse_opt,
     generate_xyz_structure,
     gen_fingerprint,
     send_gcloud_task,
-    load_output_files,
     plot_peaks,
     get_calc_size,
 )
+from .decorators import superuser_required
+
 from frontend import tasks
 from .decorators import superuser_required
 from .constants import *
@@ -4178,10 +4176,10 @@ def log(request, pk):
     if not can_view_calculation(calc, request.user):
         return HttpResponse(status=403)
 
+    load_output_files(calc)
+
     if len(calc.output_files) == 0:
         return HttpResponse(status=204)
-
-    load_output_files(calc)
 
     data = json.loads(calc.output_files)
 
