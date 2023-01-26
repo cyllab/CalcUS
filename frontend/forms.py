@@ -28,6 +28,7 @@ from django.core.validators import validate_email
 from django.contrib.auth.forms import AuthenticationForm, UsernameField
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib.auth.forms import SetPasswordForm
+from django.utils import timezone
 
 if settings.IS_CLOUD:
     from captcha.fields import ReCaptchaField
@@ -59,6 +60,7 @@ class ResearcherCreateForm(UserCreationForm):
         user = super(ResearcherCreateForm, self).save(commit=False)
         user.email = self.cleaned_data["email"]
         user.allocated_seconds = 600
+        user.last_free_refill = timezone.now()
 
         if commit:
             user.save()
@@ -217,6 +219,7 @@ class CreateFullAccountForm(SetPasswordForm, ModelForm):
         user.is_temporary = False
         user.is_trial = False
         user.allocated_seconds += 540
+        user.last_free_refill = timezone.now()
 
         if commit:
             user.save()

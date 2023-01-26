@@ -1951,3 +1951,115 @@ class CalcusCloudLiveServer(CalcusLiveServer):
 
         if msg != "Resource redeemed!":
             raise Exception(f"Error while redeeming code: {msg}")
+
+    def create_research_group(self, name):
+        self.lget("/profile/")
+
+        btn = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.ID, "create_group_button"))
+        )
+        name_input = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.ID, "group_name"))
+        )
+
+        name_input.send_keys(name)
+        btn.click()
+        self.wait_for_ajax()
+
+        try:
+            msg = self.driver.find_element(By.ID, "create_group_msg").text
+        except selenium.common.exceptions.NoSuchElementException:
+            return
+
+        if msg != "":
+            raise Exception(f"Error while creating the research group: {msg}")
+
+    def dissolve_research_group(self):
+        self.lget("/profile/")
+
+        # Only one per user max
+        groups_div = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "#groups_div > div > div > div")
+            )
+        )
+
+        btn = groups_div.find_element(
+            By.CSS_SELECTOR, "center > button.dissolve-button"
+        )
+        btn.click()
+        self.accept_alert()
+        self.wait_for_ajax()
+
+        try:
+            msg = groups_div.find_element(
+                By.CSS_SELECTOR, "center > span .ajax_msg"
+            ).text
+        except selenium.common.exceptions.NoSuchElementException:
+            return
+        else:
+            raise Exception(f"Error while dissolving the research group: {msg}")
+
+    def create_class(self, name):
+        self.lget("/profile/")
+
+        btn = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.ID, "create_class_button"))
+        )
+        name_input = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.ID, "class_name"))
+        )
+
+        name_input.send_keys(name)
+        btn.click()
+        self.wait_for_ajax()
+
+        try:
+            msg = self.driver.find_element(By.ID, "create_class_msg").text
+        except selenium.common.exceptions.NoSuchElementException:
+            return
+
+        if msg != "":
+            raise Exception(f"Error while creating the class: {msg}")
+
+    def dissolve_class(self, name):
+        self.lget("/profile/")
+
+        classes = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "#classes_div > div.has-text-centered")
+            )
+        )
+
+        classes = self.driver.find_elements(
+            By.CSS_SELECTOR, "#classes_div > div.has-text-centered"
+        )
+
+        for el in classes:
+            class_name = el.find_element(By.CSS_SELECTOR, "div > center > h4").text
+            if class_name == name:
+                try:
+                    btn = el.find_element(
+                        By.CSS_SELECTOR,
+                        "div > center > div.field > div.control > button",
+                    )
+                except selenium.common.exceptions.NoSuchElementException:
+                    raise Exception(f"Cannot dissolve class {name}: no dissolve button")
+
+                btn.click()
+                self.accept_alert()
+                self.wait_for_ajax()
+
+                try:
+                    msg = el.find_element(
+                        By.CSS_SELECTOR, "div > center > span.ajax_msg"
+                    ).text
+                except selenium.common.exceptions.NoSuchElementException:
+                    return
+
+                if msg == "":
+                    return
+                else:
+                    raise Exception(f"Error while dissolving the class: {msg}")
+        else:
+            raise Exception(f"Could not find a class named {name} to dissolve")

@@ -1,5 +1,5 @@
 {% if request.user.is_temporary %}
-<div id="classes_div">
+<div id="classes_subdiv">
     {% if request.user.in_class %}
     <div class="block">
     You are in <b>{{ request.user.in_class.name }}</b>
@@ -15,7 +15,7 @@
 </div>
 
 {% else %}
-<div id="classes_div">
+<div id="classes_subdiv">
     Create a class to enable students to access CalcUS and perform calculations.
 
     <div id="create_class_div">
@@ -25,7 +25,7 @@
         </div>
         <div class="field">
             <div class="control has-text-centered">
-                <button class="button is-primary" id="create_class_button" onclick="create_group('class');">Create</button>
+                <button class="button is-primary" id="create_class_button" onclick="create_group('class');" {% if not request.user.is_subscriber %}title="Subscription required" disabled{% endif %}>Create</button>
             </div>
         </div>
         <span class="ajax_msg" id="create_class_msg"></span>
@@ -36,9 +36,13 @@
 <div class="has-text-centered">
     <div>
         <center>
-            <h4 class="title is-4">{{ class.name }}</h4>
+            <h4 class="title is-4">{{ class.name }} {% if not request.user.is_subscriber %}<i>(currently inactive)</i>{% endif %}</h4>
+            {% if not request.user.is_subscriber %}
+            You do not have an active subscription. As such, students cannot join the class or launch calculations.
+            {% else %}
             Students can register using the code <br />
             <p class="box class_code" data-clipboard-text="{{ class.access_code }}"><b>{{ class.access_code }}</b><i class="fa fa-solid fa-clipboard fa-lg" ></i></p>
+            {% endif %}
 
             {% if class.members.count > 0 %}
             <table class="table">

@@ -4005,7 +4005,9 @@ def bill_calculation(calc):
     logger.info(
         f"{calc.order.resource_provider.name} ({calc.order.resource_provider.id}) has been billed {calc_time} seconds for calc {calc.id}"
     )
-    if calc.order.author != calc.order.resource_provider:
+    if calc.order.author.is_temporary:
+        # In the case of temporary users (students in classes), we want to be able to limit their usage.
+        # Temporary users shouldn't have their own resource allocation anyway.
         calc.order.author.bill_time(calc_time)
         logger.info(
             f"{calc.order.author.name} ({calc.order.author.id}) has also been billed {calc_time} seconds for calc {calc.id}"

@@ -96,22 +96,16 @@
 				},
 
 				data: {'group_name': group_name, 'type': type},
-				success: function(data, textStatus, xhr) {
-                    if (xhr.status != 201) {
-                        $("#create_" + type + "_msg").text(data.responseText);
-                    }
-                    else {
-					    refresh_groups();
-                    }
-				},
-				error: function(data, textStatus, xhr) {
+			}).done(function(data, textStatus, xhr) {
+					refresh_groups();
+                    $("#create_" + type + "_msg").text("The " + type + " has been created");
+			}).fail(function(data, textStatus, xhr) {
                     $("#create_" + type + "_msg").text(data.responseText);
-                },
-                complete: function() {
+            }).always(
+                function() {
                     $("#create_" + type + "_button").removeClass("is-loading");
-                },
-
-			});
+                }
+            );
         }
 
         function dissolve_group(group_id, group_name, type) {
@@ -434,11 +428,16 @@
 
             {% if request.user.is_temporary %}
             <p>You are logged in as temporary user <b>{{ request.user.email }}</b>.</p>
-            {% if request.user.is_trial %}
-            <a class="button is-info" id="convert_link" href="/create_full_account/">Convert account to full account</a>
-            {% endif %}
+                {% if request.user.is_trial %}
+                <a class="button is-info" id="convert_link" href="/create_full_account/">Convert account to full account</a>
+                {% endif %}
             {% else %}
             <p>You are logged in as <b>{{ request.user.email }}</b>.</p>
+            {% if request.user.is_subscriber %}
+            You have an active subscription which will end on {{ request.user.active_subscription.end_date|date }}.
+            {% else %}
+            You do not have an active subscription. Email <a href="mailto:contact@calcus.cloud">contact@calcus.cloud</a> for subscription options.
+            {% endif %}
             {% endif %}
 
             <div class="field">

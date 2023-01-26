@@ -138,6 +138,25 @@ class User(AbstractUser):
     # For temporary users, both their billed_seconds and the professor's will be incremented in order to enforce the usage limit
     billed_seconds = models.PositiveIntegerField(default=0)
 
+    last_free_refill = models.DateTimeField(
+        "date", default=timezone.datetime(year=2000, month=1, day=1, hour=1, minute=1)
+    )
+
+    @property
+    def active_subscription(self):
+        subs = self.subscription_set.all()
+        now = timezone.now()
+        for sub in subs:
+            if now > sub.start_date and now < sub.end_date:
+                return sub
+        return None
+
+    @property
+    def is_subscriber(self):
+        if not settings.IS_CLOUD:
+            return True
+        return self.active_subscription is not None
+
     @property
     def resource_provider(self):
         if self.is_PI:
@@ -230,6 +249,25 @@ class User(AbstractUser):
         return self.clusteraccess_owner.all()
 
 
+class Subscription(models.Model):
+    id = BigHashidAutoField(
+        primary_key=True, salt="Subscription_hashid_" + settings.HASHID_FIELD_SALT
+    )
+
+    subscriber = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    associated_allocation = models.ForeignKey(
+        "ResourceAllocation", on_delete=models.SET_NULL, null=True
+    )
+
+    # Duration in months (1, 4, 12)
+    # Mostly to identify which subscription option the user has chosen
+    duration = models.PositiveSmallIntegerField()
+    for_academia = models.BooleanField(default=True)
+
+    start_date = models.DateTimeField("date")
+    end_date = models.DateTimeField("date")
+
+
 class ResourceAllocation(models.Model):
     id = BigHashidAutoField(
         primary_key=True, salt="ResourceAllocation_hashid_" + settings.HASHID_FIELD_SALT
@@ -247,6 +285,7 @@ class ResourceAllocation(models.Model):
     PURCHASE = 4
     SUBSCRIPTION = 5
     TRIAL_CONVERSION = 6
+    MONTHLY_FREE_REFILL = 7
 
     MANUAL = 99
 
@@ -258,6 +297,7 @@ class ResourceAllocation(models.Model):
         (PURCHASE, "Purchase"),
         (SUBSCRIPTION, "Subscription"),
         (MANUAL, "Manually issued allocation"),
+        (MONTHLY_FREE_REFILL, "Monthly free refill"),
     ]
     note = models.PositiveSmallIntegerField(choices=NOTES, default=99)
 

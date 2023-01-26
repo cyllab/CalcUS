@@ -113,7 +113,7 @@ from .decorators import superuser_required
 from .constants import *
 from .libxyz import parse_xyz_from_text, equivalent_atoms
 from .environment_variables import *
-from .helpers import get_xyz_from_Gaussian_input
+from .helpers import get_xyz_from_Gaussian_input, get_random_string
 
 from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
@@ -1252,6 +1252,29 @@ def error(request, msg):
             "error_message": msg,
         },
     )
+
+
+@csrf_exempt
+def run_refills(request):
+    if not "X-AppEngine-Cron" in request.headers.keys():
+        return HttpResponse(status=403)
+
+    now = timezone.now()
+    for u in User.objects.all():
+        if now > u.last_free_refill + timezone.timedelta(days=30):
+            time_left = u.allocated_seconds - u.billed_seconds
+            refill = 300 - time_left
+            if refill > 0:
+                u.last_free_refill = now
+                u.save()
+
+                r = ResourceAllocation.objects.create(
+                    code=get_random_string(n=128),
+                    allocation_seconds=refill,
+                    note=ResourceAllocation.MONTHLY_FREE_REFILL,
+                )
+                r.redeem(u)
+                logger.info(f"Issued a free refill of {refill} seconds to user {u.id}")
 
 
 @csrf_exempt
@@ -3189,6 +3212,11 @@ def server_summary(request):
 @login_required
 def create_group(request):
     if request.method == "POST":
+        if not request.user.is_subscriber:
+            return HttpResponse(
+                "You need a subscription in order to create groups or classes",
+                status=403,
+            )
 
         try:
             group_name = clean(request.POST["group_name"])
@@ -3213,8 +3241,10 @@ def create_group(request):
         elif type == "class":
             cls = ClassGroup.objects.create(name=group_name, professor=request.user)
             cls.generate_code()
+        else:
+            return HttpResponse("Unknown group type", status=400)
 
-        return HttpResponse(status=201)
+        return HttpResponse(status=200)
 
     return HttpResponse(status=403)
 
