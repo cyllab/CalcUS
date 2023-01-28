@@ -5,10 +5,10 @@ Contributing
 ------------
 Contributions to the project in the form of feedback or pull requests are welcome. For code contributions, please make sure to provide good quality code with similar formatting as the rest of the project. Notably, this means:
 
-* Variable names and comments should be in English
-* Use tabs for indentation
-* Use proper whitespace (for example, after commas)
-* Comment complex or unintuitive lines of code
+- Variable names and comments should be in English
+- Comment complex or unintuitive lines of code
+
+We use the ``black`` code styling (`see the project's repo here <https://github.com/psf/black>`_). It will automatically be enforced when submitting a pull request, so you should not need to worry too much about formatting the code exactly right.
 
 Tests
 -----
@@ -46,6 +46,7 @@ As many tests require the output files of quantum chemistry packages, the requir
 - ``frontend/test_calculations.py``
 - ``frontend/test_views.py``
 - ``frontend/test_xyz.py``
+- ``frontend/test_models.py``
 - ``frontend/test_units.py``
 - ``frontend/test_md5.py``
 - ``frontend/test_fingerprint.py``
