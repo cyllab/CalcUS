@@ -1255,7 +1255,7 @@ def error(request, msg):
 
 
 @csrf_exempt
-def run_refills(request):
+def cloud_refills(request):
     if not "X-AppEngine-Cron" in request.headers.keys():
         return HttpResponse(status=403)
 
@@ -1263,6 +1263,7 @@ def run_refills(request):
     for u in User.objects.all():
         if now > u.last_free_refill + timezone.timedelta(days=30):
             time_left = u.allocated_seconds - u.billed_seconds
+            print("left", time_left)
             refill = 300 - time_left
             if refill > 0:
                 u.last_free_refill = now
@@ -1275,6 +1276,7 @@ def run_refills(request):
                 )
                 r.redeem(u)
                 logger.info(f"Issued a free refill of {refill} seconds to user {u.id}")
+    return HttpResponse(status=200)
 
 
 @csrf_exempt

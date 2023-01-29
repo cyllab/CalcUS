@@ -1926,3 +1926,94 @@ class MiscTests(TestCase):
         related = self.client.get("/get_related_calculations/{}".format(e2.pk))
         print(related.content)
 """
+
+
+class CloudTests(TestCase):
+    def setUp(self):
+        super().setUp()
+        settings.IS_CLOUD = True
+        settings.GCP_LOCATION = "us-central1"
+        settings.GCP_PROJECT_ID = "test-project"
+        settings.GCP_SERVICE_ACCOUNT_EMAIL = "selenium@calcus.cloud"
+        settings.COMPUTE_SMALL_HOST_URL = "http://cloud-compute:8001"
+        settings.ACTION_HOST_URL = "http://cloud-compute:8001"
+        settings.ALLOW_REMOTE_CALC = False
+        settings.LOCAL_MAX_ATOMS = 60
+
+        settings.LOCAL_ALLOWED_THEORY_LEVELS = [
+            "xtb",
+        ]
+
+        self.email = "Tester@test.com"
+        self.password = "test1234"
+
+        self.user = User.objects.create_superuser(
+            email=self.email,
+            password=self.password,
+        )
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
+        self.client = Client()
+        self.client.force_login(self.user)
+
+    def tearDown(self):
+        super().tearDown()
+
+        settings.IS_CLOUD = False
+        settings.ALLOW_REMOTE_CALC = True
+        settings.LOCAL_MAX_ATOMS = -1
+        settings.LOCAL_ALLOWED_THEORY_LEVELS = ["ALL"]
+        settings.LOCAL_ALLOWED_STEPS = ["ALL"]
+
+    def test_refill(self):
+        self.assertEqual(self.user.allocated_seconds, 0)
+        headers = {"HTTP_X_APPENGINE_CRON": "something"}
+        response = self.client.post("/cloud_refills/", **headers)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.allocated_seconds, 300)
+
+    def test_no_double_refill(self):
+        self.assertEqual(self.user.allocated_seconds, 0)
+        headers = {"HTTP_X_APPENGINE_CRON": "something"}
+        response = self.client.post("/cloud_refills/", **headers)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.allocated_seconds, 300)
+
+        response = self.client.post("/cloud_refills/", **headers)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.allocated_seconds, 300)
+
+    def test_no_early_refill(self):
+        last_refill = timezone.now() - timezone.timedelta(days=10)
+        self.user.last_free_refill = last_refill
+        self.user.save()
+
+        self.assertEqual(self.user.allocated_seconds, 0)
+        headers = {"HTTP_X_APPENGINE_CRON": "something"}
+        response = self.client.post("/cloud_refills/", **headers)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.allocated_seconds, 0)
+        self.assertEqual(self.user.last_free_refill, last_refill)
+
+    def test_refill_cap(self):
+        self.user.allocated_seconds = 100
+        self.user.save()
+
+        headers = {"HTTP_X_APPENGINE_CRON": "something"}
+        response = self.client.post("/cloud_refills/", **headers)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.allocated_seconds, 300)
+
+    def test_refill_above_cap(self):
+        self.user.allocated_seconds = 500
+        self.user.save()
+
+        headers = {"HTTP_X_APPENGINE_CRON": "something"}
+        response = self.client.post("/cloud_refills/", **headers)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.allocated_seconds, 500)
