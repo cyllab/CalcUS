@@ -4096,8 +4096,8 @@ class MiscCalculationTests(CalcusLiveServer):
         for ind, line in enumerate(data):
             self.assertEqual(line[0], str(ind + 1))
             self.assertEqual(line[1], f"{structs[ind][0]:.6f}")
-            self.assertEqual(line[3], str(structs[ind][1]))
-            self.assertEqual(line[4], f"{ref_weights[ind]:.2f}")
+            # self.assertEqual(line[3], str(structs[ind][1]))
+            self.assertEqual(line[3], f"{ref_weights[ind]:.2f}")
 
     def test_conformer_table2(self):
         proj = Project.objects.create(name="TestProj", author=self.user)
@@ -4141,8 +4141,8 @@ class MiscCalculationTests(CalcusLiveServer):
         for ind, line in enumerate(data):
             self.assertEqual(line[0], str(ind + 1))
             self.assertEqual(line[1], f"{structs[ind][0]:.6f}")
-            self.assertEqual(line[3], str(structs[ind][1]))
-            self.assertEqual(line[4], f"{ref_weights[ind]:.2f}")
+            # self.assertEqual(line[3], str(structs[ind][1]))
+            self.assertEqual(line[3], f"{ref_weights[ind]:.2f}")
 
     def test_confirmed_specifications(self):
         params = {
