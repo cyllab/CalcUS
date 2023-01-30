@@ -1966,7 +1966,7 @@ class CloudTests(TestCase):
 
     def test_refill(self):
         self.assertEqual(self.user.allocated_seconds, 0)
-        headers = {"HTTP_X_APPENGINE_CRON": "something"}
+        headers = {"HTTP_X_CLOUDSCHEDULER": "something"}
         response = self.client.post("/cloud_refills/", **headers)
 
         self.user.refresh_from_db()
@@ -1974,7 +1974,7 @@ class CloudTests(TestCase):
 
     def test_no_double_refill(self):
         self.assertEqual(self.user.allocated_seconds, 0)
-        headers = {"HTTP_X_APPENGINE_CRON": "something"}
+        headers = {"HTTP_X_CLOUDSCHEDULER": "something"}
         response = self.client.post("/cloud_refills/", **headers)
 
         self.user.refresh_from_db()
@@ -1991,7 +1991,7 @@ class CloudTests(TestCase):
         self.user.save()
 
         self.assertEqual(self.user.allocated_seconds, 0)
-        headers = {"HTTP_X_APPENGINE_CRON": "something"}
+        headers = {"HTTP_X_CLOUDSCHEDULER": "something"}
         response = self.client.post("/cloud_refills/", **headers)
 
         self.user.refresh_from_db()
@@ -2002,7 +2002,7 @@ class CloudTests(TestCase):
         self.user.allocated_seconds = 100
         self.user.save()
 
-        headers = {"HTTP_X_APPENGINE_CRON": "something"}
+        headers = {"HTTP_X_CLOUDSCHEDULER": "something"}
         response = self.client.post("/cloud_refills/", **headers)
 
         self.user.refresh_from_db()
@@ -2012,7 +2012,7 @@ class CloudTests(TestCase):
         self.user.allocated_seconds = 500
         self.user.save()
 
-        headers = {"HTTP_X_APPENGINE_CRON": "something"}
+        headers = {"HTTP_X_CLOUDSCHEDULER": "something"}
         response = self.client.post("/cloud_refills/", **headers)
 
         self.user.refresh_from_db()
