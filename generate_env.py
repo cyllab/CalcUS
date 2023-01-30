@@ -61,11 +61,7 @@ services:
                 volumes:
                         - .:/calcus
 {}
-        slurm:
-                volumes:
-                        - .:/calcus
-                        - ./docker/slurm/calcus:/home/slurm/calcus
-{}"""
+"""
 
 cwd = os.getcwd()
 
@@ -277,11 +273,7 @@ with open("docker-compose.override.yml", "w") as out:
     out.write(OVERRIDE_TEMPLATE.format(override_content))
 
 with open("test-compose.override.yml", "w") as out:
-    out.write(
-        TEST_OVERRIDE_TEMPLATE.format(
-            override_content, override_content.replace("binaries", "home/slurm")
-        )
-    )
+    out.write(TEST_OVERRIDE_TEMPLATE.format(override_content))
 
 print("Creating necessary folders")
 for d in ["scr", "keys", "logs", "backups"]:
