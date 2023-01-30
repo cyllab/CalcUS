@@ -277,8 +277,9 @@ if IS_CLOUD:
     ALLOW_REMOTE_CALC = False
 
     ALLOW_TRIAL = True
-    # Give 60 free CPU-seconds for trial
-    TRIAL_DEFAULT_COMP_SECONDS = 60
+
+    # Give 300 free CPU-seconds for trial
+    TRIAL_DEFAULT_COMP_SECONDS = 300
 
     LOCAL_MAX_ATOMS = 200
 
