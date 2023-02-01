@@ -1260,7 +1260,7 @@ def cloud_refills(request):
         return HttpResponse(status=403)
 
     now = timezone.now()
-    for u in User.objects.all():
+    for u in User.objects.filter(is_temporary=False).all():
         if now > u.last_free_refill + timezone.timedelta(days=30):
             time_left = u.allocated_seconds - u.billed_seconds
             refill = 300 - time_left
