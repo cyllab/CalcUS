@@ -90,7 +90,6 @@ from frontend import tasks
 
 
 class ClusterDaemon:
-
     connections = {}
     locks = {}
     calculations = {}
@@ -262,7 +261,6 @@ class ClusterDaemon:
         close_old_connections()
 
     def resume_calc(self, c, attempt_count=1):
-
         pid = threading.get_ident()
         tasks.connections[pid] = self.connections
         self.calculations[c.id] = pid

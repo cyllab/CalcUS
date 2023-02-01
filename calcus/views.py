@@ -26,11 +26,9 @@ from django.contrib.auth.models import User
 
 
 class LoginView(TemplateView):
-
     template_name = "registration/login.html"
 
     def post(self, request, **kwargs):
-
         username = request.POST.get("username", False)
         password = request.POST.get("password", False)
         user = authenticate(username=username, password=password)
@@ -42,7 +40,6 @@ class LoginView(TemplateView):
 
 
 class LogoutView(TemplateView):
-
     template_name = "frontend/index.html"
 
     def get(self, request, **kwargs):

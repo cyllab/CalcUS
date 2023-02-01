@@ -160,7 +160,6 @@ def direct_command(command, conn, lock, attempt_count=1):
 
 
 def sftp_get(src, dst, conn, lock, attempt_count=1):
-
     if (
         os.getenv("USE_CACHED_LOGS") == "true"
         and os.getenv("CAN_USE_CACHED_LOGS") == "true"
@@ -203,7 +202,6 @@ def sftp_get(src, dst, conn, lock, attempt_count=1):
 
 
 def sftp_put(src, dst, conn, lock, attempt_count=1):
-
     if not os.path.exists(src):
         return
 
@@ -354,7 +352,6 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
             return testing_delay_remote(calc_id)
 
         if calc.status == 0 and calc.remote_id == 0:
-
             if log_file != "":
                 output = direct_command(
                     "cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{} | tee {}' >> submit_{}.sh; sbatch --job-name={} submit_{}.sh | tee calcus".format(
@@ -1278,7 +1275,6 @@ def xtb_freq(in_file, calc):
 
         vibs = []
         while ind < len(lines) - 1:
-
             vib = []
             sline = lines[ind].split()
             num_vibs = int((len(sline) - 2) / 3)
@@ -1985,7 +1981,6 @@ def plot_vibs(_x, PP):
 
 
 def xtb_stda(in_file, calc):  # TO OPTIMIZE
-
     ww = []
     TT = []
     PP = []
@@ -2211,7 +2206,6 @@ def launch_gaussian_calc(in_file, calc, files):
 
 
 def parse_orca_charges(calc, s):
-
     xyz = parse_xyz_from_text(calc.structure.xyz_structure)
 
     if len(xyz) < 2:  # Monoatomic
@@ -2669,7 +2663,9 @@ def gaussian_freq(in_file, calc):
             ind -= 1
         ind += 5
 
-    except IndexError:  # "Standard orientation" is not in all Gaussian output files, apparently
+    except (
+        IndexError
+    ):  # "Standard orientation" is not in all Gaussian output files, apparently
         ind = 0
 
         raw_lines = calc.structure.xyz_structure.split("\n")
@@ -3067,7 +3063,6 @@ def find_bonds(xyz):
 
 
 def write_mol(xyz):
-
     bonds = find_bonds(xyz)
     content = []
     content.append("Molfile\n")

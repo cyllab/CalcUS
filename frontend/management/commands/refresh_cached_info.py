@@ -36,7 +36,6 @@ class Command(BaseCommand):
             profile.save()
 
         for proj in Project.objects.all():
-
             dnum = {}
             dcompleted = {}
             dqueued = {}
