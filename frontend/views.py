@@ -2428,12 +2428,12 @@ def _submit_calculation(request, verify=False):
                             m = other_struct.properties.first().parameters.multiplicity
                             if c != charge:
                                 return f"Cannot combine files with different charge specifications ({filename}: charge={charge}, {other_filename}: charge={c})"
-                            if m != mult:
+                            if m != multiplicity:
                                 return f"Cannot combine files with different multiplicity specifications ({filename}: multiplicity={mult}, {other_filename}: multiplicity={m})"
                         # Create the Parameters object for all the inputs
                         __params = _params.copy()
                         __params["charge"] = charge
-                        __params["multiplicity"] = mult
+                        __params["multiplicity"] = multiplicity
                         params = Parameters.objects.create(**__params)
 
                         for ind, filename in enumerate(all_filenames):
