@@ -3798,6 +3798,8 @@ def record_event_analytics(request, event_name, **extra_params):
     ):
         return
 
+    logger.info(f"Recording event {event_name} by {str(request.user.id)}")
+
     from google.cloud import tasks_v2
 
     client = tasks_v2.CloudTasksClient()
