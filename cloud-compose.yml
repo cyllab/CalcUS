@@ -52,11 +52,10 @@ services:
                         - web        
         taskqueue:
               image: raphaelrobidas/cloud-tasks-emulator:latest
-              env:
+              environment:
                     QUEUE_HOST: localhost
                     QUEUE_PORT: 8123
-                    QUEUE_NAME: projects/test-project/locations/us-central1/queues/xtb-compute,projects/test-project/locations/us-central1/queues/actions
-
+                    QUEUE_NAME: projects/test-project/locations/us-central1/queues/xtb-compute,projects/test-project/locations/us-central1/queues/actions,projects/test-project/locations/us-central1/queues/analytics
               expose:
                     - 8123
         cloud-compute:

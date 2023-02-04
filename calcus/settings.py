@@ -53,6 +53,8 @@ else:
     except (FileNotFoundError, subprocess.CalledProcessError):
         CALCUS_VERSION_HASH = "unknown"
 
+ANALYTICS_MEASUREMENT_ID = os.getenv("ANALYTICS_MEASUREMENT_ID", "")
+ANALYTICS_API_SECRET = os.getenv("ANALYTICS_API_SECRET", "")
 
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")

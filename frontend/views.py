@@ -105,6 +105,7 @@ from .tasks import (
     send_gcloud_task,
     plot_peaks,
     get_calc_size,
+    record_event_analytics,
 )
 from .decorators import superuser_required
 
@@ -207,6 +208,7 @@ def register(request):
                     email=form_student.rand_email,
                     password=form_student.rand_password,
                 )
+                record_event_analytics(request, "register_student")
                 if user:
                     login(request, user)
                     return redirect("/projects/")  # Quickstart page?
@@ -220,6 +222,7 @@ def register(request):
                 email = form_researcher.cleaned_data.get("email")
                 password = form_researcher.cleaned_data.get("password1")
                 user = authenticate(request, email=email, password=password)
+                record_event_analytics(request, "register_full")
                 if user:
                     login(request, user)
                     return redirect("/projects/")  # Quickstart page?
@@ -260,6 +263,7 @@ def start_trial(request):
                 email=form.rand_email,
                 password=form.rand_password,
             )
+            record_event_analytics(request, "start_trial")
             if user:
                 login(request, user)
                 return redirect("/launch/")
@@ -1184,57 +1188,6 @@ def recipe(request, pk):
         pass
 
     return render(request, "recipes/" + r.page_path, {})
-
-
-def register(request):
-    acc_type = ""
-    if request.method == "POST" and "acc_type" in request.POST:
-        acc_type = clean(request.POST["acc_type"])
-        if acc_type == "student":
-            form_student = StudentCreateForm(request.POST)
-            if form_student.is_valid():
-                form_student.save()
-                user = authenticate(
-                    request,
-                    email=form_student.rand_email,
-                    password=form_student.rand_password,
-                )
-                if user:
-                    login(request, user)
-                    return redirect("/projects/")  # Quickstart page?
-                else:
-                    logger.error(f"Could not log in student")
-            form_researcher = ResearcherCreateForm()
-        elif acc_type == "researcher":
-            form_researcher = ResearcherCreateForm(request.POST)
-            if form_researcher.is_valid():
-                form_researcher.save()
-                email = form_researcher.cleaned_data.get("email")
-                password = form_researcher.cleaned_data.get("password1")
-                user = authenticate(request, email=email, password=password)
-                if user:
-                    login(request, user)
-                    return redirect("/projects/")  # Quickstart page?
-                else:
-                    logger.error(f"Could not log in researcher {email}")
-            form_student = StudentCreateForm()
-        else:
-            logger.error(f"Invalid account type: {acc_type}")
-            form_researcher = ResearcherCreateForm()
-            form_student = StudentCreateForm()
-    else:
-        form_researcher = ResearcherCreateForm()
-        form_student = StudentCreateForm()
-
-    return render(
-        request,
-        "registration/register.html",
-        {
-            "form_student": form_student,
-            "form_researcher": form_researcher,
-            "acc_type": acc_type,
-        },
-    )
 
 
 def please_register(request):
@@ -2706,6 +2659,7 @@ def _submit_calculation(request, verify=False):
     if "test" in request.POST.keys():
         return redirect("/calculations/")
 
+    record_event_analytics(request, "launch_calc")
     if settings.IS_CLOUD:
         for o in orders:
             send_gcloud_task("/cloud_order/", str(o.id), compute=False)
@@ -3399,6 +3353,7 @@ def redeem_allocation(request):
     if not alloc.redeem(request.user):
         return HttpResponse("Code already redeemed", status=400)
 
+    record_event_analytics(request, "allocation_redeemed")
     return HttpResponse("Resource redeemed!", status=200)
 
 

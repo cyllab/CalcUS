@@ -3785,6 +3785,78 @@ def send_gcloud_task(url, payload, compute=True, size="SMALL"):
     client.create_task(parent=parent, task=task)
 
 
+def record_event_analytics(request, event_name, **extra_params):
+    """
+    Records particular significant events triggered by the user for analysis and management
+    """
+
+    if (
+        is_test
+        or settings.DEBUG
+        or not settings.IS_CLOUD
+        or settings.ANALYTICS_MEASUREMENT_ID == ""
+        or settings.ANALYTICS_API_SECRET == ""
+    ):
+        return
+
+    from google.cloud import tasks_v2
+
+    client = tasks_v2.CloudTasksClient()
+
+    if "_ga" not in request.COOKIES:
+        logger.warning(
+            f"The Google Analytics cookie does not appear to be set for {request.user.id}"
+        )
+        return
+
+    payload = {
+        "client_id": request.COOKIES["_ga"],
+        "events": [
+            {
+                "name": event_name,
+                "params": {
+                    "engagement_time_msec": "100",
+                    **extra_params,
+                },
+            }
+        ],
+    }
+
+    if "CALCUS_SESSION_COOKIE" in request.COOKIES:
+        payload["events"][0]["params"]["session_id"] = request.COOKIES[
+            "CALCUS_SESSION_COOKIE"
+        ]
+
+    if not request.user.is_anonymous:
+        payload["user_id"] = str(request.user.id)
+        if request.user.is_trial:
+            account_type = "trial_account"
+        elif request.user.is_temporary:
+            account_type = "student_account"
+        else:
+            account_type = "full_account"
+
+        payload["user_properties"] = {"account_type": account_type}
+
+    url = f"https://www.google-analytics.com/mp/collect?measurement_id={settings.ANALYTICS_MEASUREMENT_ID}&api_secret={settings.ANALYTICS_API_SECRET}"
+
+    parent = client.queue_path(
+        settings.GCP_PROJECT_ID, settings.GCP_LOCATION, "analytics"
+    )
+
+    task = {
+        "http_request": {
+            "http_method": "POST",
+            "url": url,
+            "oidc_token": {"service_account_email": settings.GCP_SERVICE_ACCOUNT_EMAIL},
+            "headers": {"Content-type": "application/json"},
+        }
+    }
+    task["http_request"]["body"] = json.dumps(payload)
+
+    client.create_task(parent=parent, task=task)
+
+
 def add_input_to_calc(calc):
     inp = calc_to_ccinput(calc)
     if isinstance(inp, CCInputException):
