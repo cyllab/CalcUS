@@ -3798,8 +3798,6 @@ def record_event_analytics(request, event_name, **extra_params):
     ):
         return
 
-    logger.info(f"Recording event {event_name} by {str(request.user.id)}")
-
     from google.cloud import tasks_v2
 
     client = tasks_v2.CloudTasksClient()
@@ -3823,12 +3821,10 @@ def record_event_analytics(request, event_name, **extra_params):
         ],
     }
 
-    """
     if "CALCUS_SESSION_COOKIE" in request.COOKIES:
         payload["events"][0]["params"]["session_id"] = request.COOKIES[
             "CALCUS_SESSION_COOKIE"
         ]
-    """
 
     if not request.user.is_anonymous:
         payload["user_id"] = str(request.user.id)
@@ -3839,7 +3835,7 @@ def record_event_analytics(request, event_name, **extra_params):
         else:
             account_type = "full_account"
 
-        payload["user_properties"] = {"account_type": account_type}
+        payload["user_properties"] = {"account_type": {"value": account_type}}
 
     url = f"https://www.google-analytics.com/mp/collect?measurement_id={settings.ANALYTICS_MEASUREMENT_ID}&api_secret={settings.ANALYTICS_API_SECRET}"
 
@@ -3857,7 +3853,6 @@ def record_event_analytics(request, event_name, **extra_params):
     }
     task["http_request"]["body"] = json.dumps(payload).encode()
 
-    logger.info(f"Payload={json.dumps(payload)}")
     client.create_task(parent=parent, task=task)
 
 
