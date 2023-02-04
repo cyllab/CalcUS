@@ -2660,6 +2660,7 @@ def _submit_calculation(request, verify=False):
         return redirect("/calculations/")
 
     record_event_analytics(request, "launch_calc")
+
     if settings.IS_CLOUD:
         for o in orders:
             send_gcloud_task("/cloud_order/", str(o.id), compute=False)
@@ -5225,7 +5226,7 @@ def ensemble_map(request, pk):
                 }}"""
     nodes = ""
     for e in mol.ensemble_set.all():
-        label = "{} ({})".format(e.name, str(mol.id)[:5])
+        label = "{} ({})".format(e.name, str(e.id)[:5])
         if e.flagged:
             border_text = """, "bcolor": "black", "bwidth": 2"""
         else:
