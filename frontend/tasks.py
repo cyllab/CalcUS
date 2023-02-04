@@ -3779,8 +3779,7 @@ def send_gcloud_task(url, payload, compute=True, size="SMALL"):
             "oidc_token": {"service_account_email": settings.GCP_SERVICE_ACCOUNT_EMAIL},
         }
     }
-    converted_payload = payload.encode()
-    task["http_request"]["body"] = converted_payload
+    task["http_request"]["body"] = payload.encode()
 
     client.create_task(parent=parent, task=task)
 
@@ -3852,7 +3851,7 @@ def record_event_analytics(request, event_name, **extra_params):
             "headers": {"Content-type": "application/json"},
         }
     }
-    task["http_request"]["body"] = json.dumps(payload)
+    task["http_request"]["body"] = json.dumps(payload).encode()
 
     client.create_task(parent=parent, task=task)
 
