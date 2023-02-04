@@ -3823,10 +3823,12 @@ def record_event_analytics(request, event_name, **extra_params):
         ],
     }
 
+    """
     if "CALCUS_SESSION_COOKIE" in request.COOKIES:
         payload["events"][0]["params"]["session_id"] = request.COOKIES[
             "CALCUS_SESSION_COOKIE"
         ]
+    """
 
     if not request.user.is_anonymous:
         payload["user_id"] = str(request.user.id)
@@ -3855,6 +3857,7 @@ def record_event_analytics(request, event_name, **extra_params):
     }
     task["http_request"]["body"] = json.dumps(payload).encode()
 
+    logger.info("Payload", payload)
     client.create_task(parent=parent, task=task)
 
 
