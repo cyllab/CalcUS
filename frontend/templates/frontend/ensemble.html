@@ -27,6 +27,10 @@
         max-width: 190px;
         margin-top: 0.5em;
     }
+    #ensemble_id{
+        margin-top: 5px;
+        font-weight: 600;
+    }
 
     ul.tree,
     ul.tree ul {
@@ -174,7 +178,6 @@
             success: function (data, textStatus, xhr) {
                 if (xhr.status != 204) {
                     let mol = ChemDoodle.readXYZ(data);
-
                     ChemDoodle.relabel(mol);
                     editor.loadMolecule(mol);
                     editorfs.loadMolecule(mol);
@@ -544,6 +547,7 @@
         </div>
     </div>
     <div>
+        <div id="ensemble_id"></div>
         <details>
             <summary>Related Calculations</summary>
             <div id="related_calculations_div"></div>
@@ -604,7 +608,6 @@
                                 <th>#</th>
                                 <th>Energy (Eh)</th>
                                 <th>Rel. energy ({{ request.user.pref_units_name }})</th>
-                                <th>Degeneracy</th>
                                 <th>Boltzmann Weight at 298K</th>
                             </tr>
                         </thead>
@@ -658,6 +661,7 @@
         let modalBtnFS = document.getElementById("fullscreen_btn");
         let modalFS = document.querySelector(".fullscreen_div");
         let closeBtnFS = document.querySelector(".close_btn");
+        document.getElementById("ensemble_id").innerHTML= "Ensemble "+("{{ensemble.id}}").slice(0,5)
 
         modalBtnFS.onclick = function () {
             modalFS.style.display = "block";

@@ -5276,12 +5276,13 @@ def ensemble_map(request, pk):
                 }}"""
     nodes = ""
     for e in mol.ensemble_set.all():
+        label="{} ({})".format(e.name,str(mol.id)[:5])
         if e.flagged:
             border_text = """, "bcolor": "black", "bwidth": 2"""
         else:
             border_text = ""
-        nodes += """{{ "data": {{"id": "{}", "name": "{}", "href": "/ensemble/{}", "color": "{}"{}}} }},""".format(
-            e.id, e.name, e.id, e.get_node_color, border_text
+        nodes += """{{ "data": {{"label":"{}","id": "{}", "name": "{}", "href": "/ensemble/{}", "color": "{}"{}}} }},""".format(
+             label,e.id, e.name, e.id, e.get_node_color, border_text
         )
     nodes = nodes[:-1]
 
