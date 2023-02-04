@@ -16,6 +16,7 @@
         height: 400px;
         width: 90%;
     }
+
     .hscroll {
         overflow-x: auto;
     }
@@ -41,6 +42,9 @@
                 "X-CSRFToken": "{{ csrf_token }}",
             },
             success: function (data) {
+        
+                console.log('{{molecule.id}}' + data)
+
                 var cy = (window.cy = cytoscape({
                     container: document.getElementById("ensembles_graph"),
                     boxSelectionEnabled: false,
@@ -55,7 +59,7 @@
                             style: {
                                 "background-color": "data(color)",
                                 shape: "round-rectangle",
-                                label: "data(name)",
+                                label: "data(label)",
                                 "text-valign": "center",
                                 "text-halign": "center",
                                 "font-size": "10px",
@@ -187,7 +191,7 @@
             body: 'Delete the ensemble?',
             confirm: {
                 label: "Delete",
-                onClick: function() {
+                onClick: function () {
                     $.ajax({
                         method: "POST",
                         url: "/delete_ensemble/",
@@ -221,7 +225,8 @@
                 <a href="/projects/{{ molecule.project.author.id }}">{{ molecule.project.author.name }}</a>
             </li>
             <li>
-                <a href="/projects/{{ molecule.project.author.id }}/{{ molecule.project.name }}">{{ molecule.project.name }}</a>
+                <a href="/projects/{{ molecule.project.author.id }}/{{ molecule.project.name }}">
+                    {{molecule.project.name }}</a>
             </li>
             <li class="is-active">
                 <a aria-current="page" href="#">{{ molecule.name }}</a>
