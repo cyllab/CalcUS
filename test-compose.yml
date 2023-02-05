@@ -32,7 +32,7 @@ services:
                         - GCP_PROJECT_ID=test-project
                         - GCP_SERVICE_ACCOUNT_EMAIL=selenium@calcus.com
                         - USE_CACHED_LOGS=true
-
+                        - SUBSCRIPTION_ACADEMIC_MONTHLY=price_1MY8rsDOp6QF0VwnTOrxcUax
                 links:
                         - redis
                         - taskqueue

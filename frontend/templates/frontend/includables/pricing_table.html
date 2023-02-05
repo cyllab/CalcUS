@@ -41,7 +41,7 @@
             <div class="plan-footer">
                 <form action="/checkout/" method="POST">
                     {% csrf_token %}
-                    <input type="hidden" name="priceId" value="price_1MY8rsDOp6QF0VwnTOrxcUax">
+                    <input type="hidden" name="priceId" value="{{ SUBSCRIPTION_ACADEMIC_MONTHLY }}">
                     <button class="button is-primary is-fullwidth sub_btn" type="submit" id="subscribe_btn">Subscribe</button>
                 </form>
             </div>

@@ -13,5 +13,6 @@ def default(request):
             "LOCAL_MAX_ATOMS",
             "LOCAL_ALLOWED_THEORY_LEVELS",
             "LOCAL_ALLOWED_STEPS",
+            "SUBSCRIPTION_ACADEMIC_MONTHLY",
         ]
     }
