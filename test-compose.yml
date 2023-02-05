@@ -37,11 +37,15 @@ services:
                         - redis
                         - taskqueue
                         - cloud-compute
+                        - stripe-cli
         taskqueue:
               image: ghcr.io/aertje/cloud-tasks-emulator:latest
               command: -host 0.0.0.0 -port 8123 -queue projects/test-project/locations/us-central1/queues/xtb-compute -queue projects/test-project/locations/us-central1/queues/actions
               expose:
                     - 8123
+        stripe-cli:
+              image: stripe/stripe-cli
+              command: listen --forward-to cloud-compute:8001/webhook/ --api-key $STRIPE_SECRET_KEY
         cloud-compute:
                 build:
                         context: .

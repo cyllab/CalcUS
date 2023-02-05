@@ -25,7 +25,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IS_CLOUD = "CALCUS_CLOUD" in os.environ
 IS_TEST = "CALCUS_TEST" in os.environ
 
-
 try:
     DEBUG = os.environ["CALCUS_DEBUG"]
 except:
@@ -36,8 +35,10 @@ else:
 if IS_TEST or DEBUG:
     SECRET_KEY = "testkey"
     SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]
+    HOST_URL = "http://localhost:8080"
 else:
     SECRET_KEY = os.environ["CALCUS_SECRET_KEY"]
+    HOST_URL = "https://calcus.cloud"
 
 if "CALCUS_VERSION_HASH" in os.environ.keys():
     CALCUS_VERSION_HASH = os.environ["CALCUS_VERSION_HASH"]
@@ -55,6 +56,14 @@ else:
 
 ANALYTICS_MEASUREMENT_ID = os.getenv("ANALYTICS_MEASUREMENT_ID", "")
 ANALYTICS_API_SECRET = os.getenv("ANALYTICS_API_SECRET", "")
+
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
+STRIPE_ENDPOINT_SECRET = os.getenv("STRIPE_ENDPOINT_SECRET", "")
+if STRIPE_SECRET_KEY:
+    import stripe
+
+    stripe.api_key = STRIPE_SECRET_KEY
 
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")

@@ -1,0 +1,14 @@
+{% extends 'frontend/base.html' %} 
+{% load static %} 
+
+{% block extrahead %}
+<title>CalcUS Cloud - Pricing</title>
+{% include "frontend/includables/pricing_head.html" %}
+
+{% endblock %} 
+
+{% block content %}
+<div class="content">
+    {% include "frontend/includables/pricing_table.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'frontend/bulma-pricingtable.min.css' %}" />
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    fetch("/stripe_config/")
+        .then((result) => { return result.json(); })
+        .then((data) => {
+        const stripe = Stripe(data.publicKey);
+    });
+</script>
+<style>
+    #pricing-table-div {
+        max-width: 80em;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 4em;
+        margin-bottom: 6em;
+    }
+    .sub_btn {
+        margin-bottom: 1.5em;
+    }
+    #free_msg {
+        font-size: 0.8em;
+        margin-top: 0.3em;
+    }
+    .pricing-plan {
+        max-width: 20em;
+    }
+    .plan-desc {
+        font-weight: bold;
+    }
+
+</style>
+

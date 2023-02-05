@@ -40,7 +40,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views import generic
 from django.utils import timezone
@@ -5407,3 +5407,85 @@ def handler500(request, *args, **argv):
         return HttpResponse("Content could not be loaded: internal server error")
 
     return render(request, "error/500.html", {})
+
+
+def pricing(request):
+    return render(request, "frontend/pricing.html")
+
+
+def checkout(request):
+    import stripe
+
+    ## iff
+    price_id = clean(request.POST["priceId"])
+
+    session = stripe.checkout.Session.create(
+        success_url=settings.HOST_URL
+        + "/subscription_successful/{CHECKOUT_SESSION_ID}",
+        cancel_url=f"{settings.HOST_URL}/home/",
+        mode="subscription",
+        line_items=[
+            {
+                "price": price_id,
+                # For metered billing, do not pass quantity
+                "quantity": 1,
+            }
+        ],
+    )
+
+    return redirect(session.url)
+
+
+def subscription_successful(request, session_id):
+    logger.info(f"Subscription successful for {session_id}")
+    return redirect("/profile/")
+
+
+@csrf_exempt
+def webhook(request):
+    if request.method != "POST":
+        return HttpResponse(status=400)
+
+    import stripe
+
+    data = request.body
+    sig_header = request.headers.get("stripe-signature")
+
+    try:
+        event = stripe.Webhook.construct_event(
+            data, sig_header, settings.STRIPE_ENDPOINT_SECRET
+        )
+    except ValueError as e:
+        # Invalid payload
+        logger.error(f"Receive Stripe webhook with invalid payload: {str(e)}")
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
+        logger.error(f"Receive Stripe webhook with invalid signature: {str(e)}")
+        return HttpResponse(status=400)
+
+    if event.type == "payment_intent.succeeded":
+        payment = event["data"]["object"]
+        customer = stripe.Customer.retrieve(payment["customer"])
+        logger.info(f"Payment successful by {customer['email']}")
+
+        try:
+            user = User.objects.get(email=customer["email"])
+        except User.DoesNotExist:
+            logger.error(
+                f"Customer with email {customer['email']} does not have an account"
+            )
+        else:
+            tasks.create_subscription(user)
+            logger.info(f"Subscription created for {customer['email']}")
+    else:
+        logger.info(f"Unhandled Stripe event: {event.type}")
+
+    return HttpResponse(status=200)
+
+
+@csrf_exempt
+def stripe_config(request):
+    if request.method == "GET":
+        stripe_config = {"publicKey": settings.STRIPE_PUBLISHABLE_KEY}
+        return JsonResponse(stripe_config, safe=False)

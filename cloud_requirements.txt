@@ -24,5 +24,6 @@ psycopg2
 pysisyphus
 requests
 scipy
+stripe
 wheel
 xkcdpass

@@ -4233,3 +4233,19 @@ def ping_satellite():
         "https://ping.calcus.cloud/ping",
         data={"code": settings.PING_CODE},
     )
+
+
+def create_subscription(user, duration=1):
+    alloc = ResourceAllocation.objects.create(
+        code=get_random_string(32),
+        allocation_seconds=500 * 60,
+        note=ResourceAllocation.SUBSCRIPTION,
+    )  # TODO: make dynamic
+    alloc.redeem(user)
+    sub = Subscription.objects.create(
+        subscriber=user,
+        associated_allocation=alloc,
+        duration=duration,
+        start_date=timezone.now(),
+        end_date=timezone.now() + timezone.timedelta(days=duration * 31),
+    )

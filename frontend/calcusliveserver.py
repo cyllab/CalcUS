@@ -1916,6 +1916,8 @@ class CalcusCloudLiveServer(CalcusLiveServer):
         settings.ALLOW_REMOTE_CALC = False
         settings.LOCAL_MAX_ATOMS = 60
 
+        settings.HOST_URL = self.live_server_url
+
         settings.LOCAL_ALLOWED_THEORY_LEVELS = [
             "xtb",
         ]
@@ -2062,3 +2064,27 @@ class CalcusCloudLiveServer(CalcusLiveServer):
                     raise Exception(f"Error while dissolving the class: {msg}")
         else:
             raise Exception(f"Could not find a class named {name} to dissolve")
+
+    def subscribe(self, email, card_number):
+        self.lget("/pricing/")
+
+        btn = WebDriverWait(self.driver, 2).until(
+            EC.element_to_be_clickable((By.ID, "subscribe_btn"))
+        )
+        btn.click()
+
+        email_inp = WebDriverWait(self.driver, 4).until(
+            EC.presence_of_element_located((By.ID, "email"))
+        )
+        email_inp.send_keys(email)
+
+        self.driver.find_element(By.ID, "cardNumber").send_keys(card_number)
+        self.driver.find_element(By.ID, "cardExpiry").send_keys("0140")
+        self.driver.find_element(By.ID, "cardCvc").send_keys("123")
+        self.driver.find_element(By.ID, "billingName").send_keys("Selenium Robot")
+        self.driver.find_element(By.ID, "billingPostalCode").send_keys("123 456")
+
+        self.driver.find_element(By.CSS_SELECTOR, ".SubmitButton").click()
+
+        WebDriverWait(self.driver, 10).until(EC.url_contains(self.live_server_url))
+        self.wait_for_ajax()
