@@ -120,9 +120,9 @@
         color: blue;
     }
 </style>
+{% if IS_CLOUD %}
 {% include "frontend/includables/pricing_head.html" %}
-
-
+{% endif %}
 
 {% endblock %} {% block content %}
 <div class="content">
@@ -173,7 +173,9 @@
         </div>
     </div>
 
+    {% if IS_CLOUD %}
     {% include "frontend/includables/pricing_table.html" %}
+    {% endif %}
 
     <div class="tile is-ancestor" id="contact_tile">
         <center style="width: 100%">

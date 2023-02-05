@@ -435,8 +435,12 @@
             <p>You are logged in as <b>{{ request.user.email }}</b>.</p>
             {% if request.user.is_subscriber %}
             You have an active subscription which will end on {{ request.user.active_subscription.end_date|date }}.
+            <br>
+            <a href="https://billing.stripe.com/p/login/00g9CX7oP3SzeZO288" class="button is-primary">Manage subscription</a>
             {% else %}
-            You do not have an active subscription. Email <a href="mailto:contact@calcus.cloud">contact@calcus.cloud</a> for subscription options.
+            You do not have an active subscription.
+            <br>
+            <a href="/pricing/" class="button is-primary">Pricing</a>
             {% endif %}
             {% endif %}
 
