@@ -70,7 +70,6 @@ ZOOM = 1
 
 
 class CalcusLiveServer(StaticLiveServerTestCase):
-
     host = "0.0.0.0"
 
     @classmethod
