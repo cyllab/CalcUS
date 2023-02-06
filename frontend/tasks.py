@@ -4200,7 +4200,9 @@ def cancel(calc_id):
 
 def kill_calc(calc):
     if settings.IS_CLOUD:
-        raise Exception(f"Cannot kill calculation {calc.id} this way in Cloud mode")
+        if calc.status not in [2, 3]:
+            calc.set_as_cancelled()
+        return
 
     if calc.local:
         if calc.task_id != "":
