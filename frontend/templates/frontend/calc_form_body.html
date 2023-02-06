@@ -62,7 +62,7 @@
 			</div>
 		</div>
 
-		<div class="field type_specific avail_Minimum_Energy_Path" style="display: none;">
+		<div class="field" style="display: none;" id="calc_aux_file_structure">
 			<div class="file">
 				<label class="file-label">
 					<input class="file-input" type="file" name="aux_file_structure" id="aux_file_structure">
@@ -127,35 +127,35 @@
 				</div>
 			</div>
 			<div class="column is-narrow">
-				<div class="field" id="calc_solvation_model_field">
+				<div class="field" id="calc_solvation_model">
 					<label class="label">Solvation Model</label>
 						<div class="control">
 							<div class="select">
-							<select name="calc_solvation_model" id="calc_solvation_model" onchange="refresh_availabilities();">
-								<option class="software_specific avail_xtb type_specific avail_Constrained_Optimisation avail_Constrained_Conformational_Search avail_Geometrical_Optimisation avail_Frequency_Calculation avail_UV-Vis_Calculation avail_Single-Point_Energy avail_Conformational_Search">GBSA</option>
-								<option class="software_specific avail_xtb">ALPB</option>
-								<option class="software_specific avail_Gaussian avail_ORCA">SMD</option>
-								<option class="software_specific avail_Gaussian">PCM</option>
-								<option class="software_specific avail_Gaussian avail_ORCA">CPCM</option>
+							<select name="calc_solvation_model" onchange="refresh_availabilities();">
+								<option>GBSA</option>
+								<option>ALPB</option>
+                                <option>SMD</option>
+								<option>PCM</option>
+                                <option>CPCM</option>
 							</select>
 							</div>
 						</div>
 				</div>
 			</div>
 			<div class="column is-narrow">
-				<div class="field software_specific avail_Gaussian avail_ORCA" id="calc_solvation_radii_field">
+				<div class="field" id="calc_solvation_radii">
 					<label class="label">Solvation Radii</label>
 					<div class="control">
 						<div class="select">
-							<select name="calc_solvation_radii" id="calc_solvation_radii">
-								<option class="solvation_model_specific avail_SMD">SMD18</option>
+							<select name="calc_solvation_radii">
+								<option>SMD18</option>
 								<option>Default</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UFF</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UA0</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UAHF</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">UAKS</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">Pauling</option>
-								<option class="solvation_model_specific avail_PCM avail_CPCM software_specific avail_Gaussian">Bondi</option>
+								<option>UFF</option>
+								<option>UA0</option>
+								<option>UAHF</option>
+								<option>UAKS</option>
+								<option>Pauling</option>
+								<option>Bondi</option>
 							</select>
 						</div>
 					</div>
@@ -199,9 +199,9 @@
                     <div class="control" >
                         <div class="select wide_select">
                             <select name="calc_software" id="calc_software" onchange="refresh_availabilities();">
-                                <option {% if 'xtb' not in packages %}class="resource_specific avail_remote"{% endif %}>xtb</option>
-                                <option {% if 'ORCA' not in packages %}class="resource_specific avail_remote"{% endif %}>ORCA</option>
-                                <option {% if 'Gaussian' not in packages %}class="resource_specific avail_remote"{% endif %}>Gaussian</option>
+                                <option>xtb</option>
+                                <option>ORCA</option>
+                                <option>Gaussian</option>
                             </select>
                         </div>
                     </div>
@@ -214,24 +214,24 @@
                         <div class="select wide_select">
                             <select name="calc_type" id="calc_type" onchange="calc_selection_changed();">
                             {% for proc in procs %}
-                            <option class="software_specific {% if proc.avail_xtb %}avail_xtb{% endif %} {% if proc.avail_ORCA %}avail_ORCA{% endif %} {% if proc.avail_Gaussian %}avail_Gaussian{% endif %}">{{ proc.name }}</option>
+                            <option>{{ proc.name }}</option>
                             {% endfor %}
                             </select>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="column software_specific avail_ORCA avail_Gaussian is-3">
+            <div class="column is-3">
                 <div class="field">
                     <label class="label">Theory Level</label>
                     <div class="control">
                         <div class="select wide_select">
                             <select name="calc_theory_level" id="calc_theory_level" onchange="refresh_availabilities();">
-                                <option class="hidden software_specific avail_xtb" value="xtb">xtb</option>
+                                <option class="hidden" value="xtb">xtb</option>
                                 <option class="type_exclusion not_avail_UV-Vis_Calculation" value="semiempirical">Semi-empirical</option>
                                 <option value="hf">HF</option>
                                 <option value="dft">DFT</option>
-                                <option class="software_specific avail_ORCA" value="mp2">RI-MP2</option>
+                                <option value="mp2">RI-MP2</option>
                             </select>
                         </div>
                     </div>
@@ -239,7 +239,7 @@
 			</div>
 		</div>
 
-		<div class="type_specific avail_Minimum_Energy_Path" id="aux_structure_div">
+		<div id="calc_aux_structure">
 			<div class="field">
 				<label class="label">Existing auxiliary structure</label>
 				<div class="control" id="aux_structure">
@@ -270,7 +270,7 @@
 			</div>
 		</div>
 
-		<div style="display: none;" class="type_specific avail_Constrained_Optimisation avail_Constrained_Conformational_Search" id="constraint_div">
+		<div style="display: none;" id="calc_constraints">
 			<div class="field">
 				<label class="label">Constraints and scan coordinates</label>
 				<div id="constraint_list">
@@ -278,40 +278,40 @@
 			</div>
 		</div>
 
-		<div class="software_specific avail_ORCA avail_Gaussian">
+		<div>
 			<div class="columns">
-				<div class="method_specific avail_dft">
-					<div class="column is-narrow software_specific avail_ORCA ">
+				<div id="calc_pbeh3c">
+					<div class="column is-narrow">
 						<div class="field">
 							<label class="label">Special</label>
 							<label class="checkbox">
-								<input type="checkbox" name="pbeh3c" id="pbeh3c" onchange="refresh_availabilities();">
+								<input type="checkbox" name="pbeh3c" onchange="refresh_availabilities();">
 								PBEh-3c
 							</label>		
 						</div>
 					</div>
 				</div>
-				<div class="method_specific avail_hf">
-					<div class="column is-narrow software_specific avail_ORCA ">
+				<div id="calc_hf3c">
+					<div class="column is-narrow">
 						<div class="field">
 							<label class="label">Special</label>
 							<label class="checkbox">
-								<input type="checkbox" id="hf3c" name="hf3c" onchange="refresh_availabilities();">
+								<input type="checkbox" name="calc_hf3c" onchange="refresh_availabilities();">
 								HF-3c
 							</label>		
 						</div>
 					</div>
 				</div>
-				<div class="column method_specific avail_semiempirical">
+				<div class="column" id="calc_se_method">
 					<div class="field">
 						<label class="label">Method</label>
 						<div class="control">
-							<div class="select">
-								<select name="calc_se_method" id="calc_method">
+							<div class="select wide_select">
+								<select name="calc_se_method">
 									<option>AM1</option>
 									<option>PM3</option>
-									<option class="software_specific avail_Gaussian">PM6</option>
-									<option class="software_specific avail_Gaussian">PM7</option>
+									<option>PM6</option>
+									<option>PM7</option>
 								</select>
 							</div>
 						</div>
@@ -319,7 +319,7 @@
 				</div>
 
 
-				<div class="column method_specific avail_dft">
+				<div class="column">
 					<div class="field" id="calc_functional_field">
 						<label class="label">Functional</label>
 						<div class="control">
@@ -328,7 +328,7 @@
 						<p class="check_msg is-danger" id="functional_check_msg"></p>
 					</div>
 				</div>
-				<div class="column method_specific avail_dft avail_mp2 avail_hf">
+				<div class="column">
 					<div class="field" id="calc_basis_set_field">
 						<label class="label">Basis set</label>
 						<div class="control">
@@ -349,19 +349,19 @@
 					</div>
 				</div>
 			</div>
-			<div class="method_specific avail_dft">
+			<div id="calc_df">
 				<div class="field software_specific avail_Gaussian">
 					<label class="label">Density Fitting</label>
 					<div class="control">
-						<input class="input" name="calc_df" id="calc_df" type="text" placeholder="" >
+						<input class="input" name="calc_df" type="text" placeholder="" >
 					</div>
 				</div>
 			</div>
-			<div class="method_specific avail_dft avail_mp2 avail_hf">
+			<div id="calc_custom_bs" >
 				<div class="field" id="custom_bs_field">
 					<label class="label">Custom basis sets</label>
 					<div class="control">
-						<input class="input" name="calc_custom_bs" id="calc_custom_bs" type="text" placeholder="" >
+						<input class="input" name="calc_custom_bs" type="text" placeholder="" >
 					<button class="button is-info" id="pick_bs_button" type="button">Pick custom basis sets</button>
 					</div>
 				</div>
@@ -396,7 +396,7 @@
 					{% if ALLOW_REMOTE_CALC %}
 					{% for access in request.user.accesses %}
 						{% if access.connected %}
-							<option>{{ access.cluster_address }}</option>
+                            <option>{{ access.cluster_address }} {% if not access.connected %}(DISCONNECTED){% endif %}</option>
 						{% endif %}
 					{% endfor %}
 					{% endif %}

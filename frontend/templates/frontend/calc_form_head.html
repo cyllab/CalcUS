@@ -110,6 +110,82 @@ String.prototype.format = function() {
 		{% endfor %}
 	}
 
+    var master_list_params = ["software", "type", "solvent", "solvation_model", "solvation_radii", "theory_level"];
+    var master_options = {
+        "software": {
+            "Gaussian": {
+                "type": ["NMR Prediction", "Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "UV-Vis Calculation"],
+                "solvation_model": ["PCM", "CPCM", "SMD"],
+                "se_method": ["AM1", "PM3", "PM6", "PM7"],
+                "solvation_radii": ["SMD18", "Default", "UFF", "UA0", "UAHF", "UAKS", "Pauling", "Bondi"],
+                "theory_level": ["semiempirical", "hf", "dft"]
+            },
+            "ORCA": {
+                "type": ["NMR Prediction", "Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "MO Calculation"],
+                "solvation_model": ["CPCM", "SMD"],
+                "se_method": ["AM1", "PM3"],
+                "solvation_radii": ["SMD18", "Default"],
+                "theory_level": ["xtb", "semiempirical", "hf", "dft", "mp2"]
+            },
+            "xtb": {
+                "type": ["Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "UV-Vis Calculation", "Conformational Search", "Constrained Conformational Search", "Minimum Energy Path"],
+                "solvation_model": ["ALPB", "GBSA"],
+                "solvation_radii": ["Default"],
+                "theory_level": ["xtb"]
+            },
+        },
+        "solvation_model": {
+            "SMD": {
+                "solvation_radii": ["Default", "SMD18"],
+            },
+            "PCM": {
+                "solvation_radii": ["Default", "UFF", "UA0", "UAHF", "UAKS", "Pauling", "Bondi"],
+            },
+            "CPCM": {
+                "solvation_radii": ["Default", "UFF", "UA0", "UAHF", "UAKS", "Pauling", "Bondi"],
+            },
+            "GBSA": {
+                "solvation_radii": ["Default"],
+            },
+            "ALPB": {
+                "solvation_radii": ["Default"],
+            }
+
+        }
+
+    }
+    var list_available_elements = ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints"];
+    var master_available = {
+        "software": {
+            "Gaussian": ["df", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
+            "ORCA": ["hf3c", "pbeh3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
+            "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints"]
+        },
+        "theory_level": {
+            "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints"],
+            "semiempirical": ["se_method", "solvation_model", "solvation_radii", "constraints"],
+            "hf": ["hf3c", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
+            "dft": ["df", "pbeh3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
+            "mp2": ["basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"]
+        },
+        "type": {
+            "Minimum Energy Path": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "solvation_model", "solvation_radii"],
+            "NMR Prediction": ["df", "pbeh3c", "hf3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
+            "Geometrical Optimisation": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
+            "TS Optimisation": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
+            "Frequency Calculation": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
+            "Constrained Optimisation": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
+            "Single-Point Energy": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
+            "MO Calculation": ["df", "pbeh3c", "hf3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
+            "UV-Vis Calculation": ["df", "pbeh3c", "hf3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
+            "Conformational Search": [, "solvation_model", "solvation_radii"],
+            "Constrained Conformational Search": ["solvation_model", "solvation_radii", "constraints"]
+        },
+        "solvent": {
+            "": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "constraints"]
+        }
+    }
+
 	const allow_local_calc = {{ ALLOW_LOCAL_CALC|yesno:"true,false" }};
 	const allow_remote_calc = {{ ALLOW_REMOTE_CALC|yesno:"true,false" }};
 	const local_allowed_theory_levels = [{% for l in LOCAL_ALLOWED_THEORY_LEVELS %}"{{ l }}", {% endfor %}];
@@ -329,133 +405,46 @@ String.prototype.format = function() {
 	}
 
 	function refresh_availabilities() {
-
 		full_options = document.querySelectorAll(".unavailable");
 		full_options.forEach(element => {
 			element.classList.remove("unavailable");
 			element.style.display = 'block';
 		});
 
-		full_options = document.querySelectorAll(".resource_specific");
-		choice = document.getElementById("calc_resource");
-
-		full_options.forEach(element => {
-			if((element.classList.contains('avail_local') && (choice.value != "Local" || !allow_local_calc)) || (element.classList.contains('avail_remote') && (choice.value == "Local" || !allow_remote_calc))) {
-				element.style.display = 'none';
-				element.classList.add("unavailable");
-			}
-		});
-
+        master_list_params.forEach(p => {
+            el = document.getElementsByName("calc_"+p)[0];
+            // Some elements can be omitted when generating the page depending on the parameters 
+            // (e.g., launching from ensemble)
+            if(el != undefined) {
+                choice = el.value;
+                if (p in master_options && choice in master_options[p]) {
+                    for (const key2 in master_options[p][choice]) {
+                        el2 = document.getElementsByName("calc_"+key2)[0];
+                        allowed = master_options[p][choice][key2];
+                        for (let opt of el2.options) {
+                            if(!allowed.includes(opt.value)) {
+                                opt.style.display = "none";
+                                opt.classList.add("unavailable");
+                            }
+                        }
+                    }
+                }
+                if (p in master_available && choice in master_available[p]) {
+                    for (const ind in list_available_elements) {
+                        key = list_available_elements[ind];
+                        el2 = document.getElementById("calc_"+key);
+                        if(el2 != undefined) {
+                            if(!master_available[p][choice].includes(key)) {
+                                el2.style.display = "none";
+                                el2.classList.add("unavailable");
+                            }
+                        }
+                    }
+                }
+            }
+        });
 		set_availables();
 
-		full_options = document.querySelectorAll(".software_specific");
-		choice = document.getElementById("calc_software");
-
-		full_options.forEach(element => {
-			if(!element.classList.contains('avail_' + choice.value)) {
-				element.style.display = 'none';
-				element.classList.add("unavailable");
-			}
-		});
-
-		set_availables();
-
-		choice = document.getElementById("calc_solvation_model");
-
-		full_options = document.querySelectorAll(".solvation_model_specific:not(unavailable)");
-
-		full_options.forEach(element => {
-			if(!element.classList.contains('avail_' + choice.value)) {
-				element.style.display = 'none';
-				element.classList.add("unavailable");
-			}
-		});
-
-		set_availables();
-
-		choice = document.getElementById("calc_theory_level");
-
-		full_options = document.querySelectorAll(".method_specific:not(unavailable)");
-
-		full_options.forEach(element => {
-			if(!element.classList.contains('avail_' + choice.value)) {
-				element.style.display = 'none';
-				element.classList.add("unavailable");
-			}
-		});
-
-		set_availables();
-
-		if(choice.value == "hf"){
-			hf3c = document.getElementById("hf3c").checked;
-			software = document.getElementById("calc_software").value;
-			if (hf3c == true && software == "ORCA") {
-				document.getElementById("calc_basis_set_field").style.display = "none";
-				document.getElementById("custom_bs_field").style.display = "none";
-			}
-			else {
-				document.getElementById("calc_basis_set_field").style.display = "block";
-				document.getElementById("custom_bs_field").style.display = "block";
-			}
-		}
-		else if(choice.value == "dft") {
-			pbeh3c = document.getElementById("pbeh3c").checked;
-			software = document.getElementById("calc_software").value;
-			if (pbeh3c == true && software == "ORCA") {
-				document.getElementById("calc_basis_set_field").style.display = "none";
-				document.getElementById("calc_functional_field").style.display = "none";
-				document.getElementById("custom_bs_field").style.display = "none";
-			}
-			else {
-				document.getElementById("calc_basis_set_field").style.display = "block";
-				document.getElementById("calc_functional_field").style.display = "block";
-				document.getElementById("custom_bs_field").style.display = "block";
-			}
-		}
-
-		set_availables();
-
-		solvent = document.getElementById("calc_solvent").value;
-		if(solvent.toLowerCase() == "vacuum" || solvent.trim() == "") {
-			document.getElementById("calc_solvation_model_field").style.display = "none";
-			document.getElementById("calc_solvation_radii_field").style.display = "none";
-		}
-		else {
-			document.getElementById("calc_solvation_model_field").style.display = "block";
-			radii_field = document.getElementById("calc_solvation_radii_field");
-			if(radii_field.querySelectorAll("option:not(.unavailable)").length > 0) {
-				radii_field.style.display = "block";
-			}
-		}
-
-
-		choice = document.getElementById("calc_type");
-
-		full_options = document.querySelectorAll(".type_specific:not(unavailable)");
-
-		full_options.forEach(element => {
-			if(!element.classList.contains('avail_' + choice.value.replace(/ /g, '_'))) {
-				element.style.display = 'none';
-				element.classList.add("unavailable");
-			}
-
-		});
-
-		full_options = document.querySelectorAll(".type_exclusion:not(unavailable)");
-
-		full_options.forEach(element => {
-			if(element.classList.contains('not_avail_' + choice.value.replace(/ /g, '_'))) {
-				element.style.display = 'none';
-				element.classList.add("unavailable");
-			}
-
-		});
-
-		set_availables();
-
-		check("functional");
-		check("basis_set");
-		check("solvent");
 	}
 
 	function set_availables() {
