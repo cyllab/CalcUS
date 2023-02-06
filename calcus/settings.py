@@ -60,7 +60,8 @@ ANALYTICS_API_SECRET = os.getenv("ANALYTICS_API_SECRET", "")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_ENDPOINT_SECRET = os.getenv("STRIPE_ENDPOINT_SECRET", "")
-if STRIPE_SECRET_KEY:
+
+if STRIPE_SECRET_KEY and IS_CLOUD:
     import stripe
 
     stripe.api_key = STRIPE_SECRET_KEY
@@ -198,6 +199,13 @@ DATABASES = {
         "PASSWORD": POSTGRES_PASSWORD,
         "HOST": POSTGRES_HOST,
         "PORT": "5432",
+        # To connect over SSL
+        # "OPTIONS": {
+        #     'sslmode': 'verify-ca',
+        #     'sslrootcert': 'server-ca.pem',
+        #     'sslcert': 'client-cert.pem',
+        #     'sslkey': 'client-key.pem',
+        # },
     }
 }
 

@@ -1,5 +1,6 @@
 {% extends 'frontend/base.html' %} {% load static %} {% block extrahead %}
-<title>CalcUS</title>
+
+<title>CalcUS {% if IS_CLOUD %}Cloud {% endif %}- Quantum Chemistry Web Platform</title>
 
 <style>
     .title {
