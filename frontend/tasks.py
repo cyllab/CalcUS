@@ -3546,19 +3546,23 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
                 else:
                     if fingerprint != fing:  #####
                         pass
+            """
             try:
                 molecule = Molecule.objects.get(
                     inchi=fingerprint, project=order.project
                 )
             except Molecule.DoesNotExist:
-                ensemble.parent_molecule.inchi = fingerprint
-                ensemble.parent_molecule.save()
-                molecule = ensemble.parent_molecule
+            """
+            ensemble.parent_molecule.inchi = fingerprint
+            ensemble.parent_molecule.save()
+            molecule = ensemble.parent_molecule
+            """
             else:
                 _mol = ensemble.parent_molecule
                 ensemble.parent_molecule = molecule
                 ensemble.save()
                 _mol.delete()
+            """
 
             input_structures = ensemble.structure_set.all()
         else:
