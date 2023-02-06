@@ -2017,3 +2017,14 @@ class CloudTests(TestCase):
 
         self.user.refresh_from_db()
         self.assertEqual(self.user.allocated_seconds, 500)
+
+    def test_trial_no_refill(self):
+        self.assertEqual(self.user.allocated_seconds, 0)
+        self.user.is_trial = True
+        self.user.is_temporary = True
+        self.user.save()
+        headers = {"HTTP_X_CLOUDSCHEDULER": "something"}
+        response = self.client.post("/cloud_refills/", **headers)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.allocated_seconds, 0)

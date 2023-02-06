@@ -171,14 +171,14 @@ class TrialUserCreateForm(forms.ModelForm):
         user.set_password(self.rand_password)
         user.is_temporary = True
         user.is_trial = True
-        user.allocated_seconds = 60
+        user.allocated_seconds = settings.TRIAL_DEFAULT_COMP_SECONDS
 
         if commit:
             user.save()
             r = ResourceAllocation.objects.create(
                 code=get_random_string(),
                 redeemer=user,
-                allocation_seconds=60,
+                allocation_seconds=settings.TRIAL_DEFAULT_COMP_SECONDS,
                 note=ResourceAllocation.TRIAL,
             )
 
