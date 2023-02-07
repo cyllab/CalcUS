@@ -5004,7 +5004,7 @@ def download_folder(request, pk):
         ensembles = folder.ensemble_set.filter(flagged=True)
 
         for e in ensembles:
-            prefix = f"{e.parent_molecule.name}.{e.name}_{e.id}_"
+            prefix = f"{e.parent_molecule.name}_"
             related_orders = _get_related_calculations(e)
             # Verify if the user can view the ensemble?
             # The ensembles should be in the project which he can view, so probably not necessary
@@ -5014,8 +5014,8 @@ def download_folder(request, pk):
                     if c.status == 2:
                         log_name = clean_filename(
                             prefix
-                            + c.parameters.file_name
-                            + "_"
+                            # + c.parameters.file_name
+                            # + "_"
                             + c.step.short_name
                             + "_conf"
                             + str(c.structure.number)
