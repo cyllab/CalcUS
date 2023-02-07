@@ -301,21 +301,21 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         if "type" in params.keys():
             self.driver.find_element(
-                By.XPATH, f"//*[@id='calc_type']/option[text()='{params['type']}']"
+                By.XPATH, f"//*[@name='calc_type']/option[text()='{params['type']}']"
             ).click()
             self.wait_for_ajax()
 
         if "project" in params.keys():
             self.driver.find_element(
                 By.XPATH,
-                f"//*[@id='calc_project']/option[text()='{params['project']}']",
+                f"//*[@name='calc_project']/option[text()='{params['project']}']",
             ).click()
             self.wait_for_ajax()
 
         if "solvation_model" in params.keys():
             self.driver.find_element(
                 By.XPATH,
-                "//*[@id='calc_solvation_model']/option[text()='{}']".format(
+                "//*[@name='calc_solvation_model']/option[text()='{}']".format(
                     params["solvation_model"]
                 ),
             ).click()
@@ -324,7 +324,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if "solvation_radii" in params.keys():
             self.driver.find_element(
                 By.XPATH,
-                "//*[@id='calc_solvation_radii']/option[text()='{}']".format(
+                "//*[@name='calc_solvation_radii']/option[text()='{}']".format(
                     params["solvation_radii"]
                 ),
             ).click()
@@ -484,9 +484,16 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             self.wait_for_ajax()
 
         if "method" in params.keys():
-            self.driver.find_element(
-                By.XPATH, f"//*[@id='calc_method']/option[text()='{params['method']}']"
-            ).click()
+            try:
+                self.driver.find_element(
+                    By.XPATH,
+                    f"//*[@name='calc_method']/option[text()='{params['method']}']",
+                ).click()
+            except selenium.common.exceptions.NoSuchElementException:
+                self.driver.find_element(
+                    By.XPATH,
+                    f"//*[@name='calc_se_method']/option[text()='{params['method']}']",
+                ).click()
 
         if "functional" in params.keys():
             element = WebDriverWait(self.driver, 5).until(
@@ -524,7 +531,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if "resource" in params.keys():
             self.driver.find_element(
                 By.XPATH,
-                f"//*[@id='calc_resource']/option[text()='{params['resource']}']",
+                f"//*[@name='calc_resource']/option[text()='{params['resource']}']",
             ).click()
 
         self.wait_for_ajax()
@@ -1726,12 +1733,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.wait_for_ajax()
         element = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located(
-                (By.XPATH, f"//*[@id='presets']/option[text()='{name}']")
+                (By.XPATH, f"//*[@name='presets']/option[text()='{name}']")
             )
         )
 
         self.driver.find_element(
-            By.XPATH, f"//*[@id='presets']/option[text()='{name}']"
+            By.XPATH, f"//*[@name='presets']/option[text()='{name}']"
         ).click()
 
     def try_assert_number_unseen_calcs(self, num, timeout):
