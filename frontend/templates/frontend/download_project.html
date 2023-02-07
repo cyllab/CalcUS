@@ -1,7 +1,64 @@
 {% extends 'frontend/base.html' %} {% load static %} {% block extrahead %}
 <title>CalcUS - Download Project</title>
+<style>
+    #calcform{
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    .formContainer{
+        width: 550px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 2.5rem 4rem;
+        box-shadow: 0px 1px 7px rgba(0, 0, 0, 0.24);
+        border-radius: 11px;
+    }
+    #downloadHeading{
+        font-size: 2rem;
+        font-weight: 600;
+        color: rgb(49, 49, 49);
+
+    }
+    #project_heading{
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: rgb(49, 49, 49);
+        margin: 0.7rem;
+    }
+    .field{
+        width: 350px;
+    }
+    .field select{
+        width: 350px;
+    }
+    .statistic_container{
+        width: 350px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin: 10px 0 ;
+        padding: 1rem 2.5rem;
+        border-radius: 10px;
+        background: #FDFFAF;
+        border: 1px solid #EEE400;
+        color: #6D1400;
+        font-size: 0.9rem;
+    }
+    #statistics_heading{
+        font-weight: 600;
+    }
+    #downloadButton{
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %} {% block content %}
 <script>
-    function refresh_availabilities() {
+    function refresh_availabilities(id) {
+        console.log("{{projects}}",id)
         choice = document.getElementById("data");
 
         full_options = document.querySelectorAll(".data_specific");
@@ -19,9 +76,12 @@
         refresh_availabilities();
     });
 </script>
-{% endblock %} {% block content %}
+
 <form action="/download_project/" method="post" id="calcform" enctype="multipart/form-data">
+    <div class="formContainer">
     {% csrf_token %}
+    <h1 id="downloadHeading">Download Project</h1>
+    <h3 id="project_heading">Project Heading</h3>
     <input type="hidden" name="id" value="{{ proj.id }}" />
     <div class="field">
         <label class="label">Data</label>
@@ -67,8 +127,14 @@
             </div>
         </div>
     </div>
-
-    <button class="button is-primary">Download</button>
+    <div class="statistic_container">
+        <h2 id="statistics_heading">Statistics</h2>
+        <p id="calculations">Total Calculations: </p>
+        <p id="molecules">Molecules: </p>
+        <p id="author">Author: </p>
+    </div>
+    <button class="button is-primary" id="downloadButton">Download</button>
+</div>
 </form>
 
 {% endblock %}
