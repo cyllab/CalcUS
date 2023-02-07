@@ -228,7 +228,7 @@
                         <div class="select wide_select">
                             <select name="calc_theory_level" onchange="refresh_availabilities();">
                                 <option class="hidden" value="xtb">xtb</option>
-                                <option class="type_exclusion not_avail_UV-Vis_Calculation" value="semiempirical">Semi-empirical</option>
+                                <option value="semiempirical">Semi-empirical</option>
                                 <option value="hf">HF</option>
                                 <option value="dft">DFT</option>
                                 <option value="mp2">RI-MP2</option>
@@ -366,7 +366,7 @@
 				</div>
 			</div>
 			<div id="calc_df">
-				<div class="field software_specific avail_Gaussian">
+				<div class="field">
 					<label class="label">Density Fitting</label>
 					<div class="control">
 						<input class="input" name="calc_df" type="text" placeholder="" >
@@ -411,9 +411,7 @@
 
 					{% if ALLOW_REMOTE_CALC %}
 					{% for access in request.user.accesses %}
-						{% if access.connected %}
-                            <option>{{ access.cluster_address }} {% if not access.connected %}(DISCONNECTED){% endif %}</option>
-						{% endif %}
+                        <option>{{ access.cluster_address }} {% if not access.connected %}(DISCONNECTED){% endif %}</option>
 					{% endfor %}
 					{% endif %}
 				  </select>

@@ -194,11 +194,13 @@ String.prototype.format = function() {
 	function verify_form() {
 		$("#submit_button").addClass("is-loading");
 		
-		{% if is_flowchart is None %}
-			//Adding the selected Project to localStorage on pressing Submit Button
-			choice = document.getElementById("calc_project");
-			localStorage.setItem("lastSelectedProject", choice.value);
-		{% endif %}
+        // Adding the selected Project to localStorage on pressing Submit Button
+        choice = document.getElementById("calc_project");
+        localStorage.setItem("lastSelectedProject", choice.value);
+
+        choice = document.getElementById("calc_resource");
+        localStorage.setItem("lastSelectedResource", choice.value);
+
 
         data = new FormData(document.forms.namedItem("calcform"));
 
@@ -391,17 +393,10 @@ String.prototype.format = function() {
 	}
 
 	function preselect_last_project() {
-		choice = document.getElementById("calc_project");
-		for(var i=0;i<choice.options.length;i++)
-		{
-			option = choice.options[i];
-			if(option.text == localStorage.getItem("lastSelectedProject") && option.text != "New Project")
-			{
-				option.setAttribute('selected', true);
-				project_selection_changed(option);
-				return;
-			}
-		}
+        $("#calc_project").val(localStorage.getItem("lastSelectedProject"));
+	}
+    function preselect_last_resource() {
+        $("#calc_resource").val(localStorage.getItem("lastSelectedResource"));
 	}
 
 	function refresh_availabilities() {
@@ -443,6 +438,16 @@ String.prototype.format = function() {
                 }
             }
         });
+
+        software = document.getElementById("calc_software").value;
+        if(software == "Gaussian") {
+            document.querySelectorAll(".scan_from").forEach(element => {
+                if(!element.classList.contains("unavailable")) {
+                    element.style.display = "none";
+                    element.classList.add("unavailable");
+                }
+            });
+        }
 		set_availables();
 
 	}
@@ -510,7 +515,7 @@ String.prototype.format = function() {
 			<div class="columns"> \
 			<div class="column"> \
 				<p id="calc_label_from_{}"> From (Å)</p> \
-			<input class="input software_specific avail_xtb avail_ORCA scan_from" type="text" width="5" name="calc_scan_{}_1" id="calc_scan_{}_1"> \
+			<input class="input scan_from" type="text" width="5" name="calc_scan_{}_1" id="calc_scan_{}_1"> \
 			</div> \
 			<div class="column"> \
 				<p id="calc_label_to_{}"> To (Å)</p> \
