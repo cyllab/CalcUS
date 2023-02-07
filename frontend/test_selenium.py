@@ -4303,7 +4303,6 @@ class ComplexCalculationTests(CalcusLiveServer):
         self.login(self.email, self.password)
 
     def test_selective_delete(self):
-
         self.assertTrue(self.try_assert_number_unseen_calcs(0, 3))
         params = {
             "mol_name": "H2",

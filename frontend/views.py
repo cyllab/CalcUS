@@ -875,7 +875,6 @@ def _get_shifts(request):
 
 @login_required
 def get_shifts(request):
-
     shifts = _get_shifts(request)
 
     if shifts == "":
@@ -2182,7 +2181,6 @@ def _submit_calculation(request, verify=False):
             else:
                 return "Invalid filter type"
         if not verify:
-
             params = Parameters.objects.create(**_params)
 
             obj = CalculationOrder.objects.create(
@@ -4257,7 +4255,6 @@ def profile(request):
 @login_required
 def update_preferences(request):
     if request.method == "POST":
-
         if "pref_units" not in request.POST.keys():
             return HttpResponse(status=204)
 
@@ -4484,7 +4481,6 @@ def delete_preset(request, pk):
 
 @login_required
 def launch_presets(request):
-
     presets = request.user.preset_set.all().order_by("name")
     return render(request, "frontend/dynamic/launch_presets.html", {"presets": presets})
 
@@ -4786,7 +4782,6 @@ def get_csv(proj, user, scope="flagged", details="full", folders=True):
 
 
 def download_project_csv(proj, user, scope, details, folders):
-
     csv = get_csv(proj, user, scope, details, folders)
 
     proj_name = proj.name.replace(" ", "_")
@@ -4797,7 +4792,6 @@ def download_project_csv(proj, user, scope, details, folders):
 
 @login_required
 def cancel_calc(request):
-
     if request.method != "POST":
         return HttpResponse(status=403)
 
@@ -5113,7 +5107,6 @@ def download_folder(request, pk):
 
 @login_required
 def move_element(request):
-
     if "id" not in request.POST.keys():
         return HttpResponse(status=400)
 
@@ -5300,7 +5293,6 @@ def ensemble_map(request, pk):
 
 @login_required
 def analyse(request, project_id):
-
     try:
         proj = Project.objects.get(pk=project_id)
     except Project.DoesNotExist:
@@ -5371,7 +5363,6 @@ def see(request, pk):
 
 @login_required
 def see_all(request):
-
     calcs = CalculationOrder.objects.filter(author=request.user, hidden=False)
 
     for c in calcs:
@@ -5388,7 +5379,6 @@ def see_all(request):
 
 @login_required
 def clean_all_successful(request):
-
     to_update = []
     calcs = CalculationOrder.objects.filter(author=request.user, hidden=False)
     for c in calcs:
@@ -5404,7 +5394,6 @@ def clean_all_successful(request):
 
 @login_required
 def clean_all_completed(request):
-
     to_update = []
     calcs = CalculationOrder.objects.filter(author=request.user, hidden=False)
     for c in calcs:
