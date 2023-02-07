@@ -672,11 +672,11 @@ class InterfaceTests(CalcusLiveServer):
         self.load_preset("Test Preset")
 
         solvent = self.driver.find_element(By.NAME, "calc_solvent")
-        theory = Select(self.driver.find_element(By.ID, "calc_theory_level"))
-        func = self.driver.find_element(By.ID, "calc_functional")
-        basis_set = self.driver.find_element(By.ID, "calc_basis_set")
-        specifications = self.driver.find_element(By.ID, "calc_specifications")
-        software = self.driver.find_element(By.ID, "calc_software")
+        theory = Select(self.driver.find_element(By.NAME, "calc_theory_level"))
+        func = self.driver.find_element(By.NAME, "calc_functional")
+        basis_set = self.driver.find_element(By.NAME, "calc_basis_set")
+        specifications = self.driver.find_element(By.NAME, "calc_specifications")
+        software = self.driver.find_element(By.NAME, "calc_software")
 
         self.assertEqual(solvent.get_attribute("value"), params["solvent"])
         self.assertEqual(theory.first_selected_option.text, params["theory"])
@@ -718,11 +718,11 @@ class InterfaceTests(CalcusLiveServer):
         solvation_radii = Select(
             self.driver.find_element(By.NAME, "calc_solvation_radii")
         )
-        theory = Select(self.driver.find_element(By.ID, "calc_theory_level"))
-        func = self.driver.find_element(By.ID, "calc_functional")
-        basis_set = self.driver.find_element(By.ID, "calc_basis_set")
-        software = self.driver.find_element(By.ID, "calc_software")
-        specifications = self.driver.find_element(By.ID, "calc_specifications")
+        theory = Select(self.driver.find_element(By.NAME, "calc_theory_level"))
+        func = self.driver.find_element(By.NAME, "calc_functional")
+        basis_set = self.driver.find_element(By.NAME, "calc_basis_set")
+        software = self.driver.find_element(By.NAME, "calc_software")
+        specifications = self.driver.find_element(By.NAME, "calc_specifications")
 
         self.assertEqual(solvent.get_attribute("value"), params["solvent"])
         self.assertEqual(
@@ -1463,6 +1463,26 @@ class XtbCalculationTests(CalcusLiveServer):
         self.wait_latest_calc_done(10)
         self.assertTrue(self.latest_calc_successful())
 
+    def test_choose_method(self):
+        params = {
+            "method": "GFN1-xTB",
+            "mol_name": "my_mol",
+            "type": "Single-Point Energy",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "CH4.mol",
+        }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+
+        calc = Calculation.objects.latest("pk")
+        self.assertEqual(calc.parameters.method, "gfn1-xtb")
+
     def test_proj(self):
         proj = Project.objects.create(author=self.user, name="TestProj")
         proj.save()
@@ -2078,7 +2098,7 @@ class XtbCalculationTests(CalcusLiveServer):
         solvation_model = Select(
             self.driver.find_element(By.NAME, "calc_solvation_model")
         )
-        software = self.driver.find_element(By.ID, "calc_software")
+        software = self.driver.find_element(By.NAME, "calc_software")
 
         self.assertEqual(solvent.get_attribute("value"), params["solvent"])
         self.assertEqual(charge.get_attribute("value"), params["charge"])
@@ -2115,7 +2135,7 @@ class XtbCalculationTests(CalcusLiveServer):
         solvation_model = Select(
             self.driver.find_element(By.NAME, "calc_solvation_model")
         )
-        software = self.driver.find_element(By.ID, "calc_software")
+        software = self.driver.find_element(By.NAME, "calc_software")
 
         self.assertEqual(solvent.get_attribute("value"), params["solvent"])
         self.assertEqual(charge.get_attribute("value"), params["charge"])
@@ -2152,7 +2172,7 @@ class XtbCalculationTests(CalcusLiveServer):
         solvation_model = Select(
             self.driver.find_element(By.NAME, "calc_solvation_model")
         )
-        software = self.driver.find_element(By.ID, "calc_software")
+        software = self.driver.find_element(By.NAME, "calc_software")
 
         self.assertEqual(solvent.get_attribute("value"), params["solvent"])
         self.assertEqual(charge.get_attribute("value"), params["charge"])

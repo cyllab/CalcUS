@@ -154,35 +154,35 @@ String.prototype.format = function() {
         }
 
     }
-    var list_available_elements = ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints"];
+    var list_available_elements = ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "xtb_method", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints"];
     var master_available = {
         "software": {
             "Gaussian": ["df", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
             "ORCA": ["hf3c", "pbeh3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
-            "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints"]
+            "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints", "xtb_method"]
         },
         "theory_level": {
-            "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints"],
+            "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints", "xtb_method"],
             "semiempirical": ["se_method", "solvation_model", "solvation_radii", "constraints"],
             "hf": ["hf3c", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
             "dft": ["df", "pbeh3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
             "mp2": ["basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"]
         },
         "type": {
-            "Minimum Energy Path": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "solvation_model", "solvation_radii"],
+            "Minimum Energy Path": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "xtb_method"],
             "NMR Prediction": ["df", "pbeh3c", "hf3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
-            "Geometrical Optimisation": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
-            "TS Optimisation": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
-            "Frequency Calculation": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
-            "Constrained Optimisation": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
-            "Single-Point Energy": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
+            "Geometrical Optimisation": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "xtb_method"],
+            "TS Optimisation": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "xtb_method"],
+            "Frequency Calculation": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "xtb_method"],
+            "Constrained Optimisation": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints", "xtb_method"],
+            "Single-Point Energy": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "xtb_method"],
             "MO Calculation": ["df", "pbeh3c", "hf3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
-            "UV-Vis Calculation": ["df", "pbeh3c", "hf3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
-            "Conformational Search": [, "solvation_model", "solvation_radii"],
-            "Constrained Conformational Search": ["solvation_model", "solvation_radii", "constraints"]
+            "UV-Vis Calculation": ["df", "pbeh3c", "hf3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "xtb_method"],
+            "Conformational Search": ["solvation_model", "solvation_radii", "xtb_method"],
+            "Constrained Conformational Search": ["solvation_model", "solvation_radii", "constraints", "xtb_method"]
         },
         "solvent": {
-            "": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "constraints"]
+            "": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "constraints", "xtb_method"]
         }
     }
 

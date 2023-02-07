@@ -282,7 +282,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             mult_input.send_keys(params["multiplicity"])
 
         if "software" in params.keys():
-            select = self.driver.find_element(By.ID, "calc_software")
+            select = self.driver.find_element(By.NAME, "calc_software")
             self.driver.execute_script(
                 "showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",
                 select,
@@ -341,7 +341,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             for f in params["in_files"]:
                 upload_input.send_keys(f"{dir_path}/tests/{f}")
             if "combine" in params.keys() and params["combine"] == True:
-                combine_box = self.driver.find_element(By.ID, "calc_combine_files")
+                combine_box = self.driver.find_element(By.NAME, "calc_combine_files")
                 combine_box.click()
 
         if "aux_file" in params.keys():
@@ -350,14 +350,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         if "aux_structure" in params.keys():
             aux_mol, aux_e, aux_s = params["aux_structure"]
-            mol_select = self.driver.find_element(By.ID, "aux_mol")
+            mol_select = self.driver.find_element(By.NAME, "aux_mol")
             mol_select.find_element(By.XPATH, f"option[text()='{aux_mol}']").click()
 
             self.wait_for_ajax()
 
             for i in range(2):
                 try:
-                    e_select = self.driver.find_element(By.ID, "aux_ensemble")
+                    e_select = self.driver.find_element(By.NAME, "aux_ensemble")
                     e_select.find_element(By.XPATH, f"option[text()='{aux_e}']").click()
                 except selenium.common.exceptions.NoSuchElementException:
                     time.sleep(1)
@@ -367,7 +367,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             self.wait_for_ajax()
             for i in range(2):
                 try:
-                    s_select = self.driver.find_element(By.ID, "aux_struct")
+                    s_select = self.driver.find_element(By.NAME, "aux_struct")
                     s_select.find_element(By.XPATH, f"option[text()='{aux_s}']").click()
                 except selenium.common.exceptions.NoSuchElementException:
                     time.sleep(1)
@@ -470,7 +470,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     ind += 1
 
         if "theory" in params.keys():
-            select = self.driver.find_element(By.ID, "calc_theory_level")
+            select = self.driver.find_element(By.NAME, "calc_theory_level")
             self.driver.execute_script(
                 "showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",
                 select,
@@ -484,34 +484,36 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             self.wait_for_ajax()
 
         if "method" in params.keys():
-            try:
-                self.driver.find_element(
-                    By.XPATH,
-                    f"//*[@name='calc_method']/option[text()='{params['method']}']",
-                ).click()
-            except selenium.common.exceptions.NoSuchElementException:
-                self.driver.find_element(
-                    By.XPATH,
-                    f"//*[@name='calc_se_method']/option[text()='{params['method']}']",
-                ).click()
+            for name in ["calc_method", "calc_se_method", "calc_xtb_method"]:
+                try:
+                    self.driver.find_element(
+                        By.XPATH,
+                        f"//*[@name='{name}']/option[text()='{params['method']}']",
+                    ).click()
+                except selenium.common.exceptions.NoSuchElementException:
+                    pass
+                else:
+                    break
+            else:
+                raise Exception("Could not find any suitable option or select!")
 
         if "functional" in params.keys():
             element = WebDriverWait(self.driver, 5).until(
-                EC.presence_of_element_located((By.ID, "calc_functional"))
+                EC.presence_of_element_located((By.NAME, "calc_functional"))
             )
-            func = self.driver.find_element(By.ID, "calc_functional")
+            func = self.driver.find_element(By.NAME, "calc_functional")
             func.clear()
             func.click()
             func.send_keys(params["functional"])
 
         if "basis_set" in params.keys():
-            bs = self.driver.find_element(By.ID, "calc_basis_set")
+            bs = self.driver.find_element(By.NAME, "calc_basis_set")
             bs.clear()
             bs.click()
             bs.send_keys(params["basis_set"])
 
         if "specifications" in params.keys():
-            specs = self.driver.find_element(By.ID, "calc_specifications")
+            specs = self.driver.find_element(By.NAME, "calc_specifications")
             specs.clear()
             specs.click()
             specs.send_keys(params["specifications"])
@@ -1733,12 +1735,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.wait_for_ajax()
         element = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located(
-                (By.XPATH, f"//*[@name='presets']/option[text()='{name}']")
+                (By.XPATH, f"//*[@id='presets']/option[text()='{name}']")
             )
         )
 
         self.driver.find_element(
-            By.XPATH, f"//*[@name='presets']/option[text()='{name}']"
+            By.XPATH, f"//*[@id='presets']/option[text()='{name}']"
         ).click()
 
     def try_assert_number_unseen_calcs(self, num, timeout):

@@ -1392,100 +1392,93 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
     else:
         bs = ""
 
-    if software == "ORCA" or software == "Gaussian":
-        if "calc_theory_level" in parameters_dict.keys():
-            _theory = clean(parameters_dict["calc_theory_level"])
-            if _theory.strip() == "":
-                return "No theory level chosen"
-            theory = ccinput.utilities.get_theory_level(_theory)
-        else:
+    if "calc_theory_level" in parameters_dict.keys():
+        _theory = clean(parameters_dict["calc_theory_level"])
+        if _theory.strip() == "":
             return "No theory level chosen"
+        theory = ccinput.utilities.get_theory_level(_theory)
+    else:
+        return "No theory level chosen"
 
-        if (
-            "ALL" not in settings.LOCAL_ALLOWED_THEORY_LEVELS
-            and theory not in settings.LOCAL_ALLOWED_THEORY_LEVELS
-        ):
-            return "This theory level has been disabled"
+    if (
+        "ALL" not in settings.LOCAL_ALLOWED_THEORY_LEVELS
+        and theory not in settings.LOCAL_ALLOWED_THEORY_LEVELS
+    ):
+        return "This theory level has been disabled"
 
-        if theory == "dft":
-            special_functional = False
-            if "pbeh3c" in parameters_dict.keys() and software == "ORCA":
-                field_pbeh3c = clean(parameters_dict["pbeh3c"])
-                if field_pbeh3c == "on":
-                    special_functional = True
-                    functional = "PBEh-3c"
-                    basis_set = ""
-
-            if not special_functional:
-                if "calc_functional" in parameters_dict.keys():
-                    functional = clean(parameters_dict["calc_functional"])
-                    if functional.strip() == "":
-                        return "No method"
-                else:
-                    return "No method"
-                if functional not in SPECIAL_FUNCTIONALS:
-                    if "calc_basis_set" in parameters_dict.keys():
-                        basis_set = clean(parameters_dict["calc_basis_set"])
-                        if basis_set.strip() == "":
-                            return "No basis set chosen"
-                    else:
-                        return "No basis set chosen"
-                else:
-                    basis_set = ""
-        elif theory == "semiempirical":
-            if "calc_se_method" in parameters_dict.keys():
-                functional = clean(parameters_dict["calc_se_method"])
-                if functional.strip() == "":
-                    return "No semi-empirical method chosen"
+    if theory == "dft":
+        special_functional = False
+        if "pbeh3c" in parameters_dict.keys() and software == "ORCA":
+            field_pbeh3c = clean(parameters_dict["pbeh3c"])
+            if field_pbeh3c == "on":
+                special_functional = True
+                functional = "PBEh-3c"
                 basis_set = ""
-            else:
-                return "No semi-empirical method chosen"
-        elif theory == "hf":
-            special_functional = False
-            if "hf3c" in parameters_dict.keys() and software == "ORCA":
-                field_hf3c = clean(parameters_dict["hf3c"])
-                if field_hf3c == "on":
-                    special_functional = True
-                    functional = "HF-3c"
-                    basis_set = ""
 
-            if not special_functional:
-                functional = "HF"
+        if not special_functional:
+            if "calc_functional" in parameters_dict.keys():
+                functional = clean(parameters_dict["calc_functional"])
+                if functional.strip() == "":
+                    return "No method"
+            else:
+                return "No method"
+            if functional not in SPECIAL_FUNCTIONALS:
                 if "calc_basis_set" in parameters_dict.keys():
                     basis_set = clean(parameters_dict["calc_basis_set"])
                     if basis_set.strip() == "":
                         return "No basis set chosen"
                 else:
                     return "No basis set chosen"
-        elif theory == "mp2":
-            if software != "ORCA":
-                return "RI-MP2 is only available for ORCA"
+            else:
+                basis_set = ""
+    elif theory == "semiempirical":
+        if "calc_se_method" in parameters_dict.keys():
+            functional = clean(parameters_dict["calc_se_method"])
+            if functional.strip() == "":
+                return "No semi-empirical method chosen"
+            basis_set = ""
+        else:
+            return "No semi-empirical method chosen"
+    elif theory == "hf":
+        special_functional = False
+        if "hf3c" in parameters_dict.keys() and software == "ORCA":
+            field_hf3c = clean(parameters_dict["hf3c"])
+            if field_hf3c == "on":
+                special_functional = True
+                functional = "HF-3c"
+                basis_set = ""
 
-            functional = "RI-MP2"
+        if not special_functional:
+            functional = "HF"
             if "calc_basis_set" in parameters_dict.keys():
                 basis_set = clean(parameters_dict["calc_basis_set"])
                 if basis_set.strip() == "":
                     return "No basis set chosen"
             else:
                 return "No basis set chosen"
-        # TODO: support for Coupled-cluster methods
-        else:
-            return "Invalid theory level"
+    elif theory == "mp2":
+        if software != "ORCA":
+            return "RI-MP2 is only available for ORCA"
 
-    else:
-        theory = "GFN2-xTB"
-        if software == "xtb":
-            functional = "GFN2-xTB"
-            basis_set = "min"
-            if step.name == "Conformational Search":
-                if "calc_conf_option" in parameters_dict.keys():
-                    conf_option = clean(parameters_dict["calc_conf_option"])
-                    if conf_option not in ["GFN2-xTB", "GFN-FF", "GFN2-xTB//GFN-FF"]:
-                        return "Error in the option for the conformational search"
-                    functional = conf_option
+        functional = "RI-MP2"
+        if "calc_basis_set" in parameters_dict.keys():
+            basis_set = clean(parameters_dict["calc_basis_set"])
+            if basis_set.strip() == "":
+                return "No basis set chosen"
         else:
-            functional = ""
-            basis_set = ""
+            return "No basis set chosen"
+    elif theory == "xtb":
+        if "calc_xtb_method" in parameters_dict.keys():
+            functional = clean(parameters_dict["calc_xtb_method"])
+            if functional.strip() == "":
+                return "No xTB method chosen"
+            basis_set = "min"
+        else:
+            return "No xTB method chosen"
+
+        # TODO: support for Coupled-cluster methods
+    else:
+        return "Invalid theory level"
 
     if is_flowchart is None:
         if len(project) > 100:

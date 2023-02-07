@@ -221,12 +221,12 @@
                     </div>
                 </div>
             </div>
-            <div class="column is-3">
+            <div class="column is-3" id="calc_theory_level" >
                 <div class="field">
                     <label class="label">Theory Level</label>
                     <div class="control">
                         <div class="select wide_select">
-                            <select name="calc_theory_level" id="calc_theory_level" onchange="refresh_availabilities();">
+                            <select name="calc_theory_level" onchange="refresh_availabilities();">
                                 <option class="hidden" value="xtb">xtb</option>
                                 <option class="type_exclusion not_avail_UV-Vis_Calculation" value="semiempirical">Semi-empirical</option>
                                 <option value="hf">HF</option>
@@ -236,8 +236,9 @@
                         </div>
                     </div>
                 </div>
-			</div>
-		</div>
+            </div>
+            
+        </div>
 
 		<div id="calc_aux_structure">
 			<div class="field">
@@ -302,44 +303,60 @@
 						</div>
 					</div>
 				</div>
-				<div class="column" id="calc_se_method">
-					<div class="field">
-						<label class="label">Method</label>
-						<div class="control">
-							<div class="select wide_select">
-								<select name="calc_se_method">
-									<option>AM1</option>
-									<option>PM3</option>
-									<option>PM6</option>
-									<option>PM7</option>
-								</select>
-							</div>
-						</div>
-					</div>
-				</div>
+                <div class="column" id="calc_se_method">
+                    <div class="field">
+                        <label class="label">Method</label>
+                        <div class="control">
+                            <div class="select wide_select">
+                                <select name="calc_se_method">
+                                    <option>AM1</option>
+                                    <option>PM3</option>
+                                    <option>PM6</option>
+                                    <option>PM7</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-				<div class="column">
-					<div class="field" id="calc_functional_field">
-						<label class="label">Functional</label>
-						<div class="control">
-							<input class="input" name="calc_functional" id="calc_functional" type="text" list="functional_options">
-						</div>
-						<p class="check_msg is-danger" id="functional_check_msg"></p>
-					</div>
-				</div>
-				<div class="column">
-					<div class="field" id="calc_basis_set_field">
-						<label class="label">Basis set</label>
-						<div class="control">
-							<input class="input" name="calc_basis_set" id="calc_basis_set" type="text" list="basis_sets_options">
-						</div>
-						<p class="check_msg is-danger" id="basis_set_check_msg"></p>
-					</div>
-				</div>
+                <div class="column" id="calc_xtb_method">
+                    <div class="field">
+                        <label class="label">Method</label>
+                        <div class="control">
+                            <div class="select wide_select">
+                                <select name="calc_xtb_method">
+                                    <option value="gfn2-xtb">GFN2-xTB</option>
+                                    <option value="gfn1-xtb">GFN1-xTB</option>
+                                    <option value="gfn0-xtb">GFN0-xTB</option>
+                                    <option value="gfn-ff">GFN-FF</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-			</div>
-		</div>
-		<div>
+                <div class="column">
+                    <div class="field" id="calc_functional_field">
+                        <label class="label">Functional</label>
+                        <div class="control">
+                            <input class="input" name="calc_functional" id="calc_functional" type="text" list="functional_options">
+                        </div>
+                        <p class="check_msg is-danger" id="functional_check_msg"></p>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="field" id="calc_basis_set_field">
+                        <label class="label">Basis set</label>
+                        <div class="control">
+                            <input class="input" name="calc_basis_set" id="calc_basis_set" type="text" list="basis_sets_options">
+                        </div>
+                        <p class="check_msg is-danger" id="basis_set_check_msg"></p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div>
 			<div>
 				<div class="field" id="custom_specifications_field">
 					<label class="label">Specifications</label>
