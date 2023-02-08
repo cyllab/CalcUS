@@ -51,7 +51,8 @@ basic_params = {
     "calc_project": ["New Project"],
     "new_project_name": ["Test"],
     "calc_software": ["xtb"],
-    "calc_theory_level": [""],
+    "calc_theory_level": ["xtb"],
+    "calc_xtb_method": ["GFN2-xTB"],
     "calc_type": ["Geometrical Optimisation"],
     "constraint_mode_1": ["Freeze"],
     "constraint_type_1": ["Distance"],
@@ -252,6 +253,7 @@ class CalculationLaunchTests(TestCase):
     def test_submit_ORCA_no_theory(self):
         params = basic_params.copy()
         params["calc_software"] = "ORCA"
+        del params["calc_theory_level"]
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 

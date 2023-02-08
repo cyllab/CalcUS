@@ -521,8 +521,8 @@
 $( document ).ready(function() {
 	{% if not ensemble and not structure and is_flowchart is None%}
 	preselect_last_project();
-	project_selection_changed(document.getElementById("calc_project"));
 	set_availables();
+	project_selection_changed(document.getElementById("calc_project"));
 	{% endif %}
 
 	refresh_presets();
@@ -532,6 +532,7 @@ $( document ).ready(function() {
 	{% if proj %}
 	proj = document.getElementById("calc_project");
 	proj.value = "{{ proj.name }}";
+    project_selection_changed(proj);
 	{% endif %}
 
 	{% if init_params_id %}
@@ -546,6 +547,7 @@ $( document ).ready(function() {
 				refresh_availabilities();
 				refresh_availabilities();//Whatever
 				$('#calc_software').data('software', $("#calc_software").val());
+				refresh_availabilities();//Whatever
 
 			},
 		});
