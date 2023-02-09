@@ -171,7 +171,7 @@ class Command(BaseCommand):
             creates_ensemble=True,
             avail_xtb=True,
             avail_Gaussian=False,
-            avail_ORCA=False,
+            avail_ORCA=True,
         )
 
         self.add_step(

@@ -110,7 +110,7 @@ String.prototype.format = function() {
 		{% endfor %}
 	}
 
-    var master_list_params = ["software", "type", "solvent", "solvation_model", "solvation_radii", "theory_level"];
+    var master_list_params = ["software", "type", "solvent", "solvation_model", "solvation_radii", "theory_level", "driver"];
     var master_options = {
         "software": {
             "Gaussian": {
@@ -118,20 +118,23 @@ String.prototype.format = function() {
                 "solvation_model": ["PCM", "CPCM", "SMD"],
                 "se_method": ["AM1", "PM3", "PM6", "PM7"],
                 "solvation_radii": ["SMD18", "Default", "UFF", "UA0", "UAHF", "UAKS", "Pauling", "Bondi"],
-                "theory_level": ["semiempirical", "hf", "dft"]
+                "theory_level": ["semiempirical", "hf", "dft"],
+                "driver": ["Gaussian", "Pysisyphus"]
             },
             "ORCA": {
                 "type": ["NMR Prediction", "Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "MO Calculation"],
                 "solvation_model": ["CPCM", "SMD"],
                 "se_method": ["AM1", "PM3"],
                 "solvation_radii": ["SMD18", "Default"],
-                "theory_level": ["xtb", "semiempirical", "hf", "dft", "mp2"]
+                "theory_level": ["xtb", "semiempirical", "hf", "dft", "mp2"],
+                "driver": ["ORCA", "Pysisyphus"]
             },
             "xtb": {
                 "type": ["Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "UV-Vis Calculation", "Conformational Search", "Constrained Conformational Search", "Minimum Energy Path"],
                 "solvation_model": ["ALPB", "GBSA"],
                 "solvation_radii": ["Default"],
-                "theory_level": ["xtb"]
+                "theory_level": ["xtb"],
+                "driver": ["xtb", "Pysisyphus"]
             },
         },
         "solvation_model": {
@@ -150,9 +153,12 @@ String.prototype.format = function() {
             "ALPB": {
                 "solvation_radii": ["Default"],
             }
-
+        },
+        "type": {
+            "Minimum Energy Path": {
+                "driver": ["ORCA", "Pysisyphus"]
+            }
         }
-
     }
     var list_available_elements = ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "xtb_method", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints"];
     var master_available = {

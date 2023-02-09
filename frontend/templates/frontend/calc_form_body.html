@@ -207,6 +207,24 @@
                     </div>
                 </div>
             </div>
+
+            <div class="column is-3">
+                <div class="field">
+                    <label class="label">Driver</label>
+                    <div class="control">
+                        <div class="select wide_select">
+                            <select name="calc_driver" id="calc_driver" onchange="refresh_availabilities();">
+                                <option value="xtb">xtb</option>
+                                <option value="Gaussian">Gaussian</option>
+                                <option value="ORCA">ORCA</option>
+                                <option value="Pysisyphus">Pysisyphus</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+			</div>
+
+
             <div class="column is-6">
                 <div class="field">
                     <label class="label">Calculation Type</label>
@@ -221,24 +239,7 @@
                     </div>
                 </div>
             </div>
-            <div class="column is-3" id="calc_theory_level" >
-                <div class="field">
-                    <label class="label">Theory Level</label>
-                    <div class="control">
-                        <div class="select wide_select">
-                            <select name="calc_theory_level" onchange="refresh_availabilities();">
-                                <option class="hidden" value="xtb">xtb</option>
-                                <option value="semiempirical">Semi-empirical</option>
-                                <option value="hf">HF</option>
-                                <option value="dft">DFT</option>
-                                <option value="mp2">RI-MP2</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-        </div>
+		</div>
 
 		<div id="calc_aux_structure">
 			<div class="field">
@@ -279,19 +280,35 @@
 			</div>
 		</div>
 
-		<div>
-			<div class="columns">
-				<div id="calc_pbeh3c">
-					<div class="column is-narrow">
-						<div class="field">
-							<label class="label">Special</label>
-							<label class="checkbox">
-								<input type="checkbox" name="pbeh3c" onchange="refresh_availabilities();">
-								PBEh-3c
-							</label>		
-						</div>
-					</div>
-				</div>
+        <div>
+            <div class="columns">
+                <div class="column is-3" id="calc_theory_level" >
+                    <div class="field">
+                        <label class="label">Theory Level</label>
+                        <div class="control">
+                            <div class="select wide_select">
+                                <select name="calc_theory_level" onchange="refresh_availabilities();">
+                                    <option class="hidden" value="xtb">xtb</option>
+                                    <option value="semiempirical">Semi-empirical</option>
+                                    <option value="hf">HF</option>
+                                    <option value="dft">DFT</option>
+                                    <option value="mp2">RI-MP2</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="calc_pbeh3c">
+                    <div class="column is-narrow">
+                        <div class="field">
+                            <label class="label">Special</label>
+                            <label class="checkbox">
+                                <input type="checkbox" name="pbeh3c" onchange="refresh_availabilities();">
+                                PBEh-3c
+                            </label>		
+                        </div>
+                    </div>
+                </div>
 				<div id="calc_hf3c">
 					<div class="column is-narrow">
 						<div class="field">

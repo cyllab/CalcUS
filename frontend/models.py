@@ -946,6 +946,8 @@ class Parameters(models.Model):
     density_fitting = models.CharField(max_length=1000, default="")
     custom_basis_sets = models.CharField(max_length=1000, default="")
 
+    driver = models.CharField(max_length=100, default="")
+
     _md5 = models.CharField(max_length=32, default="")
 
     def __repr__(self):

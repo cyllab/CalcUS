@@ -899,11 +899,20 @@ def xtb_opt(in_file, calc):
 
 
 def xtb_mep(in_file, calc):
+    if calc.parameters.driver == "ORCA":
+        return xtb_mep_orca(in_file, calc)
+    elif calc.parameters.driver == "Pysisyphus":
+        return xtb_mep_pysis(in_file, calc)
+    else:
+        raise Exception(f"Unknown driver for MEP calculation: {calc.parameters.driver}")
+
+
+def xtb_mep_orca(in_file, calc):
     folder = "/".join(in_file.split("/")[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
-    with open(os.path.join(local_folder, "struct2.xyz"), "w") as out:
+    with open(os.path.join(local_folder, "calc2.xyz"), "w") as out:
         out.write(calc.aux_structure.xyz_structure)
 
     ret = launch_orca_calc(in_file, calc, ["calc.out", "calc_MEP_trj.xyz"])
@@ -927,6 +936,57 @@ def xtb_mep(in_file, calc):
     for metaind, mol in enumerate(inds[:-1]):
         sline = lines[inds[metaind] + 1].strip().split()
         E = float(sline[-1])
+        struct = "".join(
+            [i.strip() + "\n" for i in lines[inds[metaind] : inds[metaind + 1]]]
+        )
+
+        r = Structure.objects.get_or_create(
+            number=metaind + 1, parent_ensemble=calc.result_ensemble
+        )[0]
+        r.degeneracy = 1
+        r.xyz_structure = clean_xyz(struct)
+        r.save()
+
+        prop = get_or_create(calc.parameters, r)
+        prop.energy = E
+        prop.geom = True
+        properties.append(prop)
+
+    Property.objects.bulk_update(properties, ["energy", "geom"])
+    return ErrorCodes.SUCCESS
+
+
+def xtb_mep_pysis(in_file, calc):
+    folder = "/".join(in_file.split("/")[:-1])
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    local = calc.local
+
+    with open(os.path.join(local_folder, "calc2.xyz"), "w") as out:
+        out.write(calc.aux_structure.xyz_structure)
+
+    ret = launch_pysis_calc(
+        in_file, calc, ["calc.out", "current_geometries.trj", "splined_hei.xyz"]
+    )
+
+    if ret != ErrorCodes.SUCCESS:
+        return ret
+
+    with open(f"{local_folder}/current_geometries.trj") as f:
+        lines = f.readlines()
+
+    num_atoms = lines[0]
+    inds = []
+    ind = 0
+    while ind < len(lines) - 1:
+        if lines[ind] == num_atoms:
+            inds.append(ind)
+        ind += 1
+    inds.append(len(lines))
+
+    properties = []
+    for metaind, mol in enumerate(inds[:-1]):
+        sline = lines[inds[metaind] + 1].strip().split()
+        E = float(sline[-2])
         struct = "".join(
             [i.strip() + "\n" for i in lines[inds[metaind] : inds[metaind + 1]]]
         )
@@ -983,7 +1043,7 @@ def get_or_create(params, struct):
 
 
 def xtb_handle_ts(in_file, calc):
-    """Used to choose the right driver for the calculation (ORCA or Pysisyphus)"""
+    """Chooses the right driver for the calculation (ORCA or Pysisyphus)"""
 
     # if settings.IS_CLOUD:
     return xtb_ts_pysis(in_file, calc)
@@ -1413,8 +1473,8 @@ def launch_orca_calc(in_file, calc, files):
             )
             if calc.step.name == "Minimum Energy Path":
                 sftp_put(
-                    f"{local_folder}/struct2.xyz",
-                    os.path.join(folder, "struct2.xyz"),
+                    f"{local_folder}/calc2.xyz",
+                    os.path.join(folder, "calc2.xyz"),
                     conn,
                     lock,
                 )
@@ -2134,12 +2194,10 @@ def calc_to_ccinput(calc):
         "mem": _mem,
         "charge": calc.parameters.charge,
         "multiplicity": calc.parameters.multiplicity,
-        "aux_name": "struct2",
+        "aux_name": "calc2",
         "name": "in",
+        "driver": calc.parameters.driver,
     }
-
-    if software == "xtb" and calc.step.short_name == "optts":
-        params["driver"] = "pysis"
 
     try:
         inp = generate_calculation(**params)
@@ -3940,15 +3998,7 @@ def run_calc(calc_id):
         logger.info(f"Calc {calc_id} already revoked")
         return ErrorCodes.JOB_CANCELLED
 
-    if (
-        calc.parameters.software == "xtb"
-        and calc.step.short_name == "mep"
-        and not settings.IS_CLOUD
-    ):
-        calc.parameters.software = "ORCA"
-        ret = add_input_to_calc(calc)
-        calc.parameters.software = "xtb"
-    elif calc.parameters.software == "xtb" and calc.step.short_name == "uvvis":
+    if calc.parameters.software == "xtb" and calc.step.short_name == "uvvis":
         ret = None
     else:
         ret = add_input_to_calc(calc)

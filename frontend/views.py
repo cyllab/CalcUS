@@ -1480,6 +1480,13 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
     else:
         return "Invalid theory level"
 
+    if "calc_driver" in parameters_dict:
+        driver = clean(parameters_dict["calc_driver"])
+        if driver not in ["xtb", "Gaussian", "ORCA", "Pysisyphus"]:
+            return f"Unknown driver: {driver}"
+    else:
+        driver = ""
+
     if is_flowchart is None:
         if len(project) > 100:
             return "The chosen project name is too long"
@@ -1541,6 +1548,7 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
         "density_fitting": df,
         "custom_basis_sets": bs,
         "specifications": specifications,
+        "driver": driver,
     }
 
     if is_flowchart is None:
