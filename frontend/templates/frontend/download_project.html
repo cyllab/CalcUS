@@ -60,6 +60,8 @@
     function refresh_availabilities() {
         choice = document.getElementById("data");
 
+        console.log('{{proj}}')
+
         full_options = document.querySelectorAll(".data_specific");
 
         full_options.forEach((element) => {
@@ -80,7 +82,7 @@
     <div class="formContainer">
     {% csrf_token %}
     <h1 id="downloadHeading">Download Project</h1>
-    <h3 id="project_heading">Project Heading</h3>
+    <h3 id="project_heading">{{proj}}</h3>
     <input type="hidden" name="id" value="{{ proj.id }}" />
     <div class="field">
         <label class="label">Data</label>
