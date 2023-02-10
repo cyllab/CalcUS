@@ -64,7 +64,7 @@ class Command(BaseCommand):
             BasicStep.objects.create(
                 name=name,
                 short_name=short_name,
-                **kargs,
+                **kwargs,
             )
         else:
             BasicStep.objects.filter(name=name).update(
