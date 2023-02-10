@@ -898,16 +898,16 @@ def xtb_opt(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def xtb_mep(in_file, calc):
+def mep(in_file, calc):
     if calc.parameters.driver == "ORCA":
-        return xtb_mep_orca(in_file, calc)
+        return mep_orca(in_file, calc)
     elif calc.parameters.driver == "Pysisyphus":
-        return xtb_mep_pysis(in_file, calc)
+        return mep_pysis(in_file, calc)
     else:
         raise Exception(f"Unknown driver for MEP calculation: {calc.parameters.driver}")
 
 
-def xtb_mep_orca(in_file, calc):
+def mep_orca(in_file, calc):
     folder = "/".join(in_file.split("/")[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
@@ -956,13 +956,27 @@ def xtb_mep_orca(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def xtb_mep_pysis(in_file, calc):
+def mep_pysis(in_file, calc):
     folder = "/".join(in_file.split("/")[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     local = calc.local
 
     with open(os.path.join(local_folder, "calc2.xyz"), "w") as out:
         out.write(calc.aux_structure.xyz_structure)
+
+    if not calc.local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+
+        if calc.remote_id == 0:
+            sftp_put(
+                f"{local_folder}/calc2.xyz",
+                os.path.join(folder, "calc2.xyz"),
+                conn,
+                lock,
+            )
 
     ret = launch_pysis_calc(
         in_file, calc, ["calc.out", "current_geometries.trj", "splined_hei.xyz"]
@@ -3453,7 +3467,7 @@ BASICSTEP_TABLE = {
         "TS Optimisation": xtb_handle_ts,
         "UV-Vis Calculation": xtb_stda,
         "Single-Point Energy": xtb_sp,
-        "Minimum Energy Path": xtb_mep,
+        "Minimum Energy Path": mep,
         "Constrained Conformational Search": crest,
     },
     "ORCA": {
@@ -3464,6 +3478,7 @@ BASICSTEP_TABLE = {
         "Frequency Calculation": orca_freq,
         "Constrained Optimisation": orca_scan,
         "Single-Point Energy": orca_sp,
+        "Minimum Energy Path": mep,
     },
     "Gaussian": {
         "NMR Prediction": gaussian_nmr,
@@ -3931,18 +3946,11 @@ def add_input_to_calc(calc):
 
     calc.input_file = inp.input_file
 
-    if (
-        calc.parameters.software != "xtb"
-    ):  # TODO: have a 'driver' field in the calculations
+    if hasattr(inp, "confirmed_specifications"):
         calc.parameters.specifications = inp.confirmed_specifications
 
     if hasattr(inp, "command"):
         calc.command = inp.command
-
-    if (
-        hasattr(inp, "command_line") and calc.parameters.software == "xtb"
-    ):  # TODO: remove with next version of ccinput (1.6.1)
-        calc.command = inp.command_line
 
     calc.save()
     calc.parameters.save()

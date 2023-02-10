@@ -58,27 +58,18 @@ class Command(BaseCommand):
         self,
         name,
         short_name,
-        creates_ensemble=False,
-        avail_xtb=False,
-        avail_Gaussian=False,
-        avail_ORCA=False,
+        **kwargs,
     ):
         if self.is_absent(BasicStep, name):
             BasicStep.objects.create(
                 name=name,
                 short_name=short_name,
-                creates_ensemble=creates_ensemble,
-                avail_xtb=avail_xtb,
-                avail_Gaussian=avail_Gaussian,
-                avail_ORCA=avail_ORCA,
+                **kargs,
             )
         else:
             BasicStep.objects.filter(name=name).update(
                 short_name=short_name,
-                creates_ensemble=creates_ensemble,
-                avail_xtb=avail_xtb,
-                avail_Gaussian=avail_Gaussian,
-                avail_ORCA=avail_ORCA,
+                **kwargs,
             )
 
     def handle(self, *args, **options):

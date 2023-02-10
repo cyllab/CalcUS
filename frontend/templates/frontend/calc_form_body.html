@@ -428,7 +428,7 @@
 
 					{% if ALLOW_REMOTE_CALC %}
 					{% for access in request.user.accesses %}
-                        <option>{{ access.cluster_address }} {% if not access.connected %}(DISCONNECTED){% endif %}</option>
+                    <option value="{{ access.cluster_address }}">{{ access.cluster_address }} {% if not access.connected %}(DISCONNECTED){% endif %}</option>
 					{% endfor %}
 					{% endif %}
 				  </select>
