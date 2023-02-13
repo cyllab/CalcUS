@@ -1009,8 +1009,11 @@ class Parameters(models.Model):
             "id",
             "charge",
             "multiplicity",
+            "specifications",
+            # Previously compared fields
             "method",
             "basis_set",
+            "solvent",
         ]
 
         values = [(k, v) for k, v in self.__dict__.items() if k not in excluded_fields]

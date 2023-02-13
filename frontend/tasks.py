@@ -899,9 +899,9 @@ def xtb_opt(in_file, calc):
 
 
 def mep(in_file, calc):
-    if calc.parameters.driver == "ORCA":
+    if calc.parameters.driver == "orca":
         return mep_orca(in_file, calc)
-    elif calc.parameters.driver == "Pysisyphus":
+    elif calc.parameters.driver == "pysisyphus":
         return mep_pysis(in_file, calc)
     else:
         raise Exception(f"Unknown driver for MEP calculation: {calc.parameters.driver}")
@@ -985,6 +985,19 @@ def mep_pysis(in_file, calc):
     if ret != ErrorCodes.SUCCESS:
         return ret
 
+    with open(f"{local_folder}/calc.out") as f:
+        lines = f.readlines()
+        ind = len(lines) - 1
+
+    try:
+        while lines[ind].find("Wrote final, hopefully optimized, geometry") == -1:
+            ind -= 1
+    except IndexError:
+        return ErrorCodes.UNKNOWN_TERMINATION
+
+    # Splined HEI is at 2.85/5.00, between image 2 and 3 (0-based indexing).
+    splined_index = int(lines[ind + 1].split()[-5])
+
     with open(f"{local_folder}/current_geometries.trj") as f:
         lines = f.readlines()
 
@@ -997,6 +1010,7 @@ def mep_pysis(in_file, calc):
         ind += 1
     inds.append(len(lines))
 
+    index_offset = 0
     properties = []
     for metaind, mol in enumerate(inds[:-1]):
         sline = lines[inds[metaind] + 1].strip().split()
@@ -1006,7 +1020,7 @@ def mep_pysis(in_file, calc):
         )
 
         r = Structure.objects.get_or_create(
-            number=metaind + 1, parent_ensemble=calc.result_ensemble
+            number=metaind + 1 + index_offset, parent_ensemble=calc.result_ensemble
         )[0]
         r.degeneracy = 1
         r.xyz_structure = clean_xyz(struct)
@@ -1016,6 +1030,26 @@ def mep_pysis(in_file, calc):
         prop.energy = E
         prop.geom = True
         properties.append(prop)
+
+        if metaind == splined_index:
+            splined_xyz = parse_xyz_from_file(f"{local_folder}/splined_hei.xyz")
+            splined_xyz_str = format_xyz(splined_xyz)
+            r = Structure.objects.get_or_create(
+                number=metaind + 2, parent_ensemble=calc.result_ensemble
+            )[0]
+            r.degeneracy = 1
+            r.xyz_structure = clean_xyz(splined_xyz_str)
+            r.save()
+
+            with open(f"{local_folder}/splined_hei.xyz") as ff:
+                E = float(ff.readlines()[1].split()[-2])
+
+            prop = get_or_create(calc.parameters, r)
+            prop.energy = E
+            prop.geom = True
+            properties.append(prop)
+
+            index_offset = 1
 
     Property.objects.bulk_update(properties, ["energy", "geom"])
     return ErrorCodes.SUCCESS
@@ -3201,6 +3235,7 @@ def analyse_opt(calc_id):
         "Gaussian": analyse_opt_Gaussian,
         "ORCA": analyse_opt_ORCA,
         "xtb": analyse_opt_xtb,
+        "pysis": analyse_opt_pysis,
     }
 
     calc = Calculation.objects.get(pk=calc_id)
@@ -3210,9 +3245,67 @@ def analyse_opt(calc_id):
     if len(xyz) == 1:  # Single atom
         return
 
-    software = calc.parameters.software
+    if calc.parameters.driver != "":
+        # return funcs[calc.parameters.driver](calc)
+        return ErrorCodes.SUCCESS
+    else:
+        return funcs[calc.parameters.software](calc)
 
-    return funcs[software](calc)
+
+def analyse_opt_pysis(calc):
+    # TODO
+    prepath = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+
+    # RMSDs = [0]
+    RMSDs = []  # Not sure
+
+    if not os.path.isfile(os.path.join(prepath, "current_geometries.trj")):
+        return
+
+    with open(os.path.join(prepath, "calc.out")) as f:
+        lines = f.readlines()
+
+    ind = 0
+    flag = False
+    while not flag:
+        while lines[ind].find("RMS step") == -1:
+            if lines[ind].find("THE OPTIMIZATION HAS CONVERGED") != -1:
+                RMSDs.append(0.0)
+            ind += 1
+            if ind > len(lines) - 2:
+                flag = True
+                break
+        if not flag:
+            rms = float(lines[ind].split()[2])
+            RMSDs.append(rms)
+            ind += 1
+
+    structs, energies = parse_multixyz_from_file(os.path.join(prepath, "calc_trj.xyz"))
+    new_frames = []
+    update_frames = []
+
+    for ind, (s, E) in enumerate(zip(structs, energies)):
+        xyz = format_xyz(s)
+        try:
+            f = calc.calculationframe_set.get(number=ind + 1)
+        except CalculationFrame.DoesNotExist:
+            new_frames.append(
+                CalculationFrame(
+                    number=ind + 1,
+                    xyz_structure=xyz,
+                    parent_calculation=calc,
+                    RMSD=RMSDs[ind],
+                )
+            )
+        else:
+            f.xyz_structure = xyz
+            f.RMSD = RMSDs[ind]
+            update_frames.append(f)
+
+    CalculationFrame.objects.bulk_create(new_frames)
+    CalculationFrame.objects.bulk_update(update_frames, ["xyz_structure", "RMSD"])
+
+    return ErrorCodes.SUCCESS
 
 
 def analyse_opt_ORCA(calc):
