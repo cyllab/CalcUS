@@ -3791,7 +3791,7 @@ def download_structure(request, ee, num):
         return HttpResponse(status=404)
 
     name = (
-        f"{clean_filename(e.parent_molecule.name)}.{clean_filename(e.name)}_conf{num}"
+        f"{clean_filename(e.parent_molecule.name)}_{clean_filename(e.name)}_conf{num}"
     )
 
     response = HttpResponse(s.xyz_structure)
@@ -4083,7 +4083,7 @@ def download_log(request, pk):
     if not can_view_calculation(calc, request.user):
         return HttpResponse(status=403)
 
-    name = f"{clean_filename(calc.order.molecule_name)}_calc{calc.id}"
+    name = f"{clean_filename(calc.order.molecule_name)}_{clean_filename(calc.result_ensemble.name)}"
 
     if len(calc.output_files) == 0:
         logger.warning(f"No log to download! (Calculation {pk})")
@@ -4137,7 +4137,8 @@ def download_all_logs(request, pk):
                 else:
                     _logname = f"_{logname}"
                 zip.writestr(
-                    f"{order.molecule_name}_order{pk}_calc{cid}{_logname}", log
+                    f"{order.molecule_name}_{calc.corresponding_ensemble.name}_{calc.step.short_name}",
+                    log,
                 )
 
     response = HttpResponse(mem.getvalue(), content_type="application/zip")
@@ -5017,8 +5018,8 @@ def download_folder(request, pk):
                     if c.status == 2:
                         log_name = clean_filename(
                             prefix
-                            # + c.parameters.file_name
-                            # + "_"
+                            + c.corresponding_ensemble.name
+                            + "_"
                             + c.step.short_name
                             + "_conf"
                             + str(c.structure.number)

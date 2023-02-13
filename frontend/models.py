@@ -1448,6 +1448,15 @@ class Calculation(models.Model):
         else:
             print("Could not find molecule to update!")
 
+    @property
+    def corresponding_ensemble(self):
+        if self.result_ensemble is not None:
+            return self.result_ensemble
+        elif self.structure is not None:
+            return self.structure.parent_ensemble
+        else:
+            print("Could not find the corresponding ensemble")
+
     def save(self, *args, **kwargs):
         if self.flowchart_order is not None:
             old_status = self.flowchart_order.status
