@@ -469,12 +469,23 @@ String.prototype.format = function() {
 				}
 			}
 
+            // If there is a preferred option set (by being tagged "selected"), pick that one
+            // Otherwise, pick any valid option
 			for(i=0; i < sel.options.length; i++) {
 				opt = sel.options[i];
 				if(opt.getAttribute("selected") != undefined && opt.style.display != "none"  && !opt.disabled) {
 					sel.selectedIndex = i;
+                    return
 				}
 			}
+			for(i=0; i < sel.options.length; i++) {
+				opt = sel.options[i];
+				if(opt.style.display != "none"  && !opt.disabled) {
+					sel.selectedIndex = i;
+                    return
+				}
+			}
+
 		});
 	}
 
