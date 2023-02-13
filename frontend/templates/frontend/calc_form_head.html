@@ -471,7 +471,7 @@ String.prototype.format = function() {
 
 			for(i=0; i < sel.options.length; i++) {
 				opt = sel.options[i];
-				if(opt.style.display != "none"  && !opt.disabled) {
+				if(opt.getAttribute("selected") != undefined && opt.style.display != "none"  && !opt.disabled) {
 					sel.selectedIndex = i;
 				}
 			}
