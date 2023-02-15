@@ -1927,6 +1927,7 @@ class XtbCalculationTests(CalcusLiveServer):
             "project": "New Project",
             "new_project_name": "SeleniumProject",
             "software": "xtb",
+            "driver": "ORCA",
             "in_file": "elimination_substrate.xyz",
             "aux_file": "elimination_product.xyz",
             "charge": "-1",
@@ -1969,6 +1970,7 @@ class XtbCalculationTests(CalcusLiveServer):
             "type": "Minimum Energy Path",
             "project": "SeleniumProject",
             "software": "xtb",
+            "driver": "ORCA",
             "aux_structure": ["elimination_substrate", "elimination_substrate", 4],
             "specifications": "--nimages 3",
         }
@@ -2003,6 +2005,7 @@ class XtbCalculationTests(CalcusLiveServer):
             "type": "Minimum Energy Path",
             "project": "SeleniumProject",
             "software": "xtb",
+            "driver": "ORCA",
             "aux_structure": ["elimination_substrate", "elimination_substrate", 4],
             "in_file": "elimination_substrate.xyz",
             "specifications": "--nimages 3",

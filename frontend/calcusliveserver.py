@@ -294,6 +294,21 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
             self.wait_for_ajax()
 
+        if "driver" in params.keys():
+            driver = params["driver"]
+        else:
+            driver = params["software"]
+
+        select = self.driver.find_element(By.NAME, "calc_driver")
+        self.driver.execute_script(
+            "showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",
+            select,
+        )
+        time.sleep(0.1)
+        select.find_element(By.XPATH, f"option[text()='{driver}']").click()
+
+        self.wait_for_ajax()
+
         if "solvent" in params.keys():
             solvent_input = self.driver.find_element(By.NAME, "calc_solvent")
             solvent_input.send_keys(params["solvent"])

@@ -134,7 +134,7 @@ String.prototype.format = function() {
                 "solvation_model": ["ALPB", "GBSA"],
                 "solvation_radii": ["Default"],
                 "theory_level": ["xtb"],
-                "driver": ["xtb", "Pysisyphus"]
+                "driver": ["xtb", "Pysisyphus", "ORCA"]
             },
         },
         "solvation_model": {
@@ -157,6 +157,11 @@ String.prototype.format = function() {
         "type": {
             "Minimum Energy Path": {
                 "driver": ["ORCA", "Pysisyphus"]
+            }
+        },
+        "driver": {
+            "Pysisyphus": {
+                "type": ["Minimum Energy Path", "TS Optimisation"],
             }
         }
     }

@@ -8,6 +8,7 @@ KEEP_FILES = [
     "calc.out",
     "calc.log",
     "calc.xyz",
+    "calc2.xyz",
     "calc.allxyz",
     "calc.relaxscanact.dat",
     "in.xyz",
@@ -26,6 +27,8 @@ KEEP_FILES = [
     "in-LUMO.cube",
     "in-LUMOA.cube",
     "in-LUMOB.cube",
+    "tda.dat",
+    "calc2.out",
 ]
 
 for d in glob.glob("cache/*/"):

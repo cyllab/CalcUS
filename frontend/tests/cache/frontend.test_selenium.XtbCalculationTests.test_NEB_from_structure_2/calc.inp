@@ -12,7 +12,7 @@ O   -0.97892360   0.73164394   2.84233599
 H   -1.92653911   0.89354531   2.87895947
 *
 %neb
-product "struct2.xyz"
+product "calc2.xyz"
 nimages 3
 end
 %MaxCore 500

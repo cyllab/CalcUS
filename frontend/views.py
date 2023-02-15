@@ -4083,7 +4083,7 @@ def download_log(request, pk):
     if not can_view_calculation(calc, request.user):
         return HttpResponse(status=403)
 
-    name = f"{clean_filename(calc.order.molecule_name)}_{clean_filename(calc.result_ensemble.name)}"
+    name = f"{clean_filename(calc.order.molecule_name)}_{clean_filename(calc.corresponding_ensemble.name)}"
 
     if len(calc.output_files) == 0:
         logger.warning(f"No log to download! (Calculation {pk})")
