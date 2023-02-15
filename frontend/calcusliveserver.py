@@ -297,7 +297,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         if "driver" in params.keys():
             driver = params["driver"]
         else:
-            driver = params["software"]
+            if "software" in params:
+                driver = params["software"]
+            else:
+                driver = "xtb"
 
         select = self.driver.find_element(By.NAME, "calc_driver")
         self.driver.execute_script(
