@@ -28,6 +28,7 @@ KEEP_FILES = [
     "in-LUMOA.cube",
     "in-LUMOB.cube",
     "tda.dat",
+    "wfn.xtb",
     "calc2.out",
 ]
 

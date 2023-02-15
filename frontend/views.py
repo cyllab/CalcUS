@@ -1408,8 +1408,8 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
 
     if theory == "dft":
         special_functional = False
-        if "pbeh3c" in parameters_dict.keys() and software == "ORCA":
-            field_pbeh3c = clean(parameters_dict["pbeh3c"])
+        if "calc_pbeh3c" in parameters_dict.keys() and software == "ORCA":
+            field_pbeh3c = clean(parameters_dict["calc_pbeh3c"])
             if field_pbeh3c == "on":
                 special_functional = True
                 functional = "PBEh-3c"
@@ -1441,8 +1441,8 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
             return "No semi-empirical method chosen"
     elif theory == "hf":
         special_functional = False
-        if "hf3c" in parameters_dict.keys() and software == "ORCA":
-            field_hf3c = clean(parameters_dict["hf3c"])
+        if "calc_hf3c" in parameters_dict.keys() and software == "ORCA":
+            field_hf3c = clean(parameters_dict["calc_hf3c"])
             if field_hf3c == "on":
                 special_functional = True
                 functional = "HF-3c"

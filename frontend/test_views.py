@@ -286,14 +286,36 @@ class CalculationLaunchTests(TestCase):
         params = basic_params.copy()
         params["calc_software"] = "ORCA"
         params["calc_theory_level"] = "DFT"
+        params["calc_basis_set"] = "Def2-SVP"
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
+
+    def test_submit_ORCA_DFT_special(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = "DFT"
+        params["calc_pbeh3c"] = "on"
+        params["calc_functional"] = ""
+        params["calc_basis_set"] = ""
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertNotContains(response, "Error while submitting your calculation")
+
+    def test_submit_ORCA_HF_special(self):
+        params = basic_params.copy()
+        params["calc_software"] = "ORCA"
+        params["calc_theory_level"] = "HF"
+        params["calc_hf3c"] = "on"
+        params["calc_functional"] = ""
+        params["calc_basis_set"] = ""
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertNotContains(response, "Error while submitting your calculation")
 
     def test_submit_ORCA_DFT_no_basis_set(self):
         params = basic_params.copy()
         params["calc_software"] = "ORCA"
         params["calc_theory_level"] = "DFT"
         params["calc_functional"] = "M06-2X"
+        params["calc_basis_set"] = ""
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 
@@ -302,6 +324,7 @@ class CalculationLaunchTests(TestCase):
         params["calc_software"] = "ORCA"
         params["calc_theory_level"] = "DFT"
         params["calc_functional"] = ""
+        params["calc_basis_set"] = "Def2-SVP"
         response = self.client.post("/submit_calculation/", data=params, follow=True)
         self.assertContains(response, "Error while submitting your calculation")
 

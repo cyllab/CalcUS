@@ -2332,6 +2332,27 @@ class OrcaCalculationTests(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
+    def test_pbeh3c(self):
+        params = {
+            "mol_name": "my_mol",
+            "type": "Single-Point Energy",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "CH4.mol",
+            "software": "ORCA",
+            "theory": "DFT",
+            "pbeh3c": "True",
+        }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(150)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 1)
+
     def test_sp_DFT2(self):
         params = {
             "mol_name": "my_mol",

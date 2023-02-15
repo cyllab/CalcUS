@@ -527,6 +527,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             bs.click()
             bs.send_keys(params["basis_set"])
 
+        if "pbeh3c" in params.keys():
+            pbeh = self.driver.find_element(By.NAME, "calc_pbeh3c")
+            if not pbeh.get_attribute("checked"):
+                pbeh.click()
+
         if "specifications" in params.keys():
             specs = self.driver.find_element(By.NAME, "calc_specifications")
             specs.clear()
