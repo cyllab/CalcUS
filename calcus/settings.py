@@ -200,12 +200,12 @@ DATABASES = {
         "HOST": POSTGRES_HOST,
         "PORT": "5432",
         # To connect over SSL
-        # "OPTIONS": {
-        #     'sslmode': 'verify-ca',
-        #     'sslrootcert': 'server-ca.pem',
-        #     'sslcert': 'client-cert.pem',
-        #     'sslkey': 'client-key.pem',
-        # },
+        "OPTIONS": {
+            "sslmode": "verify-ca",
+            "sslrootcert": "server-ca.pem",
+            "sslcert": "client-cert.pem",
+            "sslkey": "client-key.pem",
+        },
     }
 }
 
