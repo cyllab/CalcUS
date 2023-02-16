@@ -1,7 +1,7 @@
 %chk=in.chk
-%nproc=1
+%nproc=4
 %mem=2000MB
-#p td M062X/Def2TZVP
+#p opt M062X/Def2TZVP
 
 File created by ccinput
 

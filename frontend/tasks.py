@@ -3246,7 +3246,7 @@ def analyse_opt(calc_id):
         return
 
     if calc.parameters.driver != "":
-        return funcs[calc.parameters.driver](calc)
+        return funcs[calc.parameters.driver.lower()](calc)
     else:
         return funcs[calc.parameters.software.lower()](calc)
 
