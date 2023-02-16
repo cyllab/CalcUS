@@ -3231,10 +3231,11 @@ def gen_fingerprint(structure):
 
 def analyse_opt(calc_id):
     funcs = {
-        "Gaussian": analyse_opt_Gaussian,
-        "ORCA": analyse_opt_ORCA,
+        "gaussian": analyse_opt_Gaussian,
+        "orca": analyse_opt_ORCA,
         "xtb": analyse_opt_xtb,
         "pysis": analyse_opt_pysis,
+        "pysisyphus": analyse_opt_pysis,
     }
 
     calc = Calculation.objects.get(pk=calc_id)
@@ -3245,10 +3246,9 @@ def analyse_opt(calc_id):
         return
 
     if calc.parameters.driver != "":
-        # return funcs[calc.parameters.driver](calc)
-        return ErrorCodes.SUCCESS
+        return funcs[calc.parameters.driver](calc)
     else:
-        return funcs[calc.parameters.software](calc)
+        return funcs[calc.parameters.software.lower()](calc)
 
 
 def analyse_opt_pysis(calc):
