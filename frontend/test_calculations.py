@@ -193,6 +193,7 @@ class XtbCalculationTests(CalculationUnitTest):
                 type="Minimum Energy Path",
                 in_file="elimination_substrate.xyz",
                 aux_file="elimination_product.xyz",
+                driver="orca",
                 charge=-1,
                 specifications="--nimages 3",
                 callback=partial(self.cb_has_n_conformers, 5),

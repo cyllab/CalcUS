@@ -2246,7 +2246,6 @@ def calc_to_ccinput(calc):
         "name": "in",
         "driver": calc.parameters.driver,
     }
-
     try:
         inp = generate_calculation(**params)
     except CCInputException as e:
@@ -3950,7 +3949,7 @@ def send_gcloud_task(url, payload, compute=True, size="SMALL"):
         }
     }
     task["http_request"]["body"] = payload.encode()
-
+    print(task)
     client.create_task(parent=parent, task=task)
 
 
@@ -4171,9 +4170,12 @@ def run_calc(calc_id):
     logger.info(f"Calc {calc_id} finished")
 
     if calc.local:
-        calc.billed_seconds = PAL * max(
-            1, round((calc.date_finished - calc.date_started).total_seconds())
-        )
+        if calc.date_started is None:
+            logger.error(f"Cannot bill time for calculation {calc.id}: no start date!")
+        else:
+            calc.billed_seconds = PAL * max(
+                1, round((calc.date_finished - calc.date_started).total_seconds())
+            )
 
     if calc.step.creates_ensemble:
         analyse_opt(calc.id)

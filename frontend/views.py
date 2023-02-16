@@ -1271,7 +1271,7 @@ def cloud_calc(request):
         ret = run_calc(calc.id)
     except Exception as e:
         logger.error(f"Calculation {calc.id} finished with exception {str(e)}")
-        return HttpResponse(status=500)
+        raise e
 
     if ret != 0:
         logger.warning(f"Calculation {calc.id} finished with code {ret}")

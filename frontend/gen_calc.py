@@ -52,6 +52,11 @@ def gen_param(params):
         if "solvation_radii" in params.keys():
             solvation_radii = params["solvation_radii"]
 
+    if "driver" in params.keys():
+        driver = params["driver"]
+    else:
+        driver = params["software"]
+
     if "basis_set" in params.keys():
         basis_set = params["basis_set"]
 
@@ -85,6 +90,7 @@ def gen_param(params):
         density_fitting=density_fitting,
         specifications=specifications,
         software=software,
+        driver=driver,
     )
     return p
 

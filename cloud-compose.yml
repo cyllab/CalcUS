@@ -53,11 +53,13 @@ services:
         taskqueue:
               image: raphaelrobidas/cloud-tasks-emulator:latest
               environment:
-                    QUEUE_HOST: localhost
+                    QUEUE_HOST: taskqueue # should be "localhost" for Github actions
                     QUEUE_PORT: 8123
                     QUEUE_NAME: projects/test-project/locations/us-central1/queues/xtb-compute,projects/test-project/locations/us-central1/queues/actions,projects/test-project/locations/us-central1/queues/analytics
               expose:
                     - 8123
+              depends_on:
+                    - web
         cloud-compute:
                 build:
                         context: .
@@ -80,6 +82,7 @@ services:
                 environment:
                         - CALCUS_DEBUG=True
                         - CALCUS_CLOUD=True
+                        - CALCUS_TEST=True
                         - NUM_THREADS=4
                         - NUM_WORKERS=1
                         - PORT=8001

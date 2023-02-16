@@ -1,6 +1,6 @@
 basis-set-exchange
 bleach
-ccinput>=1.6.0
+ccinput>=1.7.1
 cryptography
 Django>=3.2.17,<4
 django-appconf==1.0.4

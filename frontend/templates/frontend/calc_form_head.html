@@ -437,6 +437,11 @@ String.prototype.format = function() {
 	}
 
 	function refresh_availabilities() {
+        // Since some parameters that will change can influence which parameters should be visible, we have to execute the function twice
+        _refresh_availabilities();
+        _refresh_availabilities();
+    }
+	function _refresh_availabilities() {
 		full_options = document.querySelectorAll(".unavailable");
 		full_options.forEach(element => {
 			element.classList.remove("unavailable");
