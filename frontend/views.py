@@ -4120,29 +4120,30 @@ def download_all_logs(request, pk):
     if not can_view_order(order, request.user):
         return HttpResponse(status=403)
 
-    order_logs = {}
-    for calc in order.calculation_set.all():
-        if calc.status in [0, 1]:
-            return HttpResponse(status=204)
-
-        if len(calc.output_files) > 0:
-            order_logs[calc.id] = json.loads(calc.output_files)
-
     mem = BytesIO()
     with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zip:
-        for cid, calc in order_logs.items():
-            for logname, log in calc.items():
+        for calc in order.calculation_set.all():
+            if calc.status in [0, 1]:
+                return HttpResponse(status=204)
+
+            for logname, log in json.loads(calc.output_files).items():
                 if logname == "calc":
                     _logname = ""
                 else:
                     _logname = f"_{logname}"
+                if calc.structure:
+                    conf_num = calc.structure.number
+                else:
+                    conf_num = 1
                 zip.writestr(
-                    f"{order.molecule_name}_{calc.corresponding_ensemble.name}_{calc.step.short_name}",
+                    f"{clean_filename(order.molecule_name)}_{clean_filename(calc.corresponding_ensemble.name)}_{clean_filename(calc.step.short_name)}_conf{conf_num}.log",
                     log,
                 )
 
     response = HttpResponse(mem.getvalue(), content_type="application/zip")
-    response["Content-Disposition"] = f'attachment; filename="order_{pk}.zip"'
+    response[
+        "Content-Disposition"
+    ] = f'attachment; filename="{order.molecule_name}_order_{pk}.zip"'
     return response
 
 

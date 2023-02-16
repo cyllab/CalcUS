@@ -151,11 +151,12 @@
     </div>
     <hr id="logo_sep" />
 
+    {% if IS_CLOUD %}
     <div class="tile is-ancestor">
         <div class="tile is-6 is-parent">
             <div class="tile is-child">
-                <p class="title">Teach practical quantum chemistry</p>
-                <p class="subtitle">Students run fast semi-empirical <a href="https://github.com/grimme-lab/xtb" class="xtb_link">xTB calculations</a>  on real computing resources, no configuration required</p>
+                <p class="title">Launch state-of-the-art calculations</p>
+                <p class="subtitle">Run ridiculously fast semi-empirical <a href="https://github.com/grimme-lab/xtb" class="xtb_link">xTB calculations</a> on real computing resources, no configuration required</p>
             </div>
         </div>
         <div class="tile is-6">
@@ -174,7 +175,6 @@
         </div>
     </div>
 
-    {% if IS_CLOUD %}
     {% include "frontend/includables/pricing_table.html" %}
     {% endif %}
 

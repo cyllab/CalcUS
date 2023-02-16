@@ -126,7 +126,7 @@ String.prototype.format = function() {
                 "solvation_model": ["CPCM", "SMD"],
                 "se_method": ["AM1", "PM3"],
                 "solvation_radii": ["SMD18", "Default"],
-                "theory_level": ["xtb", "semiempirical", "hf", "dft", "mp2"],
+                "theory_level": ["semiempirical", "hf", "dft", "mp2"],
                 "driver": ["ORCA", "Pysisyphus"]
             },
             "xtb": {
@@ -157,13 +157,38 @@ String.prototype.format = function() {
         "type": {
             "Minimum Energy Path": {
                 "driver": ["ORCA", "Pysisyphus"]
+            },
+            "NMR Prediction": {
+                "driver": ["ORCA", "Gaussian"]
+            }, 
+            "Geometrical Optimisation": {
+                "driver": ["xtb", "Gaussian", "ORCA"]
+            }, 
+            "TS Optimisation": {
+                "driver": ["Pysisyphus", "Gaussian", "ORCA"]
+            }, 
+            "Frequency Calculation": {
+                "driver": ["xtb", "Gaussian", "ORCA"]
+            }, 
+            "Constrained Optimisation": {
+                "driver": ["xtb", "Gaussian", "ORCA"]
+            }, 
+            "Single-Point Energy": {
+                "driver": ["xtb", "Gaussian", "ORCA"]
+            }, 
+            "MO Calculation": {
+                "driver": ["ORCA"]
+            }, 
+            "UV-Vis Calculation": {
+                "driver": ["ORCA", "Gaussian", "xtb"]
+            }, 
+            "Conformational Search": {
+                "driver": ["xtb"]
+            }, 
+            "Constrained Conformational Search": {
+                "driver": ["xtb"]
             }
         },
-        "driver": {
-            "Pysisyphus": {
-                "type": ["Minimum Energy Path", "TS Optimisation"],
-            }
-        }
     }
     var list_available_elements = ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "xtb_method", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints"];
     var master_available = {
