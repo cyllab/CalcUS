@@ -110,7 +110,7 @@ String.prototype.format = function() {
 		{% endfor %}
 	}
 
-    var master_list_params = ["software", "type", "solvent", "solvation_model", "solvation_radii", "theory_level", "driver"];
+    var master_list_params = ["software", "type", "solvent", "solvation_model", "solvation_radii", "theory_level", "driver", "resource"];
     var master_options = {
         "software": {
             "Gaussian": {
@@ -189,6 +189,11 @@ String.prototype.format = function() {
                 "driver": ["xtb"]
             }
         },
+        "resource": {
+            "Local": {
+                "driver": [{% if "ORCA" in packages %}"ORCA", {% endif %}"Pysisyphus", "xtb"]
+            }
+        }
     }
     var list_available_elements = ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "xtb_method", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints"];
     var master_available = {
