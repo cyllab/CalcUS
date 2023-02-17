@@ -112,7 +112,13 @@ from .decorators import superuser_required
 from frontend import tasks
 from .decorators import superuser_required
 from .constants import *
-from .libxyz import parse_xyz_from_text, equivalent_atoms
+from .libxyz import (
+    parse_xyz_from_text,
+    equivalent_atoms,
+    parse_xyz_from_file,
+    create_derivative,
+    format_xyz,
+)
 from .environment_variables import *
 from .helpers import get_xyz_from_Gaussian_input, get_random_string
 
@@ -684,6 +690,12 @@ def project_details(request, user_id, proj):
 
 def clean(txt):
     filter(lambda x: x in string.printable, txt)
+    return bleach.clean(txt)
+
+
+def clean_alphanum(txt):
+    allowed = string.ascii_letters + string.digits + "_-,"
+    filter(lambda x: x in allowed, txt)
     return bleach.clean(txt)
 
 
@@ -1746,7 +1758,7 @@ def submit_flowchart_input(request):
                 name=new_project_name, author=request.user
             )
         else:
-            logger.info("Project with that name already exists")
+            return "Project with that name already exists"
     else:
         try:
             project_set = profile.project_set.filter(name=project)
@@ -2190,6 +2202,8 @@ def _submit_calculation(request, verify=False):
             )
             orders.append(obj)
     else:
+
+        print("YES")
         combine = ""
         if "calc_combine_files" in request.POST:
             combine = clean(request.POST["calc_combine_files"])
@@ -2204,6 +2218,21 @@ def _submit_calculation(request, verify=False):
             if mol_name == "":
                 return "Missing molecule name"
 
+        gen_derivatives = False
+        if "calc_gen_derivatives" in request.POST:
+            gen_checkbox = clean(request.POST["calc_gen_derivatives"])
+            if gen_checkbox == "on":
+                gen_derivatives = True
+
+            if "calc_list_derivatives" not in request.POST:
+                return "No derivative specified!"
+
+            deriv_data = request.POST.getlist("calc_list_derivatives")
+            derivatives = [clean_alphanum(i) for i in deriv_data]
+
+            if len(derivatives) == 0:
+                return "No derivative specified!"
+
         if (
             len(request.FILES) > 0
         ):  # Can't really verify file uploads before actually processing the files
@@ -2212,18 +2241,25 @@ def _submit_calculation(request, verify=False):
             uploaded_files = {}
 
             for ind, ff in enumerate(request.FILES.getlist("file_structure")):
-                ss = handle_file_upload(ff, is_local)
+                ss = handle_file_upload(ff, is_local, verify=gen_derivatives)
                 if isinstance(ss, str):
                     return ss
 
-                struct, filename = ss
+                if gen_derivatives:
+                    xyz_structure, filename = ss
+                else:
+                    struct, filename = ss
+                    xyz_structure = struct.xyz_structure
 
                 electrons = 0
-                for line in struct.xyz_structure.split("\n")[2:]:
+                for line in xyz_structure.split("\n")[2:]:
                     if line.strip() == "":
                         continue
                     el = line.split()[0]
                     electrons += ATOMIC_NUMBER[el]
+                    if el == "He":
+                        # Assume that substituents form a single bond
+                        electrons -= 1
 
                 _charge = _params["charge"]
                 _multiplicity = _params["multiplicity"]
@@ -2245,11 +2281,44 @@ def _submit_calculation(request, verify=False):
                 if odd_e == odd_m:
                     return "Impossible charge/multiplicity combination"
 
-                sparams = struct.properties.first().parameters
-                sparams.charge = _charge
-                sparams.multiplicity = _multiplicity
-                sparams.save()
-                uploaded_files[filename] = struct
+                if gen_derivatives:
+                    init_params = Parameters.objects.create(
+                        software="CalcUS",
+                        method="Unknown",
+                        basis_set="",
+                        solvation_model="",
+                        charge=_charge,
+                        multiplicity=_multiplicity,
+                    )
+
+                    for sub in derivatives:
+                        if not os.path.join(
+                            "/calcus/frontend/substituents", f"{sub}.xyz"
+                        ):  # Docker only
+                            logger.warning(f"Substituent {sub} does not exist")
+                            continue
+
+                        sub_xyz = parse_xyz_from_file(
+                            os.path.join("/calcus/frontend/substituents", f"{sub}.xyz")
+                        )
+
+                        derivative_xyz = create_derivative(
+                            parse_xyz_from_text(xyz_structure), sub_xyz
+                        )
+
+                        s = Structure.objects.create(
+                            xyz_structure=format_xyz(derivative_xyz)
+                        )
+                        p = Property.objects.create(
+                            parent_structure=s, parameters=init_params, geom=True
+                        )
+                        uploaded_files[f"{filename}_{sub}"] = s
+                else:
+                    sparams = struct.properties.first().parameters
+                    sparams.charge = _charge
+                    sparams.multiplicity = _multiplicity
+                    sparams.save()
+                    uploaded_files[filename] = struct
 
             if not verify:
                 # Process the files
@@ -2327,7 +2396,6 @@ def _submit_calculation(request, verify=False):
                             mol = Molecule.objects.create(
                                 name=mol_name, inchi=fing, project=project_obj
                             )
-                            mol.save()
 
                             e = Ensemble.objects.create(
                                 name="File Upload", parent_molecule=mol
@@ -2415,21 +2483,21 @@ def _submit_calculation(request, verify=False):
                             uploaded_files.items()
                         ):
                             # fing = gen_fingerprint(struct)
-                            fing = str(random.random())
-                            if fing in unique_molecules.keys():
-                                unique_molecules[fing].append(struct)
-                            else:
-                                unique_molecules[fing] = [struct]
+                            # fing = str(random.random())
+                            # if fing in unique_molecules.keys():
+                            #    unique_molecules[fing].append(struct)
+                            # else:
+                            unique_molecules[filename] = [struct]
 
                         params = Parameters.objects.create(**_params)
 
-                        for ind, (fing, arr_struct) in enumerate(
+                        for ind, (filename, arr_struct) in enumerate(
                             unique_molecules.items()
                         ):
                             if len(unique_molecules.keys()) > 1:
                                 mol = Molecule.objects.create(
-                                    name=f"{mol_name} set {ind + 1}",
-                                    inchi=fing,
+                                    name=filename,
+                                    # inchi=fing,
                                     project=project_obj,
                                 )
                             else:

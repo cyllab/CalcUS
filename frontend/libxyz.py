@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import json
 import numpy as np
 import periodictable
+import copy
 from .constants import *
 
 from hashlib import md5
@@ -121,16 +122,15 @@ def parse_multixyz_from_file(f, ind=0):
     return multixyz, energies
 
 
-def get_connectivity(xyz):
-    """Returns a list of pairs of bonded atoms"""
-    TOLERANCE = 1.1
+def get_connectivity(xyz, tolerance=1.15, He_radius=0.28):
+    """Returns a list of pairs of bonded atoms (one-indexed)"""
     bonds = []
 
     def bond_unique(ind1, ind2):
         for bond in bonds:
-            if bond[0] == ind1 and bond[1] == ind2:
+            if bond[0] == ind1 + 1 and bond[1] == ind2 + 1:
                 return False
-            if bond[0] == ind2 and bond[1] == ind1:
+            if bond[0] == ind2 + 1 and bond[1] == ind1 + 1:
                 return False
         return True
 
@@ -138,25 +138,38 @@ def get_connectivity(xyz):
         for ind2, j in enumerate(xyz):
             if ind1 > ind2:
                 d = get_distance(xyz, ind1 + 1, ind2 + 1)
-                cov = (
-                    periodictable.elements[ATOMIC_NUMBER[i[0]]].covalent_radius
-                    + periodictable.elements[ATOMIC_NUMBER[j[0]]].covalent_radius
-                )
+                cov = get_cov_radius(i[0], He_radius) + get_cov_radius(j[0], He_radius)
 
-                if d < cov * TOLERANCE and bond_unique(ind1, ind2):
-                    bonds.append([ind1, ind2])
+                if d < cov * tolerance and bond_unique(ind1, ind2):
+                    bonds.append([ind2 + 1, ind1 + 1])
     return bonds
 
 
-def get_neighbors_lists(xyz):
-    """Returns a list neighbors (bonded atoms) for each atom"""
-    bonds = get_connectivity(xyz)
+def get_cov_bond_length(xyz, a, b):
+    ela = xyz[a - 1][0]
+    elb = xyz[b - 1][0]
+
+    cova = getattr(periodictable.elements, ela).covalent_radius
+    covb = getattr(periodictable.elements, elb).covalent_radius
+    return 1.1 * (cova + covb)
+
+
+def get_cov_radius(element, He_radius=0.28):
+    if element == "He":
+        return He_radius
+    else:
+        return periodictable.elements[ATOMIC_NUMBER[element]].covalent_radius
+
+
+def get_neighbors_lists(xyz, tolerance=1.1, He_radius=0.28):
+    """Returns a list neighbors (bonded atoms) for each atom, zero-indexed"""
+    bonds = get_connectivity(xyz, tolerance=tolerance, He_radius=He_radius)
     neighbors = [[] for i in range(len(xyz))]
 
     for bond in bonds:
         a, b = bond
-        neighbors[a].append(b)
-        neighbors[b].append(a)
+        neighbors[a - 1].append(b - 1)
+        neighbors[b - 1].append(a - 1)
 
     return neighbors
 
@@ -258,3 +271,135 @@ def format_xyz(xyz):
     for line in xyz:
         str_xyz += "{} {:.4f} {:.4f} {:.4f}\n".format(line[0], *line[1])
     return str_xyz
+
+
+def rotation_matrix_from_vectors(vec1, vec2):
+    """Find the rotation matrix that aligns vec1 to vec2
+    :param vec1: A 3d "source" vector
+    :param vec2: A 3d "destination" vector
+    :return mat: A transform matrix (3x3) which when applied to vec1, aligns it with vec2.
+    """
+    a, b = (vec1 / np.linalg.norm(vec1)).reshape(3), (
+        vec2 / np.linalg.norm(vec2)
+    ).reshape(3)
+    v = np.cross(a, b)
+    c = np.dot(a, b)
+    s = np.linalg.norm(v)
+    kmat = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+    rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s**2))
+    return rotation_matrix
+
+
+# https://stackoverflow.com/questions/6802577/rotation-of-3d-vector
+def rotation_matrix_around_axis(axis, theta):
+    return expm(cross(eye(3), axis / norm(axis) * theta))
+
+
+def rotate_around_axis(xyz, full_xyz, axis, theta):
+    pos_i = copy.deepcopy(xyz[13])
+    M = rotation_matrix_around_axis(axis, theta)
+
+    xyz = M.dot(xyz.T)
+
+    delta = pos_i - xyz.T[13]
+    final = []
+    for l, ll in zip(full_xyz, xyz.T):
+        final.append([l[0], ll + delta])
+    return final
+
+
+def rotate_around_axis_without_centering(xyz, axis, theta):
+    M = rotation_matrix_around_axis(axis, theta)
+    _xyz = copy.deepcopy([i[1] for i in xyz])
+    _xyz = np.array(_xyz)
+
+    _xyz = M.dot(_xyz.T)
+
+    final = []
+    for l, ll in zip(xyz, _xyz.T):
+        final.append([l[0], ll])
+    return final
+
+
+def align_xyz(xyz, v1, v2):
+    origin = xyz[0][1]
+    # v1 = xyz[1][1] - xyz[0][1]
+    R = rotation_matrix_from_vectors(v1, v2)
+
+    _xyz = []
+    for l in xyz:
+        _xyz.append(l[1] - origin)
+    _xyz = np.array(_xyz)
+    _xyz = R.dot(_xyz.T)
+    final = []
+    for l, ll in zip(xyz, _xyz.T):
+        final.append([l[0], ll])
+    return final
+
+
+def shift_xyz(xyz, vec):
+    _xyz = []
+    for l in xyz:
+        _l = l
+        _l[1] += vec
+        _xyz.append(_l)
+    return _xyz
+
+
+def create_derivative(base_xyz, sub_xyz):
+    """
+    Takes in 1 XYZ with one or multiple He atoms representing the desired substitution points and
+    a list of substituent names and XYZ representing the substituents in labeling order.
+    """
+
+    base_conn = get_neighbors_lists(base_xyz, He_radius=1.3)
+    sub_pos = [i for i in range(len(base_xyz)) if base_xyz[i][0] == "He"]
+
+    if len(sub_pos) > 1:
+        print("Cannot do substitution at multiple sites for now")
+        return
+
+    pos = sub_pos[0]
+
+    vecs = []
+
+    # for ind, (pos, _sub_xyz, sub_name) in enumerate(zip(sub_pos, subs, sub_names)):
+    if len(base_conn[pos]) != 1:
+        print("Improper substitution on the substrate for atom {}".format(pos))
+        exit(0)
+
+    xyz = copy.deepcopy(base_xyz)
+
+    neigh = base_conn[pos][0]
+    vec = np.array(base_xyz[base_conn[pos][0]][1]) - np.array(base_xyz[pos][1])
+    vec = vec / np.linalg.norm(vec)
+
+    anchor = [i for i in range(len(sub_xyz)) if sub_xyz[i][0] == "He"]
+    if len(anchor) != 1:
+        print("Invalid substituent: {}".format(sub))
+        return
+
+    anchor = anchor[0]
+
+    conn = get_neighbors_lists(sub_xyz, He_radius=1.4)
+    anchor_neigh = conn[anchor]
+    if len(anchor_neigh) != 1:
+        print("Could not find proper substitution bond: {}".format(sub))
+        return
+    sub_neigh = anchor_neigh[0]
+
+    sub_vec = np.array(sub_xyz[anchor_neigh[0]][1]) - np.array(sub_xyz[anchor][1])
+
+    aligned_sub_xyz = align_xyz(sub_xyz, -sub_vec, vec)
+    ideal_bond_length = get_cov_radius(sub_xyz[sub_neigh][0]) + get_cov_radius(
+        xyz[neigh][0]
+    )
+
+    moved_sub_xyz = shift_xyz(
+        aligned_sub_xyz,
+        xyz[neigh][1] - aligned_sub_xyz[sub_neigh][1] - vec * ideal_bond_length,
+    )
+
+    xyz += moved_sub_xyz
+
+    return [i for i in xyz if i[0] != "He"]

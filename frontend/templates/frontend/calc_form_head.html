@@ -333,6 +333,16 @@ String.prototype.format = function() {
 
 	{% endif %}
 
+	function calc_deriv_changed(checkbox) {
+        list = document.getElementById("calc_list_derivatives");
+        if(checkbox.checked) {
+            list.style.display = "block";
+        }
+	    else {
+            list.style.display = "none";
+        }
+	}
+
 	function calc_selection_changed() {
 		{% if is_flowchart is None %}
 			choice = document.getElementById("calc_type");
