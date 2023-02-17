@@ -2202,7 +2202,6 @@ def _submit_calculation(request, verify=False):
             )
             orders.append(obj)
     else:
-
         print("YES")
         combine = ""
         if "calc_combine_files" in request.POST:
