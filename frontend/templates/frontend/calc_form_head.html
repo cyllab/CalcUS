@@ -119,7 +119,7 @@ String.prototype.format = function() {
                 "se_method": ["AM1", "PM3", "PM6", "PM7"],
                 "solvation_radii": ["SMD18", "Default", "UFF", "UA0", "UAHF", "UAKS", "Pauling", "Bondi"],
                 "theory_level": ["semiempirical", "hf", "dft"],
-                "driver": ["Gaussian", "Pysisyphus"]
+                "driver": ["Gaussian"]
             },
             "ORCA": {
                 "type": ["NMR Prediction", "Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "MO Calculation", "Minimum Energy Path"],
@@ -191,7 +191,8 @@ String.prototype.format = function() {
         },
         "resource": {
             "Local": {
-                "driver": [{% if "ORCA" in packages %}"ORCA", {% endif %}"Pysisyphus", "xtb"]
+                "driver": [{% if "Gaussian" in packages %}"Gaussian", {% endif %}{% if "ORCA" in packages %}"ORCA", {% endif %}"Pysisyphus", "xtb"],
+                "software": [{% if "Gaussian" in packages %}"Gaussian", {% endif %}{% if "ORCA" in packages %}"ORCA", {% endif %} "xtb"]
             }
         }
     }

@@ -35,6 +35,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.keys import Keys
 
+from django.conf import settings
 from django.core.management import call_command
 from django.contrib.auth.models import User, Group
 
@@ -1345,6 +1346,135 @@ class InterfaceTests(CalcusLiveServer):
         self.click_folder(folder_name)
         self.assertEqual(self.get_number_folders(), 0)
         self.assertEqual(self.get_number_folder_ensembles(), 0)
+
+
+class LaunchParametersTests(CalcusLiveServer):
+    def setUp(self):
+        super().setUp()
+
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+        g.save()
+
+        self.login(self.email, self.password)
+
+    def get_drivers(self):
+        return [
+            i.text
+            for i in Select(self.driver.find_element(By.NAME, "calc_driver")).options
+            if "none" not in i.get_attribute("style")
+        ]
+
+    def choose_type(self, name):
+        self.driver.find_element(
+            By.XPATH, f"//*[@name='calc_type']/option[text()='{name}']"
+        ).click()
+        self.wait_for_ajax()
+
+    def tearDown(self):
+        settings.IS_CLOUD = False
+        settings.PACKAGES = ["xtb", "Gaussian", "ORCA"]
+
+    def test_baseline(self):
+        self.lget("/launch/")
+
+        select = Select(self.driver.find_element(By.NAME, "calc_software"))
+        select.select_by_visible_text("xtb")
+        self.wait_for_ajax()
+
+        drivers = self.get_drivers()
+        self.assertIn("xtb", drivers)
+        self.assertIn("ORCA", drivers)
+        # Pysisyphus only for TS optimizations and MEP calculations
+        self.assertEqual(len(drivers), 2)
+
+        self.choose_type("TS Optimisation")
+
+        drivers = self.get_drivers()
+        self.assertIn("ORCA", drivers)
+        self.assertIn("Pysisyphus", drivers)
+        self.assertEqual(len(drivers), 2)
+
+        select = Select(self.driver.find_element(By.NAME, "calc_software"))
+        select.select_by_visible_text("Gaussian")
+        self.wait_for_ajax()
+
+        drivers = self.get_drivers()
+
+        self.assertIn("Gaussian", drivers)
+        self.assertEqual(len(drivers), 1)
+
+    def test_missing_package(self):
+        settings.PACKAGES = ["xtb", "Gaussian"]
+
+        self.lget("/launch/")
+
+        select = Select(self.driver.find_element(By.NAME, "calc_software"))
+
+        self.assertEqual(
+            len(
+                [
+                    i.text
+                    for i in select.options
+                    if "none" not in i.get_attribute("style")
+                ]
+            ),
+            2,
+        )
+
+        select.select_by_visible_text("xtb")
+        self.wait_for_ajax()
+
+        drivers = self.get_drivers()
+
+        self.assertIn("xtb", drivers)
+        self.assertEqual(len(drivers), 1)
+
+        self.choose_type("TS Optimisation")
+
+        drivers = self.get_drivers()
+        self.assertIn("Pysisyphus", drivers)
+        self.assertEqual(len(drivers), 1)
+
+        select = Select(self.driver.find_element(By.NAME, "calc_software"))
+        select.select_by_visible_text("Gaussian")
+        self.wait_for_ajax()
+
+        drivers = self.get_drivers()
+
+        self.assertIn("Gaussian", drivers)
+        self.assertEqual(len(drivers), 1)
+
+    def test_cloud_drivers(self):
+        settings.IS_CLOUD = True
+        settings.PACKAGES = ["xtb", "Gaussian", "ORCA"]
+
+        self.lget("/launch/")
+
+        select = Select(self.driver.find_element(By.NAME, "calc_software"))
+
+        self.assertEqual(
+            len(
+                [
+                    i.text
+                    for i in select.options
+                    if "none" not in i.get_attribute("style") and i.is_enabled()
+                ]
+            ),
+            1,
+        )
+
+        select.select_by_visible_text("xtb")
+        self.wait_for_ajax()
+
+        drivers = self.get_drivers()
+        self.assertIn("xtb", drivers)
+        self.assertEqual(len(drivers), 1)
+
+        self.choose_type("TS Optimisation")
+
+        drivers = self.get_drivers()
+        self.assertIn("Pysisyphus", drivers)
+        self.assertEqual(len(drivers), 1)
 
 
 class UserPermissionsTests(CalcusLiveServer):

@@ -225,9 +225,9 @@
                     <div class="control" >
                         <div class="select wide_select">
                             <select name="calc_software" id="calc_software" onchange="refresh_availabilities();">
-                                <option {% if 'xtb' not in packages and IS_CLOUD %} disabled{% endif %}>xtb</option>
-                                <option {% if 'ORCA' not in packages and IS_CLOUD %} disabled{% endif %}>ORCA</option>
-                                <option {% if 'Gaussian' not in packages and IS_CLOUD %} disabled{% endif %}>Gaussian</option>
+                                <option>xtb</option>
+                                <option {% if IS_CLOUD %} disabled{% endif %}>ORCA</option>
+                                <option {% if IS_CLOUD %} disabled{% endif %}>Gaussian</option>
                             </select>
                         </div>
                     </div>
@@ -241,8 +241,8 @@
                         <div class="select wide_select">
                             <select name="calc_driver" id="calc_driver" onchange="refresh_availabilities();">
                                 <option value="xtb" selected>xtb</option>
-                                <option value="Gaussian" selected>Gaussian</option>
-                                <option value="ORCA" selected>ORCA</option>
+                                {% if not IS_CLOUD %}<option value="Gaussian" selected>Gaussian</option>{% endif %}
+                                {% if not IS_CLOUD %}<option value="ORCA" selected>ORCA</option>{% endif %}
                                 <option value="Pysisyphus">Pysisyphus</option>
                             </select>
                         </div>
