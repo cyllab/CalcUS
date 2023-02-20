@@ -167,7 +167,7 @@ class IndexView(generic.ListView):
                 hits = target_user.calculationorder_set.filter(hidden=False).exclude(
                     author=None
                 )
-            elif mode == "All orders":
+            else:  # mode == "All orders" or invalid parameters
                 hits = target_user.calculationorder_set.all().exclude(author=None)
 
             if proj != "All projects":
@@ -662,6 +662,12 @@ def project_details(request, user_id, proj):
     if user_intersection(target_user, request.user):
         try:
             project = target_user.project_set.get(name=target_project)
+        except Project.MultipleObjectsReturned:
+            # Should not happen anymore
+            logger.warning(
+                f"Multiple projects with name '{target_project}' for user {target_user.id}, considering the first one..."
+            )
+            project = target_user.project_set.filter(name=target_project).first()
         except Project.DoesNotExist:
             return HttpResponseRedirect("/home/")
 
@@ -2202,7 +2208,6 @@ def _submit_calculation(request, verify=False):
             )
             orders.append(obj)
     else:
-        print("YES")
         combine = ""
         if "calc_combine_files" in request.POST:
             combine = clean(request.POST["calc_combine_files"])
@@ -4335,9 +4340,12 @@ def launch(request):
             params["resource"] = o.resource.cluster_address
 
         params["ensemble"] = e
-        if "structures" in request.POST.keys():
+        if (
+            "structures" in request.POST.keys()
+            and clean(request.POST["structures"]).strip() != ""
+        ):
             s_str = clean(request.POST["structures"])
-            s_nums = [int(i) for i in s_str.split(",")]
+            s_nums = [int(i) for i in s_str.split(",") if i.strip() != ""]
 
             try:
                 struct = e.structure_set.get(number=s_nums[0])
@@ -4350,6 +4358,7 @@ def launch(request):
                 if s_num not in avail_nums:
                     return HttpResponse(status=404)
 
+            # TODO: catch possible edge cases
             init_params = struct.properties.all()[0].parameters
 
             params["structures"] = s_str
