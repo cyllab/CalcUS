@@ -1,4 +1,5 @@
 from django.contrib import sitemaps
+from django.urls import reverse
 
 
 class CalcUSSitemap(sitemaps.Sitemap):
@@ -6,7 +7,7 @@ class CalcUSSitemap(sitemaps.Sitemap):
     changefreq = "monthly"
 
     def items(self):
-        return ["home", "pricing"]
+        return ["frontend:home", "frontend:pricing"]
 
     def location(self, item):
-        return f"/{item}/"
+        return reverse(item)

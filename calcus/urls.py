@@ -33,7 +33,7 @@ sitemaps = {
 }
 
 urlpatterns = [
-    path("", include("frontend.urls")),
+    path("", include("frontend.urls", namespace="frontend")),
     path("accounts/", include("django.contrib.auth.urls")),
     path(
         "sitemap.xml",
