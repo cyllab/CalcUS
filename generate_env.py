@@ -209,7 +209,7 @@ if local_calc:
     print("\n")
     while True:
         n = input(
-            "How many MB of RAM per core do you want CalcUS to use for local calculations? (e.g. 1)\n"
+            "How many MB of RAM per core do you want CalcUS to use for local calculations? (e.g. 1024)\n"
         )
         try:
             mem = int(n)

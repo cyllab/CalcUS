@@ -7,7 +7,6 @@ services:
 
         web:
                 image: raphaelrobidas/calcus2:latest
-                restart: always
                 hostname: web
                 user: "${UID}:${GID}"
                 command: ./scripts/run_web.sh
@@ -81,7 +80,6 @@ services:
                         - redis
         postgres:
                 image: postgres:11-bullseye
-                restart: always
                 user: "${UID}:${GID}"
                 command: postgres -c config_file=/etc/postgresql/postgresql.conf
                 volumes:

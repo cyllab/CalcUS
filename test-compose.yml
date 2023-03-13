@@ -94,7 +94,6 @@ services:
                         - SCREEN_HEIGHT=1080
         postgres:
                 image: postgres:11-bullseye
-                restart: always
                 user: "${UID}:${GID}"
                 volumes:
                         - ./data:/var/lib/postgresql/data/:rw

@@ -24,9 +24,23 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.conf import settings
 from django.conf.urls.static import static
 
+from django.contrib.sitemaps.views import sitemap
+
+from .sitemaps import CalcUSSitemap
+
+sitemaps = {
+    "static": CalcUSSitemap,
+}
+
 urlpatterns = [
     path("", include("frontend.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
+    path(
+        "sitemap.xml",
+        sitemap,
+        {"sitemaps": sitemaps},
+        name="django.contrib.sitemaps.views.sitemap",
+    ),
 ]
 
 handler404 = "frontend.views.handler404"
