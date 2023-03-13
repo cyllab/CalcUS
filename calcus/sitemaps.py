@@ -1,5 +1,4 @@
 from django.contrib import sitemaps
-from django.urls import reverse
 
 
 class CalcUSSitemap(sitemaps.Sitemap):
@@ -10,4 +9,4 @@ class CalcUSSitemap(sitemaps.Sitemap):
         return ["home", "pricing"]
 
     def location(self, item):
-        return reverse(item)
+        return f"/{item}/"
