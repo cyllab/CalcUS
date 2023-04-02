@@ -33,6 +33,7 @@ def create_container_job(calc_id: str) -> batch_v1.Job:
     instances.policy = policy
     allocation_policy = batch_v1.AllocationPolicy()
     allocation_policy.instances = [instances]
+    allocation_policy.service_account = settings.COMPUTE_SERVICE_ACCOUNT
 
     job = batch_v1.Job()
     job.task_groups = [group]
@@ -45,7 +46,7 @@ def create_container_job(calc_id: str) -> batch_v1.Job:
 
     create_request = batch_v1.CreateJobRequest()
     create_request.job = job
-    create_request.job_id = calc_id.lower()
+    create_request.job_id = "j" + calc_id.lower()
 
     create_request.parent = (
         f"projects/{settings.GCP_PROJECT_ID}/locations/{settings.GCP_LOCATION}"
