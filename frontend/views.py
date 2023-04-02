@@ -1285,6 +1285,10 @@ def cloud_calc(request):
         logger.error(f"Could not find calculation number {body}")
         return HttpResponse(status=400)
 
+    from frontend.cloud_job import create_container_job
+
+    create_container_job(calc.id)
+    """
     try:
         ret = run_calc(calc.id)
     except Exception as e:
@@ -1293,8 +1297,10 @@ def cloud_calc(request):
 
     if ret != 0:
         logger.warning(f"Calculation {calc.id} finished with code {ret}")
+        calc.refresh_from_db()
         calc.status = 3
         calc.save()
+    """
 
     return HttpResponse(status=200)
 
