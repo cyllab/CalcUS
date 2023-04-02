@@ -1287,7 +1287,7 @@ def cloud_calc(request):
 
     from frontend.cloud_job import create_container_job
 
-    create_container_job(calc.id)
+    create_container_job(str(calc.id))
     """
     try:
         ret = run_calc(calc.id)
