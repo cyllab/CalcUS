@@ -31,9 +31,12 @@ def create_container_job(calc_id: str) -> batch_v1.Job:
     policy.machine_type = "e2-standard-4"
     instances = batch_v1.AllocationPolicy.InstancePolicyOrTemplate()
     instances.policy = policy
+    acc = batch_v1.ServiceAccount()
+    acc.email = settings.COMPUTE_SERVICE_ACCOUNT
+
     allocation_policy = batch_v1.AllocationPolicy()
     allocation_policy.instances = [instances]
-    allocation_policy.service_account = settings.COMPUTE_SERVICE_ACCOUNT
+    allocation_policy.service_account = acc
 
     job = batch_v1.Job()
     job.task_groups = [group]
