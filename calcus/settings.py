@@ -69,6 +69,9 @@ if STRIPE_SECRET_KEY and IS_CLOUD:
 
 SUBSCRIPTION_ACADEMIC_MONTHLY = os.getenv("SUBSCRIPTION_ACADEMIC_MONTHLY", "")
 
+# On Google Cloud, the URI of the secret containing the PostgreSQL password (for compute instances)
+POSTGRES_SECRET_URI = os.getenv("POSTGRES_SECRET_URI", "")
+
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
 POSTGRES_USER = os.environ.get("POSTGRES_USER", "calcus")

@@ -14,7 +14,7 @@ def create_container_job(calc_id: str) -> batch_v1.Job:
     runnable.container.commands = ["python", "manage.py", "run_calc", calc_id]
 
     env = batch_v1.Environment()
-    env.secret_variables = {"POSTGRES_PASSWORD": "postgres-password"}
+    env.secret_variables = {"POSTGRES_PASSWORD": settings.POSTGRES_SECRET_URI}
     env.variables = {
         "POSTGRES_USER": settings.POSTGRES_USER,
         "POSTGRES_HOST": os.environ.get(
