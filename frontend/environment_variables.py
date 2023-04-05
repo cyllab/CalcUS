@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 
 is_test = "CALCUS_TEST" in os.environ
+is_compute = "CALCUS_COMPUTE" in os.environ
 
 if is_test:
     if "GITHUB_WORKSPACE" in os.environ:
@@ -37,12 +38,14 @@ if is_test:
         prefix, os.environ.get("CALCUS_TEST_KEY_HOME", "scratch/keys")
     )
 else:
+    CALCUS_KEY_HOME = os.getenv("CALCUS_KEY_HOME", "")
+
     if "CALCUS_CLOUD" in os.environ:
         CALCUS_SCR_HOME = os.getenv("CALCUS_SCR_HOME", "/tmp")
-        CALCUS_KEY_HOME = os.getenv("CALCUS_KEY_HOME", "")
+    elif is_compute:
+        CALCUS_SCR_HOME = os.getenv("CALCUS_SCR_HOME", "/calcus/")
     else:
         CALCUS_SCR_HOME = os.getenv("CALCUS_SCR_HOME", "")
-        CALCUS_KEY_HOME = os.getenv("CALCUS_KEY_HOME", "")
 
 PAL = int(os.getenv("NUM_CPU", "1"))
 

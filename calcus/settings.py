@@ -24,6 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 IS_CLOUD = "CALCUS_CLOUD" in os.environ
 IS_TEST = "CALCUS_TEST" in os.environ
+IS_COMPUTE = "CALCUS_COMPUTE" in os.environ
 
 try:
     DEBUG = os.environ["CALCUS_DEBUG"]
@@ -32,7 +33,7 @@ except:
 else:
     DEBUG = True
 
-if IS_TEST or DEBUG:
+if IS_TEST or DEBUG or IS_COMPUTE:
     SECRET_KEY = "testkey"
     SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]
     HOST_URL = "http://localhost:8080"

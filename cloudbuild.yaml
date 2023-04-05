@@ -2,7 +2,7 @@ steps:
 - name: 'gcr.io/cloud-builders/gsutil'
   args: ['cp', 'gs://$_CONFIG_BUCKET/cloud_config.json', 'frontend/cloud_config.json']
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/$_PROJECT_ID:$COMMIT_SHA', '-f', 'Cloud_dockerfile', '.']
+  args: ['build', '-t', 'gcr.io/$_PROJECT_ID:$COMMIT_SHA', '-t', 'gcr.io/$_PROJECT_ID:latest', '-f', 'Cloud_dockerfile', '.']
   timeout: 500s
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/$_PROJECT_ID:$COMMIT_SHA']

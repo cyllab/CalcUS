@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 
 from google.cloud import batch_v1
@@ -10,6 +12,19 @@ def create_container_job(calc_id: str) -> batch_v1.Job:
     runnable.container = batch_v1.Runnable.Container()
     runnable.container.image_uri = settings.COMPUTE_IMAGE
     runnable.container.commands = ["python", "manage.py", "run_calc", calc_id]
+
+    env = batch_v1.Environment()
+    env.secret_variables = {"POSTGRES_PASSWORD": "postgres-password"}
+    env.variables = {
+        "POSTGRES_USER": settings.POSTGRES_USER,
+        "POSTGRES_HOST": os.environ.get(
+            "COMPUTE_POSTGRES_HOST", settings.POSTGRES_HOST
+        ),
+        "CALCUS_COMPUTE": "True",
+        # set NUM_CPU and OMP_STACKSIZE
+    }
+
+    runnable.environment = env
 
     task = batch_v1.TaskSpec()
     task.runnables = [runnable]
