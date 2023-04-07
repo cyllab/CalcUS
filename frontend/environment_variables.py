@@ -20,10 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 
-is_test = "CALCUS_TEST" in os.environ
-is_compute = "CALCUS_COMPUTE" in os.environ
+IS_TEST = "CALCUS_TEST" in os.environ
+IS_COMPUTE = "CALCUS_COMPUTE" in os.environ
 
-if is_test:
+if IS_TEST:
     if "GITHUB_WORKSPACE" in os.environ:
         prefix = os.environ["GITHUB_WORKSPACE"]
         CALCUS_CACHE_HOME = os.path.join(prefix, "frontend", "tests", "cache")

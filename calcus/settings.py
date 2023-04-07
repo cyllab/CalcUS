@@ -62,7 +62,7 @@ STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_ENDPOINT_SECRET = os.getenv("STRIPE_ENDPOINT_SECRET", "")
 
-if STRIPE_SECRET_KEY and IS_CLOUD:
+if STRIPE_SECRET_KEY and (IS_CLOUD or IS_TEST):
     import stripe
 
     stripe.api_key = STRIPE_SECRET_KEY
@@ -288,6 +288,22 @@ SESSION_COOKIE_NAME = "CALCUS_SESSION_COOKIE"
 
 PACKAGES = ["xtb"]
 
+# For the Cloud version
+RESOURCE_LIMITS = {
+    "trial": {
+        "nproc": 4,
+        "time": 5,  # minutes
+    },
+    "free": {
+        "nproc": 8,
+        "time": 15,
+    },
+    "subscriber": {
+        "nproc": 8,
+        "time": 120,
+    },
+}
+
 if IS_CLOUD:
     PING_SATELLITE = False
 
@@ -295,8 +311,7 @@ if IS_CLOUD:
     GCP_LOCATION = os.getenv("GCP_LOCATION")
     GCP_SERVICE_ACCOUNT_EMAIL = os.getenv("GCP_SERVICE_ACCOUNT_EMAIL")
     COMPUTE_SMALL_HOST_URL = os.getenv("COMPUTE_SMALL_HOST_URL")
-    COMPUTE_MEDIUM_HOST_URL = os.getenv("COMPUTE_MEDIUM_HOST_URL")
-    COMPUTE_LARGE_HOST_URL = os.getenv("COMPUTE_LARGE_HOST_URL")
+
     ACTION_HOST_URL = os.getenv("ACTION_HOST_URL", COMPUTE_SMALL_HOST_URL)
     COMPUTE_IMAGE = os.getenv("COMPUTE_IMAGE")
     COMPUTE_SERVICE_ACCOUNT = os.getenv("COMPUTE_SERVICE_ACCOUNT")
@@ -306,8 +321,10 @@ if IS_CLOUD:
 
     ALLOW_TRIAL = True
 
-    # Give 300 free CPU-seconds for trial
-    TRIAL_DEFAULT_COMP_SECONDS = 300
+    # Give 600 free CPU-seconds for trial
+    TRIAL_DEFAULT_COMP_SECONDS = 600
+
+    FREE_DEFAULT_COMP_SECONDS = 3600
 
     LOCAL_MAX_ATOMS = 200
 

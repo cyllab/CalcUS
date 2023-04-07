@@ -72,13 +72,13 @@ CONNECTION_MESSAGES = {
     ConnectionCodes.SOCKET_RECEIVE_ERROR: "Unknown connection error",
 }
 try:
-    is_test = os.environ["CALCUS_TEST"]
-    if is_test.lower() == "false":
-        is_test = False
+    IS_TEST = os.environ["CALCUS_TEST"]
+    if IS_TEST.lower() == "false":
+        IS_TEST = False
     else:
-        is_test = True
+        IS_TEST = True
 except:
-    is_test = False
+    IS_TEST = False
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calcus.settings")
@@ -290,7 +290,7 @@ class ClusterDaemon:
 
         if lines[0].strip() == "stop":
             logger.info("Stopping the daemon")
-            if not is_test:
+            if not IS_TEST:
                 for conn_id in list(self.connections.keys()):
                     self.disconnect(conn_id)
 
@@ -438,7 +438,7 @@ class ClusterDaemon:
     def __init__(self):
         tasks.REMOTE = True
 
-        if not is_test:
+        if not IS_TEST:
             t = threading.Thread(target=self.ping_daemon)
             t.start()
 

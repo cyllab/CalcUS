@@ -59,7 +59,7 @@ class ResearcherCreateForm(UserCreationForm):
     def save(self, commit=True):
         user = super(ResearcherCreateForm, self).save(commit=False)
         user.email = self.cleaned_data["email"]
-        user.allocated_seconds = 600
+        user.allocated_seconds = settings.FREE_DEFAULT_COMP_SECONDS
         user.last_free_refill = timezone.now()
 
         if commit:
@@ -67,7 +67,7 @@ class ResearcherCreateForm(UserCreationForm):
             r = ResourceAllocation.objects.create(
                 code=get_random_string(),
                 redeemer=user,
-                allocation_seconds=600,
+                allocation_seconds=settings.FREE_DEFAULT_COMP_SECONDS,
                 note=ResourceAllocation.NEW_ACCOUNT,
             )
 
@@ -218,7 +218,9 @@ class CreateFullAccountForm(SetPasswordForm, ModelForm):
 
         user.is_temporary = False
         user.is_trial = False
-        user.allocated_seconds += 540
+        user.allocated_seconds += (
+            settings.FREE_DEFAULT_COMP_SECONDS - settings.TRIAL_DEFAULT_COMP_SECONDS
+        )
         user.last_free_refill = timezone.now()
 
         if commit:
@@ -226,7 +228,10 @@ class CreateFullAccountForm(SetPasswordForm, ModelForm):
             r = ResourceAllocation.objects.create(
                 code=get_random_string(),
                 redeemer=user,
-                allocation_seconds=540,
+                allocation_seconds=(
+                    settings.FREE_DEFAULT_COMP_SECONDS
+                    - settings.TRIAL_DEFAULT_COMP_SECONDS
+                ),
                 note=ResourceAllocation.TRIAL_CONVERSION,
             )
 

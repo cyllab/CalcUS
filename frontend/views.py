@@ -102,12 +102,10 @@ from .tasks import (
     analyse_opt,
     generate_xyz_structure,
     gen_fingerprint,
-    send_gcloud_task,
     plot_peaks,
-    get_calc_size,
-    record_event_analytics,
 )
 from .decorators import superuser_required
+from .cloud_job import send_gcloud_task, record_event_analytics
 
 from frontend import tasks
 from .decorators import superuser_required
@@ -121,6 +119,7 @@ from .libxyz import (
 )
 from .environment_variables import *
 from .helpers import get_xyz_from_Gaussian_input, get_random_string
+from .cloud_job import create_container_job, submit_cloud_job
 
 from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
@@ -129,6 +128,7 @@ from django.conf import settings
 from throttle.decorators import throttle
 
 import logging
+
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s"
@@ -1213,7 +1213,7 @@ def please_register(request):
 
 
 def error(request, msg):
-    if is_test:
+    if IS_TEST:
         print("VIEWS ERROR: " + msg)
     return render(
         request,
@@ -1285,10 +1285,6 @@ def cloud_calc(request):
         logger.error(f"Could not find calculation number {body}")
         return HttpResponse(status=400)
 
-    from frontend.cloud_job import create_container_job
-
-    create_container_job(str(calc.id))
-    """
     try:
         ret = run_calc(calc.id)
     except Exception as e:
@@ -1297,10 +1293,8 @@ def cloud_calc(request):
 
     if ret != 0:
         logger.warning(f"Calculation {calc.id} finished with code {ret}")
-        calc.refresh_from_db()
         calc.status = 3
         calc.save()
-    """
 
     return HttpResponse(status=200)
 
@@ -4857,7 +4851,7 @@ def cancel_calc(request):
         logger.info(f"Killing calc {calc.id}")
         calc.set_as_cancelled()
     else:
-        if is_test:
+        if IS_TEST:
             cancel(calc.id)
         else:
             cancel.delay(str(calc.id))
@@ -5249,7 +5243,7 @@ def relaunch_calc(request):
 
     if calc.local:
         if settings.IS_CLOUD:
-            send_gcloud_task("/cloud_calc/", str(calc.id), size=get_calc_size(calc))
+            submit_cloud_job(calc)
         else:
             t = run_calc.s(str(calc.id)).set(queue="comp")
             res = t.apply_async()

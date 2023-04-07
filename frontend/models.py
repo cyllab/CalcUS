@@ -143,6 +143,15 @@ class User(AbstractUser):
     )
 
     @property
+    def user_type(self):
+        if self.is_trial:
+            return "trial"
+        elif self.is_subscriber:
+            return "subscriber"
+        else:
+            return "free"
+
+    @property
     def active_subscription(self):
         subs = self.subscription_set.all()
         now = timezone.now()

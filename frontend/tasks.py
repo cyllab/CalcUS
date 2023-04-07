@@ -85,6 +85,7 @@ from .libxyz import *
 from .models import *
 from .helpers import *
 from .environment_variables import *
+from .cloud_job import send_gcloud_task, submit_cloud_job
 
 import traceback
 import periodictable
@@ -123,7 +124,7 @@ def direct_command(command, conn, lock, attempt_count=1):
             return direct_command(command, conn, lock, attempt_count + 1)
 
     # Do not run the actual calculation in a test
-    if not is_test or (
+    if not IS_TEST or (
         command.find("xtb") == -1
         and command.find("stda") == -1
         and command.find("crest") == -1
@@ -216,7 +217,7 @@ def sftp_put(src, dst, conn, lock, attempt_count=1):
 
 
 def wait_until_logfile(remote_dir, conn, lock):
-    if is_test:
+    if IS_TEST:
         DELAY = [2]
     else:
         DELAY = [5, 30, 60, 180, 300, 600]
@@ -244,7 +245,7 @@ def wait_until_done(calc, conn, lock, ind=0):
     job_id = calc.remote_id
     logger.info(f"Waiting for job {job_id} to finish")
 
-    if is_test:
+    if IS_TEST:
         DELAY = [2]
     else:
         DELAY = [5, 20, 30, 60, 120, 240, 600]
@@ -348,7 +349,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
 
-        if calc_id != -1 and is_test and setup_cached_calc(calc):
+        if calc_id != -1 and IS_TEST and setup_cached_calc(calc):
             return testing_delay_remote(calc_id)
 
         if calc.status == 0 and calc.remote_id == 0:
@@ -438,7 +439,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                 else:
                     return ErrorCodes.FAILED_SUBMISSION
         else:
-            if is_test:
+            if IS_TEST:
                 ret = wait_until_done(calc, conn, lock)
             else:
                 ret = wait_until_done(calc, conn, lock, ind=6)
@@ -460,7 +461,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         else:
             stream = open("/dev/null", "w")
 
-        if calc_id != -1 and is_test and setup_cached_calc(calc):
+        if calc_id != -1 and IS_TEST and setup_cached_calc(calc):
             return testing_delay_local(res)
 
         try:
@@ -2214,7 +2215,7 @@ def calc_to_ccinput(calc):
     except ValueError:
         _MEM = 1000
 
-    if is_test:
+    if IS_TEST:
         _nproc = min(4, PAL)
         _mem = 2000
     else:
@@ -3838,7 +3839,7 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
             if local:
                 calculations.append(c)
                 if not settings.IS_CLOUD:
-                    if not is_test:
+                    if not IS_TEST:
                         group_order.append(run_calc.s(str(c.id)).set(queue="comp"))
                     else:
                         group_order.append(run_calc.s(str(c.id)))
@@ -3877,7 +3878,7 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
             if local:
                 calculations.append(c)
                 if not settings.IS_CLOUD:
-                    if not is_test:
+                    if not IS_TEST:
                         group_order.append(run_calc.s(str(c.id)).set(queue="comp"))
                     else:
                         group_order.append(run_calc.s(str(c.id)))
@@ -3890,7 +3891,7 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
 
     if settings.IS_CLOUD:
         for c in calculations:
-            send_gcloud_task("/cloud_calc/", str(c.id), size=get_calc_size(c))
+            submit_cloud_job(c)
     else:
         for task, c in zip(group_order, calculations):
             res = task.apply_async()
@@ -3898,138 +3899,11 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
             c.save()
 
 
-def get_calc_size(calc):
-    if calc.order.author.is_trial:
-        return "SMALL"
-
-    if calc.step.name in ["Conformational Search", "Constrained Conformational Search"]:
-        if "gfnff" in calc.parameters.specifications.lower():
-            return "MEDIUM"
-        return "LARGE"
-    return "SMALL"
-
-
-def send_gcloud_task(url, payload, compute=True, size="SMALL"):
-    if is_test or settings.DEBUG:
-        import grpc
-        from google.cloud import tasks_v2
-        from google.cloud.tasks_v2.services.cloud_tasks.transports import (
-            CloudTasksGrpcTransport,
-        )
-
-        if "GITHUB_WORKSPACE" in os.environ:
-            hostname = "localhost"
-        else:
-            hostname = "taskqueue"
-
-        client = tasks_v2.CloudTasksClient(
-            transport=CloudTasksGrpcTransport(
-                channel=grpc.insecure_channel(f"{hostname}:8123")
-            )
-        )
-    else:
-        from google.cloud import tasks_v2
-
-        client = tasks_v2.CloudTasksClient()
-
-    if compute:
-        queue = "xtb-compute"
-        url = getattr(settings, f"COMPUTE_{size}_HOST_URL") + url
-    else:
-        queue = "actions"
-        url = settings.ACTION_HOST_URL + url
-
-    parent = client.queue_path(settings.GCP_PROJECT_ID, settings.GCP_LOCATION, queue)
-
-    task = {
-        "http_request": {
-            "http_method": "POST",
-            "url": url,
-            "oidc_token": {"service_account_email": settings.GCP_SERVICE_ACCOUNT_EMAIL},
-        }
-    }
-    task["http_request"]["body"] = payload.encode()
-    print(task)
-    client.create_task(parent=parent, task=task)
-
-
-def record_event_analytics(request, event_name, **extra_params):
-    """
-    Records particular significant events triggered by the user for analysis and management
-    """
-
-    if (
-        is_test
-        or settings.DEBUG
-        or not settings.IS_CLOUD
-        or settings.ANALYTICS_MEASUREMENT_ID == ""
-        or settings.ANALYTICS_API_SECRET == ""
-    ):
-        return
-
-    from google.cloud import tasks_v2
-
-    client = tasks_v2.CloudTasksClient()
-
-    if "_ga" not in request.COOKIES:
-        logger.warning(
-            f"The Google Analytics cookie does not appear to be set for {request.user.id}"
-        )
-        return
-
-    payload = {
-        "client_id": request.COOKIES["_ga"],
-        "events": [
-            {
-                "name": event_name,
-                "params": {
-                    "engagement_time_msec": "100",
-                    **extra_params,
-                },
-            }
-        ],
-    }
-
-    if "CALCUS_SESSION_COOKIE" in request.COOKIES:
-        payload["events"][0]["params"]["session_id"] = request.COOKIES[
-            "CALCUS_SESSION_COOKIE"
-        ]
-
-    if not request.user.is_anonymous:
-        payload["user_id"] = str(request.user.id)
-        if request.user.is_trial:
-            account_type = "trial_account"
-        elif request.user.is_temporary:
-            account_type = "student_account"
-        else:
-            account_type = "full_account"
-
-        payload["user_properties"] = {"account_type": {"value": account_type}}
-
-    url = f"https://www.google-analytics.com/mp/collect?measurement_id={settings.ANALYTICS_MEASUREMENT_ID}&api_secret={settings.ANALYTICS_API_SECRET}"
-
-    parent = client.queue_path(
-        settings.GCP_PROJECT_ID, settings.GCP_LOCATION, "analytics"
-    )
-
-    task = {
-        "http_request": {
-            "http_method": "POST",
-            "url": url,
-            "oidc_token": {"service_account_email": settings.GCP_SERVICE_ACCOUNT_EMAIL},
-            "headers": {"Content-type": "application/json"},
-        }
-    }
-    task["http_request"]["body"] = json.dumps(payload).encode()
-
-    client.create_task(parent=parent, task=task)
-
-
 def add_input_to_calc(calc):
     inp = calc_to_ccinput(calc)
     if isinstance(inp, CCInputException):
         msg = f"CCInput error: {str(inp)}"
-        if is_test or settings.DEBUG:
+        if IS_TEST or settings.DEBUG:
             print(msg)
         calc.error_message = msg
         calc.status = 3
@@ -4064,7 +3938,7 @@ def load_output_files(calc):
 
 @app.task(base=AbortableTask)
 def run_calc(calc_id):
-    if not is_test:
+    if not IS_TEST:
         logger.info(f"Processing calc {calc_id}")
 
     def get_calc(calc_id):
@@ -4076,7 +3950,7 @@ def run_calc(calc_id):
             else:
                 if (
                     not settings.IS_CLOUD
-                    and not is_test
+                    and not IS_TEST
                     and calc.task_id == ""
                     and calc.local
                 ):
@@ -4185,7 +4059,7 @@ def run_calc(calc_id):
     global cache_ind
 
     if (
-        is_test
+        IS_TEST
         and os.getenv("CAN_USE_CACHED_LOGS") == "true"
         and os.getenv("USE_CACHED_LOGS") == "true"
         and not calc_is_cached(calc)
@@ -4219,7 +4093,7 @@ def run_calc(calc_id):
 def bill_calculation(calc):
     calc_time = calc.billed_seconds
     if settings.IS_CLOUD and calc.order.resource_provider is None:
-        if is_test:
+        if IS_TEST:
             return
         else:
             logger.error(f"There is no resource provider for order {calc.order.id}")
