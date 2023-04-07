@@ -98,7 +98,7 @@ def create_container_job(calc, nproc, timeout):
             "COMPUTE_POSTGRES_HOST", settings.POSTGRES_HOST
         ),
         "CALCUS_COMPUTE": "True",
-        "NUM_CPU": nproc,
+        "NUM_CPU": str(nproc),
         "OMP_NUM_THREADS": f"{nproc},1",
         "OMP_STACKSIZE": "1536MB",  # for the c3 machines only
     }
