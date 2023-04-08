@@ -214,7 +214,7 @@ def job_triage(calc):
 
     return (
         min(settings.RESOURCE_LIMITS[user_type]["nproc"], nproc),
-        settings.RESOURCE_LIMITS[user_type]["time"],
+        settings.RESOURCE_LIMITS[user_type]["time"] * 60,
     )
 
 

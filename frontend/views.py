@@ -119,7 +119,7 @@ from .libxyz import (
 )
 from .environment_variables import *
 from .helpers import get_xyz_from_Gaussian_input, get_random_string
-from .cloud_job import create_container_job, submit_cloud_job
+from .cloud_job import submit_cloud_job
 
 from shutil import copyfile, make_archive, rmtree
 from django.db.models.functions import Lower
