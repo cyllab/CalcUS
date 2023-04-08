@@ -1995,7 +1995,9 @@ class CloudTests(TestCase):
         response = self.client.post("/cloud_refills/", **headers)
 
         self.user.refresh_from_db()
-        self.assertEqual(self.user.allocated_seconds, 300)
+        self.assertEqual(
+            self.user.allocated_seconds, settings.FREE_DEFAULT_COMP_SECONDS
+        )
 
     def test_no_double_refill(self):
         self.assertEqual(self.user.allocated_seconds, 0)
@@ -2003,12 +2005,16 @@ class CloudTests(TestCase):
         response = self.client.post("/cloud_refills/", **headers)
 
         self.user.refresh_from_db()
-        self.assertEqual(self.user.allocated_seconds, 300)
+        self.assertEqual(
+            self.user.allocated_seconds, settings.FREE_DEFAULT_COMP_SECONDS
+        )
 
         response = self.client.post("/cloud_refills/", **headers)
 
         self.user.refresh_from_db()
-        self.assertEqual(self.user.allocated_seconds, 300)
+        self.assertEqual(
+            self.user.allocated_seconds, settings.FREE_DEFAULT_COMP_SECONDS
+        )
 
     def test_no_early_refill(self):
         last_refill = timezone.now() - timezone.timedelta(days=10)
@@ -2031,17 +2037,19 @@ class CloudTests(TestCase):
         response = self.client.post("/cloud_refills/", **headers)
 
         self.user.refresh_from_db()
-        self.assertEqual(self.user.allocated_seconds, 300)
+        self.assertEqual(
+            self.user.allocated_seconds, settings.FREE_DEFAULT_COMP_SECONDS
+        )
 
     def test_refill_above_cap(self):
-        self.user.allocated_seconds = 500
+        self.user.allocated_seconds = 4000
         self.user.save()
 
         headers = {"HTTP_X_CLOUDSCHEDULER": "something"}
         response = self.client.post("/cloud_refills/", **headers)
 
         self.user.refresh_from_db()
-        self.assertEqual(self.user.allocated_seconds, 500)
+        self.assertEqual(self.user.allocated_seconds, 4000)
 
     def test_trial_no_refill(self):
         self.assertEqual(self.user.allocated_seconds, 0)

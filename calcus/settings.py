@@ -304,6 +304,10 @@ RESOURCE_LIMITS = {
     },
 }
 
+# Give 600 free CPU-seconds for trial
+TRIAL_DEFAULT_COMP_SECONDS = 600
+FREE_DEFAULT_COMP_SECONDS = 3600
+
 if IS_CLOUD:
     PING_SATELLITE = False
 
@@ -320,11 +324,6 @@ if IS_CLOUD:
     ALLOW_REMOTE_CALC = False
 
     ALLOW_TRIAL = True
-
-    # Give 600 free CPU-seconds for trial
-    TRIAL_DEFAULT_COMP_SECONDS = 600
-
-    FREE_DEFAULT_COMP_SECONDS = 3600
 
     LOCAL_MAX_ATOMS = 200
 
