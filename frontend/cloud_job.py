@@ -88,7 +88,12 @@ def create_container_job(calc, nproc, timeout):
     runnable = batch_v1.Runnable()
     runnable.container = batch_v1.Runnable.Container()
     runnable.container.image_uri = settings.COMPUTE_IMAGE
-    runnable.container.commands = ["python", "manage.py", "run_calc", str(calc.id)]
+    runnable.container.commands = [
+        "/usr/local/bin/python",
+        "manage.py",
+        "run_calc",
+        str(calc.id),
+    ]
 
     env = batch_v1.Environment()
     env.secret_variables = {"POSTGRES_PASSWORD": settings.POSTGRES_SECRET_URI}
