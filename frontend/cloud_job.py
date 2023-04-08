@@ -105,7 +105,7 @@ def create_container_job(calc, nproc, timeout):
         "CALCUS_COMPUTE": "True",
         "NUM_CPU": str(nproc),
         "OMP_NUM_THREADS": f"{nproc},1",
-        "OMP_STACKSIZE": "1536MB",  # for the c3 machines only
+        "OMP_STACKSIZE": "1536M",  # for the c3 machines only
     }
 
     runnable.environment = env
