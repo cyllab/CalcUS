@@ -1233,7 +1233,7 @@ def cloud_refills(request):
     for u in User.objects.filter(is_temporary=False).all():
         if now > u.last_free_refill + timezone.timedelta(days=30):
             time_left = u.allocated_seconds - u.billed_seconds
-            refill = 300 - time_left
+            refill = settings.FREE_DEFAULT_COMP_SECONDS - time_left
             if refill > 0:
                 u.last_free_refill = now
                 u.save()

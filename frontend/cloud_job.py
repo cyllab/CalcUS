@@ -88,8 +88,8 @@ def create_container_job(calc, nproc, timeout):
     runnable = batch_v1.Runnable()
     runnable.container = batch_v1.Runnable.Container()
     runnable.container.image_uri = settings.COMPUTE_IMAGE
+    runnable.container.entrypoint = "/usr/local/bin/python"
     runnable.container.commands = [
-        "/usr/local/bin/python",
         "manage.py",
         "run_calc",
         str(calc.id),
