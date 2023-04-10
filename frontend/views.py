@@ -217,7 +217,7 @@ def register(request):
                 record_event_analytics(request, "register_student")
                 if user:
                     login(request, user)
-                    return redirect("/projects/")  # Quickstart page?
+                    return redirect("/new_profile/")  # Quickstart page?
                 else:
                     logger.error(f"Could not log in student")
             form_researcher = ResearcherCreateForm()
@@ -231,7 +231,7 @@ def register(request):
                 record_event_analytics(request, "register_full")
                 if user:
                     login(request, user)
-                    return redirect("/projects/")  # Quickstart page?
+                    return redirect("/new_profile/")  # Quickstart page?
                 else:
                     logger.error(f"Could not log in researcher {email}")
             form_student = StudentCreateForm()
