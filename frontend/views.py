@@ -2012,6 +2012,19 @@ def _submit_calculation(request, verify=False):
 
     _params, project_obj, step = ret
 
+    if settings.IS_CLOUD and not verify and not request.user.is_subscriber:
+        if request.user.is_trial:
+            limit = 1
+        else:
+            limit = 3
+
+        # Limit the number of calculations free users can launch at once
+        num_running = Calculation.objects.filter(
+            status__lte=1, order__author=request.user
+        ).count()
+        if num_running >= 3:
+            return f"You have too many running calculations at the moment (limit of {limit} for your account type), wait a bit or become a subscriber"
+
     if "calc_resource" in request.POST.keys():
         resource = clean(request.POST["calc_resource"])
         if resource.strip() == "":
