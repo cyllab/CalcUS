@@ -116,16 +116,17 @@
     #contact_tile > a {
         text-decoration: underline;
     }
-    .xtb_link {
+    #register_link, .xtb_link {
         text-decoration: underline;
         color: blue;
     }
+    #free_span {
+        color: #00A75B;
+    }
 </style>
-{% if IS_CLOUD %}
-{% include "frontend/includables/pricing_head.html" %}
-{% endif %}
 
-{% endblock %} {% block content %}
+{% endblock %} 
+{% block content %}
 <div class="content">
     <div id="logo_div">
         <center>
@@ -174,16 +175,23 @@
             </div>
         </div>
     </div>
-
     {% endif %}
+
+    <div class="tile is-ancestor">
+        <center style="width: 100%">
+            <h2 class="title is-2">Get <span id="free_span">3600 free seconds</span> of compute time per month</h2>
+            <br>
+            <a href="/register/" id="register_link">Create a free account</a> and accelerate your research immediately
+        </center>
+    </div>
 
     <div class="tile is-ancestor" id="contact_tile">
         <center style="width: 100%">
             <h2 class="title is-2">You have questions?</h2>
-            <br />
+            <br>
             Feel free to contact us for any inquiry at contact@calcus.cloud
-            <br />
-            <br />
+            <br>
+            <br>
             <a class="button is-primary is-large" href="mailto:contact@calcus.cloud">Contact us</a>
         <center>
     </div>

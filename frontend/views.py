@@ -1519,14 +1519,6 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
     else:
         specifications = ""
 
-    if (
-        settings.IS_CLOUD
-        and "Conformational Search" in step.name
-        and "--gfn" not in specifications
-    ):
-        # Use GFN-FF by default in the cloud version unless something else is specified by the user
-        specifications = (specifications + " --gfnff").strip()
-
     if is_flowchart is None:
         if project == "New Project":
             new_project_name = clean(parameters_dict["new_project_name"])

@@ -106,6 +106,7 @@ def create_container_job(calc, nproc, timeout):
         "NUM_CPU": str(nproc),
         "OMP_NUM_THREADS": f"{nproc},1",
         "OMP_STACKSIZE": "1536M",  # for the c3 machines only
+        "CALCUS_TIMEOUT": str(timeout),
     }
 
     runnable.environment = env
@@ -119,7 +120,7 @@ def create_container_job(calc, nproc, timeout):
     task.compute_resource = resources
 
     task.max_retry_count = 1
-    task.max_run_duration = f"{timeout}s"
+    task.max_run_duration = f"{timeout+300}s"  # Add some margin in the task runtime; the timeout is for the actual calculation
 
     group = batch_v1.TaskGroup()
     group.task_count = 1

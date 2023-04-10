@@ -42,7 +42,7 @@ else:
 
     if "CALCUS_CLOUD" in os.environ:
         CALCUS_SCR_HOME = os.getenv("CALCUS_SCR_HOME", "/tmp")
-    elif is_compute:
+    elif IS_COMPUTE:
         CALCUS_SCR_HOME = os.getenv("CALCUS_SCR_HOME", "/calcus/")
     else:
         CALCUS_SCR_HOME = os.getenv("CALCUS_SCR_HOME", "")

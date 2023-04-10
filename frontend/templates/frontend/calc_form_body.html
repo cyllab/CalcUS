@@ -503,10 +503,10 @@
 				</div>
 
 			</div>
-
 		{% endif %}
 
-		<div class="field">
+        <center>
+		<div class="field" id="submit_field">
 			<span id="form_error_msg"></span>
 			<div class="control">
 				{% if is_flowchart is None %}
@@ -515,7 +515,20 @@
 					<a class="button is-primary" onclick="verify_form_flowchart()">Save</a>
 				{% endif %}
 			</div>
+            {% if IS_CLOUD %}
+            <div class="cloud_comp_info">
+                <span id="cloud_num_cores">1</span> core will be used (maximum runtime: {% if request.user.is_trial %}5 minutes{% elif request.user.is_subscriber %}2 hours{% else %}15 minutes{% endif %}</span>)
+                {% if request.user.is_trial %}
+                <br>
+                <a href="/create_full_account/">You are using a trial account. Convert to a free full account to unlock more computing power and longer runtimes</a>
+                {% elif not request.user.is_subscriber %}
+                <br>
+                <a href="/pricing/">Become a subscriber to increase your maximum runtime</a>
+                {% endif %}
+            </div>
+            {% endif %}
 		</div>
+        <center>
 	</form>
 </div>
 <script>

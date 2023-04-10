@@ -6,8 +6,8 @@
             <div class="plan-items">
                 <div class="plan-item plan-desc">xTB calculations</div>
                 <div class="plan-item plan-desc">Monthly calculation time</div>
+                <div class="plan-item plan-desc">Maximum calculation runtime</div>
                 <div class="plan-item plan-desc">Create groups and classes</div>
-                <div class="plan-item plan-desc">Priority support</div>
                 <div class="plan-item plan-desc">Commercial Use</div>
             </div>
             <div class="plan-footer">
@@ -18,8 +18,8 @@
             <div class="plan-price"><span class="plan-price-amount"><span class="plan-price-currency">$</span>0</span>/month</div>
             <div class="plan-items">
                 <div class="plan-item"><b>Yes</b></div>
-                <div class="plan-item"><b>10 CPU-minutes</b></div>
-                <div class="plan-item">No</div>
+                <div class="plan-item"><b>60 CPU-minutes</b></div>
+                <div class="plan-item">15 minutes</div>
                 <div class="plan-item">No</div>
                 <div class="plan-item">No</div>
             </div>
@@ -33,8 +33,8 @@
             <div class="plan-price"><span class="plan-price-amount"><span class="plan-price-currency">$</span>19</span>/month</div>
             <div class="plan-items">
                 <div class="plan-item"><b>Yes</b></div>
-                <div class="plan-item"><b>According to needs</b></div>
-                <div class="plan-item"><b>Yes</b></div>
+                <div class="plan-item"><b>1000 CPU-minutes*</b></div>
+                <div class="plan-item"><b>2 hours</b></div>
                 <div class="plan-item"><b>Yes</b></div>
                 <div class="plan-item">No</div>
             </div>
@@ -42,8 +42,9 @@
                 <form action="/checkout/" method="POST">
                     {% csrf_token %}
                     <input type="hidden" name="priceId" value="{{ SUBSCRIPTION_ACADEMIC_MONTHLY }}">
-                    <button class="button is-primary is-fullwidth sub_btn" type="submit" id="subscribe_btn">Subscribe</button>
+                    <button class="button is-primary is-fullwidth" type="submit" id="subscribe_btn">Subscribe</button>
                 </form>
+                <em id="time_note">*additional time available</em>
             </div>
         </div>
         <div class="pricing-plan is-danger">
@@ -52,7 +53,7 @@
             <div class="plan-items">
                 <div class="plan-item"><b>Yes</b></div>
                 <div class="plan-item"><b>According to needs</b></div>
-                <div class="plan-item"><b>Yes</b></div>
+                <div class="plan-item"><b>According to needs</b></div>
                 <div class="plan-item"><b>Yes</b></div>
                 <div class="plan-item"><b>Yes</b></div>
             </div>

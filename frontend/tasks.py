@@ -449,6 +449,12 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
 
             return ret
     else:  # Local
+        if calc_id != -1 and settings.IS_CLOUD:
+            try:
+                timeout = int(os.getenv("CALCUS_TIMEOUT", "300"))
+            except ValueError:
+                logger.warning(f"Could not parse the timeout for calc {calc_id}")
+                timeout = 300
         if calc_id != -1:
             calc = Calculation.objects.get(pk=calc_id)
             calc.status = 1
@@ -508,6 +514,14 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     calc = Calculation.objects.get(id=calc_id)
                     if calc.status == 3:
                         return kill_task()
+
+                    time_running = timezone.now() - calc.date_started
+                    if time_running.total_seconds() > timeout:
+                        calc.status = 3
+                        calc.error_message = "Calculation exceeded your time limit"
+                        calc.save()
+                        return kill_task()
+
                     time.sleep(settings.DATABASE_STATUS_CHECK_DELAY - 1)
                 else:
                     if res.is_aborted():
@@ -4011,7 +4025,6 @@ def run_calc(calc_id):
         traceback.print_exc()
 
         calc.refresh_from_db()
-        calc.date_finished = timezone.now()
 
         calc.status = 3
         calc.error_message = f"Incorrect termination ({str(e)})"
@@ -4036,10 +4049,11 @@ def run_calc(calc_id):
                 calc.error_message = "Failed to execute the relevant command"
         else:
             logger.warning(f"Calculation {calc.id} finished with return code {ret}")
-            calc.status = 3
-            calc.error_message = "Unknown termination"
+            if calc.error_message == "":
+                calc.status = 3
+                calc.error_message = "Unknown termination"
 
-        calc.date_finished = timezone.now()
+    calc.date_finished = timezone.now()
 
     logger.info(f"Calc {calc_id} finished")
 
@@ -4271,7 +4285,7 @@ def ping_satellite():
 def create_subscription(user, duration=1):
     alloc = ResourceAllocation.objects.create(
         code=get_random_string(32),
-        allocation_seconds=500 * 60,
+        allocation_seconds=1000 * 60,
         note=ResourceAllocation.SUBSCRIPTION,
     )  # TODO: make dynamic
     alloc.redeem(user)
