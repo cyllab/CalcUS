@@ -621,7 +621,7 @@ String.prototype.format = function() {
 	
 	function get_3D() {
 		let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
-
+        document.getElementById("gen_3D_btn").classList.add("is-loading");
 		$.ajax({
 			method: "POST",	 	 
 			url: "/gen_3D/",
@@ -641,7 +641,9 @@ String.prototype.format = function() {
 					editor.loadMolecule(mol_read);	
 				}
 			}
-		});
+        }).always(function() {
+            document.getElementById("gen_3D_btn").classList.remove("is-loading");
+        });;
 	}
 	
 
