@@ -9,6 +9,13 @@ from .environment_variables import *
 if settings.IS_CLOUD:
     from google.cloud import batch_v1
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s"
+)
+logger = logging.getLogger(__name__)
+
 
 def record_event_analytics(request, event_name, **extra_params):
     """
