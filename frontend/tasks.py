@@ -677,9 +677,8 @@ def launch_pysis_calc(in_file, calc, files):
         with open(os.path.join(local_folder, "calc.inp"), "w") as out:
             out.write(calc.input_file)
 
-    os.chdir(local_folder)
-
     if not calc.local:
+        log_path = os.path.join(folder, "calc.out")
         pid = int(threading.get_ident())
         conn = connections[pid]
         lock = locks[pid]
@@ -700,9 +699,9 @@ def launch_pysis_calc(in_file, calc, files):
                 lock,
             )
     else:
-        os.chdir(local_folder)
+        log_path = os.path.join(local_folder, "calc.out")
 
-    ret = system(calc.command, "calc.out", software="pysis", calc_id=calc.id)
+    ret = system(calc.command, log_path, software="pysis", calc_id=calc.id)
 
     cancelled = False
     if ret != ErrorCodes.SUCCESS:
@@ -795,6 +794,7 @@ def launch_xtb_calc(in_file, calc, files):
     os.chdir(local_folder)
 
     if not calc.local:
+        log_path = os.path.join(folder, local_folder)
         pid = int(threading.get_ident())
         conn = connections[pid]
         lock = locks[pid]
@@ -815,9 +815,9 @@ def launch_xtb_calc(in_file, calc, files):
                 lock,
             )
     else:
-        os.chdir(local_folder)
+        log_path = os.path.join(local_folder, "calc.out")
 
-    ret = system(calc.command, "calc.out", software="xtb", calc_id=calc.id)
+    ret = system(calc.command, log_path, software="xtb", calc_id=calc.id)
 
     cancelled = False
     if ret != ErrorCodes.SUCCESS:
@@ -4285,9 +4285,9 @@ def ping_satellite():
 def create_subscription(user, duration=1):
     alloc = ResourceAllocation.objects.create(
         code=get_random_string(32),
-        allocation_seconds=1000 * 60,
+        allocation_seconds=settings.SUBSCRIBER_COMP_SECONDS,
         note=ResourceAllocation.SUBSCRIPTION,
-    )  # TODO: make dynamic
+    )
     alloc.redeem(user)
     sub = Subscription.objects.create(
         subscriber=user,
