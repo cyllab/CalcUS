@@ -740,7 +740,6 @@ class InterfaceTests(CalcusLiveServer):
 
     def test_duplicate_project_preset(self):
         proj = Project.objects.create(name="My Project", author=self.user)
-        proj.save()
 
         params = {
             "software": "Gaussian",
@@ -775,7 +774,6 @@ class InterfaceTests(CalcusLiveServer):
 
     def test_project_preset_independence(self):
         proj = Project.objects.create(name="My Project", author=self.user)
-        proj.save()
 
         params = {
             "type": "Frequency Calculation",
@@ -862,11 +860,6 @@ class InterfaceTests(CalcusLiveServer):
         o2 = CalculationOrder.objects.create(author=self.user, last_seen_status=1)
         c2a = Calculation.objects.create(order=o2, status=2)
 
-        o1.save()
-        c1a.save()
-        c1b.save()
-        o2.save()
-        c2a.save()
         self.user.unseen_calculations = 2
         self.user.save()
 
@@ -914,18 +907,6 @@ class InterfaceTests(CalcusLiveServer):
         o6 = CalculationOrder.objects.create(author=self.user, last_seen_status=2)
         c6 = Calculation.objects.create(order=o6, status=3)
 
-        o1.save()
-        c1.save()
-        o2.save()
-        c2.save()
-        o3.save()
-        c3.save()
-        o4.save()
-        c4.save()
-        o5.save()
-        c5.save()
-        o6.save()
-        c6.save()
         o1.last_seen_status = 1
         o5.last_seen_status = 3
         o1.save()
@@ -986,18 +967,6 @@ class InterfaceTests(CalcusLiveServer):
         o6 = CalculationOrder.objects.create(author=self.user, last_seen_status=2)
         c6 = Calculation.objects.create(order=o6, status=3)
 
-        o1.save()
-        c1.save()
-        o2.save()
-        c2.save()
-        o3.save()
-        c3.save()
-        o4.save()
-        c4.save()
-        o5.save()
-        c5.save()
-        o6.save()
-        c6.save()
         o1.last_seen_status = 1
         o5.last_seen_status = 3
         o1.save()
@@ -1258,7 +1227,6 @@ class InterfaceTests(CalcusLiveServer):
     def test_create_empty_folders(self):
         self.setup_test_group()
         proj = Project.objects.create(name="Proj", author=self.user)
-        proj.save()
 
         self.assertEqual(proj.main_folder.folder_set.count(), 0)
         self.lget("/projects/")
@@ -1353,7 +1321,6 @@ class LaunchParametersTests(CalcusLiveServer):
         super().setUp()
 
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
-        g.save()
 
         self.login(self.email, self.password)
 
@@ -1557,7 +1524,6 @@ class XtbCalculationTests(CalcusLiveServer):
         super().setUp()
 
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
-        g.save()
 
         self.login(self.email, self.password)
 
@@ -1615,7 +1581,6 @@ class XtbCalculationTests(CalcusLiveServer):
 
     def test_proj(self):
         proj = Project.objects.create(author=self.user, name="TestProj")
-        proj.save()
 
         params = {
             "mol_name": "my_mol",
@@ -2320,7 +2285,6 @@ class StudentTests(CalcusLiveServer):
         super().setUp()
 
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
-        g.save()
 
         u = User.objects.create_user(
             email="Student@test.com", password=self.password, member_of=g
@@ -2349,7 +2313,6 @@ class StudentTests(CalcusLiveServer):
     def test_proj(self):
         student = User.objects.get(email="Student@test.com")
         proj = Project.objects.create(author=student, name="TestProj")
-        proj.save()
 
         params = {
             "mol_name": "my_mol",
@@ -2371,7 +2334,6 @@ class OrcaCalculationTests(CalcusLiveServer):
         super().setUp()
 
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
-        g.save()
 
         self.login(self.email, self.password)
 
@@ -3134,7 +3096,6 @@ class GaussianCalculationTests(CalcusLiveServer):
         super().setUp()
 
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
-        g.save()
 
         self.login(self.email, self.password)
 
@@ -3930,7 +3891,6 @@ class MiscCalculationTests(CalcusLiveServer):
         super().setUp()
 
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
-        g.save()
 
         self.login(self.email, self.password)
 
@@ -4129,7 +4089,7 @@ class MiscCalculationTests(CalcusLiveServer):
 
     def test_multiple_files2(self):
         proj = Project.objects.create(name="MyProj", author=self.user)
-        proj.save()
+
         params = {
             "mol_name": "my_mol",
             "type": "Geometrical Optimisation",
@@ -4233,10 +4193,6 @@ class MiscCalculationTests(CalcusLiveServer):
         mol = Molecule.objects.create(project=proj, name="TestMol")
         e = Ensemble.objects.create(parent_molecule=mol, name="TestEnsemble")
 
-        proj.save()
-        mol.save()
-        e.save()
-
         structs = [
             [-16.82945685, 9],
             [-16.82855278, 36],
@@ -4256,11 +4212,6 @@ class MiscCalculationTests(CalcusLiveServer):
             prop = Property.objects.create(
                 parameters=params, energy=structs[ind][0], parent_structure=s
             )
-            prop.save()
-            s.save()
-        e.save()
-        proj.save()
-        mol.save()
 
         ref_weights = [0.34724, 0.53361, 0.03796, 0.04880, 0.01082, 0.02125, 0.00033]
 
@@ -4277,10 +4228,6 @@ class MiscCalculationTests(CalcusLiveServer):
         proj = Project.objects.create(name="TestProj", author=self.user)
         mol = Molecule.objects.create(project=proj, name="TestMol")
         e = Ensemble.objects.create(parent_molecule=mol, name="TestEnsemble")
-
-        proj.save()
-        mol.save()
-        e.save()
 
         structs = [
             [-16.82945685, 9],
@@ -4301,11 +4248,6 @@ class MiscCalculationTests(CalcusLiveServer):
             prop = Property.objects.create(
                 parameters=params, energy=structs[ind][0], parent_structure=s
             )
-            prop.save()
-            s.save()
-        e.save()
-        proj.save()
-        mol.save()
 
         ref_weights = [0.34724, 0.53361, 0.03796, 0.04880, 0.01082, 0.02125, 0.00033]
 
@@ -4385,10 +4327,6 @@ class MiscCalculationTests(CalcusLiveServer):
         mol = Molecule.objects.create(project=proj, name="TestMol")
         e = Ensemble.objects.create(parent_molecule=mol, name="TestEnsemble")
 
-        proj.save()
-        mol.save()
-        e.save()
-
         structs = [
             [-16.82945685, 9],
             [-16.82855278, 36],
@@ -4414,11 +4352,6 @@ class MiscCalculationTests(CalcusLiveServer):
             prop = Property.objects.create(
                 parameters=params, energy=structs[ind][0], parent_structure=s
             )
-            prop.save()
-            s.save()
-        e.save()
-        proj.save()
-        mol.save()
 
     def test_filter_ensemble_energy(self):
         self.setup_propane_ensemble()
@@ -4472,7 +4405,6 @@ class ComplexCalculationTests(CalcusLiveServer):
         super().setUp()
 
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
-        g.save()
 
         self.login(self.email, self.password)
 

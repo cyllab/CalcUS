@@ -1064,11 +1064,6 @@ class PermissionTestsStudent(TestCase):
         m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
         e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
         s = Structure.objects.create(parent_ensemble=e, number=0)
-        p.save()
-        m.save()
-        e.save()
-        s.save()
-
         response = self.client.get(f"/projects/{self.PI.id}")
         self.assertEqual(response.status_code, 404)
 
@@ -1095,10 +1090,6 @@ class PermissionTestsStudent(TestCase):
         m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
         e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
         s = Structure.objects.create(parent_ensemble=e, number=0)
-        p.save()
-        m.save()
-        e.save()
-        s.save()
 
         response = self.client.get(f"/projects/{self.PI.id}")
         self.assertEqual(response.status_code, 200)
@@ -1126,10 +1117,6 @@ class PermissionTestsStudent(TestCase):
         m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
         e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
         s = Structure.objects.create(parent_ensemble=e, number=0)
-        p.save()
-        m.save()
-        e.save()
-        s.save()
 
         response = self.client.get(f"/projects/{self.PI.id}")
         self.assertEqual(response.status_code, 200)
@@ -1179,10 +1166,6 @@ class PermissionTestsPI(TestCase):
         m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
         e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
         s = Structure.objects.create(parent_ensemble=e, number=0)
-        p.save()
-        m.save()
-        e.save()
-        s.save()
 
         response = self.client.get(f"/projects/{self.student.id}")
         self.assertEqual(response.status_code, 404)
@@ -1212,10 +1195,6 @@ class PermissionTestsPI(TestCase):
         m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
         e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
         s = Structure.objects.create(parent_ensemble=e, number=0)
-        p.save()
-        m.save()
-        e.save()
-        s.save()
 
         response = self.client.get(f"/projects/{self.student.id}")
         self.assertEqual(response.status_code, 200)
@@ -1245,10 +1224,6 @@ class PermissionTestsPI(TestCase):
         m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
         e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
         s = Structure.objects.create(parent_ensemble=e, number=0)
-        p.save()
-        m.save()
-        e.save()
-        s.save()
 
         response = self.client.get(f"/projects/{self.student.id}")
         self.assertEqual(response.status_code, 200)
@@ -1278,10 +1253,6 @@ class PermissionTestsPI(TestCase):
         m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
         e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
         s = Structure.objects.create(parent_ensemble=e, number=0)
-        p.save()
-        m.save()
-        e.save()
-        s.save()
 
         response = self.client.post("/delete_project/", {"id": p.id})
         self.assertEqual(response.status_code, 403)
@@ -1296,10 +1267,6 @@ class PermissionTestsPI(TestCase):
         m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
         e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
         s = Structure.objects.create(parent_ensemble=e, number=0)
-        p.save()
-        m.save()
-        e.save()
-        s.save()
 
         response = self.client.post("/delete_molecule/", {"id": m.id})
         self.assertEqual(response.status_code, 403)
@@ -1314,10 +1281,6 @@ class PermissionTestsPI(TestCase):
         m = Molecule.objects.create(name="Public Molecule", project=p, inchi="dummy")
         e = Ensemble.objects.create(name="Public Ensemble", parent_molecule=m)
         s = Structure.objects.create(parent_ensemble=e, number=0)
-        p.save()
-        m.save()
-        e.save()
-        s.save()
 
         response = self.client.post("/delete_ensemble/", {"id": e.id})
         self.assertEqual(response.status_code, 403)
@@ -1367,11 +1330,7 @@ class AnalysisTests(TestCase):
             prop = Property.objects.create(
                 parameters=params, energy=structs[ind][0], parent_structure=s
             )
-            prop.save()
-            s.save()
-        e.save()
-        proj.save()
-        mol.save()
+
         ref_weights = [0.34724, 0.53361, 0.03796, 0.04880, 0.01082, 0.02125, 0.00033]
 
         response = self.client.post(
@@ -1432,11 +1391,7 @@ class AnalysisTests(TestCase):
             prop = Property.objects.create(
                 parameters=params, energy=structs[ind][0], parent_structure=s
             )
-            prop.save()
-            s.save()
-        e.save()
-        proj.save()
-        mol.save()
+
         ref_weights = [0.42044, 0.35261, 0.22695]
 
         response = self.client.post(
@@ -1501,11 +1456,7 @@ class AnalysisTests(TestCase):
             prop = Property.objects.create(
                 parameters=params, energy=structs[ind][0], parent_structure=s
             )
-            prop.save()
-            s.save()
-        e.save()
-        proj.save()
-        mol.save()
+
         ref_weights = [0.34724, 0.53361, 0.03796, 0.04880, 0.01082, 0.02125, 0.00033]
 
         response = self.client.post(
@@ -1577,11 +1528,6 @@ class AnalysisTests(TestCase):
             prop = Property.objects.create(
                 parameters=params, energy=structs[ind][0], parent_structure=s
             )
-            prop.save()
-            s.save()
-        e.save()
-        proj.save()
-        mol.save()
         ref_weights = [0.34724, 0.53361, 0.03796, 0.04880, 0.01082, 0.02125, 0.00033]
 
         response = self.client.post(
@@ -1655,18 +1601,12 @@ class AnalysisTests(TestCase):
             prop = Property.objects.create(
                 parameters=params, energy=structs[ind][0], parent_structure=s
             )
-            prop.save()
-            s.save()
 
         for ind, _s in enumerate(structs[-3:]):
             s = Structure.objects.create(
                 parent_ensemble=e, number=ind + 5, degeneracy=structs[ind][1]
             )
-            s.save()
 
-        e.save()
-        proj.save()
-        mol.save()
         ref_weights = [0.359, 0.551, 0.039, 0.050]  # Generated by working code
 
         response = self.client.post(
@@ -1730,8 +1670,6 @@ class AnalysisTests(TestCase):
             prop = Property.objects.create(
                 parameters=params, energy=structs[ind][0], parent_structure=s
             )
-            prop.save()
-            s.save()
 
         response = self.client.post(
             "/download_project/",

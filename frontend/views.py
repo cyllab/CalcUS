@@ -524,7 +524,6 @@ def create_flowchart(request):
         flowchart_view = Flowchart.objects.create(
             name=flowchart_name, author=request.user, flowchart=flowchart_dat
         )
-        flowchart_view.save()
         if "flowchart_order_id" in request.POST.keys():
             flowchart_order_id = request.POST["flowchart_order_id"]
             if flowchart_order_id != "":
@@ -581,13 +580,11 @@ def create_flowchart(request):
                             parameters=None,
                             parentId=obj_parent,
                         )
-                    obj_view.save()
                     parent_dict[i] = obj_view
                 else:
                     obj_view = Step.objects.create(
                         name=calc_name[index], flowchart=flowchart_view, parentId=None
                     )
-                    obj_view.save()
                     parent_dict[i] = obj_view
         return HttpResponse(status=200)
 
@@ -640,9 +637,8 @@ def create_folder(request):
             name=f"My Folder {i}",
             project=current_folder.project,
             parent_folder=current_folder,
+            depth=current_folder.depth + 1,
         )
-        folder.depth = current_folder.depth + 1
-        folder.save()
 
         return HttpResponse(f"{folder.id};{folder.name}")
     else:
@@ -1584,7 +1580,6 @@ def save_preset(request):
 
     params = Parameters.objects.create(**_params)
     preset = Preset.objects.create(name=preset_name, author=request.user, params=params)
-    preset.save()
     return HttpResponse("Preset created")
 
 
@@ -1604,7 +1599,6 @@ def set_project_default(request):
         author=request.user,
         params=params,
     )
-    preset.save()
 
     if project_obj.preset is not None:
         project_obj.preset.delete()
@@ -1831,7 +1825,6 @@ def submit_flowchart_input(request):
                     mol = Molecule.objects.create(
                         name=_mol_name, inchi=fing, project=project_obj
                     )
-                    mol.save()
 
                     e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
                     for struct in arr_structs:
@@ -1953,7 +1946,6 @@ def submit_flowchart_input(request):
             mol = Molecule.objects.create(
                 name=_mol_name, inchi=fing, project=project_obj
             )
-            mol.save()
 
             e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
             obj.ensemble = e
@@ -1979,7 +1971,6 @@ def submit_flowchart_input(request):
                 project=project_obj,
                 ensemble=e,
             )
-            obj.save()
             obj_id = obj.id
         else:
             return "No input structure"
@@ -2559,7 +2550,6 @@ def _submit_calculation(request, verify=False):
                     mol = Molecule.objects.create(
                         name=_mol_name, inchi=fing, project=project_obj
                     )
-                    mol.save()
 
                     e = Ensemble.objects.create(name="File Upload", parent_molecule=mol)
                     struct.parent_ensemble = e
@@ -2614,8 +2604,6 @@ def _submit_calculation(request, verify=False):
                     p = Property.objects.create(
                         parent_structure=s, parameters=params, geom=True
                     )
-                    p.save()
-                    params.save()
 
                     s.xyz_structure = xyz
                     s.save()
@@ -3020,8 +3008,6 @@ def add_clusteraccess(request):
             pal=pal,
             memory=memory,
         )
-        access.save()
-        owner.save()
 
         key = rsa.generate_private_key(
             backend=default_backend(), public_exponent=65537, key_size=2048
