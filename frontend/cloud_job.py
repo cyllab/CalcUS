@@ -1,5 +1,6 @@
 import os
 import json
+import uuid
 
 from django.conf import settings
 
@@ -158,9 +159,10 @@ def create_container_job(calc, nproc, timeout):
     job.logs_policy = batch_v1.LogsPolicy()
     job.logs_policy.destination = batch_v1.LogsPolicy.Destination.CLOUD_LOGGING
 
+    rand = str(uuid.uuid4())[:4]
     create_request = batch_v1.CreateJobRequest()
     create_request.job = job
-    create_request.job_id = f"j{str(calc.id).lower()}"
+    create_request.job_id = f"j{str(calc.id).lower()}_{rand}"
 
     create_request.parent = (
         f"projects/{settings.GCP_PROJECT_ID}/locations/{settings.GCP_LOCATION}"
