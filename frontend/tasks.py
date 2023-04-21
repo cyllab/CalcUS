@@ -3946,6 +3946,10 @@ def load_output_files(calc):
             log = "".join(f.readlines())
         output_files[fname] = log
 
+    logger.info(
+        f"Loaded {len(output_files)} output files for calculation {str(calc.id)} (scr: {CALCUS_SCR_HOME})"
+    )
+
     calc.output_files = json.dumps(output_files)
     calc.save()
 

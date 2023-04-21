@@ -4153,6 +4153,11 @@ def download_log(request, pk):
         return HttpResponse(status=404)
 
     data = json.loads(calc.output_files)
+
+    if "calc" not in data:
+        logger.warning(f"Calculation {str(calc.pk)} has no output file!")
+        return HttpResponse(status=204)
+
     if len(data) > 1:
         mem = BytesIO()
         with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zip:
