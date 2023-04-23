@@ -3947,7 +3947,7 @@ def load_output_files(calc):
         output_files[fname] = log
 
     logger.info(
-        f"Loaded {len(output_files)} output files for calculation {str(calc.id)} (scr: {CALCUS_SCR_HOME})"
+        f"Loaded {len(output_files)} output file(s) for calculation {str(calc.id)} (scr: {CALCUS_SCR_HOME})"
     )
 
     calc.output_files = json.dumps(output_files)
@@ -4069,10 +4069,14 @@ def run_calc(calc_id):
                 1, round((calc.date_finished - calc.date_started).total_seconds())
             )
 
+    calc.save()
+
     if calc.step.creates_ensemble:
         analyse_opt(calc.id)
+        calc.refresh_from_db()
 
     load_output_files(calc)
+    calc.refresh_from_db()
 
     global cache_ind
 
