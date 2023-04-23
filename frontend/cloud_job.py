@@ -114,7 +114,7 @@ def create_container_job(calc, nproc, timeout):
         "CALCUS_CLOUD": "True",
         "NUM_CPU": str(nproc),
         "OMP_NUM_THREADS": f"{nproc},1",
-        "OMP_STACKSIZE": "1536M",  # for the c3 machines only
+        "OMP_STACKSIZE": "900M",
         "CALCUS_TIMEOUT": str(timeout),
     }
 
@@ -125,7 +125,7 @@ def create_container_job(calc, nproc, timeout):
 
     resources = batch_v1.ComputeResource()
     resources.cpu_milli = nproc * 1000  # in milliseconds per cpu-second
-    resources.memory_mib = nproc * 1024 * 2
+    resources.memory_mib = nproc * 1024
     task.compute_resource = resources
 
     task.max_retry_count = 1
@@ -139,7 +139,7 @@ def create_container_job(calc, nproc, timeout):
     group.parallelism = 1
 
     policy = batch_v1.AllocationPolicy.InstancePolicy()
-    policy.machine_type = f"c3-highcpu-{nproc}"
+    policy.machine_type = f"n2d-highcpu-{nproc}"
 
     instances = batch_v1.AllocationPolicy.InstancePolicyOrTemplate()
     instances.policy = policy

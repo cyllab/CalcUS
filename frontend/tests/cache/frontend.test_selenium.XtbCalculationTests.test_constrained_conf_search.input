@@ -1,4 +1,4 @@
-crest in.xyz -cinp input -rthr 0.6 -ewin 6
+crest in.xyz -cinp input -rthr 2.0 -ewin 6
 $constrain
 force constant=1.0
 reference=in.xyz

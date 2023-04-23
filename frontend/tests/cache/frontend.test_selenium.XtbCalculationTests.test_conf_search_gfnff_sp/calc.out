@@ -30,10 +30,10 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
  Command line input:
- > crest in.xyz -gfn2//gfnff -rthr 0.6 -ewin 6
+ > crest in.xyz -gfn2//gfnff -rthr 2.0 -ewin 6
 
   -gfn2//gfnff : energy reweighting
-  -rthr 0.6
+  -rthr 2.0
   -ewin 6
  
  -------------------------
@@ -56,7 +56,7 @@ Generating MTD length from a flexibility measure
 Starting a trial MTD to test settings
 -------------------------------------
  Estimated runtime for one MTD (5.0 ps) on a single thread: 0 sec
- Estimated runtime for a batch of 14 MTDs on 4 threads: 1 sec
+ Estimated runtime for a batch of 14 MTDs on 4 threads: 0 sec
  
  list of Vbias parameters applied:
 $metadyn    0.00300   1.300
@@ -114,13 +114,6 @@ Starting Meta-MD   4 with the settings:
      dumpstep(Vbias)/ps :     1.0
      Vbias factor k /Eh :  0.0270
      Vbias exp α /bohr⁻²:    0.78
-Starting Meta-MD   5 with the settings:
-     MD time /ps        :     5.0
-     dt /fs             :     2.0
-     dumpstep(trj) /fs  :     100
-     dumpstep(Vbias)/ps :     1.0
-     Vbias factor k /Eh :  0.0135
-     Vbias exp α /bohr⁻²:    0.78
 Starting Meta-MD   6 with the settings:
      MD time /ps        :     5.0
      dt /fs             :     2.0
@@ -135,19 +128,19 @@ Starting Meta-MD   7 with the settings:
      dumpstep(Vbias)/ps :     1.0
      Vbias factor k /Eh :  0.0270
      Vbias exp α /bohr⁻²:    0.47
+Starting Meta-MD   5 with the settings:
+     MD time /ps        :     5.0
+     dt /fs             :     2.0
+     dumpstep(trj) /fs  :     100
+     dumpstep(Vbias)/ps :     1.0
+     Vbias factor k /Eh :  0.0135
+     Vbias exp α /bohr⁻²:    0.78
 Starting Meta-MD   8 with the settings:
      MD time /ps        :     5.0
      dt /fs             :     2.0
      dumpstep(trj) /fs  :     100
      dumpstep(Vbias)/ps :     1.0
      Vbias factor k /Eh :  0.0135
-     Vbias exp α /bohr⁻²:    0.47
-Starting Meta-MD   9 with the settings:
-     MD time /ps        :     5.0
-     dt /fs             :     2.0
-     dumpstep(trj) /fs  :     100
-     dumpstep(Vbias)/ps :     1.0
-     Vbias factor k /Eh :  0.0068
      Vbias exp α /bohr⁻²:    0.47
 Starting Meta-MD  10 with the settings:
      MD time /ps        :     5.0
@@ -156,13 +149,13 @@ Starting Meta-MD  10 with the settings:
      dumpstep(Vbias)/ps :     1.0
      Vbias factor k /Eh :  0.0270
      Vbias exp α /bohr⁻²:    0.28
-Starting Meta-MD  11 with the settings:
+Starting Meta-MD   9 with the settings:
      MD time /ps        :     5.0
      dt /fs             :     2.0
      dumpstep(trj) /fs  :     100
      dumpstep(Vbias)/ps :     1.0
-     Vbias factor k /Eh :  0.0135
-     Vbias exp α /bohr⁻²:    0.28
+     Vbias factor k /Eh :  0.0068
+     Vbias exp α /bohr⁻²:    0.47
 Starting Meta-MD  12 with the settings:
      MD time /ps        :     5.0
      dt /fs             :     2.0
@@ -170,13 +163,13 @@ Starting Meta-MD  12 with the settings:
      dumpstep(Vbias)/ps :     1.0
      Vbias factor k /Eh :  0.0068
      Vbias exp α /bohr⁻²:    0.28
-Starting Meta-MD  14 with the settings:
+Starting Meta-MD  11 with the settings:
      MD time /ps        :     5.0
      dt /fs             :     2.0
      dumpstep(trj) /fs  :     100
      dumpstep(Vbias)/ps :     1.0
-     Vbias factor k /Eh :  0.0450
-     Vbias exp α /bohr⁻²:    0.80
+     Vbias factor k /Eh :  0.0135
+     Vbias exp α /bohr⁻²:    0.28
 Starting Meta-MD  13 with the settings:
      MD time /ps        :     5.0
      dt /fs             :     2.0
@@ -184,20 +177,27 @@ Starting Meta-MD  13 with the settings:
      dumpstep(Vbias)/ps :     1.0
      Vbias factor k /Eh :  0.0090
      Vbias exp α /bohr⁻²:    0.10
-*Meta-MTD 12 finished*
-*Meta-MTD 7 finished*
-*Meta-MTD 11 finished*
-*Meta-MTD 9 finished*
-*Meta-MTD 6 finished*
-*Meta-MTD 8 finished*
-*Meta-MTD 3 finished*
-*Meta-MTD 1 finished*
+Starting Meta-MD  14 with the settings:
+     MD time /ps        :     5.0
+     dt /fs             :     2.0
+     dumpstep(trj) /fs  :     100
+     dumpstep(Vbias)/ps :     1.0
+     Vbias factor k /Eh :  0.0450
+     Vbias exp α /bohr⁻²:    0.80
 *Meta-MTD 4 finished*
+*Meta-MTD 8 finished*
+*Meta-MTD 12 finished*
 *Meta-MTD 5 finished*
 *Meta-MTD 14 finished*
+*Meta-MTD 6 finished*
 *Meta-MTD 10 finished*
-*Meta-MTD 13 finished*
+*Meta-MTD 11 finished*
+*Meta-MTD 9 finished*
 *Meta-MTD 2 finished*
+*Meta-MTD 1 finished*
+*Meta-MTD 13 finished*
+*Meta-MTD 7 finished*
+*Meta-MTD 3 finished*
  
 -----------------------
 Multilevel Optimization
@@ -211,13 +211,13 @@ Multilevel Optimization
  done.
  running RMSDs...
  done.
- E lowest :   -11.39359
+ E lowest :   -11.39355
  19 structures remain within    12.00 kcal/mol window
  This is less than 5% of the initial 686 structures.
  Increasing energy window to include more...
  running RMSDs...
  done.
- E lowest :   -11.39359
+ E lowest :   -11.39355
  19 structures remain within    18.00 kcal/mol window
  
  -------------------------------------
@@ -254,6 +254,13 @@ Starting Meta-MD   2 with the settings:
      dumpstep(Vbias)/ps :     1.0
      Vbias factor k /Eh :  0.0135
      Vbias exp α /bohr⁻²:    1.30
+Starting Meta-MD   3 with the settings:
+     MD time /ps        :     5.0
+     dt /fs             :     2.0
+     dumpstep(trj) /fs  :     100
+     dumpstep(Vbias)/ps :     1.0
+     Vbias factor k /Eh :  0.0068
+     Vbias exp α /bohr⁻²:    1.30
 Starting Meta-MD   4 with the settings:
      MD time /ps        :     5.0
      dt /fs             :     2.0
@@ -268,13 +275,6 @@ Starting Meta-MD   5 with the settings:
      dumpstep(Vbias)/ps :     1.0
      Vbias factor k /Eh :  0.0135
      Vbias exp α /bohr⁻²:    0.78
-Starting Meta-MD   3 with the settings:
-     MD time /ps        :     5.0
-     dt /fs             :     2.0
-     dumpstep(trj) /fs  :     100
-     dumpstep(Vbias)/ps :     1.0
-     Vbias factor k /Eh :  0.0068
-     Vbias exp α /bohr⁻²:    1.30
 Starting Meta-MD   6 with the settings:
      MD time /ps        :     5.0
      dt /fs             :     2.0
@@ -296,13 +296,6 @@ Starting Meta-MD   8 with the settings:
      dumpstep(Vbias)/ps :     1.0
      Vbias factor k /Eh :  0.0135
      Vbias exp α /bohr⁻²:    0.47
-Starting Meta-MD   9 with the settings:
-     MD time /ps        :     5.0
-     dt /fs             :     2.0
-     dumpstep(trj) /fs  :     100
-     dumpstep(Vbias)/ps :     1.0
-     Vbias factor k /Eh :  0.0068
-     Vbias exp α /bohr⁻²:    0.47
 Starting Meta-MD  10 with the settings:
      MD time /ps        :     5.0
      dt /fs             :     2.0
@@ -310,6 +303,13 @@ Starting Meta-MD  10 with the settings:
      dumpstep(Vbias)/ps :     1.0
      Vbias factor k /Eh :  0.0270
      Vbias exp α /bohr⁻²:    0.28
+Starting Meta-MD   9 with the settings:
+     MD time /ps        :     5.0
+     dt /fs             :     2.0
+     dumpstep(trj) /fs  :     100
+     dumpstep(Vbias)/ps :     1.0
+     Vbias factor k /Eh :  0.0068
+     Vbias exp α /bohr⁻²:    0.47
 Starting Meta-MD  11 with the settings:
      MD time /ps        :     5.0
      dt /fs             :     2.0
@@ -324,18 +324,18 @@ Starting Meta-MD  12 with the settings:
      dumpstep(Vbias)/ps :     1.0
      Vbias factor k /Eh :  0.0068
      Vbias exp α /bohr⁻²:    0.28
-*Meta-MTD 10 finished*
-*Meta-MTD 9 finished*
-*Meta-MTD 8 finished*
-*Meta-MTD 12 finished*
 *Meta-MTD 11 finished*
-*Meta-MTD 4 finished*
-*Meta-MTD 3 finished*
-*Meta-MTD 7 finished*
-*Meta-MTD 5 finished*
+*Meta-MTD 10 finished*
 *Meta-MTD 2 finished*
+*Meta-MTD 8 finished*
+*Meta-MTD 7 finished*
 *Meta-MTD 1 finished*
+*Meta-MTD 3 finished*
+*Meta-MTD 4 finished*
 *Meta-MTD 6 finished*
+*Meta-MTD 9 finished*
+*Meta-MTD 12 finished*
+*Meta-MTD 5 finished*
  
 -----------------------
 Multilevel Optimization
@@ -349,20 +349,20 @@ Multilevel Optimization
  done.
  running RMSDs...
  done.
- E lowest :   -11.39361
- 17 structures remain within    12.00 kcal/mol window
+ E lowest :   -11.39354
+ 14 structures remain within    12.00 kcal/mol window
  This is less than 5% of the initial 588 structures.
  Increasing energy window to include more...
  running RMSDs...
  done.
- E lowest :   -11.39361
- 17 structures remain within    18.00 kcal/mol window
+ E lowest :   -11.39354
+ 14 structures remain within    18.00 kcal/mol window
  
  -------------------------------------
  2. optimization with tight thresholds
  -------------------------------------
- Optimizing all 18 structures from file "crest_rotamers_1.xyz" ...
- 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18
+ Optimizing all 15 structures from file "crest_rotamers_1.xyz" ...
+ 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
  done.
  running RMSDs...
  done.
@@ -422,12 +422,12 @@ Starting MD   6 with the settings:
      MD Temperature /K  :   500.0
      dt /fs             :     2.0
      dumpstep(trj) /fs  :     100
-*MD 4 finished*
-*MD 6 finished*
 *MD 3 finished*
-*MD 5 finished*
-*MD 1 finished*
 *MD 2 finished*
+*MD 1 finished*
+*MD 4 finished*
+*MD 5 finished*
+*MD 6 finished*
  Appending file crest_rotamers_2.xyz with new structures
  
  -------------------------------------------
@@ -456,15 +456,15 @@ number of atoms                :     9
 number of points on xyz files  :     3
 conformer energy window  /kcal :    6.00
 CN per atom difference cut-off :  0.3000
-RMSD threshold                 :  1.2000
+RMSD threshold                 :  4.0000
 max. # of generated structures : 250
  reading xyz file ...
  # in E window                  3
  generating pairs ...           5
  generated pairs           :           3
  number of clash discarded :           0
- average rmsd w.r.t input  : 1.90472
- sd of ensemble            : 0.17516
+ average rmsd w.r.t input  : 0.73067
+ sd of ensemble            : 0.21932
  number of new structures      :           1
  removed identical structures  :           2
  writing            1  TMPCONF* dirs ...
@@ -478,7 +478,7 @@ max. # of generated structures : 250
  Now appending opt.xyz file with new structures
  running RMSDs...
  done.
- E lowest :   -11.39341
+ E lowest :   -11.39342
  1 structures remain within    10.00 kcal/mol window
  --------------------------------------
  GC: optimization with tight thresholds
@@ -509,26 +509,26 @@ max. # of generated structures : 250
  output file name : crest_rotamers_7.xyz
  number of atoms                :   9
  number of points on xyz files  :   3
- RMSD threshold                 :   0.6000
+ RMSD threshold                 :   2.0000
  Bconst threshold               :   0.0100
  population threshold           :   0.0500
  conformer energy window  /kcal :   6.0000
  # fragment in coord            :     1
  # bonds in reference structure :     8
  number of reliable points      :     3
- reference state Etot :  -11.3933847000000
+ reference state Etot :  -11.3933837300000
  number of doubles removed by rot/RMSD         :           0
  total number unique points considered further :           3
        Erel/kcal        Etot weight/tot  conformer     set   degen     origin
-       1   0.000   -11.39338    0.86532    0.86532       1       1     md2
-       2   1.275   -11.39135    0.10087    0.10087       2       1     hor
-       3   1.923   -11.39032    0.03382    0.03382       3       1     md1
+       1   0.000   -11.39338    0.86524    0.86524       1       1     md5
+       2   1.274   -11.39135    0.10096    0.10096       2       1     hor
+       3   1.923   -11.39032    0.03381    0.03381       3       1     md4
 T /K                                  :   298.15
 E lowest                              :   -11.39338
 ensemble average energy (kcal)        :    0.194
-ensemble entropy (J/mol K, cal/mol K) :    3.917    0.936
+ensemble entropy (J/mol K, cal/mol K) :    3.918    0.936
 ensemble free energy (kcal/mol)       :   -0.279
-population of lowest in %             :   86.532
+population of lowest in %             :   86.524
  number of unique conformers for further calc            3
  list of relative energies saved as "crest.energies"
  
@@ -537,10 +537,10 @@ population of lowest in %             :   86.532
  -----------------
              test MD wall time :         0h : 0m : 0s
                  MTD wall time :         0h : 0m : 0s
-      multilevel OPT wall time :         0h : 0m : 9s
+      multilevel OPT wall time :         0h : 0m : 8s
                   MD wall time :         0h : 0m : 1s
                   GC wall time :         0h : 0m : 0s
 --------------------
-Overall wall time  : 0h : 0m :11s
+Overall wall time  : 0h : 0m :10s
  
  CREST terminated normally.
