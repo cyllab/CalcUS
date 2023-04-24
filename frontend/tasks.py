@@ -3953,7 +3953,10 @@ def load_output_files(calc):
         )
         return
 
-    output_files = calc.output_files
+    if calc.output_files.strip() in ["{}", ""]:
+        output_files = {}
+    else:
+        output_files = json.loads(calc.output_files)
     for log_name in glob.glob(
         os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.log")
     ) + glob.glob(os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.out")):
