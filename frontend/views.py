@@ -4234,7 +4234,8 @@ def log(request, pk):
     if not can_view_calculation(calc, request.user):
         return HttpResponse(status=403)
 
-    load_output_files(calc)
+    if not settings.IS_CLOUD:
+        load_output_files(calc)
 
     if len(calc.output_files) == 0:
         return HttpResponse(status=204)

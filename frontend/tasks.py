@@ -473,9 +473,13 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
             return testing_delay_local(res)
 
         try:
-            t = subprocess.Popen(
-                shlex.split(command), stdout=stream, stderr=stream, cwd=exe_dir
-            )
+            if exe_dir.strip() != "":
+                t = subprocess.Popen(
+                    shlex.split(command), stdout=stream, stderr=stream, cwd=exe_dir
+                )
+            else:
+                t = subprocess.Popen(shlex.split(command), stdout=stream, stderr=stream)
+
         except FileNotFoundError:
             logger.error(f'Could not run command "{command}" - executable not found')
             calc.error_message = f"{command.split()[0]} is not found"
@@ -2219,6 +2223,7 @@ def calc_to_ccinput(calc):
         raise Exception(
             f"No method specified; theory level is {calc.parameters.theory_level}"
         )
+
     _specifications = calc.parameters.specifications
     software = calc.parameters.software.lower()
 
@@ -3930,8 +3935,9 @@ def add_input_to_calc(calc):
 
     calc.input_file = inp.input_file
 
-    if hasattr(inp, "confirmed_specifications"):
-        calc.parameters.specifications = inp.confirmed_specifications
+    # TODO: make ccinput support keywords in a more general way
+    # if hasattr(inp, "confirmed_specifications"):
+    #    calc.parameters.specifications = inp.confirmed_specifications
 
     if hasattr(inp, "command"):
         calc.command = inp.command
@@ -3941,7 +3947,13 @@ def add_input_to_calc(calc):
 
 
 def load_output_files(calc):
-    output_files = {}
+    if not os.path.isdir(os.path.join(CALCUS_SCR_HOME, str(calc.id))):
+        logger.warning(
+            f"Cannot load the logs of calculation {calc.id}: no scratch directory"
+        )
+        return
+
+    output_files = calc.output_files
     for log_name in glob.glob(
         os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.log")
     ) + glob.glob(os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.out")):
@@ -4057,8 +4069,8 @@ def run_calc(calc_id):
                 calc.error_message = "Failed to execute the relevant command"
         else:
             logger.warning(f"Calculation {calc.id} finished with return code {ret}")
+            calc.status = 3
             if calc.error_message == "":
-                calc.status = 3
                 calc.error_message = "Unknown termination"
 
     calc.date_finished = timezone.now()
