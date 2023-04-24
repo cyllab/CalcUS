@@ -449,6 +449,8 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
 
             return ret
     else:  # Local
+        # Assume the calculation will be run in the same directory as the output file
+        exe_dir = os.path.dirname(log_file)
         if calc_id != -1 and settings.IS_CLOUD:
             try:
                 timeout = int(os.getenv("CALCUS_TIMEOUT", "300"))
@@ -471,7 +473,9 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
             return testing_delay_local(res)
 
         try:
-            t = subprocess.Popen(shlex.split(command), stdout=stream, stderr=stream)
+            t = subprocess.Popen(
+                shlex.split(command), stdout=stream, stderr=stream, cwd=exe_dir
+            )
         except FileNotFoundError:
             logger.error(f'Could not run command "{command}" - executable not found')
             calc.error_message = f"{command.split()[0]} is not found"
