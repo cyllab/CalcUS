@@ -72,12 +72,13 @@ If you use CalcUS in your research, please cite it:
 
 **Contributor of significant features**: 
 
-+ Divyam Agarwal (automated multi-step calculations)
++ Divyam Agarwal (@div-yam): automated multi-step calculations (partially completed)
 
 **Contributors to the web frontend**: 
 
-+ Glen Forcha
-+ Dhairya Khanna
++ Glen Forcha (@ForchaGlen)
++ Dhairya Khanna (@Dhairya3124)
++ Omkar (@Omkar0803)
 
 **Beta-testers**:
 
