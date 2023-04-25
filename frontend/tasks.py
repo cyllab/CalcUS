@@ -2270,9 +2270,13 @@ def calc_to_ccinput(calc):
         "name": "in",
         "driver": calc.parameters.driver,
     }
+
     try:
         inp = generate_calculation(**params)
-    except CCInputException as e:
+    except Exception as e:
+        logger.error(
+            f"Could not generate the input file: got exception {str(e)} from ccinput"
+        )
         return e
 
     return inp
@@ -3924,7 +3928,7 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
 
 def add_input_to_calc(calc):
     inp = calc_to_ccinput(calc)
-    if isinstance(inp, CCInputException):
+    if isinstance(inp, Exception):
         msg = f"CCInput error: {str(inp)}"
         if IS_TEST or settings.DEBUG:
             print(msg)

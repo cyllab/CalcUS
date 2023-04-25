@@ -4483,11 +4483,10 @@ def check_solvent(request):
 
     software = clean(request.POST["software"]).lower()
 
-    if software != "xtb":  # To change once xtb is supported by ccinput
-        try:
-            software = ccinput.utilities.get_abs_software(software)
-        except ccinput.exceptions.InvalidParameter:
-            return HttpResponse(status=400)
+    try:
+        software = ccinput.utilities.get_abs_software(software)
+    except ccinput.exceptions.InvalidParameter:
+        return HttpResponse(status=400)
 
     try:
         solvent = ccinput.utilities.get_abs_solvent(solv)
