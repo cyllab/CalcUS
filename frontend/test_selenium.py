@@ -4260,6 +4260,9 @@ class MiscCalculationTests(CalcusLiveServer):
             # self.assertEqual(line[3], str(structs[ind][1]))
             self.assertEqual(line[3], f"{ref_weights[ind]:.2f}")
 
+    """
+    # This test has been (temporarily?) removed since confirmed specifications have been disabled
+    # in order to avoid some issues they caused in some edge cases (AuxC fitting basis sets with double hybrids)
     def test_confirmed_specifications(self):
         params = {
             "mol_name": "my_mol",
@@ -4285,7 +4288,6 @@ class MiscCalculationTests(CalcusLiveServer):
         specs = self.get_confirmed_specifications()
         self.assertEqual(specs, "")
 
-    """
     def test_combine_molecule(self):
         params = {
                 'mol_name': 'Test',
