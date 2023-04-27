@@ -4293,9 +4293,9 @@ def tour_done(request):
     if act not in ["cancel", "complete"]:
         return HttpResponse(status=400)
 
-    # record_event_analytics(request, f"tour_{act}")
-    # request.user.tour_done = True
-    # request.user.save()
+    record_event_analytics(request, f"tour_{act}")
+    request.user.tour_done = True
+    request.user.save()
 
     return HttpResponse(status=204)
 
@@ -4342,7 +4342,7 @@ def launch(request):
     params = {
         "procs": BasicStep.objects.all().order_by(Lower("name")),
         "packages": settings.PACKAGES,
-        "start_tour": not request.user.tour_done,
+        "start_tour": not request.user.tour_done and not IS_TEST,
     }
 
     if "ensemble" in request.POST.keys():
