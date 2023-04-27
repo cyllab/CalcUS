@@ -131,10 +131,24 @@
 
 <div class="columns" id="main_columns">
     <div class="column is-narrow has-text-centered">
-        {% if not ensemble and not structure and not calc %}
         <script>
             let win_width = Math.round(Math.max(400, $(window).width()/5));
             let win_height = Math.round(Math.max(300, $(window).width()/5*(3/4)));
+
+            let editor = new ChemDoodle.EditorCanvas3D("editor", win_width, win_height, {
+                useServices: false,
+                oneMolecule: false,
+            });
+            editor.styles.atoms_usePYMOLColors = true;
+            editor.oneMolecule = false;
+            editor.styles.set3DRepresentation("Stick");
+            editor.styles.shapes_color = "c10000";
+            editor.repaint();
+        </script>
+
+        {% if not ensemble and not structure and not calc %}
+        <script>
+
             let sketcher = new ChemDoodle.SketcherCanvas("sketcher", win_width, win_height, {
                 useServices: false,
                 oneMolecule: false,
@@ -149,17 +163,6 @@
         <button class="button is-info" onclick="get_3D();" id="gen_3D_btn">Generate 3D representation</button>
         {% endif %}
 
-        <script>
-            let editor = new ChemDoodle.EditorCanvas3D("editor", win_width, win_height, {
-                useServices: false,
-                oneMolecule: false,
-            });
-            editor.styles.atoms_usePYMOLColors = true;
-            editor.oneMolecule = false;
-            editor.styles.set3DRepresentation("Stick");
-            editor.styles.shapes_color = "c10000";
-            editor.repaint();
-        </script>
         <div id="3d_msg"></div>
     </div>
     {% include 'frontend/calc_form_body.html' %}
