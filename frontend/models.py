@@ -119,6 +119,8 @@ class User(AbstractUser):
     default_gaussian = models.CharField(max_length=1000, default="")
     default_orca = models.CharField(max_length=1000, default="")
 
+    tour_done = models.BooleanField(default=False)
+
     code = models.CharField(max_length=16)  ### ?
 
     pref_units = models.PositiveIntegerField(default=0)

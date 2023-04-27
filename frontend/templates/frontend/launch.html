@@ -19,7 +19,7 @@
         margin: 0 auto;
     }
     #main_columns {
-        max-width: calc(60em + 400px);
+        max-width: calc(60em + max(400px, 20vw));
         margin: 0 auto;
     }
     @media screen and (max-width: 1407px) {
@@ -48,7 +48,24 @@
             opacity: 1;
         }
     }
-
+    .shepherd-button {
+        background: #3039E4 !important;
+        margin: auto auto auto auto !important;
+        width: 10em;
+    }
+    .shepherd-text {
+        text-align: justify;
+    }
+    .shepherd-text > a {
+        color: blue;
+        text-decoration: underline;
+    }
+    .shepherd-content {
+        padding: 1em;
+    }
+    .shepherd-step-highlight {
+        margin: 10em;
+    }
     @media screen and (min-width: 1408px) {
         #content_container {
             width: 80%;
@@ -67,6 +84,9 @@
     .field {
         margin-top: 0.5em;
     }
+    #gen_3D_btn {
+        margin-bottom: 2em;
+    }
 
 </style>
 
@@ -75,13 +95,47 @@
     <script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
     <link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
 
+    {% if start_tour %}
+    <script src="https://cdn.jsdelivr.net/npm/@floating-ui/core@1.2.6"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.2.7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/shepherd.js@11.1.1/dist/js/shepherd.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shepherd.js@11.1.1/dist/css/shepherd.css"/>
+    <script>
+    const tour = new Shepherd.Tour({
+        useModalOverlay: true,
+        defaultStepOptions: {
+            classes: '',
+            scrollTo: { behavior: 'smooth', block: 'center' },
+            modalOverlayOpeningPadding: "10",
+            floatingUIOptions: {  middleware: [window.FloatingUIDOM.offset({ mainAxis: 30})] }
+        },
+        exitOnEsc: true,
+        keyboardNavigation: true,
+    });
+
+
+    ['complete', 'cancel'].forEach(event => Shepherd.on(event, () => {
+        $.ajax({
+            method: "POST",
+            url: "/tour_done/",
+            data: {"action": event},
+	        headers: {
+				"X-CSRFToken": '{{ csrf_token }}',
+			}
+        });
+    }));
+    </script>
+    {% endif %}
+
 {% include 'frontend/calc_form_head.html' %} {% endblock %} {% block content %} {% csrf_token %}
 
 <div class="columns" id="main_columns">
     <div class="column is-narrow has-text-centered">
         {% if not ensemble and not structure and not calc %}
         <script>
-            let sketcher = new ChemDoodle.SketcherCanvas("sketcher", 400, 300, {
+            let win_width = Math.round(Math.max(400, $(window).width()/5));
+            let win_height = Math.round(Math.max(300, $(window).width()/5*(3/4)));
+            let sketcher = new ChemDoodle.SketcherCanvas("sketcher", win_width, win_height, {
                 useServices: false,
                 oneMolecule: false,
             });
@@ -92,11 +146,11 @@
             sketcher.repaint();
         </script>
         <br />
-        <button class="button" onclick="get_3D();" id="gen_3D_btn">Generate 3D representation</button>
+        <button class="button is-info" onclick="get_3D();" id="gen_3D_btn">Generate 3D representation</button>
         {% endif %}
 
         <script>
-            let editor = new ChemDoodle.EditorCanvas3D("editor", 400, 300, {
+            let editor = new ChemDoodle.EditorCanvas3D("editor", win_width, win_height, {
                 useServices: false,
                 oneMolecule: false,
             });
@@ -111,8 +165,105 @@
     {% include 'frontend/calc_form_body.html' %}
 </div>
 <script>
+    function _add_step(id, text, el, pos) {
+        tour.addStep({
+            id: id,
+            text: text,
+            attachTo: {
+                element: el,
+                on: pos
+            },
+            buttons: [
+                {
+                    text: 'Back',
+                    action: tour.back
+                },
+                {
+                    text: 'Next',
+                    action: tour.next
+                }
+            ]
+        });
+    }
     window.onload = function () {
         document.getElementById("calcform").action = "/submit_calculation/";
+        {% if start_tour %}
+        tour.addStep({
+            id: 'tour_intro',
+            text: 'It seems like it is your first time here, do you want to go through a quick tour of the interface?',
+            buttons: [
+                {
+                    text: 'No thanks',
+                    action: tour.cancel
+                },
+                {
+                    text: 'Yes!',
+                    action: tour.next
+                }
+            ]
+        });
+
+        tour.addStep({
+            id: 'tour_briefing',
+            text: 'This tour will tell you about the main options of the interface. You can navigate using the arrow keys or abort the tour using the escape key.',
+            buttons: [
+                {
+                    text: 'Start',
+                    action: tour.next
+                }
+            ]
+        });
+
+        _add_step('tour_sketcher', 'This is the sketcher. You can draw molecules as input. Specific elements can be chosen using your keyboard while hovering over an atom.', '#sketcher', 'left');
+        _add_step('tour_3D', 'You can verify that the 3D structure is correct by clicking here. The structure will be loaded in the viewer below.', '#gen_3D_btn', 'left');
+        _add_step('tour_file_upload', 'Instead of using the sketcher, you can also upload structure files (.xyz, .mol, .mol2, .sdf...)', '#file_structure', 'bottom');
+        _add_step('tour_charge', 'If your molecule isn\'t neutral and in a singlet state, enter the proper charge and multiplicity.', '#charge_field', 'bottom');
+
+        _add_step('tour_mol', 'You need to specify a molecule name for your input. This can be anything, but should be clear for you.', '#calc_mol_name_field', 'bottom');
+        _add_step('tour_ensemble', 'This field specifies what the specific result of the calculation will be called. If you don\'t specify a name, the calculation type will be used as name.', '#calc_name_field', 'bottom');
+        _add_step('tour_project', 'You need to select a project (or create a new one) for each calculation. Projects are used to keep related results together and to make it easier to find past results.', '#project_field', 'bottom');
+    
+        {% if IS_CLOUD %}
+        _add_step('tour_software', 'The software to use for the calculation is selected here. CalcUS Cloud currently only offers xtb, although more packages will be supported in the future.', '#software_field', 'bottom');
+        {% else %}
+        _add_step('tour_software', 'The software to use for the calculation is selected here. Your options may be limited by the software that you have locally.', '#software_field', 'bottom');
+        {% endif %}
+
+        _add_step('tour_driver', 'The driver is the package that manages the procedure that you are using (for example, the geometrical optimization algorithm). It can simply be the same as the software which runs the energy calculation, if the algorithm is available in it. In some cases, it is necessary or useful to use a separate driver to have access to more options. <br><br> For example, while xtb cannot perform TS optimization, the Pysisyphus driver can be used in combination with xtb in order to perform TS optimizations', '#driver_field', 'bottom');
+
+        {% if IS_CLOUD %}
+        _add_step('tour_type', 'The calculation type defines what the goal of the calculation is. The available options will change depending on the software package and might require specific drivers.', '#type_field', 'bottom');
+        {% else %}
+        _add_step('tour_type', 'The calculation type defines what the goal of the calculation is. Some options might require a specific drivers.', '#type_field', 'bottom');
+        {% endif %}
+
+        {% if IS_CLOUD %}
+        _add_step('tour_theory_level', 'This option allows you to choose the theory level to use. CalcUS Cloud only offers the eXtended Tight-Binding (xtb) methods developed by Stefan Grimme and coworkers.', '#calc_theory_level', 'bottom');
+        {% else %}
+        _add_step('tour_theory_level', 'This option allows you to choose the theory level to use. The available options will vary depending on the selected software. Additional details about the method to use will be required.', '#calc_theory_level', 'bottom');
+        {% endif %}
+
+        {% if IS_CLOUD %}
+        _add_step('tour_method', 'You can choose here the specific flavor of tight-binding to use. In summary, GFN2-xTB is the most recent and accurate method, while GFN1-xTB and GFN0-xTB are somewhat faster and more approximate. GFN-FF is a forcefield derived from the methodology used in the other methods and it is much faster. Refer to <a href="https://xtb-docs.readthedocs.io/en/latest/contents.html">the official documentation for more information</a><br><br>In general, <b>GFN2-xTB is recommended for almost all calculations</b>, since it is still extremely fast. <b>The only exceptions are conformational searches, which are much more computationally intensive; GFN-FF is recommended for these</b> unless your molecule is small or is not well represented by forcefield.', '#calc_xtb_method', 'bottom');
+        {% endif %}
+
+            _add_step('tour_solvent', 'If desired, implicit solvation for a given solvent can be added here.', '#solvent_field', 'bottom');
+
+            _add_step('tour_specifications', 'Additional options can be added here (<a href=https://calcus.readthedocs.io/en/latest/software-packages.html#specifications"> see the CalcUS documentation</a>)', '#custom_specifications_field', 'bottom');
+
+        tour.addStep({
+            id: 'tour_end',
+            text: 'This concludes the quick tour. If you need help, contact <a href="mailto:support@calcus.cloud">support@calcus.cloud</a> or <a href="https://github.com/cyllab/CalcUS">visit the project\'s Github repository</a>.',
+            buttons: [
+                {
+                    text: 'Complete tour',
+                    action: tour.complete
+                }
+            ]
+        });
+
+        tour.start();
+        {% endif %}
     };
 </script>
 {% endblock content %}

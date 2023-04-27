@@ -4284,6 +4284,32 @@ def profile(request):
 
 
 @login_required
+def tour_done(request):
+    if "action" not in request.POST:
+        return HttpResponse(status=400)
+
+    act = clean(request.POST["action"])
+
+    if act not in ["cancel", "complete"]:
+        return HttpResponse(status=400)
+
+    # record_event_analytics(request, f"tour_{act}")
+    # request.user.tour_done = True
+    # request.user.save()
+
+    return HttpResponse(status=204)
+
+
+@login_required
+def tour_restart(request):
+    record_event_analytics(request, f"tour_restart")
+    request.user.tour_done = False
+    request.user.save()
+
+    return HttpResponseRedirect("/launch/")
+
+
+@login_required
 def update_preferences(request):
     if request.method == "POST":
         if "pref_units" not in request.POST.keys():
@@ -4316,6 +4342,7 @@ def launch(request):
     params = {
         "procs": BasicStep.objects.all().order_by(Lower("name")),
         "packages": settings.PACKAGES,
+        "start_tour": not request.user.tour_done,
     }
 
     if "ensemble" in request.POST.keys():

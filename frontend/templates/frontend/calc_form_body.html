@@ -126,7 +126,7 @@
 			</div>
 
 			<div class="column is-narrow">
-				<div class="field">
+				<div class="field" id="charge_field">
 					<label class="label">Charge</label>
 					<div class="control" >
 						<input class="input" name="calc_charge" id="calc_charge" type="text" value="0">
@@ -134,7 +134,7 @@
 				</div>
 			</div>
 			<div class="column is-narrow">
-				<div class="field">
+				<div class="field" id="multiplicity_field">
 					<label class="label">Multiplicity</label>
 					<div class="control" >
 						<input class="input" name="calc_multiplicity" id="calc_multiplicity" type="text" value="1">
@@ -144,7 +144,7 @@
 		</div>
 		<div class="columns">
 			<div class="column is-narrow">
-				<div class="field">
+				<div class="field" id="solvent_field">
 					<label class="label">Solvent</label>
 					<div class="control">
 						<input class="input" name="calc_solvent" id="calc_solvent" type="text" oninput="refresh_availabilities();" list="solvent_options">
@@ -191,7 +191,7 @@
 		{% if is_flowchart is None %}
 		<div class="columns">
 			<div class="column is-narrow">
-				<div class="field">
+				<div class="field" id="project_field">
 					<label class="label">Project</label>
 					<div class="control">
 						<div class="select" >
@@ -220,7 +220,7 @@
 
 		<div class="columns">
             <div class="column is-3">
-                <div class="field">
+                <div class="field" id="software_field">
                     <label class="label">Software</label>
                     <div class="control" >
                         <div class="select wide_select">
@@ -235,7 +235,7 @@
             </div>
 
             <div class="column is-3">
-                <div class="field">
+                <div class="field" id="driver_field">
                     <label class="label">Driver</label>
                     <div class="control">
                         <div class="select wide_select">
@@ -252,7 +252,7 @@
 
 
             <div class="column is-6">
-                <div class="field">
+                <div class="field" id="type_field">
                     <label class="label">Calculation Type</label>
                     <div class="control" >
                         <div class="select wide_select">
@@ -308,8 +308,8 @@
 
         <div>
             <div class="columns">
-                <div class="column is-3" id="calc_theory_level" >
-                    <div class="field">
+                <div class="column is-3">
+                    <div class="field" id="calc_theory_level">
                         <label class="label">Theory Level</label>
                         <div class="control">
                             <div class="select wide_select">
