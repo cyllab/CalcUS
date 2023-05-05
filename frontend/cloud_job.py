@@ -162,7 +162,7 @@ def create_container_job(calc, nproc, timeout):
     rand = str(uuid.uuid4())[:4]
     create_request = batch_v1.CreateJobRequest()
     create_request.job = job
-    create_request.job_id = f"j{str(calc.id).lower()}_{rand}"
+    create_request.job_id = f"j{str(calc.id).lower()}{rand}"
 
     create_request.parent = (
         f"projects/{settings.GCP_PROJECT_ID}/locations/{settings.GCP_LOCATION}"
