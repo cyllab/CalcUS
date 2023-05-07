@@ -36,6 +36,33 @@
     .plan-desc {
         font-weight: bold;
     }
+    #discount_strike {
+        margin-right: 0.2em;
+    }
 
+    strike {
+        text-decoration: none;
+        position: relative;
+    }
+
+    strike::before {
+        top: 40%;
+        background: red;
+        width: 110%;
+        transform: rotate(-15deg);  
+        position: absolute;
+        opacity: .6;
+        content: '';
+        height: .3rem;
+        border-radius: .2rem;
+        left: -8%;
+        white-space: nowrap;
+        display: block;
+    }
+    strike.straight::before {
+        transform: rotate(0deg);
+        left: -1%;
+        width: 102%;
+    }
 </style>
 

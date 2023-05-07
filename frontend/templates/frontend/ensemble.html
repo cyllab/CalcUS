@@ -95,7 +95,7 @@
         color: darkgray;
     }
     .modal-card {
-        max-width: 850px;
+        max-width: 80%;
         width: 100%;
     }
     #charges_viewer_div > canvas,
@@ -626,7 +626,9 @@
             </header>
             <section class="modal-card-body" id="fullscreen_section">
                 <script>
-                    let editorfs = new ChemDoodle.EditorCanvas3D("editorfs", 800, 600, {
+                    let large_width = Math.round(3*$(window).width()/4);
+                    let large_height = Math.round(3.3*$(window).width()/8);
+                    let editorfs = new ChemDoodle.EditorCanvas3D("editorfs", large_width, large_height, {
                         useServices: false,
                     });
                     editorfs.styles.set3DRepresentation("Stick");
