@@ -164,6 +164,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.password = "test1234"
 
         self.user = User.objects.create_user(email=self.email, password=self.password)
+
         self.login(self.email, self.password)
         time.sleep(0.1)  # Reduces glitches (I think?)
 
@@ -2105,12 +2106,13 @@ class CalcusCloudLiveServer(CalcusLiveServer):
         )
         btn.click()
 
-        email_inp = WebDriverWait(self.driver, 4).until(
-            EC.presence_of_element_located((By.ID, "email"))
-        )
-        email_inp.send_keys(email)
+        # The email is autofilled
 
-        self.driver.find_element(By.ID, "cardNumber").send_keys(card_number)
+        cardNumber = WebDriverWait(self.driver, 4).until(
+            EC.presence_of_element_located((By.ID, "cardNumber"))
+        )
+        cardNumber.send_keys(card_number)
+
         self.driver.find_element(By.ID, "cardExpiry").send_keys("0140")
         self.driver.find_element(By.ID, "cardCvc").send_keys("123")
         self.driver.find_element(By.ID, "billingName").send_keys("Selenium Robot")

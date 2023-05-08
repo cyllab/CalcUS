@@ -1228,7 +1228,7 @@ def cloud_refills(request):
     now = timezone.now()
     for u in User.objects.filter(is_temporary=False).all():
         if now > u.last_free_refill + timezone.timedelta(days=30):
-            time_left = u.allocated_seconds - u.billed_seconds
+            time_left = max(0, u.allocated_seconds - u.billed_seconds)
             refill = settings.FREE_DEFAULT_COMP_SECONDS - time_left
             if refill > 0:
                 u.last_free_refill = now
@@ -5524,6 +5524,7 @@ def checkout(request):
     price_id = clean(request.POST["priceId"])
 
     session = stripe.checkout.Session.create(
+        customer_email=request.user.email,
         success_url=settings.HOST_URL
         + "/subscription_successful/{CHECKOUT_SESSION_ID}",
         cancel_url=f"{settings.HOST_URL}/home/",
@@ -5541,7 +5542,31 @@ def checkout(request):
 
 
 def subscription_successful(request, session_id):
+    import stripe
+
     logger.info(f"Subscription successful for {session_id}")
+
+    session = stripe.checkout.Session.retrieve(session_id)
+    sub = stripe.Subscription.retrieve(session.subscription)
+
+    items = [
+        {
+            "item_id": sub.plan.id,
+            "discount": session.total_details.amount_discount,
+            "price": session.amount_total,
+            "quantity": 1,
+        }
+    ]
+
+    record_event_analytics(
+        request,
+        "purchase",
+        currency=session.currency,
+        transaction_id=sub.id,
+        value=session.amount_total,
+        items=items,
+    )
+
     return redirect("/profile/")
 
 
