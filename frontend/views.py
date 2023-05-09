@@ -5546,7 +5546,12 @@ def subscription_successful(request, session_id):
 
     logger.info(f"Subscription successful for {session_id}")
 
-    session = stripe.checkout.Session.retrieve(session_id)
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+    except stripe.error.InvalidRequestError:
+        logger.error(f"Could not get the stripe session with id {session_id}")
+        return redirect("/profile/")
+
     sub = stripe.Subscription.retrieve(session.subscription)
 
     items = [
@@ -5558,14 +5563,20 @@ def subscription_successful(request, session_id):
         }
     ]
 
-    record_event_analytics(
-        request,
-        "purchase",
-        currency=session.currency,
-        transaction_id=sub.id,
-        value=session.amount_total,
-        items=items,
-    )
+    try:
+        record_event_analytics(
+            request,
+            "purchase",
+            currency=session.currency,
+            transaction_id=sub.id,
+            value=session.amount_total,
+            items=items,
+        )
+    except Exception as e:
+        logger.error(
+            f"Could not record this subscription because of an exception: {str(e)}"
+        )
+        logger.info(e.__traceback__)
 
     return redirect("/profile/")
 
