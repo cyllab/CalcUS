@@ -180,6 +180,7 @@
         </div>
     </div>
 
+    {% if not request.user.is_authenticated %}
     <div class="tile is-ancestor">
         <center style="width: 100%">
             <h2 class="title is-2">Get <span id="free_span">3600 free seconds</span> of compute time per month</h2>
@@ -191,6 +192,7 @@
 
         </center>
     </div>
+    {% endif %}
     {% endif %}
 
     <div class="tile is-ancestor" id="contact_tile">
