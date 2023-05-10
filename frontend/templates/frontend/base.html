@@ -157,6 +157,11 @@
     </head>
 
     <body>
+        {% if IS_CLOUD %}
+        {% autoescape off %}
+        {% get_extra_body_code %}
+        {% endautoescape %}
+        {% endif %}
         <div class="flex-container">
             <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
                 <div class="navbar-brand">

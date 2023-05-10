@@ -41,3 +41,11 @@ def get_extra_head_code():
         return cloud_config["extra_head_code"]
     else:
         return ""
+
+
+@register.simple_tag
+def get_extra_body_code():
+    if "extra_body_code" in cloud_config:
+        return cloud_config["extra_body_code"]
+    else:
+        return ""
