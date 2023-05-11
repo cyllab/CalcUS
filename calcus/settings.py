@@ -76,9 +76,11 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
 POSTGRES_USER = os.environ.get("POSTGRES_USER", "calcus")
 
+"""
 GMAIL_API_CLIENT_ID = os.getenv("CALCUS_EMAIL_ID", "")
 GMAIL_API_CLIENT_SECRET = os.getenv("CALCUS_EMAIL_SECRET", "")
 GMAIL_API_REFRESH_TOKEN = os.getenv("CALCUS_EMAIL_TOKEN", "")
+"""
 
 ALLOWED_HOSTS = [
     "0.0.0.0",
@@ -116,7 +118,7 @@ INSTALLED_APPS = [
     "django.contrib.sitemaps",
     "axes",
     "bulma",
-    "gmailapi_backend",
+    # "gmailapi_backend",
     "corsheaders",
     #'debug_toolbar',
 ]
@@ -259,7 +261,14 @@ if IS_TEST:
     EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
     EMAIL_FILE_PATH = os.path.join(BASE_DIR, "scratch", "sent_emails")
 else:
-    EMAIL_BACKEND = "gmailapi_backend.mail.GmailBackend"
+    # EMAIL_BACKEND = "gmailapi_backend.mail.GmailBackend"
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = "smtp.gmail.com"
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_USE_SSL = False
+    EMAIL_HOST_USER = os.getenv("CALCUS_EMAIL_USER")
+    EMAIL_HOST_PASSWORD = os.getenv("CALCUS_EMAIL_PASSWORD")
 
 MEDIA_URL = "/media/"
 
