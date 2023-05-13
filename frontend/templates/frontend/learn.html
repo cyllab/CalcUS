@@ -63,16 +63,19 @@
     <h3 class="title is-3">Reference</h3>
     <h4 class="title is-4">Examples</h4>
     <div>
+        <b>This example is outdated and will be replaced by better educational content soon</b>
         {% for ex in examples %}
         <a class="box learn-item" href="/learn/example/{{ ex.id }}"> {{ ex.title }} </a>
         {% endfor %}
     </div>
 
+    {% if not IS_CLOUD %}
     <h4 class="title is-4">Recipes</h4>
     <div>
         {% for r in recipes %}
         <a class="box learn-item" href="/learn/recipe/{{ r.id }}"> {{ r.title }} </a>
         {% endfor %}
     </div>
+    {% endif %}
 </div>
 {% endblock %}

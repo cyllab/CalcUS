@@ -6,6 +6,7 @@ from django.conf import settings
 
 from .models import Calculation
 from .environment_variables import *
+from .helpers import job_triage
 
 if settings.IS_CLOUD:
     from google.cloud import batch_v1
@@ -213,20 +214,6 @@ def send_gcloud_task(url, payload, compute=True):
     task["http_request"]["body"] = payload.encode()
 
     client.create_task(parent=parent, task=task)
-
-
-def job_triage(calc):
-    if calc.step.name in ["Conformational Search", "Constrained Conformational Search"]:
-        nproc = 8
-    else:
-        nproc = 1
-
-    user_type = calc.order.author.user_type
-
-    return (
-        min(settings.RESOURCE_LIMITS[user_type]["nproc"], nproc),
-        settings.RESOURCE_LIMITS[user_type]["time"] * 60,
-    )
 
 
 def submit_cloud_job(calc):

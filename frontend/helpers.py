@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from .constants import *
 import string
 import secrets
+from django.conf import settings
 
 from xkcdpass import xkcd_password as xp
 
@@ -55,3 +56,17 @@ def get_random_readable_code(n=5):
     wordfile = xp.locate_wordfile()
     words = xp.generate_wordlist(wordfile=wordfile, min_length=n, max_length=n + 2)
     return xp.generate_xkcdpassword(words)
+
+
+def job_triage(calc):
+    if calc.step.name in ["Conformational Search", "Constrained Conformational Search"]:
+        nproc = 8
+    else:
+        nproc = 1
+
+    user_type = calc.order.author.user_type
+
+    return (
+        min(settings.RESOURCE_LIMITS[user_type]["nproc"], nproc),
+        settings.RESOURCE_LIMITS[user_type]["time"] * 60,
+    )
