@@ -40,7 +40,8 @@ import time
 from hashid_field import HashidAutoField, BigHashidAutoField
 
 from .constants import *
-from .helpers import get_random_readable_code
+from .helpers import get_random_readable_code, job_triage
+from .environment_variables import PAL
 
 import ccinput
 
@@ -277,6 +278,8 @@ class Subscription(models.Model):
 
     start_date = models.DateTimeField("date")
     end_date = models.DateTimeField("date")
+
+    stripe_sub_id = models.CharField(max_length=256, default="")
 
 
 class ResourceAllocation(models.Model):
@@ -1504,17 +1507,24 @@ class Calculation(models.Model):
 
     @property
     def execution_time(self):
+        if self.date_started is None:
+            return "-"
+        if settings.IS_CLOUD:
+            nproc, limit = job_triage(self)
+            delta = timezone.now() - self.date_started
+            return f"{delta.total_seconds()*nproc:.0f}"
+        if self.local:
+            delta = timezone.now() - self.date_started
+            return f"{delta.total_seconds()*PAL:.0f}"
+
         if self.order.resource is None:
             return "-"
-        if self.date_started is not None and self.date_finished is not None:
+        if self.date_finished is not None:
             if self.local:
                 pal = os.getenv("OMP_NUM_THREADS")[0]
             else:
                 pal = self.order.resource.pal
             return int((self.date_finished - self.date_started).seconds * int(pal))
-
-        else:
-            return "-"
 
     def __repr__(self):
         return str(self.id)
