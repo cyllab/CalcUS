@@ -24,9 +24,7 @@
                     <h1 class="title is-4">Try CalcUS Cloud for free</h1>
                     <form method="post" id="form_trial">
                         <center>
-                            <div class="control">
-                                <textarea class="textarea has-fixed-size" readonly>{{ trial_tos }}</textarea>
-                            </div>
+                        Please confirm that you are not a robot.
                         {% csrf_token %} {{ form|bulma }}
                         </center>
                         <button class="control button is-primary" type="Submit">Try CalcUS now</button>

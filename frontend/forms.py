@@ -142,9 +142,11 @@ class StudentCreateForm(forms.ModelForm):
 
 
 class TrialUserCreateForm(forms.ModelForm):
+    """
     accepts_tos = forms.BooleanField(
         required=True, label="I accept the Terms of Service"
     )
+    """
 
     if settings.IS_CLOUD:
         captcha = ReCaptchaField()
@@ -153,12 +155,14 @@ class TrialUserCreateForm(forms.ModelForm):
         model = User
         fields = ()
 
+    """
     def clean_accepts_tos(self):
         accepts = self.cleaned_data["accepts_tos"]
         if not accepts:
             raise ValidationError(
                 f"You must accept the Terms of Service in order to use the platform"
             )
+    """
 
     def save(self, commit=True):
         user = super().save(commit=False)
