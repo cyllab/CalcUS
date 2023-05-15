@@ -80,10 +80,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         if "CI" in os.environ:  # Github Actions
             chrome_options = Options()
-            from pyvirtualdisplay import Display
+            chrome_options.add_argument("--headless")
+            # from pyvirtualdisplay import Display
 
-            cls.display = Display(visible=0, size=(ZOOM * 1920, ZOOM * 1080))
-            cls.display.start()
+            # cls.display = Display(visible=0, size=(ZOOM * 1920, ZOOM * 1080))
+            # cls.display.start()
 
             cls.driver = webdriver.Chrome(chrome_options=chrome_options)
         else:
