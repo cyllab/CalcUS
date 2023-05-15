@@ -50,6 +50,10 @@ class ResearcherCreateForm(UserCreationForm):
     )
 
     if settings.IS_CLOUD:
+        opted_in_emails = forms.BooleanField(
+            required=False,
+            label="Receive occasional emails about updates and promotions",
+        )
         captcha = ReCaptchaField()
 
     class Meta:
@@ -59,6 +63,10 @@ class ResearcherCreateForm(UserCreationForm):
     def save(self, commit=True):
         user = super(ResearcherCreateForm, self).save(commit=False)
         user.email = self.cleaned_data["email"]
+
+        if "opted_in_emails" in self.cleaned_data:
+            user.opted_in_emails = self.cleaned_data["opted_in_emails"]
+
         user.allocated_seconds = settings.FREE_DEFAULT_COMP_SECONDS
         user.last_free_refill = timezone.now()
 
