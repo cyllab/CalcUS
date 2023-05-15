@@ -91,6 +91,8 @@ def record_event_analytics(request, event_name, **extra_params):
     }
     task["http_request"]["body"] = json.dumps(payload).encode()
 
+    print("DEBUG", task)
+
     client.create_task(parent=parent, task=task)
 
 
