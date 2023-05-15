@@ -198,6 +198,8 @@ class IndexView(generic.ListView):
 
 
 def home(request):
+    if "gclid" in request.GET:
+        request.set_cookie("gclid", request.GET["gclid"])
     return render(request, "frontend/home.html")
 
 

@@ -72,6 +72,9 @@ def record_event_analytics(request, event_name, **extra_params):
 
         payload["user_properties"] = {"account_type": {"value": account_type}}
 
+    if "gclid" in request.COOKIES:
+        payload["gclid"] = request.COOKIES["gclid"]
+
     url = f"https://www.google-analytics.com/mp/collect?measurement_id={settings.ANALYTICS_MEASUREMENT_ID}&api_secret={settings.ANALYTICS_API_SECRET}"
 
     parent = client.queue_path(

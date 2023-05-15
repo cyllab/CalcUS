@@ -121,6 +121,7 @@ class User(AbstractUser):
     default_orca = models.CharField(max_length=1000, default="")
 
     tour_done = models.BooleanField(default=False)
+    opted_in_emails = models.BooleanField(default=False)
 
     code = models.CharField(max_length=16)  ### ?
 
