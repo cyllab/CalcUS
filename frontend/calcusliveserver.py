@@ -1968,6 +1968,45 @@ class CalcusCloudLiveServer(CalcusLiveServer):
 
         settings.LOCAL_ALLOWED_STEPS = ["ALL"]
 
+    def register(self, acc_type, email, password, opt_in_emails):
+        self.lget("/register/")
+
+        # Researcher only for now
+        tab = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.ID, "tab_" + acc_type))
+        )
+
+        tab.click()
+        if acc_type == "researcher":
+            self.driver.find_element(By.ID, "id_email").send_keys(email)
+            self.driver.find_element(By.ID, "id_password1").send_keys(password)
+            self.driver.find_element(By.ID, "id_password2").send_keys(password)
+            if opt_in_emails:
+                self.driver.find_element(By.ID, "id_opted_in_emails").click()
+
+            try:
+                WebDriverWait(self.driver, 3).until(
+                    EC.frame_to_be_available_and_switch_to_it(
+                        (By.XPATH, "//*[@title='reCAPTCHA']")
+                    )
+                )
+                time.sleep(0.3)
+                WebDriverWait(self.driver, 1).until(
+                    EC.element_to_be_clickable(
+                        (By.XPATH, "//div[@class='recaptcha-checkbox-border']")
+                    )
+                ).click()
+                self.wait_for_ajax()
+                self.driver.switch_to.default_content()
+                time.sleep(0.3)
+            except selenium.common.exceptions.NoSuchElementException:
+                pass
+
+        submit = self.driver.find_element(
+            By.CSS_SELECTOR, "#form_" + acc_type + " > button"
+        )
+        submit.click()
+
     def redeem_code(self, code):
         self.lget("/profile/")
 

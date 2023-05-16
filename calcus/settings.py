@@ -124,9 +124,10 @@ INSTALLED_APPS = [
     #'debug_toolbar',
 ]
 
-if IS_CLOUD:
+if IS_CLOUD or IS_TEST:
     INSTALLED_APPS.append("captcha")
 
+if IS_CLOUD:
     if not DEBUG:
         SECURE_SSL_REDIRECT = True
         SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

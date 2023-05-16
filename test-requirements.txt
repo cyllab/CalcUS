@@ -1,4 +1,5 @@
 coverage
+django-recaptcha
 pexpect==4.8.0
 pyvirtualdisplay
 selenium
