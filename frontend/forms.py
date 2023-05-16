@@ -30,7 +30,7 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib.auth.forms import SetPasswordForm
 from django.utils import timezone
 
-if settings.IS_CLOUD:
+if settings.IS_CLOUD or settings.IS_TEST:
     from captcha.fields import ReCaptchaField
 
 from frontend.models import User, ClassGroup, ResourceAllocation
@@ -49,7 +49,7 @@ class ResearcherCreateForm(UserCreationForm):
         error_messages={"exists": "This email has already been used"},
     )
 
-    if settings.IS_CLOUD:
+    if settings.IS_CLOUD or settings.IS_TEST:
         opted_in_emails = forms.BooleanField(
             required=False,
             label="Receive occasional emails about updates and promotions",
