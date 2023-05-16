@@ -14,5 +14,6 @@ def default(request):
             "LOCAL_ALLOWED_THEORY_LEVELS",
             "LOCAL_ALLOWED_STEPS",
             "SUBSCRIPTION_ACADEMIC_MONTHLY",
+            "SUBSCRIPTION_TEAM_MONTHLY",
         ]
     }

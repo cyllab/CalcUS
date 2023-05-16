@@ -4314,7 +4314,7 @@ def ping_satellite():
 
 
 def create_subscription(user, duration=1):
-    time_left = max(0, u.allocated_seconds - u.billed_seconds)
+    time_left = max(0, user.allocated_seconds - user.billed_seconds)
     sub_amount = settings.SUBSCRIBER_COMP_SECONDS - time_left
 
     alloc = ResourceAllocation.objects.create(
