@@ -68,6 +68,7 @@ if STRIPE_SECRET_KEY and (IS_CLOUD or IS_TEST):
     stripe.api_key = STRIPE_SECRET_KEY
 
 SUBSCRIPTION_ACADEMIC_MONTHLY = os.getenv("SUBSCRIPTION_ACADEMIC_MONTHLY", "")
+SUBSCRIPTION_TEAM_MONTHLY = os.getenv("SUBSCRIPTION_TEAM_MONTHLY", "")
 
 # On Google Cloud, the URI of the secret containing the PostgreSQL password (for compute instances)
 POSTGRES_SECRET_URI = os.getenv("POSTGRES_SECRET_URI", "")

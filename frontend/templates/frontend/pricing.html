@@ -3,12 +3,165 @@
 
 {% block extrahead %}
 <title>CalcUS Cloud - Pricing</title>
-{% include "frontend/includables/pricing_head.html" %}
+
+<link rel="stylesheet" href="{% static 'frontend/bulma-pricingtable.min.css' %}" />
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    fetch("/stripe_config/")
+        .then((result) => { return result.json(); })
+        .then((data) => {
+        const stripe = Stripe(data.publicKey);
+    });
+</script>
+<style>
+    #pricing-table-div {
+        max-width: 74em;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 4em;
+        margin-bottom: 6em;
+    }
+    .sub_btn {
+        margin-bottom: 1.5em;
+    }
+
+    #free_msg {
+        font-size: 0.8em;
+        margin-top: 0.3em;
+    }
+    #time_note {
+        font-size: 0.8em;
+        margin-top: 0.3em;
+    }
+    .pricing-plan {
+        max-width: 16em;
+    }
+    .plan-desc {
+        font-weight: bold;
+    }
+    #discount_strike {
+        margin-right: 0.2em;
+    }
+
+    strike {
+        text-decoration: none;
+        position: relative;
+    }
+
+    strike::before {
+        top: 40%;
+        background: red;
+        width: 110%;
+        transform: rotate(-15deg);
+        position: absolute;
+        opacity: .6;
+        content: '';
+        height: .3rem;
+        border-radius: .2rem;
+        left: -8%;
+        white-space: nowrap;
+        display: block;
+    }
+    strike.straight::before {
+        transform: rotate(0deg);
+        left: -1%;
+        width: 102%;
+    }
+    .fa-check {
+        color: #00a759ff;
+    }
+    .title {
+        text-align: center;
+        margin-top: 1.5em;
+        margin-bottom: 0.5em;
+    }
+    .details {
+        max-width: 40%;
+        min-width: 28em;
+        margin: 0 auto;
+        font-size: 16pt;
+        text-align: center;
+    }
+    .details > a {
+        color: blue;
+    }
+</style>
 
 {% endblock %} 
 
 {% block content %}
 <div class="content">
-    {% include "frontend/includables/pricing_table.html" %}
+    <h1 class="title is-1">Unlock the Potential of Quantum Chemistry</h1>
+    <div id="pricing-table-div">
+        <div class="pricing-table is-comparative">
+            <div class="pricing-plan is-features">
+                <div class="plan-header">Features</div>
+                <div class="plan-price"><span class="plan-price-amount">&nbsp;</span></div>
+                <div class="plan-items">
+                    <div class="plan-item plan-desc">xTB calculations</div>
+                    <div class="plan-item plan-desc">Monthly calculation time</div>
+                    <div class="plan-item plan-desc">Maximum calculation runtime</div>
+                    <div class="plan-item plan-desc">Create groups and classes</div>
+                </div>
+                <div class="plan-footer">
+                </div>
+            </div>
+            <div class="pricing-plan is-info">
+                <div class="plan-header">Free</div>
+                <div class="plan-price"><span class="plan-price-amount"><span class="plan-price-currency">$</span>0</span>/month</div>
+                <div class="plan-items">
+                    <div class="plan-item"><i class="fas fa-solid fa-check fa-lg"></i></div>
+                    <div class="plan-item"><b>1 CPU-hour</b></div>
+                    <div class="plan-item">15 minutes</div>
+                    <div class="plan-item"><i class="fas fa-solid fa-times fa-lg"></i></div>
+                </div>
+                <div class="plan-footer">
+                    <a class="button is-fullwidth is-info" href="/register/"{% if not request.user.is_anonymous and not request.user.is_temporary %}disabled="disabled"{% endif %}>Register</a>
+                    <em id="free_msg">No credit card required</em>
+                </div>
+            </div>
+            <div class="pricing-plan is-success is-active">
+                <div class="plan-header">Researcher</div>
+                <div class="plan-price"><span class="plan-price-amount"><span class="plan-price-currency">$</span><strike id="discount_strike"><span class="plan-price-amount plan-regular-price">39</span></strike>29</span>/month</div>
+                <div class="plan-items">
+                    <div class="plan-item"><i class="fas fa-solid fa-check fa-lg"></i></div>
+                    <div class="plan-item"><b>60 CPU-hours*</b></div>
+                    <div class="plan-item"><b>6 hours</b></div>
+                    <div class="plan-item"><i class="fas fa-solid fa-check fa-lg"></i></div>
+                </div>
+                <div class="plan-footer">
+                    <form action="/checkout/" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="priceId" value="{{ SUBSCRIPTION_ACADEMIC_MONTHLY }}">
+                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_btn">Subscribe</button>
+                    </form>
+                    <em id="time_note">*additional time available</em>
+                </div>
+            </div>
+            <div class="pricing-plan is-danger">
+                <div class="plan-header">Team</div>
+                <div class="plan-price"><span class="plan-price-amount"><span class="plan-price-currency">$</span><strike id="discount_strike"><span class="plan-price-amount plan-regular-price">299</span></strike>199</span>/month</div>
+                <div class="plan-items">
+                    <div class="plan-item"><i class="fas fa-solid fa-check fa-lg"></i></div>
+                    <div class="plan-item"><b>500 CPU-hours*</b></div>
+                    <div class="plan-item"><b>12 hours</b></div>
+                    <div class="plan-item"><i class="fas fa-solid fa-check fa-lg"></i></div>
+                </div>
+                <div class="plan-footer">
+                    <form action="/checkout/" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="priceId" value="{{ SUBSCRIPTION_TEAM_MONTHLY }}">
+                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_btn">Subscribe</button>
+                    </form>
+                    <em id="time_note">*additional time available</em>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h3 class="title is-3">Try Risk-free</h3>
+    <div class="details">
+        If you are not <b>entirely satisfied</b> with your CalcUS Cloud subscription, we will refund you <em>the full price up</em> to 14 days after your purchase, simply <a href="mailto:contact@calcus.cloud">send us an email</a>.
+    <div>
+
 </div>
 {% endblock %}
