@@ -4313,9 +4313,9 @@ def ping_satellite():
     )
 
 
-def create_subscription(user, duration=1):
+def create_subscription(user, end_date, allocation):
     time_left = max(0, user.allocated_seconds - user.billed_seconds)
-    sub_amount = settings.SUBSCRIBER_COMP_SECONDS - time_left
+    sub_amount = allocation - time_left
 
     alloc = ResourceAllocation.objects.create(
         code=get_random_string(32),
@@ -4326,10 +4326,7 @@ def create_subscription(user, duration=1):
     sub = Subscription.objects.create(
         subscriber=user,
         associated_allocation=alloc,
-        duration=duration,
+        duration=1,
         start_date=timezone.now(),
-        end_date=timezone.now()
-        + timezone.timedelta(
-            days=duration * 31
-        ),  # TODO: use the exact date given by stripe
+        end_date=end_date,
     )

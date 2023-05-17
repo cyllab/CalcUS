@@ -34,6 +34,7 @@ import numpy as np
 import tempfile
 import json
 import ccinput
+from datetime import datetime
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -5523,23 +5524,29 @@ def pricing(request):
 def checkout(request):
     import stripe
 
-    ## iff
+    if "priceId" not in request.POST:
+        return HttpResponse(status=400)
+
     price_id = clean(request.POST["priceId"])
 
-    session = stripe.checkout.Session.create(
-        customer_email=request.user.email,
-        success_url=settings.HOST_URL
+    params = {
+        "success_url": settings.HOST_URL
         + "/subscription_successful/{CHECKOUT_SESSION_ID}",
-        cancel_url=f"{settings.HOST_URL}/home/",
-        mode="subscription",
-        line_items=[
+        "cancel_url": f"{settings.HOST_URL}/home/",
+        "mode": "subscription",
+        "line_items": [
             {
                 "price": price_id,
                 # For metered billing, do not pass quantity
                 "quantity": 1,
             }
         ],
-    )
+    }
+
+    if request.user.is_authenticated:
+        params["customer_email"] = request.user.email
+
+    session = stripe.checkout.Session.create(**params)
 
     return redirect(session.url)
 
@@ -5607,10 +5614,22 @@ def webhook(request):
         logger.error(f"Receive Stripe webhook with invalid signature: {str(e)}")
         return HttpResponse(status=400)
 
-    if event.type == "payment_intent.succeeded":
-        payment = event["data"]["object"]
-        customer = stripe.Customer.retrieve(payment["customer"])
+    if event.type == "invoice.paid":
+        inv = event["data"]["object"]
+        customer = stripe.Customer.retrieve(inv["customer"])
         logger.info(f"Payment successful by {customer['email']}")
+        sub = stripe.Subscription.retrieve(inv["subscription"])
+        end_date = timezone.make_aware(
+            datetime.fromtimestamp(sub["current_period_end"])
+        )
+
+        if len(sub["items"]["data"]) != 1:
+            logger.error(
+                f"Subscription {sub['id']} unexpectedly has more than one item"
+            )
+
+        prod = stripe.Product.retrieve(sub["items"]["data"][0]["price"]["product"])
+        allocation = int(prod["metadata"]["MONTHLY_ALLOCATION"])
 
         try:
             user = User.objects.get(email=customer["email"])
@@ -5619,7 +5638,7 @@ def webhook(request):
                 f"Customer with email {customer['email']} does not have an account"
             )
         else:
-            tasks.create_subscription(user)
+            tasks.create_subscription(user, end_date, allocation)
             logger.info(f"Subscription created for {customer['email']}")
     else:
         logger.info(f"Unhandled Stripe event: {event.type}")
