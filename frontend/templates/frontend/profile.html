@@ -440,9 +440,13 @@
             {% else %}
             <p>You are logged in as <b>{{ request.user.email }}</b>.</p>
             {% if request.user.is_subscriber %}
-            You have an active subscription which will end on {{ request.user.active_subscription.end_date|date }}.
+            {% if request.user.stripe_will_renew %}
+            You have an active subscription which will automatically renew (unless cancelled) on {{ request.user.active_subscription.end_date|date }}.
+            {% else %}
+            You have an active subscription which will end {{ request.user.active_subscription.end_date|date }} and not be renewed.
+            {% endif %}
             <br>
-            <a href="https://billing.stripe.com/p/login/00g9CX7oP3SzeZO288" class="button is-primary">Manage subscription</a>
+            <a href="/manage_subscription/" class="button is-primary" id="manage_sub">Manage subscription</a>
             {% else %}
             You do not have an active subscription.
             <br>

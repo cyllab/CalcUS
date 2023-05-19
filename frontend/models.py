@@ -134,6 +134,9 @@ class User(AbstractUser):
 
     INV_UNITS = {v: k for k, v in UNITS.items()}
 
+    stripe_cus_id = models.CharField(max_length=256, default="")
+    stripe_will_renew = models.BooleanField(default=True)
+
     # Total/allocated computation time and time consumed by user or class/group
     # These numbers should be accurate, but are not the official references
     # Instead, allocated_seconds should be recalculated from ResourceAllocation objects
@@ -271,11 +274,6 @@ class Subscription(models.Model):
     associated_allocation = models.ForeignKey(
         "ResourceAllocation", on_delete=models.SET_NULL, null=True
     )
-
-    # Duration in months (1, 4, 12)
-    # Mostly to identify which subscription option the user has chosen
-    duration = models.PositiveSmallIntegerField()
-    for_academia = models.BooleanField(default=True)
 
     start_date = models.DateTimeField("date")
     end_date = models.DateTimeField("date")

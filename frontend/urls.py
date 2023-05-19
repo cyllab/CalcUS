@@ -46,6 +46,7 @@ urlpatterns = [
     path("checkout/", views.checkout, name="checkout"),
     path("stripe_config/", views.stripe_config, name="stripe_config"),
     path("webhook/", views.webhook, name="webhook"),
+    path("manage_subscription/", views.manage_subscription, name="manage_subscription"),
     path(
         "subscription_successful/<str:session_id>",
         views.subscription_successful,

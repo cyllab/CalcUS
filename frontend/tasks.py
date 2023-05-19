@@ -4313,20 +4313,36 @@ def ping_satellite():
     )
 
 
-def create_subscription(user, end_date, allocation):
+def create_subscription(
+    user, stripe_sub_id, end_date, allocation, stripe_cus_id, will_renew
+):
     time_left = max(0, user.allocated_seconds - user.billed_seconds)
     sub_amount = allocation - time_left
 
-    alloc = ResourceAllocation.objects.create(
-        code=get_random_string(32),
-        allocation_seconds=sub_amount,
-        note=ResourceAllocation.SUBSCRIPTION,
-    )
-    alloc.redeem(user)
-    sub = Subscription.objects.create(
-        subscriber=user,
-        associated_allocation=alloc,
-        duration=1,
-        start_date=timezone.now(),
-        end_date=end_date,
-    )
+    # Make sure we don't create a duplicate subscription and allocation
+    try:
+        sub = Subscription.objects.get(subscriber=user, end_date=end_date)
+    except Subscription.DoesNotExist:
+        alloc = ResourceAllocation.objects.create(
+            code=get_random_string(32),
+            allocation_seconds=sub_amount,
+            note=ResourceAllocation.SUBSCRIPTION,
+        )
+        alloc.redeem(user)
+        sub = Subscription.objects.create(
+            subscriber=user,
+            associated_allocation=alloc,
+            stripe_sub_id=stripe_sub_id,
+            start_date=timezone.now(),
+            end_date=end_date,
+        )
+    else:
+        logger.warning(
+            f"Received duplicate subscription creation request for user {user.id} ({stripe_sub_id})"
+        )
+        return
+
+    user.refresh_from_db()
+    user.stripe_cus_id = stripe_cus_id
+    user.stripe_will_renew = will_renew
+    user.save()
