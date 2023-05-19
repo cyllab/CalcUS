@@ -318,7 +318,11 @@ RESOURCE_LIMITS = {
 # Give 600 free CPU-seconds for trial
 TRIAL_DEFAULT_COMP_SECONDS = 600
 FREE_DEFAULT_COMP_SECONDS = 3600
+
+# These allocation amounts shouldn't be used as official reference anymore.
+# The real amounts are parsed from Stripe. These are for testing
 SUBSCRIBER_COMP_SECONDS = 3600 * 60
+SUBSCRIBER_TEAM_COMP_SECONDS = 3600 * 500
 
 if IS_CLOUD:
     PING_SATELLITE = False

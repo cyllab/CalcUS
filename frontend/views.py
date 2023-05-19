@@ -3881,6 +3881,7 @@ def get_mol_preview(request):
             return HttpResponse(status=204)
 
         return HttpResponse(xyz)
+    return HttpResponse(status=400)
 
 
 def gen_3D(request):
@@ -4171,6 +4172,8 @@ def download_log(request, pk):
             for logname, log in data.items():
                 if logname == "calc":
                     continue
+                if log.strip() == "":
+                    continue
                 zip.write(log, f"{name}_{logname}")
 
         response = HttpResponse(mem.getvalue(), content_type="application/zip")
@@ -4285,6 +4288,20 @@ def profile(request):
         request,
         "frontend/profile.html",
     )
+
+
+@login_required
+def manage_subscription(request):
+    if not request.user.is_subscriber:
+        return HttpResponse(status=403)
+
+    import stripe
+
+    session = stripe.billing_portal.Session.create(
+        customer=request.user.stripe_cus_id,
+        return_url="https://calcus.cloud/profile/",
+    )
+    return redirect(session.url)
 
 
 @login_required
@@ -5615,8 +5632,11 @@ def webhook(request):
         return HttpResponse(status=400)
 
     if event.type == "invoice.paid":
+        logger.info(f"Received webhook invoice.paid - Creating a subscription")
+
         inv = event["data"]["object"]
         customer = stripe.Customer.retrieve(inv["customer"])
+
         logger.info(f"Payment successful by {customer['email']}")
         sub = stripe.Subscription.retrieve(inv["subscription"])
         end_date = timezone.make_aware(
@@ -5638,8 +5658,43 @@ def webhook(request):
                 f"Customer with email {customer['email']} does not have an account"
             )
         else:
-            tasks.create_subscription(user, end_date, allocation)
+            tasks.create_subscription(
+                user,
+                sub["id"],
+                end_date,
+                allocation,
+                customer["id"],
+                will_renew=not sub["cancel_at_period_end"],
+            )
             logger.info(f"Subscription created for {customer['email']}")
+    elif event.type == "customer.created":
+        logger.info(
+            f"Received webhook customer.created - Adding the customer ID to the existing User account"
+        )
+        cus = event["data"]["object"]
+        try:
+            user = User.objects.get(email=cus["email"])
+        except User.DoesNotExist:
+            logger.critical(
+                f"Stripe created a customer with an email that is not linked to any known account"
+            )
+        else:
+            user.stripe_cus_id = cus["id"]
+            user.save()
+    elif event.type == "customer.subscription.updated":
+        logger.info(
+            f"Received webhook customer.subscription.updated - Updating field `stripe_will_renew`"
+        )
+        sub = event["data"]["object"]
+        try:
+            cus = User.objects.get(stripe_cus_id=sub["customer"])
+        except User.DoesNotExist:
+            logger.critical(
+                f"Received a stripe event customer.subscription.updated for unknown customer {sub['customer']}"
+            )
+        else:
+            cus.stripe_will_renew = not sub["cancel_at_period_end"]
+            cus.save()
     else:
         logger.info(f"Unhandled Stripe event: {event.type}")
 

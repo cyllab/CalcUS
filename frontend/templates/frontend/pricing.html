@@ -133,7 +133,7 @@
                     <form action="/checkout/" method="POST">
                         {% csrf_token %}
                         <input type="hidden" name="priceId" value="{{ SUBSCRIPTION_ACADEMIC_MONTHLY }}">
-                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_btn">Subscribe</button>
+                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_researcher_btn">Subscribe</button>
                     </form>
                     <em id="time_note">*additional time available</em>
                 </div>
@@ -151,7 +151,7 @@
                     <form action="/checkout/" method="POST">
                         {% csrf_token %}
                         <input type="hidden" name="priceId" value="{{ SUBSCRIPTION_TEAM_MONTHLY }}">
-                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_btn">Subscribe</button>
+                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_team_btn">Subscribe</button>
                     </form>
                     <em id="time_note">*additional time available</em>
                 </div>
