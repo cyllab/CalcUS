@@ -7,7 +7,14 @@ class CalcUSSitemap(sitemaps.Sitemap):
     changefreq = "monthly"
 
     def items(self):
-        return ["frontend:home", "frontend:pricing"]
+        return [
+            "frontend:home",
+            "frontend:pricing",
+            "frontend:register",
+            "frontend:login",
+            "frontend:start_trial",
+            "frontend:learn",
+        ]
 
     def location(self, item):
         return reverse(item)

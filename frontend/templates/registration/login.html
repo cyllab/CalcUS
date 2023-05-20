@@ -1,6 +1,8 @@
 {% extends "frontend/base.html" %}
 {% load i18n bulma_tags %}
 {% block extrahead %}
+<title>CalcUS {% if IS_CLOUD %}Cloud {% endif %}Login</title>
+<meta name="description" content="Login on CalcUS Cloud to run quantum chemistry calculations online.">
     <style>
         #id_captcha {
             margin-bottom: 2em;
