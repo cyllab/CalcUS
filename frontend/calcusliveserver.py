@@ -2138,14 +2138,22 @@ class CalcusCloudLiveServer(CalcusLiveServer):
         else:
             raise Exception(f"Could not find a class named {name} to dissolve")
 
-    def subscribe(self, plan, email, card_number):
+    def subscribe(self, plan, email, card_number, length="month"):
         """
         Plan is either `researcher` or `team`
         """
         self.lget("/pricing/")
 
+        if length == "year":
+            switch = WebDriverWait(self.driver, 5).until(
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, f"[for=sub_length_switch]")
+                )
+            )
+            switch.click()
+
         btn = WebDriverWait(self.driver, 2).until(
-            EC.element_to_be_clickable((By.ID, f"subscribe_{plan}_btn"))
+            EC.element_to_be_clickable((By.ID, f"subscribe_{plan}_btn_{length}"))
         )
         btn.click()
 

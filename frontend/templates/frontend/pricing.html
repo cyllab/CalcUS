@@ -5,7 +5,10 @@
 <title>Pricing of Cloud-based Quantum Chemistry</title>
 <meta name="description" content="CalcUS Cloud offers affordable access to a computational chemistry web platform leveraging cloud computing. It provides access to quantum chemistry software in order to promote education, self-learning and research."> 
 
-<link rel="stylesheet" href="{% static 'frontend/bulma-pricingtable.min.css' %}" />
+<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+<link rel="stylesheet" href="{% static 'frontend/bulma-pricingtable.min.css' %}">
+<link rel="stylesheet" href="{% static 'frontend/bulma-switch.min.css' %}">
+
 <script src="https://js.stripe.com/v3/"></script>
 <script>
     fetch("/stripe_config/")
@@ -13,6 +16,24 @@
         .then((data) => {
         const stripe = Stripe(data.publicKey);
     });
+    function length_changed(el) {
+        if(el.checked) {
+            $(".monthly").each(function(ind, el) {
+                $(el).hide();
+            });
+            $(".yearly").each(function(ind, el) {
+                $(el).show();
+            });
+        }
+        else {
+            $(".yearly").each(function(ind, el) {
+                $(el).hide();
+            });
+            $(".monthly").each(function(ind, el) {
+                $(el).show();
+            });
+        }
+    }
 </script>
 <style>
     #pricing-table-div {
@@ -86,6 +107,16 @@
     .details > a {
         color: blue;
     }
+    #sub_length_div {
+        text-align: center;
+    }
+    #sub_length_div > label {
+        font-size: 1.5em;
+        margin-bottom: 0.5em;
+    }
+    #sub_monthly_label {
+        margin-right: 0.3em;
+    }
 </style>
 
 {% endblock %} 
@@ -94,6 +125,11 @@
 <div class="content">
     <h1 class="title is-1">Unlock the Potential of Quantum Chemistry</h1>
     <div id="pricing-table-div">
+        <div class="field" id="sub_length_div">
+            <label id="sub_monthly_label">Monthly</label>
+            <input id="sub_length_switch" type="checkbox" class="switch is-large is-success is-rounded" onchange="length_changed(this);">
+            <label for="sub_length_switch">Yearly</label>
+        </div>
         <div class="pricing-table is-comparative">
             <div class="pricing-plan is-features">
                 <div class="plan-header">Features</div>
@@ -121,7 +157,7 @@
                     <em id="free_msg">No credit card required</em>
                 </div>
             </div>
-            <div class="pricing-plan is-success is-active">
+            <div class="pricing-plan is-success is-active monthly">
                 <div class="plan-header">Researcher</div>
                 <div class="plan-price"><span class="plan-price-amount"><span class="plan-price-currency">$</span><strike id="discount_strike"><span class="plan-price-amount plan-regular-price">39</span></strike>29</span>/month</div>
                 <div class="plan-items">
@@ -133,13 +169,32 @@
                 <div class="plan-footer">
                     <form action="/checkout/" method="POST">
                         {% csrf_token %}
-                        <input type="hidden" name="priceId" value="{{ SUBSCRIPTION_ACADEMIC_MONTHLY }}">
-                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_researcher_btn">Subscribe</button>
+                        <input type="hidden" name="priceId" value="{{ SUBSCRIPTION_DATA.researcher.monthly }}">
+                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_researcher_btn_month">Subscribe</button>
                     </form>
                     <em id="time_note">*additional time available</em>
                 </div>
             </div>
-            <div class="pricing-plan is-danger">
+            <div class="pricing-plan is-success is-active yearly" style="display: none;">
+                <div class="plan-header">Researcher</div>
+                <div class="plan-price"><span class="plan-price-amount"><span class="plan-price-currency">$</span><strike id="discount_strike"><span class="plan-price-amount plan-regular-price">468</span></strike>290</span>/year</div>
+                <div class="plan-items">
+                    <div class="plan-item"><i class="fas fa-solid fa-check fa-lg"></i></div>
+                    <div class="plan-item"><b>60 CPU-hours*</b></div>
+                    <div class="plan-item"><b>6 hours</b></div>
+                    <div class="plan-item"><i class="fas fa-solid fa-check fa-lg"></i></div>
+                </div>
+                <div class="plan-footer">
+                    <form action="/checkout/" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="priceId" value="{{ SUBSCRIPTION_DATA.researcher.yearly }}">
+                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_researcher_btn_year">Subscribe</button>
+                    </form>
+                    <em id="time_note">*additional time available</em>
+                </div>
+            </div>
+
+            <div class="pricing-plan is-danger monthly">
                 <div class="plan-header">Team</div>
                 <div class="plan-price"><span class="plan-price-amount"><span class="plan-price-currency">$</span><strike id="discount_strike"><span class="plan-price-amount plan-regular-price">299</span></strike>199</span>/month</div>
                 <div class="plan-items">
@@ -151,18 +206,42 @@
                 <div class="plan-footer">
                     <form action="/checkout/" method="POST">
                         {% csrf_token %}
-                        <input type="hidden" name="priceId" value="{{ SUBSCRIPTION_TEAM_MONTHLY }}">
-                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_team_btn">Subscribe</button>
+                        <input type="hidden" name="priceId" value="{{ SUBSCRIPTION_DATA.team.monthly }}">
+                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_team_btn_month">Subscribe</button>
                     </form>
                     <em id="time_note">*additional time available</em>
                 </div>
             </div>
+            <div class="pricing-plan is-danger yearly" style="display: none;">
+                <div class="plan-header">Team</div>
+                <div class="plan-price"><span class="plan-price-amount"><span class="plan-price-currency">$</span><strike id="discount_strike"><span class="plan-price-amount plan-regular-price">3588</span></strike>1950</span>/year</div>
+                <div class="plan-items">
+                    <div class="plan-item"><i class="fas fa-solid fa-check fa-lg"></i></div>
+                    <div class="plan-item"><b>500 CPU-hours*</b></div>
+                    <div class="plan-item"><b>12 hours</b></div>
+                    <div class="plan-item"><i class="fas fa-solid fa-check fa-lg"></i></div>
+                </div>
+                <div class="plan-footer">
+                    <form action="/checkout/" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="priceId" value="{{ SUBSCRIPTION_DATA.team.yearly }}">
+                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_team_btn_year">Subscribe</button>
+                    </form>
+                    <em id="time_note">*additional time available</em>
+                </div>
+            </div>
+
         </div>
     </div>
     <h3 class="title is-3">Try Risk-free</h3>
     <div class="details">
-        If you are not <b>entirely satisfied</b> with your CalcUS Cloud subscription, we will refund you <em>the full price up</em> to 14 days after your purchase, simply <a href="mailto:contact@calcus.cloud">send us an email</a>.
-    <div>
+        If you are not <b>entirely satisfied</b> with your CalcUS Cloud subscription, we will refund you <em>the full price up</em> to 14 days after your purchase, simply <a href="mailto:contact@calcus.cloud">send us an email</a>. After that, you can still <b>cancel anytime you want</b>.
+    <div/>
+
+    <h3 class="title is-3">Advantageous yearly plans</h3>
+    <div class="details">
+        Get 2 months free per year when you subscribe for a yearly subscription instead of a monthly subscription.
+    <div/>
 
 </div>
 {% endblock %}

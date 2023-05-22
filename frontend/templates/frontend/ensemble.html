@@ -1,12 +1,17 @@
 {% extends 'frontend/base.html' %} {% load i18n %} {% load static %} {% load details_tags %} {% block extrahead %}
 <title>Ensemble {{ ensemble.name }}</title>
-<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css" />
+
+<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
 <script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
-<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
+<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
 <script src="{% static 'frontend/jquery.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
 
-<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css" />
+<link rel="stylesheet" href="{% static 'frontend/bulma-slider.min.css' %}" type="text/css">
+<script src="{% static 'frontend/bulma-slider.min.js' %}"></script>
+
+<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
+
 <script src="{% static 'frontend/dygraph.min.js' %}"></script>
 <script src="{% static 'frontend/3Dmol-min.js' %}"></script>
 
@@ -122,6 +127,9 @@
             top: 0;
             opacity: 1;
         }
+    }
+    .slider {
+        margin-top: 1em;
     }
 </style>
 <script>

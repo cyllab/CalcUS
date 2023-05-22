@@ -432,6 +432,7 @@
             </div>
             {% endif %}
 
+            {% if IS_CLOUD %}
             {% if request.user.is_temporary %}
             <p>You are logged in as temporary user <b>{{ request.user.email }}</b>.</p>
                 {% if request.user.is_trial %}
@@ -451,6 +452,7 @@
             You do not have an active subscription.
             <br>
             <a href="/pricing/" class="button is-primary">Pricing</a>
+            {% endif %}
             {% endif %}
             {% endif %}
 
