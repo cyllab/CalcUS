@@ -33,18 +33,16 @@ def record_event_analytics(request, event_name, **extra_params):
     ):
         return
 
-    from google.cloud import tasks_v2
-
-    client = tasks_v2.CloudTasksClient()
-
     if "_ga" not in request.COOKIES:
         logger.warning(
             f"The Google Analytics cookie does not appear to be set for {request.user.id}"
         )
         return
 
+    client_id = ".".join(request.COOKIES["_ga"].split(".")[-2:])
+
     payload = {
-        "client_id": request.COOKIES["_ga"],
+        "client_id": client_id,
         "events": [
             {
                 "name": event_name,
@@ -56,10 +54,10 @@ def record_event_analytics(request, event_name, **extra_params):
         ],
     }
 
-    if "CALCUS_SESSION_COOKIE" in request.COOKIES:
-        payload["events"][0]["params"]["session_id"] = request.COOKIES[
-            "CALCUS_SESSION_COOKIE"
-        ]
+    # Session ID
+    for cookie, val in request.COOKIES.items():
+        if "_ga_" in cookie and len(cookie) > 4:
+            payload["events"][0]["params"]["session_id"] = val.split(".")[2]
 
     if not request.user.is_anonymous:
         payload["user_id"] = str(request.user.id)
@@ -76,6 +74,10 @@ def record_event_analytics(request, event_name, **extra_params):
 
     if "gclid" in request.COOKIES:
         url += f'&gclid={request.COOKIES["gclid"]}'
+
+    from google.cloud import tasks_v2
+
+    client = tasks_v2.CloudTasksClient()
 
     parent = client.queue_path(
         settings.GCP_PROJECT_ID, settings.GCP_LOCATION, "analytics"
