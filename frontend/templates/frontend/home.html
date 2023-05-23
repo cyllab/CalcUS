@@ -11,7 +11,7 @@
         margin-bottom: 20px;
     }
 
-    h1 {
+    h1, h2 {
         text-align: center;
     }
     .content {
@@ -39,6 +39,10 @@
         #logo_div {
             width: 52%;
             margin-left: 23%;
+        }
+        .main_content {
+            width: 80% !important;
+            margin-left: 10% !important;
         }
     }
     @media screen and (min-width: 1024px) and (max-width: 1407px) {
@@ -134,6 +138,22 @@
         text-align: center;
         margin-bottom: 1em;
     }
+    #testimonials_div {
+        margin: 3em auto;
+        min-width: 500px;
+        max-width: 50em;
+        text-align: justify;
+    }
+    #testimonial_div {
+        margin: 0 auto;
+    }
+    .testimonial_img {
+        max-width: 250px;
+        width: 100%;
+    }
+    .testimonial_text {
+        font-style: italic;
+    }
 </style>
 
 {% endblock %} 
@@ -205,6 +225,30 @@
     <div id="video_div">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/WdNKY32p_dM" title="CalcUS Cloud Example" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
     </div>
+
+    {% if IS_CLOUD %}
+    <div id="testimonials_div">
+        <h2 class="title is-2">What users say</h2>
+            <div class="testimonial_div columns is-variable is-5-desktop is-1-tablet">
+                <div class="column is-4">
+                    <center>
+                    <img class="testimonial_img" src="{% static 'testimonials/nassim.png' %}">
+                    <br>
+                    <span class="testimonial-name"><b>Nassim Maarouf</b> <br>PhD student in Medicinal Chemistry <br>University of Montreal</span>
+                    </center>
+                </div>
+                <div class="column is-8 testimonial_text">
+                <i class="fas fa-quote-left"></i>
+                Throughout my research journey, I have come to rely on the exceptional capabilities of CalcUS Cloud for computational modeling of molecules.
+                <br>
+                <br>
+
+                CalcUS Cloud, with its powerful semi-empirical xTB calculations, has become an invaluable tool in my work. The platform's user-friendly interface and comprehensive features have greatly enhanced my ability to simulate 3D conformers and analyze bond angles, critical aspects in the field of medicinal chemistry. This has allowed me to simulate 3D structures before investing time in their laboratory synthesis, providing a solid starting point for my experimental work.<i class="fas fa-quote-right"></i>
+                </div>
+            </div>
+    </div>
+
+    {% endif %}
 
     <div class="tile is-ancestor" id="contact_tile">
         <center style="width: 100%">
