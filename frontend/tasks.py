@@ -75,6 +75,7 @@ else:
 
 from django.utils import timezone
 from django.core import management
+from django.core.mail import send_mail
 from django.db.utils import IntegrityError
 
 from ccinput.wrapper import generate_calculation
@@ -4311,6 +4312,27 @@ def ping_satellite():
         "https://ping.calcus.cloud/ping",
         data={"code": settings.PING_CODE},
     )
+
+
+def create_account_sub(email):
+    # The email must not be used by any other user already
+    default_pass = get_random_string()
+    user = User.objects.create_user(email, password=default_pass)
+    user.is_temporary = False
+    user.is_trial = False
+    user.save()
+
+    send_mail(
+        "Your CalcUS Cloud account",
+        'Your CalcUS Cloud account has been created. To log in, enter this email ({email}) and the temporary password "{default_pass}" on the login page (https://calcus.cloud/accounts/login/). Make sure to change the account password immediately after logging in by going on the profile page and clicking on the red "Change password" button.',
+        "bot.calcus.cloud@gmail.com",
+        recipient_list=[email],
+    )
+    logger.info(
+        f"Created the account with email {email} and sent instructions to that email."
+    )
+
+    return user
 
 
 def create_subscription(

@@ -1,0 +1,31 @@
+{% extends 'frontend/base.html' %} 
+
+{% load static %} 
+{% block extrahead %}
+<title>Subscription Successful</title>
+
+<style>
+    h1 {
+        text-align: center;
+    }
+    .content {
+        width: 50%;
+        max-width: 40em;
+        margin: 2em auto;
+    }
+    span > a {
+        text-decoration: underline;
+        color: blue;
+    }
+    </style>
+
+{% endblock %} 
+{% block content %}
+<div class="content">
+    <h1 class="title is-1">Subscription Successful!</h1>
+    <p>
+        We have created a subscription linked with the email you provided for the payment. If you previously created an account with that email, simply log in. If you did not have an account, one has been created for you. You will receive an email with a temporary password for that new account.
+    </p>
+    <span>For any issue regarding your subscription, email <a href="mailto:contact@calcus.cloud">contact@calcus.cloud</a></span>
+</div>
+{% endblock %}

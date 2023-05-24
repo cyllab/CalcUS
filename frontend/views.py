@@ -104,6 +104,7 @@ from .tasks import (
     generate_xyz_structure,
     gen_fingerprint,
     plot_peaks,
+    create_account_sub,
 )
 from .decorators import superuser_required
 from .cloud_job import send_gcloud_task, record_event_analytics
@@ -5605,7 +5606,10 @@ def subscription_successful(request, session_id):
         )
         logger.info(e.__traceback__)
 
-    return redirect("/profile/")
+    if request.user.is_authenticated:
+        return redirect("/profile/")
+
+    return render(request, "frontend/subscription_successful.html")
 
 
 @csrf_exempt
@@ -5654,19 +5658,20 @@ def webhook(request):
         try:
             user = User.objects.get(email=customer["email"])
         except User.DoesNotExist:
-            logger.error(
+            logger.warning(
                 f"Customer with email {customer['email']} does not have an account"
             )
-        else:
-            tasks.create_subscription(
-                user,
-                sub["id"],
-                end_date,
-                allocation,
-                customer["id"],
-                will_renew=not sub["cancel_at_period_end"],
-            )
-            logger.info(f"Subscription created for {customer['email']}")
+            user = create_account_sub(customer["email"])
+
+        tasks.create_subscription(
+            user,
+            sub["id"],
+            end_date,
+            allocation,
+            customer["id"],
+            will_renew=not sub["cancel_at_period_end"],
+        )
+        logger.info(f"Subscription created for {customer['email']}")
     elif event.type == "customer.created":
         logger.info(
             f"Received webhook customer.created - Adding the customer ID to the existing User account"
