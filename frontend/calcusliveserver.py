@@ -2157,12 +2157,19 @@ class CalcusCloudLiveServer(CalcusLiveServer):
         )
         btn.click()
 
-        # The email is autofilled
-
         cardNumber = WebDriverWait(self.driver, 4).until(
             EC.presence_of_element_located((By.ID, "cardNumber"))
         )
         cardNumber.send_keys(card_number)
+
+        # The email is autofilled if the user is logged in
+        try:
+            email_field = self.driver.find_element(By.ID, "email")
+            if not email_field.get_property("readonly"):
+                email_field.send_keys(email)
+        except selenium.common.exceptions.NoSuchElementException:
+            # It seems like the filled field does not have the same ID
+            pass
 
         self.driver.find_element(By.ID, "cardExpiry").send_keys("0140")
         self.driver.find_element(By.ID, "cardCvc").send_keys("123")
