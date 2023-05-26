@@ -147,8 +147,15 @@ def create_container_job(calc, nproc, timeout):
     policy = batch_v1.AllocationPolicy.InstancePolicy()
     policy.machine_type = f"n2d-highcpu-{nproc}"
 
+    # Trying spot VMs
+    if calc.order.author.email == "raphael.robidas@usherbrooke.ca":
+        policy.provisioning_model = (
+            batch_v1.types.AllocationPolicy.ProvisioningModel.SPOT
+        )
+
     instances = batch_v1.AllocationPolicy.InstancePolicyOrTemplate()
     instances.policy = policy
+
     acc = batch_v1.ServiceAccount()
     acc.email = settings.COMPUTE_SERVICE_ACCOUNT
 
