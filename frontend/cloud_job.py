@@ -122,6 +122,12 @@ def create_container_job(calc, nproc, timeout):
         "OMP_NUM_THREADS": f"{nproc},1",
         "OMP_STACKSIZE": "900M",
         "CALCUS_TIMEOUT": str(timeout),
+        # Variables for rescheduling when a VM in preempted
+        "CALC_ID": str(calc.id),
+        "COMPUTE_IMAGE": settings.COMPUTE_IMAGE,
+        "COMPUTE_SERVICE_ACCOUNT": settings.COMPUTE_SERVICE_ACCOUNT,
+        "GCP_PROJECT_ID": settings.GCP_PROJECT_ID,
+        "GCP_LOCATION": settings.GCP_LOCATION,
     }
 
     runnable.environment = env
@@ -147,10 +153,15 @@ def create_container_job(calc, nproc, timeout):
     policy = batch_v1.AllocationPolicy.InstancePolicy()
     policy.machine_type = f"n2d-highcpu-{nproc}"
 
+    metadata = []
+
     # Trying spot VMs
     if calc.order.author.email == "raphael.robidas@usherbrooke.ca":
         policy.provisioning_model = (
             batch_v1.types.AllocationPolicy.ProvisioningModel.SPOT
+        )
+        metadata.append(
+            ("shutdown-script-url", "gs://calcus-cloud-config/shutdown_script.py")
         )
 
     instances = batch_v1.AllocationPolicy.InstancePolicyOrTemplate()
@@ -181,7 +192,7 @@ def create_container_job(calc, nproc, timeout):
         f"projects/{settings.GCP_PROJECT_ID}/locations/{settings.GCP_LOCATION}"
     )
 
-    return client.create_job(create_request)
+    return client.create_job(create_request, metadata=metadata)
 
 
 def send_gcloud_task(url, payload, compute=True):
