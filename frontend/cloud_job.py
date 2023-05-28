@@ -156,13 +156,10 @@ def create_container_job(calc, nproc, timeout):
     metadata = []
 
     # Trying spot VMs
-    if calc.order.author.email == "raphael.robidas@usherbrooke.ca":
-        policy.provisioning_model = (
-            batch_v1.types.AllocationPolicy.ProvisioningModel.SPOT
-        )
-        metadata.append(
-            ("shutdown-script-url", "gs://calcus-cloud-config/shutdown_script.py")
-        )
+    policy.provisioning_model = batch_v1.types.AllocationPolicy.ProvisioningModel.SPOT
+    metadata.append(
+        ("shutdown-script-url", "gs://calcus-cloud-config/shutdown_script.py")
+    )
 
     instances = batch_v1.AllocationPolicy.InstancePolicyOrTemplate()
     instances.policy = policy
