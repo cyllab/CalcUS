@@ -931,20 +931,20 @@ class InterfaceTests(CalcusLiveServer):
         self.wait_for_ajax()
 
         # Check for frontend removal
-        self.assertEqual(self.get_number_unseen_calcs_manually(), 1)
-        self.assertEqual(self.get_number_calc_orders(), 4)
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
+        self.assertEqual(self.get_number_calc_orders(), 5)
 
         # Check for backend removal
         for i in range(3):
             self.lget("/calculations/")
-            if self.get_number_unseen_calcs() == 1:
+            if self.get_number_unseen_calcs() == 2:
                 break
             time.sleep(1)
         else:
             raise Exception("Remaining calculations")
 
-        self.assertEqual(self.get_number_unseen_calcs_manually(), 1)
-        self.assertEqual(self.get_number_calc_orders(), 4)
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
+        self.assertEqual(self.get_number_calc_orders(), 5)
 
     def test_clean_all_completed(self):
         self.setup_test_group()
@@ -991,20 +991,20 @@ class InterfaceTests(CalcusLiveServer):
         self.wait_for_ajax()
 
         # Check for frontend removal
-        self.assertEqual(self.get_number_unseen_calcs_manually(), 1)
-        self.assertEqual(self.get_number_calc_orders(), 3)
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
+        self.assertEqual(self.get_number_calc_orders(), 4)
 
         # Check for backend removal
         for i in range(3):
             self.lget("/calculations/")
-            if self.get_number_unseen_calcs() == 1:
+            if self.get_number_calc_orders() == 4:
                 break
             time.sleep(1)
         else:
             raise Exception("Remaining calculations")
 
-        self.assertEqual(self.get_number_unseen_calcs_manually(), 0)
-        self.assertEqual(self.get_number_calc_orders(), 2)
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
+        self.assertEqual(self.get_number_calc_orders(), 4)
 
     def test_delete_unseen_calc(self):
         self.setup_test_group()
@@ -1417,7 +1417,11 @@ class LaunchParametersTests(CalcusLiveServer):
 
         self.lget("/launch/")
 
-        select = Select(self.driver.find_element(By.NAME, "calc_software"))
+        software = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.NAME, "calc_software"))
+        )
+
+        select = Select(software)
 
         self.assertEqual(
             len(
