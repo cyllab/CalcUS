@@ -184,7 +184,9 @@
         calcs = document.getElementById("calculations_list").querySelectorAll("article > .has-background-success");
         for (i = 0; i < calcs.length; i++) {
             art = calcs[i].parentElement;
-            $grid.masonry("remove", art).masonry();
+
+            if(!art.classList.contains("new"))
+                $grid.masonry("remove", art).masonry();
         }
 
         $.ajax({
@@ -201,13 +203,17 @@
 
         for (i = 0; i < calcs.length; i++) {
             art = calcs[i].parentElement;
-            $grid.masonry("remove", art).masonry();
+
+            if(!art.classList.contains("new"))
+                $grid.masonry("remove", art).masonry();
         }
 
         calcs = document.getElementById("calculations_list").querySelectorAll("article > .has-background-success");
         for (i = 0; i < calcs.length; i++) {
             art = calcs[i].parentElement;
-            $grid.masonry("remove", art).masonry();
+
+            if(!art.classList.contains("new"))
+                $grid.masonry("remove", art).masonry();
         }
         $.ajax({
             type: "POST",
