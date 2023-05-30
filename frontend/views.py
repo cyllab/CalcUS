@@ -5344,11 +5344,12 @@ def clean_all_successful(request):
     to_update = []
     calcs = CalculationOrder.objects.filter(author=request.user, hidden=False)
     for c in calcs:
-        if c.last_seen_status != 0:    #default value of c.last_seen_status is 0, if calculation is not viewed
+        if c.last_seen_status == c.status :    
             if c.status == 2:
-                c.hidden = True
-                c.see()
-                to_update.append(c)
+                if c.hidden == False:
+                    c.hidden = True
+                    c.see()
+                    to_update.append(c)
 
     CalculationOrder.objects.bulk_update(to_update, ["hidden", "last_seen_status"])
 
@@ -5360,11 +5361,12 @@ def clean_all_completed(request):
     to_update = []
     calcs = CalculationOrder.objects.filter(author=request.user, hidden=False)
     for c in calcs:
-        if c.last_seen_status != 0:   #default value of c.last_seen_status is 0, if calculation is not viewed
+        if c.last_seen_status == c.status :   
             if c.status in [2, 3]:
-                c.hidden = True
-                c.see()
-                to_update.append(c)
+                if c.hidden == False:
+                    c.hidden = True
+                    c.see()
+                    to_update.append(c)
 
     CalculationOrder.objects.bulk_update(to_update, ["hidden", "last_seen_status"])
 
