@@ -991,13 +991,13 @@ class InterfaceTests(CalcusLiveServer):
         self.wait_for_ajax()
 
         # Check for frontend removal
-        self.assertEqual(self.get_number_unseen_calcs_manually(), 0)
-        self.assertEqual(self.get_number_calc_orders(), 2)
+        self.assertEqual(self.get_number_unseen_calcs_manually(), 1)
+        self.assertEqual(self.get_number_calc_orders(), 3)
 
         # Check for backend removal
         for i in range(3):
             self.lget("/calculations/")
-            if self.get_number_unseen_calcs() == 0:
+            if self.get_number_unseen_calcs() == 1:
                 break
             time.sleep(1)
         else:
