@@ -5465,7 +5465,7 @@ def clean_all_successful(request):
     to_update = []
     calcs = CalculationOrder.objects.filter(author=request.user, hidden=False)
     for c in calcs:
-        if c.last_seen_status == c.status :    
+        if c.last_seen_status == c.status:
             if c.status == 2:
                 if c.hidden == False:
                     c.hidden = True
@@ -5482,7 +5482,7 @@ def clean_all_completed(request):
     to_update = []
     calcs = CalculationOrder.objects.filter(author=request.user, hidden=False)
     for c in calcs:
-        if c.last_seen_status == c.status :   
+        if c.last_seen_status == c.status:
             if c.status in [2, 3]:
                 if c.hidden == False:
                     c.hidden = True
