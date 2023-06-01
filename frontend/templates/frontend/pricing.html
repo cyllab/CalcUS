@@ -37,7 +37,7 @@
 </script>
 <style>
     #pricing-table-div {
-        max-width: 74em;
+        max-width: 90em;
         margin-left: auto;
         margin-right: auto;
         margin-top: 4em;
@@ -116,6 +116,31 @@
     }
     #sub_monthly_label {
         margin-right: 0.3em;
+    }
+                @media screen and (min-width: 1408px) {
+                .main_content {
+                    width: 84% !important;
+                    margin: 0 auto !important;
+                }
+            }
+            @media screen and (min-width: 1024px) and (max-width: 1407px) {
+                .main_content {
+                    width: 96% !important;
+                    margin: 0 auto !important;
+                }
+            }
+            @media screen and (max-width: 1023px) {
+                .main_content {
+                    width: 98%;
+                    flex: 1;
+                    margin: 0 auto;
+                }
+            }
+
+    .content {
+        width: 100%;
+        flex: 1;
+        margin: 0 auto;
     }
 </style>
 
@@ -230,6 +255,21 @@
                     <em id="time_note">*additional time available</em>
                 </div>
             </div>
+            <div class="pricing-plan is-warning yearly monthly">
+                <div class="plan-header">Organisation</div>
+                <div class="plan-price"><span class="plan-price-amount"><a href="mailto:contact@calcus.cloud">Contact us</a></span></div>
+                <div class="plan-items">
+                    <div class="plan-item"><i class="fas fa-solid fa-check fa-lg"></i></div>
+                    <div class="plan-item">According to needs</div>
+                    <div class="plan-item">According to needs</div>
+                    <div class="plan-item"><i class="fas fa-solid fa-check fa-lg"></i></div>
+                </div>
+                <div class="plan-footer">
+                    <form>
+                        <a class="button is-primary is-fullwidth" href="mailto:contact@calcus.cloud">Contact us</a>
+                    </form>
+                </div>
+            </div>
 
         </div>
     </div>
@@ -243,5 +283,9 @@
         Get 2 months free per year when you subscribe for a yearly subscription instead of a monthly subscription.
     <div/>
 
+    <h3 class="title is-3">Organisational subscriptions</h3>
+    <div class="details">
+        Want to get access for your entire organisation with a custom plan satisfying your specific needs? <a href="mailto:contact@calcus.cloud">Get in touch with us!</a>
+    <div/>
 </div>
 {% endblock %}
