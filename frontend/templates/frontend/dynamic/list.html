@@ -12,6 +12,7 @@
                 <i class="fas fa-spinner"></i>
                 {% elif order.status == 2 %}
                 <i class="fas fa-check"></i>{% elif order.status == 3 %} <i class="fas fa-times"></i>{% endif %}
+                
                 <span class="text_wrap"> {{ order.label }}</span>
             </div>
             <div class="column is-narrow" style="text-align: right">
@@ -33,6 +34,9 @@
                 <span class="text_wrap"> {{ order.molecule_name }} </span>
                 <br />
                 {{ order.date }}
+                {% if IS_CLOUD or True%}
+                <span>| <strong>{{ order.total_cpu_time }}</strong> CPU-sec  </span>
+                {% endif %}
                 <br />
                 <table class="table">
                     <tr>

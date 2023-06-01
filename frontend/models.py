@@ -1254,6 +1254,12 @@ class CalculationOrder(models.Model):
                 self.save()
 
     @property
+    def total_cpu_time(self):
+        return sum(
+            [c.execution_time for c in self.calculation_set.filter(status__gt=0).all()]
+        )
+
+    @property
     def color(self):
         return STATUS_COLORS[self.status]
 
@@ -1507,23 +1513,29 @@ class Calculation(models.Model):
     @property
     def execution_time(self):
         if self.date_started is None:
-            return "-"
+            return 0
+        if self.date_finished is None:
+            end_date = timezone.now()
+        else:
+            end_date = self.date_finished
+
         if settings.IS_CLOUD:
             nproc, limit = job_triage(self)
-            delta = timezone.now() - self.date_started
-            return f"{delta.total_seconds()*nproc:.0f}"
+            delta = end_date - self.date_started
+            return round(delta.total_seconds() * nproc)
         if self.local:
-            delta = timezone.now() - self.date_started
-            return f"{delta.total_seconds()*PAL:.0f}"
+            delta = end_date - self.date_started
+            return round(delta.total_seconds() * PAL)
 
         if self.order.resource is None:
-            return "-"
-        if self.date_finished is not None:
-            if self.local:
-                pal = os.getenv("OMP_NUM_THREADS")[0]
-            else:
-                pal = self.order.resource.pal
-            return int((self.date_finished - self.date_started).seconds * int(pal))
+            # Shouldn't happen
+            return 0
+
+        if self.local:
+            pal = os.getenv("OMP_NUM_THREADS")[0]
+        else:
+            pal = self.order.resource.pal
+        return int((end_date - self.date_started).seconds * int(pal))
 
     def __repr__(self):
         return str(self.id)
