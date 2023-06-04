@@ -1173,6 +1173,12 @@ def learn(request):
     )
 
 
+def learn_keyword(request, keyword):
+    ckeyword = clean(keyword)
+
+    return render(request, f"best_practices/{ckeyword}.html")
+
+
 def flowchart(request):
     flag = True
     flowchartsData = Flowchart.objects.all()

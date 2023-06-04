@@ -3,7 +3,7 @@
 <meta name="description" content="Learning material showcasing useful quantum chemistry procedures and example applications to organic reactions.">
 
 <script src="{% static 'frontend/jquery.min.js' %}"></script>
-<script src="{% static 'frontend/jquery.toc.min.js' %}"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", (event) => {
         document.querySelectorAll("sh code").forEach((block) => {
@@ -48,12 +48,14 @@
     }
     .content {
         width: 50%;
-        margin-left: 25%;
+        margin: 0 auto;
+        max-width: 40em;
     }
 
     .learn-item {
         text-align: center;
         padding: 5px;
+        font-weight: bold; 
     }
 </style>
 {% endblock %} {% block content %}
@@ -62,7 +64,13 @@
 
     <ul data-toc=".content" data-toc-headings="h2,h3,h4,h5" id="toc"></ul>
 
-    <h3 class="title is-3">Reference</h3>
+    <h3 class="title is-3">Best practices</h3>
+    <div>
+        <ul>
+            <a class="learn-item box has-background-warning" href="/learn/conformational_search">Conformational sampling</a>
+        </ul>
+    </div>
+    {% if not IS_CLOUD %}
     <h4 class="title is-4">Examples</h4>
     <div>
         <b>This example is outdated and will be replaced by better educational content soon</b>
@@ -71,7 +79,6 @@
         {% endfor %}
     </div>
 
-    {% if not IS_CLOUD %}
     <h4 class="title is-4">Recipes</h4>
     <div>
         {% for r in recipes %}
