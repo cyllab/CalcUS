@@ -630,6 +630,10 @@ def generate_xyz_structure(drawing, inp, ext):
                 to_print = []
                 for line in inp.split("\n")[4:]:
                     sline = line.split()
+                    if len(sline) < 4:
+                        # Not sure what input causes this error
+                        logger.warning(f"Strange .mol input; processing line: '{line}'")
+                        break
                     try:
                         a = int(sline[3])
                     except ValueError:
@@ -3250,7 +3254,12 @@ def gen_fingerprint(structure):
             stderr=stream,
         ).decode("utf-8")
 
-    inchi = out.split("\n")[-2]
+    stext = out.split("\n")
+    if len(stext) < 3:
+        logger.warning(f"Invalid InChI key obtained for structure {structure.id}")
+        return ""
+
+    inchi = stext[-2]
     if inchi[:6] != "InChI=":
         logger.warning(f"Invalid InChI key obtained for structure {structure.id}")
         return ""

@@ -55,6 +55,7 @@ from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import login, authenticate
 from django.db.models import Q
+from django.template.loader import get_template
 
 from .forms import (
     ResearcherCreateForm,
@@ -1176,7 +1177,13 @@ def learn(request):
 def learn_keyword(request, keyword):
     ckeyword = clean(keyword)
 
-    return render(request, f"best_practices/{ckeyword}.html")
+    template = f"best_practices/{ckeyword}.html"
+    try:
+        get_template(template)
+    except django.template.exceptions.TemplateDoesNotExist:
+        return HttpResponse(status=404)
+    else:
+        return render(request, template)
 
 
 def flowchart(request):
@@ -1201,7 +1208,7 @@ def example(request, pk):
     try:
         ex = Example.objects.get(pk=pk)
     except Example.DoesNotExist:
-        pass
+        return HttpResponse(status=404)
 
     return render(request, "examples/" + ex.page_path, {})
 
@@ -1210,7 +1217,7 @@ def recipe(request, pk):
     try:
         r = Recipe.objects.get(pk=pk)
     except Recipe.DoesNotExist:
-        pass
+        return HttpResponse(status=404)
 
     return render(request, "recipes/" + r.page_path, {})
 
@@ -1752,6 +1759,9 @@ def submit_flowchart_input(request):
         return "The chosen project name is too long"
     if project == "New Project":
         new_project_name = clean(request.POST["new_project_name"])
+        if new_project_name.strip() == "":
+            return "Invalid new project name"
+
         try:
             project_obj = Project.objects.get(
                 name=new_project_name, author=request.user
@@ -2267,6 +2277,8 @@ def _submit_calculation(request, verify=False):
                     if line.strip() == "":
                         continue
                     el = line.split()[0]
+                    if el not in ATOMIC_NUMBER:
+                        return f"Unknown element: {el}"
                     electrons += ATOMIC_NUMBER[el]
                     if el == "He":
                         # Assume that substituents form a single bond
@@ -5079,6 +5091,11 @@ def project_folders(request, user_id, proj, folder_path):
         project = target_user.project_set.get(name=target_project)
     except Project.DoesNotExist:
         return HttpResponseRedirect("/home/")
+    except Project.MultipleObjectsReturned:
+        logger.error(
+            f"Multiple projects with name '{target_project}' for user {target_user_id}"
+        )
+        return target_user.project_set.filter(name=target_project).first()
 
     if not can_view_project(project, request.user):
         return HttpResponseRedirect("/home/")
