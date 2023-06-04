@@ -1,0 +1,628 @@
+{% extends 'frontend/base.html' %} {% load static %} {% block extrahead %}
+<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
+<script src="{% static 'frontend/jquery.min.js' %}"></script>
+
+<link rel="stylesheet" href="{% static 'frontend/bulma-slider.min.css' %}" type="text/css">
+<script src="{% static 'frontend/bulma-slider.min.js' %}"></script>
+
+<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css">
+<script src="{% static 'frontend/dygraph.min.js' %}"></script>
+
+<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+     		tex2jax: {
+       		inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+       		processEscapes: true
+     		}
+    });
+</script>
+<style>
+    p {
+        text-align: justify;
+        text-indent: 2em;
+        margin: 1em;
+    }
+    p > a {
+        color: blue;
+    }
+    .main {
+        margin-top: 4em !important;
+        width: 50%;
+        margin: 0 auto;
+        max-width: 40em;
+        min-width: 15em;
+    }
+    @media screen and (min-width: 1024px) and (max-width: 1407px) {
+        .main {
+            width: 60%;
+        }
+    }
+    @media screen and (min-width: 769px) and (max-width: 1023px) {
+        .main {
+            width: 70%;
+        }
+    }
+    @media screen and (max-width: 768px) {
+        .main {
+            width: 85%;
+        }
+    }
+
+    h3 {
+        text-align: center;
+    }
+    h4 {
+        text-align: center;
+        margin-top: 3em !important;
+        font-style: italic;
+    }
+    figure {
+        margin-bottom: 1em;
+    }
+    figcaption {
+        font-weight: bold;
+    }
+    .message {
+        margin-top: 4em;
+        margin-bottom: 4em !important;
+        text-color: black !important;
+    }
+    .message-header {
+        font-size: 1.5em;
+        text-align: center;
+        display: block;
+    }
+    .slider {
+        background-color: #ebfff5;
+    }
+    #ircgraph_1_speed, #ircgraph_1_frame_control {
+        text-align: center;
+        margin-top: 2em;
+        font-weight: bold;
+    }
+    .table_footnote {
+        margin-top: 5px;
+        margin-left: 1em;
+        margin-bottom: 3em;
+        font-size: 0.8em;
+        font-style: italic;
+    }
+    .equation {
+        font-size: 1.4em;
+    }
+    #rmsd_example {
+        margin-top: 2em;
+        margin-bottom: 2em;
+    }
+    #fig_rmsd_example {
+        max-width: 500px;
+    }
+    li {
+        margin-top: 1.0em;
+        margin-bottom: 1.0em;
+        text-align: justify;
+    }
+    ul {
+        list-style-type: disc;
+    }
+    #start_rows_rigid, #start_rows_flexible {
+        border-top: 3px solid #dbdbdb;
+    }
+    #end_table {
+        border-bottom: 3px solid #dbdbdb;
+    }
+
+
+</style>
+<script
+    type="text/javascript"
+    src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+></script>
+<script>
+	let widgets = {};
+	let settings = {};
+
+	function set_loop(check, k) {
+		if(check.checked == true) {
+			settings[k]['_animation'] = settings[k]['animation'];
+			settings[k]['animation'] = "manual";
+		}
+		else {
+			settings[k]['animation'] = settings[k]['_animation'];
+		}
+		refresh_animation(k);
+	}
+	function change_speed(slider, k) {
+		speed = slider.value;
+		settings[k]['interval'] = 10*(12-speed);
+
+		refresh_animation(k);
+	}
+	function refresh_animation(k) {
+		ircgraph = widgets[k];
+		ircgraph_settings = settings[k];
+		ircgraph.stopAnimate();
+		if(k.includes("ircgraph_")) {
+			speed = document.getElementById(k + "_speed");
+			frame = document.getElementById(k + "_frame_control");
+			slider = document.getElementById(k + "_frame_control_slider");
+		}
+		if(ircgraph_settings['animation'] != 'manual') {
+			ircgraph.animate({'loop': ircgraph_settings['animation'], 'interval': ircgraph_settings['interval']});
+
+			if(k.includes("ircgraph_")) {
+				speed.style.display = "block";
+				frame.style.display = "none";
+			}
+		}
+		else {
+			speed.style.display = "none";
+			frame.style.display = "block";
+			slider.value = ircgraph.getFrame();
+		}
+	}
+	function frame_step(k) {
+		ircgraph = widgets[k];
+		ircgraph_plot = widgets[k + '_plot'];
+		ircgraph_plot.setSelection(ircgraph.getFrame()-1);
+	}
+	function step_frame(slider, k) {
+		ircgraph = widgets[k];
+		ircgraph.setFrame(slider.value);
+		ircgraph.render();
+	}
+</script>
+<script>
+	$(document).ready(function(){
+        $.get("{% static 'best_practices/conf_search/butane_rotation.xyz' %}", function(data) {
+			irc_data = "Dihedral Angle,Relative Energy\n"
+
+			let widget_width = Math.round($(".main").width()/2.3);
+            if($(window).width() >= 769) {
+                $("#ircgraph_1").width(widget_width);
+                $("#ircgraph_1").height(widget_width);
+                $("#ircgraph_1_plot").width(widget_width);
+                $("#ircgraph_1_plot").height(widget_width);
+            }
+            else {
+                $("#ircgraph_1").width(widget_width*1.5);
+                $("#ircgraph_1").height(widget_width);
+                $("#ircgraph_1_plot").width(widget_width*1.5);
+                $("#ircgraph_1_plot").height(widget_width);
+            }
+
+			wid = $3Dmol.createViewer("ircgraph_1");
+
+			set = {
+				animation: 'backAndForth',
+				interval: 90,
+			}
+			
+			split_lines = data.split('\n');
+			num = parseInt(split_lines[0]);
+			total = split_lines.length - 1;
+
+			for(i=0; i < total/(num+2); i++) {
+				E_line = split_lines[i*(num+2)+1];
+				E = parseFloat(E_line.split(' ')[2])*2625.5;
+				irc_data += String(-180 + i*5) + "," + String(E) + '\n';
+			}
+
+			plot = new Dygraph(
+				document.getElementById("ircgraph_1_plot"),
+					irc_data,
+					{
+						strokeWidth: 2,	
+						xlabel: "Dihedral Angle (degrees)",
+						ylabel: "Relative Energy (kJ/mol)",
+						rangeSelectorPlotStrokeColor: "#BABABA",
+						legend: "never",
+						highlightCircleSize:  5, 
+						digitsAfterDecimal: 0,
+						axes: {
+							y: {
+								axisLabelWidth: 60,
+							},
+						}
+					}
+			);
+plot.ready(function() {
+	plot.setAnnotations([
+	{
+		series: "Relative Energy",
+		x: "0",
+		text: "Fully eclipsed",
+                shortText: "D",
+                width: 20,
+                height: 20,
+	},
+	{
+		series: "Relative Energy",
+		x: "-180",
+		text: "Anti",
+                shortText: "A",
+                width: 20,
+                height: 20,
+	},
+	{
+		series: "Relative Energy",
+		x: "-120",
+		text: "Anticlinal",
+                shortText: "B",
+                width: 20,
+                height: 20,
+	},
+	{
+		series: "Relative Energy",
+		x: "-65",
+		text: "Gauche",
+                shortText: "C",
+                width: 20,
+                height: 20,
+	},
+	{
+		series: "Relative Energy",
+		x: "65",
+		text: "Gauche",
+                shortText: "C",
+                width: 20,
+                height: 20,
+	},
+	{
+		series: "Relative Energy",
+		x: "120",
+		text: "Anticlinal",
+                shortText: "B",
+                width: 20,
+                height: 20,
+	},
+	{
+		series: "Relative Energy",
+		x: "180",
+		text: "Anti",
+                shortText: "A",
+                width: 20,
+                height: 20,
+	},
+	]);
+});
+			wid.addModelsAsFrames(data, "xyz");
+			wid.setBackgroundColor(0xF5FFFA);
+            wid.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
+
+			wid.zoomTo();
+			wid.render();
+			wid.animate({'loop': set['animation'], 'interval': set['interval']});
+
+			wid.setViewChangeCallback(function() { frame_step("ircgraph_1")});
+
+			slider = document.getElementById("ircgraph_1_frame_control_slider");
+			slider.max = wid.getNumFrames();
+			widgets["ircgraph_1"] = wid;
+			widgets["ircgraph_1_plot"] = plot;
+			settings["ircgraph_1"] = set;
+		});
+	});
+</script>
+
+<title>Conformational Sampling</title>
+<!-- METADATA --!>
+
+{% endblock %}
+{% block content %}
+
+<div class="main">
+    <h3 class="title is-3">Conformational Sampling</h3>
+    <h4 class="subtitle is-4">What conformational sampling is and why it is important</h4>
+    <p>
+ In computational chemistry, conformational sampling plays a crucial role in understanding the properties and reactivity of molecules. Conformational sampling refers to the exploration of different three-dimensional arrangements, or conformations, that a molecule can adopt. This spacial arrangement can greatly influence the properties of interest because of differences in the distances between atoms, in orbital interactions and in steric constraints, among other factors.
+    </p>
+    <p>
+Molecules are exist in dynamic environments, constantly undergoing thermal motion and fluctuating between a range of conformations. What we mean by "conformation" is a local minimum in terms of all molecular coordinates, the bottom of a potential well on the potential energy surface (PES). In reality, molecules do not adopt strictly this conformation, but oscillates around this local minimum until it crosses over to another local minimum. 
+    </p>
+    <p>
+In the context of computational chemistry, we often use conformations (the minima) in order to study the properties of the molecule in its state of flux. However, determining the most energetically favorable or relevant conformations for a given molecule is a complex task due to the high dimensionality of the conformational space, namely $3N - 6$ dimensions (or $3N - 5$ for linear molecules). Conformational sampling methods aim to address this challenge by efficiently exploring this vast space and identifying all the significant local minima.
+    </p>
+    <div class="example message is-primary">
+        <div class="message-header">
+            Example: the conformations of butane
+        </div>
+        <div class="message-body">
+            <p>
+            Butane has only two unique stable conformations. The most stable conformation is obtained when the carbon backbone forms a zig-zag, putting the terminal methyl groups <em>anti</em> to each other (<b>State A</b> below). In this conformation, all the hydrogens are staggered to each other and the methyl groups are as far from each other as they can be.
+            </p>
+            <p>
+            The second stable conformation also has every group staggered to each other, but the methyl groups are <em>gauche</em> to each other (<b>State C</b>). To go from one conformation to the other, butane must pass over an energy barrier (<b>State B</b>). The maximum point of the barrier (the transition state) occurs when the groups of the internal carbons are eclipsed and thus repulse each other the most. An even greater barrier occurs at <b>State D</b> due to the eclipsed methyl groups.
+            </p>
+            <p>
+            Only one molecular coordinate is considered in this example, but larger flexible molecules have many molecular coordinates that must be explored. For example, if we consider longer linear alkane chains, the number of conformations featuring only staggered groups increases exponentially. Moreover, functional groups that can interact favorably with each other can force chains to fold due to a stability gain greater than the energy cost of bringing groups <em>gauche</em> to each other. The most notable example is the case of proteins, which fold into very specific structures due to internal hydrogen bonds.
+            </p>
+            <div class="viewer_container columns">
+                <center>
+                    <div id="ircgraph_1" class="mol_container column" style="position: relative"></div>
+                </center>
+                <center>
+                    <div id="ircgraph_1_plot" class="column" style="flex: 1;"></div>
+                </center>
+            </div>
+            <div id="ircgraph_1_speed">
+                <div class="btn_title">Speed</div>
+                <div class="slidecontainer">
+                    <input type="range" min="1" max="10" value="3" class="slider" oninput="change_speed(this, 'ircgraph_1');" style="width: 100%;">
+                </div>
+            </div>
+            <div id="ircgraph_1_frame_control" style="display: none;">
+                <div class="btn_title">Progress</div>
+                <div class="slidecontainer">
+                    <input type="range" min="1" max="1" value="1" class="slider is-info" id="ircgraph_1_frame_control_slider" oninput="step_frame(this, 'ircgraph_1');" style="width: 100%;">
+                </div>
+            </div>
+            <center>
+                Manual Animation <input type="checkbox" onchange="set_loop(this, 'ircgraph_1');">
+            </center>
+        </div>
+    </div>
+    <!-- Visual example? Simple and possibly a complex example too --!>
+
+    <h4 class="subtitle is-4">How conformations are found</h4>
+    <p>
+Various algorithms and techniques have been developed to explore the conformational space effectively. These include systematic search methods, such as the systematic torsion angle sampling or grid-based techniques, as well as stochastic search methods, like Monte Carlo methods and molecular dynamics simulations. Each approach has its strengths and limitations, and the choice of method depends on the specific objectives and computational resources available.
+    </p>
+    <p>
+    One relatively recent solution to this problem has been developed and made freely available by the group of Stefan Grimme in a software called <a href="https://github.com/crest-lab/crest">CREST</a>. This approach makes extensive use of the extremely fast GFN<em>n</em>-xTB methods (<a href="https://github.com/grimme-lab/xtb">available through the xtb package</a>), which enable dynamics simulations for all the supported elements (hydrogen to radon). These simulations could be done using standard forcefields instead of GFN<em>n</em>-xTB, but this is very restrictive in terms of the supported molecules. Indeed, most forcefields have been developed with peptides and proteins in mind. Other molecules can be simulated using forcefields if proper parameters can be developed for these specific molecules. The GFN<em>n</em>-xTB methods thus provide a very convenient way to simulate the dynamics of almost any molecule. Moreover, the Grimme group have developed a forcefield method inspired from the GFN<em>n</em>-xTB methods and developed an automated parameterization procedure in order to keep the same generality. Among the three GFN<em>n</em>-xTB methods (<em>n</em> from 0 to 2), GFN2-xTB is the most accurate, and thus we will only consider this method out of the three here.
+    </p>
+    <p>
+Conformational sampling is achieved by using molecular dynamics simulations to find new conformers. Starting from the initial conformation of the molecule, multiple other conformations will be explored throughout the simulations, purely through the random atomic movements within the molecule. With long enough simulations, all conformations will be visited by the molecule.
+    </p>
+    <p>
+    However, depending on the flexibility of the molecule and the conformational change barriers, the required simulation time might be unreasonable in these conditions. In order to accelerate the exploration of new conformations, an artificial potential is periodically added around the current configuration. This potential increases the potential energy of the geometries that have been explored and thus "lowers" the barriers to new conformations. This can be seen as pouring a bucket of sand in the potential well and reducing its depth. After this has been done enough times, the potential well will be very shallow and the molecule will exit it towards new conformations. This type of dynamics is called <b>meta-dynamics</b> and is extensively used in the CREST package. Meta-dynamics are discussed in more detail in <a href="https://dx.doi.org/10.1021/acs.jctc.9b00143">S. Grimme, J. Chem. Theory Comput., 2019, 155, 2847-2862.<a>
+    </p>
+    <p>
+    The full conformational sampling procedure is explained in details on the <a href="https://crest-lab.github.io/crest-docs/page/overview/workflows.html">CREST documentation</a>. In brief, meta-dynamics simulations are used to iteratively explore more and more possible conformations until no lower energy conformation is found. The structures that are found are reoptimized and filtered down to unique conformations. Normal molecular dynamics are launched starting from the most stable conformers in order to explore nearby conformations. Finally, the new orientations of parts of the molecule are applied to other conformers in order to generate a hybrid conformation, which is likely of similar energy as its parents. This is called "Genetic Z-matrix crossing", as it uses an approach related to genetic algorithms to combined conformations into new ones without relying on dynamics simulation.
+    </p>
+    <h4 class="subtitle is-4">The computational cost of conformational sampling</h4>
+    <p>
+    The time required to perform the conformational sampling increases rapidly with the number of atoms in the molecule and its flexibility. To give you an idea of the resources required for your molecules, we have benchmarked the conformational search of very flexible molecules (linear alkanes) and very rigid molecules (insaturated polycycles). The GFN2-xTB calculations also used the analytical linearized Poisson-Boltzmann (ALPB) implicit solvation model to represent a typical use case (see <a href="https://doi.org/10.1021/acs.jctc.1c00471">S. Ehlert, M. Stahn, S. Spicher, S. Grimme, J. Chem. Theory Comput., 2021, 17, 4250-4261</a>). The calculations were performed using 8 vCPU cores on CalcUS Cloud. The time reported is the computing time used, which is 8 times greater than the real elapsed time.
+    </p>
+    <center>
+    <table class="table is-striped has-text-centered is-full-width">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Number<br>of atoms</th>
+            <th>CPU Time <br>(GFN-FF)</th>
+            <th>CPU Time <br>(GFN2-xTB/ALPB(H2O))</th>
+            <th>Number of <br>conformers*</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr id="start_rows_flexible">
+            <td>Butane</td>
+            <td>14</td>
+            <td>80</td>
+            <td>400</td>
+            <td>2</td>
+        </tr>
+        <tr>
+            <td>Heptane</td>
+            <td>23</td>
+            <td>192</td>
+            <td>2008</td>
+            <td>16-17</td>
+        </tr>
+
+        <tr>
+            <td>Decane</td>
+            <td>32</td>
+            <td>552</td>
+            <td>8040</td>
+            <td>33-48</td>
+        </tr>
+
+        <tr>
+            <td>Hexadecane</td>
+            <td>50</td>
+            <td>10304</td>
+            <td>101488</td>
+            <td>143-197</td>
+        </tr>
+
+        <tr>
+            <td>Eicosane</td>
+            <td>62</td>
+            <td>80264</td>
+            <td>-</td>
+            <td>999</td>
+        </tr>
+        <tr id="start_rows_rigid">
+            <td>Benzene</td>
+            <td>12</td>
+            <td>64</td>
+            <td>400</td>
+            <td>1</td>
+        </tr>
+        <tr>
+            <td>Biphenyl</td>
+            <td>22</td>
+            <td>96</td>
+            <td>1136</td>
+            <td>1-2</td>
+        </tr>
+        <tr>
+            <td>Pyrene</td>
+            <td>26</td>
+            <td>128</td>
+            <td>2120</td>
+            <td>1</td>
+        </tr>
+        <tr>
+            <td>Coronene</td>
+            <td>36</td>
+            <td>336</td>
+            <td>4200</td>
+            <td>1</td>
+        </tr>
+        <tr id="end_table">
+            <td>Bicoronene</td>
+            <td>70</td>
+            <td>688</td>
+            <td>19112</td>
+            <td>1-2</td>
+        </tr>
+
+    </tbody>
+    </table>
+    </center>
+    <p class="table_footnote">*This number can vary greatly depending on the parameters used, notably the maximal relative energy and the threshold RMSD for unique conformers (see the text for more details).</p>
+
+    <p>
+    While the conformational sampling of small molecules like butane and benzene required similar durations, the different quickly increases. In the extreme case, we can compare eicosane ($C_{20}H_{42}$), which took 22 CPU-hours with GFN-FF, to bicoronene ($C_{48}H_{22}$), which took under 12 CPU-minutes, despite having slightly more atoms.
+    </p>
+    <p>
+    The conformational sampling compute time grows exponentially with the number of atoms, and the flexibility of the molecules dictates how fast the time will grow. The two figures below illustrate the enormous difference between the rigid insaturated hydrocarbons in blue and the flexible alkane chains in red. The two series follow quite closely an exponential curve for molecules between 12 and 70 atoms. We can thus use the trendlines as guides to predict the minimal and maximal compute times to expect from a molecule with a given number of atoms. We can hardly predict exactly how much time the conformational sampling will take, but we can be confident that it will be between these two extremes.
+    </p>
+
+    <center>
+        <figure style="display: flex">
+            <figure>
+                <img src="{% static 'best_practices/conf_search/scaling_gfnff.png' %}" />
+                <figcaption>Scaling of GFN-FF (vacuum)</figcaption>
+            </figure>
+            <figure>
+                <img src="{% static 'best_practices/conf_search/scaling_gfn2.png' %}" />
+                <figcaption>Scaling of GFN2-xTB with ALPB(H2O)</figcaption>
+            </figure>
+        </figure>
+    </center>
+
+    <div class="example message is-info">
+        <div class="message-header">
+            Cheatsheet: expected CPU time for conformational sampling on CalcUS Cloud
+        </div>
+        <div class="message-body">
+        <center>
+            <table class="table is-striped has-text-centered is-full-width">
+            <thead>
+                <tr>
+                    <th>Number of atoms</th>
+                    <th>Predicted CPU Time <br>(GFN-FF)</th>
+                    <th>Predicted CPU Time <br>(GFN2-xTB/ALPB(H2O))</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>20</td>
+                    <td>90 &mdash; 140</td>
+                    <td>1000 &mdash; 1200</td>
+                </tr>
+                <tr>
+                    <td>30</td>
+                    <td>140 &mdash; 590</td>
+                    <td>2000 &mdash; 5200</td>
+                </tr>
+                <tr>
+                    <td>40</td>
+                    <td>210 &mdash; 2500</td>
+                    <td>3700 &mdash; 24,000</td>
+                </tr>
+                <tr>
+                    <td>50</td>
+                    <td>320 &mdash; 11,000</td>
+                    <td>6900 &mdash; 110,000</td>
+                </tr>
+                <tr>
+                    <td>60</td>
+                    <td>480 &mdash; 47,000</td>
+                    <td>13,000 &mdash; 500,000</td>
+                </tr>
+                <tr>
+                    <td>70</td>
+                    <td>730 &mdash; 200,000</td>
+                    <td>24,000 &mdash; 2,300,000</td>
+                </tr>
+                </tbody>
+            </table>
+        </center>
+        </div>
+   </div>
+
+    <h4 class="subtitle is-4">How unique conformations are identified</h4>
+    <p>
+    The conformational search process generates a large number of structures which may or may not correspond to known conformers. Even if two structures are visually indistinguishable to the human eye, its numerical representation (<em>i.e.</em>, the 3D coordinates of the atoms) will not be identical. This is because structures remain chemically identical after translations or rotations, while the numerical representation is completely different. Moreover, tiny variations in the coordinates would make the coordinates different, while humans would classify them as essentially identical.
+    </p>
+    <p>
+    In order to compare structures mathematically more rigorously, we can use their root mean squared deviation (RMSD) as difference metric. In words, this criteria expresses the average magnitude of the deviation between the position of the atoms in one structure compared to the other. It is usually implicitly assumed that both structures have been aligned (through translations and rotations) in order to obtain the smallest RMSD possible. This means that two structures whose internal coordinates are identical will have a RMSD of 0 with respect to each other. If the structures have slightly different bond distances or different angles within the molecule, the RMSD will quantify to what extent the structures differ.
+    </p>
+
+    <center id="rmsd_example">
+        <div class="equation">
+        RMSD = $\sqrt{\frac{\sum_{i=1}^N \left((x_{Ai} - x_{Bi})^2 + (y_{Ai} - y_{Bi})^2 + (z_{Ai} - z_{Bi})^2\right)}{N}}$
+        </div>
+
+        <div class="example message is-primary">
+            <div class="message-header">
+                Example: the structure of $NO_2$
+            </div>
+            <div class="message-body">
+
+            <figure id="fig_rmsd_example">
+                <img src="{% static 'best_practices/conf_search/RMSD_example.png' %}" />
+                <figcaption>RMSD between the GFN-FF structure (red) and GFN2-xTB structure (blue)</figcaption>
+            </figure>
+            <p>
+                Both structures were aligned in order to minimize the RMSD. Due to the different N-O bond distances and O-N-O angles, the atoms are slightly offset. In this case, the RMSD is 0.125 Å, which is quite small. 
+            </p>
+            </div>
+        </div>
+    </center>
+
+    <p>
+    In the context of conformational sampling, we use a certain threshold RMSD above which two structures are considered to be different conformations. By default, the RMSD threshold of conformational searches on CalcUS Cloud is 2.0 Å, which is generally suitable for molecules with average flexibility and moderate size. However, if you wish to change this threshold, you can use the calculation specification <code>--rthr NEWVALUE</code> when launching the calculation. Additional available options are explained in the <a href="https://calcus.readthedocs.io/en/latest/software-packages.html#xtb">CalcUS documentation</a>.
+    </p>
+    <p>
+    There are however some caveats with respect to the RMSD. It requires all the atoms to be distinguishable, meaning that we know with which atom in structure B we should compare each atom in structure A. While this is generally not a problem, it can cause duplicate conformers if there are equivalent atoms in the molecule. For example, a methyl group has three equivalent hydrogen atoms. If the methyl group rotates by 120 degrees, the structure is chemically identical, since there is still three hydrogen atoms at the same positions. However, the indices of these atoms are different, meaning that the RMSD will compare the positions of the "wrong" hydrogen atoms and will not be null. It is thus possible that these two structures will be considered to be two unique conformations, although this is chemically false.
+    </p>
+
+    <h4 class="subtitle is-4">General Recipe</h4>
+
+    <p>
+    	<ol>
+	    <li>
+            Select your input structure on the launch page, either through the online sketcher or by uploading the structure in a suitable format.
+	    </li>
+	     <li>
+	        Specify the molecule name, the solvent (if desired), the project and pick the xtb software. The calculation type should be "Conformational Search".
+	    </li>
+	    <li>
+            Decide on the best method to use. Refer to the table above to estimate the approximate CPU time required with each method. If your system contains transition metals or exotic valence, it would be wise to optimise the structure using GFN-FF to verify if its structure changes significantly. If it does, GFN-FF might not be suitable. If the computing time is reasonable, using GFN2-xTB is a safe choice.
+        </li>
+        <li>
+            If desired, <a href="https://calcus.readthedocs.io/en/latest/software-packages.html#xtb">add specifications.</a>
+        </li>
+        <li>
+            Submit the calculation and wait for it to finish. Conformational searches do not start immediately like other xtb calculations, since they are executed on an entire virtual machine, which takes some time to start up.
+        </li>
+        <li>
+            Once the calculation is done, click on the calculation order to view the ensemble page. You will see a table with all the unique conformers ranked by energy.
+        </li>
+        <li>
+            Use the ensemble (or a subset of it) for further calculations (<em>e.g.</em>, frequency calculation to calculate the free energy). The Boltzmann-weighted ensemble averages will be calculated for energetic properties (energy and free energy). These values are more representative of the true value of the molecule than any individual conformation, since they take into account all (unique) significant conformations.
+        </li>
+
+    	</ol>
+    </p>
+
+    <h4 class="subtitle is-4">Tips and guidelines</h4>
+    <p>
+    	<ul>
+            <li>
+            <b>The more polar the solvent, the more implicit solvation is important.</b> Without implicit solvation, the molecule will tend to curl up in order to maximize intramolecular interactions. Implicit solvation adds the solvent-solute interactions which stabilize linear or "open" conformations. <em>The increase in compute time caused by adding implicit solvation is pretty moderate.</em>
+            </li>
+            <li>
+            <b>If you used GFN-FF, it is generally recommended to reoptimize all the structures using GFN2-xTB.</b> You can launch the optimization for all structures by clicking on "Launch calculation on ensemble". You can also only consider the relevant conformers by holding the Control key and clicking on table entries, then click "Launch calculation on selected structure(s)". <em>GFN2-xTB optimizations take generally only a few seconds per structure, which is much less than the conformational search itself.</em>
+            </li>
+    	</ul>
+    </p>
+</div>
+{% endblock %}

@@ -136,6 +136,7 @@ urlpatterns = [
     path("save_preset/", views.save_preset, name="save_preset"),
     # Documentation
     path("learn/", views.learn, name="learn"),
+    path("learn/<str:keyword>", views.learn_keyword, name="learn_keyword"),
     path("learn/example/<str:pk>", views.example, name="example"),
     path("learn/recipe/<str:pk>", views.recipe, name="recipe"),
     path("calculationorder/<str:pk>", views.calculationorder, name="calculationorder"),
