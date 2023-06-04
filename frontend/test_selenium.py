@@ -1417,9 +1417,17 @@ class LaunchParametersTests(CalcusLiveServer):
 
         self.lget("/launch/")
 
-        software = WebDriverWait(self.driver, 2).until(
-            EC.presence_of_element_located((By.NAME, "calc_software"))
-        )
+        try:
+            software = WebDriverWait(self.driver, 2).until(
+                EC.presence_of_element_located((By.ID, "calc_software"))
+            )
+        except selenium.common.exceptions.TimeoutException:
+            # Problems when running in Github Actions for some reason
+            self.lget("/launch/")
+            time.sleep(0.5)
+            software = WebDriverWait(self.driver, 2).until(
+                EC.presence_of_element_located((By.ID, "calc_software"))
+            )
 
         select = Select(software)
 
