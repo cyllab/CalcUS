@@ -8,13 +8,15 @@ class CalcUSSitemap(sitemaps.Sitemap):
 
     def items(self):
         return [
-            "frontend:home",
-            "frontend:pricing",
-            "frontend:register",
-            "frontend:login",
-            "frontend:start_trial",
-            "frontend:learn",
+            ("frontend:home", {}),
+            ("frontend:pricing", {}),
+            ("frontend:register", {}),
+            ("frontend:login", {}),
+            ("frontend:start_trial", {}),
+            ("frontend:learn", {}),
+            ("frontend:learn_keyword", {"keyword": "conformational_search"}),
         ]
 
-    def location(self, item):
-        return reverse(item)
+    def location(self, item_data):
+        item, kwargs = item_data
+        return reverse(item, kwargs=kwargs)
