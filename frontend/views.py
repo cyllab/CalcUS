@@ -4316,10 +4316,20 @@ def manage_subscription(request):
 
     import stripe
 
-    session = stripe.billing_portal.Session.create(
-        customer=request.user.stripe_cus_id,
-        return_url="https://calcus.cloud/profile/",
-    )
+    if request.user.stripe_cus_id != "":
+        session = stripe.billing_portal.Session.create(
+            customer=request.user.stripe_cus_id,
+            return_url="https://calcus.cloud/profile/",
+        )
+    else:
+        # Not sure why this happens...
+        logger.warning(
+            f"Customer has no stripe customer id: {request.user.stripe_cus_id} (user {request.user.id})"
+        )
+        session = stripe.billing_portal.Session.create(
+            return_url="https://calcus.cloud/profile/",
+        )
+
     return redirect(session.url)
 
 
