@@ -1,0 +1,44 @@
+{% extends "frontend/base.html" %}
+{% load i18n bulma_tags %}
+{% block extrahead %}
+<title>CalcUS Cloud Privacy Statement</title>
+    <style>
+        #msg_div {
+            margin-top: 6em;
+            width: 40%;
+            max-width: 30em;
+            min-width: 10em;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        p {
+            text-align: justify;
+            text-indent: 2em;
+            margin: 1em;
+        }
+        h3 {
+            text-align: center;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+<div class="container">
+    <div id="msg_div" class="box">
+        <h3 class="title is-3">Our use of cookies</h3>
+        <p>
+        Like almost all websites, we use cookies. <b>By continuing to browse the website, you agree to our use of cookies, which is explained below.</b>
+        </p>
+        <p>
+        The cookies we use are divided into two groups: feature cookies and analytics cookies. The feature cookies are used to keep you logged in for long periods of time (unless you choose to log off) and to improve the security of the website. Some cookies store your last selected project on the platform in order to preselect it when you launch new calculations. We also need to create a cookie to indicate that you have seen the cookie banner and that we shouldn't bother you with it anymore. The analytics cookies help us run and improve the platform. For example, they allow us to see how many new users visit our website, how many returning users start a trial or create an account, and also how many people launch calculations. 
+        </p>
+        <p>
+        <b>We <em>do not</em> use cookies to track you and send you ads on other websites. We also <em>do not</em> collect sensitive information about you through cookies.</b>
+        </p>
+        {% if not IS_CLOUD %}
+        <p>
+            Note: the platform is not running in Cloud mode and does not use analytics cookies.
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

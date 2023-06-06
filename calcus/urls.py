@@ -27,6 +27,7 @@ from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
 
 from .sitemaps import CalcUSSitemap
+from .views import privacy
 
 sitemaps = {
     "static": CalcUSSitemap,
@@ -34,6 +35,7 @@ sitemaps = {
 
 urlpatterns = [
     path("", include("frontend.urls", namespace="frontend")),
+    path("privacy/", privacy),
     path("accounts/", include("django.contrib.auth.urls")),
     path(
         "sitemap.xml",
