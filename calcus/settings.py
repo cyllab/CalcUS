@@ -269,6 +269,7 @@ else:
     EMAIL_HOST_USER = os.getenv("CALCUS_EMAIL_USER")
     EMAIL_HOST_PASSWORD = os.getenv("CALCUS_EMAIL_PASSWORD")
 
+
 MEDIA_URL = "/media/"
 
 AXES_LOCKOUT_TEMPLATE = "registration/lockout.html"

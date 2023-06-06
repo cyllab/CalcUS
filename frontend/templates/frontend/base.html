@@ -154,7 +154,48 @@
                 background-color: #ffffff;
                 margin-top: 20px;
             }
+            #cookie_banner {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: #ccffcc;
+                height: 3em;
+                font-size: 1em;
+                padding-left: 3em;
+            }
+            #cookie_banner > span {
+                margin-top: 0.5em;
+                margin-bottom: 0.5em;
+                display: block;
+                float: left;
+                vertical-align: center;
+                height: 2em;
+            }
+            #cookie_banner > button {
+                height: 2em;
+                float: right;
+                margin: 0.5em;
+            }
+            #cookie_banner > span > a {
+                color: blue;
+                text-decoration: underline;
+            }
         </style>
+        <script>
+            {% if IS_CLOUD %}
+            document.addEventListener('DOMContentLoaded', function() {
+                var seen = localStorage.getItem("calcus_cloud_seen_banner");
+                if(seen == null) {
+                    document.getElementById("cookie_banner").style.display = "block";
+                }
+            }, false);
+            function see_banner() {
+                localStorage.setItem("calcus_cloud_seen_banner", true);
+                document.getElementById("cookie_banner").style.display = "none";
+            }
+            {% endif %}
+        </script>
     </head>
 
     <body>
@@ -282,6 +323,9 @@
                 <span id="version_label">Version {% get_calcus_version %}</span>
                 {% endif %}
             </section>
+        </div>
+        <div id="cookie_banner" style="display: none;">
+            <span>By using our website, you consent to our use of cookies. We use cookies to keep you logged in, see if you're new here and provide a better user experience. <a href="/privacy/">See the details</a></span> <button class="button is-primary" onclick="see_banner()">OK</button>
         </div>
     </body>
 </html>
