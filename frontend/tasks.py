@@ -454,10 +454,10 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         exe_dir = os.path.dirname(log_file)
         if calc_id != -1 and settings.IS_CLOUD:
             try:
-                timeout = int(os.getenv("CALCUS_TIMEOUT", "300"))
+                timeout = int(os.getenv("CALCUS_TIMEOUT", "580"))
             except ValueError:
                 logger.warning(f"Could not parse the timeout for calc {calc_id}")
-                timeout = 300
+                timeout = 580
         if calc_id != -1:
             calc = Calculation.objects.get(pk=calc_id)
             calc.status = 1
