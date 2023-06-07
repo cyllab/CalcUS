@@ -183,7 +183,7 @@
             }
         </style>
         <script>
-            {% if IS_CLOUD %}
+            {% if IS_CLOUD and not IS_TEST %}
             document.addEventListener('DOMContentLoaded', function() {
                 var seen = localStorage.getItem("calcus_cloud_seen_banner");
                 if(seen == null) {

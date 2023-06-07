@@ -37,7 +37,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.action_chains import ActionChains
 
 from celery.contrib.testing.worker import start_worker
@@ -90,7 +89,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         else:
             cls.driver = webdriver.Remote(
                 command_executor="http://selenium:4444/wd/hub",
-                desired_capabilities=DesiredCapabilities.CHROME,
+                options=webdriver.ChromeOptions(),
             )
 
         cls.driver.set_window_size(ZOOM * 1920, ZOOM * 1080)

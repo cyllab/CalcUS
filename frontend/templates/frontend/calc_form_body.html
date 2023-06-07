@@ -517,7 +517,7 @@
 			</div>
             {% if IS_CLOUD %}
             <div class="cloud_comp_info">
-                <span id="cloud_num_cores">1</span> core will be used (maximum runtime: <span id="cloud_timeout_conf" style="display: none;">{% if request.user.is_trial %}5 minutes{% elif request.user.is_subscriber %}6 hours{% else %}15 minutes{% endif %}</span><span id="cloud_timeout_regular">10 minutes</span></span>)
+                <span id="cloud_num_cores">1 to 4</span> core will be used (maximum runtime: <span id="cloud_timeout">{% if request.user.is_trial %}5 minutes{% elif request.user.is_subscriber %}6 hours{% else %}15 minutes{% endif %}</span></span>)
                 {% if request.user.is_trial %}
                 <br>
                 <a href="/create_full_account/">You are using a trial account. Convert to a free full account to unlock more computing power and longer runtimes</a>

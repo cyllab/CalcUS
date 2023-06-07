@@ -373,13 +373,9 @@ String.prototype.format = function() {
             if(choice.value == "Conformational Search" || choice.value == "Constrained Conformational Search") {
                 // Hardcoded values for now...
                 $("#cloud_num_cores").html({% if request.user.is_trial %}"4"{% else %}"8"{% endif %});
-                $("#cloud_timeout_conf").show();
-                $("#cloud_timeout_regular").hide();
             }
             else {
-                $("#cloud_num_cores").html("1");
-                $("#cloud_timeout_conf").hide();
-                $("#cloud_timeout_regular").show();
+                $("#cloud_num_cores").html("1 to 4");
             }
 
 		{% endif %}
