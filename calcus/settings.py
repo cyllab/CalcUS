@@ -339,7 +339,7 @@ if IS_CLOUD:
 
     ALLOW_TRIAL = True
 
-    LOCAL_MAX_ATOMS = 200
+    LOCAL_MAX_ATOMS = 50000
 
     LOCAL_ALLOWED_THEORY_LEVELS = [
         "xtb",
