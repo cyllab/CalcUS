@@ -143,6 +143,12 @@ String.prototype.format = function() {
                 "theory_level": ["xtb"],
                 "driver": ["xtb", "Pysisyphus", "ORCA"]
             },
+            "NWChem": {
+                "type": ["Geometrical Optimisation", "Single-Point Energy"],
+                "theory_level": ["hf", "dft"],
+                "driver": ["NWChem"],
+                "solvation_model": [],
+            },
         },
         "solvation_model": {
             "SMD": {
@@ -166,25 +172,25 @@ String.prototype.format = function() {
                 "driver": ["ORCA", "Pysisyphus"]
             },
             "NMR Prediction": {
-                "driver": ["ORCA", "Gaussian"]
+                "driver": ["ORCA", "Gaussian", "NWChem"]
             }, 
             "Geometrical Optimisation": {
-                "driver": ["xtb", "Gaussian", "ORCA"]
+                "driver": ["xtb", "Gaussian", "ORCA", "NWChem"]
             }, 
             "TS Optimisation": {
-                "driver": ["Pysisyphus", "Gaussian", "ORCA"]
+                "driver": ["Pysisyphus", "Gaussian", "ORCA", "NWChem"]
             }, 
             "Frequency Calculation": {
-                "driver": ["xtb", "Gaussian", "ORCA"]
+                "driver": ["xtb", "Gaussian", "ORCA", "NWChem"]
             }, 
             "Constrained Optimisation": {
-                "driver": ["xtb", "Gaussian", "ORCA"]
+                "driver": ["xtb", "Gaussian", "ORCA", "NWChem"]
             }, 
             "Single-Point Energy": {
-                "driver": ["xtb", "Gaussian", "ORCA"]
+                "driver": ["xtb", "Gaussian", "ORCA", "NWChem"]
             }, 
             "MO Calculation": {
-                "driver": ["ORCA"]
+                "driver": ["ORCA", "NWChem"]
             }, 
             "UV-Vis Calculation": {
                 "driver": ["ORCA", "Gaussian", "xtb"]
@@ -198,8 +204,8 @@ String.prototype.format = function() {
         },
         "resource": {
             "Local": {
-                "driver": [{% if "Gaussian" in packages %}"Gaussian", {% endif %}{% if "ORCA" in packages %}"ORCA", {% endif %}"Pysisyphus", "xtb"],
-                "software": [{% if "Gaussian" in packages %}"Gaussian", {% endif %}{% if "ORCA" in packages %}"ORCA", {% endif %} "xtb"]
+                "driver": [{% if "Gaussian" in packages %}"Gaussian", {% endif %}{% if "ORCA" in packages %}"ORCA", {% endif %}"Pysisyphus", "xtb", "NWChem"],
+                "software": [{% if "Gaussian" in packages %}"Gaussian", {% endif %}{% if "ORCA" in packages %}"ORCA", {% endif %} "xtb", "NWChem"]
             }
         }
     }
@@ -208,7 +214,8 @@ String.prototype.format = function() {
         "software": {
             "Gaussian": ["df", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
             "ORCA": ["hf3c", "pbeh3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints", "aux_file_structure", "aux_structure"],
-            "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints", "xtb_method"]
+            "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints", "xtb_method"],
+            "NWChem": ["functional_field", "basis_set_field"],
         },
         "theory_level": {
             "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints", "xtb_method"],

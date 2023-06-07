@@ -524,6 +524,7 @@ class BasicStep(models.Model):
     avail_xtb = models.BooleanField(default=False)
     avail_Gaussian = models.BooleanField(default=False)
     avail_ORCA = models.BooleanField(default=False)
+    avail_NWChem = models.BooleanField(default=False)
 
     creates_ensemble = models.BooleanField(default=False)
 

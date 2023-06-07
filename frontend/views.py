@@ -1514,7 +1514,7 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
 
     if "calc_driver" in parameters_dict:
         driver = clean(parameters_dict["calc_driver"]).lower()
-        if driver not in ["xtb", "gaussian", "orca", "pysisyphus"]:
+        if driver not in ["xtb", "gaussian", "orca", "nwchem", "pysisyphus"]:
             return f"Unknown driver: {driver}"
         if driver == software:
             driver = ""

@@ -2217,6 +2217,210 @@ def xtb_stda(in_file, calc):  # TO OPTIMIZE
     return ErrorCodes.SUCCESS
 
 
+def launch_nwchem_calc(in_file, calc, files):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    folder = f"scratch/calcus/{calc.id}"
+
+    if not os.path.isdir(local_folder):
+        os.makedirs(local_folder, exist_ok=True)
+
+    with open(os.path.join(local_folder, "calc.inp"), "w") as out:
+        out.write(calc.input_file)
+
+    if not calc.local:
+        pid = int(threading.get_ident())
+        conn = connections[pid]
+        lock = locks[pid]
+        remote_dir = remote_dirs[pid]
+        if calc.remote_id == 0:
+            sftp_put(
+                f"{local_folder}/calc.inp",
+                os.path.join(folder, "calc.inp"),
+                conn,
+                lock,
+            )
+
+        ret = system("nwchem calc.inp", "calc.out", software="NWChem", calc_id=calc.id)
+    else:
+        os.chdir(local_folder)
+        ret = system(
+            f"nwchem calc.inp",
+            "calc.out",
+            software="NWChem",
+            calc_id=calc.id,
+        )
+
+    cancelled = False
+    if ret != ErrorCodes.SUCCESS:
+        if ret == ErrorCodes.JOB_CANCELLED:
+            cancelled = True
+        else:
+            return ret
+
+    if not calc.local:
+        for f in files:
+            a = sftp_get(
+                f"{folder}/{f}",
+                os.path.join(CALCUS_SCR_HOME, str(calc.id), f),
+                conn,
+                lock,
+            )
+            if not cancelled and a != ErrorCodes.SUCCESS:
+                return a
+
+    if not cancelled:
+        for f in files:
+            if not os.path.isfile(f"{local_folder}/{f}"):
+                return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
+
+        return ErrorCodes.SUCCESS
+    else:
+        return ErrorCodes.JOB_CANCELLED
+
+
+def nwchem_sp(in_file, calc):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+
+    ret = launch_nwchem_calc(in_file, calc, ["calc.out"])
+
+    if ret != ErrorCodes.SUCCESS:
+        return ret
+
+    with open(f"{local_folder}/calc.out") as f:
+        lines = f.readlines()
+        ind = len(lines) - 1
+
+        try:
+            while (
+                lines[ind].find("Total SCF energy") == -1
+                and lines[ind].find("Total DFT energy") == -1
+            ):
+                ind -= 1
+            E = float(lines[ind].split()[-1])
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
+
+    prop = get_or_create(calc.parameters, calc.structure)
+    prop.energy = E
+    prop.save()
+
+    # parse_nwchem_charges(calc, calc.structure)
+
+    return ErrorCodes.SUCCESS
+
+
+def nwchem_opt(in_file, calc):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+
+    ret = launch_nwchem_calc(in_file, calc, ["calc.out", "calc.xyz"])
+
+    if ret != ErrorCodes.SUCCESS:
+        return ret
+
+    with open(f"{local_folder}/calc.xyz") as f:
+        lines = f.readlines()
+
+    converged = True
+    structures = []
+    rmsds = []
+    with open(f"{local_folder}/calc.out") as f:
+        lines = f.readlines()
+        ind = 0
+        while True:
+            while (
+                ind < len(lines) - 1
+                and lines[ind].find('Geometry "geometry" -> "geometry"') == -1
+            ):
+                ind += 1
+            if ind >= len(lines) - 1:
+                break
+            ind += 7
+            xyz = []
+
+            while lines[ind].strip() != "":
+                sline = lines[ind].split()
+                ind += 1
+                xyz.append([sline[1], [float(i) for i in sline[3:]]])
+
+            structures.append(xyz)
+            while (
+                lines[ind].find(
+                    "Step       Energy      Delta E   Gmax     Grms     Xrms     Xmax   Walltime"
+                )
+                == -1
+            ):
+                ind += 1
+            ind += 2
+            RMSD = float(lines[ind].split()[6])
+            rmsds.append(RMSD)
+
+        try:
+            while lines[ind].find("Optimization converged") == -1:
+                ind -= 1
+        except IndexError:
+            logger.warning(f"Optimization {calc.id} did not converge")
+        else:
+            converged = True
+            try:
+                while (
+                    lines[ind].find("Total SCF energy") == -1
+                    and lines[ind].find("Total DFT energy") == -1
+                ):
+                    ind -= 1
+                E = float(lines[ind].split()[-1])
+            except IndexError:
+                return ErrorCodes.INVALID_OUTPUT
+
+    if converged:
+        s = Structure.objects.get_or_create(
+            parent_ensemble=calc.result_ensemble,
+            number=calc.structure.number,
+        )[0]
+        s.degeneracy = calc.structure.degeneracy
+        s.xyz_structure = format_xyz(structures[-1])
+
+        prop = get_or_create(calc.parameters, s)
+        prop.energy = E
+        prop.geom = True
+        s.save()
+        prop.save()
+
+        frames = structures[:-1]
+    else:
+        frames = structures
+
+    new_frames = []
+    update_frames = []
+
+    for ind, (s, rmsd) in enumerate(zip(frames, rmsds)):
+        xyz = format_xyz(s)
+        try:
+            f = calc.calculationframe_set.get(number=ind + 1)
+        except CalculationFrame.DoesNotExist:
+            new_frames.append(
+                CalculationFrame(
+                    number=ind + 1,
+                    xyz_structure=xyz,
+                    parent_calculation=calc,
+                    RMSD=rmsd,
+                )
+            )
+        else:
+            f.xyz_structure = xyz
+            f.RMSD = rmsd
+            update_frames.append(f)
+
+    CalculationFrame.objects.bulk_create(new_frames)
+    CalculationFrame.objects.bulk_update(update_frames, ["xyz_structure", "RMSD"])
+
+    # parse_nwchem_charges(calc, s)
+
+    return ErrorCodes.SUCCESS
+
+
 def calc_to_ccinput(calc):
     if calc.parameters.method != "":
         _method = calc.parameters.method
@@ -2232,7 +2436,7 @@ def calc_to_ccinput(calc):
     _specifications = calc.parameters.specifications
     software = calc.parameters.software.lower()
 
-    if software in ["gaussian", "orca"]:
+    if software in ["gaussian", "orca"]:  # TODO: NWChem?
         _specifications += " " + getattr(calc.order.author, "default_" + software)
         _solvation_radii = calc.parameters.solvation_radii
     else:
@@ -3618,6 +3822,16 @@ BASICSTEP_TABLE = {
         "Constrained Optimisation": gaussian_scan,
         "Single-Point Energy": gaussian_sp,
         "UV-Vis Calculation": gaussian_td,
+    },
+    "NWChem": {
+        # "NMR Prediction": nwchem_nmr,
+        "Geometrical Optimisation": nwchem_opt,
+        # "TS Optimisation": nwchem_ts, ##############
+        # "MO Calculation": nwchem_mo_gen, ############
+        # "Frequency Calculation": nwchem_freq, ########
+        # "Constrained Optimisation": nwchem_scan,
+        "Single-Point Energy": nwchem_sp,
+        # "Minimum Energy Path": mep,
     },
 }
 
