@@ -156,6 +156,8 @@ class User(AbstractUser):
         elif self.is_subscriber:
             return "subscriber"
         else:
+            if self.member_of is not None and self.member_of.PI.is_subscriber:
+                return "subscriber"
             return "free"
 
     @property
