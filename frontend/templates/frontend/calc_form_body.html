@@ -228,6 +228,7 @@
                                 <option>xtb</option>
                                 <option {% if IS_CLOUD %} disabled{% endif %}>ORCA</option>
                                 <option {% if IS_CLOUD %} disabled{% endif %}>Gaussian</option>
+                                <option>NWChem</option>
                             </select>
                         </div>
                     </div>
@@ -244,6 +245,7 @@
                                 {% if not IS_CLOUD %}<option value="Gaussian" selected>Gaussian</option>{% endif %}
                                 {% if not IS_CLOUD %}<option value="ORCA">ORCA</option>{% endif %}
                                 <option value="Pysisyphus">Pysisyphus</option>
+                                <option value="NWChem">NWChem</option>
                             </select>
                         </div>
                     </div>
@@ -673,7 +675,9 @@ $( document ).ready(function() {
 
 		});
 	}
-    calc_deriv_changed(document.getElementsByName("calc_gen_derivatives")[0]);
+    checkbox_deriv = document.getElementsByName("calc_gen_derivatives")[0]
+    if(checkbox_deriv != null)
+        calc_deriv_changed(checkbox_deriv);
 });
 </script>
 <script>

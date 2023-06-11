@@ -77,19 +77,19 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         cls.host = socket.gethostbyname(socket.gethostname())
 
+        chrome_options = Options()
         if "CI" in os.environ:  # Github Actions
-            chrome_options = Options()
             chrome_options.add_argument("--headless")
             # from pyvirtualdisplay import Display
 
             # cls.display = Display(visible=0, size=(ZOOM * 1920, ZOOM * 1080))
             # cls.display.start()
 
-            cls.driver = webdriver.Chrome(chrome_options=chrome_options)
+            cls.driver = webdriver.Chrome(options=chrome_options)
         else:
             cls.driver = webdriver.Remote(
                 command_executor="http://selenium:4444/wd/hub",
-                options=webdriver.ChromeOptions(),
+                options=chrome_options,
             )
 
         cls.driver.set_window_size(ZOOM * 1920, ZOOM * 1080)
@@ -175,8 +175,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def cleanupCalculations(self):
         for c in Calculation.objects.all():
-            res = AbortableAsyncResult(c.task_id)
-            res.abort()
+            if c.task_id != "":
+                res = AbortableAsyncResult(c.task_id)
+                res.abort()
 
     def login(self, email, password):
         self.lget("/accounts/login/")
