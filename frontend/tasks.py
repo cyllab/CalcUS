@@ -93,10 +93,10 @@ import periodictable
 
 import logging
 
+logger = logging.getLogger()
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s"
 )
-logger = logging.getLogger(__name__)
 
 
 REMOTE = False
@@ -2244,7 +2244,7 @@ def launch_nwchem_calc(in_file, calc, files):
     else:
         os.chdir(local_folder)
         ret = system(
-            f"nwchem calc.inp",
+            f"mpirun -n {PAL} nwchem calc.inp",
             "calc.out",
             software="NWChem",
             calc_id=calc.id,
@@ -2305,6 +2305,56 @@ def nwchem_sp(in_file, calc):
 
     prop = get_or_create(calc.parameters, calc.structure)
     prop.energy = E
+    prop.save()
+
+    # parse_nwchem_charges(calc, calc.structure)
+
+    return ErrorCodes.SUCCESS
+
+
+def nwchem_mo_gen(in_file, calc):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+
+    ret = launch_nwchem_calc(
+        in_file,
+        calc,
+        ["calc.out", "in-HOMO.cube", "in-LUMO.cube", "in-LUMOA.cube", "in-LUMOB.cube"],
+    )
+
+    if ret != ErrorCodes.SUCCESS:
+        return ret
+
+    with open(f"{local_folder}/calc.out") as f:
+        lines = f.readlines()
+        ind = len(lines) - 1
+
+        try:
+            while (
+                lines[ind].find("Total SCF energy") == -1
+                and lines[ind].find("Total DFT energy") == -1
+            ):
+                ind -= 1
+            E = float(lines[ind].split()[-1])
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
+
+    prop = get_or_create(calc.parameters, calc.structure)
+
+    cubes = {}
+    for mo in ["HOMO", "LUMO", "LUMOA", "LUMOB"]:
+        path = os.path.join(local_folder, f"in-{mo}.cube")
+        if not os.path.isfile(path):
+            logger.error(f"Cube file {path} does not exist!")
+            return ErrorCodes.MISSING_FILE
+        with open(path) as f:
+            cube = "".join(f.readlines())
+        cubes[mo] = cube
+
+    prop.energy = E
+    prop.mo = json.dumps(cubes)
     prop.save()
 
     # parse_nwchem_charges(calc, calc.structure)
@@ -2458,9 +2508,18 @@ def calc_to_ccinput(calc):
             _nproc = calc.order.resource.pal
             _mem = calc.order.resource.memory
 
+    # patch
+    if (
+        calc.parameters.software.lower() == "nwchem"
+        and calc.step.name == "MO Calculation"
+    ):
+        _step_name = "SP"
+    else:
+        _step_name = calc.step.name
+
     params = {
         "software": calc.parameters.software,
-        "type": calc.step.name,
+        "type": _step_name,
         "method": _method,
         "basis_set": calc.parameters.basis_set,
         "solvent": calc.parameters.solvent,
@@ -3478,6 +3537,7 @@ def analyse_opt(calc_id):
         "xtb": analyse_opt_xtb,
         "pysis": analyse_opt_pysis,
         "pysisyphus": analyse_opt_pysis,
+        "nwchem": analyse_opt_nwchem,
     }
 
     calc = Calculation.objects.get(pk=calc_id)
@@ -3491,6 +3551,11 @@ def analyse_opt(calc_id):
         return funcs[calc.parameters.driver.lower()](calc)
     else:
         return funcs[calc.parameters.software.lower()](calc)
+
+
+def analyse_opt_nwchem(calc):
+    # TODO
+    return
 
 
 def analyse_opt_pysis(calc):
@@ -3827,7 +3892,7 @@ BASICSTEP_TABLE = {
         # "NMR Prediction": nwchem_nmr,
         "Geometrical Optimisation": nwchem_opt,
         # "TS Optimisation": nwchem_ts, ##############
-        # "MO Calculation": nwchem_mo_gen, ############
+        "MO Calculation": nwchem_mo_gen,
         # "Frequency Calculation": nwchem_freq, ########
         # "Constrained Optimisation": nwchem_scan,
         "Single-Point Energy": nwchem_sp,
@@ -4150,6 +4215,66 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
             c.save()
 
 
+NWCHEM_MO_FIX = """
+dplot
+  TITLE HOMO
+  vectors in.movecs
+   LimitXYZ
+ -5.0 5.0 50
+ -5.0 5.0 50
+ -5.0  5.0  50
+ spin total
+  ORBITALS view; 1; {}
+  gaussian
+  output in-HOMO.cube
+end
+task dplot
+
+dplot
+  TITLE LUMO
+  vectors in.movecs
+   LimitXYZ
+ -5.0 5.0 50
+ -5.0 5.0 50
+ -5.0  5.0  50
+ spin total
+  ORBITALS view; 1; {}
+  gaussian
+  output in-LUMO.cube
+end
+task dplot
+
+dplot
+  TITLE LUMOA
+  vectors in.movecs
+   LimitXYZ
+ -5.0 5.0 50
+ -5.0 5.0 50
+ -5.0  5.0  50
+ spin total
+  ORBITALS view; 1; {}
+  gaussian
+  output in-LUMOA.cube
+end
+task dplot
+
+dplot
+  TITLE LUMOB
+  vectors in.movecs
+   LimitXYZ
+ -5.0 5.0 50
+ -5.0 5.0 50
+ -5.0  5.0  50
+ spin total
+  ORBITALS view; 1; {}
+  gaussian
+  output in-LUMOB.cube
+end
+task dplot
+
+"""
+
+
 def add_input_to_calc(calc):
     inp = calc_to_ccinput(calc)
     if isinstance(inp, Exception):
@@ -4161,7 +4286,26 @@ def add_input_to_calc(calc):
         calc.save()
         return ErrorCodes.FAILED_TO_CREATE_INPUT
 
-    calc.input_file = inp.input_file
+    input_file = inp.input_file
+
+    # Quick fix
+    if (
+        calc.parameters.software.lower() == "nwchem"
+        and calc.step.name == "MO Calculation"
+    ):
+        electrons = 0
+        for line in calc.structure.xyz_structure.split("\n")[2:]:
+            if line.strip() == "":
+                continue
+            el = line.split()[0]
+            electrons += ATOMIC_NUMBER[el]
+
+        electrons -= calc.parameters.charge
+        n_homo = electrons // 2
+
+        input_file += NWCHEM_MO_FIX.format(n_homo, n_homo + 1, n_homo + 2, n_homo + 3)
+
+    calc.input_file = input_file
 
     # TODO: make ccinput support keywords in a more general way
     # if hasattr(inp, "confirmed_specifications"):
