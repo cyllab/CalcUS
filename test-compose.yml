@@ -2,7 +2,7 @@ version: "3.4"
 
 services:  
         redis:
-                image: redis:latest
+                image: redis:7.2-rc2
                 hostname: redis
 
         web:
