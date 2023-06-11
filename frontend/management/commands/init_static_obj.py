@@ -82,6 +82,7 @@ class Command(BaseCommand):
             avail_xtb=True,
             avail_Gaussian=True,
             avail_ORCA=True,
+            avail_NWChem=True,
         )
 
         self.add_step(
@@ -91,6 +92,7 @@ class Command(BaseCommand):
             avail_xtb=True,
             avail_Gaussian=False,
             avail_ORCA=False,
+            avail_NWChem=False,
         )
 
         self.add_step(
@@ -100,6 +102,7 @@ class Command(BaseCommand):
             avail_xtb=True,
             avail_Gaussian=True,
             avail_ORCA=True,
+            # avail_NWChem=False, # For now
         )
 
         self.add_step(
@@ -109,6 +112,7 @@ class Command(BaseCommand):
             avail_xtb=True,
             avail_Gaussian=True,
             avail_ORCA=True,
+            avail_NWChem=True,
         )
 
         self.add_step(
@@ -118,6 +122,7 @@ class Command(BaseCommand):
             avail_xtb=True,
             avail_Gaussian=True,
             avail_ORCA=True,
+            avail_NWChem=True,
         )
 
         self.add_step(
@@ -127,6 +132,7 @@ class Command(BaseCommand):
             avail_xtb=True,
             avail_Gaussian=True,
             avail_ORCA=False,
+            avail_NWChem=False,
         )
 
         self.add_step(
@@ -136,6 +142,7 @@ class Command(BaseCommand):
             avail_xtb=False,
             avail_Gaussian=True,
             avail_ORCA=True,
+            avail_NWChem=False,  # For now
         )
 
         self.add_step(
@@ -145,6 +152,7 @@ class Command(BaseCommand):
             avail_xtb=True,
             avail_Gaussian=True,
             avail_ORCA=True,
+            avail_NWChem=True,
         )
 
         self.add_step(
@@ -154,6 +162,7 @@ class Command(BaseCommand):
             avail_xtb=False,
             avail_Gaussian=False,
             avail_ORCA=True,
+            avail_NWChem=True,
         )
 
         self.add_step(
@@ -163,6 +172,7 @@ class Command(BaseCommand):
             avail_xtb=True,
             avail_Gaussian=False,
             avail_ORCA=True,
+            avail_NWChem=False,
         )
 
         self.add_step(
@@ -172,6 +182,7 @@ class Command(BaseCommand):
             avail_xtb=True,
             avail_Gaussian=False,
             avail_ORCA=False,
+            avail_NWChem=False,
         )
 
         title = "NHC-Catalysed Condensation"

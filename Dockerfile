@@ -20,7 +20,7 @@ ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/binaries/orca"
 ENV PATH=$PATH:$XTB4STDAHOME/xtb/bin:$XTB4STDAHOME:$EBROOTORCA:$GAUSS_EXEDIR
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/binaries/orca:/usr/lib/openmpi/
 
-RUN apt update && apt install openbabel sshpass postgresql-client dos2unix openmpi-bin -y
+RUN apt update && apt install openbabel sshpass postgresql-client dos2unix openmpi-bin nwchem -y
 
 ADD ./requirements.txt /calcus/requirements.txt
 RUN pip install -r /calcus/requirements.txt
