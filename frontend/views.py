@@ -121,7 +121,7 @@ from .libxyz import (
     format_xyz,
 )
 from .environment_variables import *
-from .helpers import get_xyz_from_Gaussian_input, get_random_string
+from .helpers import get_xyz_from_Gaussian_input, get_random_string, get_xyz_from_cube
 from .cloud_job import submit_cloud_job
 
 from shutil import copyfile, make_archive, rmtree
@@ -3704,8 +3704,13 @@ def get_cube(request):
         else:
             return HttpResponse(status=204)
 
-        if cube_mo in cubes:
-            return HttpResponse(cubes[cube_mo])
+        if cube_mo not in cubes:
+            return HttpResponse(status=204)
+
+        cube = cubes[cube_mo]
+        xyz = get_xyz_from_cube(cube)
+
+        return JsonResponse({"cube": cube, "xyz": xyz})
 
     return HttpResponse(status=204)
 

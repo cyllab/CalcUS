@@ -2240,7 +2240,12 @@ def launch_nwchem_calc(in_file, calc, files):
                 lock,
             )
 
-        ret = system("nwchem calc.inp", "calc.out", software="NWChem", calc_id=calc.id)
+        ret = system(
+            "mpirun -n {PAL} nwchem calc.inp",
+            "calc.out",
+            software="NWChem",
+            calc_id=calc.id,
+        )
     else:
         os.chdir(local_folder)
         ret = system(
