@@ -344,9 +344,9 @@ if IS_CLOUD:
     LOCAL_ALLOWED_THEORY_LEVELS = [
         "xtb",
         # "semiempirical",
-        # "hf",
+        "hf",
         # "special",  # hf3c, pbeh3c, r2scan3c, b973c
-        # "dft",
+        "dft",
         # "mp2",
         # "cc",
     ]
@@ -362,7 +362,7 @@ if IS_CLOUD:
         # "Minimum Energy Path",
         "Constrained Conformational Search",
         # "NMR Prediction",
-        # "MO Calculation",
+        "MO Calculation",
     ]
 
 else:

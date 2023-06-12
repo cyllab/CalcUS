@@ -315,16 +315,14 @@
             <section class="footer is-success has-text-centered" style="clear: both">
                 {% if IS_CLOUD %}
                 <img id="calcus_logo" src="{% static 'frontend/calcus_cloud_logo.png' %}" />
-                <br />
-                <span id="version_label">Version beta {% get_calcus_version %}</span>
                 {% else %}
                 <img id="calcus_logo" src="{% static 'frontend/calcus.png' %}" />
+                {% endif %}
                 <br />
                 <span id="version_label">Version {% get_calcus_version %}</span>
-                {% endif %}
             </section>
         </div>
-        {% if not IS_TEST %}
+        {% if not IS_TEST and IS_CLOUD %}
         <div id="cookie_banner" style="display: none;">
             <span>By using our website, you consent to our use of cookies. We use cookies to keep you logged in, see if you're new here and provide a better user experience. <a href="/privacy/">See the details</a></span> <button class="button is-primary" onclick="see_banner()">OK</button>
         </div>
