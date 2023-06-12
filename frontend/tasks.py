@@ -517,6 +517,10 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
                     return ErrorCodes.SUCCESS
                 else:
                     logger.info(f"Got returncode {t.returncode}")
+                    with open(log_file) as f:
+                        last_lines = "".join(f.readlines()[-100:])
+                    logger.info("Last lines of the log file: " + last_lines)
+
                     return ErrorCodes.UNKNOWN_TERMINATION
 
             if calc_id != -1:
@@ -2224,6 +2228,7 @@ def launch_nwchem_calc(in_file, calc, files):
     if not os.path.isdir(local_folder):
         os.makedirs(local_folder, exist_ok=True)
 
+    logger.info(f"The input is {calc.input_file}")
     with open(os.path.join(local_folder, "calc.inp"), "w") as out:
         out.write(calc.input_file)
 
