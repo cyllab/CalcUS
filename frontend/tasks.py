@@ -452,6 +452,7 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
     else:  # Local
         # Assume the calculation will be run in the same directory as the output file
         exe_dir = os.path.dirname(log_file)
+        logger.info(f"exe_dir: {exe_dir} (calc {calc_id})")
         if calc_id != -1 and settings.IS_CLOUD:
             try:
                 timeout = int(os.getenv("CALCUS_TIMEOUT", "580"))
@@ -1559,10 +1560,9 @@ def launch_orca_calc(in_file, calc, files):
             "$EBROOTORCA/orca calc.inp", "calc.out", software="ORCA", calc_id=calc.id
         )
     else:
-        os.chdir(local_folder)
         ret = system(
             f"{EBROOTORCA}/orca calc.inp",
-            "calc.out",
+            os.path.join(local_folder, "calc.out"),
             software="ORCA",
             calc_id=calc.id,
         )
@@ -2247,10 +2247,9 @@ def launch_nwchem_calc(in_file, calc, files):
             calc_id=calc.id,
         )
     else:
-        os.chdir(local_folder)
         ret = system(
             f"mpirun -n {PAL} nwchem calc.inp",
-            "calc.out",
+            os.path.join(local_folder, "calc.out"),
             software="NWChem",
             calc_id=calc.id,
         )
@@ -2581,6 +2580,7 @@ def launch_gaussian_calc(in_file, calc, files):
         ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
     else:
         os.chdir(local_folder)
+        # There could be a race condition here
         ret = system("g16 calc.com", software="Gaussian", calc_id=calc.id)
 
     cancelled = False
