@@ -2230,7 +2230,12 @@ def launch_nwchem_calc(in_file, calc, files):
 
     logger.info(f"The input is {calc.input_file}")
     with open(os.path.join(local_folder, "calc.inp"), "w") as out:
-        out.write(calc.input_file)
+        # Hack until the option is supported by ccinput
+        out.write(
+            calc.input_file.replace(
+                "geometry units angstroms", "geometry units angstroms noautosym"
+            )
+        )
 
     if not calc.local:
         pid = int(threading.get_ident())
@@ -4395,6 +4400,7 @@ def run_calc(calc_id):
         ret = None
     else:
         ret = add_input_to_calc(calc)
+        calc.refresh_from_db()
 
     if isinstance(ret, ErrorCodes):
         return ret
