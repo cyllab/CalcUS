@@ -48,6 +48,25 @@ def get_xyz_from_Gaussian_input(txt):
     return xyz
 
 
+def get_xyz_from_cube(cube):
+    lines = cube.split("\n")
+    ind = 1
+    sline = lines[ind].strip().split()
+    xyz = ""
+    while len(sline) != 5:
+        ind += 1
+        sline = lines[ind].strip().split()
+    start_ind = ind
+
+    while len(sline) == 5:
+        xyz += f"{ATOMIC_SYMBOL[int(sline[0])]} {float(sline[2])*BOHR_VAL} {float(sline[3])*BOHR_VAL} {float(sline[4])*BOHR_VAL}\n"
+        ind += 1
+        sline = lines[ind].strip().split()
+
+    xyz = f"{ind-start_ind}\n\n{xyz}"
+    return xyz
+
+
 def get_random_string(n=16):
     return "".join(secrets.choice(full_alphabet) for i in range(n))
 
