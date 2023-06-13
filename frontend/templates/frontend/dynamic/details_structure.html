@@ -255,7 +255,8 @@
             }
 
             $(document).ready(function(){
-            	get_cube(0);
+                if(mo_viewer.getModel() == null)
+            	    get_cube(0);
             });
         </script>
         <div id="mo_container">
