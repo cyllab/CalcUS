@@ -47,7 +47,7 @@ import ccinput
 
 register = template.Library()
 
-STATUS_COLORS = {0: "#AAAAAA", 1: "#FFE515", 2: "#1EE000", 3: "#FD1425"}
+STATUS_COLORS = {0: "#202f26", 1: "#e2e100", 2: "#02b200", 3: "#b21b00"}
 
 
 class UserManager(BaseUserManager):

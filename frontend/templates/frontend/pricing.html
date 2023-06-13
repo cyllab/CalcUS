@@ -5,9 +5,7 @@
 <title>Pricing of Cloud-based Quantum Chemistry</title>
 <meta name="description" content="CalcUS Cloud offers affordable access to a computational chemistry web platform leveraging cloud computing. It provides access to quantum chemistry software in order to promote education, self-learning and research."> 
 
-<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
-<link rel="stylesheet" href="{% static 'frontend/bulma-pricingtable.min.css' %}">
-<link rel="stylesheet" href="{% static 'frontend/bulma-switch.min.css' %}">
+<script src="{% static 'frontend/jquery.min.js' %}"></script>
 
 <script src="https://js.stripe.com/v3/"></script>
 <script>
@@ -117,30 +115,33 @@
     #sub_monthly_label {
         margin-right: 0.3em;
     }
-                @media screen and (min-width: 1408px) {
-                .main_content {
-                    width: 84% !important;
-                    margin: 0 auto !important;
-                }
-            }
-            @media screen and (min-width: 1024px) and (max-width: 1407px) {
-                .main_content {
-                    width: 96% !important;
-                    margin: 0 auto !important;
-                }
-            }
-            @media screen and (max-width: 1023px) {
-                .main_content {
-                    width: 98%;
-                    flex: 1;
-                    margin: 0 auto;
-                }
-            }
+    @media screen and (min-width: 1408px) {
+        .main_content {
+            width: 84% !important;
+            margin: 0 auto !important;
+        }
+    }
+    @media screen and (min-width: 1024px) and (max-width: 1407px) {
+        .main_content {
+            width: 96% !important;
+            margin: 0 auto !important;
+        }
+    }
+    @media screen and (max-width: 1023px) {
+        .main_content {
+            width: 98%;
+            flex: 1;
+            margin: 0 auto;
+        }
+    }
 
     .content {
         width: 100%;
         flex: 1;
         margin: 0 auto;
+    }
+    .button {
+        justify-content: center !important;
     }
 </style>
 

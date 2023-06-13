@@ -141,6 +141,7 @@
 
         $("#vib_table").load("/vib_table/{{ property.id }}");
         g4 = new Dygraph(document.getElementById("ir_spectrum"), "/ir_spectrum/{{ property.id }}", {
+            color: "#202f26",
             strokeWidth: 2,
             xlabel: "Wavelength (cm^-1)",
             ylabel: "Intensity",
@@ -169,6 +170,7 @@
         <script>
             $(document).ready(function () {
                 g2 = new Dygraph(document.getElementById("uvvis_spectrum"), "/uvvis/{{ property.id }}", {
+                    color: "#202f26",
                     strokeWidth: 2,
                     xlabel: "Wavelength (nm)",
                     ylabel: "Absorbance",
@@ -187,6 +189,7 @@
         <script>
             $(document).ready(function () {
                 g3 = new Dygraph(document.getElementById("nmr_spectrum"), "/nmr/{{ property.id }}", {
+                    color: "#202f26",
                     strokeWidth: 2,
                     xlabel: "Chemical shift (ppm)",
                     ylabel: "Intensity",
@@ -256,10 +259,10 @@
             });
         </script>
         <div id="mo_container">
-            <button class="button" onclick="get_cube(0);" style="width: 24%">HOMO</button>
-            <button class="button" onclick="get_cube(1);" style="width: 24%">LUMO</button>
-            <button class="button" onclick="get_cube(2);" style="width: 24%">LUMO+1</button>
-            <button class="button" onclick="get_cube(3);" style="width: 24%">LUMO+2</button>
+            <button class="button is-info" onclick="get_cube(0);" style="width: 24%">HOMO</button>
+            <button class="button is-info" onclick="get_cube(1);" style="width: 24%">LUMO</button>
+            <button class="button is-info" onclick="get_cube(2);" style="width: 24%">LUMO+1</button>
+            <button class="button is-info" onclick="get_cube(3);" style="width: 24%">LUMO+2</button>
 
             <div class="slidecontainer">
                 <span id="mo_span">Orbital Plotting Isovalue</span>

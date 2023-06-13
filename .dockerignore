@@ -23,3 +23,8 @@ bin/*
 gcloud.sh
 frontend/cloud_config.py
 *.pem
+npm_modules/node_modules
+npm_packages/node_modules
+npm_packages/css
+npm_packages/css-dist
+npm_packages/js-dist

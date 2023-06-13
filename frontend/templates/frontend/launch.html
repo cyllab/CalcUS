@@ -90,16 +90,17 @@
 
 </style>
 
-    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+    <script src="{% static 'frontend/jquery.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
     <script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
     <link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
 
     {% if start_tour %}
-    <script src="https://cdn.jsdelivr.net/npm/@floating-ui/core@1.2.6"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.2.7"></script>
-    <script src="https://cdn.jsdelivr.net/npm/shepherd.js@11.1.1/dist/js/shepherd.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shepherd.js@11.1.1/dist/css/shepherd.css"/>
+    <script type="text/javascript" src="{% static 'frontend/floating-ui.core.umd.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'frontend/floating-ui.dom.umd.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'frontend/shepherd.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'frontend/shepherd.css' %}">
+
     <script>
     const tour = new Shepherd.Tour({
         useModalOverlay: true,

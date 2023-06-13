@@ -26,3 +26,7 @@ old/
 static/CACHE/
 static/testimonials
 test_run
+npm_packages/node_modules
+npm_packages/css
+npm_packages/css-dist
+npm_packages/js-dist
