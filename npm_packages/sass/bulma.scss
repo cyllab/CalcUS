@@ -1,0 +1,30 @@
+@charset "utf-8";
+
+$calcus-green: #00b158;
+$purple: #6e00b2;
+$blue: #0060b2;
+$yellow: #e2e100;
+$red: #b21b00;
+$green: #02b200;
+$dark: #202f26;
+
+$light: #f2f5f3;
+$grey: #e1e7e3;
+
+$primary: $calcus-green;
+$info: $blue;
+$success: $green;
+$warning: $yellow;
+$danger: $red;
+$black: $dark;
+
+tr.is-selected {
+    background-color: $warning;
+}
+
+@import "../node_modules/bulma/bulma.sass";
+@import "../node_modules/bulma-switch/src/sass/index.sass";
+@import "../node_modules/bulma-pricingtable/src/sass/index.sass";
+@import "../node_modules/@creativebulma/bulma-badge/src/sass/index.sass";
+@import "../node_modules/bulma-slider/src/sass/index.sass";
+

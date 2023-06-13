@@ -131,8 +131,8 @@
         text-decoration: underline;
         color: blue;
     }
-    #free_span {
-        color: #00A75B;
+    #free_span, .highlight {
+        color: #00b158;
     }
     #video_div {
         text-align: center;
@@ -154,9 +154,6 @@
     .testimonial_text {
         font-style: italic;
     }
-    .highlight {
-        color: #00a759;
-    }
 </style>
 
 {% endblock %} 
@@ -176,8 +173,8 @@
                 <p id="tagline">Making Quantum Chemistry<br><span class="highlight">Accessible</span> and <span class="highlight">Efficient</span></p>
             </div>
 
-            <a class="button is-warning is-large" href="https://github.com/cyllab/CalcUS" id="gh_button" target="_blank"><i class="fa fa-lg fa-brands fa-github"></i> View Project</a>
-            <a class="button is-warning is-large" href="https://doi.org/10.1021/acs.jcim.1c01502" id="paper_button" target="_blank"><i class="fa fa-lg fa-solid fa-scroll"></i>View Publication</a>
+            <a class="button is-info is-large" href="https://github.com/cyllab/CalcUS" id="gh_button" target="_blank"><i class="fa fa-lg fa-brands fa-github"></i> View Project</a>
+            <a class="button is-info is-large" href="https://doi.org/10.1021/acs.jcim.1c01502" id="paper_button" target="_blank"><i class="fa fa-lg fa-solid fa-scroll"></i>View Publication</a>
             {% if IS_CLOUD and ALLOW_TRIAL and not request.user.is_authenticated %}
             <br>
             <a class="button is-primary is-large is-rounded is-focused" href="/start_trial/" id="trial_button"><i class="fa fa-lg fa-solid fa-gift"></i>Try for free now</a>
@@ -260,7 +257,7 @@
             Feel free to contact us for any inquiry at <span class="highlight">contact@calcus.cloud</span>
             <br>
             <br>
-            <a class="button is-warning is-large" href="mailto:contact@calcus.cloud">Contact us</a>
+            <a class="button is-info is-large" href="mailto:contact@calcus.cloud">Contact us</a>
         <center>
     </div>
 

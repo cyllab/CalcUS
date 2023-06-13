@@ -25,12 +25,23 @@
         {% endif %}
 
         <link rel="stylesheet" href="{% static 'frontend/bulma.min.css' %}" />
-        <link rel="stylesheet" href="{% static 'frontend/style.css' %}" />
         <script src="https://kit.fontawesome.com/55d0fd4831.js" crossorigin="anonymous"></script>
-        <link rel="stylesheet" href="{% static 'frontend/bulma-badge.min.css' %}" />
         <script src="{% static 'frontend/bulma-js/alert.js' %}"></script>
 
         <style>
+            li a {
+                color: green;
+            }
+            .text_wrap{
+                word-wrap:break-word;
+                word-break: break-all;
+            }
+            @media screen and (max-width: 1023px) {
+                #unseen_calculations_badge{
+                    position: initial;
+                    margin-left: 15px;
+                }
+            }
             #calcus_logo {
                 margin-top: 20px;
             }

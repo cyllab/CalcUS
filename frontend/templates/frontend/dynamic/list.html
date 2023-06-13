@@ -1,5 +1,5 @@
 {% if latest_frontend %} {% for order in latest_frontend %}
-<article class="grid-item main-grid-item message {% if order.new_status %}new{% endif %}" id="order_{{ order.id }}">
+<article class="grid-item main-grid-item message {% if order.new_status %}new{% endif %} has-background-light" id="order_{{ order.id }}">
     <div
         class="message-header {% if order.status == 1 %} has-background-warning {% elif order.status == 2 %} has-background-success {% elif order.status == 3 %} has-background-danger{% endif %}"
         style="padding-right: 0"
@@ -38,7 +38,7 @@
                 <span>| <strong>{{ order.total_cpu_time }}</strong> CPU-sec  </span>
                 {% endif %}
                 <br />
-                <table class="table">
+                <table class="table has-background-light">
                     <tr>
                         <td>Queued</td>
                         <td>{{ order.get_queued }}</td>

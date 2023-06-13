@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
 <script src="{% static 'frontend/jquery.min.js' %}"></script>
 
-<link rel="stylesheet" href="{% static 'frontend/dygraph.css' %}" type="text/css" />
+<link rel="stylesheet" href="{% static 'frontend/dygraph.min.css' %}" type="text/css" />
 
 <title>Calculation {{ calc.id }}</title>
 <script src="{% static 'frontend/dygraph.min.js' %}"></script>
@@ -59,10 +59,11 @@
     				document.getElementById("rmsd_graph"),
     					rmsd,
     					{
+                            color: "#0060b2",
     						strokeWidth: 2,
     						xlabel: "Frame",
     						ylabel: "RMS Displacement",
-    						rangeSelectorPlotStrokeColor: "#BABABA",
+    						rangeSelectorPlotStrokeColor: "#e1e7e3",
     						highlightCircleSize:  5,
     						pointClickCallback: function(e, pt) {
     						    set_frame(this.getValue(pt.idx, 0));
@@ -77,7 +78,7 @@
     								var xPoint = g.toDomXCoord(num);
     								var yPoint = g.toDomYCoord(rmsd_sp[num].split(',')[1]);
 
-    								canvas.fillStyle = 'rgba(0, 0, 255, 1)';
+    								canvas.fillStyle = 'rgba(0, 96, 178, 1)';
     								canvas.beginPath();
     								canvas.arc(xPoint, yPoint, 5, 0, 2 * Math.PI, false);
     								canvas.fill();
@@ -97,9 +98,10 @@
     					scan,
     					{
     						strokeWidth: 2,
+                            color: "#0060b2",
     						xlabel: "Frame",
     						ylabel: "Relative Energy ({{ request.user.pref_units_name }})",
-    						rangeSelectorPlotStrokeColor: "#BABABA",
+    						rangeSelectorPlotStrokeColor: "#e1e7e3",
     						highlightCircleSize:  5,
     						pointClickCallback: function(e, pt) {
     						    set_frame(this.getValue(pt.idx, 0));
