@@ -35,6 +35,7 @@ import tempfile
 import json
 import ccinput
 from datetime import datetime
+import base64, gzip
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -43,6 +44,7 @@ from cryptography.hazmat.backends import default_backend
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.gzip import gzip_page
 from django.views import generic
 from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
@@ -3675,6 +3677,7 @@ def get_calc_frame(request, cid, fid):
 
 
 @login_required
+@gzip_page
 def get_cube(request):
     if request.method == "POST":
         id = clean(request.POST["id"])
@@ -3707,10 +3710,13 @@ def get_cube(request):
         if cube_mo not in cubes:
             return HttpResponse(status=204)
 
-        cube = cubes[cube_mo]
-        xyz = get_xyz_from_cube(cube)
+        _cube = cubes[cube_mo]
 
-        return JsonResponse({"cube": cube, "xyz": xyz})
+        cube = base64.b64decode(_cube)
+        clear_cube = gzip.decompress(cube).decode("utf-8")
+        xyz = get_xyz_from_cube(clear_cube)
+
+        return JsonResponse({"cube": clear_cube, "xyz": xyz})
 
     return HttpResponse(status=204)
 

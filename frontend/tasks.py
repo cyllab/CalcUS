@@ -36,6 +36,7 @@ import sys
 import shutil
 import tempfile
 import json
+import gzip, base64
 from django.conf import settings
 
 import threading
@@ -1644,7 +1645,10 @@ def orca_mo_gen(in_file, calc):
             return ErrorCodes.MISSING_FILE
         with open(path) as f:
             cube = "".join(f.readlines())
-        cubes[mo] = cube
+
+        comp_cube = gzip.compress(bytes(cube, "utf-8"))
+        str_cube = base64.b64encode(comp_cube).decode("utf-8")
+        cubes[mo] = str_cube
 
     prop.energy = E
     prop.mo = json.dumps(cubes)
@@ -2365,7 +2369,10 @@ def nwchem_mo_gen(in_file, calc):
             return ErrorCodes.MISSING_FILE
         with open(path) as f:
             cube = "".join(f.readlines())
-        cubes[mo] = cube
+
+        comp_cube = gzip.compress(bytes(cube, "utf-8"))
+        str_cube = base64.b64encode(comp_cube).decode("utf-8")
+        cubes[mo] = str_cube
 
     prop.energy = E
     prop.mo = json.dumps(cubes)
@@ -4235,9 +4242,9 @@ dplot
   TITLE HOMO
   vectors in.movecs
    LimitXYZ
- -5.0 5.0 50
- -5.0 5.0 50
- -5.0  5.0  50
+ -5.0 5.0 40
+ -5.0 5.0 40
+ -5.0  5.0  40
  spin total
   ORBITALS view; 1; {}
   gaussian
@@ -4249,9 +4256,9 @@ dplot
   TITLE LUMO
   vectors in.movecs
    LimitXYZ
- -5.0 5.0 50
- -5.0 5.0 50
- -5.0  5.0  50
+ -5.0 5.0 40
+ -5.0 5.0 40
+ -5.0  5.0  40
  spin total
   ORBITALS view; 1; {}
   gaussian
@@ -4263,9 +4270,9 @@ dplot
   TITLE LUMOA
   vectors in.movecs
    LimitXYZ
- -5.0 5.0 50
- -5.0 5.0 50
- -5.0  5.0  50
+ -5.0 5.0 40
+ -5.0 5.0 40
+ -5.0  5.0  40
  spin total
   ORBITALS view; 1; {}
   gaussian
@@ -4277,9 +4284,9 @@ dplot
   TITLE LUMOB
   vectors in.movecs
    LimitXYZ
- -5.0 5.0 50
- -5.0 5.0 50
- -5.0  5.0  50
+ -5.0 5.0 40
+ -5.0 5.0 40
+ -5.0  5.0  40
  spin total
   ORBITALS view; 1; {}
   gaussian
