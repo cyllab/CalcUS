@@ -5326,6 +5326,9 @@ def relaunch_calc(request):
 
     calc.status = 0
     calc.remote_id = 0
+    calc.date_submitted = timezone.now()
+    calc.date_started = None
+    calc.date_finished = None
     calc.order.hidden = False
     calc.order.save()
     calc.save()
