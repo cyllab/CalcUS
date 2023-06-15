@@ -22,7 +22,9 @@ tr.is-selected {
     background-color: $warning;
 }
 
+
 @import "../node_modules/bulma/bulma.sass";
+$pricing-item-color: $grey-dark !default;
 @import "../node_modules/bulma-switch/src/sass/index.sass";
 @import "../node_modules/bulma-pricingtable/src/sass/index.sass";
 @import "../node_modules/@creativebulma/bulma-badge/src/sass/index.sass";

@@ -3578,6 +3578,10 @@ def analyse_opt_nwchem(calc):
 
 
 def analyse_opt_pysis(calc):
+    logger.warning(
+        "Parsing the Pysisyphus optimisation trajectory is currently not implemented"
+    )
+    return
     # TODO
     prepath = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
