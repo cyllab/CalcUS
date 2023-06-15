@@ -359,7 +359,7 @@ if IS_CLOUD:
         "TS Optimisation",
         "UV-Vis Calculation",
         "Single-Point Energy",
-        # "Minimum Energy Path",
+        "Minimum Energy Path",
         "Constrained Conformational Search",
         # "NMR Prediction",
         "MO Calculation",

@@ -80,12 +80,20 @@ def get_random_readable_code(n=5):
 def job_triage(calc):
     if calc.step.name in ["Conformational Search", "Constrained Conformational Search"]:
         nproc = 8
+    elif calc.step.name == "Minimum Energy Path":
+        nproc = 4
     else:
         natoms = calc.structure.xyz_structure.count("\n") - 2
-        if natoms > 100:
-            nproc = 4
+        if calc.parameters.software == "xtb":
+            if natoms > 100:
+                nproc = 4
+            else:
+                nproc = 1
         else:
-            nproc = 1
+            if natoms < 20:
+                nproc = 4
+            else:
+                nproc = 8
 
     user_type = calc.order.author.user_type
 
