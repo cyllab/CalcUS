@@ -3540,16 +3540,13 @@ def gen_fingerprint(structure):
         ).decode("utf-8")
 
     stext = out.split("\n")
-    if len(stext) < 3:
-        logger.warning(f"Invalid InChI key obtained for structure {structure.id}")
-        return ""
 
-    inchi = stext[-2]
-    if inchi[:6] != "InChI=":
+    for line in stext:
+        if line[:6] == "InChI=":
+            return line[6:]
+    else:
         logger.warning(f"Invalid InChI key obtained for structure {structure.id}")
         return ""
-    else:
-        return inchi[6:]
 
 
 def analyse_opt(calc_id):

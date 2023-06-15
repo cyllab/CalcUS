@@ -1371,7 +1371,7 @@ class LaunchParametersTests(CalcusLiveServer):
         self.assertEqual(len(drivers), 1)
 
     def test_missing_package(self):
-        settings.PACKAGES = ["xtb", "Gaussian"]
+        settings.PACKAGES = ["xtb", "Gaussian", "NWChem"]
 
         self.lget("/launch/")
 
@@ -1385,7 +1385,7 @@ class LaunchParametersTests(CalcusLiveServer):
                     if "none" not in i.get_attribute("style")
                 ]
             ),
-            2,
+            3,
         )
 
         select.select_by_visible_text("xtb")
