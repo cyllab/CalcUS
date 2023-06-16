@@ -762,6 +762,20 @@ String.prototype.format = function() {
 			parse.style.display = "none";	
 		}
 	}
+	function aux_file_upload_changed() {
+		file_list = this.files;
+        ff = file_list[0].name;
+		fname = ff.replace('C:\\fakepath\\', '');
+		if(file_list.length > 1) {
+			fname += ', ...';
+		}
+
+		$("#aux_file_upload_name").html(fname);
+        if(fname.length > 1)
+            $("#calc_aux_structure").hide()
+        else
+            $("#calc_aux_structure").show()
+    }
 
 
 	function set_project_default() {

@@ -100,6 +100,9 @@
 						Upload auxiliary structure
 						</span>
 					</span>
+			        <span class="file-name" id="aux_file_upload_name">
+                        No input file selected
+                    </span>
 				</label>
 			</div>
 		</div>
@@ -722,9 +725,12 @@ $('#calc_software').change(function(e){
 add_constraint(true);	
 
 {% if not ensemble and not structure and not calc and is_flowchart is None%}
-	const inputElement = document.getElementById("file_structure");
-	inputElement.addEventListener("change", file_upload_changed, false);
+	let upload_el = document.getElementById("file_structure");
+	upload_el.addEventListener("change", file_upload_changed, false);
 {% endif %}
+
+let aux_upload_el = document.getElementById("aux_file_structure");
+aux_upload_el.addEventListener("change", aux_file_upload_changed, false);
 
 $("#calc_functional").on('input', debounce(function() {check("functional")}, 250));
 $("#calc_basis_set").on('input', debounce(function() {check("basis_set")}, 250));
