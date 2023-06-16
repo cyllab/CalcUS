@@ -1418,7 +1418,7 @@ class LaunchParametersTests(CalcusLiveServer):
             return
 
         settings.IS_CLOUD = True
-        settings.PACKAGES = ["xtb", "Gaussian", "ORCA"]
+        settings.PACKAGES = ["xtb", "Gaussian", "ORCA", "NWChem"]
 
         self.lget("/launch/")
 
@@ -1436,7 +1436,7 @@ class LaunchParametersTests(CalcusLiveServer):
                     if "none" not in i.get_attribute("style") and i.is_enabled()
                 ]
             ),
-            1,
+            2,
         )
 
         select.select_by_visible_text("xtb")
