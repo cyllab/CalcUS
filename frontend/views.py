@@ -3678,7 +3678,7 @@ def get_calc_frame(request, cid, fid):
 
 @login_required
 @gzip_page
-def get_cube(request):
+def get_mo_cube(request):
     if request.method == "POST":
         id = clean(request.POST["id"])
         orb = int(clean(request.POST["orb"]))
@@ -3717,6 +3717,37 @@ def get_cube(request):
         xyz = get_xyz_from_cube(clear_cube)
 
         return JsonResponse({"cube": clear_cube, "xyz": xyz})
+
+    return HttpResponse(status=204)
+
+
+@gzip_page
+def get_esp_cube(request):
+    if request.method == "POST":
+        id = clean(request.POST["id"])
+
+        try:
+            prop = Property.objects.get(pk=id)
+        except Property.DoesNotExist:
+            return HttpResponse(status=404)
+
+        if not can_view_structure(prop.parent_structure, request.user):
+            return HttpResponse(status=404)
+
+        if len(prop.esp) == 0:
+            return HttpResponse(status=204)
+
+        cubes = json.loads(prop.esp)
+
+        _density = base64.b64decode(cubes["density"])
+        _esp = base64.b64decode(cubes["esp"])
+
+        density = gzip.decompress(_density).decode("utf-8")
+        esp = gzip.decompress(_esp).decode("utf-8")
+
+        xyz = get_xyz_from_cube(density)
+
+        return JsonResponse({"density": density, "esp": esp, "xyz": xyz})
 
     return HttpResponse(status=204)
 

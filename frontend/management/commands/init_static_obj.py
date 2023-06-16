@@ -185,6 +185,16 @@ class Command(BaseCommand):
             avail_NWChem=False,
         )
 
+        self.add_step(
+            "ESP Calculation",
+            "esp",
+            creates_ensemble=False,
+            avail_xtb=False,
+            avail_Gaussian=False,
+            avail_ORCA=False,
+            avail_NWChem=True,
+        )
+
         title = "NHC-Catalysed Condensation"
         if self.is_absent_title(Example, title):
             self.print(f"Adding Example: {title}")

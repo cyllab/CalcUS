@@ -2383,6 +2383,65 @@ def nwchem_mo_gen(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
+def nwchem_esp_gen(in_file, calc):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+
+    ret = launch_nwchem_calc(
+        in_file,
+        calc,
+        ["calc.out", "esp.cube", "in.eld.total.cube"],
+    )
+
+    if ret != ErrorCodes.SUCCESS:
+        return ret
+
+    # TODO: refactor this?
+    with open(f"{local_folder}/calc.out") as f:
+        lines = f.readlines()
+        ind = len(lines) - 1
+
+        try:
+            while (
+                lines[ind].find("Total SCF energy") == -1
+                and lines[ind].find("Total DFT energy") == -1
+            ):
+                ind -= 1
+            E = float(lines[ind].split()[-1])
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
+
+    prop = get_or_create(calc.parameters, calc.structure)
+
+    cubes = {}
+    MO_LABELS = {
+        "esp": "esp",
+        "in.eld.total": "density",
+    }
+    for mo in ["esp", "in.eld.total"]:
+        path = os.path.join(local_folder, f"{mo}.cube")
+        if not os.path.isfile(path):
+            logger.error(f"Cube file {path} does not exist!")
+            return ErrorCodes.MISSING_FILE
+        with open(path) as f:
+            cube = "".join(f.readlines())
+
+        # both could be compressed together, I suppose
+        comp_cube = gzip.compress(bytes(cube, "utf-8"))
+        str_cube = base64.b64encode(comp_cube).decode("utf-8")
+        cubes[MO_LABELS[mo]] = str_cube
+
+    prop.energy = E
+    prop.esp = json.dumps(cubes)
+    prop.save()
+
+    # parse_nwchem_charges(calc, calc.structure)
+
+    return ErrorCodes.SUCCESS
+
+
 def nwchem_opt(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
@@ -2530,9 +2589,8 @@ def calc_to_ccinput(calc):
             _mem = calc.order.resource.memory
 
     # patch
-    if (
-        calc.parameters.software.lower() == "nwchem"
-        and calc.step.name == "MO Calculation"
+    if calc.parameters.software.lower() == "nwchem" and (
+        calc.step.name == "MO Calculation" or calc.step.name == "ESP Calculation"
     ):
         _step_name = "SP"
     else:
@@ -3916,6 +3974,7 @@ BASICSTEP_TABLE = {
         "Geometrical Optimisation": nwchem_opt,
         # "TS Optimisation": nwchem_ts, ##############
         "MO Calculation": nwchem_mo_gen,
+        "ESP Calculation": nwchem_esp_gen,
         # "Frequency Calculation": nwchem_freq, ########
         # "Constrained Optimisation": nwchem_scan,
         "Single-Point Energy": nwchem_sp,
@@ -4297,6 +4356,16 @@ task dplot
 
 """
 
+NWCHEM_ESP_FIX = """
+property
+  ESP
+  ELECTRONDENSITY
+  grid pad 2.0 step 0.2 output esp.cube
+end
+
+task dft property
+"""
+
 
 def add_input_to_calc(calc):
     inp = calc_to_ccinput(calc)
@@ -4327,6 +4396,11 @@ def add_input_to_calc(calc):
         n_homo = electrons // 2
 
         input_file += NWCHEM_MO_FIX.format(n_homo, n_homo + 1, n_homo + 2, n_homo + 3)
+    elif (
+        calc.parameters.software.lower() == "nwchem"
+        and calc.step.name == "ESP Calculation"
+    ):
+        input_file += NWCHEM_ESP_FIX
 
     calc.input_file = input_file
 
