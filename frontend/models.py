@@ -888,6 +888,7 @@ class Property(models.Model):
     uvvis = models.TextField(default="")
     nmr = models.TextField(default="")
     mo = models.TextField(default="")
+    esp = models.TextField(default="")
     freq_list = ArrayField(models.FloatField(), default=list)
     freq_animations = ArrayField(models.TextField(), default=list)
     ir_spectrum = models.TextField(default="")
@@ -912,6 +913,10 @@ class Property(models.Model):
     @property
     def has_mo(self):
         return len(self.mo) > 0
+
+    @property
+    def has_esp(self):
+        return len(self.esp) > 0
 
 
 class Structure(models.Model):

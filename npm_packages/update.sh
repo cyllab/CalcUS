@@ -6,6 +6,7 @@ cp css-dist/bulma.min.css ../static/frontend/
 
 cp node_modules/jquery/dist/jquery.min.js ../static/frontend/
 cp node_modules/3dmol/build/3Dmol-min.js ../static/frontend/
+cp node_modules/3dmol/build/3Dmol.ui-min.js ../static/frontend/
 cp node_modules/bulma-slider/dist/js/bulma-slider.min.js ../static/frontend/
 cp node_modules/clipboard/dist/clipboard.min.js ../static/frontend/
 

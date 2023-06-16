@@ -18,7 +18,7 @@ $warning: $yellow;
 $danger: $red;
 $black: $dark;
 
-tr.is-selected {
+.table tr.is-selected {
     background-color: $warning;
 }
 
