@@ -128,6 +128,9 @@ def create_container_job(calc, nproc, timeout):
         "COMPUTE_SERVICE_ACCOUNT": settings.COMPUTE_SERVICE_ACCOUNT,
         "GCP_PROJECT_ID": settings.GCP_PROJECT_ID,
         "GCP_LOCATION": settings.GCP_LOCATION,
+        # NWChem variables
+        "OMPI_ALLOW_RUN_AS_ROOT": 1,
+        "OMPI_ALLOW_RUN_AS_ROOT_CONFIRM": 1,
     }
 
     runnable.environment = env
