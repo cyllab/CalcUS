@@ -363,6 +363,7 @@ if IS_CLOUD:
         "Constrained Conformational Search",
         # "NMR Prediction",
         "MO Calculation",
+        "ESP Calculation",
     ]
 
 else:
