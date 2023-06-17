@@ -2261,8 +2261,13 @@ def launch_nwchem_calc(in_file, calc, files):
             calc_id=calc.id,
         )
     else:
+        if settings.IS_CLOUD:
+            cmd = f"mpirun -n {PAL} --use-hwthread-cpus nwchem calc.inp"
+        else:
+            cmd = f"mpirun -n {PAL} nwchem calc.inp"
+
         ret = system(
-            f"mpirun -n {PAL} nwchem calc.inp",
+            cmd,
             os.path.join(local_folder, "calc.out"),
             software="NWChem",
             calc_id=calc.id,
