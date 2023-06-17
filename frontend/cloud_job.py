@@ -129,8 +129,8 @@ def create_container_job(calc, nproc, timeout):
         "GCP_PROJECT_ID": settings.GCP_PROJECT_ID,
         "GCP_LOCATION": settings.GCP_LOCATION,
         # NWChem variables
-        "OMPI_ALLOW_RUN_AS_ROOT": 1,
-        "OMPI_ALLOW_RUN_AS_ROOT_CONFIRM": 1,
+        "OMPI_ALLOW_RUN_AS_ROOT": "1",
+        "OMPI_ALLOW_RUN_AS_ROOT_CONFIRM": "1",
     }
 
     runnable.environment = env
@@ -155,6 +155,8 @@ def create_container_job(calc, nproc, timeout):
 
     policy = batch_v1.AllocationPolicy.InstancePolicy()
     policy.machine_type = f"n2d-highcpu-{nproc}"
+    # policy.boot_disk = ...
+    # https://cloud.google.com/batch/docs/reference/rest/v1/projects.locations.jobs#Disk
 
     metadata = []
 
