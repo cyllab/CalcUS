@@ -322,7 +322,7 @@
                 esp_viewer.addModel(esp_data.xyz, "xyz");
                 esp_viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
 
-                esp_viewer.addVolumetricData(esp_data.density, "cube", {isoval: isoval, opacity: 0.9, voldata: esp_data.esp, volformat: 'cube', volscheme: {gradient: 'rwb', min: max, max: -max} });
+                esp_viewer.addVolumetricData(esp_data.density, "cube", {isoval: isoval, opacity: 0.9, voldata: esp_data.esp, volformat: 'cube', volscheme: {gradient: 'roygb', min: max, max: -max} });
 
                 esp_viewer.render();
             }
