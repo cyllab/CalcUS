@@ -25,7 +25,7 @@
 
     @media screen and (min-width: 1921px) {
         #home_logo {
-            max-width: 400px;
+            max-width: 300px;
         }
         #logo_div {
             width: 42%;
@@ -34,7 +34,7 @@
     }
     @media screen and (min-width: 1408px) and (max-width: 1920px) {
         #home_logo {
-            max-width: 325px;
+            max-width: 225px;
         }
         #logo_div {
             width: 52%;
@@ -47,7 +47,7 @@
     }
     @media screen and (min-width: 1024px) and (max-width: 1407px) {
         #home_logo {
-            max-width: 300px;
+            max-width: 200px;
         }
         #logo_div {
             width: 60%;
@@ -56,7 +56,7 @@
     }
     @media screen and (min-width: 769px) and (max-width: 1023px) {
         #home_logo {
-            max-width: 300px;
+            max-width: 150px;
         }
         #logo_div {
             width: 70%;
@@ -65,7 +65,7 @@
     }
     @media screen and (max-width: 768px) {
         #home_logo {
-            max-width: 250px;
+            max-width: 125px;
         }
         #logo_div {
             width: 80%;
@@ -112,13 +112,15 @@
     .tile {
         padding-left: 1em;
         padding-right: 1em;
-        margin-bottom: 4em !important;
+        margin-bottom: 2em !important;
     }
     #logo_sep {
         margin-bottom: 5em;
     }
     #teaser1 {
         object-fit: cover;
+    }
+    .teaser_img {
         max-height: 25em;
     }
     #waiting_list_div {
@@ -137,6 +139,7 @@
     #video_div {
         text-align: center;
         margin-bottom: 1em;
+        margin-top: 4em;
     }
     #testimonials_div {
         margin: 3em auto;
@@ -162,7 +165,7 @@
         font-size: 1.3em;
     }
 </style>
-{% if IS_CLOUD or True %}
+{% if IS_CLOUD %}
 <!-- Begin Brevo Form -->
 <style>
 #sib-container {
@@ -204,60 +207,62 @@
                 <p id="tagline">Making Quantum Chemistry<br><span class="highlight">Accessible</span> and <span class="highlight">Efficient</span></p>
             </div>
 
-            <a class="button is-info is-large" href="https://github.com/cyllab/CalcUS" id="gh_button" target="_blank"><i class="fa fa-lg fa-brands fa-github"></i> View Project</a>
-            <a class="button is-info is-large" href="https://doi.org/10.1021/acs.jcim.1c01502" id="paper_button" target="_blank"><i class="fa fa-lg fa-solid fa-scroll"></i>View Publication</a>
-            {% if IS_CLOUD and ALLOW_TRIAL and not request.user.is_authenticated %}
-            <br>
-            <a class="button is-primary is-large is-rounded is-focused" href="/start_trial/" id="trial_button"><i class="fa fa-lg fa-solid fa-gift"></i>Try for free now</a>
+            {% if not request.user.is_authenticated %}
+            <div class="tile is-ancestor">
+                <center style="width: 100%">
+                    Create a free account and <b>accelerate your research immediately</b> with <span id="free_span">3600 free seconds</span> of compute time per month
+                    <br>
+                    <a class="button is-primary is-large is-rounded is-focused" href="/register/" id="register_button">Create account</a>
+
+                </center>
+            </div>
             {% endif %}
+
         </center>
     </div>
     <hr id="logo_sep" />
 
-    {% if IS_CLOUD %}
+    {% if IS_CLOUD or True %}
     <div class="tile is-ancestor">
         <div class="tile is-6 is-parent">
             <div class="tile is-child">
-                <p class="title">Launch state-of-the-art calculations</p>
-                <p class="subtitle">Run ridiculously fast semi-empirical <a href="https://github.com/grimme-lab/xtb" class="xtb_link">xTB calculations</a> on real computing resources, no configuration required</p>
+                <p class="title">Skip the installation and configuration</p>
+                <p class="subtitle">Launch Density Functional Theory (DFT) calculations in your browser in under 30 seconds</p>
             </div>
         </div>
         <div class="tile is-6">
-            <img id="teaser1" src="{% static 'home/pentane.png' %}" />
+            <img id="teaser3" class="teaser_img" src="{% static 'home/mo.png' %}" />
+        </div>
+    </div>
+
+    <div class="tile is-ancestor">
+        <div class="tile is-6">
+            <img id="teaser1" class="teaser_img" src="{% static 'home/pentane.png' %}" />
+        </div>
+        <div class="tile is-6 is-parent">
+            <div class="tile is-child">
+                <p class="title">Use state-of-the-art software and algorithms</p>
+                <p class="subtitle">Run ridiculously fast semi-empirical <a href="https://github.com/grimme-lab/xtb" class="xtb_link">xTB calculations</a> on real computing resources, no configuration required</p>
+            </div>
         </div>
     </div>
     <div class="tile is-ancestor">
-        <div class="tile is-6">
-            <img id="teaser2" src="{% static 'home/launch.png' %}" />
-        </div>
         <div class="tile is-6 is-parent">
             <div class="tile is-child">
                 <p class="title">Focus on concepts, not minutae</p>
                 <p class="subtitle">The user-friendly interface handles input file creation and management so you can concentrate on the bigger picture</p>
             </div>
         </div>
+        <div class="tile is-6">
+            <img id="teaser2" class="teaser_img" src="{% static 'home/launch.png' %}" />
+        </div>
     </div>
 
-    {% if not request.user.is_authenticated %}
-    <div class="tile is-ancestor">
-        <center style="width: 100%">
-            <h2 class="title is-2">Get <span id="free_span">3600 free seconds</span> of compute time per month</h2>
-            <br>
-            Create a free account and accelerate your research immediately
-            <br>
-            <br>
-            <a class="button is-primary is-large is-rounded is-focused" href="/register/" id="register_button">Create account</a>
 
-        </center>
-    </div>
-    {% endif %}
     {% endif %}
 
-    <div id="video_div">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/WdNKY32p_dM" title="CalcUS Cloud Example" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-    </div>
 
-    {% if IS_CLOUD %}
+    {% if IS_CLOUD or True %}
     <div id="testimonials_div">
         <h2 class="title is-2">What users say</h2>
         <div class="testimonial_div columns is-variable is-5-desktop is-1-tablet">
@@ -298,6 +303,13 @@
 
     {% endif %}
 
+    <div id="video_div">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/WdNKY32p_dM" title="CalcUS Cloud Example" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    </div>
+
+    <div>
+    
+    </div>
     <div class="tile is-ancestor" id="contact_tile">
         <center style="width: 100%">
             <h2 class="title is-2">You have <span class="highlight">questions?</span></h2>
@@ -308,7 +320,7 @@
             <a class="button is-info is-large" href="mailto:contact@calcus.cloud">Contact us</a>
         <center>
     </div>
-    {% if IS_CLOUD or True %}
+    {% if IS_CLOUD %}
     <div class="sib-form" style="text-align: center;">
         <div id="sib-form-container" class="sib-form-container">
             <div id="error-message" class="sib-form-message-panel has-background-danger" style="text-align:left; color:#fff; border-radius:3px; max-width:540px;">
@@ -419,7 +431,7 @@
     </div>
     {% endif %}
 </div>
-{% if IS_CLOUD or True %}
+{% if IS_CLOUD %}
 <script>
   window.REQUIRED_CODE_ERROR_MESSAGE = 'Please choose a country code';
   window.LOCALE = 'en';

@@ -222,11 +222,21 @@
             var mo_viewer = $3Dmol.createViewer("mo_viewer_div");
             mo_viewer.setBackgroundColor(0xffffff);
             
-            function get_cube(orb) {
+            function get_cube(orb, btn) {
             	if (orb != -1) {
             		window.mo_selection = orb;
             	}
+                if(btn != null) {
+                    document.querySelectorAll("#mo_container > .button").forEach(function(el, i) {
+                        if(el.classList.contains("is-warning")) {
+                            el.classList.remove("is-warning");
+                            el.classList.add("is-info");
+                        }
+                    });
 
+                    btn.classList.remove("is-info");
+                    btn.classList.add("is-warning");
+                }
             	let _orb = mo_selection;
 
             	$.ajax({
@@ -258,14 +268,14 @@
 
             $(document).ready(function(){
                 if(mo_viewer.getModel() == null)
-            	    get_cube(0);
+            	    get_cube(0, document.getElementById("homo_btn"));
             });
         </script>
         <div id="mo_container">
-            <button class="button is-info" onclick="get_cube(0);" style="width: 24%">HOMO</button>
-            <button class="button is-info" onclick="get_cube(1);" style="width: 24%">LUMO</button>
-            <button class="button is-info" onclick="get_cube(2);" style="width: 24%">LUMO+1</button>
-            <button class="button is-info" onclick="get_cube(3);" style="width: 24%">LUMO+2</button>
+            <button class="button is-info" onclick="get_cube(0, this);" style="width: 24%" id="homo_btn">HOMO</button>
+            <button class="button is-info" onclick="get_cube(1, this);" style="width: 24%">LUMO</button>
+            <button class="button is-info" onclick="get_cube(2, this);" style="width: 24%">LUMO+1</button>
+            <button class="button is-info" onclick="get_cube(3, this);" style="width: 24%">LUMO+2</button>
 
             <div class="slidecontainer">
                 <span id="mo_span">Orbital Plotting Isovalue</span>
