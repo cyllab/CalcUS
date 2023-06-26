@@ -1392,7 +1392,6 @@ def xtb_freq(in_file, calc):
     lines = [i + "\n" for i in calc.structure.xyz_structure.split("\n")]
     num_atoms = int(lines[0].strip())
     lines = lines[2:]
-    hess = []
     struct = []
 
     for line in lines:
@@ -2558,6 +2557,162 @@ def nwchem_opt(in_file, calc):
 
     # parse_nwchem_charges(calc, s)
 
+    return ErrorCodes.SUCCESS
+
+
+def nwchem_freq(in_file, calc):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+
+    ret = launch_nwchem_calc(in_file, calc, ["calc.out"])
+
+    if ret != ErrorCodes.SUCCESS:
+        return ret
+
+    base_xyz = [i + "\n" for i in calc.structure.xyz_structure.split("\n")]
+    num_atoms = int(base_xyz[0].strip())
+    base_xyz = base_xyz[2:]
+    struct = []
+    prop = get_or_create(calc.parameters, calc.structure)
+
+    for line in base_xyz:
+        if line.strip() != "":
+            a, x, y, z = line.strip().split()
+            struct.append([a, float(x), float(y), float(z)])
+
+    with open(f"{local_folder}/calc.out") as f:
+        lines = f.readlines()
+        ind = len(lines) - 1
+
+        try:
+            while lines[ind].find("Zero-Point correction to Energy") == -1:
+                ind -= 1
+            # Temperature                      =   298.15K
+            T = float(lines[ind - 3].split()[-1][:1])  # K
+
+            ZPE = float(lines[ind].split()[-2])  # Eh
+            Hcorr = float(lines[ind + 2].split()[-2])  # Eh
+            S = float(lines[ind + 4].split()[-2])  # cal/(mol*K)
+
+            while (
+                lines[ind].find("Total SCF energy") == -1
+                and lines[ind].find("Total DFT energy") == -1
+            ):
+                ind -= 1
+            E = float(lines[ind].split()[-1])  # Eh
+        except IndexError:
+            raise
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
+
+        G = E + Hcorr - T * S / (1000 * HARTREE_TO_KCAL_F)
+
+        prop.energy = E
+        prop.free_energy = G
+
+        try:
+            while (
+                lines[ind].find("NORMAL MODE EIGENVECTORS IN CARTESIAN COORDINATES")
+                == -1
+            ):
+                ind += 1
+
+            ind += 4
+
+            vib_freqs = []
+            freqs = []  # each entry is the animation for one vib mode
+            while lines[ind].strip() != "":
+                num_line = len(lines[ind].strip().split())
+                end_num = int(lines[ind].split()[-1])
+                ind += 2
+
+                vib_freqs += [float(i) for i in lines[ind].split()[1:]]
+
+                ind += 2
+
+                vib = []
+                for i in range(num_line):
+                    vib.append([])
+
+                for j in range(num_atoms * 3):
+                    sline = lines[ind].split()
+                    for i in range(num_line):
+                        coord = float(sline[1 + i])
+                        vib[i].append(coord)
+                    ind += 1
+
+                ####
+                def is_all_null(arr):
+                    for el in arr:
+                        if float(el) != 0:
+                            return False
+                    return True
+
+                freqs += vib
+                ind += 1
+        except IndexError:
+            raise
+            logger.error(
+                f"Could not parse the frequency modes of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
+
+        freq_animations = []
+        for ind in range(len(freqs)):
+            anim = f"{num_atoms}\nCalcUS\n"
+            assert len(struct) == num_atoms
+            for ind2, (a, x, y, z) in enumerate(struct):
+                anim += "{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(
+                    a, x, y, z, *freqs[ind][3 * ind2 : 3 * ind2 + 3]
+                )
+            freq_animations.append(anim)
+
+    # Remove translation and rotation
+    # TODO: test for linear molecules
+    prop.freq_animations = freq_animations[6:]
+    prop.freq_list = vib_freqs[6:]
+    prop.save()
+
+    # vib_file = os.path.join(local_folder, "vibspectrum")
+
+    """
+    if os.path.isfile(vib_file):
+        with open(vib_file) as f:
+            lines = f.readlines()
+
+        vibs = []
+        intensities = []
+        for line in lines:
+            if len(line.split()) > 4 and line[0] != "#":
+                sline = line.split()
+                try:
+                    a = float(sline[1])
+                    if a == 0.0:
+                        continue
+                except ValueError:
+                    pass
+                vib = float(line[20:33].strip())
+                vibs.append(vib)
+                try:
+                    intensity = float(sline[3])
+                except ValueError:
+                    continue
+                else:
+                    intensities.append(intensity)
+        if len(vibs) == len(intensities) and len(intensities) > 0:
+            x = np.arange(500, 4000, 1)  # Wave number in cm^-1
+            spectrum = plot_vibs(x, zip(vibs, intensities))
+            data = "Wavenumber,Intensity\n"
+            intensities = 1000 * np.array(intensities) / max(intensities)
+            for _x, i in sorted((zip(list(x), spectrum)), reverse=True):
+                data += f"-{_x:.1f},{i:.5f}\n"
+
+            prop.ir_spectrum = data
+            prop.freq_list = vibs
+
+    """
+    prop.save()
     return ErrorCodes.SUCCESS
 
 
@@ -3985,7 +4140,7 @@ BASICSTEP_TABLE = {
         # "TS Optimisation": nwchem_ts, ##############
         "MO Calculation": nwchem_mo_gen,
         "ESP Calculation": nwchem_esp_gen,
-        # "Frequency Calculation": nwchem_freq, ########
+        "Frequency Calculation": nwchem_freq,
         # "Constrained Optimisation": nwchem_scan,
         "Single-Point Energy": nwchem_sp,
         # "Minimum Energy Path": mep,
