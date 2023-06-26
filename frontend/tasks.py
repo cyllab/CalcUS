@@ -2232,14 +2232,17 @@ def launch_nwchem_calc(in_file, calc, files):
     if not os.path.isdir(local_folder):
         os.makedirs(local_folder, exist_ok=True)
 
+    if "geometry units angstroms noautosym" not in calc.input_file:
+        # Prevent duplicate correction
+        # Hack until the option is supported by ccinput
+        calc.input_file = calc.input_file.replace(
+            "geometry units angstroms", "geometry units angstroms noautosym"
+        )
+        calc.save()
+
     logger.info(f"The input is {calc.input_file}")
     with open(os.path.join(local_folder, "calc.inp"), "w") as out:
-        # Hack until the option is supported by ccinput
-        out.write(
-            calc.input_file.replace(
-                "geometry units angstroms", "geometry units angstroms noautosym"
-            )
-        )
+        out.write(calc.input_file)
 
     if not calc.local:
         pid = int(threading.get_ident())
@@ -2450,13 +2453,10 @@ def nwchem_esp_gen(in_file, calc):
 def nwchem_opt(in_file, calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_nwchem_calc(in_file, calc, ["calc.out", "calc.xyz"])
+    ret = launch_nwchem_calc(in_file, calc, ["calc.out"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
-
-    with open(f"{local_folder}/calc.xyz") as f:
-        lines = f.readlines()
 
     converged = True
     structures = []
@@ -2486,8 +2486,13 @@ def nwchem_opt(in_file, calc):
                     "Step       Energy      Delta E   Gmax     Grms     Xrms     Xmax   Walltime"
                 )
                 == -1
+                and ind < len(lines) - 1
             ):
                 ind += 1
+
+            if ind >= len(lines) - 1:
+                break
+
             ind += 2
             RMSD = float(lines[ind].split()[6])
             rmsds.append(RMSD)
@@ -4746,6 +4751,7 @@ def kill_calc(calc):
         if calc.status not in [2, 3]:
             calc.set_as_cancelled()
         return
+    logger.info(f"Trying to kill calc {calc.id}")
 
     if calc.local:
         if calc.task_id != "":
