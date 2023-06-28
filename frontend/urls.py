@@ -225,6 +225,7 @@ urlpatterns = [
     path("delete_ensemble/", views.delete_ensemble, name="delete_ensemble"),
     path("delete_order/", views.delete_order, name="delete_order"),
     path("delete_folder/", views.delete_folder, name="delete_folder"),
+    path("batch_calculations/", views.batch_calculations, name="batch_calculations"),
     path("flowchart/", views.flowchart, name="flowchart"),
     path("create_flowchart/", views.create_flowchart, name="create_flowchart"),
     path("submit_flowchart/", views.submit_flowchart, name="submit_flowchart"),

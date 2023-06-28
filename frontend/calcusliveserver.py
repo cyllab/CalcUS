@@ -1521,6 +1521,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         else:
             raise Exception("Could not get the button to launch calculation from frame")
 
+        button = WebDriverWait(self.driver, 1).until(
+            EC.element_to_be_clickable((By.ID, "launch_from_frame"))
+        )
+
         button.click()  # Less flaky than "send_keys(Keys.RETURN)" in headless mode?
 
     def accept_alert(self):
