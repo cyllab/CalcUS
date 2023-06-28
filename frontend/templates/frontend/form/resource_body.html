@@ -1,0 +1,20 @@
+<div class="field">
+    <label class="label">Resource</label>
+    <div class="control">
+        <div class="select">
+        <select name="calc_resource" id="calc_resource" onchange="refresh_availabilities();">
+            {% if ALLOW_LOCAL_CALC %}
+                {% if request.user.group or request.user.is_PI or request.user.is_superuser %}
+                    <option>Local</option>
+                {% endif %}
+            {% endif %}
+
+            {% if ALLOW_REMOTE_CALC %}
+            {% for access in request.user.accesses %}
+            <option value="{{ access.cluster_address }}">{{ access.cluster_address }} {% if not access.connected %}(DISCONNECTED){% endif %}</option>
+            {% endfor %}
+            {% endif %}
+          </select>
+        </div>
+    </div>
+</div>

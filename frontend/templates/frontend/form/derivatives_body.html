@@ -1,0 +1,27 @@
+<div class="columns" id="calc_derivatives">
+    <div class="column is-narrow has-text-centered" id="calc_gen_derivatives">
+        <div class="field">
+            <label class="label">Generate derivatives</label>
+            <div class="control">
+                <input type="checkbox" class="checkbox" name="calc_gen_derivatives" onchange="calc_deriv_changed(this);">
+            </div>
+        </div>
+    </div>
+    <div class="column is-narrow has-text-centered">
+        <div id="calc_list_derivatives" style="display: none;">
+            <div class="field">
+                <label class="label">Fragments to use</label>
+                <div class="control">
+                    <div class="select is-multiple">
+                        <select name="calc_list_derivatives" multiple size="3">
+                            <option>Ms</option>
+                            <option>Ph</option>
+                            <option>oTol</option>
+                            <option>pCF3Ph</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

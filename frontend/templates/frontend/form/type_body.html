@@ -1,0 +1,13 @@
+<div class="field" id="type_field">
+    <label class="label">Calculation Type</label>
+    <div class="control" >
+        <div class="select wide_select">
+            <select name="calc_type" id="calc_type" onchange="calc_selection_changed();">
+            {% for proc in procs %}
+            <option {% if proc.short_name == "opt" %}selected{% endif %}>{{ proc.name }}</option>
+            {% endfor %}
+            </select>
+        </div>
+    </div>
+</div>
+

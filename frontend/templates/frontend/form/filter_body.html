@@ -1,0 +1,38 @@
+<div class="columns">
+    <div class="column">
+        <div class="field">
+            <label class="label">Filter</label>
+            <div class="control" >
+                <div class="select">
+                <select name="calc_filter" onchange="filter_changed();" id="calc_filter">
+                    <option>None</option>
+                    <option>By Relative Energy</option>
+                    <option>By Boltzmann Weight</option>
+                  </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="column">
+        <div class="field" style="display: none;" id="calc_filter_value">
+            <label class="label" id="filter_label">Higher than</label>
+            <div class="control">
+                <input class="input" name="filter_value" type="text" id="filter_value_input">
+            </div>
+        </div>
+    </div>
+    <div class="column">
+        <div class="field" id="calc_filter_params">
+            <label class="label">Parameters</label>
+            <div class="control" >
+                <div class="select">
+                <select name="filter_parameters">
+                    {% for p in ensemble.unique_parameters %}
+                        <option value="{{ p.id }}">{{ p }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

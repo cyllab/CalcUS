@@ -1,0 +1,13 @@
+<div class="field" id="software_field">
+    <label class="label">Software</label>
+    <div class="control" >
+        <div class="select wide_select">
+            <select name="calc_software" id="calc_software" onchange="refresh_availabilities();">
+                <option>xtb</option>
+                <option {% if IS_CLOUD %} disabled{% endif %}>ORCA</option>
+                <option {% if IS_CLOUD %} disabled{% endif %}>Gaussian</option>
+                <option>NWChem</option>
+            </select>
+        </div>
+    </div>
+</div>

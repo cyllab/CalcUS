@@ -1,0 +1,14 @@
+<div class="field" id="driver_field">
+    <label class="label">Driver</label>
+    <div class="control">
+        <div class="select wide_select">
+            <select name="calc_driver" id="calc_driver" onchange="refresh_availabilities();">
+                <option value="xtb" selected>xtb</option>
+                {% if not IS_CLOUD %}<option value="Gaussian" selected>Gaussian</option>{% endif %}
+                {% if not IS_CLOUD %}<option value="ORCA">ORCA</option>{% endif %}
+                <option value="Pysisyphus">Pysisyphus</option>
+                <option value="NWChem">NWChem</option>
+            </select>
+        </div>
+    </div>
+</div>
