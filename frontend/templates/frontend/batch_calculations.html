@@ -1,0 +1,105 @@
+{% extends 'frontend/base.html' %} 
+{% load i18n %} 
+{% load static %} 
+{% block extrahead %}
+<title>Batch Calculations</title>
+    <script src="{% static 'frontend/jquery.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
+    <script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'frontend/form_style.css' %}" type="text/css">
+
+    <script>
+    {% include 'frontend/form/type_head.js' %} 
+    {% include 'frontend/form/availability.js' %} 
+    </script>
+    <style>
+        #parameters_div {
+            max-width: 40em;
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 4em;
+        }
+        .column.is-8 {
+            min-height: calc(3.0em + 1.5rem);
+        }
+        .field {
+            margin-top: 0.25em !important;
+            margin-bottom: 0.25em !important;
+        }
+        label.label {
+            display: none;
+        }
+    </style>
+{% endblock %} 
+
+{% block content %} 
+{% csrf_token %}
+
+<div class="main_content">
+    <div class="box" id="parameters_div">
+        <form method="post" id="params_form" enctype="multipart/form-data">
+            <div class="param">
+                <div class="columns is-vcentered">
+                    <div class="column is-3">
+                        Theory Level
+                    </div>
+                    <div class="column is-1">
+                        <input type="checkbox" class="checkbox" name="theory_fixed">
+                    </div>
+                    <div class="column is-8">
+                        {% include 'frontend/form/theory_level_body.html' %}           
+                    </div>
+                </div>
+            </div>
+
+            <div class="param">
+                <div class="columns is-vcentered">
+                    <div class="column is-3">
+                        Method
+                    </div>
+                    <div class="column is-1">
+                        <input type="checkbox" class="checkbox" name="method_fixed">
+                    </div>
+                    <div class="column is-8">
+                        <!-- The irrelevant fields will be hidden --!>
+                        {% include 'frontend/form/xtb_method_body.html' %}           
+                        {% include 'frontend/form/se_method_body.html' %}           
+                        {% include 'frontend/form/dft_method_body.html' %}           
+                    </div>
+                </div>
+            </div>
+            <div class="param">
+                <div class="columns is-vcentered">
+                    <div class="column is-3">
+                        Basis set
+                    </div>
+                    <div class="column is-1">
+                        <input type="checkbox" class="checkbox" name="bs_fixed">
+                    </div>
+                    <div class="column is-8">
+                        {% include 'frontend/form/basis_set_body.html' %}           
+                    </div>
+                </div>
+            </div>
+            <button class="button is-primary">Add</button>
+        </form>
+    </div>
+</div>
+<script>
+    $( document ).ready(function() {
+	    refresh_availabilities();
+    });
+    var all_params = {};
+
+	$('#params_form').submit(function(){
+        data = new FormData(document.forms.namedItem("params_form"));
+
+        all_params["test"] = data;
+
+        /* Don't submit the form like it normally would, we want to handle the data ourselves */
+        return false; 
+    });
+</script>
+{% endblock content %}
