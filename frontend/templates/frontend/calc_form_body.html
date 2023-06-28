@@ -1,23 +1,7 @@
 <div class="column" id="parameters_column">
 	<div class="column" >
         {% if not IS_CLOUD %}
-		<div class="box">
-			<center>
-				<div class="select">
-					<select id="presets">
-					</select>
-				</div>
-				<br />
-				<a class="button is-info" onclick="load_selected_preset()">Load Preset</a>
-				<a class="button is-info" onclick="save_preset()">Save Preset</a>
-				<a class="button is-danger" onclick="delete_preset()">Delete Preset</a>
-				<br />
-				<a class="button is-info" onclick="set_project_default()">Set current parameters as project defaults</a>
-				<div id="preset_msg">
-
-				</div>
-			</center>
-		</div>
+            {% include "frontend/form/preset_body.html" %}
         {% endif %}
 	</div>
 
@@ -25,491 +9,103 @@
 		{% if not ensemble and not structure %}
 		<div class="columns">
 			{% if is_flowchart is None and not is_batch %}
-			<div class="column">
-				<div class="field">
-					<label class="label">Draw a structure or choose a file</label>
-					<div class="file has-name">
-						<label class="file-label">
-							<input class="file-input" type="file" name="file_structure" id="file_structure" multiple="multiple">
-							<span class="file-cta">
-								<span class="file-icon">
-									<i class="fas fa-upload"></i>
-								</span>
-								<span class="file-label">
-								File upload
-								</span>
-							</span>
-							<span class="file-name" id="file_upload_name">
-							No input file selected
-							</span>
-						</label>
-					</div>
-				</div>
-			</div>
+            {% include "frontend/form/file_upload_body.html" %}
 			{% endif %}
-			<div class="column is-narrow has-text-centered" id="calc_parse_filenames_column" style="display: none;">
-				<label class="label">Use filename(s)</label>
-				<div class="control">
-					<input type="checkbox" class="checkbox" id="calc_parse_filenames" name="calc_parse_filenames" onchange="toggle_visibility_molname(this);">
-				</div>
-			</div>
-
-			<div class="column is-narrow has-text-centered" id="calc_combine_files_column" style="display: none;">
-				<label class="label">Single ensemble</label>
-				<div class="control">
-					<input type="checkbox" class="checkbox" id="calc_combine_files" name="calc_combine_files">
-				</div>
-			</div>
 		</div>
 
         {% if not is_batch %}
-        <div class="columns" id="calc_derivatives">
-            <div class="column is-narrow has-text-centered" id="calc_gen_derivatives">
-                <div class="field">
-                    <label class="label">Generate derivatives</label>
-                    <div class="control">
-                        <input type="checkbox" class="checkbox" name="calc_gen_derivatives" onchange="calc_deriv_changed(this);">
-                    </div>
-                </div>
-            </div>
-            <div class="column is-narrow has-text-centered" id="calc_list_derivatives" style="display: none;">
-                <div class="field">
-                    <label class="label">Fragments to use</label>
-                    <div class="control">
-                        <div class="select is-multiple">
-                            <select name="calc_list_derivatives" multiple size="3">
-                                <option>Ms</option>
-                                <option>Ph</option>
-                                <option>oTol</option>
-                                <option>pCF3Ph</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+            {% include "frontend/form/derivatives_body.html" %}
         {% endif %}
 
-		<div class="field" style="display: none;" id="calc_aux_file_structure">
-			<div class="file">
-				<label class="file-label">
-					<input class="file-input" type="file" name="aux_file_structure" id="aux_file_structure">
-						<span class="file-cta">
-						<span class="file-icon">
-							<i class="fas fa-upload"></i>
-						</span>
-						<span class="file-label">
-						Upload auxiliary structure
-						</span>
-					</span>
-			        <span class="file-name" id="aux_file_upload_name">
-                        No input file selected
-                    </span>
-				</label>
-			</div>
-		</div>
+        {% include "frontend/form/aux_file_upload_body.html" %}
 
 		{% endif %}
 		{% csrf_token %}
 
 		<div class="columns">
 			<div class="column">
-				{% if not calc and not ensemble and not structure  and is_flowchart is None%}
-				<div class="field" id="calc_mol_name_field">
-					<label class="label">Molecule Name</label>
-					<div class="control">
-						<input class="input" name="calc_mol_name" id="calc_mol_name" type="text">
-					</div>
-				</div>
+				{% if not calc and not ensemble and not structure and is_flowchart is None%}
+                {% include "frontend/form/mol_name_body.html" %}
 				{% endif %}
-				<div class="field" id="calc_name_field">
-					<label class="label">Ensemble Name</label>
-					<div class="control">
-						<input class="input" name="calc_name" id="calc_name" type="text" placeholder="(Optional)">
-					</div>
-				</div>
+                {% include "frontend/form/ensemble_name_body.html" %}
 			</div>
 
 			<div class="column is-narrow">
-				<div class="field" id="charge_field">
-					<label class="label">Charge</label>
-					<div class="control" >
-						<input class="input" name="calc_charge" id="calc_charge" type="text" value="0">
-					</div>
-				</div>
+                {% include "frontend/form/charge_body.html" %}
 			</div>
 			<div class="column is-narrow">
-				<div class="field" id="multiplicity_field">
-					<label class="label">Multiplicity</label>
-					<div class="control" >
-						<input class="input" name="calc_multiplicity" id="calc_multiplicity" type="text" value="1">
-					</div>
-				</div>
+                {% include "frontend/form/multiplicity_body.html" %}
 			</div>
 		</div>
-		<div class="columns">
-			<div class="column is-narrow">
-				<div class="field" id="solvent_field">
-					<label class="label">Solvent</label>
-					<div class="control">
-						<input class="input" name="calc_solvent" id="calc_solvent" type="text" oninput="refresh_availabilities();" list="solvent_options">
-					</div>
-					<p class="check_msg is-danger" id="solvent_check_msg"></p>
-				</div>
-			</div>
-			<div class="column is-narrow">
-				<div class="field" id="calc_solvation_model">
-					<label class="label">Solvation Model</label>
-						<div class="control">
-							<div class="select">
-							<select name="calc_solvation_model" onchange="refresh_availabilities();">
-								<option>GBSA</option>
-								<option selected>ALPB</option>
-                                <option selected>SMD</option>
-								<option>PCM</option>
-                                <option>CPCM</option>
-							</select>
-							</div>
-						</div>
-				</div>
-			</div>
-			<div class="column is-narrow">
-				<div class="field" id="calc_solvation_radii">
-					<label class="label">Solvation Radii</label>
-					<div class="control">
-						<div class="select">
-							<select name="calc_solvation_radii">
-								<option>SMD18</option>
-								<option selected>Default</option>
-								<option>UFF</option>
-								<option>UA0</option>
-								<option>UAHF</option>
-								<option>UAKS</option>
-								<option>Pauling</option>
-								<option>Bondi</option>
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+
+        {% include "frontend/form/solvent_body.html" %}
+
 		{% if is_flowchart is None and not is_batch %}
-		<div class="columns">
-			<div class="column is-narrow">
-				<div class="field" id="project_field">
-					<label class="label">Project</label>
-					<div class="control">
-						<div class="select" >
-						  <select name="calc_project" onchange="project_selection_changed(this)" id="calc_project">
-							  {% for proj in request.user.project_set.all|dictsort:"name" %}
-							  <option name="{{ proj }}">{{ proj }}</option>
-							  {% endfor %}
-							  <option name="new_project">New Project</option>
-						  </select>
-						</div>
-					</div>
-				</div>
-
-			</div>
-			<div class="column">
-				<div class="field" style="display: none;" id="new_project_name_field">
-					<label class="label">Name of new project</label>
-					<div class="control">
-						<input class="input" name="new_project_name" type="text" placeholder="My Project">
-					</div>
-				</div>
-			</div>
-
-		</div>
+        {% include "frontend/form/project_body.html" %}
 		{% endif %}
 
 		<div class="columns">
             <div class="column is-3">
-                <div class="field" id="software_field">
-                    <label class="label">Software</label>
-                    <div class="control" >
-                        <div class="select wide_select">
-                            <select name="calc_software" id="calc_software" onchange="refresh_availabilities();">
-                                <option>xtb</option>
-                                <option {% if IS_CLOUD %} disabled{% endif %}>ORCA</option>
-                                <option {% if IS_CLOUD %} disabled{% endif %}>Gaussian</option>
-                                <option>NWChem</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
+                {% include "frontend/form/software_body.html" %}
             </div>
 
             <div class="column is-3">
-                <div class="field" id="driver_field">
-                    <label class="label">Driver</label>
-                    <div class="control">
-                        <div class="select wide_select">
-                            <select name="calc_driver" id="calc_driver" onchange="refresh_availabilities();">
-                                <option value="xtb" selected>xtb</option>
-                                {% if not IS_CLOUD %}<option value="Gaussian" selected>Gaussian</option>{% endif %}
-                                {% if not IS_CLOUD %}<option value="ORCA">ORCA</option>{% endif %}
-                                <option value="Pysisyphus">Pysisyphus</option>
-                                <option value="NWChem">NWChem</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
+                {% include "frontend/form/driver_body.html" %}
 			</div>
 
 
             <div class="column is-6">
-                <div class="field" id="type_field">
-                    <label class="label">Calculation Type</label>
-                    <div class="control" >
-                        <div class="select wide_select">
-                            <select name="calc_type" id="calc_type" onchange="calc_selection_changed();">
-                            {% for proc in procs %}
-                            <option {% if proc.short_name == "opt" %}selected{% endif %}>{{ proc.name }}</option>
-                            {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                {% include "frontend/form/type_body.html" %}
+		    </div>
+            
 		</div>
 
-		<div id="calc_aux_structure">
-			<div class="field">
-				<label class="label">Existing auxiliary structure</label>
-				<div class="control" id="aux_structure">
-					<div class="columns">
-						<div class="column">
-							<label class="label">Molecule</label>
-							<div class="select" id="aux_mol_select">
-								<select name="aux_mol" id="aux_mol" onchange="refresh_aux_ensemble();">
-								</select>
-							</div>
-						</div>
-						<div class="column">
-							<label class="label">Ensemble</label>
-							<div class="select">
-								<select name="aux_ensemble" id="aux_ensemble" onchange="refresh_aux_structure();">
-								</select>
-							</div>
-						</div>
-						<div class="column">
-							<label class="label">Structure</label>
-							<div class="select">
-								<select name="aux_struct" id="aux_struct">
-								</select>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+        {% include "frontend/form/aux_structure_body.html" %}
 
-		<div style="display: none;" id="calc_constraints">
-			<div class="field">
-				<label class="label">Constraints and scan coordinates</label>
-				<div id="constraint_list">
-				</div>
-			</div>
-		</div>
+        {% include "frontend/form/constraints_body.html" %}
+
 
         <div>
             <div class="columns">
                 <div class="column is-3">
-                    <div class="field" id="calc_theory_level">
-                        <label class="label">Theory Level</label>
-                        <div class="control">
-                            <div class="select wide_select">
-                                <select name="calc_theory_level" onchange="refresh_availabilities();">
-                                    <option class="hidden" value="xtb">xtb</option>
-                                    <option value="semiempirical">Semi-empirical</option>
-                                    <option value="hf">HF</option>
-                                    <option value="dft">DFT</option>
-                                    <option value="mp2">RI-MP2</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                    {% include "frontend/form/theory_level_body.html" %}
                 </div>
-                <div id="calc_pbeh3c">
-                    <div class="column is-narrow">
-                        <div class="field">
-                            <label class="label">Special</label>
-                            <label class="checkbox">
-                                <input type="checkbox" name="calc_pbeh3c" onchange="refresh_availabilities();">
-                                PBEh-3c
-                            </label>		
-                        </div>
-                    </div>
-                </div>
-				<div id="calc_hf3c">
-					<div class="column is-narrow">
-						<div class="field">
-							<label class="label">Special</label>
-							<label class="checkbox">
-								<input type="checkbox" name="calc_hf3c" onchange="refresh_availabilities();">
-								HF-3c
-							</label>		
-						</div>
-					</div>
-				</div>
-                <div class="column" id="calc_se_method">
-                    <div class="field">
-                        <label class="label">Method</label>
-                        <div class="control">
-                            <div class="select wide_select">
-                                <select name="calc_se_method">
-                                    <option>AM1</option>
-                                    <option>PM3</option>
-                                    <option>PM6</option>
-                                    <option>PM7</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="column" id="calc_xtb_method">
-                    <div class="field">
-                        <label class="label">Method</label>
-                        <div class="control">
-                            <div class="select wide_select">
-                                <select name="calc_xtb_method">
-                                    <option value="gfn2-xtb" selected>GFN2-xTB</option>
-                                    <option value="gfn1-xtb">GFN1-xTB</option>
-                                    <option value="gfn0-xtb">GFN0-xTB</option>
-                                    <option value="gfn-ff">GFN-FF</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                <div class="column">
+                {% include "frontend/form/special_body.html" %}
                 </div>
 
                 <div class="column">
-                    <div class="field" id="calc_functional_field">
-                        <label class="label">Functional</label>
-                        <div class="control">
-                            <input class="input" name="calc_functional" id="calc_functional" type="text" list="functional_options">
-                        </div>
-                        <p class="check_msg is-danger" id="functional_check_msg"></p>
-                    </div>
+                {% include "frontend/form/se_method_body.html" %}
                 </div>
                 <div class="column">
-                    <div class="field" id="calc_basis_set_field">
-                        <label class="label">Basis set</label>
-                        <div class="control">
-                            <input class="input" name="calc_basis_set" id="calc_basis_set" type="text" list="basis_sets_options">
-                        </div>
-                        <p class="check_msg is-danger" id="basis_set_check_msg"></p>
-                    </div>
+                {% include "frontend/form/xtb_method_body.html" %}
                 </div>
 
+                <div class="column">
+                {% include "frontend/form/dft_method_body.html" %}
+                </div>
+
+                <div class="column">
+                {% include "frontend/form/basis_set_body.html" %}
+                </div>
             </div>
         </div>
         <div>
-			<div>
-				<div class="field" id="custom_specifications_field">
-					<label class="label">Specifications</label>
-					<div class="control">
-						<input class="input" name="calc_specifications" id="calc_specifications" type="text" placeholder="" >
-					</div>
-				</div>
-			</div>
-			<div id="calc_df">
-				<div class="field">
-					<label class="label">Density Fitting</label>
-					<div class="control">
-						<input class="input" name="calc_df" type="text" placeholder="" >
-					</div>
-				</div>
-			</div>
-			<div id="calc_custom_bs" >
-				<div class="field" id="custom_bs_field">
-					<label class="label">Custom basis sets</label>
-					<div class="control">
-						<input class="input" name="calc_custom_bs" type="text" placeholder="" >
-					<button class="button is-info" id="pick_bs_button" type="button">Pick custom basis sets</button>
-					</div>
-				</div>
+            {% include "frontend/form/specifications_body.html" %}
 
-				<div class="modal pick_bs_div" id="pick_bs_div">
-					<div class="modal-card">
-						<header class="modal-card-head">
-							<p class="modal-card-title">Specific basis sets</p>
-							<button type="button" class="close_btn close_bs modal-close is-large" aria-label="close"></button>
-						</header>
-						<section class="modal-card-body" id="custom_bs_body">
-						</section>
-					</div>
-				</div>
-			</div>
+            {% include "frontend/form/df_body.html" %}
+
+            {% include "frontend/form/custom_bs_body.html" %}
 		</div>
 		<br />
 		{% if IS_CLOUD %}
 		<input type="hidden" id="calc_resource" name="calc_resource" value="Local">
 		{% else %}
-		<div class="field">
-			<label class="label">Resource</label>
-			<div class="control">
-				<div class="select">
-				<select name="calc_resource" id="calc_resource" onchange="refresh_availabilities();">
-					{% if ALLOW_LOCAL_CALC %}
-						{% if request.user.group or request.user.is_PI or request.user.is_superuser %}
-							<option>Local</option>
-						{% endif %}
-					{% endif %}
-
-					{% if ALLOW_REMOTE_CALC %}
-					{% for access in request.user.accesses %}
-                    <option value="{{ access.cluster_address }}">{{ access.cluster_address }} {% if not access.connected %}(DISCONNECTED){% endif %}</option>
-					{% endfor %}
-					{% endif %}
-				  </select>
-				</div>
-			</div>
-		</div>
+            {% include "frontend/form/resource_body.html" %}
 		{% endif %}
 
 		{% if ensemble and not structures %}
-			<div class="columns">
-				<div class="column">
-					<div class="field">
-						<label class="label">Filter</label>
-						<div class="control" >
-							<div class="select">
-							<select name="calc_filter" onchange="filter_changed();" id="calc_filter">
-								<option>None</option>
-								<option>By Relative Energy</option>
-								<option>By Boltzmann Weight</option>
-							  </select>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="column">
-					<div class="field" style="display: none;" id="calc_filter_value">
-						<label class="label" id="filter_label">Higher than</label>
-						<div class="control">
-							<input class="input" name="filter_value" type="text" id="filter_value_input">
-						</div>
-					</div>
-				</div>
-				<div class="column">
-					<div class="field" id="calc_filter_params">
-						<label class="label">Parameters</label>
-						<div class="control" >
-							<div class="select">
-							<select name="filter_parameters">
-								{% for p in ensemble.unique_parameters %}
-									<option value="{{ p.id }}">{{ p }}</option>
-								{% endfor %}
-							  </select>
-							</div>
-						</div>
-					</div>
-				</div>
-
-			</div>
+            {% include "frontend/form/filter_body.html" %}
 		{% endif %}
 
         <center>
@@ -684,8 +280,7 @@ $( document ).ready(function() {
     if(checkbox_deriv != null)
         calc_deriv_changed(checkbox_deriv);
 });
-</script>
-<script>
+
 let modalBtnBs = document.getElementById("pick_bs_button")
 let modalBs = document.querySelector(".pick_bs_div")
 let closeBtnBs = document.querySelector(".close_bs")
@@ -726,7 +321,7 @@ $('#calc_software').change(function(e){
 
 add_constraint(true);	
 
-{% if not ensemble and not structure and not calc and is_flowchart is None and not is_batch%}
+{% if not ensemble and not structure and not calc and is_flowchart is None and not is_batch %}
 	let upload_el = document.getElementById("file_structure");
 	upload_el.addEventListener("change", file_upload_changed, false);
 {% endif %}

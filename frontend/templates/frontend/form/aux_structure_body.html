@@ -1,0 +1,31 @@
+<div id="calc_aux_structure">
+    <div class="field">
+        <label class="label">Existing auxiliary structure</label>
+        <div class="control" id="aux_structure">
+            <div class="columns">
+                <div class="column">
+                    <label class="label">Molecule</label>
+                    <div class="select" id="aux_mol_select">
+                        <select name="aux_mol" id="aux_mol" onchange="refresh_aux_ensemble();">
+                        </select>
+                    </div>
+                </div>
+                <div class="column">
+                    <label class="label">Ensemble</label>
+                    <div class="select">
+                        <select name="aux_ensemble" id="aux_ensemble" onchange="refresh_aux_structure();">
+                        </select>
+                    </div>
+                </div>
+                <div class="column">
+                    <label class="label">Structure</label>
+                    <div class="select">
+                        <select name="aux_struct" id="aux_struct">
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

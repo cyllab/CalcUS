@@ -1,0 +1,34 @@
+<div class="column">
+    <div class="field">
+        <label class="label">Draw a structure or choose a file</label>
+        <div class="file has-name">
+            <label class="file-label">
+                <input class="file-input" type="file" name="file_structure" id="file_structure" multiple="multiple">
+                <span class="file-cta">
+                    <span class="file-icon">
+                        <i class="fas fa-upload"></i>
+                    </span>
+                    <span class="file-label">
+                    File upload
+                    </span>
+                </span>
+                <span class="file-name" id="file_upload_name">
+                No input file selected
+                </span>
+            </label>
+        </div>
+    </div>
+</div>
+<div class="column is-narrow has-text-centered" id="calc_parse_filenames_column" style="display: none;">
+    <label class="label">Use filename(s)</label>
+    <div class="control">
+        <input type="checkbox" class="checkbox" id="calc_parse_filenames" name="calc_parse_filenames" onchange="toggle_visibility_molname(this);">
+    </div>
+</div>
+
+<div class="column is-narrow has-text-centered" id="calc_combine_files_column" style="display: none;">
+    <label class="label">Single ensemble</label>
+    <div class="control">
+        <input type="checkbox" class="checkbox" id="calc_combine_files" name="calc_combine_files">
+    </div>
+</div>

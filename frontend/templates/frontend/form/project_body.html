@@ -1,0 +1,26 @@
+<div class="columns">
+    <div class="column is-narrow">
+        <div class="field" id="project_field">
+            <label class="label">Project</label>
+            <div class="control">
+                <div class="select" >
+                  <select name="calc_project" onchange="project_selection_changed(this)" id="calc_project">
+                      {% for proj in request.user.project_set.all|dictsort:"name" %}
+                      <option name="{{ proj }}">{{ proj }}</option>
+                      {% endfor %}
+                      <option name="new_project">New Project</option>
+                  </select>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="column">
+        <div class="field" style="display: none;" id="new_project_name_field">
+            <label class="label">Name of new project</label>
+            <div class="control">
+                <input class="input" name="new_project_name" type="text" placeholder="My Project">
+            </div>
+        </div>
+    </div>
+</div>
