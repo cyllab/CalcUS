@@ -24,7 +24,7 @@
 	<form method="post" id="calcform" enctype="multipart/form-data">
 		{% if not ensemble and not structure %}
 		<div class="columns">
-			{% if is_flowchart is None %}
+			{% if is_flowchart is None and not is_batch %}
 			<div class="column">
 				<div class="field">
 					<label class="label">Draw a structure or choose a file</label>
@@ -62,6 +62,7 @@
 			</div>
 		</div>
 
+        {% if not is_batch %}
         <div class="columns" id="calc_derivatives">
             <div class="column is-narrow has-text-centered" id="calc_gen_derivatives">
                 <div class="field">
@@ -87,6 +88,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
 		<div class="field" style="display: none;" id="calc_aux_file_structure">
 			<div class="file">
@@ -191,7 +193,7 @@
 				</div>
 			</div>
 		</div>
-		{% if is_flowchart is None %}
+		{% if is_flowchart is None and not is_batch %}
 		<div class="columns">
 			<div class="column is-narrow">
 				<div class="field" id="project_field">
@@ -580,7 +582,7 @@
 	}); 
 
 $( document ).ready(function() {
-	{% if not ensemble and not structure and is_flowchart is None%}
+	{% if not ensemble and not structure and is_flowchart is None and not is_batch %}
 	preselect_last_project();
 	set_availables();
 	project_selection_changed(document.getElementById("calc_project"));
@@ -724,7 +726,7 @@ $('#calc_software').change(function(e){
 
 add_constraint(true);	
 
-{% if not ensemble and not structure and not calc and is_flowchart is None%}
+{% if not ensemble and not structure and not calc and is_flowchart is None and not is_batch%}
 	let upload_el = document.getElementById("file_structure");
 	upload_el.addEventListener("change", file_upload_changed, false);
 {% endif %}

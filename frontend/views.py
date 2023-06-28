@@ -1188,6 +1188,7 @@ def learn_keyword(request, keyword):
         return render(request, template)
 
 
+@login_required
 def flowchart(request):
     flag = True
     flowchartsData = Flowchart.objects.all()
@@ -1195,6 +1196,7 @@ def flowchart(request):
         request,
         "frontend/flowchart.html",
         {
+            "is_batch": False,
             "is_flowchart": flag,
             "flowchartsData": flowchartsData,
             "procs": BasicStep.objects.all(),
@@ -1204,6 +1206,16 @@ def flowchart(request):
             "packages": settings.PACKAGES,
         },
     )
+
+
+@login_required
+def batch_calculations(request):
+    params = {
+        "is_batch": True,
+        "procs": BasicStep.objects.all().order_by(Lower("name")),
+        "packages": settings.PACKAGES,
+    }
+    return render(request, "frontend/batch_calculations.html", params)
 
 
 def example(request, pk):
@@ -4432,6 +4444,7 @@ def update_preferences(request):
 @login_required
 def launch(request):
     params = {
+        "is_batch": False,
         "procs": BasicStep.objects.all().order_by(Lower("name")),
         "packages": settings.PACKAGES,
         "start_tour": not request.user.tour_done and not IS_TEST,
