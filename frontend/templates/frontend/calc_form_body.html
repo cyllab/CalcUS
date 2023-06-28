@@ -1,4 +1,4 @@
-<div class="column" id="parameters_column">
+<div class="column" id="parameters_div">
 	<div class="column" >
         {% if not IS_CLOUD %}
             {% include "frontend/form/preset_body.html" %}
@@ -70,22 +70,22 @@
                 <div class="column is-3">
                     {% include "frontend/form/theory_level_body.html" %}
                 </div>
-                <div class="column">
+                <div class="column optional-column">
                 {% include "frontend/form/special_body.html" %}
                 </div>
 
-                <div class="column">
+                <div class="column optional-column">
                 {% include "frontend/form/se_method_body.html" %}
                 </div>
-                <div class="column">
+                <div class="column optional-column">
                 {% include "frontend/form/xtb_method_body.html" %}
                 </div>
 
-                <div class="column">
+                <div class="column optional-column">
                 {% include "frontend/form/dft_method_body.html" %}
                 </div>
 
-                <div class="column">
+                <div class="column optional-column">
                 {% include "frontend/form/basis_set_body.html" %}
                 </div>
             </div>
