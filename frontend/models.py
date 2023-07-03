@@ -122,6 +122,7 @@ class User(AbstractUser):
 
     tour_done = models.BooleanField(default=False)
     opted_in_emails = models.BooleanField(default=False)
+    advanced_interface = models.BooleanField(default=False)
 
     code = models.CharField(max_length=16)  ### ?
 

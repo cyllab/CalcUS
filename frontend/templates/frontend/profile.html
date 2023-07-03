@@ -315,15 +315,21 @@
 				<input type="text" class="input" value="{{ request.user.default_orca }}" name="default_orca">
 			</div>
             {% endif %}
+            <div class="field">
+				<label class="label">Enable advanced calculation interface</label>
+                <input type="checkbox" class="checkbox" name="advanced_interface" value="true" {% if request.user.advanced_interface %}checked{% endif %}>
+			</div>
+
 			<div class="field">
 				<div class="control">
 					<button class="button is-primary" id="submit_button">Update</button>
 				</div>
 			</div>
+            <div id="pref_msg_box">
+            </div>
 			</center>
 		</form>
-		<div id="pref_msg_box">
-		</div>
+
         <br>
         <center>
         <a class="button is-info" href="/tour_restart/">Restart interface tour</a>

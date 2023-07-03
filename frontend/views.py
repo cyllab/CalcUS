@@ -123,7 +123,12 @@ from .libxyz import (
     format_xyz,
 )
 from .environment_variables import *
-from .helpers import get_xyz_from_Gaussian_input, get_random_string, get_xyz_from_cube
+from .helpers import (
+    get_xyz_from_Gaussian_input,
+    get_random_string,
+    get_xyz_from_cube,
+    guess_missing_parameters,
+)
 from .cloud_job import submit_cloud_job
 
 from shutil import copyfile, make_archive, rmtree
@@ -2031,7 +2036,13 @@ def submit_calculation(request):
 
 
 def _submit_calculation(request, verify=False):
-    ret = parse_parameters(request, request.POST, verify=verify)
+    raw_params = request.POST.dict()
+
+    if not request.user.advanced_interface:
+        # Some parameters are not explicitly chosen in the simple interface
+        guess_missing_parameters(raw_params)
+
+    ret = parse_parameters(request, raw_params, verify=verify)
 
     if isinstance(ret, str):
         return ret
@@ -4427,6 +4438,11 @@ def update_preferences(request):
             default_orca = clean(request.POST["default_orca"]).replace("\n", "")
             request.user.default_orca = default_orca
 
+        if "advanced_interface" in request.POST:
+            request.user.advanced_interface = True
+        else:
+            request.user.advanced_interface = False
+
         units = clean(request.POST["pref_units"])
 
         try:
@@ -4447,8 +4463,14 @@ def launch(request):
         "is_batch": False,
         "procs": BasicStep.objects.all().order_by(Lower("name")),
         "packages": settings.PACKAGES,
-        "start_tour": not request.user.tour_done and not IS_TEST,
+        # "start_tour": not request.user.tour_done and not IS_TEST,
+        "start_tour": False,
     }
+
+    if request.user.advanced_interface:
+        params["interface"] = "advanced"
+    else:
+        params["interface"] = "simple"
 
     if "ensemble" in request.POST.keys():
         try:
@@ -4526,7 +4548,11 @@ def launch(request):
         params["calc"] = calc
         params["frame_num"] = frame_num
         params["init_params_id"] = init_params.id
-    return render(request, "frontend/launch.html", params)
+
+    if params["interface"] == "simple":
+        return render(request, "frontend/launch.html", params)
+    else:
+        return render(request, "frontend/launch_advanced.html", params)
 
 
 @login_required
