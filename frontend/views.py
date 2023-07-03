@@ -4565,12 +4565,17 @@ def launch_project(request, pk):
     if not can_view_project(proj, request.user):
         return HttpResponse(status=403)
 
+    if request.user.advanced_interface:
+        launch_url = "frontend/launch_advanced.html"
+    else:
+        launch_url = "frontend/launch.html"
+
     if proj.preset is not None:
         init_params_id = proj.preset.params.id
 
         return render(
             request,
-            "frontend/launch.html",
+            launch_url,
             {
                 "proj": proj,
                 "procs": BasicStep.objects.all(),
@@ -4581,7 +4586,7 @@ def launch_project(request, pk):
     else:
         return render(
             request,
-            "frontend/launch.html",
+            launch_url,
             {
                 "proj": proj,
                 "procs": BasicStep.objects.all(),
