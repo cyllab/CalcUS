@@ -163,7 +163,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.email = "Selenium@test.com"
         self.password = "test1234"
 
-        self.user = User.objects.create_user(email=self.email, password=self.password)
+        self.user = User.objects.create_user(
+            email=self.email, password=self.password, advanced_interface=True
+        )
 
         self.login(self.email, self.password)
         time.sleep(0.1)  # Reduces glitches (I think?)
@@ -236,6 +238,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def calc_input_params(self, params):
         self.wait_for_ajax()
 
+        simple_interface = False
+        if "interface" in params and params["interface"].lower() == "simple":
+            simple_interface = True
+
         if "mol_name" in params.keys():
             element = WebDriverWait(self.driver, 6).until(
                 EC.presence_of_element_located((By.NAME, "calc_mol_name"))
@@ -304,13 +310,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             else:
                 driver = "xtb"
 
-        select = self.driver.find_element(By.NAME, "calc_driver")
-        self.driver.execute_script(
-            "showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",
-            select,
-        )
-        time.sleep(0.1)
-        select.find_element(By.XPATH, f"option[text()='{driver}']").click()
+        if not simple_interface:
+            select = self.driver.find_element(By.NAME, "calc_driver")
+            self.driver.execute_script(
+                "showDropdown = function (element) {var event; event = document.createEvent('MouseEvents'); event.initMouseEvent('mousedown', true, true, window); element.dispatchEvent(event); }; showDropdown(arguments[0]);",
+                select,
+            )
+            time.sleep(0.1)
+            select.find_element(By.XPATH, f"option[text()='{driver}']").click()
 
         self.wait_for_ajax()
 

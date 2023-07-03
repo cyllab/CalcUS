@@ -1,0 +1,25 @@
+
+TITLE "File created by ccinput"
+start in
+memory total 2000 mb
+charge 0
+
+geometry units angstroms noautosym
+C    4.29180000   3.65880000   0.00000000
+H    4.64850000   2.65000000   0.00000000
+H    4.64850000   4.16320000   0.87070000
+H    4.64850000   4.16320000  -0.87970000
+H    3.22180000   3.65880000   0.00000000
+end
+
+basis
+* library Def2-SVP
+end
+
+dft
+xc m06-2x
+mult 1
+end
+
+task dft energy
+

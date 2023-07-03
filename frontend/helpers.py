@@ -101,3 +101,36 @@ def job_triage(calc):
         min(settings.RESOURCE_LIMITS[user_type]["nproc"], nproc),
         settings.RESOURCE_LIMITS[user_type]["time"] * 60,
     )
+
+
+def guess_missing_parameters(params):
+    """
+    Guesses which software and driver to use based on the parameters.
+    Mostly for CalcUS Cloud at the moment.
+    """
+    if "calc_theory_level" in params:
+        t = params["calc_theory_level"]
+        if t == "xtb":
+            params["calc_software"] = "xtb"
+            params["calc_driver"] = "xtb"
+            if "calc_type" in params:
+                t = params["calc_type"]
+                if t == "TS Optimisation":
+                    params["calc_driver"] = "Pysisyphus"
+        else:
+            params["calc_software"] = "NWChem"
+            params["calc_driver"] = "NWChem"
+    else:
+        params["calc_software"] = "xtb"
+        params["calc_driver"] = "xtb"
+
+    if "calc_solvent" in params:
+        solv = params["calc_solvent"]
+        if solv.lower() not in ["", "vacuum"]:
+            # There is a solvent
+            if params["calc_software"] == "xtb":
+                params["calc_solvation_model"] = "ALPB"
+                params["calc_solvation_radii"] = "default"
+            elif params["calc_software"] == "NWChem":
+                params["calc_solvation_model"] = "SMD"
+                params["calc_solvation_radii"] = "default"

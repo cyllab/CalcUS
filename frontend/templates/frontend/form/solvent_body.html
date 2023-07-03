@@ -1,46 +1,7 @@
-<div class="columns">
-    <div class="column is-narrow">
-        <div class="field" id="solvent_field">
-            <label class="label">Solvent</label>
-            <div class="control">
-                <input class="input" name="calc_solvent" id="calc_solvent" type="text" oninput="refresh_availabilities();" list="solvent_options">
-            </div>
-            <p class="check_msg is-danger" id="solvent_check_msg"></p>
-        </div>
+<div class="field" id="solvent_field">
+    <label class="label">Solvent</label>
+    <div class="control">
+        <input class="input" name="calc_solvent" id="calc_solvent" type="text" oninput="refresh_availabilities();" list="solvent_options" placeholder="(Optional)">
     </div>
-    <div class="column is-narrow">
-        <div class="field" id="calc_solvation_model">
-            <label class="label">Solvation Model</label>
-                <div class="control">
-                    <div class="select">
-                    <select name="calc_solvation_model" onchange="refresh_availabilities();">
-                        <option>GBSA</option>
-                        <option selected>ALPB</option>
-                        <option selected>SMD</option>
-                        <option>PCM</option>
-                        <option>CPCM</option>
-                    </select>
-                    </div>
-                </div>
-        </div>
-    </div>
-    <div class="column is-narrow">
-        <div class="field" id="calc_solvation_radii">
-            <label class="label">Solvation Radii</label>
-            <div class="control">
-                <div class="select">
-                    <select name="calc_solvation_radii">
-                        <option>SMD18</option>
-                        <option selected>Default</option>
-                        <option>UFF</option>
-                        <option>UA0</option>
-                        <option>UAHF</option>
-                        <option>UAKS</option>
-                        <option>Pauling</option>
-                        <option>Bondi</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
+    <p class="check_msg is-danger" id="solvent_check_msg"></p>
 </div>

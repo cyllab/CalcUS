@@ -1,6 +1,10 @@
 function set_visibility_name() {
     choice = document.getElementById("calc_type");
     field = document.getElementById("calc_name_field");
+    if(!field) {
+        console.log("Did not find an ensemble name (calc_name_field)")
+        return;
+    }
     if(ensemble == true) {
         if(choice.value == "Geometrical Optimisation" ||  choice.value == "Constrained Optimisation" || choice.value == "Conformational Search" ||  choice.value == "TS Optimisation" || choice.value == "Constrained Conformational Search" || choice.value == "Minimum Energy Path") {
             field.style.display = "block";

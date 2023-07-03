@@ -4599,3 +4599,220 @@ class ComplexCalculationTests(CalcusLiveServer):
             float(i.split()[2]) for i in prop.simple_nmr.split("\n") if i.strip() != ""
         ]
         self.assertEqual(shifts[1], f"{np.mean(calc_shifts[1:4]):.3f}")
+
+
+class SimpleInterfaceTests(CalcusLiveServer):
+    def setUp(self):
+        super().setUp()
+
+        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+        self.user.advanced_interface = False
+        self.user.save()
+
+        self.login(self.email, self.password)
+
+    def test_baseline(self):
+        self.lget("/launch/")
+        with self.assertRaises(selenium.common.exceptions.NoSuchElementException):
+            software = self.driver.find_element(By.NAME, "calc_software")
+        with self.assertRaises(selenium.common.exceptions.NoSuchElementException):
+            driver = self.driver.find_element(By.NAME, "calc_driver")
+
+    def test_opt(self):
+        params = {
+            "interface": "simple",
+            "mol_name": "my_mol",
+            "type": "Geometrical Optimisation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "CH4.mol",
+        }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+
+    def test_sp(self):
+        params = {
+            "interface": "simple",
+            "mol_name": "my_mol",
+            "type": "Single-Point Energy",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "CH4.mol",
+        }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+
+    def test_choose_method(self):
+        params = {
+            "interface": "simple",
+            "method": "GFN1-xTB",
+            "mol_name": "my_mol",
+            "type": "Single-Point Energy",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "CH4.mol",
+        }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+
+        calc = Calculation.objects.latest("pk")
+        self.assertEqual(calc.parameters.method, "gfn1-xtb")
+
+    def test_proj(self):
+        proj = Project.objects.create(author=self.user, name="TestProj")
+
+        params = {
+            "interface": "simple",
+            "mol_name": "my_mol",
+            "type": "Geometrical Optimisation",
+            "project": "TestProj",
+            "in_file": "CH4.mol",
+        }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+
+    def test_freq(self):
+        params = {
+            "interface": "simple",
+            "mol_name": "my_mol",
+            "type": "Frequency Calculation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "carbo_cation.mol",
+            "charge": "1",
+        }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+
+    def test_freq_solv(self):
+        params = {
+            "interface": "simple",
+            "mol_name": "my_mol",
+            "type": "Frequency Calculation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "carbo_cation.mol",
+            "charge": "1",
+            "solvent": "Chloroform",
+        }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(10)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+
+        params = Parameters.objects.latest("id")
+        self.assertEqual(params.solvation_model, "ALPB")
+
+    def test_conf_search(self):
+        params = {
+            "interface": "simple",
+            "mol_name": "my_mol",
+            "type": "Conformational Search",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "ethanol.sdf",
+        }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+
+    def test_sp_HF(self):
+        params = {
+            "interface": "simple",
+            "mol_name": "my_mol",
+            "type": "Single-Point Energy",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "H2.mol2",
+            "theory": "HF",
+            "basis_set": "Def2-SVP",
+        }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(150)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_sp_DFT(self):
+        params = {
+            "interface": "simple",
+            "mol_name": "my_mol",
+            "type": "Single-Point Energy",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "CH4.mol",
+            "theory": "DFT",
+            "functional": "M062X",
+            "basis_set": "Def2-SVP",
+        }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(150)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 1)
+
+    def test_mo_HF(self):
+        params = {
+            "interface": "simple",
+            "mol_name": "my_mol",
+            "type": "MO Calculation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "in_file": "carbo_cation.mol",
+            "charge": "1",
+            "theory": "HF",
+            "basis_set": "Def2-SVP",
+        }
+
+        self.lget("/launch/")
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.lget("/calculations/")
+        self.wait_latest_calc_done(120)
+        self.assertTrue(self.latest_calc_successful())
+        self.click_latest_calc()
+        self.assertEqual(self.get_number_conformers(), 1)
+        self.click_calc_method(2)
+        self.assertTrue(self.is_loaded_mo())

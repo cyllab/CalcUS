@@ -1,5 +1,6 @@
 var master_list_params = ["software", "type", "solvent", "solvation_model", "solvation_radii", "theory_level", "driver", "resource"];
 var master_options = {
+    {% if interface == "advanced" %}
     "software": {
         "Gaussian": {
             "type": ["NMR Prediction", "Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "UV-Vis Calculation"],
@@ -31,6 +32,7 @@ var master_options = {
             "solvation_model": [],
         },
     },
+    {% endif %}
     "solvation_model": {
         "SMD": {
             "solvation_radii": ["Default", "SMD18"],
@@ -71,16 +73,27 @@ var master_options = {
             "driver": ["xtb", "Gaussian", "ORCA", "NWChem"]
         }, 
         "MO Calculation": {
-            "driver": ["ORCA", "NWChem"]
+            "driver": ["ORCA", "NWChem"],
+            "theory_level": ["hf", "dft", "mp2"]
         }, 
         "UV-Vis Calculation": {
             "driver": ["ORCA", "Gaussian", "xtb"]
+            {% if interface == "simple" and IS_CLOUD %}
+            , "theory_level": ["xtb"]
+            {% endif %}
         }, 
+        "ESP Calculation": {
+            "software": ["NWChem"],
+            "driver": ["NWChem"],
+            "theory_level": ["hf", "dft"]
+        },
         "Conformational Search": {
-            "driver": ["xtb"]
+            "driver": ["xtb"],
+            "theory_level": ["xtb"]
         }, 
         "Constrained Conformational Search": {
-            "driver": ["xtb"]
+            "driver": ["xtb"],
+            "theory_level": ["xtb"]
         }
     },
     "resource": {
@@ -102,8 +115,8 @@ var master_available = {
         "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints", "xtb_method"],
         "semiempirical": ["aux_file_structure", "aux_structure", "se_method", "solvation_model", "solvation_radii", "constraints"],
         "hf": ["aux_file_structure", "aux_structure", "hf3c", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
-        "dft": ["aux_file_structure", "aux_structure", "df", "pbeh3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
-        "mp2": ["aux_file_structure", "aux_structure", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"]
+        "dft": ["aux_file_structure", "aux_structure", "df", "pbeh3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"]
+        , "mp2": ["aux_file_structure", "aux_structure", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"]
     },
     "type": {
         "Minimum Energy Path": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "xtb_method"],
@@ -113,6 +126,7 @@ var master_available = {
         "Frequency Calculation": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "xtb_method"],
         "Constrained Optimisation": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints", "xtb_method"],
         "Single-Point Energy": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "xtb_method"],
+        "ESP Calculation": ["functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
         "MO Calculation": ["df", "pbeh3c", "hf3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
         "UV-Vis Calculation": ["df", "pbeh3c", "hf3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "xtb_method"],
         "Conformational Search": ["solvation_model", "solvation_radii", "xtb_method"],
@@ -144,25 +158,35 @@ function _refresh_availabilities() {
             choice = el.value;
             if (p in master_options && choice in master_options[p]) {
                 for (const key2 in master_options[p][choice]) {
-                    el2 = document.getElementsByName("calc_"+key2)[0];
-                    allowed = master_options[p][choice][key2];
-                    for (let opt of el2.options) {
-                        if(!allowed.includes(opt.value)) {
-                            opt.style.display = "none";
-                            opt.classList.add("unavailable");
+                    try {
+                        el2 = document.getElementsByName("calc_"+key2)[0];
+                        allowed = master_options[p][choice][key2];
+                        for (let opt of el2.options) {
+                            if(!allowed.includes(opt.value)) {
+                                opt.style.display = "none";
+                                opt.classList.add("unavailable");
+                            }
                         }
+                    }
+                    catch(TypeError) {
+                        console.log("Did not find an element with name calc_" + key2);
                     }
                 }
             }
             if (p in master_available && choice in master_available[p]) {
                 for (const ind in list_available_elements) {
                     key = list_available_elements[ind];
-                    el2 = document.getElementById("calc_"+key);
-                    if(el2 != undefined) {
-                        if(!master_available[p][choice].includes(key)) {
-                            el2.style.display = "none";
-                            el2.classList.add("unavailable");
+                    try {
+                        el2 = document.getElementById("calc_"+key);
+                        if(el2 != undefined) {
+                            if(!master_available[p][choice].includes(key)) {
+                                el2.style.display = "none";
+                                el2.classList.add("unavailable");
+                            }
                         }
+                    }
+                    catch(TypeError) {
+                        console.log("Did not find an element with name calc_" + key2);
                     }
                 }
             }
