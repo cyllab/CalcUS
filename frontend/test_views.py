@@ -138,6 +138,7 @@ class CalculationLaunchTests(TestCase):
         self.user = User.objects.create_superuser(
             email=self.email,
             password=self.password,
+            advanced_interface=True,
         )
         self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
         self.client = Client()

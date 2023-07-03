@@ -2298,6 +2298,8 @@ class StudentTests(CalcusLiveServer):
         u = User.objects.create_user(
             email="Student@test.com", password=self.password, member_of=g
         )
+        u.advanced_interface = True
+        u.save()
 
         self.login("Student@test.com", self.password)
 
