@@ -505,9 +505,36 @@ $$$$
             sketcher.styles.shapes_color = "c10000";
             sketcher.repaint();
         </script>
+        <script>
+            function load_nih(btn) {
+                $(btn).addClass("is-loading");
+                let name = document.getElementById("nih_name").value;
+                $.ajax({
+                    method: "POST",
+                    url: "https://cactus.nci.nih.gov/chemical/structure/" + name + "//file?format=sdf"
+                }).success(function(data) {
+                    let mol_read = ChemDoodle.readMOL(data, multiplier=1);
+                    ChemDoodle.relabel(mol_read);
+                    viewer.clear();
+                    viewer.loadMolecule(mol_read);	
+                    Jmol.script(editor, 'load inline "' + data + '"');
+                    $("#calc_mol_name").val(name);
+                    $("#nih_msg").text("");
+                }).fail(function(data) {
+                    $("#nih_msg").text("Sorry, could not find " + name);
+                }).always(function() {
+                    $(btn).removeClass("is-loading");
+                });
+            }
+        </script>
         <br />
         <button class="button is-info" onclick="get_3D();" id="gen_3D_btn">Generate 3D representation</button>
         <button class="button is-primary" id="edit_button">Edit structure</button>
+        <div>
+            <input class="input" type="text" id="nih_name">
+            <button class="button is-primary" id="nih_button" onclick="load_nih(this);">Load structure by name</button><br>
+            <span id="nih_msg"></span>
+        </div>
         {% endif %}
 
         <div id="3d_msg"></div>
