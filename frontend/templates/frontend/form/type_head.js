@@ -21,14 +21,14 @@ function calc_selection_changed() {
     {% if is_flowchart is None %}
         choice = document.getElementById("calc_type");
         if(choice.value == "Constrained Optimisation" || choice.value == "Constrained Conformational Search") {
-            editor.styles.atoms_displayLabels_3D = true;
+            viewer.styles.atoms_displayLabels_3D = true;
         }
         else if(choice.value == "Minimum Energy Path") {
-            editor.styles.atoms_displayLabels_3D = false;
+            viewer.styles.atoms_displayLabels_3D = false;
             refresh_aux_mol();
         }
         else {
-            editor.styles.atoms_displayLabels_3D = false;
+            viewer.styles.atoms_displayLabels_3D = false;
         }
 
         if(choice.value == "Conformational Search" || choice.value == "Constrained Conformational Search") {
