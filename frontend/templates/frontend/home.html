@@ -126,7 +126,7 @@
     #waiting_list_div {
         margin-top: 2em;
     }
-    #contact_tile > a {
+    .link {
         text-decoration: underline;
     }
     #register_link, .xtb_link {
@@ -135,11 +135,6 @@
     }
     #free_span, .highlight {
         color: #00b158;
-    }
-    #video_div {
-        text-align: center;
-        margin-bottom: 1em;
-        margin-top: 4em;
     }
     #testimonials_div {
         margin: 3em auto;
@@ -257,8 +252,6 @@
             <img id="teaser2" class="teaser_img" src="{% static 'home/launch.png' %}" />
         </div>
     </div>
-
-
     {% endif %}
 
 
@@ -275,7 +268,7 @@
             </div>
             <div class="column is-8 testimonial_text">
             <i class="fas fa-quote-left"></i>
-            Throughout my research journey, I have come to rely on the exceptional capabilities of CalcUS Cloud for computational modeling of molecules.
+            Throughout my research journey, <b>I have come to rely on the exceptional capabilities of CalcUS Cloud for computational modeling of molecules.</b>
             <br>
             <br>
             CalcUS Cloud, with its powerful semi-empirical xTB calculations, has become an invaluable tool in my work. The platform's user-friendly interface and comprehensive features have greatly enhanced my ability to simulate 3D conformers and analyze bond angles, critical aspects in the field of medicinal chemistry. This has allowed me to simulate 3D structures before investing time in their laboratory synthesis, providing a solid starting point for my experimental work.
@@ -285,7 +278,7 @@
         <div class="testimonial_div columns is-variable is-5-desktop is-1-tablet">
             <div class="column is-8 testimonial_text">
                 <i class="fas fa-quote-left"></i>
-                CalcUS Cloud is a very important tool for undergraduate and postgraduate courses in computational chemistry and computer science in chemistry due to its easy handling, friendly interface, fast results and visualization of results.
+                CalcUS Cloud is a very important tool for undergraduate and postgraduate courses in computational chemistry and computer science in chemistry due to its <b>easy handling, friendly interface, fast results and visualization of results.</b>
                 <br>
                 <br>
                 CalcUS Cloud has served chemistry students to learn about the different types of computational calculations at a theory level, the interpretation and management of cloud computing applied to chemistry. In addition, it is very important in investigations of large molecules to explain surface phenomena between chemical systems.
@@ -300,16 +293,14 @@
             </div>
         </div>
     </div>
-
     {% endif %}
 
-    <div id="video_div">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/WdNKY32p_dM" title="CalcUS Cloud Example" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    {% if False %}
+    <div id="learn_div">
+        <h2 class="title is-2">Practical guides</h2>
+        <a class="link" href="/learn/conformational_search">Learn about conformational sampling</a> 
     </div>
-
-    <div>
-    
-    </div>
+    {% endif %}
     <div class="tile is-ancestor" id="contact_tile">
         <center style="width: 100%">
             <h2 class="title is-2">You have <span class="highlight">questions?</span></h2>
@@ -317,7 +308,7 @@
             Feel free to contact us for any inquiry at <span class="highlight">contact@calcus.cloud</span>
             <br>
             <br>
-            <a class="button is-info is-large" href="mailto:contact@calcus.cloud">Contact us</a>
+            <a class="button is-info is-large link" href="mailto:contact@calcus.cloud">Contact us</a>
         <center>
     </div>
     {% if IS_CLOUD %}
