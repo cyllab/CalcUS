@@ -531,8 +531,8 @@ $$$$
         <button class="button is-info" onclick="get_3D();" id="gen_3D_btn">Generate 3D representation</button>
         <button class="button is-primary" id="edit_button">Edit structure</button>
         <div>
-            <input class="input" type="text" id="nih_name">
-            <button class="button is-primary" id="nih_button" onclick="load_nih(this);">Load structure by name</button><br>
+            <input class="input" type="text" id="nih_name" placeholder="e.g., caffeine">
+            <button class="button is-primary" id="nih_button" onclick="load_nih(this);">Load structure from name</button><br>
             <span id="nih_msg"></span>
         </div>
         {% endif %}

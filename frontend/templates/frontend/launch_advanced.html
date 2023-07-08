@@ -285,7 +285,7 @@
 					$("#3d_msg").html("");
 					let mol_read = ChemDoodle.readXYZ(data);
 					ChemDoodle.relabel(mol_read);
-					editor.loadMolecule(mol_read);	
+					viewer.loadMolecule(mol_read);	
 				}
 			}
         }).always(function() {
@@ -313,7 +313,7 @@
 				    mol_read = ChemDoodle.readXYZ(String(l) + "\n\n" + xyz);
                 }
 				ChemDoodle.relabel(mol_read);
-				editor.loadMolecule(mol_read);	
+				viewer.loadMolecule(mol_read);	
 			}
 		}
 		else if(file_list.length == 1 && file_list[0].type == "chemical/x-mdl-molfile") {
@@ -322,7 +322,7 @@
 			reader.onload = function(e) {
 				let mol_read = ChemDoodle.readMOL(e.target.result, multiplier=1);
 				ChemDoodle.relabel(mol_read);
-				editor.loadMolecule(mol_read);	
+				viewer.loadMolecule(mol_read);	
 			}
 
 		}
@@ -343,7 +343,7 @@
 						200: function (response) { 
 							let mol_read = ChemDoodle.readXYZ(response, multiplier=1);
 							ChemDoodle.relabel(mol_read);
-							editor.loadMolecule(mol_read);	
+							viewer.loadMolecule(mol_read);	
 						},
 						204: function (response) { 
 							$("#3d_msg").html("Could not generate preview: unsupported file format");
@@ -374,15 +374,15 @@
             let win_width = Math.round(Math.max(400, $(window).width()/5));
             let win_height = Math.round(Math.max(300, $(window).width()/5*(3/4)));
 
-            let editor = new ChemDoodle.EditorCanvas3D("editor", win_width, win_height, {
+            let viewer = new ChemDoodle.EditorCanvas3D("viewer", win_width, win_height, {
                 useServices: false,
                 oneMolecule: false,
             });
-            editor.styles.atoms_usePYMOLColors = true;
-            editor.oneMolecule = false;
-            editor.styles.set3DRepresentation("Stick");
-            editor.styles.shapes_color = "c10000";
-            editor.repaint();
+            viewer.styles.atoms_usePYMOLColors = true;
+            viewer.oneMolecule = false;
+            viewer.styles.set3DRepresentation("Stick");
+            viewer.styles.shapes_color = "c10000";
+            viewer.repaint();
         </script>
 
         {% if not ensemble and not structure and not calc %}
@@ -643,7 +643,7 @@ $( document ).ready(function() {
 			success: function(data, textStatus, xhr) {
 				let mol_read = ChemDoodle.readXYZ(data);
 				ChemDoodle.relabel(mol_read);
-				editor.loadMolecule(mol_read);
+				viewer.loadMolecule(mol_read);
 			}
 		});
 
@@ -653,7 +653,7 @@ $( document ).ready(function() {
 		$("#calc_project").val("{{ structure.parent_ensemble.parent_molecule.project.name }}");
 		let mol_read = ChemDoodle.readXYZ(`{{ structure.xyz_structure }}`);
 		ChemDoodle.relabel(mol_read);
-		editor.loadMolecule(mol_read);
+		viewer.loadMolecule(mol_read);
 	{% endif %}
 	{% if calc %}
 		$("#calc_project").val("{{ calc.order.project.name }}");
@@ -666,7 +666,7 @@ $( document ).ready(function() {
 			success: function(data) {
 				let mol_read = ChemDoodle.readXYZ(data);
 				ChemDoodle.relabel(mol_read);
-				editor.loadMolecule(mol_read);
+				viewer.loadMolecule(mol_read);
 				$('#calc_software').data('software', $("#calc_software").val());
 
 			},
