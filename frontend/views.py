@@ -4463,8 +4463,7 @@ def launch(request):
         "is_batch": False,
         "procs": BasicStep.objects.all().order_by(Lower("name")),
         "packages": settings.PACKAGES,
-        # "start_tour": not request.user.tour_done and not IS_TEST,
-        "start_tour": False,
+        "start_tour": not request.user.tour_done and not IS_TEST,
     }
 
     if request.user.advanced_interface:
