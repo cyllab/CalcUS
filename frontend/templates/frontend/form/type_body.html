@@ -4,7 +4,7 @@
         <div class="select wide_select">
             <select name="calc_type" id="calc_type" onchange="calc_selection_changed();">
             {% for proc in procs %}
-            <option {% if proc.short_name == "opt" %}selected{% endif %}>{{ proc.name }}</option>
+            <option {% if proc.short_name == "opt" %}selected{% endif %} value="{{ proc.name }}">{% if request.user.calc_type_property %}{{ proc.prop_name}}{% else %}{{ proc.name }}{% endif %}</option>
             {% endfor %}
             </select>
         </div>

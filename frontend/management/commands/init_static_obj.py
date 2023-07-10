@@ -58,17 +58,20 @@ class Command(BaseCommand):
         self,
         name,
         short_name,
+        prop_name,
         **kwargs,
     ):
         if self.is_absent(BasicStep, name):
             BasicStep.objects.create(
                 name=name,
                 short_name=short_name,
+                prop_name=prop_name,
                 **kwargs,
             )
         else:
             BasicStep.objects.filter(name=name).update(
                 short_name=short_name,
+                prop_name=prop_name,
                 **kwargs,
             )
 
@@ -78,6 +81,7 @@ class Command(BaseCommand):
         self.add_step(
             "Geometrical Optimisation",
             "opt",
+            "Geometry",
             creates_ensemble=True,
             avail_xtb=True,
             avail_Gaussian=True,
@@ -88,6 +92,7 @@ class Command(BaseCommand):
         self.add_step(
             "Conformational Search",
             "conf_search",
+            "Conformer ensemble",
             creates_ensemble=True,
             avail_xtb=True,
             avail_Gaussian=False,
@@ -98,6 +103,7 @@ class Command(BaseCommand):
         self.add_step(
             "Constrained Optimisation",
             "constr_opt",
+            "Geometry with constraint",
             creates_ensemble=True,
             avail_xtb=True,
             avail_Gaussian=True,
@@ -108,6 +114,7 @@ class Command(BaseCommand):
         self.add_step(
             "Frequency Calculation",
             "freq",
+            "Vibrational modes, IR spectrum and thermochemistry",
             creates_ensemble=False,
             avail_xtb=True,
             avail_Gaussian=True,
@@ -118,6 +125,7 @@ class Command(BaseCommand):
         self.add_step(
             "TS Optimisation",
             "optts",
+            "Transition state geometry",
             creates_ensemble=True,
             avail_xtb=True,
             avail_Gaussian=True,
@@ -128,6 +136,7 @@ class Command(BaseCommand):
         self.add_step(
             "UV-Vis Calculation",
             "uvvis",
+            "UV-Vis spectrum",
             creates_ensemble=False,
             avail_xtb=True,
             avail_Gaussian=True,
@@ -138,6 +147,7 @@ class Command(BaseCommand):
         self.add_step(
             "NMR Prediction",
             "nmr",
+            "NMR spectrum",
             creates_ensemble=False,
             avail_xtb=False,
             avail_Gaussian=True,
@@ -148,6 +158,7 @@ class Command(BaseCommand):
         self.add_step(
             "Single-Point Energy",
             "sp",
+            "Electronic energy",
             creates_ensemble=False,
             avail_xtb=True,
             avail_Gaussian=True,
@@ -158,6 +169,7 @@ class Command(BaseCommand):
         self.add_step(
             "MO Calculation",
             "mo",
+            "Molecular Orbitals",
             creates_ensemble=False,
             avail_xtb=False,
             avail_Gaussian=False,
@@ -168,6 +180,7 @@ class Command(BaseCommand):
         self.add_step(
             "Minimum Energy Path",
             "mep",
+            "Minimum Energy Path",
             creates_ensemble=True,
             avail_xtb=True,
             avail_Gaussian=False,
@@ -178,6 +191,7 @@ class Command(BaseCommand):
         self.add_step(
             "Constrained Conformational Search",
             "constr_conf_search",
+            "Conformer ensemble with constraint",
             creates_ensemble=True,
             avail_xtb=True,
             avail_Gaussian=False,
@@ -188,6 +202,7 @@ class Command(BaseCommand):
         self.add_step(
             "ESP Calculation",
             "esp",
+            "Electrostatic potential map",
             creates_ensemble=False,
             avail_xtb=False,
             avail_Gaussian=False,

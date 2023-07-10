@@ -292,48 +292,61 @@
 		</center>
 		<form onsubmit="update_pref(); return false;" id="pref_form">
 			{% csrf_token %}
-			<center id="pref_center">
-			<div class="field">
-				<label class="label">Units</label>
-				<div class="control">
-					<div class="select">
-					 	<select name="pref_units" id="pref_units">
-							<option {% if request.user.pref_units == 0 %}selected="selected"{% endif %} value="kJ/mol">kJ/mol</option>
-					    		<option {% if request.user.pref_units == 1 %}selected="selected"{% endif %} value="kcal/mol">kcal/mol</option>
-					    		<option {% if request.user.pref_units == 2 %}selected="selected"{% endif %} value="Eh">Eh</option>
-					  	</select>
-					</div>
-				</div>
-			</div>
-            {% if not IS_CLOUD %}
-			<div class="field">
-				<label class="label">Default options for Gaussian</label>
-				<input type="text" class="input" value="{{ request.user.default_gaussian }}" name="default_gaussian">
-			</div>
-			<div class="field">
-				<label class="label">Default options for ORCA</label>
-				<input type="text" class="input" value="{{ request.user.default_orca }}" name="default_orca">
-			</div>
-            {% endif %}
-            <div class="field">
-				<label class="label">Enable advanced calculation interface</label>
-                <input type="checkbox" class="checkbox" name="advanced_interface" value="true" {% if request.user.advanced_interface %}checked{% endif %}>
-			</div>
-
-			<div class="field">
-				<div class="control">
-					<button class="button is-primary" id="submit_button">Update</button>
-				</div>
-			</div>
-            <div id="pref_msg_box">
+            <div class="columns">
+                <div class="column">
+                    <center id="pref_center">
+                        <div class="field">
+                            <label class="label">Units</label>
+                            <div class="control">
+                                <div class="select">
+                                    <select name="pref_units" id="pref_units">
+                                        <option {% if request.user.pref_units == 0 %}selected="selected"{% endif %} value="kJ/mol">kJ/mol</option>
+                                        <option {% if request.user.pref_units == 1 %}selected="selected"{% endif %} value="kcal/mol">kcal/mol</option>
+                                        <option {% if request.user.pref_units == 2 %}selected="selected"{% endif %} value="Eh">Eh</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        {% if not IS_CLOUD %}
+                        <div class="field">
+                            <label class="label">Default options for Gaussian</label>
+                            <input type="text" class="input" value="{{ request.user.default_gaussian }}" name="default_gaussian">
+                        </div>
+                        <div class="field">
+                            <label class="label">Default options for ORCA</label>
+                            <input type="text" class="input" value="{{ request.user.default_orca }}" name="default_orca">
+                        </div>
+                        {% endif %}
+                </div>
+                <div class="column">
+                    <center>
+                        <div class="field">
+                            <label class="label">Enable advanced calculation interface</label>
+                            <input type="checkbox" class="checkbox" name="advanced_interface" value="true" {% if request.user.advanced_interface %}checked{% endif %}>
+                        </div>
+                        <div class="field">
+                            <label class="label">Use target properties as calculation types</label>
+                            <input type="checkbox" class="checkbox" name="calc_type_property" value="true" {% if request.user.calc_type_property %}checked{% endif %}>
+                        </div>
+                        <div class="field">
+                            <label class="label">Enable computational method suggestions</label>
+                            <input type="checkbox" class="checkbox" name="calc_method_suggestions" value="true" {% if request.user.calc_method_suggestions %}checked{% endif %}>
+                        </div>
+                        <a class="button is-info" href="/tour_restart/">Restart interface tour</a>
+                    </center>
+                </div>
             </div>
+
+            <center>
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-primary" id="submit_button">Update</button>
+                    </div>
+                </div>
+                <div id="pref_msg_box">
+                </div>
 			</center>
 		</form>
-
-        <br>
-        <center>
-        <a class="button is-info" href="/tour_restart/">Restart interface tour</a>
-        </center>
 	</div>
 	<br>
 

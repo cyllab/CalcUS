@@ -2296,7 +2296,12 @@ class StudentTests(CalcusLiveServer):
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
 
         u = User.objects.create_user(
-            email="Student@test.com", password=self.password, member_of=g
+            email="Student@test.com",
+            password=self.password,
+            member_of=g,
+            advanced_interface=True,
+            calc_type_property=False,
+            calc_method_suggestions=False,
         )
         u.advanced_interface = True
         u.save()

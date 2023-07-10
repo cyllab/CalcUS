@@ -122,7 +122,10 @@ class User(AbstractUser):
 
     tour_done = models.BooleanField(default=False)
     opted_in_emails = models.BooleanField(default=False)
+
     advanced_interface = models.BooleanField(default=False)
+    calc_type_property = models.BooleanField(default=True)
+    calc_method_suggestions = models.BooleanField(default=True)
 
     code = models.CharField(max_length=16)  ### ?
 
@@ -523,6 +526,7 @@ class ClusterAccess(models.Model):
 class BasicStep(models.Model):
     name = models.CharField(max_length=100)
     short_name = models.CharField(max_length=100, default="")
+    prop_name = models.CharField(max_length=100, default="")
 
     avail_xtb = models.BooleanField(default=False)
     avail_Gaussian = models.BooleanField(default=False)

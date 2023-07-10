@@ -83,7 +83,6 @@
     #gh_button,
     #paper_button,
     #trial_button {
-        font-size: 0.7em;
         text-align: center;
         margin-top: 1em;
     }
@@ -98,6 +97,12 @@
         height: 4em;
         color: black;
         font-weight: bold;
+    }
+    #register_button {
+        color: white;
+    }
+    #trial_div {
+        margin-bottom: 3em;
     }
 
     #tag_title {
@@ -203,11 +208,16 @@
             </div>
 
             {% if not request.user.is_authenticated %}
+            {% if ALLOW_TRIAL and not request.user.is_authenticated %}
+            <div id="trial_div">
+                <a class="button is-primary is-large is-rounded is-focused" href="/start_trial/" id="trial_button"><i class="fa fa-lg fa-solid fa-gift"></i>Try for free now</a>
+            </div>
+            {% endif %}
             <div class="tile is-ancestor">
                 <center style="width: 100%">
-                    Create a free account and <b>accelerate your research immediately</b> with <span id="free_span">3600 free seconds</span> of compute time per month
+                    or create a free account and <b>accelerate your research immediately</b> with <span id="free_span">3600 free seconds</span> of compute time per month
                     <br>
-                    <a class="button is-primary is-large is-rounded is-focused" href="/register/" id="register_button">Create account</a>
+                    <a class="button is-info is-rounded" href="/register/" id="register_button">Create account</a>
 
                 </center>
             </div>
@@ -217,7 +227,7 @@
     </div>
     <hr id="logo_sep" />
 
-    {% if IS_CLOUD or True %}
+    {% if IS_CLOUD %}
     <div class="tile is-ancestor">
         <div class="tile is-6 is-parent">
             <div class="tile is-child">
@@ -255,7 +265,7 @@
     {% endif %}
 
 
-    {% if IS_CLOUD or True %}
+    {% if IS_CLOUD %}
     <div id="testimonials_div">
         <h2 class="title is-2">What users say</h2>
         <div class="testimonial_div columns is-variable is-5-desktop is-1-tablet">
