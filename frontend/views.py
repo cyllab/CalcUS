@@ -4443,6 +4443,16 @@ def update_preferences(request):
         else:
             request.user.advanced_interface = False
 
+        if "calc_type_property" in request.POST:
+            request.user.calc_type_property = True
+        else:
+            request.user.calc_type_property = False
+
+        if "calc_method_suggestions" in request.POST:
+            request.user.calc_method_suggestions = True
+        else:
+            request.user.calc_method_suggestions = False
+
         units = clean(request.POST["pref_units"])
 
         try:

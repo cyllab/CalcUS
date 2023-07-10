@@ -1,0 +1,158 @@
+<div class="box" id="suggestions_div">
+    <label class="label">Recommended methods</label>
+    <div class="tile is-ancestor">
+        <div class="tile is-parent is-vertical">
+            <div class="tile is-child">
+                <a class="button is-warning rec-method" onclick="select_gfn2();">GFN2-xTB</a>
+                <a class="button small" href="#popup1">Details</a>
+                <div id="popup1" class="overlay">
+                    <article class="popup message is-warning">
+                        <div class="message-header">GFN2-xTB in a nutshell</div>
+                        <a class="close" href="#">&times;</a>
+                        <div class="message-body content">
+                            Very fast, general method. Not available for some property calculations.<br><br>
+
+                            <b>Good for:</b>
+                            <ul>
+                                <li>Geometries (equilibrium structures, transition states and constrained structures)</li>
+                                <li>Frequency modes</li>
+                                <li>UV-Vis spectra</li>
+                            </ul>
+
+                            <br>
+                            <b>Not optimal for:</b>
+                            <ul>
+                                <li>Accurate electronic energies</li>
+                                <li>Exotic or uncommon compounds (may yield strange results)</li>
+                            </ul>
+                            <hr>
+                            <b>References</b>
+                            <ul>
+                                <li><a href="https://github.com/grimme-lab/xtb">xtb software home</a></li>
+                                <li><a href="https://doi.org/10.1002/wcms.1493">General reference: <em>WIREs Comput. Mol. Sci.,</em> <b>2020</b>, 11, e01493</a></li>
+                                <li><a href="https://doi.org/10.1021/acs.jctc.8b01176">GFN2-xTB reference: <em>J. Chem. Theory Comput.</em>, <b>2019</b>, 15, 1652-1671.</a></li>
+                                <li><a href="https://doi.org/10.1021/acs.jctc.1c00471">Reference of implicit solvation models: <em>J. Chem. Theory Comput.</em>, <b>2021</b>, 17, 4250-4261.</a></li>
+                                <li><a href="https://doi.org/10.1063/1.4959605">Reference of UV-Vis calculations with sTDA-xTB: <em>J. Chem. Phys.</em>, <b>2016</b>, 145, 054103.</a></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </div>
+            <div class="tile is-child">
+                <a class="button is-warning rec-method" onclick="select_gfnff();">GFN-FF</a>
+                <a class="button small" href="#popup2">Details</a>
+                <div id="popup2" class="overlay">
+                    <article class="popup message is-warning">
+                        <div class="message-header">GFN2-FF in a nutshell</div>
+                        <a class="close" href="#">&times;</a>
+                        <div class="message-body content">
+                            Excessively fast method, even faster than GFN2-xTB. <b>Does not handle bond formation or dissociation.</b> Performs well for organic molecules containing main-group elements.<br><br>
+
+                            <b>Good for:</b>
+                            <ul>
+                                <li>Conformer generation (due to its speed)</li>
+                                <li>Geometry and frequency modes, although GFN2-xTB should be preferred</li>
+                            </ul>
+
+                            <br>
+                            <b>Not optimal for:</b>
+                            <ul>
+                                <li>Accurate electronic energies</li>
+                                <li>Exotic or uncommon compounds (may yield strange results)</li>
+                            </ul>
+                            <hr>
+                            <b>References</b>
+                            <ul>
+                                <li><a href="https://github.com/grimme-lab/xtb">xtb software home</a></li>
+                                <li><a href="https://doi.org/10.1002/wcms.1493">General reference: <em>WIREs Comput. Mol. Sci.,</em> <b>2020</b>, 11, e01493.</a></li>
+                                <li><a href="https://doi.org/10.1002/anie.202004239">GFN-FF reference: <em>Angew. Chem. Int. Ed.</em>, <b>2020</b>, 59, 15665–15673.</a></li>
+                                <li><a href="https://doi.org/10.1021/acs.jctc.1c00471">Reference of implicit solvation models: <em>J. Chem. Theory Comput.</em>, <b>2021</b>, 17, 4250-4261.</a></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+        <div class="tile is-parent is-vertical">
+            <div class="tile is-child">
+                <a class="button is-warning rec-method" onclick="select_m062x_svp();">M062X/Def2-SVP</a>
+                <a class="button small" href="#popup3">Details</a>
+                <div id="popup3" class="overlay">
+                    <article class="popup message is-warning">
+                        <div class="message-header">M062X/Def2-SVP in a nutshell</div>
+                        <a class="close" href="#">&times;</a>
+                        <div class="message-body content">
+                            Density functional theory (DFT) method constituted of the M062X functional and the Def2-SVP basis set. Multiple orders of magnitude slower than GFN2-xTB, but applicable to essentially any molecule. <br>
+                            <br>
+                            <br>
+                            <b>Start with small calculations</b> to see how long they take. Even with powerful compute nodes, these calculations can take multiple hours and even multiple days for large systems.
+                            <br>
+                            <br>
+
+                            <b>Good for:</b>
+                            <ul>
+                                <li>Any calculation of small molecules</li>
+                                <li>Obtaining accurate electronic energies</li>
+                            </ul>
+
+                            <br>
+                            <b>Not optimal for:</b>
+                            <ul>
+                                <li>Large molecules (depending on the type of calculation and your computation time budget)</li>
+                            </ul>
+                            <hr>
+                            <b>References</b>
+                            <ul>
+                                <li><a href="http://dx.doi.org/10.1063/5.0004997">Reference of NWChem, the software running DFT calculations: <em>J. Chem. Phys.</em> <b>2020</b>, 152, 184102.</a></li>
+                                <li><a href="https://doi.org/10.1007/s00214-007-0310-x">Reference of the M062X functional: <em>Theor. Chem. Acc.</em> <b>2008</b>, 120, 215–241.
+                                <li><a href="https://doi.org/10.1039/b508541a">Reference of the Def2 basis sets: <em>Phys. Chem. Chem. Phys.</em> <b>2005</b>, 7, 3297-3305.</a></li>
+                                <li><a href="https://doi.org/10.1039/b515623h">Reference of the effective core potentials for Def2 basis sets: <em>Phys. Chem. Chem. Phys.</em> <b>2006</b>, 8, 1057-1065.</a></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </div>
+            <div class="tile is-child">
+                <a class="button is-warning rec-method" onclick="select_m062x_tzvp();">M062X/Def2-TZVP</a>
+                <a class="button small" href="#popup4">Details</a>
+                <div id="popup4" class="overlay">
+                    <article class="popup message is-warning">
+                        <div class="message-header">M062X/Def2-TZVP in a nutshell</div>
+                        <a class="close" href="#">&times;</a>
+                        <div class="message-body content">
+                            Density functional theory (DFT) method constituted of the M062X functional and the Def2-TZVP basis set. Provides publication-quality results, but requires significant computational power. 
+                            <br>
+                            <br>
+                            <b>Start with very tiny calculations</b> to see how long they take. Even with powerful compute nodes, these calculations can take many hours and even multiple days for common systems.
+                            <br>
+                            <br>
+
+                            <b>Good for:</b>
+                            <ul>
+                                <li>Any calculation of tiny molecules</li>
+                                <li>Obtaining very accurate electronic energies</li>
+                                <li>Obtaining state-of-the-art results for scientific publications</li>
+                            </ul>
+
+                            <br>
+                            <b>Not optimal for:</b>
+                            <ul>
+                                <li>Medium-sized molecules and larger (depending on the type of calculation and your computation time budget)</li>
+                            </ul>
+                            <hr>
+                            <b>References</b>
+                            <ul>
+                                <li><a href="http://dx.doi.org/10.1063/5.0004997">Reference of NWChem, the software running DFT calculations: <em>J. Chem. Phys.</em> <b>2020</b>, 152, 184102.</a></li>
+                                <li><a href="https://doi.org/10.1007/s00214-007-0310-x">Reference of the M062X functional: <em>Theor. Chem. Acc.</em> <b>2008</b>, 120, 215–241.
+                                <li><a href="https://doi.org/10.1039/b508541a">Reference of the Def2 basis sets: <em>Phys. Chem. Chem. Phys.</em> <b>2005</b>, 7, 3297-3305.</a></li>
+                                <li><a href="https://doi.org/10.1039/b515623h">Reference of the effective core potentials for Def2 basis sets: <em>Phys. Chem. Chem. Phys.</em> <b>2006</b>, 8, 1057-1065.</a></li>
+                            </ul>
+ 
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

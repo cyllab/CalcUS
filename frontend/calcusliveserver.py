@@ -164,7 +164,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.password = "test1234"
 
         self.user = User.objects.create_user(
-            email=self.email, password=self.password, advanced_interface=True
+            email=self.email,
+            password=self.password,
+            advanced_interface=True,
+            calc_type_property=False,
+            calc_method_suggestions=False,
         )
 
         self.login(self.email, self.password)
@@ -1692,7 +1696,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         g = ResearchGroup.objects.create(name="Test group", PI=self.user)
 
         self.student = User.objects.create_user(
-            email="Student@test.com", password=self.password, member_of=g
+            email="Student@test.com",
+            password=self.password,
+            member_of=g,
+            advanced_interface=True,
+            calc_type_property=False,
+            calc_method_suggestions=False,
         )
 
     def is_loaded_frequencies(self):

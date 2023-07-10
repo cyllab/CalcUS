@@ -97,6 +97,49 @@
         height: 2em;
     }
 
+    .overlay {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.7);
+      transition: opacity 500ms;
+      visibility: hidden;
+      opacity: 0;
+      z-index: 100;
+    }
+    .overlay:target {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .popup {
+      margin: 70px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 5px;
+      width: 30%;
+      position: relative;
+      transition: all 5s ease-in-out;
+    }
+
+    .popup .close {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      transition: all 200ms;
+      font-size: 30px;
+      font-weight: bold;
+      text-decoration: none !important;
+      color: #333;
+    }
+    .popup .close:hover {
+      color: #06D85F;
+    }
+    .rec-method {
+        width: 10em;
+    }
 </style>
     <link rel="stylesheet" href="{% static 'frontend/form_style.css' %}" type="text/css">
 
@@ -178,6 +221,10 @@
     {% include "frontend/form/type_head.js" %}
     {% include "frontend/form/constraints_head.js" %}
     {% include "frontend/form/resource_head.js" %}
+
+    {% if request.user.calc_method_suggestions %}
+    {% include "frontend/form/suggestions_head.js" %}
+	{% endif %}
 
 	{% if ensemble and not structures %}
     {% include "frontend/form/filter_head.js" %}
@@ -399,23 +446,19 @@
             <div class="columns">
                 <div class="column">
                     <script type="text/javascript">
-                        var sdfBenzene = `
-
-
-  5  4  0  0  0  0  0  0  0  0999 V2000
-    0.0000   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    0.0000   -0.8900   -0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
-    0.0000    0.8900   -0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.8900   -0.0000    0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
-    0.8900   -0.0000    0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
-  1  2  1  0  0  0  0
-  1  3  1  0  0  0  0
-  1  4  1  0  0  0  0
-  1  5  1  0  0  0  0
-M  END
-$$$$
-`;
-
+                        var methane = `
+                          5  4  0  0  0  0  0  0  0  0999 V2000
+                            0.0000   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+                            0.0000   -0.8900   -0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
+                            0.0000    0.8900   -0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
+                           -0.8900   -0.0000    0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
+                            0.8900   -0.0000    0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
+                          1  2  1  0  0  0  0
+                          1  3  1  0  0  0  0
+                          1  4  1  0  0  0  0
+                          1  5  1  0  0  0  0
+                        M  END
+                        $$$$`;
 
                         let editor_width = Math.round(Math.min(1000, $(window).width()/2));
                         let editor_height = Math.round(Math.min(750, $(window).width()/2*(3/4)));
@@ -434,7 +477,7 @@ $$$$
                         Jmol.script(editor, 'background "#ffffff"');
                         //Jmol.script(editor, 'set bondRadiusMilliAngstroms 100; set multipleBondSpacing -0.3');
                         Jmol.script(editor, 'set forcefield "MMFF"');
-                        Jmol.script(editor, 'load inline "' + sdfBenzene + '"');
+                        Jmol.script(editor, 'load inline "' + methane + '"');
                         Jmol.script(editor, 'minimize');
                     </script>
                 </div>
@@ -624,6 +667,11 @@ $$$$
                 {% include "frontend/form/filter_body.html" %}
             {% endif %}
 
+            {% if request.user.calc_method_suggestions %}
+            <div>
+                {% include "frontend/form/suggestions_body.html" %}
+            </div>
+            {% endif %}
             <center>
             <div class="field" id="submit_field">
                 <span id="form_error_msg"></span>
