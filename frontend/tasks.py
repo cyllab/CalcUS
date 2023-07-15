@@ -2231,15 +2231,9 @@ def launch_nwchem_calc(in_file, calc, files):
     if not os.path.isdir(local_folder):
         os.makedirs(local_folder, exist_ok=True)
 
-    if "geometry units angstroms noautosym" not in calc.input_file:
-        # Prevent duplicate correction
-        # Hack until the option is supported by ccinput
-        calc.input_file = calc.input_file.replace(
-            "geometry units angstroms", "geometry units angstroms noautosym"
-        )
-        calc.save()
-
+    # Debugging code for now
     logger.info(f"The input is {calc.input_file}")
+
     with open(os.path.join(local_folder, "calc.inp"), "w") as out:
         out.write(calc.input_file)
 
