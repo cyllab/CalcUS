@@ -101,7 +101,6 @@ urlpatterns = [
     path(
         "new_profile/", views.profile, name="new_profile"
     ),  # To detect new registrations
-    path("accounts/login", views.login, name="login"),
     path("update_name/", views.update_name, name="update_name"),
     path("rename_project/", views.rename_project, name="rename_project"),
     path("rename_molecule/", views.rename_molecule, name="rename_molecule"),
