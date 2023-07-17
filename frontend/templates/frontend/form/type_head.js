@@ -20,25 +20,28 @@ function set_visibility_name() {
 function calc_selection_changed() {
     {% if is_flowchart is None %}
         choice = document.getElementById("calc_type");
-        if(choice.value == "Constrained Optimisation" || choice.value == "Constrained Conformational Search") {
-            viewer.styles.atoms_displayLabels_3D = true;
+        if(typeof viewer !== 'undefined') {
+            if(choice.value == "Constrained Optimisation" || choice.value == "Constrained Conformational Search") {
+                viewer.styles.atoms_displayLabels_3D = true;
+            }
+            else if(choice.value == "Minimum Energy Path") {
+                viewer.styles.atoms_displayLabels_3D = false;
+                refresh_aux_mol();
+            }
+            else {
+                viewer.styles.atoms_displayLabels_3D = false;
+            }
         }
-        else if(choice.value == "Minimum Energy Path") {
-            viewer.styles.atoms_displayLabels_3D = false;
-            refresh_aux_mol();
+        msg = document.getElementById("cloud_num_cores");
+        if(msg) {
+            if(choice.value == "Conformational Search" || choice.value == "Constrained Conformational Search") {
+                // Hardcoded values for now...
+                $("#cloud_num_cores").html({% if request.user.is_trial %}"4"{% else %}"8"{% endif %});
+            }
+            else {
+                $("#cloud_num_cores").html("1 to 4");
+            }
         }
-        else {
-            viewer.styles.atoms_displayLabels_3D = false;
-        }
-
-        if(choice.value == "Conformational Search" || choice.value == "Constrained Conformational Search") {
-            // Hardcoded values for now...
-            $("#cloud_num_cores").html({% if request.user.is_trial %}"4"{% else %}"8"{% endif %});
-        }
-        else {
-            $("#cloud_num_cores").html("1 to 4");
-        }
-
     {% endif %}
     set_visibility_name();
     refresh_availabilities();

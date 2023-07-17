@@ -50,12 +50,11 @@ from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser, User
-from django.contrib.auth import login, update_session_auth_hash
+from django.contrib.auth import login, update_session_auth_hash, authenticate
 from django.utils.datastructures import MultiValueDictKeyError
 from django.db.models import Prefetch
 from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth import login, authenticate
 from django.db.models import Q
 from django.template.loader import get_template
 
