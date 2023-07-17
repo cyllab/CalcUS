@@ -52,9 +52,11 @@ var master_options = {
     },
     "type": {
         "Minimum Energy Path": {
+            "software": ["xtb", "ORCA"],
             "driver": ["ORCA", "Pysisyphus"]
         },
         "NMR Prediction": {
+            "software": ["ORCA", "Gaussian", "NWChem"],
             "driver": ["ORCA", "Gaussian", "NWChem"]
         }, 
         "Geometrical Optimisation": {
@@ -73,10 +75,12 @@ var master_options = {
             "driver": ["xtb", "Gaussian", "ORCA", "NWChem"]
         }, 
         "MO Calculation": {
+            "software": ["ORCA", "NWChem"],
             "driver": ["ORCA", "NWChem"],
             "theory_level": ["hf", "dft", "mp2"]
         }, 
         "UV-Vis Calculation": {
+            "software": ["ORCA", "Gaussian", "xtb"],
             "driver": ["ORCA", "Gaussian", "xtb"]
             {% if interface == "simple" and IS_CLOUD %}
             , "theory_level": ["xtb"]
@@ -88,10 +92,12 @@ var master_options = {
             "theory_level": ["hf", "dft"]
         },
         "Conformational Search": {
+            "software": ["xtb"],
             "driver": ["xtb"],
             "theory_level": ["xtb"]
         }, 
         "Constrained Conformational Search": {
+            "software": ["xtb"],
             "driver": ["xtb"],
             "theory_level": ["xtb"]
         }
