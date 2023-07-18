@@ -12,10 +12,43 @@
     <script>
     {% include 'frontend/form/type_head.js' %} 
     {% include 'frontend/form/availability.js' %} 
+    {% include 'frontend/form/file_upload_head.js' %} 
     </script>
+
+    <script>
+        var rowCounter = 1;
+    
+        function addRow() {
+            rowCounter++;
+            var inputRows = document.getElementById('input_rows');
+            var newRow = document.createElement('div');
+            newRow.classList.add('columns', 'is-vcentered');
+            newRow.innerHTML = `
+                <div class="column">
+                    {% include "frontend/form/file_upload_body.html" with row_id=rowCounter %}
+                </div>
+                <div class="column">
+                    {% include "frontend/form/charge_body.html" with row_id=rowCounter %}
+                </div>
+                <div class="column">
+                    {% include "frontend/form/multiplicity_body.html" with row_id=rowCounter %}
+                </div>
+            `;
+            inputRows.appendChild(newRow);
+        }
+    </script>
+
     <style>
+        #input_files_div {
+            max-width: 60em;
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 4em;
+        }
+
         #parameters_div {
-            max-width: 40em;
+            max-width: 60em;
             text-align: center;
             margin-left: auto;
             margin-right: auto;
@@ -38,52 +71,198 @@
 {% csrf_token %}
 
 <div class="main_content">
+     
+    <div class="field" id="batch_name"> Batch Name
+        <div class="control">
+            <input class="input" name="batch_name" id="batch_name" type="text">
+        </div>
+    </div>
+
+    <div class="field" id="calculation_type"> Calculation Type 
+        <div class="control">
+            {% include 'frontend/form/type_body.html' %}   
+        </div>
+    </div>
+
+    <div class="box" id="input_files_div"> 
+        <div class="columns is-vcentered">
+            <div class="column">
+                <strong>Input Files</strong>
+            </div>
+            <div class="column">
+                <strong>    Charge</strong>
+            </div>
+            <div class="column">
+                <strong>Multiplicity</strong>
+            </div>
+        </div>
+        
+        <div id="input_rows">
+            <div class="columns is-vcentered">
+                <div class="column">
+                    {% include "frontend/form/file_upload_body.html" with row_id=1 %}
+                </div>
+                <div class="column">
+                    {% include "frontend/form/charge_body.html" with row_id=1 %}
+                </div>
+                <div class="column">
+                    {% include "frontend/form/multiplicity_body.html" with row_id=1 %}
+                </div>
+            </div>
+        </div>
+        
+        <button class="button is-primary" onclick="addRow()">Add</button>     
+        
+    </div>
+    
+    <div class="field" id="fix_parameters">
+        Fix Parameters
+    </div>
+
     <div class="box" id="parameters_div">
         <form method="post" id="params_form" enctype="multipart/form-data">
-            <div class="param">
+
+            <div class="param" id="row_theory_level">
                 <div class="columns is-vcentered">
                     <div class="column is-3">
                         Theory Level
                     </div>
                     <div class="column is-1">
-                        <input type="checkbox" class="checkbox" name="theory_fixed">
+                        <input type="checkbox" class="checkbox" id="theory-checkbox" name="theory_fixed">
                     </div>
-                    <div class="column is-8">
+                    <div class="column is-8" id="theory-body">
                         {% include 'frontend/form/theory_level_body.html' %}           
                     </div>
                 </div>
             </div>
 
-            <div class="param">
+            <div class="param" id="row_method">
                 <div class="columns is-vcentered">
                     <div class="column is-3">
                         Method
                     </div>
                     <div class="column is-1">
-                        <input type="checkbox" class="checkbox" name="method_fixed">
+                        <input type="checkbox" class="checkbox" id="method-checkbox" name="method_fixed">
                     </div>
-                    <div class="column is-8">
-                        <!-- The irrelevant fields will be hidden --!>
+                    <div class="column is-8" id="method-body">
+                        <!-- The irrelevant fields will be hidden -->
                         {% include 'frontend/form/xtb_method_body.html' %}           
                         {% include 'frontend/form/se_method_body.html' %}           
                         {% include 'frontend/form/dft_method_body.html' %}           
                     </div>
                 </div>
             </div>
-            <div class="param">
+
+            <div class="param" id="row_software">
+                <div class="columns is-vcentered">
+                    <div class="column is-3">
+                        Software
+                    </div>
+                    <div class="column is-1">
+                        <input type="checkbox" class="checkbox" id="software-checkbox" name="software_fixed">
+                    </div>
+                    <div class="column is-8" id="software-body">
+                        {% include 'frontend/form/software_body.html' %}           
+                    </div>
+                </div>
+            </div>
+
+            <div class="param" id="row_driver">
+                <div class="columns is-vcentered">
+                    <div class="column is-3">
+                        Driver
+                    </div>
+                    <div class="column is-1">
+                        <input type="checkbox" class="checkbox" id="driver-checkbox" name="driver_fixed">
+                    </div>
+                    <div class="column is-8" id="driver-body">
+                        {% include 'frontend/form/driver_body.html' %}           
+                    </div>
+                </div>
+            </div>
+            
+            <div class="param" id="row_basis_set">
                 <div class="columns is-vcentered">
                     <div class="column is-3">
                         Basis set
                     </div>
                     <div class="column is-1">
-                        <input type="checkbox" class="checkbox" name="bs_fixed">
+                        <input type="checkbox" class="checkbox" id="basis-set-checkbox" name="bs_fixed">
                     </div>
-                    <div class="column is-8">
+                    <div class="column is-8" id="basis-set-body">
                         {% include 'frontend/form/basis_set_body.html' %}           
                     </div>
                 </div>
             </div>
-            <button class="button is-primary">Add</button>
+
+            <div class="param" id="row_solvent">
+                <div class="columns is-vcentered">
+                    <div class="column is-3">
+                        Solvent
+                    </div>
+                    <div class="column is-1">
+                        <input type="checkbox" class="checkbox" id="solvent-checkbox" name="solvent_fixed">
+                    </div>
+                    <div class="column is-8" id="solvent-body">
+                        {% include 'frontend/form/solvent_body.html' %}    
+                    </div>
+                </div>
+            </div>
+
+            <div class="param" id="row_solvation_radii">
+                <div class="columns is-vcentered">
+                    <div class="column is-3">
+                        Solvation Radii
+                    </div>
+                    <div class="column is-1">
+                        <input type="checkbox" class="checkbox" id="solvation_radii-checkbox" name="solvation_radii_fixed">
+                    </div>
+                    <div class="column is-8" id="solvation_radii-body">
+                        {% include 'frontend/form/solvation_radii_body.html' %}    
+                    </div>
+                </div>
+            </div>
+
+            <div class="param" id="row_solvation_model">
+                <div class="columns is-vcentered">
+                    <div class="column is-3">
+                        Solvation Model
+                    </div>
+                    <div class="column is-1">
+                        <input type="checkbox" class="checkbox" id="solvation_model-checkbox" name="solvation_model_fixed">
+                    </div>
+                    <div class="column is-8" id="solvation_model-body">
+                        {% include 'frontend/form/solvation_model_body.html' %}    
+                    </div>
+                </div>
+            </div>
+
+
+            
+            <script>
+                $(document).ready(function() {
+                    
+                    $('#method-body, #basis-set-body, #software-body, #driver-body, #solvent-body, #theory-body, #solvation_radii-body, #solvation_model-body ').hide();
+                    
+                   
+                    $('input[name="theory_fixed"], input[name="method_fixed"], input[name="bs_fixed"], input[name="driver_fixed"], input[name="software_fixed"], input[name="solvent_fixed"], input[name="solvation_radii_fixed"], input[name="solvation_model_fixed"] ').change(function() {
+                        var checkboxId = $(this).attr('id');
+                        var bodyId = checkboxId.replace('-checkbox', '-body');
+                        
+                        
+                        if ($(this).is(':checked')) {
+                            $('#' + bodyId).show();  
+                        } else {
+                            $('#' + bodyId).hide();  
+                        }
+                    });
+                });
+            </script>
+            
+
+
+
+            <button class="button is-primary">Submit</button>
         </form>
     </div>
 </div>
