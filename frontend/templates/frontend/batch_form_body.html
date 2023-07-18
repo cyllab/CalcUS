@@ -1,0 +1,245 @@
+<div class="column" id="parameters_column">
+    <form method="post" id="calcform" enctype="multipart/form-data">
+
+        <div class="field" id ="batch_calculation">
+            <label class="label">Batch Name</label>
+            <div class="control">
+                <input class="input" name="batch_name" id="batch_name" type="text">
+            </div>
+        </div>
+        
+        <br>
+        <br>
+
+        <table border="1" width="100%" id="fileTable">
+            <tr>
+              <th>Input files</th>
+              <th>Charge</th>
+              <th>Multiplicity</th>
+            </tr>
+        </table>
+          
+          <button id="addRowBtn">Add Row</button>
+
+            <br>
+            <br>
+
+        <div class="field" id ="batch_calculation">
+        <label class="label">Fix Parameters</label>
+
+        <div class="columns">
+            <div class="column is-narrow">
+              <div class="field">
+                <div class="control">
+                  <label class="checkbox">
+                    <input type="checkbox" id="solvent_checkbox" onchange="handleCheckboxChange(this)">
+                    Solvent
+                  </label>
+                </div>
+              </div>
+              <div class="field">
+                <div class="control">
+                  <input class="input" name="calc_solvent" id="calc_solvent" type="text" disabled>
+                </div>
+                <p class="check_msg is-danger" id="solvent_check_msg"></p>
+              </div>
+            </div>
+          
+            <div class="column is-narrow" id="solvation_fields" style="display: none;">
+              <div class="field" id="calc_solvation_model">
+                <label class="label">Solvation Model</label>
+                <div class="control">
+                  <div class="select">
+                    <select name="calc_solvation_model" onchange="refresh_availabilities();">
+                      <option>GBSA</option>
+                      <option selected>ALPB</option>
+                      <option selected>SMD</option>
+                      <option>PCM</option>
+                      <option>CPCM</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          
+            <div class="column is-narrow" id="solvation_radii_fields" style="display: none;">
+              <div class="field" id="calc_solvation_radii">
+                <label class="label">Solvation Radii</label>
+                <div class="control">
+                  <div class="select">
+                    <select name="calc_solvation_radii">
+                      <option>SMD18</option>
+                      <option selected>Default</option>
+                      <option>UFF</option>
+                      <option>UA0</option>
+                      <option>UAHF</option>
+                      <option>UAKS</option>
+                      <option>Pauling</option>
+                      <option>Bondi</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+          
+        <div class="columns">
+            <div class="column is-3">
+              <div class="field">
+                <div class="control">
+                  <label class="checkbox">
+                    <input type="checkbox" id="software_checkbox" onchange="handleSoftwareCheckboxChange(this)">
+                    Software
+                  </label>
+                </div>
+              </div>
+              <div id="software_options" style="display: none;">
+                <div class="field">
+                  <div class="control">
+                    <div class="select wide_select">
+                      <select name="calc_software" id="calc_software" onchange="refresh_availabilities();" disabled>
+                        <option>xtb</option>
+                        <option>ORCA</option>
+                        <option>Gaussian</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+          
+        <div class="column is-3">
+            <div class="field">
+              <div class="control">
+                <label class="checkbox">
+                  <input type="checkbox" id="driver_checkbox" onchange="handleDriverCheckboxChange(this)">
+                  Driver
+                </label>
+              </div>
+            </div>
+            <div id="driver_options" style="display: none;">
+              <div class="field">
+                <div class="control">
+                  <div class="select wide_select">
+                    <select name="calc_driver" id="calc_driver" onchange="refresh_availabilities();" disabled>
+                      <option value="xtb" selected>xtb</option>
+                      <option value="Gaussian" selected>Gaussian</option>
+                      <option value="ORCA" selected>ORCA</option>
+                      <option value="Pysisyphus">Pysisyphus</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <div class="column is-6">
+            <div class="field">
+              <div class="control">
+                <label class="checkbox">
+                  <input type="checkbox" id="calc_type_checkbox" onchange="handleCalcTypeCheckboxChange(this)">
+                  Calculation Type
+                </label>
+              </div>
+            </div>
+            <div id="calc_type_options" style="display: none;">
+              <div class="field">
+                <div class="control">
+                  <div class="select wide_select">
+                    <select name="calc_type" id="calc_type" onchange="calc_selection_changed();" disabled>
+                      {% for proc in procs %}
+                      <option {% if proc.short_name == "opt" %}selected{% endif %}>{{ proc.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <div class="column" id="calc_xtb_method">
+            <div class="field">
+              <div class="control">
+                <label class="checkbox">
+                  <input type="checkbox" id="method_checkbox" onchange="handleMethodCheckboxChange(this)">
+                  Method
+                </label>
+              </div>
+            </div>
+            <div id="method_options" style="display: none;">
+              <div class="field">
+                <div class="control">
+                  <div class="select wide_select">
+                    <select name="calc_xtb_method" disabled>
+                      <option value="gfn2-xtb" selected>GFN2-xTB</option>
+                      <option value="gfn1-xtb">GFN1-xTB</option>
+                      <option value="gfn0-xtb">GFN0-xTB</option>
+                      <option value="gfn-ff">GFN-FF</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+          
+
+        <div class="column">
+            <div class="field">
+              <div class="control">
+                <label class="checkbox">
+                  <input type="checkbox" id="functional_checkbox" onchange="handleFunctionalCheckboxChange(this)">
+                  Functional
+                </label>
+              </div>
+            </div>
+            <div id="functional_field" style="display: none;">
+              <div class="field" id="calc_functional_field">
+                
+                <div class="control">
+                  <input class="input" name="calc_functional" id="calc_functional" type="text" list="functional_options" disabled>
+                </div>
+                <p class="check_msg is-danger" id="functional_check_msg"></p>
+              </div>
+            </div>
+        </div>
+          
+        <div class="column">
+            <div class="field">
+              <div class="control">
+                <label class="checkbox">
+                  <input type="checkbox" id="basis_set_checkbox" onchange="handleBasisSetCheckboxChange(this)">
+                  Basis set
+                </label>
+              </div>
+            </div>
+            <div id="basis_set_field" style="display: none;">
+              <div class="field" id="calc_basis_set_field">
+                <div class="control">
+                  <input class="input" name="calc_basis_set" id="calc_basis_set" type="text" list="basis_sets_options" disabled>
+                </div>
+                <p class="check_msg is-danger" id="basis_set_check_msg"></p>
+              </div>
+            </div>
+        </div>
+
+        <div class="control">
+            <a class="button is-primary" id="submit_button">Submit</a>
+          
+
+    </div>
+</div>
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    

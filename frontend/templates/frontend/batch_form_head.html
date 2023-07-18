@@ -1,0 +1,238 @@
+{% load static %}
+<script>
+
+    function addRow() {
+        var table = document.getElementById("fileTable");
+        var newRow = table.insertRow(-1); // Insert a new row at the end of the table
+
+        // Create cells for file input, charge, and multiplicity
+        var fileCell = newRow.insertCell(0);
+        var chargeCell = newRow.insertCell(1);
+        var multiplicityCell = newRow.insertCell(2);
+
+        // Add HTML content for the cells
+        fileCell.innerHTML = `
+        <input class="file-input" type="file" name="file_structure" multiple="multiple">
+        <span class="file-cta">
+            <span class="file-icon">
+            <i class="fas fa-upload"></i>
+            </span>
+            <span class="file-label">
+            File upload
+            </span>
+        </span>
+        `;
+        chargeCell.innerHTML = '<input class="input" name="calc_multiplicity" type="text" value="1">';
+        multiplicityCell.innerHTML = '<input class="input" name="calc_charge" type="text" value="1">';
+    }
+
+    // Event listener for the "Add Row" button
+    var addRowBtn = document.getElementById("addRowBtn");
+    addRowBtn.addEventListener("click", addRow);
+
+
+    function handleCheckboxChange(checkbox) {
+        var solvationFields = document.getElementById("solvation_fields");
+        var solvationRadiiFields = document.getElementById("solvation_radii_fields");
+        var calcSolventInput = document.getElementById("calc_solvent");
+    
+        if (checkbox.checked) {
+        solvationFields.style.display = "block";
+        solvationRadiiFields.style.display = "block";
+        calcSolventInput.disabled = false;
+        calcSolventInput.addEventListener("input", refresh_availabilities);
+        } else {
+        solvationFields.style.display = "none";
+        solvationRadiiFields.style.display = "none";
+        calcSolventInput.disabled = true;
+        calcSolventInput.removeEventListener("input", refresh_availabilities);
+        calcSolventInput.value = "";
+        }
+    }
+
+    function handleSoftwareCheckboxChange(checkbox) {
+        var softwareOptions = document.getElementById("software_options");
+        var calc_software = document.getElementById("calc_software");
+    
+    
+        if (checkbox.checked) {
+        softwareOptions.style.display = "block";
+        calc_software.disabled = false; 
+        refresh_availabilities();
+        } else {
+        softwareOptions.style.display = "none";
+        calc_software.disabled = true;
+        }
+    }
+
+    function handleDriverCheckboxChange(checkbox) {
+        var driverOptions = document.getElementById("driver_options");
+        var calcDriver = document.getElementById("calc_driver");
+    
+        if (checkbox.checked) {
+        driverOptions.style.display = "block";
+        calcDriver.disabled = false;
+        refresh_availabilities();
+        } else {
+        driverOptions.style.display = "none";
+        calcDriver.disabled = true;
+        }
+    }
+    
+    function handleCalcTypeCheckboxChange(checkbox) {
+        var calcTypeOptions = document.getElementById("calc_type_options");
+        var calcType = document.getElementById("calc_type");
+    
+        if (checkbox.checked) {
+        calcTypeOptions.style.display = "block";
+        calcType.disabled = false;
+        calc_selection_changed();
+        } else {
+        calcTypeOptions.style.display = "none";
+        calcType.disabled = true;
+        }
+    }
+    
+    function handleCalcTypeCheckboxChange(checkbox) {
+        var calcTypeOptions = document.getElementById("calc_type_options");
+        var calcType = document.getElementById("calc_type");
+    
+        if (checkbox.checked) {
+        calcTypeOptions.style.display = "block";
+        calcType.disabled = false;
+        calc_selection_changed();
+        } else {
+        calcTypeOptions.style.display = "none";
+        calcType.disabled = true;
+        }
+    }
+
+    function handleMethodCheckboxChange(checkbox) {
+        var methodOptions = document.getElementById("method_options");
+        var calcXtbMethod = document.getElementsByName("calc_xtb_method")[0];
+    
+        if (checkbox.checked) {
+        methodOptions.style.display = "block";
+        calcXtbMethod.disabled = false;
+        } else {
+        methodOptions.style.display = "none";
+        calcXtbMethod.disabled = true;
+        }
+    }
+
+    function handleFunctionalCheckboxChange(checkbox) {
+        var functionalField = document.getElementById("functional_field");
+        var calcFunctional = document.getElementById("calc_functional");
+    
+        if (checkbox.checked) {
+        functionalField.style.display = "block";
+        calcFunctional.disabled = false;
+        } else {
+        functionalField.style.display = "none";
+        calcFunctional.disabled = true;
+        }
+    }
+
+    function handleBasisSetCheckboxChange(checkbox) {
+        var basisSetField = document.getElementById("basis_set_field");
+        var calcBasisSet = document.getElementById("calc_basis_set");
+    
+        if (checkbox.checked) {
+        basisSetField.style.display = "block";
+        calcBasisSet.disabled = false;
+        } else {
+        basisSetField.style.display = "none";
+        calcBasisSet.disabled = true;
+        }
+    }
+    
+    function refresh_availabilities() {
+        // Since some parameters that will change can influence which parameters should be visible, we have to execute the function twice
+        _refresh_availabilities();
+        _refresh_availabilities();
+    }
+    function _refresh_availabilities() {
+        full_options = document.querySelectorAll(".unavailable");
+        full_options.forEach(element => {
+            element.classList.remove("unavailable");
+            element.style.display = 'block';
+        });
+
+        master_list_params.forEach(p => {
+            el = document.getElementsByName("calc_"+p)[0];
+            // Some elements can be omitted when generating the page depending on the parameters 
+            // (e.g., launching from ensemble)
+            if(el != undefined) {
+                choice = el.value;
+                if (p in master_options && choice in master_options[p]) {
+                    for (const key2 in master_options[p][choice]) {
+                        el2 = document.getElementsByName("calc_"+key2)[0];
+                        allowed = master_options[p][choice][key2];
+                        for (let opt of el2.options) {
+                            if(!allowed.includes(opt.value)) {
+                                opt.style.display = "none";
+                                opt.classList.add("unavailable");
+                            }
+                        }
+                    }
+                }
+                if (p in master_available && choice in master_available[p]) {
+                    for (const ind in list_available_elements) {
+                        key = list_available_elements[ind];
+                        el2 = document.getElementById("calc_"+key);
+                        if(el2 != undefined) {
+                            if(!master_available[p][choice].includes(key)) {
+                                el2.style.display = "none";
+                                el2.classList.add("unavailable");
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        software = document.getElementById("calc_software").value;
+        if(software == "Gaussian") {
+            document.querySelectorAll(".scan_from").forEach(element => {
+                if(!element.classList.contains("unavailable")) {
+                    element.style.display = "none";
+                    element.classList.add("unavailable");
+                }
+            });
+        }
+        set_availables();
+
+    }
+
+    function set_availables() {
+        [].forEach.call(document.getElementById("parameters_column").querySelectorAll('select'), function(sel) {
+            ind = sel.selectedIndex;
+            if(ind != -1) {
+                opt = sel.options[ind];
+                if(opt.style.display != "none" && !opt.disabled) {
+                    return;
+                }
+            }
+
+            // If there is a preferred option set (by being tagged "selected"), pick that one
+            // Otherwise, pick any valid option
+            for(i=0; i < sel.options.length; i++) {
+                opt = sel.options[i];
+                if(opt.getAttribute("selected") != undefined && opt.style.display != "none"  && !opt.disabled) {
+                    sel.selectedIndex = i;
+                    return
+                }
+            }
+            for(i=0; i < sel.options.length; i++) {
+                opt = sel.options[i];
+                if(opt.style.display != "none"  && !opt.disabled) {
+                    sel.selectedIndex = i;
+                    return
+                }
+            }
+
+        });
+    }
+
+
+</script>
