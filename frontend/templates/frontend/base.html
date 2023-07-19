@@ -241,7 +241,9 @@
 
                         <a class="navbar-item" href="/launch/"> Launch </a>
 
+                        {% if not IS_CLOUD %}
                         <a class="navbar-item" href="/batch_calculations/"> Batch Calculations</a>
+                        {% endif %}
 
                         <a class="navbar-item" href="/calculations/">
                             Calculations {% if request.user.unseen_calculations > 0 %}

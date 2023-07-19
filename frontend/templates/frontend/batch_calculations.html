@@ -128,7 +128,7 @@
                         Theory Level
                     </div>
                     <div class="column is-1">
-                        <input type="checkbox" class="checkbox" id="theory-checkbox" name="theory_fixed">
+                        <input type="checkbox" class="checkbox" id="theory_level-checkbox" name="theory_level_fixed">
                     </div>
                     <div class="column is-8" id="theory-body">
                         {% include 'frontend/form/theory_level_body.html' %}           
@@ -181,13 +181,13 @@
                 </div>
             </div>
             
-            <div class="param" id="row_basis_set">
+            <div class="param" id="row_basis_set_field"> <!-- Slightly different naming convention in the previous code (quirk?) --!>
                 <div class="columns is-vcentered">
                     <div class="column is-3">
                         Basis set
                     </div>
                     <div class="column is-1">
-                        <input type="checkbox" class="checkbox" id="basis-set-checkbox" name="bs_fixed">
+                        <input type="checkbox" class="checkbox" id="basis-set-checkbox" name="basis_set_fixed">
                     </div>
                     <div class="column is-8" id="basis-set-body">
                         {% include 'frontend/form/basis_set_body.html' %}           
@@ -236,25 +236,12 @@
                     </div>
                 </div>
             </div>
-
-
             
             <script>
                 $(document).ready(function() {
                     
-                    $('#method-body, #basis-set-body, #software-body, #driver-body, #solvent-body, #theory-body, #solvation_radii-body, #solvation_model-body ').hide();
-                    
-                   
-                    $('input[name="theory_fixed"], input[name="method_fixed"], input[name="bs_fixed"], input[name="driver_fixed"], input[name="software_fixed"], input[name="solvent_fixed"], input[name="solvation_radii_fixed"], input[name="solvation_model_fixed"] ').change(function() {
-                        var checkboxId = $(this).attr('id');
-                        var bodyId = checkboxId.replace('-checkbox', '-body');
-                        
-                        
-                        if ($(this).is(':checked')) {
-                            $('#' + bodyId).show();  
-                        } else {
-                            $('#' + bodyId).hide();  
-                        }
+                    $('input[name="theory_level_fixed"], input[name="method_fixed"], input[name="bs_fixed"], input[name="driver_fixed"], input[name="software_fixed"], input[name="solvent_fixed"], input[name="solvation_radii_fixed"], input[name="solvation_model_fixed"] ').change(function() {
+                        refresh_availabilities();
                     });
                 });
             </script>
