@@ -244,4 +244,10 @@ urlpatterns = [
         views.submit_flowchart_input,
         name="submit_flowchart_input",
     ),
+    path(
+        "robots.txt",
+        TemplateView.as_view(
+            template_name="frontend/robots.txt", content_type="text/plain"
+        ),
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

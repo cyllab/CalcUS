@@ -22,6 +22,9 @@ $black: $dark;
     background-color: $warning;
 }
 
+$body-color: $dark;
+$strong-color: $dark;
+
 
 @import "../node_modules/bulma/bulma.sass";
 $pricing-item-color: $grey-dark !default;
