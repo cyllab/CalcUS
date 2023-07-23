@@ -45,7 +45,7 @@ services:
                         context: .
                         dockerfile: Dockerfile
                         target: calcus_user
-                user: calcus
+                user: "${UID}:${GID}"
                 command: ./scripts/run_celery_main.sh
                 volumes:
                         - ./scr:/calcus/scr
@@ -61,7 +61,7 @@ services:
                         context: .
                         dockerfile: Dockerfile
                         target: calcus_user
-                user: calcus
+                user: "${UID}:${GID}"
                 shm_size: 1gb
                 command: ./scripts/run_celery_comp.sh
                 volumes:
@@ -78,7 +78,7 @@ services:
                         context: .
                         dockerfile: Dockerfile
                         target: calcus_user
-                user: calcus
+                user: "${UID}:${GID}"
                 command: ./scripts/run_cluster_daemon.sh
                 env_file:
                         - ./.env
