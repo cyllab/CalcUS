@@ -19,6 +19,7 @@ if ("{{ params.software }}" != "Unknown" && "{{ params.software }}" != "Open Bab
     if(theory_level)
 	    theory_level.value = "{{ params.theory_level }}";
 
+
 	basis_set = document.getElementsByName("calc_basis_set")[0];
     if(basis_set)
 	    basis_set.value = "{{ params.basis_set }}";
@@ -31,6 +32,10 @@ if ("{{ params.software }}" != "Unknown" && "{{ params.software }}" != "Open Bab
 		hf3c = document.getElementsByName("hf3c")[0];
         if(hf3c)
 		    hf3c.checked = true;
+	{% elif params.software == "xtb" %}
+        xtb_level = document.getElementsByName("calc_xtb_method")[0];
+        if(xtb_level)
+            xtb_level.value = "{{ params.method }}";
 	{% else %}
 		func = document.getElementsByName("calc_functional")[0];
         if(func)

@@ -140,6 +140,13 @@
     .rec-method {
         width: 10em;
     }
+
+    #sketcher_div {
+        margin-top: 1em;
+    }
+    #sketcher {
+        border: .1em solid #aaa;
+    }
 </style>
     <link rel="stylesheet" href="{% static 'frontend/form_style.css' %}" type="text/css">
 
@@ -232,6 +239,7 @@
 
 
     {% include "frontend/form/availability.js" %}
+    {% include "frontend/form/.input_widgets_head.js" %}
 
 	function check(param) {
 		val = $("#calc_" + param).val();
@@ -436,155 +444,12 @@
 {% endblock %}
 
 {% block content %}
-<div class="modal" id="edit_structure_modal">
-    <div class="modal-card">
-        <header class="modal-card-head">
-            <p class="modal-card-title">Edit Structure</p>
-            <button type="button" class="close_btn close_bs modal-close is-large" aria-label="close"></button>
-        </header>
-        <section class="modal-card-body" id="edit_structure_body">
-            <div class="columns">
-                <div class="column">
-                    <script type="text/javascript">
-                        var methane = `
-                          5  4  0  0  0  0  0  0  0  0999 V2000
-                            0.0000   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-                            0.0000   -0.8900   -0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
-                            0.0000    0.8900   -0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
-                           -0.8900   -0.0000    0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
-                            0.8900   -0.0000    0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
-                          1  2  1  0  0  0  0
-                          1  3  1  0  0  0  0
-                          1  4  1  0  0  0  0
-                          1  5  1  0  0  0  0
-                        M  END
-                        $$$$`;
 
-                        let editor_width = Math.round(Math.min(1000, $(window).width()/2));
-                        let editor_height = Math.round(Math.min(750, $(window).width()/2*(3/4)));
-                        var editor_info = {
-                            height: editor_height,
-                            width: editor_width,
-                            serverURL: "https://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php",
-                            j2sPath: "{% static 'j2s' %}",
-                            use: 'HTML5',
-                            console: "editor_widget",
-                            disableInitialConsole: true,
-                            allowJavaScript: true,
-                            debug: false,
-                        };
-                        var editor = Jmol.getApplet("editor", editor_info);
-                        Jmol.script(editor, 'background "#ffffff"');
-                        //Jmol.script(editor, 'set bondRadiusMilliAngstroms 100; set multipleBondSpacing -0.3');
-                        Jmol.script(editor, 'set forcefield "MMFF"');
-                        Jmol.script(editor, 'load inline "' + methane + '"');
-                        Jmol.script(editor, 'minimize');
-                    </script>
-                </div>
-                <div class="column">
-                    <div class="box" id="jsmol_elements">
-                    <center>
-                        <span class="jsmol_span">Elements</span><br>
-                        <div class="button element is-danger" data-el="x">x</div>
-                        <div class="button element" data-el="H">H</div>
-                        <div class="button element" data-el="C">C</div>
-                        <div class="button element" data-el="N">N</div>
-                        <div class="button element" data-el="O">O</div>
-                        <div class="button element" data-el="F">F</div>
-                        <div class="button element" data-el="Si">Si</div>
-                        <div class="button element" data-el="P">P</div>
-                        <div class="button element" data-el="S">S</div>
-                        <div class="button element" data-el="Cl">Cl</div>
-                        <div class="button element" data-el="Br">Br</div>
-                        <div class="button element" data-el="I">I</div>
-                    </center>
-                    </div>
-                    <div class="box" id="jsmol_bonds">
-                        <center>
-                        <span class="jsmol_span">Bonds</span><br>
-                        <div class="button bond" data-bond="0">Break</div>
-                        <div class="button bond" data-bond="1">Single</div>
-                        <div class="button bond" data-bond="2">Double</div>
-                        <div class="button bond" data-bond="3">Triple</div>
-                        </center>
-                    </div>
-                    <div class="box" id="jsmol_actions">
-                        <center>
-                            <button class="button is-success" id="jsmol_done">Done</button>
-                        </center>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-</div>
+{% include "frontend/form/edit_structure_body.html" %}
 
 <div class="columns" id="main_columns">
     <div class="column is-narrow has-text-centered">
-        <script>
-            let win_width = Math.round(Math.max(400, $(window).width()/5));
-            let win_height = Math.round(Math.max(300, $(window).width()/5*(3/4)));
-            let viewer = new ChemDoodle.EditorCanvas3D("viewer", win_width, win_height, {
-                useServices: false,
-                oneMolecule: false,
-            });
-            viewer.styles.atoms_usePYMOLColors = true;
-            viewer.oneMolecule = false;
-            viewer.styles.set3DRepresentation("Stick");
-            viewer.styles.shapes_color = "c10000";
-            viewer.repaint();
-        </script>
-
-        {% if not ensemble and not structure and not calc %}
-        <script>
-
-            let sketcher = new ChemDoodle.SketcherCanvas("sketcher", win_width, win_height, {
-                useServices: false,
-                oneMolecule: false,
-            });
-            sketcher.styles.atoms_usePYMOLColors = true;
-            sketcher.oneMolecule = false;
-            sketcher.styles.bonds_clearOverlaps_2D = true;
-            sketcher.styles.shapes_color = "c10000";
-            sketcher.repaint();
-        </script>
-        <script>
-            function load_nih(btn) {
-                $(btn).addClass("is-loading");
-                let name = document.getElementById("nih_name").value;
-                $.ajax({
-                    method: "POST",
-                    url: "https://cactus.nci.nih.gov/chemical/structure/" + name + "//file?format=mol"
-                }).success(function(data) {
-                    let mol_read = ChemDoodle.readMOL(data, multiplier=1);
-                    ChemDoodle.relabel(mol_read);
-                    viewer.clear();
-                    viewer.loadMolecule(mol_read);	
-                    sketcher.clear();
-                    sketcher.loadMolecule(ChemDoodle.readMOL(data));	
-                    sketcher.center();
-                    Jmol.script(editor, 'load inline "' + data + '"');
-                    $("#calc_mol_name").val(name);
-                    $("#nih_msg").text("");
-                }).fail(function(data) {
-                    $("#nih_msg").text("Sorry, could not find " + name);
-                }).always(function() {
-                    $(btn).removeClass("is-loading");
-                });
-            }
-        </script>
-        <br />
-        <button class="button is-info" onclick="get_3D();" id="gen_3D_btn">Generate 3D representation</button>
-        <button class="button is-primary" id="edit_button">Edit structure</button>
-        <div>
-            <input class="input" type="text" id="nih_name" placeholder="e.g., caffeine">
-            <button class="button is-primary" id="nih_button" onclick="load_nih(this);">Load structure from name</button><br>
-            <span id="nih_msg"></span>
-        </div>
-        {% endif %}
-
-        <div id="3d_msg"></div>
-        
+        {% include "frontend/form/input_widgets_body.html" %}
     </div>
     <div class="column" id="parameters_div">
         <form method="post" id="calcform" enctype="multipart/form-data">
@@ -734,14 +599,14 @@
 		{% endif %}
 
 		{% if not ensemble and not structure and not calc %}
-		if (sketcher.molecules.length > 0) {
-			let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
+		if (viewer.molecules.length > 0) {
+			let mol = ChemDoodle.writeMOL(viewer.getMolecule());
 
 			$('<input />').attr('type', 'hidden')
 				.attr('name', "structure").val(mol).appendTo("#calcform");
 		}
-        if (sketcher.molecules.length == 0 && viewer.molecules.length > 0) {
-			let mol = ChemDoodle.writeMOL(viewer.getMolecule());
+        if (viewer.molecules.length == 0 && sketcher.molecules.length > 0) {
+			let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
 
 			$('<input />').attr('type', 'hidden')
 				.attr('name', "structure").val(mol).appendTo("#calcform");
@@ -871,16 +736,7 @@ if(modalBtnBs) {
     }
 }
 
-var modalEdit = document.getElementById("edit_structure_modal");
-var modalBtnEdit = document.getElementById("edit_button");
-if(modalBtnEdit) {
-    modalBtnEdit.onclick = function(){
-        modalEdit.style.display = "block";
-    }
-    closeBtnBs.onclick = function(){
-        modalEdit.style.display = "none";
-    }
-}
+
 function print_output_bs() {
 	output = document.getElementById("calc_custom_bs");
 	tmp_output = document.getElementById("custom_bs");
@@ -1000,55 +856,7 @@ $("#calc_solvent").on('input', debounce(function() {check("solvent")}, 250));
         {% endif %}
     };
 
-var atomBtns = $('.element');
-atomBtns.click(function() {
-    let cmd = $(this).attr('data-el');
-    $('.element.is-primary').removeClass("is-primary");
-
-    switch(cmd)
-    {
-        case 'x':
-            Jmol.script(editor, 'set picking deleteAtom');
-            Jmol.script(editor, 'set atomPicking on');
-            break;
-        case 'off':/// to use
-            Jmol.script(editor, 'set atomPicking off');
-            break;
-        case 'dra':
-
-            Jmol.script(editor, 'set atomPicking on');
-            Jmol.script(editor, 'set picking dragMinimize'); // on off
-            $(this).addClass('is-primary');
-            break;
-        default:
-            Jmol.script(editor, 'set atomPicking on');
-            Jmol.script(editor, 'set picking dragMinimize');
-            Jmol.script(editor, 'set picking assignAtom_'+cmd);
-            $(this).addClass('is-primary');
-    }
-
-    return false;
-});
-
-var bondBtns = $('.bond');
-bondBtns.click(function() {
-    let bondtype = $(this).attr('data-bond');
-    $('.bond.is-primary').removeClass("is-primary");
-    $(this).addClass('is-primary');
-    Jmol.script(editor, 'set picking assignBond_' + bondtype);
-    return false;
-});
-
-var doneBtn = $('#jsmol_done');
-doneBtn.click(function() {
-    modalEdit.style.display = "none";
-    let struct_mol = Jmol.getPropertyAsString(editor, "extractModel", "all");
-    let mol_read = ChemDoodle.readMOL(struct_mol, 1);
-    ChemDoodle.relabel(mol_read);
-    viewer.loadMolecule(mol_read);	
-
-    return false;
-});
+    {% include "frontend/form/edit_structure_appendix.js" %}
 
 </script>
 {% endblock content %}

@@ -4276,6 +4276,10 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
                 )
             except Molecule.DoesNotExist:
             """
+
+            if len(fingerprint) > 9900:
+                fingerprint = fingerprint[:9900]
+
             ensemble.parent_molecule.inchi = fingerprint
             ensemble.parent_molecule.save()
             molecule = ensemble.parent_molecule

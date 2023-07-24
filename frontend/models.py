@@ -1098,7 +1098,7 @@ class Molecule(models.Model):
         primary_key=True, salt="Molecule_hashid_" + settings.HASHID_FIELD_SALT
     )
     name = models.CharField(max_length=100)
-    inchi = models.CharField(max_length=1000, default="", blank=True, null=True)
+    inchi = models.CharField(max_length=10000, default="", blank=True, null=True)
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, blank=True, null=True
     )
