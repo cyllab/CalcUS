@@ -1,0 +1,138 @@
+<div class="box" id="parameters_div">
+    <form method="post" id="params_form" enctype="multipart/form-data" action="{% url 'process_form' %}">
+        <h2 style="font-weight: bold; text-align: left;">Fix Parameters</h2>
+
+        <br>
+        <br>
+
+        <div class="param" id="row_theory_level">
+            <div class="columns is-vcentered">
+                <div class="column is-3">
+                    Theory Level
+                </div>
+                <div class="column is-1">
+                    <input type="checkbox" class="checkbox" id="theory_level-checkbox" name="theory_level_fixed">
+                </div>
+                <div class="column is-8" id="theory-body" name="files_to_include">
+                    {% include 'frontend/form/theory_level_body.html' %}           
+                </div>
+            </div>
+        </div>
+
+        <div class="param" id="row_method">
+            <div class="columns is-vcentered">
+                <div class="column is-3">
+                    Method
+                </div>
+                <div class="column is-1">
+                    <input type="checkbox" class="checkbox" id="method-checkbox" name="method_fixed">
+                </div>
+                <div class="column is-8" id="method-body" name="files_to_include">
+                    <!-- The irrelevant fields will be hidden -->
+                    {% include 'frontend/form/xtb_method_body.html' %}           
+                    {% include 'frontend/form/se_method_body.html' %}           
+                    {% include 'frontend/form/dft_method_body.html' %}           
+                </div>
+            </div>
+        </div>
+
+        <div class="param" id="row_software">
+            <div class="columns is-vcentered">
+                <div class="column is-3">
+                    Software
+                </div>
+                <div class="column is-1">
+                    <input type="checkbox" class="checkbox" id="software-checkbox" name="software_fixed">
+                </div>
+                <div class="column is-8" id="software-body" name="files_to_include">
+                    {% include 'frontend/form/software_body.html' %}           
+                </div>
+            </div>
+        </div>
+
+        <div class="param" id="row_driver">
+            <div class="columns is-vcentered">
+                <div class="column is-3">
+                    Driver
+                </div>
+                <div class="column is-1">
+                    <input type="checkbox" class="checkbox" id="driver-checkbox" name="driver_fixed">
+                </div>
+                <div class="column is-8" id="driver-body" name="files_to_include">
+                    {% include 'frontend/form/driver_body.html' %}           
+                </div>
+            </div>
+        </div>
+        
+        <div class="param" id="row_basis_set_field"> <!-- Slightly different naming convention in the previous code (quirk?)-->
+            <div class="columns is-vcentered">
+                <div class="column is-3">
+                    Basis set
+                </div>
+                <div class="column is-1">
+                    <input type="checkbox" class="checkbox" id="basis-set-checkbox" name="basis_set_fixed">
+                </div>
+                <div class="column is-8" id="basis-set-body" name="files_to_include">
+                    {% include 'frontend/form/basis_set_body.html' %}           
+                </div>
+            </div>
+        </div>
+
+        <div class="param" id="row_solvent">
+            <div class="columns is-vcentered">
+                <div class="column is-3">
+                    Solvent
+                </div>
+                <div class="column is-1">
+                    <input type="checkbox" class="checkbox" id="solvent-checkbox" name="solvent_fixed">
+                </div>
+                <div class="column is-8" id="solvent-body" name="files_to_include">
+                    {% include 'frontend/form/solvent_body.html' %}    
+                </div>
+            </div>
+        </div>
+
+        <div class="param" id="row_solvation_radii">
+            <div class="columns is-vcentered">
+                <div class="column is-3">
+                    Solvation Radii
+                </div>
+                <div class="column is-1">
+                    <input type="checkbox" class="checkbox" id="solvation_radii-checkbox" name="solvation_radii_fixed">
+                </div>
+                <div class="column is-8" id="solvation_radii-body" name="files_to_include">
+                    {% include 'frontend/form/solvation_radii_body.html' %}    
+                </div>
+            </div>
+        </div>
+
+        <div class="param" id="row_solvation_model">
+            <div class="columns is-vcentered">
+                <div class="column is-3">
+                    Solvation Model
+                </div>
+                <div class="column is-1">
+                    <input type="checkbox" class="checkbox" id="solvation_model-checkbox" name="solvation_model_fixed">
+                </div>
+                <div class="column is-8" id="solvation_model-body" name="files_to_include">
+                    {% include 'frontend/form/solvation_model_body.html' %}    
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            $(document).ready(function() {
+                
+                $('input[name="theory_level_fixed"], input[name="method_fixed"], input[name="bs_fixed"], input[name="driver_fixed"], input[name="software_fixed"], input[name="solvent_fixed"], input[name="solvation_radii_fixed"], input[name="solvation_model_fixed"] ').change(function() {
+                    refresh_availabilities();
+                });
+            });
+        </script>
+        
+
+
+
+        <button class="button is-primary">Submit</button>
+    </form>
+</div>
+</div>
