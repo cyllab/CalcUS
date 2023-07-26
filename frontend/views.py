@@ -5848,24 +5848,7 @@ def stripe_config(request):
         stripe_config = {"publicKey": settings.STRIPE_PUBLISHABLE_KEY}
         return JsonResponse(stripe_config, safe=False)
 
-def process_form(request):
-    if request.method == 'POST':
-        selected_files = request.POST.getlist('files_to_include')
 
-        dynamic_data = {}
-
-        file_paths_map = {
-            'theory_level': 'frontend/form/theory_level_body.html',
-            
-        }
-        for file_name in selected_files:
-            if file_name in file_paths_map:
-                file_path = file_paths_map[file_name]
-                with open(file_path, 'r') as file:
-                    dynamic_data[file_name + '_data'] = file.read()
-        return render(request, 'dynamic_form.html', {'dynamic_data': dynamic_data})
-
-    return render(request, 'basic_form.html')
 
     
 
