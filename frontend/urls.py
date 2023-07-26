@@ -40,7 +40,6 @@ urlpatterns = [
     ),
     # Home and index
     path("", views.home, name="home"),
-    path("home/", views.home, name="home_dup"),
     path("start_trial/", views.start_trial, name="start_trial"),
     path("pricing/", views.pricing, name="pricing"),
     path("checkout/", views.checkout, name="checkout"),
