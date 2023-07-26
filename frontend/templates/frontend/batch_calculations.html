@@ -82,7 +82,7 @@
         .batch_name {
             flex: auto ;
             border: 1px solid #ccc; /* Optional border style for Batch Name div */
-            padding: 5px; /* Optional padding for Batch Name div */
+            padding: 12px; /* Optional padding for Batch Name div */
             margin-right: 150px; /* Adjust the spacing between Batch Name and Preview button as needed */
         }
     
@@ -151,7 +151,145 @@
     </div>
 
     <div class="basic_form">
-        {% include "frontend/basic_form.html"}
+        <div class="box" id="parameters_div">
+            <form method="post" id="params_form" enctype="multipart/form-data">
+                <h2 style="font-weight: bold; text-align: left;">Fix Parameters</h2>
+        
+                <br>
+                <br>
+        
+                <div class="param" id="row_theory_level">
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Theory Level
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="theory_level-checkbox" name="theory_level_fixed">
+                        </div>
+                        <div class="column is-8" id="theory-body" name="files_to_include">
+                            {% include 'frontend/form/theory_level_body.html' %}           
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="param" id="row_method">
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Method
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="method-checkbox" name="method_fixed">
+                        </div>
+                        <div class="column is-8" id="method-body" name="files_to_include">
+                            <!-- The irrelevant fields will be hidden -->
+                            {% include 'frontend/form/xtb_method_body.html' %}           
+                            {% include 'frontend/form/se_method_body.html' %}           
+                            {% include 'frontend/form/dft_method_body.html' %}           
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="param" id="row_software">
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Software
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="software-checkbox" name="software_fixed">
+                        </div>
+                        <div class="column is-8" id="software-body" name="files_to_include">
+                            {% include 'frontend/form/software_body.html' %}           
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="param" id="row_driver">
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Driver
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="driver-checkbox" name="driver_fixed">
+                        </div>
+                        <div class="column is-8" id="driver-body" name="files_to_include">
+                            {% include 'frontend/form/driver_body.html' %}           
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="param" id="row_basis_set_field"> <!-- Slightly different naming convention in the previous code (quirk?)-->
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Basis set
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="basis-set-checkbox" name="basis_set_fixed">
+                        </div>
+                        <div class="column is-8" id="basis-set-body" name="files_to_include">
+                            {% include 'frontend/form/basis_set_body.html' %}           
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="param" id="row_solvent">
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Solvent
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="solvent-checkbox" name="solvent_fixed">
+                        </div>
+                        <div class="column is-8" id="solvent-body" name="files_to_include">
+                            {% include 'frontend/form/solvent_body.html' %}    
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="param" id="row_solvation_radii">
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Solvation Radii
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="solvation_radii-checkbox" name="solvation_radii_fixed">
+                        </div>
+                        <div class="column is-8" id="solvation_radii-body" name="files_to_include">
+                            {% include 'frontend/form/solvation_radii_body.html' %}    
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="param" id="row_solvation_model">
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Solvation Model
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="solvation_model-checkbox" name="solvation_model_fixed">
+                        </div>
+                        <div class="column is-8" id="solvation_model-body" name="files_to_include">
+                            {% include 'frontend/form/solvation_model_body.html' %}    
+                        </div>
+                    </div>
+                </div>
+                
+                <script>
+                    $(document).ready(function() {
+                        
+                        $('input[name="theory_level_fixed"], input[name="method_fixed"], input[name="bs_fixed"], input[name="driver_fixed"], input[name="software_fixed"], input[name="solvent_fixed"], input[name="solvation_radii_fixed"], input[name="solvation_model_fixed"] ').change(function() {
+                            refresh_availabilities();
+                        });
+                    });
+                </script>
+                
+        
+        
+        
+                <button class="button is-primary">Submit</button>
+            </form>
+        </div>
+        </div>
+        
     </div>
 
 
@@ -177,7 +315,7 @@
         </div>
 
         <div id="dynamic_form">
-            {% include "frontend/dynamic_form.html"}
+           
         </div>
     </div>
 
@@ -188,52 +326,91 @@
 
 
 <script>
-    function showResultDiv() {
-        var mainContentDiv = document.getElementById("main_content");
-        var resultDiv = document.getElementById("result_div");        
-        mainContentDiv.classList.add("hidden_div");
-        resultDiv.classList.remove("hidden_div");
+    
+        function showResultDiv() {
 
-        var batchName = document.getElementById("batch_name_input").value;
-        document.getElementById("batch_name_result").textContent = batchName;
+            var mainContentDiv = document.getElementById("main_content");
+            var resultDiv = document.getElementById("result_div");
+            var batchNameInputDiv = document.getElementById("batch_name_input");
+    
+            
+            mainContentDiv.classList.add("hidden_div");
+            
+            resultDiv.classList.remove("hidden_div");
+    
+            var batchName = batchNameInputDiv.textContent;
+            document.getElementById("batch_name_result").textContent = batchName;
+    
+            batchNameInputDiv.removeAttribute("contenteditable");
+    
+            generateDynamicForm();
+        }
+        function generateDynamicForm() {
+            var uncheckedParameters = getUncheckedParameters();
+            var dynamicForm = document.getElementById("dynamic_form");
 
-       
-    }
-
-    $(document).ready(function() {
-        $('#params_form').submit(function(event) {
-          event.preventDefault(); 
+            console.log(uncheckedParameters)
+          
+            dynamicForm.innerHTML = "";
+          
+            
+            uncheckedParameters.forEach(function (parameter) {
+              var div = document.createElement('div');
+              div.setAttribute('id', parameter);
+          
+              var label = document.createElement('label');
+              label.setAttribute('for', parameter);
+              label.innerText = parameter;
+          
+             
+              fetchFileContent(parameter).then(function (fileContent) {
+                var includedFileContent = fileContent;
+          
+                
+                div.appendChild(label);
+                div.innerHTML += includedFileContent;
+          
+                
+                dynamicForm.appendChild(div);
+              });
+            });
+          }
+          
+          function fetchFileContent(parameter) {
+           
+            var url = "frontend/form/" + parameter + "_body.html";
 
           
-          var selectedFiles = [];
-          $('input[name="files_to_include"]:checked').each(function() {
-            selectedFiles.push($(this).val());
-          });
-      
-          $.ajax({
-            type: 'POST',
-            url: '{% url 'process_form' %}',
-            data: {
-              'csrfmiddlewaretoken': '{{ csrf_token }}',
-              'files_to_include': selectedFiles
-            },
-            success: function(response) {
-              
-                
-              $('#dynamic_form').html(response);
-              $('#dynamic_form').show();
-            },
-            error: function() {
-              
-                alert('An error occurred while processing the form.');
+            return fetch(url)
+              .then(function (response) {
+                if (!response.ok) {
+                  throw new Error("Network response was not ok");
+                }
+                return response.text();
+              })
+              .catch(function (error) {
+                console.error("Error fetching the file:", error);
+              });
+          }
+          
+          function getUncheckedParameters() {
+            var uncheckedParams = [];
+          
+            var theoryLevelCheckbox = document.getElementById("theory_level-checkbox");
+            if (!theoryLevelCheckbox.checked) {
+              uncheckedParams.push("theory_level");
             }
-          });
-        });
-      });
-
-
-
+          
+            
+            
+          
+            // Add more parameters as needed
+          
+            return uncheckedParams;
+          }
+          
     
+       
     $( document ).ready(function() {
 	    refresh_availabilities();
     });

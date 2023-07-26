@@ -96,7 +96,7 @@ urlpatterns = [
         views.get_available_elements,
         name="get_available_elements",
     ),
-    path('params_form/', views.process_form, name='process_form'),
+    
     path("gen_3D/", views.gen_3D, name="gen_3D"),
     path("get_mol_preview/", views.get_mol_preview, name="get_mol_preview"),
     path("check_functional/", views.check_functional, name="check_functional"),
