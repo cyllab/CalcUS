@@ -1,0 +1,118 @@
+<form method="post" enctype="multipart/form-data">
+    <div class="param" id="row_theory_level">
+        <div class="columns is-vcentered">
+            <div class="column is-3">
+                Theory Level
+            </div>
+            <div class="column is-1">
+                <input type="checkbox" class="checkbox" id="theory_level-checkbox" name="theory_level" data-field="theory_level">
+            </div>
+            <div class="column is-8" id="theory-body" name="files_to_include">
+                {% include 'frontend/form/theory_level_body.html' %}           
+            </div>
+        </div>
+    </div>
+
+    <div class="param" id="row_method">
+        <div class="columns is-vcentered">
+            <div class="column is-3">
+                Method
+            </div>
+            <div class="column is-1">
+                <input type="checkbox" class="checkbox" id="method-checkbox" name="method" data-field="method">
+            </div>
+            <div class="column is-8 optional-column" id="method-body" name="files_to_include">
+                <!-- The irrelevant fields will be hidden -->
+                {% include 'frontend/form/xtb_method_body.html' %}           
+                {% include 'frontend/form/se_method_body.html' %}           
+                {% include 'frontend/form/dft_method_body.html' %}           
+            </div>
+        </div>
+    </div>
+
+    <div class="param" id="row_software">
+        <div class="columns is-vcentered">
+            <div class="column is-3">
+                Software
+            </div>
+            <div class="column is-1">
+                <input type="checkbox" class="checkbox" id="software-checkbox" name="software" data-field="software">
+            </div>
+            <div class="column is-8" id="software-body" name="files_to_include">
+                {% include 'frontend/form/software_body.html' %}           
+            </div>
+        </div>
+    </div>
+
+    <div class="param" id="row_driver">
+        <div class="columns is-vcentered">
+            <div class="column is-3">
+                Driver
+            </div>
+            <div class="column is-1">
+                <input type="checkbox" class="checkbox" id="driver-checkbox" name="driver" data-field="driver">
+            </div>
+            <div class="column is-8" id="driver-body" name="files_to_include">
+                {% include 'frontend/form/driver_body.html' %}           
+            </div>
+        </div>
+    </div>
+    
+    <div class="param" id="row_basis_set_field"> <!-- Slightly different naming convention in the previous code (quirk?)-->
+        <div class="columns is-vcentered">
+            <div class="column is-3">
+                Basis set
+            </div>
+            <div class="column is-1">
+                <input type="checkbox" class="checkbox" id="basis-set-checkbox" name="basis_set" data-field="basis_set">
+            </div>
+            <div class="column is-8" id="basis-set-body" name="files_to_include">
+                {% include 'frontend/form/basis_set_body.html' %}           
+            </div>
+        </div>
+    </div>
+
+    <div class="param" id="row_solvent">
+        <div class="columns is-vcentered">
+            <div class="column is-3">
+                Solvent
+            </div>
+            <div class="column is-1">
+                <input type="checkbox" class="checkbox" id="solvent-checkbox" name="solvent" data-field="solvent">
+            </div>
+            <div class="column is-8" id="solvent-body" name="files_to_include">
+                {% include 'frontend/form/solvent_body.html' %}    
+            </div>
+        </div>
+    </div>
+
+    <div class="param" id="row_solvation_radii">
+        <div class="columns is-vcentered">
+            <div class="column is-3">
+                Solvation Radii
+            </div>
+            <div class="column is-1">
+                <input type="checkbox" class="checkbox" id="solvation_radii-checkbox" name="solvation_radii" data-field="solvation_radii">
+            </div>
+            <div class="column is-8" id="solvation_radii-body" name="files_to_include">
+                {% include 'frontend/form/solvation_radii_body.html' %}    
+            </div>
+        </div>
+    </div>
+
+    <div class="param" id="row_solvation_model">
+        <div class="columns is-vcentered">
+            <div class="column is-3">
+                Solvation Model
+            </div>
+            <div class="column is-1">
+                <input type="checkbox" class="checkbox" id="solvation_model-checkbox" name="solvation_model" data-field="solvation_model">
+            </div>
+            <div class="column is-8" id="solvation_model-body" name="files_to_include">
+                {% include 'frontend/form/solvation_model_body.html' %}    
+            </div>
+        </div>
+    </div>
+
+    <button class="button is-primary">Submit</button>
+</form>
