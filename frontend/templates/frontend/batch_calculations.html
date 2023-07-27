@@ -19,23 +19,22 @@
         var rowCounter = 1;
     
         function addRow() {
+            $("#input_rows").append(`
+                <div class="columns is-vcentered" id="input_col` + rowCounter + `">
+                    <div class="column">
+                        {% include "frontend/form/file_upload_body.html" %}
+                    </div>
+                    <div class="column is-2">
+                        {% include "frontend/form/charge_body.html" %}
+                    </div>
+                    <div class="column is-2">
+                        {% include "frontend/form/multiplicity_body.html" %}
+                    </div>
+                </div>
+            `);
             rowCounter++;
-            var inputRows = document.getElementById('input_rows');
-            var newRow = document.createElement('div');
-            newRow.classList.add('columns', 'is-vcentered');
-            newRow.innerHTML = `
-                <div class="column">
-                    {% include "frontend/form/file_upload_body.html" with row_id=rowCounter %}
-                </div>
-                <div class="column">
-                    {% include "frontend/form/charge_body.html" with row_id=rowCounter %}
-                </div>
-                <div class="column">
-                    {% include "frontend/form/multiplicity_body.html" with row_id=rowCounter %}
-                </div>
-            `;
-            inputRows.appendChild(newRow);
         }
+        var form_html = `{% include "frontend/basic_form.html" %}`;
     </script>
 
     <style>
@@ -47,7 +46,7 @@
             margin-top: 4em;
         }
 
-        #parameters_div {
+        #batch_center {
             max-width: 60em;
             text-align: center;
             margin-left: auto;
@@ -90,14 +89,20 @@
         .preview_button button {
             margin-left: 0;
         }
+
+        #batch_content {
+            max-width: 50em;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 2em;
+        }
     
-        
-    
-    
-    
-    
-        
-        
+        .dynamic_params {
+            max-width: 30em;
+        }
+        #dyn_section {
+            margin-top: 2em;
+        }
     </style>
 
 {% endblock %} 
@@ -105,7 +110,7 @@
 {% block content %} 
 {% csrf_token %}
 
-<div class="main_content" id="main_content">
+<div id="batch_content">
      
     <div class="field" id="batch_name"> Batch Name
         <div class="control">
@@ -113,315 +118,123 @@
         </div>
     </div>
 
-    <div class="field" id="calculation_type"> Calculation Type
-        <div class="control">
-            {% include 'frontend/form/type_body.html' %}   
+    <div id="fixed_params_div" class="params_div">
+        <div class="field" id="calculation_type"> Calculation Type
+            <div class="control">
+                {% include 'frontend/form/type_body.html' %}   
+            </div>
         </div>
-    </div>
 
-    <div class="box" id="input_files_div"> 
-        <div class="columns is-vcentered">
-            <div class="column">
-                <strong>Input Files</strong>
-            </div>
-            <div class="column">
-                <strong>    Charge</strong>
-            </div>
-            <div class="column">
-                <strong>Multiplicity</strong>
-            </div>
-        </div>
-        
-        <div id="input_rows">
+        <div class="box" id="input_files_div"> 
             <div class="columns is-vcentered">
                 <div class="column">
-                    {% include "frontend/form/file_upload_body.html" with row_id=1 %}
+                    <strong>Input Files</strong>
                 </div>
-                <div class="column">
-                    {% include "frontend/form/charge_body.html" with row_id=1 %}
+                <div class="column is-2">
+                    <strong>Charge</strong>
                 </div>
-                <div class="column">
-                    {% include "frontend/form/multiplicity_body.html" with row_id=1 %}
+                <div class="column is-2">
+                    <strong>Multiplicity</strong>
                 </div>
             </div>
-        </div>
-        
-        <button class="button is-primary" onclick="addRow()">Add</button>     
-        
-    </div>
 
-    <div class="basic_form">
-        <div class="box" id="parameters_div">
-            <form method="post" id="params_form" enctype="multipart/form-data">
-                <h2 style="font-weight: bold; text-align: left;">Fix Parameters</h2>
-        
-                <br>
-                <br>
-        
-                <div class="param" id="row_theory_level">
-                    <div class="columns is-vcentered">
-                        <div class="column is-3">
-                            Theory Level
-                        </div>
-                        <div class="column is-1">
-                            <input type="checkbox" class="checkbox" id="theory_level-checkbox" name="theory_level_fixed">
-                        </div>
-                        <div class="column is-8" id="theory-body" name="files_to_include">
-                            {% include 'frontend/form/theory_level_body.html' %}           
-                        </div>
-                    </div>
-                </div>
-        
-                <div class="param" id="row_method">
-                    <div class="columns is-vcentered">
-                        <div class="column is-3">
-                            Method
-                        </div>
-                        <div class="column is-1">
-                            <input type="checkbox" class="checkbox" id="method-checkbox" name="method_fixed">
-                        </div>
-                        <div class="column is-8" id="method-body" name="files_to_include">
-                            <!-- The irrelevant fields will be hidden -->
-                            {% include 'frontend/form/xtb_method_body.html' %}           
-                            {% include 'frontend/form/se_method_body.html' %}           
-                            {% include 'frontend/form/dft_method_body.html' %}           
-                        </div>
-                    </div>
-                </div>
-        
-                <div class="param" id="row_software">
-                    <div class="columns is-vcentered">
-                        <div class="column is-3">
-                            Software
-                        </div>
-                        <div class="column is-1">
-                            <input type="checkbox" class="checkbox" id="software-checkbox" name="software_fixed">
-                        </div>
-                        <div class="column is-8" id="software-body" name="files_to_include">
-                            {% include 'frontend/form/software_body.html' %}           
-                        </div>
-                    </div>
-                </div>
-        
-                <div class="param" id="row_driver">
-                    <div class="columns is-vcentered">
-                        <div class="column is-3">
-                            Driver
-                        </div>
-                        <div class="column is-1">
-                            <input type="checkbox" class="checkbox" id="driver-checkbox" name="driver_fixed">
-                        </div>
-                        <div class="column is-8" id="driver-body" name="files_to_include">
-                            {% include 'frontend/form/driver_body.html' %}           
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="param" id="row_basis_set_field"> <!-- Slightly different naming convention in the previous code (quirk?)-->
-                    <div class="columns is-vcentered">
-                        <div class="column is-3">
-                            Basis set
-                        </div>
-                        <div class="column is-1">
-                            <input type="checkbox" class="checkbox" id="basis-set-checkbox" name="basis_set_fixed">
-                        </div>
-                        <div class="column is-8" id="basis-set-body" name="files_to_include">
-                            {% include 'frontend/form/basis_set_body.html' %}           
-                        </div>
-                    </div>
-                </div>
-        
-                <div class="param" id="row_solvent">
-                    <div class="columns is-vcentered">
-                        <div class="column is-3">
-                            Solvent
-                        </div>
-                        <div class="column is-1">
-                            <input type="checkbox" class="checkbox" id="solvent-checkbox" name="solvent_fixed">
-                        </div>
-                        <div class="column is-8" id="solvent-body" name="files_to_include">
-                            {% include 'frontend/form/solvent_body.html' %}    
-                        </div>
-                    </div>
-                </div>
-        
-                <div class="param" id="row_solvation_radii">
-                    <div class="columns is-vcentered">
-                        <div class="column is-3">
-                            Solvation Radii
-                        </div>
-                        <div class="column is-1">
-                            <input type="checkbox" class="checkbox" id="solvation_radii-checkbox" name="solvation_radii_fixed">
-                        </div>
-                        <div class="column is-8" id="solvation_radii-body" name="files_to_include">
-                            {% include 'frontend/form/solvation_radii_body.html' %}    
-                        </div>
-                    </div>
-                </div>
-        
-                <div class="param" id="row_solvation_model">
-                    <div class="columns is-vcentered">
-                        <div class="column is-3">
-                            Solvation Model
-                        </div>
-                        <div class="column is-1">
-                            <input type="checkbox" class="checkbox" id="solvation_model-checkbox" name="solvation_model_fixed">
-                        </div>
-                        <div class="column is-8" id="solvation_model-body" name="files_to_include">
-                            {% include 'frontend/form/solvation_model_body.html' %}    
-                        </div>
-                    </div>
-                </div>
-                
-                <script>
-                    $(document).ready(function() {
-                        
-                        $('input[name="theory_level_fixed"], input[name="method_fixed"], input[name="bs_fixed"], input[name="driver_fixed"], input[name="software_fixed"], input[name="solvent_fixed"], input[name="solvation_radii_fixed"], input[name="solvation_model_fixed"] ').change(function() {
-                            refresh_availabilities();
-                        });
-                    });
-                </script>
-                
-        
-        
-        
-                <button class="button is-primary">Submit</button>
-            </form>
-        </div>
-        </div>
-        
-    </div>
-
-
-
-
-
-    
-
-    <div id="result_div" class="hidden_div">
+            <div id="input_rows">
+            </div>
             
-        <!-- Batch Name in the previous div -->
-        <div class="field" id="batch_name">
-            <div class="control">
-                <!-- Use a contenteditable div to show the Batch Name -->
-                <div class="batch_name_input_container">
-                    <div class="batch_name_label">Batch Name</div>
-                    <div class="batch_name" id="batch_name_result" contenteditable="false" readonly></div>
-                    <div class="preview_button">
-                        <button class="button is-primary" onclick="previewBatch()">Preview</button>
-                    </div>
-                </div>
-            </div>
+            <button class="button is-primary" onclick="addRow()">Add</button>     
+            
         </div>
 
-        <div id="dynamic_form">
-           
+        <div class="box" id="parameters_div">
+            <h2 style="font-weight: bold;">Fixed Parameters</h2>
+
+            {% include "frontend/basic_form.html" %}
+
         </div>
     </div>
 
+    <div class="box" id="dyn_section">
+        <h2 style="font-weight: bold;">Dynamic Parameters</h2>
+        <div id="dynamic_params_div">
+        </div>
+        <button onclick="submit_batch();" class="button is-primary" id="submit_batch_btn">Launch batch</button>
+    </div>
 
 </div>
 
-
-
-
 <script>
-    
-        function showResultDiv() {
-
-            var mainContentDiv = document.getElementById("main_content");
-            var resultDiv = document.getElementById("result_div");
-            var batchNameInputDiv = document.getElementById("batch_name_input");
-    
-            
-            mainContentDiv.classList.add("hidden_div");
-            
-            resultDiv.classList.remove("hidden_div");
-    
-            var batchName = batchNameInputDiv.textContent;
-            document.getElementById("batch_name_result").textContent = batchName;
-    
-            batchNameInputDiv.removeAttribute("contenteditable");
-    
-            generateDynamicForm();
-        }
-        function generateDynamicForm() {
-            var uncheckedParameters = getUncheckedParameters();
-            var dynamicForm = document.getElementById("dynamic_form");
-
-            console.log(uncheckedParameters)
-          
-            dynamicForm.innerHTML = "";
-          
-            
-            uncheckedParameters.forEach(function (parameter) {
-              var div = document.createElement('div');
-              div.setAttribute('id', parameter);
-          
-              var label = document.createElement('label');
-              label.setAttribute('for', parameter);
-              label.innerText = parameter;
-          
-             
-              fetchFileContent(parameter).then(function (fileContent) {
-                var includedFileContent = fileContent;
-          
-                
-                div.appendChild(label);
-                div.innerHTML += includedFileContent;
-          
-                
-                dynamicForm.appendChild(div);
-              });
-            });
-          }
-          
-          function fetchFileContent(parameter) {
-           
-            var url = "frontend/form/" + parameter + "_body.html";
-
-          
-            return fetch(url)
-              .then(function (response) {
-                if (!response.ok) {
-                  throw new Error("Network response was not ok");
-                }
-                return response.text();
-              })
-              .catch(function (error) {
-                console.error("Error fetching the file:", error);
-              });
-          }
-          
-          function getUncheckedParameters() {
-            var uncheckedParams = [];
-          
-            var theoryLevelCheckbox = document.getElementById("theory_level-checkbox");
-            if (!theoryLevelCheckbox.checked) {
-              uncheckedParams.push("theory_level");
-            }
-          
-            
-            
-          
-            // Add more parameters as needed
-          
-            return uncheckedParams;
-          }
-          
-    
-       
-    $( document ).ready(function() {
-	    refresh_availabilities();
-    });
     var all_params = {};
+    var fixed_params = [];
 
-	$('#params_form').submit(function () {
-        data = new FormData(document.forms.namedItem("params_form"));
-        all_params["test"] = data;
-        showResultDiv(); 
-        return false;
+    function set_dynamic_params() {
+        $("#parameters_div").find("input[type=checkbox]:checked").each(function(ind) {
+            fixed_params.push($(this).data("field"));
+        });
+        add_dynamic_params();
+    }
+
+    function add_dynamic_params() {
+        $("#dynamic_params_div").append(`<article class='dynamic_params message is-light'><div class="message-body">
+        <div class="param">
+            <div class="columns is-vcentered">
+                <div class="column is-3">
+                    <b>Name</b>
+                </div>
+                <div class="column is-1">
+                </div>
+                <div class="column is-8" id="theory-body">
+                    <input class="input" name="set_name" type="text">
+                </div>
+            </div>
+        </div>
+        <hr>
+        ` + form_html + "</div></article>");
+        dyn_div = $("#dynamic_params_div").find(".dynamic_params").last();
+        dyn_div.find("input[type=checkbox]").remove();
+
+        for(i=0;i<fixed_params.length;i++) {
+            dyn_div.find("#row_" + fixed_params[i]).remove();
+        }
+        dyn_div.find("button").remove();
+
+        $(dyn_div).find("input, select").on("change", function() {
+            refresh_availabilities($("#fixed_params_div"), dyn_div);
+            refresh_availabilities(dyn_div, dyn_div, true);
+        });
+
+        refresh_availabilities($("#fixed_params_div"), dyn_div);
+        refresh_availabilities(dyn_div, dyn_div, true);
+
+    }
+
+    function submit_batch() {
+        $("#dynamic_params_div").find(".dynamic_params").each(function(ind) {
+            let name = $(this).find("input[name='set_name']").val()
+            let form_data = new FormData($(this).find("form")[0]);
+            all_params["dynamic"][name] = form_data;
+        });
+        $("#submit_batch_btn").remove(); // Temporary
+    }
+    
+    $(document).ready(function() {
+        addRow();
+	    refresh_availabilities($("#fixed_params_div"));
+        $('#fixed_params_div').find("input, select").on("change", function() {
+            refresh_availabilities($("#fixed_params_div"));
+        });
+
+        $("#fixed_params_div").find("form").submit(function(e) {
+            e.preventDefault();
+            data = new FormData($("#fixed_params_div").find("form")[0]);
+            all_params["fixed"] = data;
+            all_params["dynamic"] = {};
+            set_dynamic_params(); 
+            return false;
+        });
     });
+
+
+
 
 </script>
 {% endblock content %}
