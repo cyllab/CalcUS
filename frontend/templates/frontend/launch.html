@@ -81,10 +81,6 @@
         margin-top: 1em;
     }
     
-    #gen_3D_btn {
-        margin-bottom: 2em;
-    }
-
     #editor_appletinfotablediv {
         border: 2px solid black;
     }
@@ -140,9 +136,8 @@
     .rec-method {
         width: 10em;
     }
-
     #sketcher_div {
-        margin-top: 1em;
+        margin-top: 2em;
     }
     #sketcher {
         border: .1em solid #aaa;
@@ -239,7 +234,7 @@
 
 
     {% include "frontend/form/availability.js" %}
-    {% include "frontend/form/.input_widgets_head.js" %}
+    {% include "frontend/form/input_widgets_head.js" %}
 
 	function check(param) {
 		val = $("#calc_" + param).val();
