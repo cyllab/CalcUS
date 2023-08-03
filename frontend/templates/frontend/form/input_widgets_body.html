@@ -1,3 +1,14 @@
+<div id="nih_div" class="box">
+    <h4 class="title is-3">Load structure from name</h3>
+<div>
+    <input class="input" type="text" id="nih_name" placeholder="e.g., caffeine">
+    <button class="button is-primary" id="nih_button" onclick="load_nih(this);">Load structure</button><br>
+    <span id="nih_msg"></span>
+</div>
+</div>
+
+<div id="viewer_div" class="box">
+    <h4 class="title is-3">3D Viewer</h3>
 <script>
     let win_width = Math.round(Math.max(400, $(window).width()/5));
     let win_height = Math.round(Math.max(300, $(window).width()/5*(3/4)));
@@ -12,8 +23,13 @@
     viewer.styles.shapes_color = "c10000";
     viewer.repaint();
 </script>
+<br>
+<button class="button is-primary" id="edit_button">Edit structure in 3D</button>
+</div>
 
 {% if not ensemble and not structure and not calc %}
+<div id="sketcher_div" class="box">
+    <h4 class="title is-3">Sketcher</h3>
 <script>
 
     let sketcher = new ChemDoodle.SketcherCanvas("sketcher", win_width, win_height, {
@@ -26,14 +42,10 @@
     sketcher.styles.shapes_color = "c10000";
     sketcher.repaint();
 </script>
-<br />
+<br>
 <button class="button is-info" onclick="get_3D();" id="gen_3D_btn">Generate 3D representation</button>
-<button class="button is-primary" id="edit_button">Edit structure</button>
-<div>
-    <input class="input" type="text" id="nih_name" placeholder="e.g., caffeine">
-    <button class="button is-primary" id="nih_button" onclick="load_nih(this);">Load structure from name</button><br>
-    <span id="nih_msg"></span>
 </div>
+
 
 {% endif %}
 
