@@ -33,7 +33,7 @@ from django.utils import timezone
 if settings.IS_CLOUD or settings.IS_TEST:
     from captcha.fields import ReCaptchaField
 
-from frontend.models import User, ClassGroup, ResourceAllocation
+from frontend.models import User, ClassGroup, ResourceAllocation, Project
 from frontend.helpers import get_random_string
 
 logging.basicConfig(
@@ -78,6 +78,7 @@ class ResearcherCreateForm(UserCreationForm):
                 allocation_seconds=settings.FREE_DEFAULT_COMP_SECONDS,
                 note=ResourceAllocation.NEW_ACCOUNT,
             )
+            proj = Project.objects.create(name="My Main Project", author=user)
 
         return user
 
@@ -146,6 +147,7 @@ class StudentCreateForm(forms.ModelForm):
 
         if commit:
             user.save()
+            proj = Project.objects.create(name="My Main Project", author=user)
         return user
 
 
@@ -193,6 +195,7 @@ class TrialUserCreateForm(forms.ModelForm):
                 allocation_seconds=settings.TRIAL_DEFAULT_COMP_SECONDS,
                 note=ResourceAllocation.TRIAL,
             )
+            proj = Project.objects.create(name="My Main Project", author=user)
 
         return user
 

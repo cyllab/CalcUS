@@ -151,7 +151,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     num += 1
                 print(f"Test failed, trying again (attempt {num}/{MAX_ATTEMPTS})")
                 self.cleanupCalculations()
-                self.lget("/home/")
+                self.lget("/")
                 time.sleep(3)
             else:
                 break
@@ -975,11 +975,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_projects(self):
         for i in range(3):
             url = self.get_split_url()
-            if (url[0] == "projects" or url[0] == "home") and (
-                url[1] == "" or self.is_user(url[1])
+            if url[0] == "projects" and (
+                len(url) < 2 or self.is_user(url[1]) or url[1] == ""
             ):
                 return True
-            time.sleep(1)
+            time.sleep(0.5)
 
         return False
 
@@ -1959,6 +1959,7 @@ class CalcusCloudLiveServer(CalcusLiveServer):
     def setUp(self):
         super().setUp()
         self.user.allocated_seconds = 100
+        self.user.calc_type_property = False
         self.user.save()
 
         settings.IS_CLOUD = True
