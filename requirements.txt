@@ -27,7 +27,7 @@ pysisyphus
 rdkit
 requests
 scipy
-sklearn
+scikit-learn
 spyrmsd
 wheel
 xkcdpass

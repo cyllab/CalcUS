@@ -5781,14 +5781,6 @@ def webhook(request):
             datetime.fromtimestamp(sub["current_period_end"])
         )
 
-        if len(sub["items"]["data"]) != 1:
-            logger.error(
-                f"Subscription {sub['id']} unexpectedly has more than one item"
-            )
-
-        prod = stripe.Product.retrieve(sub["items"]["data"][0]["price"]["product"])
-        allocation = int(prod["metadata"]["MONTHLY_ALLOCATION"])
-
         try:
             user = User.objects.get(email=customer["email"])
         except User.DoesNotExist:
@@ -5796,6 +5788,22 @@ def webhook(request):
                 f"Customer with email {customer['email']} does not have an account"
             )
             user = create_account_sub(customer["email"])
+        else:
+            if user.is_subscriber:
+                sub = user.subscription_set.latest("pk")
+                if sub.end_date - timezone.now() > timezone.timedelta(hours=1):
+                    logger.critical(
+                        f"User {user.id} with email {user.email} is already a subscriber, yet has paid for a subscription!"
+                    )
+                    return HttpResponse(status=400)
+
+        if len(sub["items"]["data"]) != 1:
+            logger.error(
+                f"Subscription {sub['id']} unexpectedly has more than one item"
+            )
+
+        prod = stripe.Product.retrieve(sub["items"]["data"][0]["price"]["product"])
+        allocation = int(prod["metadata"]["MONTHLY_ALLOCATION"])
 
         tasks.create_subscription(
             user,
