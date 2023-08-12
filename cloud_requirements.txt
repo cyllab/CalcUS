@@ -25,6 +25,8 @@ psycopg2
 pysisyphus
 requests
 scipy
+sklearn
+spyrmsd
 stripe
 wheel
 xkcdpass

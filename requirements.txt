@@ -24,7 +24,10 @@ pre-commit
 psutil==5.7.2
 psycopg2
 pysisyphus
+rdkit
 requests
 scipy
+sklearn
+spyrmsd
 wheel
 xkcdpass
