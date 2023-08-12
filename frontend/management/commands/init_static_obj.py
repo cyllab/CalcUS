@@ -83,10 +83,6 @@ class Command(BaseCommand):
             "opt",
             "Geometry",
             creates_ensemble=True,
-            avail_xtb=True,
-            avail_Gaussian=True,
-            avail_ORCA=True,
-            avail_NWChem=True,
         )
 
         self.add_step(
@@ -94,10 +90,6 @@ class Command(BaseCommand):
             "conf_search",
             "Conformer ensemble",
             creates_ensemble=True,
-            avail_xtb=True,
-            avail_Gaussian=False,
-            avail_ORCA=False,
-            avail_NWChem=False,
         )
 
         self.add_step(
@@ -105,10 +97,6 @@ class Command(BaseCommand):
             "constr_opt",
             "Geometry with constraint",
             creates_ensemble=True,
-            avail_xtb=True,
-            avail_Gaussian=True,
-            avail_ORCA=True,
-            # avail_NWChem=False, # For now
         )
 
         self.add_step(
@@ -116,10 +104,6 @@ class Command(BaseCommand):
             "freq",
             "Vibrational modes, IR spectrum and thermochemistry",
             creates_ensemble=False,
-            avail_xtb=True,
-            avail_Gaussian=True,
-            avail_ORCA=True,
-            avail_NWChem=True,
         )
 
         self.add_step(
@@ -127,10 +111,6 @@ class Command(BaseCommand):
             "optts",
             "Transition state geometry",
             creates_ensemble=True,
-            avail_xtb=True,
-            avail_Gaussian=True,
-            avail_ORCA=True,
-            avail_NWChem=True,
         )
 
         self.add_step(
@@ -138,10 +118,6 @@ class Command(BaseCommand):
             "uvvis",
             "UV-Vis spectrum",
             creates_ensemble=False,
-            avail_xtb=True,
-            avail_Gaussian=True,
-            avail_ORCA=False,
-            avail_NWChem=False,
         )
 
         self.add_step(
@@ -149,10 +125,6 @@ class Command(BaseCommand):
             "nmr",
             "NMR spectrum",
             creates_ensemble=False,
-            avail_xtb=False,
-            avail_Gaussian=True,
-            avail_ORCA=True,
-            avail_NWChem=False,  # For now
         )
 
         self.add_step(
@@ -160,10 +132,6 @@ class Command(BaseCommand):
             "sp",
             "Electronic energy",
             creates_ensemble=False,
-            avail_xtb=True,
-            avail_Gaussian=True,
-            avail_ORCA=True,
-            avail_NWChem=True,
         )
 
         self.add_step(
@@ -171,10 +139,6 @@ class Command(BaseCommand):
             "mo",
             "Molecular Orbitals",
             creates_ensemble=False,
-            avail_xtb=False,
-            avail_Gaussian=False,
-            avail_ORCA=True,
-            avail_NWChem=True,
         )
 
         self.add_step(
@@ -182,10 +146,6 @@ class Command(BaseCommand):
             "mep",
             "Minimum Energy Path",
             creates_ensemble=True,
-            avail_xtb=True,
-            avail_Gaussian=False,
-            avail_ORCA=True,
-            avail_NWChem=False,
         )
 
         self.add_step(
@@ -193,10 +153,6 @@ class Command(BaseCommand):
             "constr_conf_search",
             "Conformer ensemble with constraint",
             creates_ensemble=True,
-            avail_xtb=True,
-            avail_Gaussian=False,
-            avail_ORCA=False,
-            avail_NWChem=False,
         )
 
         self.add_step(
@@ -204,10 +160,13 @@ class Command(BaseCommand):
             "esp",
             "Electrostatic potential map",
             creates_ensemble=False,
-            avail_xtb=False,
-            avail_Gaussian=False,
-            avail_ORCA=False,
-            avail_NWChem=True,
+        )
+
+        self.add_step(
+            "Fast Conformational Search",
+            "fast_conf_search",
+            "Preliminary conformer ensemble",
+            creates_ensemble=True,
         )
 
         title = "NHC-Catalysed Condensation"
