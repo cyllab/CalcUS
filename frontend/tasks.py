@@ -5118,7 +5118,7 @@ def create_subscription(
     user, stripe_sub_id, end_date, allocation, stripe_cus_id, will_renew
 ):
     time_left = max(0, user.allocated_seconds - user.billed_seconds)
-    sub_amount = allocation - time_left
+    sub_amount = max(allocation - time_left, 0)
 
     # Make sure we don't create a duplicate subscription and allocation
     try:
@@ -5144,6 +5144,10 @@ def create_subscription(
         return
 
     user.refresh_from_db()
+    if user.stripe_cus_id != "" and user.stripe_cus_id != stripe_cus_id:
+        logger.warning(
+            f"Changing the Stripe customer id of user {user.id} from {user.stripe_cus_id} to {stripe_cus_id}"
+        )
     user.stripe_cus_id = stripe_cus_id
     user.stripe_will_renew = will_renew
     user.save()
