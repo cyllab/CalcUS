@@ -28,15 +28,6 @@ from django.contrib.auth.views import LoginView
 from frontend import views
 from frontend.forms import UserLoginForm
 
-from . import views
-from django.contrib import admin
-from django.urls import path, include
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    
-]
-
 app_name = "frontend"
 urlpatterns = [
     # Override the default login page in order to use the ReCaptcha
@@ -95,7 +86,6 @@ urlpatterns = [
         views.get_available_elements,
         name="get_available_elements",
     ),
-    
     path("gen_3D/", views.gen_3D, name="gen_3D"),
     path("get_mol_preview/", views.get_mol_preview, name="get_mol_preview"),
     path("check_functional/", views.check_functional, name="check_functional"),
