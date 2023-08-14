@@ -19,7 +19,7 @@ OMP_NUM_THREADS={},1
 # Number of cores to use for local calculations
 NUM_CPU={}
 
-# Amount of memory allocated per core/thread in Gb (must be whole number)
+# Amount of memory allocated per core/thread in MB (must be whole number)
 OMP_STACKSIZE={}M
 
 # Use cached calculation logs during testing (for developers)

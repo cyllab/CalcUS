@@ -1,0 +1,87 @@
+{% load static %}
+
+<div class="modal" id="edit_structure_modal">
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Edit Structure</p>
+            <button type="button" class="close_btn close_bs modal-close is-large" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body" id="edit_structure_body">
+            <div class="columns">
+                <div class="column">
+                    <script type="text/javascript">
+                        var methane = `Methane
+
+
+  5  4  0  0  0  0  0  0  0  0999 V2000
+    0.0000   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000   -0.8900   -0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000    0.8900   -0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8900   -0.0000    0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8900   -0.0000    0.6293 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  1  3  1  0  0  0  0
+  1  4  1  0  0  0  0
+  1  5  1  0  0  0  0
+M  END
+$$$$`;
+
+                        let editor_width = Math.round(Math.min(1000, $(window).width()/2));
+                        let editor_height = Math.round(Math.min(750, $(window).width()/2*(3/4)));
+                        var editor_info = {
+                            height: editor_height,
+                            width: editor_width,
+                            serverURL: "https://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php",
+                            j2sPath: "{% static 'j2s' %}",
+                            use: 'HTML5',
+                            console: "editor_widget",
+                            disableInitialConsole: true,
+                            allowJavaScript: true,
+                            debug: false,
+                        };
+                        var editor = Jmol.getApplet("editor", editor_info);
+                        Jmol.script(editor, 'background "#ffffff"');
+                        //Jmol.script(editor, 'set bondRadiusMilliAngstroms 100; set multipleBondSpacing -0.3');
+                        Jmol.script(editor, 'set forcefield "MMFF"');
+                        Jmol.script(editor, 'load inline "' + methane + '"');
+                        Jmol.script(editor, 'minimize');
+                    </script>
+                </div>
+                <div class="column">
+                    <div class="box" id="jsmol_elements">
+                    <center>
+                        <span class="jsmol_span">Elements</span><br>
+                        <div class="button element is-danger" data-el="x">Del</div>
+                        <div class="button element" data-el="H">H</div>
+                        <div class="button element" data-el="C">C</div>
+                        <div class="button element" data-el="N">N</div>
+                        <div class="button element" data-el="O">O</div>
+                        <div class="button element" data-el="F">F</div>
+                        <div class="button element" data-el="Si">Si</div>
+                        <div class="button element" data-el="P">P</div>
+                        <div class="button element" data-el="S">S</div>
+                        <div class="button element" data-el="Cl">Cl</div>
+                        <div class="button element" data-el="Br">Br</div>
+                        <div class="button element" data-el="I">I</div>
+                    </center>
+                    </div>
+                    <div class="box" id="jsmol_bonds">
+                        <center>
+                        <span class="jsmol_span">Bonds</span><br>
+                        <div class="button bond" data-bond="0">Break</div>
+                        <div class="button bond" data-bond="1">Single</div>
+                        <div class="button bond" data-bond="2">Double</div>
+                        <div class="button bond" data-bond="3">Triple</div>
+                        </center>
+                    </div>
+                    <div class="box" id="jsmol_actions">
+                        <center>
+                            <button class="button is-success" id="jsmol_done">Done</button>
+                        </center>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+

@@ -272,7 +272,7 @@ def start_trial(request):
     if request.user.is_authenticated:
         return HttpResponseRedirect("/launch/")
     if not settings.ALLOW_TRIAL:
-        return HttpResponseRedirect("/home/")
+        return HttpResponseRedirect("/")
 
     if request.method == "POST":
         form = TrialUserCreateForm(request.POST)
@@ -667,7 +667,7 @@ def project_details(request, user_id, proj):
     try:
         target_user = User.objects.get(id=target_user_id)
     except User.DoesNotExist:
-        return HttpResponseRedirect("/home/")
+        return HttpResponseRedirect("/")
 
     if user_intersection(target_user, request.user):
         try:
@@ -679,7 +679,7 @@ def project_details(request, user_id, proj):
             )
             project = target_user.project_set.filter(name=target_project).first()
         except Project.DoesNotExist:
-            return HttpResponseRedirect("/home/")
+            return HttpResponseRedirect("/")
 
         if can_view_project(project, request.user):
             molecules = []
@@ -699,9 +699,9 @@ def project_details(request, user_id, proj):
                 },
             )
         else:
-            return HttpResponseRedirect("/home/")
+            return HttpResponseRedirect("/")
     else:
-        return HttpResponseRedirect("/home/")
+        return HttpResponseRedirect("/")
 
 
 def clean(txt):
@@ -724,10 +724,10 @@ def molecule(request, pk):
     try:
         mol = Molecule.objects.get(pk=pk)
     except Molecule.DoesNotExist:
-        return redirect("/home/")
+        return redirect("/")
 
     if not can_view_molecule(mol, request.user):
-        return redirect("/home/")
+        return redirect("/")
 
     return render(
         request,
@@ -744,10 +744,10 @@ def ensemble_table_body(request, pk):
     try:
         mol = Molecule.objects.get(pk=pk)
     except Molecule.DoesNotExist:
-        return redirect("/home/")
+        return redirect("/")
 
     if not can_view_molecule(mol, request.user):
-        return redirect("/home/")
+        return redirect("/")
 
     return render(
         request,
@@ -761,10 +761,10 @@ def ensemble(request, pk):
     try:
         e = Ensemble.objects.get(pk=pk)
     except Ensemble.DoesNotExist:
-        return redirect("/home/")
+        return redirect("/")
 
     if not can_view_ensemble(e, request.user):
-        return redirect("/home/")
+        return redirect("/")
 
     return render(
         request,
@@ -784,10 +784,10 @@ def get_related_calculations(request, pk):
     try:
         e = Ensemble.objects.get(pk=pk)
     except Ensemble.DoesNotExist:
-        return redirect("/home/")
+        return redirect("/")
 
     if not can_view_ensemble(e, request.user):
-        return redirect("/home/")
+        return redirect("/")
 
     orders = _get_related_calculations(e)
     return render(
@@ -805,18 +805,18 @@ def nmr_analysis(request, pk, pid):
     try:
         e = Ensemble.objects.get(pk=pk)
     except Ensemble.DoesNotExist:
-        return redirect("/home/")
+        return redirect("/")
 
     if not can_view_ensemble(e, request.user):
-        return redirect("/home/")
+        return redirect("/")
 
     try:
         param = Parameters.objects.get(pk=pid)
     except Parameters.DoesNotExist:
-        return redirect("/home/")
+        return redirect("/")
 
     if not can_view_parameters(param, request.user):
-        return redirect("/home/")
+        return redirect("/")
 
     return render(
         request,
@@ -3688,7 +3688,7 @@ def get_calc_frame(request, cid, fid):
     try:
         calc = Calculation.objects.get(pk=cid)
     except Calculation.DoesNotExist:
-        return redirect("/home/")
+        return redirect("/")
 
     if not can_view_calculation(calc, request.user):
         return HttpResponse(status=403)
@@ -4486,7 +4486,7 @@ def launch(request):
         try:
             e = Ensemble.objects.get(pk=clean(request.POST["ensemble"]))
         except Ensemble.DoesNotExist:
-            return redirect("/home/")
+            return redirect("/")
 
         if not can_view_ensemble(e, request.user):
             return HttpResponse(status=403)
@@ -4540,7 +4540,7 @@ def launch(request):
         try:
             calc = Calculation.objects.get(pk=calc_id)
         except Calculation.DoesNotExist:
-            return redirect("/home/")
+            return redirect("/")
 
         if not can_view_calculation(calc, request.user):
             return HttpResponse(status=403)
@@ -4551,7 +4551,7 @@ def launch(request):
         try:
             frame = calc.calculationframe_set.get(number=frame_num)
         except CalculationFrame.DoesNotExist:
-            return redirect("/home/")
+            return redirect("/")
 
         init_params = calc.order.parameters
 
@@ -4570,7 +4570,7 @@ def launch_project(request, pk):
     try:
         proj = Project.objects.get(pk=pk)
     except Project.DoesNotExist:
-        return redirect("/home/")
+        return redirect("/")
 
     if not can_view_project(proj, request.user):
         return HttpResponse(status=403)
@@ -5153,7 +5153,7 @@ def download_project_post(request):
         return error(request, "Invalid project")
 
     if not can_view_project(proj, request.user):
-        return HttpResponseRedirect("/home/")
+        return HttpResponseRedirect("/")
 
     if data == "summary":
         return download_project_csv(proj, request.user, scope, details, folders)
@@ -5169,7 +5169,7 @@ def download_project(request, pk):
         return HttpResponse(status=403)
 
     if not can_view_project(proj, request.user):
-        return HttpResponseRedirect("/home/")
+        return HttpResponseRedirect("/")
 
     return render(request, "frontend/download_project.html", {"proj": proj})
 
@@ -5188,15 +5188,15 @@ def project_folders(request, user_id, proj, folder_path):
     try:
         target_user = User.objects.get(id=target_user_id)
     except User.DoesNotExist:
-        return HttpResponseRedirect("/home/")
+        return HttpResponseRedirect("/")
 
     if not user_intersection(target_user, request.user):
-        return HttpResponseRedirect("/home/")
+        return HttpResponseRedirect("/")
 
     try:
         project = target_user.project_set.get(name=target_project)
     except Project.DoesNotExist:
-        return HttpResponseRedirect("/home/")
+        return HttpResponseRedirect("/")
     except Project.MultipleObjectsReturned:
         logger.error(
             f"Multiple projects with name '{target_project}' for user {target_user_id}"
@@ -5204,7 +5204,7 @@ def project_folders(request, user_id, proj, folder_path):
         return target_user.project_set.filter(name=target_project).first()
 
     if not can_view_project(project, request.user):
-        return HttpResponseRedirect("/home/")
+        return HttpResponseRedirect("/")
 
     folders = []
     ensembles = []
@@ -5470,10 +5470,10 @@ def ensemble_map(request, pk):
     try:
         mol = Molecule.objects.get(pk=pk)
     except Molecule.DoesNotExist:
-        return redirect("/home/")
+        return redirect("/")
 
     if not can_view_molecule(mol, request.user):
-        return redirect("/home/")
+        return redirect("/")
     json = """{{
                 "nodes": [
                         {}
@@ -5686,7 +5686,7 @@ def checkout(request):
     params = {
         "success_url": settings.HOST_URL
         + "/subscription_successful/{CHECKOUT_SESSION_ID}",
-        "cancel_url": f"{settings.HOST_URL}/home/",
+        "cancel_url": f"{settings.HOST_URL}/",
         "mode": "subscription",
         "line_items": [
             {
@@ -5783,14 +5783,6 @@ def webhook(request):
             datetime.fromtimestamp(sub["current_period_end"])
         )
 
-        if len(sub["items"]["data"]) != 1:
-            logger.error(
-                f"Subscription {sub['id']} unexpectedly has more than one item"
-            )
-
-        prod = stripe.Product.retrieve(sub["items"]["data"][0]["price"]["product"])
-        allocation = int(prod["metadata"]["MONTHLY_ALLOCATION"])
-
         try:
             user = User.objects.get(email=customer["email"])
         except User.DoesNotExist:
@@ -5798,6 +5790,22 @@ def webhook(request):
                 f"Customer with email {customer['email']} does not have an account"
             )
             user = create_account_sub(customer["email"])
+        else:
+            if user.is_subscriber:
+                sub = user.subscription_set.latest("pk")
+                if sub.end_date - timezone.now() > timezone.timedelta(hours=1):
+                    logger.critical(
+                        f"User {user.id} with email {user.email} is already a subscriber, yet has paid for a subscription!"
+                    )
+                    return HttpResponse(status=400)
+
+        if len(sub["items"]["data"]) != 1:
+            logger.error(
+                f"Subscription {sub['id']} unexpectedly has more than one item"
+            )
+
+        prod = stripe.Product.retrieve(sub["items"]["data"][0]["price"]["product"])
+        allocation = int(prod["metadata"]["MONTHLY_ALLOCATION"])
 
         tasks.create_subscription(
             user,

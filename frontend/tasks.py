@@ -45,6 +45,13 @@ from threading import Lock
 from shutil import copyfile, rmtree
 import time
 
+from rdkit import Chem
+from rdkit.Chem import AllChem
+import spyrmsd
+from spyrmsd.optional.rdkit import to_molecule
+from spyrmsd.rmsd import rmsdwrapper
+from sklearn.cluster import DBSCAN
+
 if not settings.IS_CLOUD:
     from calcus.celery import app
     from celery.signals import task_prerun, task_postrun
@@ -337,7 +344,14 @@ def testing_delay_cloud(calc_id):
     return ErrorCodes.SUCCESS
 
 
-def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
+def system(
+    command,
+    log_file="",
+    force_local=False,
+    software="xtb",
+    calc_id=-1,
+    time_cumul=False,
+):
     if REMOTE and not force_local:
         assert calc_id != -1
 
@@ -463,7 +477,8 @@ def system(command, log_file="", force_local=False, software="xtb", calc_id=-1):
         if calc_id != -1:
             calc = Calculation.objects.get(pk=calc_id)
             calc.status = 1
-            calc.date_started = timezone.now()
+            if calc.date_started is None or not time_cumul:
+                calc.date_started = timezone.now()
             calc.save()
             res = AbortableAsyncResult(calc.task_id)
 
@@ -1521,6 +1536,135 @@ def crest(in_file, calc):
 
     Property.objects.bulk_update(properties, ["energy", "geom"])
     Structure.objects.bulk_update(structures, ["xyz_structure"])
+
+    return ErrorCodes.SUCCESS
+
+
+def fast_conf(in_file, calc):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    folder = f"scratch/calcus/{calc.id}"  # Remote
+
+    calc_start = timezone.now()
+
+    subprocess.call(shlex.split("obabel in.xyz -O in.mol"), cwd=local_folder)
+
+    mol = Chem.MolFromMolFile(os.path.join(local_folder, "in.mol"))
+
+    mol.UpdatePropertyCache()
+    mol = Chem.AddHs(mol)
+
+    confs = list(
+        AllChem.EmbedMultipleConfs(
+            mol, numConfs=50, maxAttempts=1000, pruneRmsThresh=0.05
+        )
+    )
+    mols = []
+    props = []
+
+    for num in confs:
+        cpath = os.path.join(local_folder, f"conf{num+1}")
+        os.makedirs(cpath, exist_ok=True)
+
+        Chem.rdmolfiles.MolToXYZFile(mol, os.path.join(cpath, "in.xyz"), confId=num)
+
+        os.chdir(cpath)
+
+        # We want to add up all the time required for the calculations.
+        # We will overwrite this with a more accurate time afterwards, but this makes the time preview
+        # a bit less strange.
+        ret = system(
+            calc.command,
+            os.path.join(cpath, "calc.out"),
+            software="xtb",
+            calc_id=calc.id,
+            time_cumul=True,
+        )
+
+        # duplicate code
+        if ret != ErrorCodes.SUCCESS:
+            logger.error(f"Failed to optimize conformer {num} of calc {calc.id}")
+            continue
+
+        with open(f"{cpath}/xtbopt.xyz") as f:
+            xyz = clean_xyz("".join(f.readlines()))
+
+        with open(f"{cpath}/calc.out") as f:
+            lines = f.readlines()
+            ind = len(lines) - 1
+
+            try:
+                while lines[ind].find("TOTAL ENERGY") == -1:
+                    ind -= 1
+                E = float(lines[ind].split()[3])
+            except IndexError:
+                logger.error(
+                    f"Could not parse the output of calculation {calc.id}: invalid format"
+                )
+                continue
+
+        rdmol = Chem.MolFromMolFile(os.path.join(cpath, "xtbtopo.mol"))
+
+        smol = to_molecule(rdmol)
+
+        mols.append(smol)
+        props.append((E, xyz))
+
+    def rmsd_cluster(mols, props, threshold=0.8):
+        # Could be too slow if there are many structures
+        dist = np.zeros((len(mols), len(mols)))
+        for i, (mol1, prop1) in enumerate(zip(mols, props)):
+            for j, (mol2, prop2) in enumerate(zip(mols, props)):
+                if j <= i:
+                    continue
+                try:
+                    d = rmsdwrapper(
+                        mol1, mol2, symmetry=True, center=True, minimize=True
+                    )[0]
+                except spyrmsd.exceptions.NonIsomorphicGraphs:
+                    d = 10
+                    logger.error(f"Non-isomorphic graphs: {i} and {j} (calc {calc.id})")
+
+                dist[i, j] = d
+                dist[j, i] = d
+
+        clustering = DBSCAN(eps=threshold, min_samples=1, metric="precomputed").fit(
+            dist
+        )
+
+        unique_mol = []
+        unique_prop = []
+        known = []  # Known cluster labels
+        for ind, pos in enumerate(clustering.labels_):
+            if pos in known:
+                continue
+            known.append(pos)
+            unique_mol.append(mols[ind])
+            unique_prop.append(props[ind])
+
+        return unique_mol, unique_prop
+
+    umols, uprops = rmsd_cluster(mols, props, threshold=0.5)
+    for ind, (mol, (E, xyz)) in enumerate(
+        sorted(zip(umols, uprops), key=lambda i: i[1])
+    ):
+        s = Structure.objects.get_or_create(
+            parent_ensemble=calc.result_ensemble,
+            number=ind + 1,
+        )[0]
+        s.degeneracy = 1
+        s.xyz_structure = xyz
+        prop = get_or_create(calc.parameters, s)
+        prop.energy = E
+        prop.geom = True
+        s.save()
+        prop.save()
+
+    calc_end = timezone.now()
+
+    # Set the true start and end dates, including the conformational sampling and parsing
+    calc.date_started = calc_start
+    calc.date_finished = calc_end
+    calc.save()
 
     return ErrorCodes.SUCCESS
 
@@ -2747,13 +2891,18 @@ def calc_to_ccinput(calc):
             _nproc = calc.order.resource.pal
             _mem = calc.order.resource.memory
 
+    _step_name = calc.step.name
+
+    if calc.parameters.software.lower() == "xtb" and (
+        calc.step.name == "Fast Conformational Search"
+    ):
+        _step_name = "OPT"
+
     # patch
     if calc.parameters.software.lower() == "nwchem" and (
         calc.step.name == "MO Calculation" or calc.step.name == "ESP Calculation"
     ):
         _step_name = "SP"
-    else:
-        _step_name = calc.step.name
 
     params = {
         "software": calc.parameters.software,
@@ -4108,6 +4257,7 @@ BASICSTEP_TABLE = {
         "Single-Point Energy": xtb_sp,
         "Minimum Energy Path": mep,
         "Constrained Conformational Search": crest,
+        "Fast Conformational Search": fast_conf,
     },
     "ORCA": {
         "NMR Prediction": orca_nmr,
@@ -4276,6 +4426,10 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
                 )
             except Molecule.DoesNotExist:
             """
+
+            if len(fingerprint) > 9900:
+                fingerprint = fingerprint[:9900]
+
             ensemble.parent_molecule.inchi = fingerprint
             ensemble.parent_molecule.save()
             molecule = ensemble.parent_molecule
@@ -4964,7 +5118,7 @@ def create_subscription(
     user, stripe_sub_id, end_date, allocation, stripe_cus_id, will_renew
 ):
     time_left = max(0, user.allocated_seconds - user.billed_seconds)
-    sub_amount = allocation - time_left
+    sub_amount = max(allocation - time_left, 0)
 
     # Make sure we don't create a duplicate subscription and allocation
     try:
@@ -4990,6 +5144,10 @@ def create_subscription(
         return
 
     user.refresh_from_db()
+    if user.stripe_cus_id != "" and user.stripe_cus_id != stripe_cus_id:
+        logger.warning(
+            f"Changing the Stripe customer id of user {user.id} from {user.stripe_cus_id} to {stripe_cus_id}"
+        )
     user.stripe_cus_id = stripe_cus_id
     user.stripe_will_renew = will_renew
     user.save()

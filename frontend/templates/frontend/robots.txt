@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+User-agent: *
+Disallow: /stripe_config/
+
+Sitemap: https://calcus.cloud/sitemap.xml

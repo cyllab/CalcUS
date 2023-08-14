@@ -312,13 +312,15 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div id="dynamic_form">
-           
-        </div>
-    </div>
-
+            
+            <script>
+                $(document).ready(function() {
+                    
+                    $('input[name="theory_level_fixed"], input[name="method_fixed"], input[name="bs_fixed"], input[name="driver_fixed"], input[name="software_fixed"], input[name="solvent_fixed"], input[name="solvation_radii_fixed"], input[name="solvation_model_fixed"] ').change(function() {
+                        refresh_availabilities();
+                    });
+                });
+            </script>
 
 </div>
 
