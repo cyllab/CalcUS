@@ -49,7 +49,6 @@ urlpatterns = [
     ),
     # Home and index
     path("", views.home, name="home"),
-    path("home/", views.home, name="home_dup"),
     path("start_trial/", views.start_trial, name="start_trial"),
     path("pricing/", views.pricing, name="pricing"),
     path("checkout/", views.checkout, name="checkout"),
@@ -253,5 +252,11 @@ urlpatterns = [
         "submit_flowchart_input/",
         views.submit_flowchart_input,
         name="submit_flowchart_input",
+    ),
+    path(
+        "robots.txt",
+        TemplateView.as_view(
+            template_name="frontend/robots.txt", content_type="text/plain"
+        ),
     ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -16,7 +16,7 @@ django-ipware==3.0.1
 django-throttle-requests==0.5.9
 fabric<3.0.0
 google-cloud-tasks>=2.10.2
-gunicorn
+gunicorn>=21.2.0
 numpy
 paramiko==2.10.1
 periodictable
@@ -24,7 +24,10 @@ pre-commit
 psutil==5.7.2
 psycopg2
 pysisyphus
+rdkit
 requests
 scipy
+scikit-learn
+spyrmsd
 wheel
 xkcdpass

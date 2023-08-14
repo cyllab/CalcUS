@@ -196,26 +196,26 @@
     <div id="logo_div">
         <center>
             {% if IS_CLOUD %}
-            <img id="home_logo" src="{% static 'frontend/calcus_cloud_logo.png' %}" />
+            <img id="home_logo" src="{% static 'frontend/calcus_cloud_logo.webp' %}" alt="CalcUS Cloud Logo">
             <br />
             {% else %}
-            <img id="home_logo" src="{% static 'frontend/calcus.png' %}" />
+            <img id="home_logo" src="{% static 'frontend/calcus.webp' %}" alt="CalcUS Logo">
             <br />
             {% endif %}
 
             <div id="tag_title">
-                <p id="tagline">Making Quantum Chemistry<br><span class="highlight">Accessible</span> and <span class="highlight">Efficient</span></p>
+                <h1 class="title is-1" id="tagline">Making Quantum Chemistry<br><span class="highlight">Accessible</span> and <span class="highlight">Efficient</span></h1>
             </div>
 
             {% if not request.user.is_authenticated %}
-            {% if ALLOW_TRIAL and not request.user.is_authenticated %}
+            {% if ALLOW_TRIAL %}
             <div id="trial_div">
                 <a class="button is-primary is-large is-rounded is-focused" href="/start_trial/" id="trial_button"><i class="fa fa-lg fa-solid fa-gift"></i>Try for free now</a>
             </div>
             {% endif %}
-            <div class="tile is-ancestor">
+            <div>
                 <center style="width: 100%">
-                    or create a free account and <b>accelerate your research immediately</b> with <span id="free_span">3600 free seconds</span> of compute time per month
+                    Create a free account and <b>accelerate your research immediately</b> with <span id="free_span">3600 free seconds</span> of compute time per month
                     <br>
                     <a class="button is-info is-rounded" href="/register/" id="register_button">Create account</a>
 
@@ -231,22 +231,22 @@
     <div class="tile is-ancestor">
         <div class="tile is-6 is-parent">
             <div class="tile is-child">
-                <p class="title">Skip the installation and configuration</p>
+                <h2 class="title is-2">Skip the installation and configuration</h2>
                 <p class="subtitle">Launch Density Functional Theory (DFT) calculations in your browser in under 30 seconds</p>
             </div>
         </div>
         <div class="tile is-6">
-            <img id="teaser3" class="teaser_img" src="{% static 'home/mo.png' %}" />
+            <img id="teaser3" class="teaser_img" src="{% static 'home/mo.webp' %}" alt="Molecular Orbital generated with CalcUS">
         </div>
     </div>
 
     <div class="tile is-ancestor">
         <div class="tile is-6">
-            <img id="teaser1" class="teaser_img" src="{% static 'home/pentane.png' %}" />
+            <img id="teaser1" class="teaser_img" src="{% static 'home/pentane.webp' %}" alt="Conformers of pentane displayed in a table">
         </div>
         <div class="tile is-6 is-parent">
             <div class="tile is-child">
-                <p class="title">Use state-of-the-art software and algorithms</p>
+                <h2 class="title is-2">Use state-of-the-art software and algorithms</h2>
                 <p class="subtitle">Run ridiculously fast semi-empirical <a href="https://github.com/grimme-lab/xtb" class="xtb_link">xTB calculations</a> on real computing resources, no configuration required</p>
             </div>
         </div>
@@ -254,12 +254,12 @@
     <div class="tile is-ancestor">
         <div class="tile is-6 is-parent">
             <div class="tile is-child">
-                <p class="title">Focus on concepts, not minutae</p>
+                <h2 class="title is-2">Focus on concepts, not minutae</h2>
                 <p class="subtitle">The user-friendly interface handles input file creation and management so you can concentrate on the bigger picture</p>
             </div>
         </div>
         <div class="tile is-6">
-            <img id="teaser2" class="teaser_img" src="{% static 'home/launch.png' %}" />
+            <img id="teaser2" class="teaser_img" src="{% static 'home/launch.webp' %}" alt="Calculation launch page of CalcUS">
         </div>
     </div>
     {% endif %}
@@ -271,7 +271,7 @@
         <div class="testimonial_div columns is-variable is-5-desktop is-1-tablet">
             <div class="column is-4">
                 <center>
-                <img class="testimonial_img" src="{% static 'testimonials/nassim.png' %}">
+                <img class="testimonial_img" src="{% static 'testimonials/nassim.webp' %}" alt="Photo of Nassim Maarouf, a CalcUS Cloud user">
                 <br>
                 <span class="testimonial-name"><b>Nassim Maarouf</b> <br>PhD student in Medicinal Chemistry <br>Université de Montréal</span>
                 </center>
@@ -296,12 +296,18 @@
             </div>
             <div class="column is-4">
                 <center>
-                    <img class="testimonial_img" src="{% static 'testimonials/hector.png' %}">
+                    <img class="testimonial_img" src="{% static 'testimonials/hector.webp' %}" alt="Photo of Hector Fabio Cortes Hernandez, a CalcUS Cloud user">
                     <br>
                     <span class="testimonial-name"><b>Hector Fabio Cortes Hernandez</b> <br>Doctor in Chemical Sciences and Research Professor in Chemistry <br>Universidad Tecnológica de Pereira</span>
                 </center>
             </div>
         </div>
+    </div>
+    <div>
+        <center style="width: 100%">
+            <br>
+            <a class="button is-info is-rounded" href="/register/" id="register_button">Create account</a>
+        </center>
     </div>
     {% endif %}
 
@@ -311,6 +317,7 @@
         <a class="link" href="/learn/conformational_search">Learn about conformational sampling</a> 
     </div>
     {% endif %}
+
     <div class="tile is-ancestor" id="contact_tile">
         <center style="width: 100%">
             <h2 class="title is-2">You have <span class="highlight">questions?</span></h2>

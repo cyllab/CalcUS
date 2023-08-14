@@ -46,6 +46,11 @@ var master_options = {
             "driver": ["xtb"],
             "theory_level": ["xtb"]
         }, 
+        "Fast Conformational Search": {
+            "software": ["xtb"],
+            "driver": ["xtb"], // Not quite true, but good enough for now
+            "theory_level": ["xtb"]
+        }, 
         "Constrained Conformational Search": {
             "software": ["xtb"],
             "driver": ["xtb"],
@@ -70,7 +75,7 @@ var master_options = {
             "driver": ["ORCA", "Pysisyphus"]
         },
         "xtb": {
-            "type": ["Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "UV-Vis Calculation", "Conformational Search", "Constrained Conformational Search", "Minimum Energy Path"],
+            "type": ["Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "UV-Vis Calculation", "Conformational Search", "Constrained Conformational Search", "Minimum Energy Path", "Fast Conformational Search"],
             "solvation_model": ["ALPB", "GBSA"],
             "solvation_radii": ["Default"],
             "theory_level": ["xtb"],
@@ -152,17 +157,17 @@ var master_options = {
     }
     {% endif %}
 }
-var list_available_elements = ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "xtb_method", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints"];
+var list_available_elements = ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "xtb_method", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints", "new_type_badge"];
 var master_available = {
     "software": {
         "Gaussian": ["df", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
         "ORCA": ["hf3c", "pbeh3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints", "aux_file_structure", "aux_structure"],
-        "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints", "xtb_method"],
+        "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints", "xtb_method", "new_type_badge"],
         "NWChem": ["functional_field", "basis_set_field", "solvation_model", "solvation_radii"],
     },
 
     "theory_level": {
-        "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints", "xtb_method"],
+        "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints", "xtb_method", "new_type_badge"],
         "semiempirical": ["aux_file_structure", "aux_structure", "se_method", "solvation_model", "solvation_radii", "constraints"],
         "hf": ["aux_file_structure", "aux_structure", "hf3c", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
         "dft": ["aux_file_structure", "aux_structure", "df", "pbeh3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"]
@@ -180,10 +185,11 @@ var master_available = {
         "MO Calculation": ["df", "pbeh3c", "hf3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii"],
         "UV-Vis Calculation": ["df", "pbeh3c", "hf3c", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "xtb_method"],
         "Conformational Search": ["solvation_model", "solvation_radii", "xtb_method"],
+        "Fast Conformational Search": ["solvation_model", "solvation_radii", "xtb_method", "new_type_badge"],
         "Constrained Conformational Search": ["solvation_model", "solvation_radii", "constraints", "xtb_method"]
     },
     "solvent": {
-        "": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "constraints", "xtb_method"]
+        "": ["df", "pbeh3c", "hf3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "aux_file_structure", "aux_structure", "constraints", "xtb_method", "new_type_badge"]
     }
 }
 

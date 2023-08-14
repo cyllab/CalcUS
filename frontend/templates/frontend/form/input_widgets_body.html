@@ -1,0 +1,55 @@
+{% if not ensemble and not structure and not calc %}
+<div id="nih_div" class="box">
+    <h4 class="title is-3">Load structure from name</h3>
+    <div>
+        <input class="input" type="text" id="nih_name" placeholder="e.g., caffeine">
+        <button class="button is-primary" id="nih_button" onclick="load_nih(this);">Load structure</button><br>
+        <span id="nih_msg"></span>
+    </div>
+</div>
+{% endif %}
+
+<div id="viewer_div" class="box">
+    <h4 class="title is-3">3D Viewer</h3>
+<script>
+    let win_width = Math.round(Math.max(400, $(window).width()/5));
+    let win_height = Math.round(Math.max(300, $(window).width()/5*(3/4)));
+
+    let viewer = new ChemDoodle.EditorCanvas3D("viewer", win_width, win_height, {
+        useServices: false,
+        oneMolecule: false,
+    });
+    viewer.styles.atoms_usePYMOLColors = true;
+    viewer.oneMolecule = false;
+    viewer.styles.set3DRepresentation("Stick");
+    viewer.styles.shapes_color = "c10000";
+    viewer.repaint();
+</script>
+{% if not ensemble and not structure and not calc %}
+<br>
+<button class="button is-primary" id="edit_button">Edit structure in 3D</button>
+{% endif %}
+</div>
+
+{% if not ensemble and not structure and not calc %}
+<div id="sketcher_div" class="box">
+    <h4 class="title is-3">Sketcher</h3>
+    <script>
+
+        let sketcher = new ChemDoodle.SketcherCanvas("sketcher", win_width, win_height, {
+            useServices: false,
+            oneMolecule: false,
+        });
+        sketcher.styles.atoms_usePYMOLColors = true;
+        sketcher.oneMolecule = false;
+        sketcher.styles.bonds_clearOverlaps_2D = true;
+        sketcher.styles.shapes_color = "c10000";
+        sketcher.repaint();
+    </script>
+    <br>
+    <button class="button is-info" onclick="get_3D();" id="gen_3D_btn">Generate 3D representation</button>
+</div>
+
+
+{% endif %}
+<div id="3d_msg"></div>

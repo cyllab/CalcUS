@@ -196,7 +196,7 @@
                     <form action="/checkout/" method="POST">
                         {% csrf_token %}
                         <input type="hidden" name="priceId" value="{{ SUBSCRIPTION_DATA.researcher.monthly }}">
-                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_researcher_btn_month">Subscribe</button>
+                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_researcher_btn_month" {% if request.user.is_subscriber %}disabled{% endif %}>Subscribe</button>
                     </form>
                     <em id="time_note">*additional time available</em>
                 </div>
@@ -214,7 +214,7 @@
                     <form action="/checkout/" method="POST">
                         {% csrf_token %}
                         <input type="hidden" name="priceId" value="{{ SUBSCRIPTION_DATA.researcher.yearly }}">
-                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_researcher_btn_year">Subscribe</button>
+                        <button class="button is-primary is-fullwidth" type="submit" id="subscribe_researcher_btn_year" {% if request.user.is_subscriber %}disabled{% endif %}>Subscribe</button>
                     </form>
                     <em id="time_note">*additional time available</em>
                 </div>

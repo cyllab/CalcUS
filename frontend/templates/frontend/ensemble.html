@@ -80,15 +80,15 @@
         -ms-user-select: none; /* IE10+ */
     }
     .close_btn {
-        float: right;
-        color: lightgray;
-        font-size: 24px;
-        font-weight: bold;
+        background-color: #b21b00;
+        position: inherit;
+        right: 0px;
+        top: 0px;
     }
     .fullscreen_div {
         display: none;
         position: fixed;
-        padding-top: 50px;
+        padding-top: 20px;
         left: 0;
         top: 0;
         width: 100%;
@@ -97,10 +97,11 @@
         background-color: rgba(0, 0, 0, 0.5);
     }
     .close_btn:hover {
-        color: darkgray;
+        background-color: #590e00;
     }
     .modal-card {
-        max-width: 80%;
+        max-width: calc(100% - 40px);
+        max-height: calc(100% - 40px);
         width: 100%;
     }
     #charges_viewer_div > canvas,
@@ -644,8 +645,8 @@
             </header>
             <section class="modal-card-body" id="fullscreen_section">
                 <script>
-                    let large_width = Math.round(3*$(window).width()/4);
-                    let large_height = Math.round(3.3*$(window).width()/8);
+                    let large_width = Math.round($(window).width() - 100);
+                    let large_height = Math.round($(window).height() - 250);
                     let editorfs = new ChemDoodle.EditorCanvas3D("editorfs", large_width, large_height, {
                         useServices: false,
                     });
