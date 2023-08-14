@@ -205,17 +205,38 @@
 
     }
 
+    function get_json_params() {
+      let data = {
+        "fixed": Object.fromEntries(all_params["fixed"]),
+        "dynamic": {}
+      }
+      for(l in all_params["dynamic"]) {
+        data["dynamic"][l] = Object.fromEntries(all_params["dynamic"][l])
+      }
+
+      return JSON.stringify(data);
+    }
     function submit_batch() {
         $("#dynamic_params_div").find(".dynamic_params").each(function(ind) {
             let name = $(this).find("input[name='set_name']").val()
             let form_data = new FormData($(this).find("form")[0]);
             all_params["dynamic"][name] = form_data;
+            
+            $.ajax({
+              url: "/receive_params/",
+              data: {"allParamsData": get_json_params()},
+              type: "POST",
+              headers: {
+                "X-CSRFToken": '{{ csrf_token }}',
+              }
+            });
         });
         $("#submit_batch_btn").remove(); // Temporary
     }
     
     $(document).ready(function() {
-        addRow();
+      addRow();
+
 	    refresh_availabilities($("#fixed_params_div"));
         $('#fixed_params_div').find("input, select").on("change", function() {
             refresh_availabilities($("#fixed_params_div"));
