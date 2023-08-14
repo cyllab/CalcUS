@@ -137,23 +137,6 @@ var master_options = {
             "software": ["ORCA"]
         }
 
-    },
-    "driver": {
-        "xtb": {
-            "software": ["xtb"]
-        },
-        "ORCA": {
-            "software": ["xtb", "ORCA"]
-        },
-        "Gaussian": {
-            "software": ["Gaussian"]
-        },
-        "Pysisyphus": {
-            "software": ["xtb", "ORCA"]
-        },
-        "NWChem": {
-            "software": ["NWChem"]
-        }
     }
     {% endif %}
 }
@@ -201,21 +184,24 @@ var parameters_dependencies = {
     "solvation_model": ["solvent"],
 }
 
-function refresh_availabilities() {
+function refresh_availabilities(context, target, additive) {
     // Since some parameters that will change can influence which parameters should be visible, we have to execute the function twice
-    _refresh_availabilities();
-    _refresh_availabilities();
+    _refresh_availabilities(context, target, additive);
+    _refresh_availabilities(context, target, additive);
 }
 
-function _refresh_availabilities() {
-    full_options = document.querySelectorAll(".unavailable");
-    full_options.forEach(element => {
-        element.classList.remove("unavailable");
-        element.style.display = 'block';
-    });
+function _refresh_availabilities(context, target, additive) {
+    if(target == undefined)
+        target = context;
+
+    if(!additive) {
+        full_options = $(target).find(".unavailable").each(function() {
+            $(this).removeClass("unavailable");
+        });
+    }
 
     master_list_params.forEach(p => {
-        el = document.getElementsByName("calc_"+p)[0];
+        el = $(context).find("[name='calc_"+p+"']")[0];
         
         // Some elements can be omitted when generating the page depending on the parameters 
         // (e.g., launching from ensemble)
@@ -224,22 +210,24 @@ function _refresh_availabilities() {
             // We only want to hide options if the parameter is chosen as fixed.
             // Ignore the cases where the structure is different (outside the fixed parameters section)
             try {
-                parent_row = el.closest(".columns");
-                checkbox = parent_row.querySelector(".column.is-1 > input");
-                if(!checkbox.checked || checkbox.disabled)
+
+                let parent_row = el.closest(".columns");
+                checkbox = $(parent_row).find(".column.is-1 > input");
+                if(checkbox.length > 0 && (!checkbox.prop('checked') || checkbox.prop('disabled')))
                     return
             }
             catch(TypeError) {}
             {% endif %}
+
             choice = el.value;
+
             if (p in master_options && choice in master_options[p]) {
                 for (const key2 in master_options[p][choice]) {
                     try {
-                        el2 = document.getElementsByName("calc_"+key2)[0];
+                        el2 = $(target).find("[name='calc_" + key2 + "']")[0];
                         allowed = master_options[p][choice][key2];
                         for (let opt of el2.options) {
                             if(!allowed.includes(opt.value)) {
-                                opt.style.display = "none";
                                 opt.classList.add("unavailable");
                             }
                         }
@@ -256,14 +244,12 @@ function _refresh_availabilities() {
                 for (const ind in list_available_elements) {
                     key = list_available_elements[ind];
                     try {
-                        el2 = document.getElementById("calc_"+key);
-                        row = document.getElementById("row_"+key);
+                        el2 = $(target).find("#calc_"+key);
+                        row = $(target).find("#row_"+key);
                         if(el2 != undefined) {
                             if(!master_available[p][choice].includes(key)) {
-                                el2.style.display = "none";
-                                el2.classList.add("unavailable");
-                                row.style.display = "none";
-                                row.classList.add("unavailable");
+                                el2.addClass("unavailable");
+                                row.addClass("unavailable");
                             }
                         }
                     }
@@ -280,12 +266,11 @@ function _refresh_availabilities() {
     });
 
     try {
-        software = document.getElementById("calc_software").value;
+        software = $(context).find("[name='calc_software']").value;
         if(software == "Gaussian") {
-            document.querySelectorAll(".scan_from").forEach(element => {
-                if(!element.classList.contains("unavailable")) {
-                    element.style.display = "none";
-                    element.classList.add("unavailable");
+            $(target).find(".scan_from").each(function(ind) {
+                if(!$(this).hasClass("unavailable")) {
+                    $(this).addClass("unavailable");
                 }
             });
         }
@@ -293,28 +278,24 @@ function _refresh_availabilities() {
     catch (excp) {
         console.log("No software element found.")
     }
-    set_availables();
+    set_availables(context, target);
 
     /* hide columns with hidden content */
-    columns = document.querySelectorAll(".column.optional-column");
-    columns.forEach(element => {
-        element.style.display = "none";
-        $(element).children("div:not(unavailable)").each((ind, subel) => {
-            if(subel.style.display != "none")
-            {
-                $(element).show();
-            }
-        });
+    $(target).find(".column.optional-column").each(function(ind) {
+        if($(this).children("div:not(.unavailable)").length == 0)
+            $(this).parent().hide();
+        else
+           $(this).parent().show();
     });
 
     {% if is_batch %}
     for (const key in parameters_dependencies) {
-        el = document.getElementsByName(key + "_fixed")[0];
-        el.removeAttribute("disabled");
+        el = $(target).find("[name='" + key + "']");
+        el.removeAttr("disabled");
         for (const dep_key in parameters_dependencies[key]) {
-            set = document.getElementsByName(parameters_dependencies[key][dep_key] + "_fixed")[0].checked;
+            set = $(context).find("[name='" + parameters_dependencies[key][dep_key] + "']").prop("checked");
             if(!set) {
-                el.setAttribute("disabled", true);
+                el.attr("disabled", true);
                 break;
             }
         }
@@ -323,33 +304,13 @@ function _refresh_availabilities() {
     {% endif %}
 }
 
-function set_availables() {
-    [].forEach.call(document.getElementById("parameters_div").querySelectorAll('select'), function(sel) {
-        ind = sel.selectedIndex;
-        if(ind != -1) {
-            opt = sel.options[ind];
-            if(opt.style.display != "none" && !opt.disabled) {
-                return;
-            }
+function set_availables(context, target) {
+    $(target).find('select').each(function() {
+        sel = $(this).find("option.unavailable:selected");
+        if(sel.length != 0) {
+            opt = $(this).find("option:not(.unavailable):not(:disabled)");
+            $(this).val(opt.val());
         }
-
-        // If there is a preferred option set (by being tagged "selected"), pick that one
-        // Otherwise, pick any valid option
-        for(i=0; i < sel.options.length; i++) {
-            opt = sel.options[i];
-            if(opt.getAttribute("selected") != undefined && opt.style.display != "none"  && !opt.disabled) {
-                sel.selectedIndex = i;
-                return
-            }
-        }
-        for(i=0; i < sel.options.length; i++) {
-            opt = sel.options[i];
-            if(opt.style.display != "none"  && !opt.disabled) {
-                sel.selectedIndex = i;
-                return
-            }
-        }
-
     });
 }
 
