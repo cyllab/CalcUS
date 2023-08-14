@@ -64,21 +64,56 @@
         label.label {
             display: none;
         }
+        
+        .hidden_div {
+            display: none;
+        }
+
+      
+        .batch_name_input_container {
+            display: flex;
+            align-items: center;
+        }
+    
+        .batch_name_label {
+            margin-right: 10px; /* Adjust the spacing between the label and Batch Name as needed */
+        }
+    
+        .batch_name {
+            flex: auto ;
+            border: 1px solid #ccc; /* Optional border style for Batch Name div */
+            padding: 12px; /* Optional padding for Batch Name div */
+            margin-right: 150px; /* Adjust the spacing between Batch Name and Preview button as needed */
+        }
+    
+        /* Optional styling for the Preview button */
+        .preview_button button {
+            margin-left: 0;
+        }
+    
+        
+    
+    
+    
+    
+        
+        
     </style>
+
 {% endblock %} 
 
 {% block content %} 
 {% csrf_token %}
 
-<div class="main_content">
+<div class="main_content" id="main_content">
      
     <div class="field" id="batch_name"> Batch Name
         <div class="control">
-            <input class="input" name="batch_name" id="batch_name" type="text">
+            <input class="input" name="batch_name" id="batch_name_input" type="text">
         </div>
     </div>
 
-    <div class="field" id="calculation_type"> Calculation Type 
+    <div class="field" id="calculation_type"> Calculation Type
         <div class="control">
             {% include 'frontend/form/type_body.html' %}   
         </div>
@@ -114,125 +149,166 @@
         <button class="button is-primary" onclick="addRow()">Add</button>     
         
     </div>
-    
-    <div class="field" id="fix_parameters">
-        Fix Parameters
+
+    <div class="basic_form">
+        <div class="box" id="parameters_div">
+            <form method="post" id="params_form" enctype="multipart/form-data">
+                <h2 style="font-weight: bold; text-align: left;">Fix Parameters</h2>
+        
+                <br>
+                <br>
+        
+                <div class="param" id="row_theory_level">
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Theory Level
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="theory_level-checkbox" name="theory_level_fixed">
+                        </div>
+                        <div class="column is-8" id="theory-body" name="files_to_include">
+                            {% include 'frontend/form/theory_level_body.html' %}           
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="param" id="row_method">
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Method
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="method-checkbox" name="method_fixed">
+                        </div>
+                        <div class="column is-8" id="method-body" name="files_to_include">
+                            <!-- The irrelevant fields will be hidden -->
+                            {% include 'frontend/form/xtb_method_body.html' %}           
+                            {% include 'frontend/form/se_method_body.html' %}           
+                            {% include 'frontend/form/dft_method_body.html' %}           
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="param" id="row_software">
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Software
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="software-checkbox" name="software_fixed">
+                        </div>
+                        <div class="column is-8" id="software-body" name="files_to_include">
+                            {% include 'frontend/form/software_body.html' %}           
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="param" id="row_driver">
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Driver
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="driver-checkbox" name="driver_fixed">
+                        </div>
+                        <div class="column is-8" id="driver-body" name="files_to_include">
+                            {% include 'frontend/form/driver_body.html' %}           
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="param" id="row_basis_set_field"> <!-- Slightly different naming convention in the previous code (quirk?)-->
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Basis set
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="basis-set-checkbox" name="basis_set_fixed">
+                        </div>
+                        <div class="column is-8" id="basis-set-body" name="files_to_include">
+                            {% include 'frontend/form/basis_set_body.html' %}           
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="param" id="row_solvent">
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Solvent
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="solvent-checkbox" name="solvent_fixed">
+                        </div>
+                        <div class="column is-8" id="solvent-body" name="files_to_include">
+                            {% include 'frontend/form/solvent_body.html' %}    
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="param" id="row_solvation_radii">
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Solvation Radii
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="solvation_radii-checkbox" name="solvation_radii_fixed">
+                        </div>
+                        <div class="column is-8" id="solvation_radii-body" name="files_to_include">
+                            {% include 'frontend/form/solvation_radii_body.html' %}    
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="param" id="row_solvation_model">
+                    <div class="columns is-vcentered">
+                        <div class="column is-3">
+                            Solvation Model
+                        </div>
+                        <div class="column is-1">
+                            <input type="checkbox" class="checkbox" id="solvation_model-checkbox" name="solvation_model_fixed">
+                        </div>
+                        <div class="column is-8" id="solvation_model-body" name="files_to_include">
+                            {% include 'frontend/form/solvation_model_body.html' %}    
+                        </div>
+                    </div>
+                </div>
+                
+                <script>
+                    $(document).ready(function() {
+                        
+                        $('input[name="theory_level_fixed"], input[name="method_fixed"], input[name="bs_fixed"], input[name="driver_fixed"], input[name="software_fixed"], input[name="solvent_fixed"], input[name="solvation_radii_fixed"], input[name="solvation_model_fixed"] ').change(function() {
+                            refresh_availabilities();
+                        });
+                    });
+                </script>
+                
+        
+        
+        
+                <button class="button is-primary">Submit</button>
+            </form>
+        </div>
+        </div>
+        
     </div>
 
-    <div class="box" id="parameters_div">
-        <form method="post" id="params_form" enctype="multipart/form-data">
 
-            <div class="param" id="row_theory_level">
-                <div class="columns is-vcentered">
-                    <div class="column is-3">
-                        Theory Level
-                    </div>
-                    <div class="column is-1">
-                        <input type="checkbox" class="checkbox" id="theory_level-checkbox" name="theory_level_fixed">
-                    </div>
-                    <div class="column is-8" id="theory-body">
-                        {% include 'frontend/form/theory_level_body.html' %}           
-                    </div>
-                </div>
-            </div>
 
-            <div class="param" id="row_method">
-                <div class="columns is-vcentered">
-                    <div class="column is-3">
-                        Method
-                    </div>
-                    <div class="column is-1">
-                        <input type="checkbox" class="checkbox" id="method-checkbox" name="method_fixed">
-                    </div>
-                    <div class="column is-8" id="method-body">
-                        <!-- The irrelevant fields will be hidden -->
-                        {% include 'frontend/form/xtb_method_body.html' %}           
-                        {% include 'frontend/form/se_method_body.html' %}           
-                        {% include 'frontend/form/dft_method_body.html' %}           
-                    </div>
-                </div>
-            </div>
 
-            <div class="param" id="row_software">
-                <div class="columns is-vcentered">
-                    <div class="column is-3">
-                        Software
-                    </div>
-                    <div class="column is-1">
-                        <input type="checkbox" class="checkbox" id="software-checkbox" name="software_fixed">
-                    </div>
-                    <div class="column is-8" id="software-body">
-                        {% include 'frontend/form/software_body.html' %}           
-                    </div>
-                </div>
-            </div>
 
-            <div class="param" id="row_driver">
-                <div class="columns is-vcentered">
-                    <div class="column is-3">
-                        Driver
-                    </div>
-                    <div class="column is-1">
-                        <input type="checkbox" class="checkbox" id="driver-checkbox" name="driver_fixed">
-                    </div>
-                    <div class="column is-8" id="driver-body">
-                        {% include 'frontend/form/driver_body.html' %}           
-                    </div>
-                </div>
-            </div>
+    
+
+    <div id="result_div" class="hidden_div">
             
-            <div class="param" id="row_basis_set_field"> <!-- Slightly different naming convention in the previous code (quirk?) --!>
-                <div class="columns is-vcentered">
-                    <div class="column is-3">
-                        Basis set
-                    </div>
-                    <div class="column is-1">
-                        <input type="checkbox" class="checkbox" id="basis-set-checkbox" name="basis_set_fixed">
-                    </div>
-                    <div class="column is-8" id="basis-set-body">
-                        {% include 'frontend/form/basis_set_body.html' %}           
-                    </div>
-                </div>
-            </div>
-
-            <div class="param" id="row_solvent">
-                <div class="columns is-vcentered">
-                    <div class="column is-3">
-                        Solvent
-                    </div>
-                    <div class="column is-1">
-                        <input type="checkbox" class="checkbox" id="solvent-checkbox" name="solvent_fixed">
-                    </div>
-                    <div class="column is-8" id="solvent-body">
-                        {% include 'frontend/form/solvent_body.html' %}    
-                    </div>
-                </div>
-            </div>
-
-            <div class="param" id="row_solvation_radii">
-                <div class="columns is-vcentered">
-                    <div class="column is-3">
-                        Solvation Radii
-                    </div>
-                    <div class="column is-1">
-                        <input type="checkbox" class="checkbox" id="solvation_radii-checkbox" name="solvation_radii_fixed">
-                    </div>
-                    <div class="column is-8" id="solvation_radii-body">
-                        {% include 'frontend/form/solvation_radii_body.html' %}    
-                    </div>
-                </div>
-            </div>
-
-            <div class="param" id="row_solvation_model">
-                <div class="columns is-vcentered">
-                    <div class="column is-3">
-                        Solvation Model
-                    </div>
-                    <div class="column is-1">
-                        <input type="checkbox" class="checkbox" id="solvation_model-checkbox" name="solvation_model_fixed">
-                    </div>
-                    <div class="column is-8" id="solvation_model-body">
-                        {% include 'frontend/form/solvation_model_body.html' %}    
+        <!-- Batch Name in the previous div -->
+        <div class="field" id="batch_name">
+            <div class="control">
+                <!-- Use a contenteditable div to show the Batch Name -->
+                <div class="batch_name_input_container">
+                    <div class="batch_name_label">Batch Name</div>
+                    <div class="batch_name" id="batch_name_result" contenteditable="false" readonly></div>
+                    <div class="preview_button">
+                        <button class="button is-primary" onclick="previewBatch()">Preview</button>
                     </div>
                 </div>
             </div>
@@ -246,23 +322,108 @@
                 });
             </script>
 
-            <button class="button is-primary">Submit</button>
-        </form>
-    </div>
 </div>
+
+
+
+
 <script>
+    
+        function showResultDiv() {
+
+            var mainContentDiv = document.getElementById("main_content");
+            var resultDiv = document.getElementById("result_div");
+            var batchNameInputDiv = document.getElementById("batch_name_input");
+    
+            
+            mainContentDiv.classList.add("hidden_div");
+            
+            resultDiv.classList.remove("hidden_div");
+    
+            var batchName = batchNameInputDiv.textContent;
+            document.getElementById("batch_name_result").textContent = batchName;
+    
+            batchNameInputDiv.removeAttribute("contenteditable");
+    
+            generateDynamicForm();
+        }
+        function generateDynamicForm() {
+            var uncheckedParameters = getUncheckedParameters();
+            var dynamicForm = document.getElementById("dynamic_form");
+
+            console.log(uncheckedParameters)
+          
+            dynamicForm.innerHTML = "";
+          
+            
+            uncheckedParameters.forEach(function (parameter) {
+              var div = document.createElement('div');
+              div.setAttribute('id', parameter);
+          
+              var label = document.createElement('label');
+              label.setAttribute('for', parameter);
+              label.innerText = parameter;
+          
+             
+              fetchFileContent(parameter).then(function (fileContent) {
+                var includedFileContent = fileContent;
+          
+                
+                div.appendChild(label);
+                div.innerHTML += includedFileContent;
+          
+                
+                dynamicForm.appendChild(div);
+              });
+            });
+          }
+          
+          function fetchFileContent(parameter) {
+           
+            var url = "frontend/form/" + parameter + "_body.html";
+
+          
+            return fetch(url)
+              .then(function (response) {
+                if (!response.ok) {
+                  throw new Error("Network response was not ok");
+                }
+                return response.text();
+              })
+              .catch(function (error) {
+                console.error("Error fetching the file:", error);
+              });
+          }
+          
+          function getUncheckedParameters() {
+            var uncheckedParams = [];
+          
+            var theoryLevelCheckbox = document.getElementById("theory_level-checkbox");
+            if (!theoryLevelCheckbox.checked) {
+              uncheckedParams.push("theory_level");
+            }
+          
+            
+            
+          
+            // Add more parameters as needed
+          
+            return uncheckedParams;
+          }
+          
+    
+       
     $( document ).ready(function() {
 	    refresh_availabilities();
     });
     var all_params = {};
 
-	$('#params_form').submit(function(){
+	$('#params_form').submit(function () {
         data = new FormData(document.forms.namedItem("params_form"));
-
         all_params["test"] = data;
-
-        /* Don't submit the form like it normally would, we want to handle the data ourselves */
-        return false; 
+        showResultDiv(); 
+        return false;
     });
+
 </script>
 {% endblock content %}

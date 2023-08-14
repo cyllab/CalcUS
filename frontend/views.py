@@ -57,6 +57,8 @@ from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
 from django.db.models import Q
 from django.template.loader import get_template
+from django.shortcuts import render
+
 
 from .forms import (
     ResearcherCreateForm,
@@ -5853,3 +5855,9 @@ def stripe_config(request):
     if request.method == "GET":
         stripe_config = {"publicKey": settings.STRIPE_PUBLISHABLE_KEY}
         return JsonResponse(stripe_config, safe=False)
+
+
+
+    
+
+      
