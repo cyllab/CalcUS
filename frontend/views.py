@@ -2020,6 +2020,26 @@ def submit_flowchart_input(request):
 
 
 @login_required
+def receive_params(request):
+    if request.method == "POST":
+        try:
+            all_params_data = json.loads(
+                request.POST.get("allParamsData")
+            )  # Use json.loads to parse JSON data
+            print(all_params_data)
+            response_data = {
+                "message": "Data received and processed successfully",
+                "receivedData": all_params_data,
+            }
+            return JsonResponse(response_data)
+
+        except json.JSONDecodeError:
+            response_data = {"error": "Invalid JSON data"}
+            return JsonResponse(response_data, status=400)
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+@login_required
 def verify_flowchart_calculation(request):
     ret = parse_parameters(request, request.POST, verify=False, is_flowchart=True)
     if isinstance(ret, str):
