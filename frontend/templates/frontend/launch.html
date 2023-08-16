@@ -298,12 +298,12 @@
 
 		{% if not ensemble and not structure and not calc and is_flowchart is None %}
         // Duplicate code, should be refactored...
-		if (sketcher.molecules.length > 0) {
-			let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
-			data.append("structure", mol);
-		}
-        if (sketcher.molecules.length == 0 && viewer.molecules.length > 0) {
+		if (viewer.molecules.length > 0) {
 			let mol = ChemDoodle.writeMOL(viewer.getMolecule());
+			data.append("structure_3D", mol);
+		}
+        if (viewer.molecules.length == 0 && sketcher.molecules.length > 0) {
+			let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
 
 			data.append("structure", mol);
 		}
@@ -597,7 +597,7 @@
 			let mol = ChemDoodle.writeMOL(viewer.getMolecule());
 
 			$('<input />').attr('type', 'hidden')
-				.attr('name', "structure").val(mol).appendTo("#calcform");
+				.attr('name', "structure_3D").val(mol).appendTo("#calcform");
 		}
         if (viewer.molecules.length == 0 && sketcher.molecules.length > 0) {
 			let mol = ChemDoodle.writeMOL(sketcher.getMolecule());

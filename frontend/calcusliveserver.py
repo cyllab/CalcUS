@@ -1954,6 +1954,16 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         btn = self.driver.find_element(By.ID, "clean_all_completed_btn")
         btn.click()
 
+    def load_mol_in_sketcher(self, mol):
+        # The mol text should not have any excess whitespace (e.g., due to indentation in the Python code)
+        self.driver.execute_script(
+            "sketcher.loadMolecule(ChemDoodle.readMOL(`" + mol + "`))"
+        )
+
+    def preview_molecule(self):
+        self.driver.find_element(By.ID, "gen_3D_btn").click()
+        self.wait_for_ajax()
+
 
 class CalcusCloudLiveServer(CalcusLiveServer):
     def setUp(self):
