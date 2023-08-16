@@ -354,6 +354,7 @@ if IS_CLOUD:
     LOCAL_ALLOWED_STEPS = [
         "Geometrical Optimisation",
         "Conformational Search",
+        "Fast Conformational Search",
         "Constrained Optimisation",
         "Frequency Calculation",
         "TS Optimisation",
