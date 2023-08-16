@@ -2632,7 +2632,7 @@ def _submit_calculation(request, verify=False):
             if "structure" in request.POST or "structure_3D" in request.POST:
                 if "structure_3D" in request.POST:
                     mol = clean(request.POST["structure_3D"])
-                    xyz = generate_xyz_structure(False, mol, "mol")
+                    xyz = generate_xyz_structure(False, mol, "mol", scale=20)
                 else:
                     mol = clean(request.POST["structure"])
                     xyz = generate_xyz_structure(True, mol, "mol")

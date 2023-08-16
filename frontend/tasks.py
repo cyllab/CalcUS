@@ -632,7 +632,7 @@ def setup_cached_calc(calc):
     return True
 
 
-def generate_xyz_structure(drawing, inp, ext):
+def generate_xyz_structure(drawing, inp, ext, scale=1):
     if ext == "xyz":
         return inp
     elif ext == "mol":
@@ -661,9 +661,9 @@ def generate_xyz_structure(drawing, inp, ext):
                         to_print.append(
                             "{} {} {} {}\n".format(
                                 sline[3],
-                                float(sline[0]),
-                                float(sline[1]),
-                                float(sline[2]),
+                                float(sline[0]) * scale,
+                                float(sline[1]) * scale,
+                                float(sline[2]) * scale,
                             )
                         )
                     else:
