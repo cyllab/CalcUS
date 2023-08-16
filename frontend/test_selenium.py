@@ -1452,6 +1452,99 @@ class LaunchParametersTests(CalcusLiveServer):
         self.assertIn("Pysisyphus", drivers)
         self.assertEqual(len(drivers), 1)
 
+    def test_sketcher_mol(self):
+        mol = """Molecule from ChemDoodle Web Components
+
+http://www.ichemlabs.com
+  8  8  0  0  0  0            999 V2000
+   -0.8660    1.0000    0.0000 C   0  0  0  0  0  0
+    0.0000    0.5000    0.0000 C   0  0  0  0  0  0
+    0.0000   -0.5000    0.0000 C   0  0  0  0  0  0
+   -0.8660   -1.0000    0.0000 C   0  0  0  0  0  0
+   -1.7321   -0.5000    0.0000 C   0  0  0  0  0  0
+   -1.7321    0.5000    0.0000 C   0  0  0  0  0  0
+    0.8660    1.0000    0.0000 C   0  0  0  0  0  0
+    1.7321    0.5000    0.0000 C   0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  2  3  2  0  0  0  0
+  3  4  1  0  0  0  0
+  4  5  2  0  0  0  0
+  5  6  1  0  0  0  0
+  6  1  2  0  0  0  0
+  2  7  1  0  0  0  0
+  7  8  1  0  0  0  0
+M  END"""
+
+        self.lget("/launch/")
+        self.load_mol_in_sketcher(mol)
+
+        params = {
+            "mol_name": "my_mol",
+            "type": "Geometrical Optimisation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+        }
+
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.wait_all_calc_done(60)
+
+        self.assertTrue(self.latest_calc_successful())
+
+        calc = Calculation.objects.latest("pk")
+        s = calc.structure.xyz_structure
+        num_atoms = int(s.split("\n")[0])
+
+        self.assertEqual(num_atoms, 18)
+
+    def test_sketcher_mol_preview(self):
+        # There was a bug where any insaturation would be ignored and the molecule would be
+        # saturated. This occurred only when submitting from the sketcher (conversion to 3D was fine).
+        mol = """Molecule from ChemDoodle Web Components
+
+http://www.ichemlabs.com
+  8  8  0  0  0  0            999 V2000
+   -0.8660    1.0000    0.0000 C   0  0  0  0  0  0
+    0.0000    0.5000    0.0000 C   0  0  0  0  0  0
+    0.0000   -0.5000    0.0000 C   0  0  0  0  0  0
+   -0.8660   -1.0000    0.0000 C   0  0  0  0  0  0
+   -1.7321   -0.5000    0.0000 C   0  0  0  0  0  0
+   -1.7321    0.5000    0.0000 C   0  0  0  0  0  0
+    0.8660    1.0000    0.0000 C   0  0  0  0  0  0
+    1.7321    0.5000    0.0000 C   0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  2  3  2  0  0  0  0
+  3  4  1  0  0  0  0
+  4  5  2  0  0  0  0
+  5  6  1  0  0  0  0
+  6  1  2  0  0  0  0
+  2  7  1  0  0  0  0
+  7  8  1  0  0  0  0
+M  END"""
+
+        self.lget("/launch/")
+        self.load_mol_in_sketcher(mol)
+        self.preview_molecule()
+
+        params = {
+            "mol_name": "my_mol",
+            "type": "Geometrical Optimisation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+        }
+
+        self.calc_input_params(params)
+        self.calc_launch()
+        self.wait_all_calc_done(60)
+
+        self.assertTrue(self.latest_calc_successful())
+
+        calc = Calculation.objects.latest("pk")
+        s = calc.structure.xyz_structure
+        num_atoms = int(s.split("\n")[0])
+
+        self.assertEqual(num_atoms, 18)
+
 
 class UserPermissionsTests(CalcusLiveServer):
     def test_launch_without_group(self):

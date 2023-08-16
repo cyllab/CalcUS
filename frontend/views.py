@@ -2629,9 +2629,14 @@ def _submit_calculation(request, verify=False):
                     obj.save()
                     orders.append(obj)
         else:  # No file upload
-            if "structure" in request.POST.keys():
-                mol = clean(request.POST["structure"])
-                xyz = generate_xyz_structure(True, mol, "mol")
+            if "structure" in request.POST or "structure_3D" in request.POST:
+                if "structure_3D" in request.POST:
+                    mol = clean(request.POST["structure_3D"])
+                    xyz = generate_xyz_structure(False, mol, "mol")
+                else:
+                    mol = clean(request.POST["structure"])
+                    xyz = generate_xyz_structure(True, mol, "mol")
+
                 if len(xyz) == 0:
                     return "Could not convert the input drawing to XYZ"
 
