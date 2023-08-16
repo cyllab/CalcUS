@@ -113,7 +113,8 @@ var master_options = {
             "driver": [{% if "Gaussian" in packages %}"Gaussian", {% endif %}{% if "ORCA" in packages %}"ORCA", {% endif %}"Pysisyphus", "xtb", "NWChem"],
             "software": [{% if "Gaussian" in packages %}"Gaussian", {% endif %}{% if "ORCA" in packages %}"ORCA", {% endif %} "xtb", "NWChem"]
         }
-    }{% if is_batch %},
+    }
+    {% if is_batch %},
     /*
      * Inverse restrictions (children restricting parents)
      * Should only be used when the children can be toggled "on" or "off", 
@@ -191,6 +192,9 @@ function refresh_availabilities(context, target, additive) {
 }
 
 function _refresh_availabilities(context, target, additive) {
+    if(context == undefined)
+        context = $("#parameters_div")
+
     if(target == undefined)
         target = context;
 
@@ -210,7 +214,6 @@ function _refresh_availabilities(context, target, additive) {
             // We only want to hide options if the parameter is chosen as fixed.
             // Ignore the cases where the structure is different (outside the fixed parameters section)
             try {
-
                 let parent_row = el.closest(".columns");
                 checkbox = $(parent_row).find(".column.is-1 > input");
                 if(checkbox.length > 0 && (!checkbox.prop('checked') || checkbox.prop('disabled')))
@@ -219,12 +222,12 @@ function _refresh_availabilities(context, target, additive) {
             catch(TypeError) {}
             {% endif %}
 
-            choice = el.value;
+            let choice = el.value;
 
             if (p in master_options && choice in master_options[p]) {
                 for (const key2 in master_options[p][choice]) {
                     try {
-                        el2 = $(target).find("[name='calc_" + key2 + "']")[0];
+                        let el2 = $(target).find("[name='calc_" + key2 + "']")[0];
                         allowed = master_options[p][choice][key2];
                         for (let opt of el2.options) {
                             if(!allowed.includes(opt.value)) {
@@ -241,23 +244,27 @@ function _refresh_availabilities(context, target, additive) {
                 }
             }
             if (p in master_available && choice in master_available[p]) {
-                for (const ind in list_available_elements) {
-                    key = list_available_elements[ind];
+                for (ind=0; ind<list_available_elements.length; ind++) {
+                    pname = list_available_elements[ind];
                     try {
-                        el2 = $(target).find("#calc_"+key);
-                        row = $(target).find("#row_"+key);
+                        el2 = $(target).find("#calc_"+pname);
+                        {% if is_batch %}
+                        row = $(target).find("#row_"+pname);
+                        {% endif %}
                         if(el2 != undefined) {
-                            if(!master_available[p][choice].includes(key)) {
+                            if(!master_available[p][choice].includes(pname)) {
                                 el2.addClass("unavailable");
+                                {% if is_batch %}
                                 row.addClass("unavailable");
+                                {% endif %}
                             }
                         }
                     }
                     catch(e) {
                         if(e instanceof TypeError || e instanceof ReferenceError)
-                            console.log("Did not find an element with name calc_" + key);
+                            console.log("Did not find an element with name calc_" + pname);
                         else
-                            console.log("Expected error while accessing calc_" + key + ": " + String(e))
+                            console.log("Expected error while accessing calc_" + pname + ": " + String(e))
                     }
  
                 }
@@ -282,14 +289,26 @@ function _refresh_availabilities(context, target, additive) {
 
     /* hide columns with hidden content */
     $(target).find(".column.optional-column").each(function(ind) {
-        if($(this).children("div:not(.unavailable)").length == 0)
+        if($(this).children("div:not(.unavailable)").length == 0) {
+            {% if is_batch %}
             $(this).parent().hide();
-        else
-           $(this).parent().show();
+            {% else %}
+            $(this).hide();
+            {% endif %}
+        }
+        else {
+            {% if is_batch %}
+            $(this).parent().show();
+            {% else %}
+            $(this).show();
+            {% endif %}
+        }
+
     });
 
     {% if is_batch %}
-    for (const key in parameters_dependencies) {
+    for (ind=0; ind<parameters_dependencies.length; ind++) {
+        let key=parameters_dependencies[ind]
         el = $(target).find("[name='" + key + "']");
         el.removeAttr("disabled");
         for (const dep_key in parameters_dependencies[key]) {

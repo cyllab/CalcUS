@@ -131,7 +131,7 @@
       color: #333;
     }
     .popup .close:hover {
-      color: #06D85F;
+        color: #06D85F;
     }
     .rec-method {
         width: 10em;
@@ -159,29 +159,28 @@
     <link rel="stylesheet" href="{% static 'frontend/shepherd.css' %}">
 
     <script>
-    const tour = new Shepherd.Tour({
-        useModalOverlay: true,
-        defaultStepOptions: {
-            classes: '',
-            scrollTo: { behavior: 'smooth', block: 'center' },
-            modalOverlayOpeningPadding: "10",
-            floatingUIOptions: {  middleware: [window.FloatingUIDOM.offset({ mainAxis: 30})] }
-        },
-        exitOnEsc: true,
-        keyboardNavigation: true,
-    });
-
-
-    ['complete', 'cancel'].forEach(event => Shepherd.on(event, () => {
-        $.ajax({
-            method: "POST",
-            url: "/tour_done/",
-            data: {"action": event},
-	        headers: {
-				"X-CSRFToken": '{{ csrf_token }}',
-			}
+        const tour = new Shepherd.Tour({
+            useModalOverlay: true,
+            defaultStepOptions: {
+                classes: '',
+                scrollTo: { behavior: 'smooth', block: 'center' },
+                modalOverlayOpeningPadding: "10",
+                floatingUIOptions: {  middleware: [window.FloatingUIDOM.offset({ mainAxis: 30})] }
+            },
+            exitOnEsc: true,
+            keyboardNavigation: true,
         });
-    }));
+
+        ['complete', 'cancel'].forEach(event => Shepherd.on(event, () => {
+            $.ajax({
+                method: "POST",
+                url: "/tour_done/",
+                data: {"action": event},
+                headers: {
+                    "X-CSRFToken": '{{ csrf_token }}',
+                }
+            });
+        }));
     </script>
     {% endif %}
 
@@ -613,13 +612,18 @@
 $( document ).ready(function() {
 	{% if not ensemble and not structure and is_flowchart is None and not is_batch %}
 	preselect_last_project();
-	set_availables();
+	set_availables($("#parameters_div"));
 	project_selection_changed(document.getElementById("calc_project"));
 	{% endif %}
 
 	refresh_presets();
 
-	refresh_availabilities();
+	refresh_availabilities($("#parameters_div"), $("#parameters_div"), false);
+
+    $('#parameters_div').find("input, select").on("change", function() {
+	    refresh_availabilities($("#parameters_div"), $("#parameters_div"), false);
+    });
+
 
 	{% if proj %}
 	proj = document.getElementById("calc_project");
@@ -636,9 +640,9 @@ $( document ).ready(function() {
 			},
 			success: function(data) {
 				eval(data);
-				refresh_availabilities();
+				refresh_availabilities($("#parameters_div"));
 				$('#calc_software').data('software', $("#calc_software").val());
-				refresh_availabilities();//Whatever
+				refresh_availabilities($("#parameters_div"));//Whatever
 
 			},
 		});
