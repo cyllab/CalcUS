@@ -7,7 +7,7 @@
             <option {% if proc.short_name == "opt" %}selected{% endif %} value="{{ proc.name }}">{% if request.user.calc_type_property %}{{ proc.prop_name}}{% else %}{{ proc.name }}{% endif %}</option>
             {% endfor %}
             </select>
-            <span title="Badge right" class="badge is-primary" id="calc_new_type_badge" style="display: none;">new</span>
+            <span title="Badge right" class="badge is-primary" id="calc_new_type_badge">new</span>
         </div>
     </div>
 </div>

@@ -693,6 +693,7 @@ $( document ).ready(function() {
 			},
 		});
 	{% endif %}
+	project_selection_changed(document.getElementById("calc_project"));
 
     if(!local_allowed_theory_levels.includes("ALL")) {
         full_options = document.querySelector("#calc_theory_level").querySelectorAll("option");

@@ -4246,6 +4246,7 @@ def get_Gaussian_xyz(text):
 
 
 SPECIAL_FUNCTIONALS = ["HF-3c", "PBEh-3c"]
+
 BASICSTEP_TABLE = {
     "xtb": {
         "Geometrical Optimisation": xtb_opt,

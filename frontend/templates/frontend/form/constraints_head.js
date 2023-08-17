@@ -81,7 +81,7 @@ function add_constraint(first) {
             </div> \
         </div> \
     </div> \
-        <div id="calc_scan_div_{}"> \
+        <div id="calc_scan_div_{}" style="display: none;"> \
         <div class="columns"> \
         <div class="column"> \
             <p id="calc_label_from_{}"> From (Å)</p> \
