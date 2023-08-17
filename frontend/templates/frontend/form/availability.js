@@ -326,7 +326,8 @@ function _refresh_availabilities(context, target, additive) {
 function set_availables(context, target) {
     $(target).find('select').each(function() {
         sel = $(this).find("option.unavailable:selected");
-        if(sel.length != 0) {
+        sel2 = $(this).find("option:selected")
+        if(sel.length != 0 || sel2.length == 0) {
             opt = $(this).find("option:not(.unavailable):not(:disabled)");
             $(this).val(opt.val());
         }

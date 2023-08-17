@@ -737,6 +737,8 @@ $( document ).ready(function() {
     checkbox_deriv = document.getElementsByName("calc_gen_derivatives")[0]
     if(checkbox_deriv != null)
         calc_deriv_changed(checkbox_deriv);
+    
+	project_selection_changed(document.getElementById("calc_project"));
 });
 
 let modalBtnBs = document.getElementById("pick_bs_button")

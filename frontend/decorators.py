@@ -26,6 +26,6 @@ def superuser_required(func):
         if request.user.is_superuser:
             return func(request, *args, **kwargs)
         else:
-            return HttpResponseRedirect("/home/")
+            return HttpResponseRedirect("/")
 
     return wrapper
