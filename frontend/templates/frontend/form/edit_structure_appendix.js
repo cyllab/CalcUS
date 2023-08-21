@@ -1,25 +1,16 @@
-var atomBtns = $('.element');
-atomBtns.click(function() {
+$('.element').click(function() {
     let cmd = $(this).attr('data-el');
     $('.element.is-primary').removeClass("is-primary");
 
     switch(cmd)
     {
         case 'x':
+            Jmol.script(editor, 'set atomPicking on');
             Jmol.script(editor, 'set picking deleteAtom');
-            Jmol.script(editor, 'set atomPicking on');
-            break;
-        case 'off':/// to use
-            Jmol.script(editor, 'set atomPicking off');
-            break;
-        case 'dra':
-
-            Jmol.script(editor, 'set atomPicking on');
-            Jmol.script(editor, 'set picking dragMinimize'); // on off
-            $(this).addClass('is-primary');
             break;
         default:
             Jmol.script(editor, 'set atomPicking on');
+            Jmol.script(editor, 'set picking select atom');
             Jmol.script(editor, 'set picking dragMinimize');
             Jmol.script(editor, 'set picking assignAtom_'+cmd);
             $(this).addClass('is-primary');
@@ -27,6 +18,67 @@ atomBtns.click(function() {
 
     return false;
 });
+
+$('.bond').click(function() {
+    let bondtype = $(this).attr('data-bond');
+    $('.bond.is-primary').removeClass("is-primary");
+    $(this).addClass('is-primary');
+    Jmol.script(editor, 'set picking assignBond_' + bondtype);
+    return false;
+});
+
+function reset_mode() {
+    Jmol.script(editor, 'set allowRotateSelected false');
+    Jmol.script(editor, 'set atomPicking off');
+    Jmol.script(editor, 'set bondPicking off');
+    Jmol.script(editor, 'set picking none');
+}
+
+$('.action').click(function() {
+    let cmd = $(this).attr('data-action');
+    $('.action.is-primary').removeClass("is-primary");
+    $(this).addClass('is-primary');
+
+    reset_mode()    
+
+    switch(cmd)
+    {
+        case 'browse':
+            Jmol.script(editor, 'set pickingStyle select toggle');
+            break;
+        case 'rotate':
+            Jmol.script(editor, 'set allowRotateSelected true');
+            Jmol.script(editor, 'set atomPicking on');
+            Jmol.script(editor, 'set picking dragMolecule');
+            Jmol.script(editor, 'set picking rotateBond');
+            break;
+        case 'drag-atom':
+            Jmol.script(editor, 'set atomPicking on');
+            Jmol.script(editor, 'set picking dragAtom');
+            break;
+        case 'drag-mol':
+            Jmol.script(editor, 'set atomPicking on');
+            Jmol.script(editor, 'set picking dragMolecule');
+            break;
+        case 'select':
+            Jmol.script(editor, 'set atomPicking on');
+            Jmol.script(editor, 'set pickingStyle select drag');
+            Jmol.script(editor, 'set picking select atom');
+            break;
+        case 'del-sel':
+            Jmol.script(editor, 'delete selected');
+            break
+        case 'deselect-all':
+            Jmol.script(editor, 'select none');
+            break;
+
+        default:
+            return
+    }
+
+    return false;
+});
+
 
 var modalEdit = document.getElementById("edit_structure_modal");
 var modalBtnEdit = document.getElementById("edit_button");
@@ -39,17 +91,8 @@ if(modalBtnEdit) {
     }
 }
 
-var bondBtns = $('.bond');
-bondBtns.click(function() {
-    let bondtype = $(this).attr('data-bond');
-    $('.bond.is-primary').removeClass("is-primary");
-    $(this).addClass('is-primary');
-    Jmol.script(editor, 'set picking assignBond_' + bondtype);
-    return false;
-});
 
-var doneBtn = $('#jsmol_done');
-doneBtn.click(function() {
+$('#jsmol_done').click(function() {
     modalEdit.style.display = "none";
     let struct_mol = Jmol.getPropertyAsString(editor, "extractModel", "all");
     let mol_read = ChemDoodle.readMOL(struct_mol, 1);

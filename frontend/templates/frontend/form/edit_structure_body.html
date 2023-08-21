@@ -45,6 +45,10 @@ $$$$`;
                         Jmol.script(editor, 'set forcefield "MMFF"');
                         Jmol.script(editor, 'load inline "' + methane + '"');
                         Jmol.script(editor, 'minimize');
+                        Jmol.script(editor, 'set appendNew false');
+                        Jmol.script(editor, 'set antialiasDisplay true');
+                        Jmol.script(editor, 'set picking off');
+
                     </script>
                 </div>
                 <div class="column">
@@ -75,6 +79,13 @@ $$$$`;
                         </center>
                     </div>
                     <div class="box" id="jsmol_actions">
+                        <button class="button action is-primary" data-action="browse">Browse</button>
+                        <button class="button action" data-action="rotate">Rotate</button>
+                        <button class="button action" data-action="drag-mol">Drag Mol</button>
+                        <button class="button action" data-action="drag-atom">Drag Atom</button>
+                        <button class="button action" data-action="select">Select</button>
+                        <button class="button action" data-action="deselect-all">Deselect all</button>
+                        <button class="button action" data-action="del-sel">Delete selection</button>
                         <center>
                             <button class="button is-success" id="jsmol_done">Done</button>
                         </center>
