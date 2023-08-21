@@ -10,6 +10,14 @@
             <div class="columns">
                 <div class="column">
                     <script type="text/javascript">
+                        function reset_mode() {
+                            Jmol.script(editor, 'set allowRotateSelected false');
+                            Jmol.script(editor, 'set atomPicking off');
+                            Jmol.script(editor, 'set bondPicking off');
+                            Jmol.script(editor, 'set pickingStyle select none');
+                            Jmol.script(editor, 'set picking none');
+                        }
+
                         var methane = `Methane
 
 
@@ -26,8 +34,8 @@
 M  END
 $$$$`;
 
-                        let editor_width = Math.round(Math.min(1000, $(window).width()/2));
-                        let editor_height = Math.round(Math.min(750, $(window).width()/2*(3/4)));
+                        let editor_width = Math.round(Math.min(1800, $(window).width()/2));
+                        let editor_height = Math.round(Math.min(1350, $(window).width()/2*(3/4)));
                         var editor_info = {
                             height: editor_height,
                             width: editor_width,
@@ -47,8 +55,8 @@ $$$$`;
                         Jmol.script(editor, 'minimize');
                         Jmol.script(editor, 'set appendNew false');
                         Jmol.script(editor, 'set antialiasDisplay true');
-                        Jmol.script(editor, 'set picking off');
 
+                        reset_mode();
                     </script>
                 </div>
                 <div class="column">
@@ -73,12 +81,13 @@ $$$$`;
                         <center>
                         <span class="jsmol_span">Bonds</span><br>
                         <div class="button bond" data-bond="0">Break</div>
-                        <div class="button bond" data-bond="1">Single</div>
+                        <div class="button bond is-primary" data-bond="1">Single</div>
                         <div class="button bond" data-bond="2">Double</div>
                         <div class="button bond" data-bond="3">Triple</div>
                         </center>
                     </div>
                     <div class="box" id="jsmol_actions">
+                        <center>
                         <button class="button action is-primary" data-action="browse">Browse</button>
                         <button class="button action" data-action="rotate">Rotate</button>
                         <button class="button action" data-action="drag-mol">Drag Mol</button>
@@ -86,10 +95,48 @@ $$$$`;
                         <button class="button action" data-action="select">Select</button>
                         <button class="button action" data-action="deselect-all">Deselect all</button>
                         <button class="button action" data-action="del-sel">Delete selection</button>
-                        <center>
-                            <button class="button is-success" id="jsmol_done">Done</button>
                         </center>
+                        <div id="actions_cheatsheet">
+                            <span id="cheatsheet_span">Cheatsheet</span>
+                            <div class="cheatsheet" id="cheatsheet_browse">
+                                <ul>
+                                    <li>Left mouse dragging: rotate around the center</li>
+                                    <li>Alt + Left mouse dragging: rotate in plane</li>
+                                    <li>Shift + Left mouse dragging: zoom</li>
+                                </ul>
+                            </div>
+                            <div class="cheatsheet" id="cheatsheet_rotate" style="display: none;">
+                                <ul>
+                                    <li>Click on the very center of a bond to select it (both atoms in the bond with by highlighted with a thin red line).</li>
+                                    <li>Click and drag from one of the two atoms to rotate the group around the selected bond.</li>
+                                </ul>
+                            </div>
+                            <div class="cheatsheet" id="cheatsheet_drag-mol" style="display: none;">
+                                <ul>
+                                    <li>Left mouse dragging: drag an entire molecule</li>
+                                    <li>Shift + Left mouse dragging: translate a molecule in or out of the plane</li>
+                                    <li>Alt + Left mouse dragging: rotate a molecule</li>
+                                </ul>
+                            </div>
+                            <div class="cheatsheet" id="cheatsheet_drag-atom" style="display: none;">
+                                <ul>
+                                    <li>Left mouse dragging: drag an atom (with its hydrogens, if any)</li>
+                                    <li>Shift + Left mouse dragging: translate the atom in or out of the plane</li>
+                                </ul>
+                            </div>
+                            <div class="cheatsheet" id="cheatsheet_select" style="display: none;">
+                                <ul>
+                                    <li>Left mouse click: select an atom</li>
+                                    <li>Shift + Left mouse dragging: toggle selection of the atoms in the selected area</li>
+                                    <li>Alt + Left mouse dragging: select the atoms in the selected area</li>
+                                </ul>
+                            </div>
+
+                        </div>
                     </div>
+                    <center>
+                        <button class="button is-success" id="jsmol_done">Done</button>
+                    </center>
                 </div>
             </div>
         </section>

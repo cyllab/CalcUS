@@ -1553,6 +1553,10 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
     else:
         specifications = ""
 
+    if "calc_concerted_scans" in parameters_dict:
+        if clean(parameters_dict["calc_concerted_scans"]).lower() == "on":
+            specifications += "--concerted"
+
     if is_flowchart is None:
         if project == "New Project":
             new_project_name = clean(parameters_dict["new_project_name"])
