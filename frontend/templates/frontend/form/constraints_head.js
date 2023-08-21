@@ -39,6 +39,7 @@ function constraint_mode_changed(id) {
         div.style.display = "block";
     }
     refresh_availabilities();
+    refresh_concerted_option();
 }
 
 function add_constraint(first) {
@@ -49,9 +50,9 @@ function add_constraint(first) {
         <div class="columns"> \
             <div class="column"> \
                 <div class="select"> \
-                    <select name="constraint_mode_{}" id="constraint_mode_{}" onchange="constraint_mode_changed({})"> \
-                    <option>Freeze</option> \
-                    <option>Scan</option> \
+                    <select name="constraint_mode_{}" id="constraint_mode_{}" class="constraint_mode" onchange="constraint_mode_changed({})"> \
+                    <option value="Freeze">Freeze</option> \
+                    <option value="Scan">Scan</option> \
                     </select> \
                 </div> \
             </div> \
@@ -77,7 +78,7 @@ function add_constraint(first) {
                 <input class="input" type="text" width="5" name="calc_constraint_{}_4" id="calc_constraint_{}_4" style="display: none;"> \
             </div> \
             <div class="column"> \
-        <button type="button" class="button is-danger constraint_btn" onclick="$('#calc_scan_div_{}').remove(); $(this).parent().parent().parent().remove();">-</button> \
+        <button type="button" class="button is-danger constraint_btn" onclick="$('#calc_scan_div_{}').remove(); $(this).parent().parent().parent().remove();refresh_concerted_option();">-</button> \
             </div> \
         </div> \
     </div> \
@@ -98,9 +99,19 @@ function add_constraint(first) {
     </div> \
     </div>`.format(constraint_num);
     if(first) {
-        _line = _line.replace(`<button type="button" class="button is-danger constraint_btn" onclick="$('#calc_scan_div_{}').remove(); $(this).parent().parent().parent().remove();">-</button>`.format(constraint_num), `<button type="button" class="button is-primary constraint_btn" id="add_constraint_btn" onclick="add_constraint();">+</button>`);
+        _line = _line.replace(`<button type="button" class="button is-danger constraint_btn" onclick="$('#calc_scan_div_{}').remove(); $(this).parent().parent().parent().remove();refresh_concerted_option();">-</button>`.format(constraint_num), `<button type="button" class="button is-primary constraint_btn" id="add_constraint_btn" onclick="add_constraint();">+</button>`);
+    
     }
 
     $("#constraint_list").append(_line);
+    refresh_concerted_option();
 }
 
+function refresh_concerted_option() {
+    let num_scans = $("#constraint_list").find('select.constraint_mode option[value="Scan"]:selected').length;
+    
+    if(num_scans > 1)
+        $("#concerted_scans_label").show();
+    else
+        $("#concerted_scans_label").hide();
+}

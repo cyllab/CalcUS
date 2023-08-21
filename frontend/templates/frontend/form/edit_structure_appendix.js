@@ -2,6 +2,8 @@ $('.element').click(function() {
     let cmd = $(this).attr('data-el');
     $('.element.is-primary').removeClass("is-primary");
 
+    reset_mode();
+
     switch(cmd)
     {
         case 'x':
@@ -23,23 +25,23 @@ $('.bond').click(function() {
     let bondtype = $(this).attr('data-bond');
     $('.bond.is-primary').removeClass("is-primary");
     $(this).addClass('is-primary');
+    // unhighlight the chosen action?
+    reset_mode();
     Jmol.script(editor, 'set picking assignBond_' + bondtype);
     return false;
 });
 
-function reset_mode() {
-    Jmol.script(editor, 'set allowRotateSelected false');
-    Jmol.script(editor, 'set atomPicking off');
-    Jmol.script(editor, 'set bondPicking off');
-    Jmol.script(editor, 'set picking none');
-}
 
 $('.action').click(function() {
     let cmd = $(this).attr('data-action');
-    $('.action.is-primary').removeClass("is-primary");
-    $(this).addClass('is-primary');
+    if(cmd != "del-sel" && cmd != "deselect-all") {
+        $('.action.is-primary').removeClass("is-primary");
+        $(this).addClass('is-primary');
+        $("#actions_cheatsheet").find(".cheatsheet").hide(); 
+        $("#cheatsheet_" + cmd).show();
+        reset_mode()    
+    }
 
-    reset_mode()    
 
     switch(cmd)
     {
