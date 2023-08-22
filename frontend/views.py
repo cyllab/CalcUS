@@ -36,6 +36,7 @@ import json
 import ccinput
 from datetime import datetime
 import base64, gzip
+import copy
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -2026,7 +2027,16 @@ def receive_params(request):
             all_params_data = json.loads(
                 request.POST.get("allParamsData")
             )  # Use json.loads to parse JSON data
-            print(all_params_data)
+
+            fixed_params = all_params_data["fixed"]
+            fixed_params["calc_charge"] = "0"
+            fixed_params["calc_multiplicity"] = "1"
+            for param_name, params in all_params_data["dynamic"].items():
+                full_params = copy.deepcopy(fixed_params)
+                full_params.update(params)
+
+                parsed_params = parse_parameters(request, full_params)
+        
             response_data = {
                 "message": "Data received and processed successfully",
                 "receivedData": all_params_data,
