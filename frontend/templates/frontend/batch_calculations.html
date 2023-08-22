@@ -13,6 +13,8 @@
     {% include 'frontend/form/type_head.js' %} 
     {% include 'frontend/form/availability.js' %} 
     {% include 'frontend/form/file_upload_head.js' %} 
+    {% include 'frontend/form/project_head.js' %} 
+
     </script>
 
     <script>
@@ -111,6 +113,12 @@
 {% csrf_token %}
 
 <div id="batch_content">
+
+    <div id="project_name">Project 
+        <div class="control">
+             {% include 'frontend/form/project_body.html' %} 
+        </div>
+    </div>
      
     <div class="field" id="batch_name"> Batch Name
         <div class="control">
@@ -210,6 +218,10 @@
         "fixed": Object.fromEntries(all_params["fixed"]),
         "dynamic": {}
       }
+      data["fixed"]["batch_name"] = $("#batch_name_input").val();
+      data["fixed"]["calc_type"] = $("#calc_type").val();
+      data["fixed"]["calc_project"] = $("#calc_project").val();
+      
       for(l in all_params["dynamic"]) {
         data["dynamic"][l] = Object.fromEntries(all_params["dynamic"][l])
       }
