@@ -146,8 +146,11 @@
                 </div>
             </div>
 
+            <form id="input_files_form" method="post" enctype="multipart/form-data" action="/receive_params/">
+            {% csrf_token %}
             <div id="input_rows">
             </div>
+            </form>
             
             <button class="button is-primary" onclick="addRow()">Add</button>     
             
@@ -213,59 +216,43 @@
 
     }
 
-    function get_json_params() {
-      let data = {
-        "fixed": Object.fromEntries(all_params["fixed"]),
-        "dynamic": {}
-      }
-      data["fixed"]["batch_name"] = $("#batch_name_input").val();
-      data["fixed"]["calc_type"] = $("#calc_type").val();
-      data["fixed"]["calc_project"] = $("#calc_project").val();
-      
-      for(l in all_params["dynamic"]) {
-        data["dynamic"][l] = Object.fromEntries(all_params["dynamic"][l])
-      }
 
-      return JSON.stringify(data);
-    }
     function submit_batch() {
         $("#dynamic_params_div").find(".dynamic_params").each(function(ind) {
             let name = $(this).find("input[name='set_name']").val()
-            let form_data = new FormData($(this).find("form")[0]);
-            all_params["dynamic"][name] = form_data;
-            
-            $.ajax({
-              url: "/receive_params/",
-              data: {"allParamsData": get_json_params()},
-              type: "POST",
-              headers: {
-                "X-CSRFToken": '{{ csrf_token }}',
-              }
-            });
+            all_params["dynamic"][name] = Object.fromEntries((new FormData($(this).find("form")[0])).entries());
         });
+
+        all_params["fixed"]["batch_name"] = $("#batch_name_input").val();
+        all_params["fixed"]["calc_type"] = $("#calc_type").val();
+        all_params["fixed"]["calc_project"] = $("#calc_project").val();
+
+        var main_data = new FormData(document.getElementById("input_files_form"));
+        main_data.append("params", JSON.stringify(all_params));
+
+        const request = new XMLHttpRequest();
+        request.open("POST", "/receive_params/");
+        request.send(main_data);
+
         $("#submit_batch_btn").remove(); // Temporary
     }
     
     $(document).ready(function() {
-      addRow();
+        addRow();
 
 	    refresh_availabilities($("#fixed_params_div"));
         $('#fixed_params_div').find("input, select").on("change", function() {
             refresh_availabilities($("#fixed_params_div"));
         });
 
-        $("#fixed_params_div").find("form").submit(function(e) {
+        $("#parameters_div").find("form").submit(function(e) {
             e.preventDefault();
-            data = new FormData($("#fixed_params_div").find("form")[0]);
-            all_params["fixed"] = data;
+            all_params["fixed"] = Object.fromEntries((new FormData($("#parameters_div").find("form")[0])).entries());
             all_params["dynamic"] = {};
             set_dynamic_params(); 
             return false;
         });
     });
-
-
-
 
 </script>
 {% endblock content %}

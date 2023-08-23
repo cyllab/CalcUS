@@ -2028,13 +2028,17 @@ def submit_flowchart_input(request):
 def receive_params(request):
     if request.method == "POST":
         try:
+            # The input files are in request.FILES
+
             all_params_data = json.loads(
-                request.POST.get("allParamsData")
+                request.POST.get("params")
             )  # Use json.loads to parse JSON data
 
+            # We should verify if these parameters exist before accessing them
             fixed_params = all_params_data["fixed"]
-            fixed_params["calc_charge"] = "0"
-            fixed_params["calc_multiplicity"] = "1"
+            fixed_params["calc_charge"] = request.POST["calc_charge"]
+            fixed_params["calc_multiplicity"] = request.POST["calc_multiplicity"]
+
             for param_name, params in all_params_data["dynamic"].items():
                 full_params = copy.deepcopy(fixed_params)
                 full_params.update(params)
