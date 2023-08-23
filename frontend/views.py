@@ -2040,7 +2040,7 @@ def receive_params(request):
                 full_params.update(params)
 
                 parsed_params = parse_parameters(request, full_params)
-        
+
             response_data = {
                 "message": "Data received and processed successfully",
                 "receivedData": all_params_data,
