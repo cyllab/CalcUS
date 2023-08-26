@@ -4302,7 +4302,7 @@ def download_log(request, pk):
                     continue
                 if log.strip() == "":
                     continue
-                zip.write(log, f"{name}_{logname}")
+                zip.writestr(f"{name}_{logname}", log)
 
         response = HttpResponse(mem.getvalue(), content_type="application/zip")
         response["Content-Disposition"] = f'attachment; filename="{name}.zip"'

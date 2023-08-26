@@ -4,28 +4,32 @@
 
 <html>
     <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="utf-8">
 
         {% if IS_CLOUD %}
         {% autoescape off %}
         {% get_extra_head_code %}
         {% endautoescape %}
 
-        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'cloud_favicon/apple-touch-icon.png' %}" />
-        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'cloud_favicon/favicon-32x32.png' %}" />
-        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'cloud_favicon/favicon-16x16.png' %}" />
-        <link rel="manifest" href="{% static 'cloud_favicon/site.webmanifest' %}" />
+        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'cloud_favicon/apple-touch-icon.png' %}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'cloud_favicon/favicon-32x32.png' %}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'cloud_favicon/favicon-16x16.png' %}">
+        <link rel="manifest" crossorigin="use-credentials" href="{% static 'cloud_favicon/site.webmanifest' %}">
 
         {% else %}
-        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}" />
-        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}" />
-        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}" />
-        <link rel="manifest" href="{% static 'favicon/site.webmanifest' %}" />
+        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
+        <link rel="manifest" crossorigin="use-credentials" href="{% static 'favicon/site.webmanifest' %}">
         {% endif %}
 
-        <link rel="stylesheet" href="{% static 'frontend/bulma.min.css' %}" />
+        <link rel="stylesheet" href="{% static 'frontend/bulma.min.css' %}">
+        <!--
         <script src="https://kit.fontawesome.com/55d0fd4831.js" crossorigin="anonymous"></script>
+        --!>
+        <link rel="stylesheet" href="{% static 'fa-css/fontawesome.min.css' %}">
+        <link rel="stylesheet" href="{% static 'fa-css/solid.min.css' %}">
         <script src="{% static 'frontend/bulma-js/alert.js' %}"></script>
 
         <style>
