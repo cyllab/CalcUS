@@ -2898,6 +2898,14 @@ def calc_to_ccinput(calc):
     ):
         _step_name = "OPT"
 
+    if (
+        calc.parameters.software.lower() == "xtb"
+        and (calc.parameters.driver.lower() == "pysis")
+        and (calc.step.name == "TS Optimization")
+    ):
+        if "tsopt(thresh=" not in _specifications:
+            _specifications += "tsopt(thresh=gau_vtight)"
+
     # patch
     if calc.parameters.software.lower() == "nwchem" and (
         calc.step.name == "MO Calculation" or calc.step.name == "ESP Calculation"
