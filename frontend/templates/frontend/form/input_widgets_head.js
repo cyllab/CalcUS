@@ -32,7 +32,7 @@ function add_3D() {
             "X-CSRFToken": '{{ csrf_token }}',
         },
 
-        data: {'mol': mol},
+        data: {'mol': mol, 'randomize': true},
         statusCode: {
             404: function(data) {
                 $("#3d_msg").html("Error while generating structure");

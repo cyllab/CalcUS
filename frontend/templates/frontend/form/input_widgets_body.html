@@ -25,10 +25,9 @@
     viewer.styles.shapes_color = "c10000";
     viewer.repaint();
 </script>
-{% if not ensemble and not structure and not calc %}
+
 <br>
 <button class="button is-primary" id="edit_button">Edit structure in 3D</button>
-{% endif %}
 </div>
 
 {% if not ensemble and not structure and not calc %}
@@ -47,7 +46,7 @@
         sketcher.repaint();
     </script>
     <br>
-    <button class="button is-info" onclick="get_3D();" id="gen_3D_btn">Generate 3D representation</button>
+    <button class="button is-info" onclick="get_3D();" id="gen_3D_btn">Set as 3D system</button>
     <button class="button is-info" onclick="add_3D();" id="add_3D_btn">Add to system</button>
 </div>
 

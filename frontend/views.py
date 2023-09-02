@@ -4016,6 +4016,12 @@ def gen_3D(request):
     if request.method == "POST":
         mol = clean(request.POST["mol"])
         xyz = generate_xyz_structure(True, mol, "mol")
+        if "randomize" in request.POST and request.POST["randomize"]:
+            vec = np.array([random.random(), random.random(), random.random()])
+            _xyz = parse_xyz_from_text(xyz)
+            for l in _xyz:
+                l[1] += vec
+            xyz = format_xyz(_xyz)
         return HttpResponse(xyz)
 
 
