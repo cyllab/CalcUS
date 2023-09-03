@@ -37,6 +37,7 @@ import ccinput
 from datetime import datetime
 import base64, gzip
 import copy
+import itertools
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -91,6 +92,8 @@ from .models import (
     Step,
     FlowchartOrder,
     ResourceAllocation,
+    BatchCalcOrder,
+    BatchCalculation
 )
 from .tasks import (
     dispatcher,
@@ -2039,11 +2042,63 @@ def receive_params(request):
             fixed_params["calc_charge"] = request.POST["calc_charge"]
             fixed_params["calc_multiplicity"] = request.POST["calc_multiplicity"]
 
+            all_parsed_params = []
             for param_name, params in all_params_data["dynamic"].items():
                 full_params = copy.deepcopy(fixed_params)
                 full_params.update(params)
 
                 parsed_params = parse_parameters(request, full_params)
+
+                _params = Parameters.object.create(parsed_params[0])
+
+                all_parsed_params.append(_params)
+            
+            uploaded_files = {}
+
+            for ind, ff in enumerate(request.FILES.getlist("file_structure")):
+                ss = handle_file_upload(ff, is_local)
+                if isinstance(ss, str):
+                    return ss
+                
+                struct, filename = ss
+                xyz_structure = struct.xyz_structure
+
+                electrons = 0
+                for line in xyz_structure.split("\n")[2:]:
+                    if line.strip() == "":
+                        continue
+                    el = line.split()[0]
+                    if el not in ATOMIC_NUMBER:
+                        return f"Unknown element: {el}"
+                    electrons += ATOMIC_NUMBER[el]
+                    if el == "He":
+                        # Assume that substituents form a single bond
+                        electrons -= 1
+
+                _charge = _params["charge"]
+                _multiplicity = _params["multiplicity"]
+
+                
+                pc, pm = ccinput.utilities.get_charge_mult_from_name(filename)
+                if pc != 0:
+                    _charge = pc
+                if pm != 1:
+                    _multiplicity = pm
+
+                uploaded_files[filename]= struct
+
+            project_obj = (parsed_params[1])
+
+            combinations = []
+            for combination in itertools.product(all_parsed_params, uploaded_files.items()):
+                combinations.append(combination)
+                parsed_params, (filename, struct) = combination
+
+                print(combination)
+
+                batch_calc = BatchCalcOrder.objects.create()
+    
+                print(f"BatchCalcOrder created with params: {parsed_params}, file: {filename}")
 
             response_data = {
                 "message": "Data received and processed successfully",

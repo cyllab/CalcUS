@@ -1567,6 +1567,40 @@ class Calculation(models.Model):
             calc.status = 3
             calc.save()
 
+        
+class BatchCalcOrder(models.Model):
+    id = BigHashidAutoField(
+        primary_key=True, salt="BatchCalc_hashid_" + settings.HASHID_FIELD_SALT
+    )
+    step = models.ForeignKey(
+        BasicStep, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    author = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+
+    project = models.ForeignKey(
+        "Project", on_delete=models.CASCADE, blank=True, null=True
+    )
+    date = models.DateTimeField("date", null=True, blank=True)
+    
+
+
+class BatchCalculation(models.Model):
+    id = BigHashidAutoField(
+        primary_key=True, salt="BatchCalc_hashid_" + settings.HASHID_FIELD_SALT
+    )
+    batch_name =  models.CharField(max_length=100)
+    parametersets = models.JSONField(default=list) 
+    parameters = models.ForeignKey(
+        Parameters, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    structure = models.ForeignKey(
+        Structure, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    calculationorder = models.ForeignKey( 
+        BatchCalcOrder, n_delete=models.SET_NULL, blank=True, null=True)
+
+    
+
 
 class Filter(models.Model):
     id = BigHashidAutoField(
