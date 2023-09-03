@@ -1581,6 +1581,7 @@ class BatchCalcOrder(models.Model):
         "Project", on_delete=models.CASCADE, blank=True, null=True
     )
     date = models.DateTimeField("date", null=True, blank=True)
+    
 
 
 class BatchCalculation(models.Model):
