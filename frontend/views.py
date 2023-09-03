@@ -2087,7 +2087,6 @@ def receive_params(request):
 
                 uploaded_files[filename]= struct
 
-         
             project_obj = (parsed_params[1])
 
             combinations = []
