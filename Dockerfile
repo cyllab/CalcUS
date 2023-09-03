@@ -1,4 +1,4 @@
-FROM python:3.9 AS calcus_user
+FROM python:3.9-bullseye AS calcus_user
 
 ARG CALCUS_VERSION_HASH
 ENV CALCUS_VERSION_HASH=${CALCUS_VERSION_HASH}
@@ -20,7 +20,10 @@ ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/binaries/orca"
 ENV PATH=$PATH:$XTB4STDAHOME/xtb/bin:$XTB4STDAHOME:$EBROOTORCA:$GAUSS_EXEDIR
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/binaries/orca:/usr/lib/openmpi/
 
-RUN apt update && apt install openbabel sshpass postgresql-client dos2unix openmpi-bin nwchem -y
+RUN apt update && apt install openbabel sshpass postgresql-client dos2unix python3-dev gfortran mpi-default-bin mpi-default-dev -y
+RUN curl -LJO https://github.com/nwchemgit/nwchem/releases/download/v7.2.0-release/nwchem-data_7.2.0-2_all.debian_bullseye.deb
+RUN curl -LJO https://github.com/nwchemgit/nwchem/releases/download/v7.2.0-release/nwchem_7.2.0-2_amd64.debian_bullseye.deb
+RUN dpkg -i nwchem*7.2.0*.deb
 
 ADD ./requirements.txt /calcus/requirements.txt
 RUN pip install -r /calcus/requirements.txt

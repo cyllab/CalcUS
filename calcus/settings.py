@@ -84,13 +84,14 @@ ALLOWED_HOSTS = [
     "0.0.0.0",
     "0.0.0.0:*",
     "https://calcus.cloud",
+    "https://static.calcus.cloud",
     "calcus.cloud",
-    "localhost",
+    "static.calcus.cloud" "localhost",
     "cloud-compute",
     "cloud-compute:*",
 ]
 
-CSRF_TRUSTED_ORIGINS = ["calcus.cloud"]
+CSRF_TRUSTED_ORIGINS = ["calcus.cloud", "static.calcus.cloud"]
 
 if "CALCUS_CLOUD_INTERNAL" in os.environ:
     ALLOWED_HOSTS.append("*")
@@ -165,6 +166,8 @@ if IS_CLOUD:
         "https://optimize.google.com",
         "https://fonts.googleapis.com",
         "https://storage.googleapis.com",
+        "https://static.calcus.cloud",
+        "https://www.static.calcus.cloud",
     ]
 
 HASHID_FIELD_SALT = os.getenv("CALCUS_HASHID_SALT", "test_salt")

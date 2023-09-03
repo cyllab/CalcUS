@@ -162,7 +162,6 @@
 </style>
     <link rel="stylesheet" href="{% static 'frontend/form_style.css' %}" type="text/css">
 
-    <script src="{% static 'frontend/jquery.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
     <script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
     <link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
@@ -381,6 +380,7 @@
                 }
 				ChemDoodle.relabel(mol_read);
 				viewer.loadMolecule(mol_read);	
+                Jmol.script(editor, 'load inline "' + xyz + '"')
 			}
 		}
 		else if(file_list.length == 1 && file_list[0].type == "chemical/x-mdl-molfile") {
@@ -390,6 +390,7 @@
 				let mol_read = ChemDoodle.readMOL(e.target.result, multiplier=1);
 				ChemDoodle.relabel(mol_read);
 				viewer.loadMolecule(mol_read);	
+                Jmol.script(editor, 'load inline "' + e.target.result + '"')
 			}
 
 		}
@@ -411,6 +412,7 @@
 							let mol_read = ChemDoodle.readXYZ(response, multiplier=1);
 							ChemDoodle.relabel(mol_read);
 							viewer.loadMolecule(mol_read);	
+                            Jmol.script(editor, 'load inline "' + response + '"')
 						},
 						204: function (response) { 
 							$("#3d_msg").html("Could not generate preview: unsupported file format");
