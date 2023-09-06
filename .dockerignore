@@ -6,7 +6,6 @@
 *__pycache__*
 .git
 backup*
-bin/*
 bulma
 data
 docs
