@@ -1596,7 +1596,7 @@ class BatchCalculation(models.Model):
         Structure, on_delete=models.SET_NULL, blank=True, null=True
     )
     calculationorder = models.ForeignKey(
-        BatchCalcOrder, n_delete=models.SET_NULL, blank=True, null=True
+        BatchCalcOrder, on_delete=models.SET_NULL, blank=True, null=True
     )
 
 
