@@ -93,7 +93,7 @@ from .models import (
     FlowchartOrder,
     ResourceAllocation,
     BatchCalcOrder,
-    BatchCalculation
+    BatchCalculation,
 )
 from .tasks import (
     dispatcher,
@@ -2052,14 +2052,14 @@ def receive_params(request):
                 _params = Parameters.object.create(parsed_params[0])
 
                 all_parsed_params.append(_params)
-            
+
             uploaded_files = {}
 
             for ind, ff in enumerate(request.FILES.getlist("file_structure")):
                 ss = handle_file_upload(ff, is_local)
                 if isinstance(ss, str):
                     return ss
-                
+
                 struct, filename = ss
                 xyz_structure = struct.xyz_structure
 
@@ -2078,27 +2078,30 @@ def receive_params(request):
                 _charge = _params["charge"]
                 _multiplicity = _params["multiplicity"]
 
-                
                 pc, pm = ccinput.utilities.get_charge_mult_from_name(filename)
                 if pc != 0:
                     _charge = pc
                 if pm != 1:
                     _multiplicity = pm
 
-                uploaded_files[filename]= struct
+                uploaded_files[filename] = struct
 
-            project_obj = (parsed_params[1])
+            project_obj = parsed_params[1]
 
             combinations = []
-            for combination in itertools.product(all_parsed_params, uploaded_files.items()):
+            for combination in itertools.product(
+                all_parsed_params, uploaded_files.items()
+            ):
                 combinations.append(combination)
                 parsed_params, (filename, struct) = combination
 
                 print(combination)
 
                 batch_calc = BatchCalcOrder.objects.create()
-    
-                print(f"BatchCalcOrder created with params: {parsed_params}, file: {filename}")
+
+                print(
+                    f"BatchCalcOrder created with params: {parsed_params}, file: {filename}"
+                )
 
             response_data = {
                 "message": "Data received and processed successfully",
