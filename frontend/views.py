@@ -5899,8 +5899,8 @@ def webhook(request):
             user = create_account_sub(customer["email"])
         else:
             if user.is_subscriber:
-                sub = user.subscription_set.latest("pk")
-                if sub.end_date - timezone.now() > timezone.timedelta(hours=1):
+                sub_model = user.subscription_set.latest("pk")
+                if sub_model.end_date - timezone.now() > timezone.timedelta(hours=1):
                     logger.critical(
                         f"User {user.id} with email {user.email} is already a subscriber, yet has paid for a subscription!"
                     )
