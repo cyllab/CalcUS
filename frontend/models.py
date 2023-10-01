@@ -892,7 +892,8 @@ class Property(models.Model):
 
     uvvis = models.TextField(default="")
     nmr = models.TextField(default="")
-    mo = models.TextField(default="")
+    mo_diagram = models.TextField(default="")
+    molden = models.TextField(default="")
     esp = models.TextField(default="")
     freq_list = ArrayField(models.FloatField(), default=list)
     freq_animations = ArrayField(models.TextField(), default=list)
@@ -917,7 +918,7 @@ class Property(models.Model):
 
     @property
     def has_mo(self):
-        return len(self.mo) > 0
+        return len(self.mo_diagram) > 0
 
     @property
     def has_esp(self):

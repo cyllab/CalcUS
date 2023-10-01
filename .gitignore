@@ -1,5 +1,4 @@
-!.github
-!bin/*.tar.bz2
+bin/*
 *.override.yml
 *.pem
 *.pyc
@@ -12,7 +11,6 @@
 scratch/
 .*
 backup*
-bin/*
 calcus/*settings*
 celerybeat-schedule
 data/
@@ -32,3 +30,5 @@ static/CACHE/
 static/testimonials
 test_run
 firebase
+!.github
+!bin/*.tar.bz2

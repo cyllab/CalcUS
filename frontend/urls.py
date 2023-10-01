@@ -178,6 +178,7 @@ urlpatterns = [
     path("load_preset/<str:pk>", views.load_preset, name="load_preset"),
     path("delete_preset/<str:pk>", views.delete_preset, name="delete_preset"),
     path("presets/", views.launch_presets, name="presets"),
+    path("get_mo_diagram/<str:pk>", views.get_mo_diagram, name="get_mo_diagram"),
     path("get_mo_cube/", views.get_mo_cube, name="get_mo_cube"),
     path("get_esp_cube/", views.get_esp_cube, name="get_esp_cube"),
     path("get_calc_data/<str:pk>", views.get_calc_data, name="get_calc_data"),

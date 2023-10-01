@@ -21,18 +21,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import absolute_import, unicode_literals
 
 
-import string
 import signal
 import psutil
 import requests
 import os
 import numpy as np
-import decimal
 import math
 import subprocess
 import shlex
 import glob
-import sys
 import shutil
 import tempfile
 import json
@@ -40,9 +37,8 @@ import gzip, base64
 from django.conf import settings
 
 import threading
-from threading import Lock
 
-from shutil import copyfile, rmtree
+from shutil import rmtree
 import time
 
 from rdkit import Chem
@@ -54,9 +50,7 @@ from sklearn.cluster import DBSCAN
 
 if not settings.IS_CLOUD:
     from calcus.celery import app
-    from celery.signals import task_prerun, task_postrun
     from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
-    from celery import group
     import redis
     import invoke
 else:
@@ -84,10 +78,8 @@ else:
 from django.utils import timezone
 from django.core import management
 from django.core.mail import send_mail
-from django.db.utils import IntegrityError
 
 from ccinput.wrapper import generate_calculation
-from ccinput.exceptions import CCInputException
 from ccinput.utilities import get_solvent
 
 from .libxyz import *
@@ -2481,7 +2473,7 @@ def nwchem_mo_gen(in_file, calc):
     ret = launch_nwchem_calc(
         in_file,
         calc,
-        ["calc.out", "in-HOMO.cube", "in-LUMO.cube", "in-LUMOA.cube", "in-LUMOB.cube"],
+        ["calc.out", "in.molden"],
     )
 
     if ret != ErrorCodes.SUCCESS:
@@ -2504,28 +2496,124 @@ def nwchem_mo_gen(in_file, calc):
             )
             return ErrorCodes.INVALID_OUTPUT
 
+        while lines[ind].find("Final Molecular Orbital Analysis") == -1:
+            ind += 1
+
+        ind += 3
+
+        orbs = ""
+
+        while True:
+            sline = lines[ind].split()
+            occ = float(sline[2].split("=")[-1].replace("D", "E"))
+
+            if sline[3].find("-") != -1:
+                E = float(sline[3].split("=")[-1].replace("D", "E"))
+            else:
+                E = float(sline[4].replace("D", "E"))
+
+            components = {}
+
+            ind += 4
+            while lines[ind].strip() != "":
+                sline = lines[ind].split()
+                for offset in range(len(sline) // 5):
+                    coeff = float(sline[5 * offset + 1])
+                    atom_num = sline[5 * offset + 2]
+                    element = sline[5 * offset + 3]
+                    orb_type = sline[5 * offset + 4]
+                    if atom_num in components:
+                        components[atom_num][0] += coeff
+                        assert components[atom_num][1] == element
+                        if orb_type not in components[atom_num][2]:
+                            components[atom_num][2].append(orb_type)
+                    else:
+                        components[atom_num] = [coeff, element, [orb_type]]
+                    # components.append((coeff, element + atom_num, orb_type))
+
+                ind += 1
+            orbs += f"{E:.6f};{occ:.3f}\n"
+
+            """
+            components = []
+
+            ind += 4
+            while lines[ind].strip() != "":
+                sline = lines[ind].split()
+                for offset in range(len(sline)//5):
+                    coeff = "{:.3f}".format(round(float(sline[5*offset+1]), 3))
+                    atom_num = sline[5*offset+2]
+                    element = sline[5*offset+3]
+                    orb_type = sline[5*offset+4]
+                    components.append((coeff, element, atom_num, orb_type))
+
+                ind += 1
+            orbs.append((occ, E, sorted(components, key=lambda i: i[1])))
+            """
+
+            if lines[ind + 1].strip() == "":
+                break
+
+            ind += 1
+
     prop = get_or_create(calc.parameters, calc.structure)
 
-    cubes = {}
-    for mo in ["HOMO", "LUMO", "LUMOA", "LUMOB"]:
-        path = os.path.join(local_folder, f"in-{mo}.cube")
-        if not os.path.isfile(path):
-            logger.error(f"Cube file {path} does not exist!")
-            return ErrorCodes.MISSING_FILE
-        with open(path) as f:
-            cube = "".join(f.readlines())
+    path = os.path.join(local_folder, "in.molden")
+    if not os.path.isfile(path):
+        logger.error(f"Molden file {path} does not exist!")
+        return ErrorCodes.MISSING_FILE
+    with open(path) as f:
+        molden = "".join(f.readlines())
 
-        comp_cube = gzip.compress(bytes(cube, "utf-8"))
-        str_cube = base64.b64encode(comp_cube).decode("utf-8")
-        cubes[mo] = str_cube
+    comp_data = gzip.compress(bytes(molden, "utf-8"))
+    str_data = base64.b64encode(comp_data).decode("utf-8")
 
+    comp_mo = gzip.compress(bytes(orbs, "utf-8"))
+    str_mo = base64.b64encode(comp_mo).decode("utf-8")
+
+    prop.molden = str_data
+    prop.mo_diagram = str_mo
     prop.energy = E
-    prop.mo = json.dumps(cubes)
     prop.save()
 
     # parse_nwchem_charges(calc, calc.structure)
 
     return ErrorCodes.SUCCESS
+
+
+def get_cube_from_molden(molden, orb_num):
+    INP = f"""200
+3
+{orb_num+1}
+2
+2
+0
+q
+"""
+
+    with tempfile.TemporaryDirectory() as d:
+        with open(os.path.join(d, "in.molden"), "w") as out:
+            out.write(molden)
+            out.write("\n")
+
+        with open(os.path.join(d, "command"), "w") as out:
+            out.write(INP)
+
+        with open("/dev/null", "w") as stream, open(os.path.join(d, "command")) as f:
+            p = subprocess.Popen(
+                shlex.split(f"/binaries/xtb/Multiwfn in.molden"),
+                cwd=d,
+                stdin=f,
+                stdout=stream,
+            )
+            p.wait()
+
+        if not os.path.isfile(os.path.join(d, "orbital.cub")):
+            return ErrorCodes.UNKNOWN_TERMINATION
+
+        with open(os.path.join(d, "orbital.cub")) as f:
+            lines = f.readlines()
+        return "".join(lines)
 
 
 def nwchem_esp_gen(in_file, calc):
@@ -4620,62 +4708,12 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
 
 
 NWCHEM_MO_FIX = """
-dplot
-  TITLE HOMO
-  vectors in.movecs
-   LimitXYZ
- -5.0 5.0 40
- -5.0 5.0 40
- -5.0  5.0  40
- spin total
-  ORBITALS view; 1; {}
-  gaussian
-  output in-HOMO.cube
+property
+moldenfile
+molden_norm nwchem
 end
-task dplot
 
-dplot
-  TITLE LUMO
-  vectors in.movecs
-   LimitXYZ
- -5.0 5.0 40
- -5.0 5.0 40
- -5.0  5.0  40
- spin total
-  ORBITALS view; 1; {}
-  gaussian
-  output in-LUMO.cube
-end
-task dplot
-
-dplot
-  TITLE LUMOA
-  vectors in.movecs
-   LimitXYZ
- -5.0 5.0 40
- -5.0 5.0 40
- -5.0  5.0  40
- spin total
-  ORBITALS view; 1; {}
-  gaussian
-  output in-LUMOA.cube
-end
-task dplot
-
-dplot
-  TITLE LUMOB
-  vectors in.movecs
-   LimitXYZ
- -5.0 5.0 40
- -5.0 5.0 40
- -5.0  5.0  40
- spin total
-  ORBITALS view; 1; {}
-  gaussian
-  output in-LUMOB.cube
-end
-task dplot
-
+task scf property
 """
 
 NWCHEM_ESP_FIX = """
@@ -4715,9 +4753,8 @@ def add_input_to_calc(calc):
             electrons += ATOMIC_NUMBER[el]
 
         electrons -= calc.parameters.charge
-        n_homo = electrons // 2
 
-        input_file += NWCHEM_MO_FIX.format(n_homo, n_homo + 1, n_homo + 2, n_homo + 3)
+        input_file += NWCHEM_MO_FIX
     elif (
         calc.parameters.software.lower() == "nwchem"
         and calc.step.name == "ESP Calculation"

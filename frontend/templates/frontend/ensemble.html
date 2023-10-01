@@ -14,7 +14,7 @@
 <script src="{% static 'frontend/dygraph.min.js' %}"></script>
 <script src="{% static 'frontend/3Dmol-min.js' %}"></script>
 <script src="{% static 'frontend/3Dmol.ui-min.js' %}"></script>
-
+<script src="https://unpkg.com/konva@9.2.0/konva.min.js"></script>
 <style>
     #ensemble_name {
         color: #f2f5f3;
@@ -144,6 +144,10 @@
     .slidecontainer {
         margin-top: 2em;
         text-align: center;
+    }
+    #mo_diagram {
+        width: min(calc(30%), 500px);
+        min-height: calc(50vh - 100px);
     }
 </style>
 <script>
