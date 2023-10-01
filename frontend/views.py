@@ -113,6 +113,7 @@ from .tasks import (
     gen_fingerprint,
     plot_peaks,
     create_account_sub,
+    get_cube_from_molden,
 )
 from .decorators import superuser_required
 from .cloud_job import send_gcloud_task, record_event_analytics
@@ -3816,34 +3817,40 @@ def get_mo_cube(request):
         if not can_view_structure(prop.parent_structure, request.user):
             return HttpResponse(status=404)
 
-        if len(prop.mo) == 0:
+        if len(prop.molden) == 0:
             return HttpResponse(status=204)
 
-        cubes = json.loads(prop.mo)
+        molden = base64.b64decode(prop.molden)
+        molden = gzip.decompress(molden).decode("utf-8")
 
-        if orb == 0:
-            cube_mo = "HOMO"
-        elif orb == 1:
-            cube_mo = "LUMO"
-        elif orb == 2:
-            cube_mo = "LUMOA"
-        elif orb == 3:
-            cube_mo = "LUMOB"
-        else:
-            return HttpResponse(status=204)
+        cube = get_cube_from_molden(molden, orb)
 
-        if cube_mo not in cubes:
-            return HttpResponse(status=204)
+        if isinstance(cube, ErrorCodes):
+            return HttpResponse(status=500)
 
-        _cube = cubes[cube_mo]
+        xyz = get_xyz_from_cube(cube)
 
-        cube = base64.b64decode(_cube)
-        clear_cube = gzip.decompress(cube).decode("utf-8")
-        xyz = get_xyz_from_cube(clear_cube)
-
-        return JsonResponse({"cube": clear_cube, "xyz": xyz})
+        return JsonResponse({"cube": cube, "xyz": xyz})
 
     return HttpResponse(status=204)
+
+
+@login_required
+def get_mo_diagram(request, pk):
+    try:
+        prop = Property.objects.get(pk=pk)
+    except Property.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if not can_view_structure(prop.parent_structure, request.user):
+        return HttpResponse(status=404)
+
+    if len(prop.mo_diagram) == 0:
+        return HttpResponse(status=204)
+
+    data = base64.b64decode(prop.mo_diagram)
+    clear_data = gzip.decompress(data)
+    return HttpResponse(clear_data)
 
 
 @gzip_page
