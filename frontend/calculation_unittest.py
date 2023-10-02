@@ -1,9 +1,9 @@
 import os
 from unittest import mock
-from shutil import copyfile, rmtree
+from shutil import rmtree
 
 from django.test import TestCase
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.core.management import call_command
 
 from frontend import tasks

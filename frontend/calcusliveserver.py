@@ -20,14 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import time
-import sys
-import glob
 import selenium
-import datetime
 import pexpect
 import socket
 from unittest import mock
-from shutil import copyfile, rmtree
+from shutil import rmtree
 
 from selenium import webdriver
 from selenium.webdriver.common.alert import Alert
@@ -35,7 +32,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 
@@ -44,7 +40,7 @@ from celery.contrib.abortable import AbortableAsyncResult
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.management import call_command
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 
 from .models import *
 from .environment_variables import *

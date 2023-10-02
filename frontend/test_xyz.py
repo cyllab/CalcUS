@@ -19,9 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 import os
-import unittest
 
-from django.test import TestCase, Client
+from django.test import TestCase
 
 from .libxyz import *
 

@@ -20,31 +20,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import time
-import sys
-import glob
 import selenium
-import datetime
 from unittest import mock
-from shutil import copyfile, rmtree
 
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.select import Select
-from selenium.webdriver.common.keys import Keys
 
 from django.conf import settings
-from django.core.management import call_command
-from django.contrib.auth.models import User, Group
 
-from celery.contrib.testing.worker import start_worker
 
-from calcus.celery import app
 from .models import *
 from .libxyz import *
-from .calcusliveserver import CalcusLiveServer, SCR_DIR, tests_dir
+from .calcusliveserver import CalcusLiveServer, tests_dir
 
 
 class InterfaceTests(CalcusLiveServer):

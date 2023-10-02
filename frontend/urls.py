@@ -21,7 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.contrib.auth.views import LoginView
 
@@ -72,7 +71,6 @@ urlpatterns = [
         name="project_folders",
     ),
     path("projects/<str:user_id>", views.projects_by_user, name="projects_by_user"),
-    path("get_projects/", views.get_projects, name="get_projects"),
     path(
         "projects/<str:user_id>/<str:proj>",
         views.project_details,

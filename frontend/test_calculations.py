@@ -19,22 +19,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 import os
-import time
-import sys
-import glob
-import datetime
 
-from django.test import TestCase
-from django.contrib.auth.models import User, Group
-from django.core.management import call_command
+from functools import partial
 
 from .calculation_unittest import CalculationUnitTest
 from .calcusliveserver import tests_dir
 from .models import *
 from .libxyz import *
-
-from unittest import mock
-from functools import partial
 
 
 class XtbCalculationTests(CalculationUnitTest):

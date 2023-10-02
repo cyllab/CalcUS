@@ -86,7 +86,7 @@ from .libxyz import *
 from .models import *
 from .helpers import *
 from .environment_variables import *
-from .cloud_job import send_gcloud_task, submit_cloud_job
+from .cloud_job import submit_cloud_job
 
 import traceback
 import periodictable

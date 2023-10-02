@@ -20,18 +20,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from django.db import models, transaction
 from django.db.models.signals import pre_save
-from django.forms import JSONField
 from django.utils import timezone
-from django.contrib.auth.models import GroupManager, Permission, Group
+from django.contrib.auth.models import GroupManager, Permission
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 
 from django.contrib.postgres.fields import ArrayField
-from django.db.models.signals import post_save, post_init
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
 from django import template
 
-import random, string
 import numpy as np
 import os
 import hashlib
