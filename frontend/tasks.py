@@ -598,6 +598,7 @@ def calc_is_cached(calc):
         if index == -1:
             logger.info(f"not found")
             return False
+        logger.info(f"Using cache index for calc {calc.id}")
 
         return index
     else:
@@ -1751,7 +1752,7 @@ def orca_mo_gen(in_file, calc):
     ret = launch_orca_calc(
         in_file,
         calc,
-        ["calc.out", "in-HOMO.cube", "in-LUMO.cube", "in-LUMOA.cube", "in-LUMOB.cube"],
+        ["calc.out", "calc.molden.input"],
     )
 
     if ret != ErrorCodes.SUCCESS:
@@ -1771,22 +1772,34 @@ def orca_mo_gen(in_file, calc):
             )
             return ErrorCodes.INVALID_OUTPUT
 
+        while lines[ind].find("ORBITAL ENERGIES") == -1:
+            ind -= 1
+
+        orbs = ""
+        ind += 4
+        while lines[ind].strip() != "":
+            _, occ, orb_E, _ = lines[ind].split()
+
+            orbs += f"{float(orb_E):.6f};{float(occ):.3f}\n"
+
     prop = get_or_create(calc.parameters, calc.structure)
-    cubes = {}
-    for mo in ["HOMO", "LUMO", "LUMOA", "LUMOB"]:
-        path = os.path.join(local_folder, f"in-{mo}.cube")
-        if not os.path.isfile(path):
-            logger.error(f"Cube file {path} does not exist!")
-            return ErrorCodes.MISSING_FILE
-        with open(path) as f:
-            cube = "".join(f.readlines())
 
-        comp_cube = gzip.compress(bytes(cube, "utf-8"))
-        str_cube = base64.b64encode(comp_cube).decode("utf-8")
-        cubes[mo] = str_cube
+    path = os.path.join(local_folder, "calc.molden.input")
+    if not os.path.isfile(path):
+        logger.error(f"Molden file {path} does not exist!")
+        return ErrorCodes.MISSING_FILE
+    with open(path) as f:
+        molden = "".join(f.readlines())
 
+    comp_data = gzip.compress(bytes(molden, "utf-8"))
+    str_data = base64.b64encode(comp_data).decode("utf-8")
+
+    comp_mo = gzip.compress(bytes(orbs, "utf-8"))
+    str_mo = base64.b64encode(comp_mo).decode("utf-8")
+
+    prop.molden = str_data
+    prop.mo_diagram = str_mo
     prop.energy = E
-    prop.mo = json.dumps(cubes)
     prop.save()
 
     parse_orca_charges(calc, calc.structure)
@@ -2508,9 +2521,9 @@ def nwchem_mo_gen(in_file, calc):
             occ = float(sline[2].split("=")[-1].replace("D", "E"))
 
             if sline[3].find("-") != -1:
-                E = float(sline[3].split("=")[-1].replace("D", "E"))
+                orb_E = float(sline[3].split("=")[-1].replace("D", "E"))
             else:
-                E = float(sline[4].replace("D", "E"))
+                orb_E = float(sline[4].replace("D", "E"))
 
             components = {}
 
@@ -2532,7 +2545,7 @@ def nwchem_mo_gen(in_file, calc):
                     # components.append((coeff, element + atom_num, orb_type))
 
                 ind += 1
-            orbs += f"{E:.6f};{occ:.3f}\n"
+            orbs += f"{orb_E:.6f};{occ:.3f}\n"
 
             """
             components = []
