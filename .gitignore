@@ -17,7 +17,6 @@ data/
 docs/build/
 frontend/cloud_config.json
 frontend/cloud_config.py
-frontend/migrations/
 gcloud.sh
 htmlcov/
 logs/
