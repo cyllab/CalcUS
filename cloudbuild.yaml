@@ -45,6 +45,7 @@ images:
 
 options:
   dynamic_substitutions: true
+  logging: CLOUD_LOGGING_ONLY
 
 substitutions:
   _IMAGE_NAME: gcr.io/${_PROJECT_REPO}:latest
