@@ -17,14 +17,30 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .constants import *
 import string
 import secrets
+import bleach
 from django.conf import settings
-
 from xkcdpass import xkcd_password as xp
 
+from .constants import *
+
 full_alphabet = string.ascii_letters + string.digits
+
+
+def clean(txt):
+    filter(lambda x: x in string.printable, txt)
+    return bleach.clean(txt)
+
+
+def clean_alphanum(txt):
+    allowed = string.ascii_letters + string.digits + "_-,"
+    filter(lambda x: x in allowed, txt)
+    return bleach.clean(txt)
+
+
+def clean_filename(txt):
+    return clean(txt).replace(" ", "_").replace("/", "_")
 
 
 def clean_xyz(xyz):

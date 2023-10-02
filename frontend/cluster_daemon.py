@@ -22,25 +22,21 @@ import django
 import sys
 import os
 import time
-import glob
 import subprocess
 import shlex
 import redis
-from shutil import copyfile
 
 from fabric import Connection
 
 import paramiko
 
-import socket
 import threading
 from threading import Lock
 
 from django.utils import timezone
 from django.db import close_old_connections
-from django.conf import settings
 
-import code, traceback, signal, logging
+import logging
 
 MAX_RESUME_CALC_ATTEMPT_COUNT = 3
 

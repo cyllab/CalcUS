@@ -18,19 +18,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
-import glob
 import os
-import time
-import unittest
 
-from django.http import HttpResponse, HttpResponseRedirect
-from django.test import TestCase, Client
-from django.urls import reverse
-from django.utils import timezone
-from .models import *
-from django.contrib.auth.models import User
-from shutil import copyfile, rmtree
+from django.test import TestCase
+
 from .tasks import write_mol, gen_fingerprint
+from .models import *
 
 tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 

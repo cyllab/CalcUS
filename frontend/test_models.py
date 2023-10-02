@@ -18,12 +18,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
-import os
-import unittest
 from threading import Thread
 import time
 
-from django.test import TransactionTestCase, Client
+from django.test import TransactionTestCase
 from django.db import close_old_connections, connection
 
 from .models import *

@@ -22,12 +22,8 @@ import json
 import os
 import glob
 import random
-import string
-import bleach
-import math
 import time
 import zipfile
-from os.path import basename
 from io import BytesIO
 import basis_set_exchange
 import numpy as np
@@ -49,15 +45,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.gzip import gzip_page
 from django.views import generic
 from django.utils import timezone
-from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.auth import login, update_session_auth_hash, authenticate
 from django.utils.datastructures import MultiValueDictKeyError
-from django.db.models import Prefetch
 from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
-from django.db.models import Q
 from django.template.loader import get_template
 from django.shortcuts import render
 
@@ -107,7 +100,6 @@ from .tasks import (
     run_calc,
     send_cluster_command,
     load_output_files,
-    system,
     analyse_opt,
     generate_xyz_structure,
     gen_fingerprint,
@@ -134,10 +126,12 @@ from .helpers import (
     get_random_string,
     get_xyz_from_cube,
     guess_missing_parameters,
+    clean,
+    clean_alphanum,
 )
 from .cloud_job import submit_cloud_job
 
-from shutil import copyfile, make_archive, rmtree
+from shutil import rmtree
 from django.db.models.functions import Lower
 from django.conf import settings
 
@@ -364,7 +358,7 @@ def aux_molecule(request):
     return render(
         request,
         "frontend/dynamic/aux_molecule.html",
-        {"molecules": project_obj.molecule_set.all()},
+        {"molecules": project_obj.molecule_set.order_by("name").all()},
     )
 
 
@@ -388,7 +382,11 @@ def aux_ensemble(request):
     return render(
         request,
         "frontend/dynamic/aux_ensembles.html",
-        {"ensembles": mol.ensemble_set.all()},
+        {
+            "ensembles": mol.ensemble_set.filter(structure__isnull=False)
+            .order_by("name")
+            .all()
+        },
     )
 
 
@@ -412,7 +410,7 @@ def aux_structure(request):
     return render(
         request,
         "frontend/dynamic/aux_structures.html",
-        {"structures": e.structure_set.all()},
+        {"structures": e.structure_set.order_by("number").all()},
     )
 
 
@@ -495,34 +493,6 @@ def projects_by_user(request, user_id):
 
 
 @login_required
-def get_projects(request):
-    if request.method == "POST":
-        target_user_id = clean(request.POST["user_id"])
-
-        try:
-            target_user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return HttpResponse(status=404)
-
-        if request.user == target_user:
-            return render(
-                request,
-                "frontend/dynamic/project_list.html",
-                {"projects": target_user.project_set.all()},
-            )
-        elif user_intersection(target_user, request.user):
-            return render(
-                request,
-                "frontend/dynamic/project_list.html",
-                {"projects": target_user.project_set.filter(private=0)},
-            )
-        else:
-            return HttpResponse(status=404)
-    else:
-        return HttpResponse(status=404)
-
-
-@login_required
 def create_project(request):
     if request.method == "POST":
         proj = Project.objects.create(name="My Project", author=request.user)
@@ -535,7 +505,6 @@ def create_project(request):
 @login_required
 def create_flowchart(request):
     if request.method == "POST":
-        profile = request.user
         if "flowchart_name" in request.POST.keys():
             flowchart_name = clean(request.POST["flowchart_name"])
         if "flowchart_data" in request.POST.keys():
@@ -707,21 +676,6 @@ def project_details(request, user_id, proj):
             return HttpResponseRedirect("/")
     else:
         return HttpResponseRedirect("/")
-
-
-def clean(txt):
-    filter(lambda x: x in string.printable, txt)
-    return bleach.clean(txt)
-
-
-def clean_alphanum(txt):
-    allowed = string.ascii_letters + string.digits + "_-,"
-    filter(lambda x: x in allowed, txt)
-    return bleach.clean(txt)
-
-
-def clean_filename(txt):
-    return clean(txt).replace(" ", "_").replace("/", "_")
 
 
 @login_required

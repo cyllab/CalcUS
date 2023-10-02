@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from .models import *
 from .tasks import generate_xyz_structure
-from .libxyz import parse_xyz_from_file
 
 TESTS_DIR = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 

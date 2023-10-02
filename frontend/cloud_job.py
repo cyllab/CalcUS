@@ -4,7 +4,6 @@ import uuid
 
 from django.conf import settings
 
-from .models import Calculation
 from .environment_variables import *
 from .helpers import job_triage
 

@@ -18,12 +18,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
-import os
-
 from .models import *
 from .helpers import get_xyz_from_Gaussian_input
-from django.core.management import call_command
-from django.test import TestCase, Client
+from django.test import TestCase
 
 
 class FileProcessingTests(TestCase):

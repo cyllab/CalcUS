@@ -18,24 +18,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
-import json
-import time
 import os
 import copy
 from shutil import copyfile, rmtree
 
 from django.core.management import call_command
-from django.contrib.auth import authenticate
 from django.test import TestCase, Client
-from django.http import HttpRequest
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from .gen_calc import gen_calc, gen_param
+from .gen_calc import gen_calc
 from .calcusliveserver import SCR_DIR
 from .constants import *
 from .models import *
-from . import views
 
 tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 
