@@ -26,6 +26,7 @@ steps:
       - "PROJECT_ID=$_PROJECT_ID"
       - "USE_CLOUD_SQL_AUTH_PROXY=true"
       - "POSTGRES_USER=$_POSTGRES_USER"
+      - "CALCUS_COMPUTE=true"
     secretEnv: ['POSTGRES_PASSWORD']
     args:
       - '-c'
