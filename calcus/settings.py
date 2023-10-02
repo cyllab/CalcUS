@@ -75,8 +75,12 @@ if STRIPE_SECRET_KEY and (IS_CLOUD or IS_TEST):
 POSTGRES_SECRET_URI = os.getenv("POSTGRES_SECRET_URI", "")
 
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
-POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
 POSTGRES_USER = os.environ.get("POSTGRES_USER", "calcus")
+
+if "USE_CLOUD_SQL_AUTH_PROXY" in os.environ:
+    POSTGRES_HOST = "127.0.0.1"
+else:
+    POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
 
 """
 GMAIL_API_CLIENT_ID = os.getenv("CALCUS_EMAIL_ID", "")
