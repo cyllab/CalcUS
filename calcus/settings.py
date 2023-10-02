@@ -20,6 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 
+from frontend.helpers import get_random_string
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 IS_CLOUD = "CALCUS_CLOUD" in os.environ
@@ -38,7 +40,9 @@ if IS_TEST or DEBUG or IS_COMPUTE:
     SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]
     HOST_URL = "http://localhost:8080"
 else:
-    SECRET_KEY = os.environ["CALCUS_SECRET_KEY"]
+    if "CALCUS_SECRET_KEY" not in os.environ:
+        print("No secret key found, using a random key!")
+    SECRET_KEY = os.getenv("CALCUS_SECRET_KEY", get_random_string(n=32))
     HOST_URL = "https://calcus.cloud"
 
 if "CALCUS_VERSION_HASH" in os.environ.keys():

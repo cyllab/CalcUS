@@ -1,14 +1,53 @@
 steps:
-- name: 'gcr.io/cloud-builders/gsutil'
-  args: ['cp', 'gs://$_CONFIG_BUCKET/cloud_config.json', 'frontend/cloud_config.json']
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/$_PROJECT_ID:latest', '-f', 'Cloud_dockerfile', '.']
-  timeout: 500s
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$_PROJECT_ID:latest']
-- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  entrypoint: gcloud
-  args: ['run', 'deploy', 'calcus-cloud', '--image', 'gcr.io/$_PROJECT_ID:latest', '--region', 'us-central1', '--update-env-vars=CALCUS_VERSION_HASH=$SHORT_SHA']
-- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  entrypoint: gcloud
-  args: ['run', 'deploy', 'calcus-cloud-compute', '--image', 'gcr.io/$_PROJECT_ID:latest', '--region', 'us-central1', '--update-env-vars=CALCUS_VERSION_HASH=$SHORT_SHA']
+  - id: "configuration"
+    name: 'gcr.io/cloud-builders/gsutil'
+    args: ['cp', 'gs://$_CONFIG_BUCKET/cloud_config.json', 'frontend/cloud_config.json']
+  - id: "build"
+    name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '$_IMAGE_NAME', '-f', 'Cloud_dockerfile', '.']
+    timeout: 500s
+  - id: "image-storage"
+    name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '$_IMAGE_NAME']
+  - id: "proxy-creation"
+    name: "gcr.io/cloud-builders/docker"
+    entrypoint: /bin/bash
+    args:
+      - "-c"
+      - |
+        echo "FROM $_IMAGE_NAME
+        COPY --from=gcr.io/cloudsql-docker/gce-proxy /cloud_sql_proxy /cloudsql/cloud_sql_proxy" > Dockerfile-proxy;
+
+        docker build -f Dockerfile-proxy -t ${_IMAGE_NAME}-proxy .
+  - id: "migration"
+    name: "${_IMAGE_NAME}-proxy"
+    entrypoint: /bin/bash
+    env: 
+      - "PROJECT_ID=$_PROJECT_ID"
+      - "USE_CLOUD_SQL_AUTH_PROXY=true"
+    args:
+      - '-c'
+      - |
+        /cloudsql/cloud_sql_proxy -instances=${_INSTANCE_CONNECTION_NAME}=tcp:${_DATABASE_PORT} & sleep 2;
+
+        python manage.py migrate
+  - id: "main-deployment"
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args: ['run', 'deploy', 'calcus-cloud', '--image', '$_IMAGE_NAME', '--region', 'us-central1', '--update-env-vars=CALCUS_VERSION_HASH=$SHORT_SHA']
+  - id: "compute-deployment"
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args: ['run', 'deploy', 'calcus-cloud-compute', '--image', '$_IMAGE_NAME', '--region', 'us-central1', '--update-env-vars=CALCUS_VERSION_HASH=$SHORT_SHA']
+
+images:
+  - $_IMAGE_NAME
+
+option:
+  dynamic_substitutions: true
+
+substitutions:
+  _IMAGE_NAME: gcr.io/${_PROJECT_ID}:latest
+  _INSTANCE_CONNECTION_NAME: ${_PROJECT_ID}:us-central1:calcus-postgres
+  _DATABASE_PORT: '5432'
+
