@@ -128,6 +128,7 @@ from .helpers import (
     guess_missing_parameters,
     clean,
     clean_alphanum,
+    clean_filename,
 )
 from .cloud_job import submit_cloud_job
 
