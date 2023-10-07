@@ -219,7 +219,6 @@
                 <script>
                     var width = Math.round($(window).width()/3 - 200);
                     var height = Math.round($(window).height()/2 - 100);
-                    console.log(height)
                     Konva.hitOnDragEnabled = true;
 
                     var label_style = {font:'sans-serif', fontSize:18, fontColor:'white', fontOpacity:1, backgroundColor:'black',backgroundOpacity:0.5};
@@ -231,38 +230,8 @@
                         draggable: true,
                     });
 
-                    var tooltipLayer = new Konva.Layer();
-
-                    var tooltip = new Konva.Label({
-                        opacity: 0.75,
-                        visible: false,
-                        listening: false,
-                    });
-
-                    tooltip.add(
-                        new Konva.Tag({
-                            fill: 'black',
-                            pointerDirection: 'down',
-                            pointerWidth: 10,
-                            pointerHeight: 10,
-                            lineJoin: 'round',
-                            shadowColor: 'black',
-                            shadowBlur: 10,
-                            shadowOffsetX: 10,
-                            shadowOffsetY: 10,
-                            shadowOpacity: 0.2,
-                        })
-                    );
-
-                    tooltip.add(
-                        new Konva.Text({
-                            text: '',
-                            fontFamily: 'Calibri',
-                            fontSize: 18,
-                            padding: 5,
-                            fill: 'white',
-                        })
-                    );
+                    var bar_width = 25;
+                    var bar_height = 5;
 
                     var executed = false;
                     var E_range = null;
@@ -272,53 +241,105 @@
 
                     function check_clash(y, x) {
                         for (i=0; i<positions_y.length; i++) {
-                            if(Math.abs(y - positions_y[i]) < 30 && x == positions_x[i])
+                            if(Math.abs(y - positions_y[i]) < 2*bar_height && x == positions_x[i])
                                 return true;
                         }
                         return false;
+                    }
+                    function tf(Ey) {
+                        return (height - (Ey - E_min)*100)
                     }
 
                     function add_rect(orb, layer) {
                         E = orb[0]
                         occ = orb[1]
-                        y = (height - (25 + (E - E_min)/E_range * (height - 25)));
+                        y = tf(E);
                         if(occ > 0.3) {
                             color = "#000";
+                            filled = true;
                         }
                         else {
                             color = "#aaa"
+                            filled = false;
                         }
 
                         x = 0
 
                         while (check_clash(y, x))
-                            x += 75
+                            x += bar_width*1.5
 
                         positions_y.push(y)
                         positions_x.push(x)
                         var node = new Konva.Rect({
                             x: x,
                             y: y,
-                            height: 10,
-                            width: 50,
+                            height: bar_height,
+                            width: bar_width,
                             fill: color,
+                            filled: filled,
                             id: ind,
                         });
                         layer.add(node);
                     }
 
-                    
-
                     var orb_data = null
-
                     var layer = new Konva.Layer();
 
                     function draw_orbs() {
-                        //layer.clear()
+                        last = tf(Math.ceil(orb_data[orb_data.length-1][0]))-30
+                        var arrow = new Konva.Arrow({
+                            points: [-10, tf(Math.floor(orb_data[0][0]))+30,
+                            -10, last],
+                            fill: 'black',
+                            stroke: 'black',
+                            strokeWidth: bar_height,
+
+                        } );
+                        layer.add(arrow);
+                        text = new Konva.Text({
+                            text: "Energy",
+                            x: -30,
+                            y: last - 30,
+                        });
+                        layer.add(text);
+
+                        lumo_y = null;
                         for(ind in orb_data){
                             orb = orb_data[ind]
                             add_rect(orb, layer)
+                            if(orb[1] == 0 && lumo_y == undefined) {
+                                lumo_y = tf(orb[0]);
+                            }
                         }
+
+                        graduation = 1;
+                        pos = Math.floor(E_min);
+                        while(true) {
+                            if(pos > E_min + E_range) 
+                                break
+                            line = new Konva.Line({
+                                points: [-50, tf(pos), -10, tf(pos)],
+                                fill: "black",
+                                stroke: "black",
+                            });
+                            text = new Konva.Text({
+                                text: Number(pos).toFixed(1) + " Eh",
+                                x: -100,
+                                y: tf(pos)-5,
+                            });
+                            layer.add(text);
+                            layer.add(line);
+                            pos += graduation;
+                        }
+
+                        initial_zoom = 2;
+                        stage.scale({ x: initial_zoom, y: initial_zoom })
+
+                        var newPos = {
+                            x: 300,
+                            y: (-lumo_y + stage.y())*initial_zoom + height/4,
+                        };
+                        stage.position(newPos);
                     }
 
                     $(document).ready(function() {
@@ -346,9 +367,7 @@
                             layer.destroyChildren()
 
                             stage.add(layer);
-                            stage.add(tooltipLayer);
 
-                            tooltipLayer.add(tooltip);
 
                             draw_orbs(); 
                         });
@@ -356,37 +375,25 @@
                         
                     });
 
-                    stage.on('mouseover mousemove dragmove', function (evt) {
-                        var node = evt.target;
-                        if (node && node.id()) {
-                            var mousePos = node.getStage().getPointerPosition();
-                            tooltip.position({
-                                x: mousePos.x - stage.x(),
-                                y: mousePos.y - 5 - stage.y(),
-                            });
-
-                            tooltip
-                                .getText()
-                                .text(node.getAttr("text"));
-                            tooltip.show();
-                        }
-                    });
-
-                    stage.on('mouseout', function (evt) {
-                        tooltip.hide();
-                    });
-
                     var startLayer;
+                    var lastShape;
 
                     stage.on('mousedown', function (evt) {
                         var shape = evt.target;
                         if (shape) {
                             startLayer = shape.getLayer();
                             if(shape.id()) {
+                                if(lastShape) {
+                                    if(lastShape.getAttr("filled"))
+                                        lastShape.fill("#000");
+                                    else
+                                        lastShape.fill("#aaa");
+                                }
+
                                 get_cube(shape.getAttr("id"));
+                                shape.fill("#f00")
+                                lastShape = shape;
                             }
-                            // manually trigger drag and drop
-                            //shape.startDrag();
                         }
                     });
 
@@ -395,6 +402,35 @@
                         if (shape) {
                             shape.moveTo(startLayer);
                         }
+                    });
+
+                    var scaleBy = 1.10;
+                    stage.on('wheel', (e) => {
+                        e.evt.preventDefault();
+
+                        var oldScale = stage.scaleX();
+                        var pointer = stage.getPointerPosition();
+
+                        var mousePointTo = {
+                            x: (pointer.x - stage.x()) / oldScale,
+                            y: (pointer.y - stage.y()) / oldScale,
+                        };
+
+                        let direction = e.evt.deltaY > 0 ? -1 : 1;
+
+                        if (e.evt.ctrlKey) {
+                            direction = -direction;
+                        }
+
+                        var newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+                        stage.scale({ x: newScale, y: newScale });
+
+                        var newPos = {
+                            x: pointer.x - mousePointTo.x * newScale,
+                            y: pointer.y - mousePointTo.y * newScale,
+                        };
+                        stage.position(newPos);
                     });
                 </script>
     </div>
@@ -420,21 +456,10 @@
                 mo_viewer.zoomTo();
                 mo_viewer.render();
             }
-            function get_cube(orb, btn) {
+            function get_cube(orb) {
             	if (orb != -1) {
             		window.mo_selection = orb;
             	}
-                if(btn != null) {
-                    document.querySelectorAll("#mo_container > .button").forEach(function(el, i) {
-                        if(el.classList.contains("is-warning")) {
-                            el.classList.remove("is-warning");
-                            el.classList.add("is-info");
-                        }
-                    });
-
-                    btn.classList.remove("is-info");
-                    btn.classList.add("is-warning");
-                }
             	let _orb = mo_selection;
 
                 if(_orb in data_cache) {
@@ -466,24 +491,19 @@
 
             $(document).ready(function(){
                 if(mo_viewer.getModel() == null)
-            	    get_cube(0, document.getElementById("homo_btn"));
+            	    get_cube(0);
             });
         </script>
-                            <div id="mo_container">
-                                <button class="button is-info" onclick="get_cube(0, this);" style="width: 24%" id="homo_btn">HOMO</button>
-                                <button class="button is-info" onclick="get_cube(1, this);" style="width: 24%">LUMO</button>
-                                <button class="button is-info" onclick="get_cube(2, this);" style="width: 24%">LUMO+1</button>
-                                <button class="button is-info" onclick="get_cube(3, this);" style="width: 24%">LUMO+2</button>
-
-                                <div class="slidecontainer">
-                                    <span id="mo_span">Orbital Plotting Isovalue</span>
-                                    <br>
-                                    <input type="range" min="1" max="20" value="8" class="slider" id="mo_calibration" onchange="get_cube(-1);">
-                                    <br>
-                                    Isovalue: <span id="mo_isovalue">0.00010</span>
-                                </div>
-                            </div>
+                    <div id="mo_container">
+                        <div class="slidecontainer">
+                            <span id="mo_span">Orbital Plotting Isovalue</span>
+                            <br>
+                            <input type="range" min="1" max="20" value="8" class="slider" id="mo_calibration" onchange="get_cube(-1);">
+                            <br>
+                            Isovalue: <span id="mo_isovalue">0.00010</span>
                         </div>
+                    </div>
+                </div>
 
     <div class="column"></div>
 </div>
