@@ -106,6 +106,7 @@ from .tasks import (
     plot_peaks,
     create_account_sub,
     get_cube_from_molden,
+    get_number_of_electrons,
 )
 from .decorators import superuser_required
 from .cloud_job import send_gcloud_task, record_event_analytics
@@ -2350,17 +2351,7 @@ def _submit_calculation(request, verify=False):
                     struct, filename = ss
                     xyz_structure = struct.xyz_structure
 
-                electrons = 0
-                for line in xyz_structure.split("\n")[2:]:
-                    if line.strip() == "":
-                        continue
-                    el = line.split()[0]
-                    if el not in ATOMIC_NUMBER:
-                        return f"Unknown element: {el}"
-                    electrons += ATOMIC_NUMBER[el]
-                    if el == "He":
-                        # Assume that substituents form a single bond
-                        electrons -= 1
+                electrons = get_number_of_electrons(xyz_structure)
 
                 _charge = _params["charge"]
                 _multiplicity = _params["multiplicity"]

@@ -150,3 +150,18 @@ def guess_missing_parameters(params):
             elif params["calc_software"] == "NWChem":
                 params["calc_solvation_model"] = "SMD"
                 params["calc_solvation_radii"] = "default"
+
+
+def get_number_of_electrons(xyz):
+    electrons = 0
+    for line in xyz.split("\n")[2:]:
+        if line.strip() == "":
+            continue
+        el = line.split()[0]
+        if el not in ATOMIC_NUMBER:
+            return f"Unknown element: {el}"
+        electrons += ATOMIC_NUMBER[el]
+        if el == "He":
+            # Assume that substituents form a single bond
+            electrons -= 1
+    return electrons

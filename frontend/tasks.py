@@ -2509,13 +2509,30 @@ def nwchem_mo_gen(in_file, calc):
             )
             return ErrorCodes.INVALID_OUTPUT
 
-        while lines[ind].find("Final Molecular Orbital Analysis") == -1:
+        while lines[ind].find("Final eigenvalues") == -1:
             ind += 1
 
-        ind += 3
+        ind += 4
+
+        eigs = []
+        while lines[ind].strip() != "":
+            num, E = lines[ind].split()
+            eigs.append(float(E))
+            ind += 1
+
+        num_electrons = get_number_of_electrons(calc.structure.xyz_structure)
+        num_electrons -= calc.parameters.charge
+        num_pairs = num_electrons // 2
 
         orbs = ""
+        for ind, val in enumerate(eigs):
+            if ind + 1 <= num_pairs:
+                occ = 2
+            else:
+                occ = 0
+            orbs += f"{val:.6f};{occ}\n"
 
+        """
         while True:
             sline = lines[ind].split()
             occ = float(sline[2].split("=")[-1].replace("D", "E"))
@@ -2546,28 +2563,24 @@ def nwchem_mo_gen(in_file, calc):
 
                 ind += 1
             orbs += f"{orb_E:.6f};{occ:.3f}\n"
+        """
 
-            """
-            components = []
+        """
+        components = []
 
-            ind += 4
-            while lines[ind].strip() != "":
-                sline = lines[ind].split()
-                for offset in range(len(sline)//5):
-                    coeff = "{:.3f}".format(round(float(sline[5*offset+1]), 3))
-                    atom_num = sline[5*offset+2]
-                    element = sline[5*offset+3]
-                    orb_type = sline[5*offset+4]
-                    components.append((coeff, element, atom_num, orb_type))
-
-                ind += 1
-            orbs.append((occ, E, sorted(components, key=lambda i: i[1])))
-            """
-
-            if lines[ind + 1].strip() == "":
-                break
+        ind += 4
+        while lines[ind].strip() != "":
+            sline = lines[ind].split()
+            for offset in range(len(sline)//5):
+                coeff = "{:.3f}".format(round(float(sline[5*offset+1]), 3))
+                atom_num = sline[5*offset+2]
+                element = sline[5*offset+3]
+                orb_type = sline[5*offset+4]
+                components.append((coeff, element, atom_num, orb_type))
 
             ind += 1
+        orbs.append((occ, E, sorted(components, key=lambda i: i[1])))
+        """
 
     prop = get_or_create(calc.parameters, calc.structure)
 
@@ -3991,7 +4004,7 @@ def write_xyz(xyz, path):
 def gen_fingerprint(structure):
     if structure.xyz_structure == "":
         logger.error("No xyz structure!")
-        return -1
+        return ""
 
     raw_xyz = structure.xyz_structure
 
