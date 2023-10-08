@@ -25,9 +25,9 @@ var master_options = {
             "driver": ["xtb", "Gaussian", "ORCA", "NWChem"]
         }, 
         "MO Calculation": {
-            "software": ["ORCA", "NWChem"],
-            "driver": ["ORCA", "NWChem"],
-            "theory_level": ["hf", "dft", "mp2"]
+            "software": ["ORCA", "NWChem", "xtb"],
+            "driver": ["ORCA", "NWChem", "xtb"],
+            "theory_level": ["hf", "dft", "mp2", "xtb"]
         }, 
         "UV-Vis Calculation": {
             "software": ["ORCA", "Gaussian", "xtb"],
@@ -75,7 +75,7 @@ var master_options = {
             "driver": ["ORCA", "Pysisyphus"]
         },
         "xtb": {
-            "type": ["Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "UV-Vis Calculation", "Conformational Search", "Constrained Conformational Search", "Minimum Energy Path", "Fast Conformational Search"],
+            "type": ["Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "UV-Vis Calculation", "Conformational Search", "Constrained Conformational Search", "Minimum Energy Path", "Fast Conformational Search", "MO Calculation"],
             "solvation_model": ["ALPB", "GBSA"],
             "solvation_radii": ["Default"],
             "theory_level": ["xtb"],
