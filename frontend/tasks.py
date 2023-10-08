@@ -2627,7 +2627,7 @@ q
 
         with open("/dev/null", "w") as stream, open(os.path.join(d, "command")) as f:
             p = subprocess.Popen(
-                shlex.split(f"/binaries/xtb/Multiwfn in.molden"),
+                shlex.split(f"{MULTIWFN_DIR}/Multiwfn in.molden"),
                 cwd=d,
                 stdin=f,
                 stdout=stream,

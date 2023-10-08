@@ -58,3 +58,4 @@ elif STACKSIZE.find("M") != -1:
 
 MEM = int(PAL) * STACKSIZE
 EBROOTORCA = os.environ.get("EBROOTORCA", "")
+MULTIWFN_DIR = os.environ.get("MULTIWFN_DIR", "/binaries/xtb/")

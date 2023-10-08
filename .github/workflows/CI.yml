@@ -57,9 +57,7 @@ jobs:
         dos2unix scripts/*
         mkdir -p scratch/keys
         mkdir -p scratch/scr
-        mkdir -p /binaries/xtb
-        cp bin/* /binaries/xtb/
-        python scripts/extract_xtb.py
+        tar xvfj bin/Multiwfn.tar.bz2 -C bin
         PGPASSWORD=postgres createdb -h localhost -p 5432 -U calcus test_calcus
     - name: Run tests
       run: |
@@ -83,6 +81,7 @@ jobs:
         GCP_SERVICE_ACCOUNT_EMAIL: github@calcus.cloud
         COMPUTE_SMALL_HOST_URL: localhost:8000
         ACTION_HOST_URL: localhost:8000
+        MULTIWFN_DIR: ${{ github.workspace}}/bin
   trigger_cloud_build:
     needs: build
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
