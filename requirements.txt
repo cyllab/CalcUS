@@ -1,6 +1,6 @@
 basis-set-exchange
 bleach
-ccinput>=1.10.1
+ccinput>=1.10.2
 celery[redis]
 django-cors-headers
 cryptography

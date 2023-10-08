@@ -85,6 +85,7 @@ from ccinput.utilities import get_solvent
 from .libxyz import *
 from .models import *
 from .helpers import *
+from .constants import HARTREE_TO_EV
 from .environment_variables import *
 from .cloud_job import submit_cloud_job
 
@@ -804,6 +805,67 @@ def xtb_opt(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
+def xtb_mo_gen(in_file, calc):
+    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+
+    ret = launch_xtb_calc(in_file, calc, ["calc.out", "molden.input", "xtbout.json"])
+
+    if ret != ErrorCodes.SUCCESS:
+        return ret
+
+    try:
+        with open(f"{local_folder}/xtbout.json") as f:
+            data = json.load(f)
+    except json.decoder.JSONDecodeError:
+        logger.error(f"Could not parse JSON file xtbout.json from calc {calc.id}")
+        return ErrorCodes.INVALID_FILE
+    """
+    with open(f"{local_folder}/calc.out") as f:
+        lines = f.readlines()
+        ind = len(lines) - 1
+
+        try:
+            while lines[ind].find("TOTAL ENERGY") == -1:
+                ind -= 1
+            E = float(lines[ind].split()[3])
+        except IndexError:
+            logger.error(
+                f"Could not parse the output of calculation {calc.id}: invalid format"
+            )
+            return ErrorCodes.INVALID_OUTPUT
+    """
+
+    E = data["total energy"]
+    orb_E = data["orbital energies/eV"]
+    orb_occ = data["fractional occupation"]
+
+    orbs = ""
+    for oE, occ in zip(orb_E, orb_occ):
+        orbs += f"{oE/HARTREE_TO_EV:.6f};{occ:.3f}\n"
+
+    prop = get_or_create(calc.parameters, calc.structure)
+
+    path = os.path.join(local_folder, "molden.input")
+    if not os.path.isfile(path):
+        logger.error(f"Molden file {path} does not exist!")
+        return ErrorCodes.MISSING_FILE
+    with open(path) as f:
+        molden = "".join(f.readlines())
+
+    comp_data = gzip.compress(bytes(molden, "utf-8"))
+    str_data = base64.b64encode(comp_data).decode("utf-8")
+
+    comp_mo = gzip.compress(bytes(orbs, "utf-8"))
+    str_mo = base64.b64encode(comp_mo).decode("utf-8")
+
+    prop.molden = str_data
+    prop.mo_diagram = str_mo
+    prop.energy = E
+    prop.save()
+
+    return ErrorCodes.SUCCESS
+
+
 def launch_xtb_calc(in_file, calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
     folder = f"scratch/calcus/{calc.id}"
@@ -896,48 +958,6 @@ def launch_xtb_calc(in_file, calc, files):
         return ErrorCodes.SUCCESS
     else:
         return ErrorCodes.JOB_CANCELLED
-
-
-def xtb_opt(in_file, calc):
-    local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-
-    ret = launch_xtb_calc(in_file, calc, ["calc.out", "xtbopt.xyz"])
-
-    if ret != ErrorCodes.SUCCESS:
-        return ret
-
-    with open(f"{local_folder}/xtbopt.xyz") as f:
-        lines = f.readlines()
-
-    xyz_structure = clean_xyz("".join(lines))
-
-    with open(f"{local_folder}/calc.out") as f:
-        lines = f.readlines()
-        ind = len(lines) - 1
-
-        try:
-            while lines[ind].find("TOTAL ENERGY") == -1:
-                ind -= 1
-            E = float(lines[ind].split()[3])
-        except IndexError:
-            logger.error(
-                f"Could not parse the output of calculation {calc.id}: invalid format"
-            )
-            return ErrorCodes.INVALID_OUTPUT
-
-    s = Structure.objects.get_or_create(
-        parent_ensemble=calc.result_ensemble,
-        number=calc.structure.number,
-    )[0]
-    s.degeneracy = 1
-    s.xyz_structure = xyz_structure
-    prop = get_or_create(calc.parameters, s)
-    prop.energy = E
-    prop.geom = True
-    s.save()
-    prop.save()
-
-    return ErrorCodes.SUCCESS
 
 
 def mep(in_file, calc):
@@ -2983,11 +3003,17 @@ def calc_to_ccinput(calc):
     _specifications = calc.parameters.specifications
     software = calc.parameters.software.lower()
 
+    _step_name = calc.step.name
+
     if software in ["gaussian", "orca"]:  # TODO: NWChem?
         _specifications += " " + getattr(calc.order.author, "default_" + software)
         _solvation_radii = calc.parameters.solvation_radii
     else:
         _solvation_radii = ""
+
+    if software == "xtb" and calc.step.name == "MO Calculation":
+        _specifications += " --json --molden"
+        _step_name = "SP"
 
     try:
         _MEM = int(MEM)
@@ -3004,8 +3030,6 @@ def calc_to_ccinput(calc):
         else:
             _nproc = calc.order.resource.pal
             _mem = calc.order.resource.memory
-
-    _step_name = calc.step.name
 
     if calc.parameters.software.lower() == "xtb" and (
         calc.step.name == "Fast Conformational Search"
@@ -4375,6 +4399,7 @@ BASICSTEP_TABLE = {
         "Conformational Search": crest,
         "Constrained Optimisation": xtb_scan,
         "Frequency Calculation": xtb_freq,
+        "MO Calculation": xtb_mo_gen,
         "TS Optimisation": xtb_handle_ts,
         "UV-Vis Calculation": xtb_stda,
         "Single-Point Energy": xtb_sp,

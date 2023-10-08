@@ -21,7 +21,11 @@ We are developing a cloud service to give you access to CalcUS without any confi
 
 ## Installation
 
-For licensing reasons, **no software package requiring a user license can be included with CalcUS.** For convenience, we have included the LGPL-v3 licensed [xtb software package](https://github.com/grimme-lab/xtb) as well as related packages by the Grimme group ([crest](https://github.com/grimme-lab/crest), [stda](https://github.com/grimme-lab/stda) and [xtb4stda](https://github.com/grimme-lab/xtb4stda)). These enable fast semi-empirical tight-binding calculations in CalcUS by default. In order to use other software packages, you will need either to install the Linux version of a package locally or use the packages on remote clusters. 
+For licensing reasons, **no software package requiring a user license can be included with CalcUS.** For convenience, we have included the LGPL-v3 licensed [xtb software package](https://github.com/grimme-lab/xtb) as well as related packages by the Grimme group ([crest](https://github.com/grimme-lab/crest), [stda](https://github.com/grimme-lab/stda) and [xtb4stda](https://github.com/grimme-lab/xtb4stda)). These enable fast semi-empirical tight-binding calculations in CalcUS by default. 
+
+CalcUS also contains a redistribution of the open-source wavefunction analysis program [Multiwfn](http://sobereva.com/multiwfn/) along with its license. If you use molecular orbitals from CalcUS, please also cite Multiwfn: Tian Lu, Feiwu Chen, "Multiwfn: A Multifunctional Wavefunction Analyzer", *J. Comput. Chem.*, **2012**, *33*, 580-592. DOI: [10.1002/jcc.22885](https://doi.org/10.1002/jcc.22885)
+
+In order to use other software packages, you will need either to install the Linux version of a package locally or use the packages on remote clusters. 
 
 ### Linux and Mac
 Firstly, install and configure [Docker Engine](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/). On Linux, it is necessary to create a docker group and to add yourself to it:
