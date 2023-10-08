@@ -22,59 +22,9 @@ end
 task scf energy
 
 
-dplot
-  TITLE HOMO
-  vectors in.movecs
-   LimitXYZ
- -5.0 5.0 40
- -5.0 5.0 40
- -5.0  5.0  40
- spin total
-  ORBITALS view; 1; 4
-  gaussian
-  output in-HOMO.cube
+property
+moldenfile
+molden_norm nwchem
 end
-task dplot
 
-dplot
-  TITLE LUMO
-  vectors in.movecs
-   LimitXYZ
- -5.0 5.0 40
- -5.0 5.0 40
- -5.0  5.0  40
- spin total
-  ORBITALS view; 1; 5
-  gaussian
-  output in-LUMO.cube
-end
-task dplot
-
-dplot
-  TITLE LUMOA
-  vectors in.movecs
-   LimitXYZ
- -5.0 5.0 40
- -5.0 5.0 40
- -5.0  5.0  40
- spin total
-  ORBITALS view; 1; 6
-  gaussian
-  output in-LUMOA.cube
-end
-task dplot
-
-dplot
-  TITLE LUMOB
-  vectors in.movecs
-   LimitXYZ
- -5.0 5.0 40
- -5.0 5.0 40
- -5.0  5.0  40
- spin total
-  ORBITALS view; 1; 7
-  gaussian
-  output in-LUMOB.cube
-end
-task dplot
-
+task scf property
