@@ -57,6 +57,9 @@ jobs:
         dos2unix scripts/*
         mkdir -p scratch/keys
         mkdir -p scratch/scr
+        mkdir -p /binaries/xtb
+        cp bin/* /binaries/xtb/
+        python scripts/extract_xtb.py
         PGPASSWORD=postgres createdb -h localhost -p 5432 -U calcus test_calcus
     - name: Run tests
       run: |
