@@ -2631,7 +2631,7 @@ def get_cube_from_molden(molden, orb_num):
     INP = f"""200
 3
 {orb_num+1}
-2
+1
 2
 0
 q

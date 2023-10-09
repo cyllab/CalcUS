@@ -231,7 +231,7 @@
                     });
 
                     var bar_width = 25;
-                    var bar_height = 5;
+                    var bar_height = 3;
 
                     var executed = false;
                     var E_range = null;
@@ -241,13 +241,13 @@
 
                     function check_clash(y, x) {
                         for (i=0; i<positions_y.length; i++) {
-                            if(Math.abs(y - positions_y[i]) < 2*bar_height && x == positions_x[i])
+                            if(Math.abs(y - positions_y[i]) < 1.2*bar_height && x == positions_x[i])
                                 return true;
                         }
                         return false;
                     }
                     function tf(Ey) {
-                        return (height - (Ey - E_min)*100)
+                        return (height - (Ey - E_min)*200)
                     }
 
                     function add_rect(orb, layer) {
@@ -266,7 +266,7 @@
                         x = 0
 
                         while (check_clash(y, x))
-                            x += bar_width*1.5
+                            x += bar_width*1.2
 
                         positions_y.push(y)
                         positions_x.push(x)
@@ -286,9 +286,9 @@
                     var layer = new Konva.Layer();
 
                     function draw_orbs() {
-                        last = tf(Math.ceil(orb_data[orb_data.length-1][0]))-30
+                        last = tf(orb_data[orb_data.length-1][0])-8*bar_height
                         var arrow = new Konva.Arrow({
-                            points: [-10, tf(Math.floor(orb_data[0][0]))+30,
+                            points: [-10, tf(Math.floor(orb_data[0][0]))+5*bar_height,
                             -10, last],
                             fill: 'black',
                             stroke: 'black',
@@ -303,14 +303,31 @@
                         });
                         layer.add(text);
 
+                        homo_y = null
                         lumo_y = null;
                         for(ind in orb_data){
                             orb = orb_data[ind]
                             add_rect(orb, layer)
+                            if(orb[1] == 2)
+                                homo_y = tf(orb[0])
                             if(orb[1] == 0 && lumo_y == undefined) {
                                 lumo_y = tf(orb[0]);
                             }
                         }
+
+                        text = new Konva.Text({
+                            text: "HOMO",
+                            x: -60,
+                            y: homo_y - 4,
+                        });
+                        layer.add(text);
+                        text = new Konva.Text({
+                            text: "LUMO",
+                            x: -60,
+                            y: lumo_y - 4,
+                        });
+                        layer.add(text);
+
 
                         graduation = 1;
                         pos = Math.floor(E_min);
@@ -343,11 +360,12 @@
                     }
 
                     $(document).ready(function() {
+                        if(executed)
+                            return
+                        executed = true
+                        // Somehow executed twice
+
                         $.get("/get_mo_diagram/" + "{{ property.id }}", function(data) {
-                            if(executed)
-                                return
-                            executed = true
-                            // Somehow executed twice
                             orb_data = []
 
                             slines = data.split('\n');
@@ -368,11 +386,11 @@
 
                             stage.add(layer);
 
-
                             draw_orbs(); 
                         });
 
-                        
+                        if(mo_viewer.getModel() == null)
+                            get_cube(0);
                     });
 
                     var startLayer;
@@ -489,10 +507,6 @@
                 }
             }
 
-            $(document).ready(function(){
-                if(mo_viewer.getModel() == null)
-            	    get_cube(0);
-            });
         </script>
                     <div id="mo_container">
                         <div class="slidecontainer">
