@@ -159,8 +159,9 @@ def get_number_of_electrons(xyz):
             continue
         el = line.split()[0]
         if el not in ATOMIC_NUMBER:
-            return f"Unknown element: {el}"
-        electrons += ATOMIC_NUMBER[el]
+            print(f"Unknown element: {el}")
+            return -1
+        electrons += int(ATOMIC_NUMBER[el])
         if el == "He":
             # Assume that substituents form a single bond
             electrons -= 1
