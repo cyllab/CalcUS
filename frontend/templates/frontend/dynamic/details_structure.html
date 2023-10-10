@@ -284,6 +284,7 @@
 
                     var orb_data = null
                     var layer = new Konva.Layer();
+                    var newPos = null;
 
                     function draw_orbs() {
                         last = tf(orb_data[orb_data.length-1][0])-8*bar_height
@@ -352,19 +353,14 @@
                         initial_zoom = 2;
                         stage.scale({ x: initial_zoom, y: initial_zoom })
 
-                        var newPos = {
-                            x: 300,
-                            y: (-lumo_y + stage.y())*initial_zoom + height/4,
+                        newPos = {
+                            x: 250,
+                            y: (-lumo_y + stage.y())+ height/4,
                         };
                         stage.position(newPos);
                     }
 
                     $(document).ready(function() {
-                        if(executed)
-                            return
-                        executed = true
-                        // Somehow executed twice
-
                         $.get("/get_mo_diagram/" + "{{ property.id }}", function(data) {
                             orb_data = []
 
@@ -389,8 +385,7 @@
                             draw_orbs(); 
                         });
 
-                        if(mo_viewer.getModel() == null)
-                            get_cube(0);
+                        
                     });
 
                     var startLayer;
