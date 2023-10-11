@@ -93,3 +93,50 @@ class ResourceAllocationTests(TransactionTestCase):
         self.assertEqual(alloc.redeemer, u1)
         self.assertEqual(u1.allocated_seconds, 10)
         self.assertEqual(u2.allocated_seconds, 0)
+
+
+class UserTypeTests(TransactionTestCase):
+    def testDown(self):
+        close_old_connections()
+        settings.IS_CLOUD = False
+
+    def setUp(self):
+        settings.IS_CLOUD = True
+
+        self.password = "password1234"
+        self.user = User.objects.create_user(email="PI@uni.com", password=self.password)
+        self.group = ResearchGroup.objects.create(PI=self.user)
+        self.student = User.objects.create_user(
+            email="student@uni.com", password=self.password, member_of=self.group
+        )
+
+        self.sub = Subscription.objects.create(
+            subscriber=self.user,
+            start_date=timezone.now(),
+            end_date=timezone.now() + timezone.timedelta(days=1),
+        )
+
+    def test_PI_type(self):
+        self.assertEqual(self.user.user_type, "subscriber")
+
+    def test_student_type(self):
+        self.assertEqual(self.student.user_type, "subscriber")
+
+    def test_student_type_after_leaving(self):
+        self.student.member_of = None
+        self.student.save()
+        self.assertEqual(self.student.user_type, "free")
+
+    def test_new_user(self):
+        u = User.objects.create_user("other@uni.com", self.password)
+        self.assertEqual(u.user_type, "free")
+
+    def test_PI_sub_ended(self):
+        self.sub.end_date = timezone.now() - timezone.timedelta(seconds=5)
+        self.sub.save()
+        self.assertEqual(self.user.user_type, "free")
+
+    def test_student_sub_ended(self):
+        self.sub.end_date = timezone.now() - timezone.timedelta(seconds=5)
+        self.sub.save()
+        self.assertEqual(self.user.user_type, "free")
