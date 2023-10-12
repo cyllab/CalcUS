@@ -83,6 +83,8 @@ from .models import (
     CalculationFrame,
     Flowchart,
     Step,
+    ShowcaseProperty,
+    ShowcaseEnsemble,
     FlowchartOrder,
     ResourceAllocation,
     BatchCalcOrder,
@@ -210,7 +212,11 @@ class IndexView(generic.ListView):
 
 
 def home(request):
-    resp = render(request, "frontend/home.html")
+    params = {
+        "prop_mo": ShowcaseProperty.objects.get(name="mo"),
+        "ensemble_aspirin": ShowcaseEnsemble.objects.get(label="acetylsalicylic_acid"),
+    }
+    resp = render(request, "frontend/home.html", params)
     if "gclid" in request.GET:
         resp.set_cookie("gclid", request.GET["gclid"])
     return resp
@@ -2854,10 +2860,14 @@ def can_view_molecule(mol, user):
 
 
 def can_view_ensemble(e, user):
+    if hasattr(e, "showcaseensemble"):
+        return True
     return can_view_molecule(e.parent_molecule, user)
 
 
 def can_view_structure(s, user):
+    if hasattr(s.parent_ensemble, "showcaseensemble"):
+        return True
     return can_view_ensemble(s.parent_ensemble, user)
 
 
@@ -3548,27 +3558,7 @@ def profile_allocation(request):
 
 
 @login_required
-def conformer_table(request, pk):
-    id = str(pk)
-    try:
-        e = Ensemble.objects.get(pk=id)
-    except Ensemble.DoesNotExist:
-        return HttpResponse(status=403)
-
-    if not can_view_ensemble(e, request.user):
-        return HttpResponse(status=403)
-
-    return render(
-        request,
-        "frontend/dynamic/conformer_table.html",
-        {
-            "ensemble": e,
-        },
-    )
-
-
-@login_required
-def conformer_table_post(request):
+def conformer_table(request):
     if request.method == "POST":
         try:
             id = clean(request.POST["ensemble_id"])
@@ -3762,7 +3752,9 @@ def get_mo_cube(request):
         except Property.DoesNotExist:
             return HttpResponse(status=404)
 
-        if not can_view_structure(prop.parent_structure, request.user):
+        if not hasattr(prop, "showcaseproperty") and not can_view_structure(
+            prop.parent_structure, request.user
+        ):
             return HttpResponse(status=404)
 
         if len(prop.molden) == 0:
@@ -3790,7 +3782,9 @@ def get_mo_diagram(request, pk):
     except Property.DoesNotExist:
         return HttpResponse(status=404)
 
-    if not can_view_structure(prop.parent_structure, request.user):
+    if not hasattr(prop, "showcaseproperty") and not can_view_structure(
+        prop.parent_structure, request.user
+    ):
         return HttpResponse(status=404)
 
     if len(prop.mo_diagram) == 0:
@@ -3940,6 +3934,7 @@ def info_table(request, pk):
     )
 
 
+"""
 @login_required
 def next_step(request, pk):
     try:
@@ -3957,6 +3952,7 @@ def next_step(request, pk):
             "calculation": calc,
         },
     )
+"""
 
 
 @login_required
@@ -4243,7 +4239,7 @@ def get_structure(request):
         if len(structs) == 0:
             return HttpResponse(status=204)
 
-        if "num" in request.POST.keys():
+        if "num" in request.POST:
             num = int(clean(request.POST["num"]))
             try:
                 struct = structs.get(number=num)
@@ -4251,7 +4247,6 @@ def get_structure(request):
                 inds = [i.number for i in structs]
                 m = inds.index(min(inds))
                 return HttpResponse(structs[m].xyz_structure)
-
             else:
                 return HttpResponse(struct.xyz_structure)
         else:

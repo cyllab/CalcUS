@@ -164,6 +164,13 @@
     .testimonial-name > b {
         font-size: 1.3em;
     }
+    .subtitle {
+        max-width: 35em;
+        margin-bottom: 2em !important;
+    }
+    #conf_table_el {
+        font-size: 1rem;
+    }
 </style>
 {% if IS_CLOUD %}
 <!-- Begin Brevo Form -->
@@ -189,6 +196,21 @@
 <link rel="stylesheet" href="https://sibforms.com/forms/end-form/build/sib-styles.css">
 <!-- End Brevo Form -->
 {% endif %}
+
+<!-- Imports for the showcases --!>
+<link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
+<script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
+
+
+<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css">
+<script src="{% static 'frontend/jquery.min.js' %}"></script>
+<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
+<script src="{% static 'frontend/3Dmol.ui-min.js' %}"></script>
+<script src="https://unpkg.com/konva@9.2.0/konva.min.js"></script>
+<script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
+
+{% include "frontend/properties/conformers_head.html" with ensemble=ensemble_aspirin %}
+
 
 {% endblock %} 
 {% block content %}
@@ -227,39 +249,40 @@
     </div>
     <hr id="logo_sep" />
 
-    {% if IS_CLOUD %}
+    {% if IS_CLOUD or True%}
     <div class="tile is-ancestor">
-        <div class="tile is-6 is-parent">
+        <div class="tile is-parent">
             <div class="tile is-child">
-                <h2 class="title is-2">Skip the installation and configuration</h2>
-                <p class="subtitle">Launch Density Functional Theory (DFT) calculations in your browser in under 30 seconds</p>
+                <h2 class="title is-2">Quantum Chemistry in your Browser</h2>
+                <center>
+                <p class="subtitle">View molecular orbitals, vibrational modes, UV-Visible absorbance and reaction processes directly on the CalcUS Cloud</p>
+                <center>
+                {% include "frontend/properties/mo.html" with property=prop_mo %}
             </div>
         </div>
-        <div class="tile is-6">
-            <img id="teaser3" class="teaser_img" src="{% static 'home/mo.webp' %}" alt="Molecular Orbital generated with CalcUS">
+    </div>
+
+    <div class="tile is-ancestor">
+        <div class="tile is-parent">
+            <div class="tile is-child">
+                <h2 class="title is-2">Explore Molecular Possibilities</h2>
+                <center>
+                <p class="subtitle">Compare conformers, evaluate reactions and predict properties</p>
+                <center>
+                {% include "frontend/properties/conformers_body.html" with ensemble=ensemble_aspirin %}
+            </div>
         </div>
     </div>
 
     <div class="tile is-ancestor">
         <div class="tile is-6">
-            <img id="teaser1" class="teaser_img" src="{% static 'home/pentane.webp' %}" alt="Conformers of pentane displayed in a table">
+            <img id="teaser2" class="teaser_img" src="{% static 'home/launch.webp' %}" alt="Calculation launch page of CalcUS">
         </div>
-        <div class="tile is-6 is-parent">
-            <div class="tile is-child">
-                <h2 class="title is-2">Use state-of-the-art software and algorithms</h2>
-                <p class="subtitle">Run ridiculously fast semi-empirical <a href="https://github.com/grimme-lab/xtb" class="xtb_link">xTB calculations</a> on real computing resources, no configuration required</p>
-            </div>
-        </div>
-    </div>
-    <div class="tile is-ancestor">
         <div class="tile is-6 is-parent">
             <div class="tile is-child">
                 <h2 class="title is-2">Focus on concepts, not minutae</h2>
                 <p class="subtitle">The user-friendly interface handles input file creation and management so you can concentrate on the bigger picture</p>
             </div>
-        </div>
-        <div class="tile is-6">
-            <img id="teaser2" class="teaser_img" src="{% static 'home/launch.webp' %}" alt="Calculation launch page of CalcUS">
         </div>
     </div>
     {% endif %}

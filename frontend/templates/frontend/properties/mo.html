@@ -1,0 +1,341 @@
+<style>
+    .slider {
+        margin-top: 1em;
+    }
+    #mo_calibration {
+        width: 100%;
+    }
+    #mo_span {
+        font-weight: bold;
+    }
+    .slidecontainer {
+        margin-top: 2em;
+        text-align: center;
+    }
+    #mo_diagram {
+        border: 1px solid black;
+    }
+    .hscroll {
+        overflow-x: auto;
+    }
+</style>
+<div class="columns box is-desktop" id="mo_structure_details">
+    <div class="column"></div>
+    <div class="column is-tight">
+        <div id="mo_diagram"></div>
+        <script>
+            {% if property.showcaseproperty %}
+            var width = Math.max(300, $(window).width()/3 - 200);
+            var height = Math.max(300, $(window).height()/2 - 200);
+            {% else %}
+            var width = Math.round($(window).width()/3 - 200);
+            var height = Math.round($(window).height()/2 - 100);
+            {% endif %}
+            Konva.hitOnDragEnabled = true;
+
+            var label_style = {font:'sans-serif', fontSize:18, fontColor:'white', fontOpacity:1, backgroundColor:'black',backgroundOpacity:0.5};
+
+            var stage = new Konva.Stage({
+                container: 'mo_diagram',
+                width: width,
+                height: height,
+                draggable: true,
+            });
+
+            var bar_width = 25;
+            var bar_height = 3;
+
+            var executed = false;
+            var E_range = null;
+            var E_min = null;
+            var positions_y = [];
+            var positions_x = [];
+
+            function check_clash(y, x) {
+                for (i=0; i<positions_y.length; i++) {
+                    if(Math.abs(y - positions_y[i]) < 1.2*bar_height && x == positions_x[i])
+                        return true;
+                }
+                return false;
+            }
+            function tf(Ey) {
+                return (height - (Ey - E_min)*200)
+            }
+
+            function add_rect(orb, layer) {
+                E = orb[0]
+                occ = orb[1]
+                y = tf(E);
+                if(occ > 0.3) {
+                    color = "#000";
+                    filled = true;
+                }
+                else {
+                    color = "#aaa"
+                    filled = false;
+                }
+
+                x = 0
+
+                while (check_clash(y, x))
+                    x += bar_width*1.2
+
+                positions_y.push(y)
+                positions_x.push(x)
+                var node = new Konva.Rect({
+                    x: x,
+                    y: y,
+                    height: bar_height,
+                    width: bar_width,
+                    fill: color,
+                    filled: filled,
+                    id: ind,
+                });
+                layer.add(node);
+            }
+
+            var orb_data = null
+            var layer = new Konva.Layer();
+            var newPos = null;
+
+            function draw_orbs() {
+                last = tf(orb_data[orb_data.length-1][0])-8*bar_height
+                var arrow = new Konva.Arrow({
+                    points: [-10, tf(Math.floor(orb_data[0][0]))+5*bar_height,
+                        -10, last],
+                    fill: 'black',
+                    stroke: 'black',
+                    strokeWidth: bar_height,
+
+                } );
+                layer.add(arrow);
+                text = new Konva.Text({
+                    text: "Energy",
+                    x: -30,
+                    y: last - 30,
+                });
+                layer.add(text);
+
+                homo_num = 0;
+                homo_y = null
+                lumo_y = null;
+                for(ind in orb_data){
+                    orb = orb_data[ind]
+                    add_rect(orb, layer)
+                    if(orb[1] == 2) {
+                        homo_y = tf(orb[0]);
+                        homo_num = ind;
+                    }
+                    if(orb[1] == 0 && lumo_y == undefined) {
+                        lumo_y = tf(orb[0]);
+                    }
+                }
+
+                text = new Konva.Text({
+                    text: "HOMO",
+                    x: -60,
+                    y: homo_y - 4,
+                });
+                layer.add(text);
+                text = new Konva.Text({
+                    text: "LUMO",
+                    x: -60,
+                    y: lumo_y - 4,
+                });
+                layer.add(text);
+
+                graduation = 1;
+                pos = Math.floor(E_min);
+                while(true) {
+                    if(pos > E_min + E_range) 
+                        break
+                    line = new Konva.Line({
+                        points: [-50, tf(pos), -10, tf(pos)],
+                        fill: "black",
+                        stroke: "black",
+                    });
+                    text = new Konva.Text({
+                        text: Number(pos).toFixed(1) + " Eh",
+                        x: -100,
+                        y: tf(pos)-5,
+                    });
+                    layer.add(text);
+                    layer.add(line);
+                    pos += graduation;
+                }
+
+                initial_zoom = 2;
+                stage.scale({ x: initial_zoom, y: initial_zoom })
+
+                newPos = {
+                    x: 250,
+                    y: -lumo_y*initial_zoom + height/3,
+                };
+                stage.position(newPos);
+
+                let homo_shape = layer.getChildren(function(node){
+                    return node.getClassName() == "Rect" && node.id() == homo_num
+                })[0];
+                select_shape(homo_shape);
+            }
+
+            $(document).ready(function() {
+                $.get("/get_mo_diagram/" + "{{ property.id }}", function(data) {
+                    orb_data = []
+
+                    slines = data.split('\n');
+                    for (i=0; i < slines.length; i++) { 
+                        if (slines[i] == "")
+                            break
+                        sdata = slines[i].split(';');
+                        orb_data.push([parseFloat(sdata[0]), parseFloat(sdata[1])])
+                    }
+                    E_min = orb_data[0][0];
+                    E_range = orb_data[orb_data.length-1][0] - E_min;
+
+                    positions_y = []
+                    positions_x = []
+
+                    stage.destroyChildren()
+                    layer.destroyChildren()
+
+                    stage.add(layer);
+
+                    draw_orbs(); 
+                });
+            });
+
+            var startLayer;
+            var lastShape;
+
+            function select_shape(shape) {
+                if(lastShape) {
+                    if(lastShape.getAttr("filled"))
+                        lastShape.fill("#000");
+                    else
+                        lastShape.fill("#aaa");
+                }
+
+                get_cube(shape.getAttr("id"));
+                shape.fill("#f00")
+                lastShape = shape;
+            }
+
+            stage.on('mousedown', function (evt) {
+                var shape = evt.target;
+                if (shape) {
+                    startLayer = shape.getLayer();
+                    if(shape.id()) {
+                        select_shape(shape); 
+                    }
+                }
+            });
+
+            stage.on('mouseup', function (evt) {
+                var shape = evt.target;
+                if (shape) {
+                    shape.moveTo(startLayer);
+                }
+            });
+
+            var scaleBy = 1.10;
+            stage.on('wheel', (e) => {
+                e.evt.preventDefault();
+
+                var oldScale = stage.scaleX();
+                var pointer = stage.getPointerPosition();
+
+                var mousePointTo = {
+                    x: (pointer.x - stage.x()) / oldScale,
+                    y: (pointer.y - stage.y()) / oldScale,
+                };
+
+                let direction = e.evt.deltaY > 0 ? -1 : 1;
+
+                if (e.evt.ctrlKey) {
+                    direction = -direction;
+                }
+
+                var newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+                stage.scale({ x: newScale, y: newScale });
+
+                var newPos = {
+                    x: pointer.x - mousePointTo.x * newScale,
+                    y: pointer.y - mousePointTo.y * newScale,
+                };
+                stage.position(newPos);
+            });
+        </script>
+    </div>
+    <div class="column"></div>
+    <div class="column is-tight has-text-centered">
+        <h3 class="title is-3">Selected molecular orbital</h3>
+        <div id="mo_viewer_div" style="width: 400px; height: 400px; position: relative"></div>
+
+        <script>
+
+            var mo_viewer = $3Dmol.createViewer("mo_viewer_div");
+            mo_viewer.setBackgroundColor(0xffffff);
+
+            var data_cache = {};
+
+            function show_cube(cube, xyz) {
+                let isoval = 10**(-document.getElementById("mo_calibration").value/2);
+                $("#mo_isovalue").html(isoval.toPrecision(2));
+                var voldata = new $3Dmol.VolumeData(cube, "cube");
+                mo_viewer.clear();
+                mo_viewer.addModel(xyz, "xyz");
+                mo_viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
+                mo_viewer.addIsosurface(voldata, {isoval: isoval, color: "blue", alpha: 0.90, smoothness: 10});
+                mo_viewer.addIsosurface(voldata, {isoval: -isoval, color: "red", alpha: 0.90, smoothness: 10});
+                mo_viewer.zoomTo();
+                mo_viewer.render();
+            }
+            function get_cube(orb) {
+                if (orb != -1) {
+                    window.mo_selection = orb;
+                }
+                let _orb = mo_selection;
+
+                if(_orb in data_cache) {
+                    data = data_cache[_orb];
+                    show_cube(data.cube, data.xyz);
+                }
+                else {
+                    $.ajax({
+                        method: "POST",
+                        url: "/get_mo_cube/",
+                        data: {
+                            'id': "{{ property.id }}",
+                            'orb': _orb,
+                        },
+
+                        headers: {
+                            "X-CSRFToken": '{{ csrf_token }}',
+                        },
+                        success: function(data, textStatus, xhr) {
+                            show_cube(data.cube, data.xyz)
+
+                            if(!(_orb in data_cache)) {
+                                data_cache[_orb] = data;
+                            }
+                        }
+                    });
+                }
+            }
+
+        </script>
+        <div id="mo_container">
+            <div class="slidecontainer">
+                <span id="mo_span">Orbital Plotting Isovalue</span>
+                <br>
+                <input type="range" min="1" max="20" value="8" class="slider" id="mo_calibration" onchange="get_cube(-1);">
+                <br>
+                Isovalue: <span id="mo_isovalue">0.00010</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="column"></div>
+</div>

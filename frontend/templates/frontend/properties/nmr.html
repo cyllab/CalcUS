@@ -1,0 +1,28 @@
+<div class="columns box is-desktop" id="enso_structure_details">
+    <div class="column">
+        <center>
+            <div id="nmr_spectrum" style="width: 80%; height: 400px; margin-bottom: 30px"></div>
+        </center>
+        <script>
+            $(document).ready(function () {
+                g3 = new Dygraph(document.getElementById("nmr_spectrum"), "/nmr/{{ property.id }}", {
+                    color: "#202f26",
+                    strokeWidth: 2,
+                    xlabel: "Chemical shift (ppm)",
+                    ylabel: "Intensity",
+                    dateWindow: [-10, 0],
+                    axes: {
+                        x: {
+                            axisLabelFormatter: function (ppm) {
+                                return -ppm.toPrecision(2);
+                            },
+                            valueFormatter: function (ppm) {
+                                return -ppm.toPrecision(3);
+                            },
+                        },
+                    },
+                });
+            });
+        </script>
+    </div>
+</div>

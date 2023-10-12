@@ -1,0 +1,95 @@
+<div class="columns box has-text-centered" id="frequency_structure_details">
+    <div class="column">
+        <center>
+            <div id="vib_animation" style="width: 400px; height: 400px; position: relative"></div>
+            <div class="slidecontainer">
+                <input class="slider is-info" type="range" min="1" max="10" value="4" id="vib_calibration" onchange="animate_vib(-1);">
+            </div>
+        </center>
+    </div>
+    <div class="column">
+        <center>
+            <div id="ir_spectrum" style="width: 500px; height: 400px; margin-bottom: 30px"></div>
+            <a class="button is-info" href="/ir_spectrum/{{ property.id }}">Download IR spectrum</a>
+        </center>
+    </div>
+</div>
+<div>
+    <div class="columns is-multiline is-centered" id="vib_table"></div>
+</div>
+<script>
+var past_num = -1;
+function animate_vib(num) {
+    if (num == -1) {
+        num = past_num;
+    } else {
+        $("#vib_mode_" + past_num).removeClass("has-background-primary");
+        $("#vib_mode_" + num).addClass("has-background-primary");
+        past_num = num;
+    }
+    amplitude = document.getElementById("vib_calibration").value / 10;
+
+    $.ajax({
+        method: "POST",
+        url: "/get_vib_animation/",
+        data: {
+            id: "{{ property.id }}",
+            num: num,
+        },
+
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+        },
+        success: function (data, textStatus, xhr) {
+            vib_viewer.stopAnimate();
+            vib_viewer.removeAllModels();
+            vib_viewer.clear();
+            vib_viewer.addModel(data, "xyz");
+            vib_viewer.vibrate(10, amplitude, true, null);
+            vib_viewer.animate({
+                loop: "backAndForth",
+            });
+            vib_viewer.setStyle(
+                {},
+                {
+                    stick: {
+                        color: "black",
+                        radius: 0.15,
+                    },
+                    sphere: {
+                        scale: 0.3,
+                    },
+                }
+            );
+
+            vib_viewer.zoomTo();
+            vib_viewer.render();
+        },
+    });
+}
+
+var vib_viewer = $3Dmol.createViewer("vib_animation");
+
+$(document).ready(function () {
+    vib_viewer.setBackgroundColor(0xffffff);
+
+    $("#vib_table").load("/vib_table/{{ property.id }}");
+    g4 = new Dygraph(document.getElementById("ir_spectrum"), "/ir_spectrum/{{ property.id }}", {
+        color: "#202f26",
+        strokeWidth: 2,
+        xlabel: "Wavelength (cm^-1)",
+        ylabel: "Intensity",
+
+        axes: {
+            x: {
+                axisLabelFormatter: function (cm) {
+                    return -cm;
+                },
+                valueFormatter: function (cm) {
+                    return -cm;
+                },
+            },
+        },
+    });
+});
+</script>

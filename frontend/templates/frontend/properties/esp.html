@@ -1,0 +1,73 @@
+<div class="columns box is-desktop" id="esp_structure_details">
+    <div class="column"></div>
+    <div class="column is-tight">
+        <div id="esp_viewer_div" style="width: 400px; height: 400px; position: relative"></div>
+
+        <script>
+
+        var esp_viewer = $3Dmol.createViewer("esp_viewer_div");
+        esp_viewer.setBackgroundColor(0xffffff);
+
+        var esp_data = null;
+
+        function get_esp_cube() {
+            $.ajax({
+                method: "POST",
+                url: "/get_esp_cube/",
+                data: {
+                    'id': "{{ property.id }}",
+                },
+
+                headers: {
+                    "X-CSRFToken": '{{ csrf_token }}',
+                },
+                success: function(data, textStatus, xhr) {
+                    esp_data = data;
+                    refresh_esp();
+                    esp_viewer.zoomTo();
+                }
+            });
+        }
+        function refresh_esp() {
+            var isoval = 10**(-document.getElementById("esp_calibration").value/2);
+            var max = 0.02*document.getElementById("pot_calibration").value;
+            $("#esp_isovalue").html(isoval.toPrecision(2));
+            $("#pot_max").html(max.toPrecision(2));
+            esp_viewer.clear();
+            esp_viewer.addModel(esp_data.xyz, "xyz");
+            esp_viewer.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
+
+            esp_viewer.addVolumetricData(esp_data.density, "cube", {isoval: isoval, opacity: 0.9, voldata: esp_data.esp, volformat: 'cube', volscheme: {gradient: 'roygb', min: max, max: -max} });
+
+            esp_viewer.render();
+        }
+
+        $(document).ready(function(){
+            if(esp_viewer.getModel() == null)
+                get_esp_cube();
+        });
+        </script>
+        <div id="esp_container">
+            <div class="slidecontainer columns">
+                <div class="column">
+                    <span id="esp_span">Density Plotting Isovalue</span>
+                    <br>
+                    <input type="range" min="1" max="15" value="6" class="slider" id="esp_calibration" onchange="refresh_esp();">
+                    <br>
+                        Isovalue: <span id="esp_isovalue">0.00010</span>
+                </div>
+                <div class="column">
+                    <span id="pot_span">Potential Plotting Span</span>
+                    <br>
+                    <input type="range" min="1" max="20" value="4" class="slider" id="pot_calibration" onchange="refresh_esp();">
+                    <br>
+                        Maximal Potential: ±<span id="pot_max">0.00010</span>
+                    <br>
+                        (<span style="color: blue; font-weight: bold;">Negative</span> to <span style="color: red; font-weight: bold;">positive</span>)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="column"></div>
+</div>
