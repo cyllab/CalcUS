@@ -148,7 +148,10 @@ class User(AbstractUser):
     billed_seconds = models.PositiveIntegerField(default=0)
 
     last_free_refill = models.DateTimeField(
-        "date", default=timezone.datetime(year=2000, month=1, day=1, hour=1, minute=1)
+        "date",
+        default=timezone.make_aware(
+            timezone.datetime(year=2000, month=1, day=1, hour=1, minute=1)
+        ),
     )
 
     @property
