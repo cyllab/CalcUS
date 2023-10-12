@@ -33,7 +33,7 @@ def redeem(obj, user, stall=0):
 
 
 class ResourceAllocationTests(TransactionTestCase):
-    def testDown(self):
+    def tearDown(self):
         close_old_connections()
 
     def test_base_redeem(self):
@@ -96,7 +96,7 @@ class ResourceAllocationTests(TransactionTestCase):
 
 
 class UserTypeTests(TransactionTestCase):
-    def testDown(self):
+    def tearDown(self):
         close_old_connections()
         settings.IS_CLOUD = False
 
