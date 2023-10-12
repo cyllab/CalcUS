@@ -856,6 +856,10 @@ class Ensemble(models.Model):
         return shifts
 
 
+class ShowcaseEnsemble(Ensemble):
+    label = models.TextField()
+
+
 @receiver(pre_save, sender=Ensemble)
 def handle_folder(sender, instance, **kwargs):
     try:
@@ -923,6 +927,10 @@ class Property(models.Model):
         return len(self.esp) > 0
 
 
+class ShowcaseProperty(Property):
+    name = models.TextField()
+
+
 class Structure(models.Model):
     id = BigHashidAutoField(
         primary_key=True, salt="Structure_hashid_" + settings.HASHID_FIELD_SALT
@@ -935,6 +943,10 @@ class Structure(models.Model):
 
     number = models.PositiveIntegerField(default=1)
     degeneracy = models.PositiveIntegerField(default=1)
+
+
+class ShowcaseEnsemble(Ensemble):
+    label = models.TextField()
 
 
 class CalculationFrame(models.Model):

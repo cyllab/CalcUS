@@ -1,4 +1,6 @@
-{% load details_tags %} {% if data %} {% for entry in data %}
+{% load details_tags %} 
+{% if data %} 
+{% for entry in data %}
 <tr id="conf_{{ forloop.counter0 }}" onclick="select_conf({{ forloop.counter0 }});" data-num="{{ entry.0.number }}">
     <th>{{ entry.0.number }}</th>
 
@@ -8,4 +10,5 @@
 
     <th>{{ entry.3|floatformat:-2 }}</th>
 </tr>
-{% endfor %} {% endif %}
+{% endfor %} 
+{% endif %}

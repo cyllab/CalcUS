@@ -1,5 +1,5 @@
 {% extends 'frontend/base.html' %} {% load i18n %} {% load static %} {% load details_tags %} {% block extrahead %}
-<title>Ensemble {{ ensemble.name }}</title>
+<title>{{ ensemble.name }}</title>
 
 <link rel="stylesheet" href="{% static 'frontend/ChemDoodleWeb.css' %}" type="text/css">
 <script type="text/javascript" src="{% static 'frontend/ChemDoodleWeb.js' %}"></script>
@@ -25,16 +25,7 @@
     #details_ensemble_div {
         margin-bottom: 30px;
     }
-    .button_full {
-        width: 100%;
-        max-width: 380px;
-        margin-top: 0.5em;
-    }
-    .button_half {
-        width: 50%;
-        max-width: 190px;
-        margin-top: 0.5em;
-    }
+
     #ensemble_id{
         margin-top: 5px;
         font-weight: 600;
@@ -74,39 +65,7 @@
     ul.tree li:last-child:before {
         border-left: 1px solid rgb(100, 100, 100);
     }
-    #conf_table {
-        /* Thanks Stackoverflow */
-        user-select: none; /* standard syntax */
-        -webkit-user-select: none; /* webkit (safari, chrome) browsers */
-        -moz-user-select: none; /* mozilla browsers */
-        -khtml-user-select: none; /* webkit (konqueror) browsers */
-        -ms-user-select: none; /* IE10+ */
-    }
-    .close_btn {
-        background-color: #b21b00;
-        position: inherit;
-        right: 0px;
-        top: 0px;
-    }
-    .fullscreen_div {
-        display: none;
-        position: fixed;
-        padding-top: 20px;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgb(0, 0, 0);
-        background-color: rgba(0, 0, 0, 0.5);
-    }
-    .close_btn:hover {
-        background-color: #590e00;
-    }
-    .modal-card {
-        max-width: calc(100% - 40px);
-        max-height: calc(100% - 40px);
-        width: 100%;
-    }
+
     #charges_viewer_div > canvas,
     #vib_animation > canvas {
         border: 1px solid black;
@@ -132,215 +91,21 @@
             opacity: 1;
         }
     }
-    .slider {
-        margin-top: 1em;
-    }
-    #mo_calibration {
-        width: 100%;
-    }
-    #mo_span, #esp_span, #pot_span {
+
+    #esp_span, #pot_span {
         font-weight: bold;
     }
-    .slidecontainer {
-        margin-top: 2em;
-        text-align: center;
-    }
-    #mo_diagram {
-        border: 1px solid black;
-    }
+    
 </style>
 <script>
-    var ctrl = false;
-    var shift = false;
-    var previous_selection = 1;
-
     $(document).ready(function () {
-        (function (ChemDoodle) {
-            ChemDoodle.relabel = function (molecule) {
-                for (let i = 0, ii = molecule.atoms.length; i < ii; i++) {
-                    molecule.atoms[i].altLabel = String(i + 1);
-                }
-            };
-        })(ChemDoodle);
-
         var details = document.querySelector("details");
         details.addEventListener("toggle", load_related_calculations);
     });
 
-    $(window).keydown(function (e) {
-        if (e.keyCode == 17) {
-            ctrl = true;
-        } else if (e.keyCode == 16) {
-            shift = true;
-        }
-    });
-
-    $(window).keyup(function (e) {
-        if (e.keyCode == 17) {
-            ctrl = false;
-        } else if (e.keyCode == 16) {
-            shift = false;
-        }
-    });
-
-    let num = 0;
-    let conf_length = 1;
-    var curr_p = 0;
-
     $.ajaxSetup({
         cache: false,
     });
-    $(document).ready(function () {
-        $.ajax({
-            method: "POST",
-            url: "/get_structure/",
-            headers: {
-                "X-CSRFToken": "{{ csrf_token }}",
-            },
-            data: {
-                id: "{{ ensemble.id }}",
-            },
-            success: function (data, textStatus, xhr) {
-                if (xhr.status != 204) {
-                    let mol = ChemDoodle.readXYZ(data);
-                    ChemDoodle.relabel(mol);
-                    editor.loadMolecule(mol);
-                    editorfs.loadMolecule(mol);
-
-                    $("#next_step_div").load("/next_step/{{ calculation.id }}");
-                    $.ajax({
-                        method: "GET",
-                        url: "/conformer_table/{{ ensemble.id }}",
-                        headers: {
-                            "X-CSRFToken": "{{ csrf_token }}",
-                        },
-                        success: function (data, textStatus, xhr) {
-                            if (xhr.status != 204) {
-                                $("#conf_table").html(data);
-                                conf_length = document.getElementById("conf_table").rows.length;
-
-                                refresh_details("{{ ensemble.unique_parameters.0.id }}");
-                            }
-                        },
-                    });
-                }
-            },
-        });
-    });
-
-    function select_conf(conf_num) {
-        if (shift) {
-            bounds = [previous_selection, conf_num];
-            Array.prototype.sort.call(bounds);
-
-            for (i = bounds[0]; i <= bounds[1]; i++) {
-                target = document.getElementById("conf_table").rows[i];
-                if (!target.classList.contains("is-selected")) {
-                    target.classList.add("is-selected");
-                }
-            }
-        } else if (ctrl) {
-            target = document.getElementById("conf_table").rows[conf_num];
-            if (target.classList.contains("is-selected")) {
-                target.classList.remove("is-selected");
-            } else {
-                target.classList.add("is-selected");
-            }
-        } else {
-            for (i = 0; i < conf_length; i++) {
-                document.getElementById("conf_" + String(i)).classList.remove("is-selected");
-            }
-
-            num = conf_num;
-            refresh();
-            document.getElementById("conf_table").rows[conf_num].classList.add("is-selected");
-        }
-        previous_selection = conf_num;
-    }
-
-    function refresh() {
-        $.ajax({
-            method: "POST",
-            url: "/get_structure/",
-            headers: {
-                "X-CSRFToken": "{{ csrf_token }}",
-            },
-
-            data: {
-                id: "{{ ensemble.id }}",
-                num: get_conf_number(),
-            },
-            success: function (data, textStatus, xhr) {
-                if (xhr.status != 204) {
-                    let mol = ChemDoodle.readXYZ(data);
-                    editor.loadMolecule(mol);
-                    editorfs.loadMolecule(mol);
-                }
-            },
-        });
-        if (curr_p != 0) {
-            refresh_structure();
-        }
-    }
-
-    function increase_conf() {
-        if (num < conf_length - 1) {
-            document.getElementById("conf_table").rows[num].classList.remove("is-selected");
-            num = num + 1;
-            document.getElementById("conf_table").rows[num].classList.add("is-selected");
-            refresh();
-        }
-    }
-
-    function decrease_conf() {
-        if (num > 0) {
-            document.getElementById("conf_table").rows[num].classList.remove("is-selected");
-            num = num - 1;
-            document.getElementById("conf_table").rows[num].classList.add("is-selected");
-            refresh();
-        }
-    }
-
-    function refresh_ensemble() {
-        $.ajax({
-            method: "POST",
-            url: "/details_ensemble/",
-            headers: {
-                "X-CSRFToken": "{{ csrf_token }}",
-            },
-
-            data: {
-                id: "{{ ensemble.id }}",
-                p_id: curr_p,
-            },
-            success: function (data, textStatus, xhr) {
-                if (xhr.status != 204) {
-                    $("#details_ensemble_div").html(data);
-                }
-            },
-        });
-    }
-
-    function refresh_structure() {
-        $.ajax({
-            method: "POST",
-            url: "/details_structure/",
-            headers: {
-                "X-CSRFToken": "{{ csrf_token }}",
-            },
-
-            data: {
-                id: "{{ ensemble.id }}",
-                num: get_conf_number(),
-                p_id: curr_p,
-            },
-            success: function (data, textStatus, xhr) {
-                if (xhr.status != 204) {
-                    $("#details_structure_div").html(data);
-                }
-            },
-        });
-    }
 
     function refresh_details(p_id) {
         curr_p = p_id;
@@ -400,15 +165,6 @@
                 }
             },
         });
-    }
-
-    function get_conf_number() {
-        return document.getElementById("conf_table").rows[parseInt(num)].cells[0].innerHTML;
-    }
-
-    function download_selected_structure() {
-        url = "/download_structures/{{ ensemble.id }}/" + get_conf_number();
-        window.location.href = url;
     }
 
     function selectText(node) {
@@ -530,14 +286,14 @@
         }
         $("#related_calculations_div").load("/get_related_calculations/{{ ensemble.id }}");
     }
-</script>
-<style>
-    .hscroll {
-        overflow-x: auto;
-    }
-</style>
 
-{% endblock %} {% block content %} {% csrf_token %}
+</script>
+{% include "frontend/properties/conformers_head.html" %}
+
+{% endblock %} 
+
+{% block content %} 
+{% csrf_token %}
 
 <div class="container">
     <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
@@ -581,88 +337,8 @@
 
     <br />
     <span class="tag is-danger is-large">Geometries</span>
-    <div class="columns box is-desktop">
-        <div class="column is-narrow">
-            <center>
-                <script>
-                    let editor = new ChemDoodle.EditorCanvas3D("editor", 400, 400, {
-                        useServices: false,
-                    });
-                    editor.styles.set3DRepresentation("Stick");
-                    editor.styles.backgroundColor = "#FFFFFF";
-                    editor.oneMolecule = false;
-                </script>
-                <br />
-                <button class="button button_full" id="fullscreen_btn">Large View</button>
-                <br />
-                <button class="button button_full" onclick="window.location.href='/download_structures/{{ ensemble.id }}'">
-                    Download ensemble in .xyz
-                    <i class="fas fa-download"></i>
-                </button>
-                <br />
-                <button class="button button_full" onclick="download_selected_structure();">
-                    Download selected structure in .xyz
-                    <i class="fas fa-download"></i>
-                </button>
-                <br />
-                <button class="button button_half" onclick="decrease_conf()">Previous Structure</button
-                ><button class="button button_half" onclick="increase_conf()">Next Structure</button>
-                <br />
-                <br />
-                <form method="POST" action="/launch/" id="launch_ensemble_form">
-                    {% csrf_token %}
-                    <input type="hidden" name="ensemble" value="{{ ensemble.id }}" />
-                    <button class="button button_full is-info" id="next_step_ensemble">Launch calculation on ensemble<i class="fas fa-external-link-alt"></i></button>
-                </form>
-                <form method="POST" action="/launch/" id="launch_selected_form">
-                    {% csrf_token %}
-                    <input type="hidden" name="ensemble" value="{{ ensemble.id }}" />
-                    <button class="button button_full is-info" id="next_step_structure">
-                        Launch calculation on selected structure(s)
-                        <i class="fas fa-external-link-alt"></i>
-                    </button>
-                </form>
-            </center>
-        </div>
-        <div class="column">
-            <center>
-                <div class="hscroll">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Energy (Eh)</th>
-                                <th>Rel. energy ({{ request.user.pref_units_name }})</th>
-                                <th>Boltzmann Weight at 298K</th>
-                            </tr>
-                        </thead>
-                        <tbody id="conf_table"></tbody>
-                    </table>
-                </div>
-            </center>
-        </div>
-    </div>
 
-    <div class="modal fullscreen_div" id="fullscreen_div">
-        <div class="modal-card">
-            <header class="modal-card-head">
-                <p class="modal-card-title">Large View</p>
-                <button type="button" class="close_btn modal-close is-large" aria-label="close"></button>
-            </header>
-            <section class="modal-card-body" id="fullscreen_section">
-                <script>
-                    let large_width = Math.round($(window).width() - 100);
-                    let large_height = Math.round($(window).height() - 250);
-                    let editorfs = new ChemDoodle.EditorCanvas3D("editorfs", large_width, large_height, {
-                        useServices: false,
-                    });
-                    editorfs.styles.set3DRepresentation("Stick");
-                    editorfs.styles.backgroundColor = "#FFFFFF";
-                    editorfs.oneMolecule = false;
-                </script>
-            </section>
-        </div>
-    </div>
+    {% include "frontend/properties/conformers_body.html" %}
 
     <br />
     <br />
@@ -685,23 +361,8 @@
     <a class="button is-danger" href="/delete/{{ calculation.id }}">Delete this calculation</a>
     {% endif %}
     <script>
-        let modalBtnFS = document.getElementById("fullscreen_btn");
-        let modalFS = document.querySelector(".fullscreen_div");
-        let closeBtnFS = document.querySelector(".close_btn");
         document.getElementById("ensemble_id").innerHTML= "Ensemble "+("{{ensemble.id}}").slice(0,5)
-
-        modalBtnFS.onclick = function () {
-            modalFS.style.display = "block";
-        };
-        closeBtnFS.onclick = function () {
-            modalFS.style.display = "none";
-        };
-        window.onclick = function (e) {
-            if (e.target == modalFS) {
-                modalFS.style.display = "none";
-            }
-        };
-
+        
         $("#launch_selected_form").submit(function () {
             var structures = document.querySelectorAll("#conf_table > tr.is-selected");
 
