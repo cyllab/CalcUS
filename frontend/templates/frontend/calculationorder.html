@@ -104,9 +104,9 @@
                     {% for calc in order.calculation_set.all %}
                     <tr>
                         <th>
-                            <a class="button is-warning" href="/calculation/{{ calc.id}}">{{ calc.id }}</a>
+                            <a class="button is-warning" href="/calculation/{{ calc.id }}">{{ calc.id }}</a>
                         </th>
-                        <th>{{ calc.text_status }}{% if calc.status == 3%} - {{ calc.error_message }}{% endif %}</th>
+                        <th>{{ calc.text_status }}{% if calc.status == 3 %} - {{ calc.error_message }}{% endif %}</th>
                         <th>{% if IS_CLOUD and calc.status != 1 %} {{ calc.billed_seconds }} {% else %} {{ calc.execution_time }} {% endif %}</th>
                         <th>
                             {% if request.user == order.author %}<a class="button is-danger" id="cancel_button_{{ calc.id }}" onclick="calc_action('{{ calc.id }}', 'cancel');">Kill</a>
