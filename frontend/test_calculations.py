@@ -214,6 +214,12 @@ class XtbCalculationTests(CalculationUnitTest):
         prop = Property.objects.latest("id")
         self.assertTrue(prop.has_uvvis)
 
+    def test_invalid_spec(self):
+        self.assertFalse(self.run_test(specifications="--nimages 50"))
+
+        calc = Calculation.objects.latest("pk")
+        self.assertTrue(calc.error_message != "")
+
 
 class OrcaCalculationTests(CalculationUnitTest):
     @classmethod

@@ -3075,9 +3075,11 @@ def calc_to_ccinput(calc):
     try:
         inp = generate_calculation(**params)
     except Exception as e:
-        logger.error(
-            f"Could not generate the input file: got exception {str(e)} from ccinput"
-        )
+        msg = f"Could not generate the input file: got exception {str(e)} from ccinput"
+        logger.error(msg)
+        calc.error_message = msg
+        calc.status = 3
+        calc.save()
         return e
 
     return inp
@@ -4784,9 +4786,6 @@ def add_input_to_calc(calc):
         msg = f"CCInput error: {str(inp)}"
         if IS_TEST or settings.DEBUG:
             print(msg)
-        calc.error_message = msg
-        calc.status = 3
-        calc.save()
         return ErrorCodes.FAILED_TO_CREATE_INPUT
 
     input_file = inp.input_file
@@ -4836,6 +4835,7 @@ def load_output_files(calc):
         output_files = {}
     else:
         output_files = json.loads(calc.output_files)
+
     for log_name in glob.glob(
         os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.log")
     ) + glob.glob(os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.out")):
@@ -4843,6 +4843,7 @@ def load_output_files(calc):
         with open(log_name) as f:
             log = "".join(f.readlines())
         output_files[fname] = log
+        logger.info(f"Found logfile {fname} ({log_name}): {log[:1000]}")
 
     logger.info(
         f"Loaded {len(output_files)} output file(s) for calculation {str(calc.id)} (scr: {CALCUS_SCR_HOME})"

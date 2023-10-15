@@ -1292,10 +1292,10 @@ def cloud_calc(request):
         logger.error(f"Calculation {calc.id} finished with exception {str(e)}")
         raise e
 
+    calc.refresh_from_db()
+
     if ret != 0:
         logger.warning(f"Calculation {calc.id} finished with code {ret}")
-        calc.status = 3
-        calc.save()
 
     return HttpResponse(status=200)
 
@@ -4383,7 +4383,7 @@ def log(request, pk):
     if not can_view_calculation(calc, request.user):
         return HttpResponse(status=403)
 
-    if not settings.IS_CLOUD:
+    if calc.status == 1 and not settings.IS_CLOUD:
         load_output_files(calc)
 
     if len(calc.output_files) == 0:
