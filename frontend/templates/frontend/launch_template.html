@@ -556,6 +556,7 @@ $( document ).ready(function() {
 		let mol_read = ChemDoodle.readXYZ(`{{ structure.xyz_structure }}`);
 		ChemDoodle.relabel(mol_read);
 		viewer.loadMolecule(mol_read);
+        Jmol.script(editor, `load inline "{{ structure.xyz_structure }}"`);
 	{% endif %}
 	{% if calc %}
 		$("#calc_project").val("{{ calc.order.project.name }}");
