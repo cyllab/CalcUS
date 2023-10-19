@@ -98,6 +98,18 @@
         <hr />
     </nav>
     <div class="grid">
+        {% if request.user == project.author and molecules|length > 10%}
+        <div style="margin-top: 30px; margin-bottom: 30px">
+            <center>
+                <a href="/launch/project/{{ project.id }}">
+                    <div class="box has-background-info" style="opacity: 0.5" id="molecule_in_project_top">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                </a>
+            </center>
+        </div>
+        {% endif %}
+
         {% for mol in molecules %}
         <div class="box has-background-info-light" id="mol_box_{{ mol.id }}">
             {% if mol.project.author == request.user %}

@@ -59,7 +59,7 @@ var master_options = {
     },
     "software": {
         "Gaussian": {
-            "type": ["NMR Prediction", "Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "UV-Vis Calculation"],
+            //"type": ["NMR Prediction", "Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "UV-Vis Calculation"],
             "solvation_model": ["PCM", "CPCM", "SMD"],
             "se_method": ["AM1", "PM3", "PM6", "PM7"],
             "solvation_radii": ["SMD18", "Default", "UFF", "UA0", "UAHF", "UAKS", "Pauling", "Bondi"],
@@ -67,7 +67,7 @@ var master_options = {
             "driver": ["Gaussian"]
         },
         "ORCA": {
-            "type": ["NMR Prediction", "Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "MO Calculation", "Minimum Energy Path"],
+            //"type": ["NMR Prediction", "Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "MO Calculation", "Minimum Energy Path"],
             "solvation_model": ["CPCM", "SMD"],
             "se_method": ["AM1", "PM3"],
             "solvation_radii": ["SMD18", "Default"],
@@ -75,14 +75,14 @@ var master_options = {
             "driver": ["ORCA", "Pysisyphus"]
         },
         "xtb": {
-            "type": ["Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "UV-Vis Calculation", "Conformational Search", "Constrained Conformational Search", "Minimum Energy Path", "Fast Conformational Search", "MO Calculation"],
+            //"type": ["Geometrical Optimisation", "TS Optimisation", "Frequency Calculation", "Constrained Optimisation", "Single-Point Energy", "UV-Vis Calculation", "Conformational Search", "Constrained Conformational Search", "Minimum Energy Path", "Fast Conformational Search", "MO Calculation"],
             "solvation_model": ["ALPB", "GBSA"],
             "solvation_radii": ["Default"],
             "theory_level": ["xtb"],
             "driver": ["xtb", "Pysisyphus", "ORCA"]
         },
         "NWChem": {
-            "type": ["Single-Point Energy", "MO Calculation", "ESP Calculation", "Geometrical Optimisation", "Frequency Calculation"],
+            //"type": ["Single-Point Energy", "MO Calculation", "ESP Calculation", "Geometrical Optimisation", "Frequency Calculation"],
             "theory_level": ["hf", "dft"],
             "driver": ["NWChem"],
             "solvation_model": ["COSMO", "SMD"],

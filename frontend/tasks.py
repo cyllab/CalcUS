@@ -257,24 +257,26 @@ def wait_until_done(calc, conn, lock, ind=0):
     while True:
         output = direct_command(f"squeue -j {job_id}", conn, lock)
         # TODO: if output if an error code
-        _output = [i for i in output if i.strip() != ""]
-        if not isinstance(output, ErrorCodes) and len(_output) > 1:
-            logger.info(f"Waiting ({job_id})")
-            try:
-                status = _output[1].split()[4]
-            except IndexError:
-                logger.warning("Got unexpected str: " + str(_output))
-                return
 
-            if status == "R" and calc.status == 0:
-                calc.date_started = timezone.now()
-                calc.status = 1
-                calc.save()
-        elif isinstance(output, ErrorCodes):
+        if isinstance(output, ErrorCodes):
             logger.warning(f"Could not check the status of job {job_id}")
         else:
-            logger.info(f"Job done ({job_id})")
-            return ErrorCodes.SUCCESS
+            _output = [i for i in output if i.strip() != ""]
+            if not isinstance(output, ErrorCodes) and len(_output) > 1:
+                logger.info(f"Waiting ({job_id})")
+                try:
+                    status = _output[1].split()[4]
+                except IndexError:
+                    logger.warning("Got unexpected str: " + str(_output))
+                    return
+
+                if status == "R" and calc.status == 0:
+                    calc.date_started = timezone.now()
+                    calc.status = 1
+                    calc.save()
+            else:
+                logger.info(f"Job done ({job_id})")
+                return ErrorCodes.SUCCESS
 
         for i in range(DELAY[ind]):
             if pid in kill_sig:
