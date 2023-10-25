@@ -251,6 +251,7 @@
 
     {% if IS_CLOUD %}
     <div class="tile is-ancestor">
+        {% if False %}
         <div class="tile is-parent">
             <div class="tile is-child">
                 <h2 class="title is-2">Quantum Chemistry in your Browser</h2>
@@ -260,6 +261,7 @@
                 {% include "frontend/properties/mo.html" with property=prop_mo %}
             </div>
         </div>
+        {% endif %}
     </div>
 
     <div class="tile is-ancestor">
