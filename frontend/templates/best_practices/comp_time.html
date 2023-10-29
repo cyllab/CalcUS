@@ -1,0 +1,172 @@
+{% extends 'frontend/base.html' %} {% load static %} {% block extrahead %}
+<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
+<script src="{% static 'frontend/jquery.min.js' %}"></script>
+
+<script src="{% static 'frontend/bulma-slider.min.js' %}"></script>
+
+<link rel="stylesheet" href="{% static 'frontend/dygraph.min.css' %}" type="text/css">
+<script src="{% static 'frontend/dygraph.min.js' %}"></script>
+
+<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+     		tex2jax: {
+       		inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+       		processEscapes: true
+     		}
+    });
+</script>
+<style>
+    p {
+        text-align: justify;
+        text-indent: 2em;
+        margin: 1em;
+    }
+    p > a {
+        color: blue;
+    }
+    .main {
+        margin-top: 4em !important;
+        width: 50%;
+        margin: 0 auto;
+        max-width: 40em;
+        min-width: 15em;
+    }
+    @media screen and (min-width: 1024px) and (max-width: 1407px) {
+        .main {
+            width: 60%;
+        }
+    }
+    @media screen and (min-width: 769px) and (max-width: 1023px) {
+        .main {
+            width: 70%;
+        }
+    }
+    @media screen and (max-width: 768px) {
+        .main {
+            width: 85%;
+        }
+    }
+
+    h3 {
+        text-align: center;
+    }
+    h4 {
+        text-align: center;
+        margin-top: 3em !important;
+        font-style: italic;
+    }
+    figure {
+        margin-bottom: 1em;
+    }
+    figcaption {
+        font-weight: bold;
+    }
+    .message {
+        margin-top: 4em;
+        margin-bottom: 4em !important;
+        text-color: black !important;
+    }
+    .message-header {
+        font-size: 1.5em;
+        text-align: center;
+        display: block;
+    }
+    .slider {
+        background-color: #ebfff5;
+    }
+    #ircgraph_1_speed, #ircgraph_1_frame_control {
+        text-align: center;
+        margin-top: 2em;
+        font-weight: bold;
+    }
+    .table_footnote {
+        margin-top: 5px;
+        margin-left: 1em;
+        margin-bottom: 3em;
+        font-size: 0.8em;
+        font-style: italic;
+    }
+    .equation {
+        font-size: 1.4em;
+    }
+    #rmsd_example {
+        margin-top: 2em;
+        margin-bottom: 2em;
+    }
+    #fig_rmsd_example {
+        max-width: 500px;
+    }
+    li {
+        margin-top: 1.0em;
+        margin-bottom: 1.0em;
+        text-align: justify;
+    }
+    ul {
+        list-style-type: disc;
+    }
+    #start_rows_rigid, #start_rows_flexible {
+        border-top: 3px solid #dbdbdb;
+    }
+    #end_table {
+        border-bottom: 3px solid #dbdbdb;
+    }
+
+
+</style>
+<script
+    type="text/javascript"
+    src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+></script>
+
+<title>Calculation time examples</title>
+<meta name="description" content="Examples of how much computational time is required for each quantum chemistry calculation, from xtb to DFT calculations.">
+
+{% endblock %}
+{% block content %}
+
+<center>
+<div class="main">
+    <h3 class="title is-3">Calculation time examples</h3>
+    <h4 class="subtitle is-4">GFN2-xTB calculations</h4>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Molecule</th>
+          <th><abbr title="Geometrical Optimisation">Opt.</abbr> time</th>
+          <th><abbr title="Frequency calculation">Freq.</abbr> time</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr>
+              <td>Caffeine (24 atoms)</td>
+              <td>&lt; 2 CPU-seconds</td>
+              <td>6 CPU-seconds</td>
+          </tr>
+          <tr>
+              <td>Strychnine (47 atoms)</td>
+              <td>11 CPU-seconds</td>
+              <td>27 CPU-seconds</td>
+          </tr>
+          <tr>
+              <td>$\beta$-carotene (96 atoms)</td>
+              <td>39 CPU-seconds</td>
+              <td>133 CPU-seconds</td>
+          </tr>
+      </tbody>
+    </table>
+
+    <h4 class="subtitle is-4">HF and DFT calculations</h4>
+    <ul>
+        <li>Caffeine (24 atoms) single-point energy with HF/def2-SVP: 129 CPU-seconds</li>
+        <li>Caffeine (24 atoms) single-point energy with M06-2X/def2-SVP: 369 CPU-seconds</li>
+    </ul>
+    <!--
+        HF/Def2-SVP Caffeine SP: 129 CPU-seconds
+        M062X/Def2-SVP Caffeine SP: 369 CPU-seconds (MO: 397)
+        M062X/Def2-TZVP Caffeine SP: crash CPU-seconds
+    --!>
+</div>
+</center>
+
+{% endblock %}
