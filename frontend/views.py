@@ -39,6 +39,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 
+from django import template
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -1155,7 +1156,7 @@ def learn_keyword(request, keyword):
     template = f"best_practices/{ckeyword}.html"
     try:
         get_template(template)
-    except django.template.exceptions.TemplateDoesNotExist:
+    except template.exceptions.TemplateDoesNotExist:
         return HttpResponse(status=404)
     else:
         return render(request, template)
@@ -3557,7 +3558,6 @@ def profile_allocation(request):
     )
 
 
-@login_required
 def conformer_table(request):
     if request.method == "POST":
         try:
@@ -3571,8 +3571,18 @@ def conformer_table(request):
         except Ensemble.DoesNotExist:
             return HttpResponse(status=403)
 
-        if not can_view_ensemble(e, request.user):
-            return HttpResponse(status=403)
+        if not request.user.is_authenticated:
+            if not hasattr(e, "showcaseensemble"):
+                return HttpResponse(status=403)
+
+            fms = "{:.1f}"
+            conv_factor = HARTREE_FVAL
+        else:
+            if not can_view_ensemble(e, request.user):
+                return HttpResponse(status=403)
+
+            fms = request.user.pref_units_format_string
+            conv_factor = request.user.unit_conversion_factor
 
         try:
             p = Parameters.objects.get(pk=p_id)
@@ -3584,12 +3594,7 @@ def conformer_table(request):
         if p.md5 in full_summary.keys():
             summary = full_summary[p.md5]
 
-            fms = request.user.pref_units_format_string
-
-            rel_energies = [
-                fms.format(i)
-                for i in np.array(summary[5]) * request.user.unit_conversion_factor
-            ]
+            rel_energies = [fms.format(i) for i in np.array(summary[5]) * conv_factor]
             structures = [e.structure_set.get(pk=i) for i in summary[4]]
             data = zip(structures, summary[2], rel_energies, summary[6])
             data = sorted(data, key=lambda i: i[0].number)
@@ -4218,7 +4223,6 @@ def rename_folder(request):
         return HttpResponse(status=403)
 
 
-@login_required
 def get_structure(request):
     if request.method == "POST":
         try:
@@ -4231,8 +4235,12 @@ def get_structure(request):
         except Ensemble.DoesNotExist:
             return HttpResponse(status=403)
 
-        if not can_view_ensemble(e, request.user):
-            return HttpResponse(status=403)
+        if not request.user.is_authenticated:
+            if not hasattr(e, "showcaseensemble"):
+                return HttpResponse(status=403)
+        else:
+            if not can_view_ensemble(e, request.user):
+                return HttpResponse(status=403)
 
         structs = e.structure_set.all()
 
