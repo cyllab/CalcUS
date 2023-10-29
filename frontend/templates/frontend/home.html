@@ -249,19 +249,21 @@
     </div>
     <hr id="logo_sep" />
 
-    {% if IS_CLOUD %}
+    {% if IS_CLOUD or True %}
     <div class="tile is-ancestor">
-        {% if False %}
-        <div class="tile is-parent">
+        <div class="tile is-parent is-6">
             <div class="tile is-child">
                 <h2 class="title is-2">Quantum Chemistry in your Browser</h2>
                 <center>
                 <p class="subtitle">View molecular orbitals, vibrational modes, UV-Visible absorbance and reaction processes directly on the CalcUS Cloud</p>
-                <center>
+                {% if False %}
                 {% include "frontend/properties/mo.html" with property=prop_mo %}
+                {% endif %}
             </div>
         </div>
-        {% endif %}
+        <div class="tile is-6">
+            <img id="teaser1" class="teaser_img" src="{% static 'home/mo.webp' %}" alt="Calculation launch page of CalcUS">
+        </div>
     </div>
 
     <div class="tile is-ancestor">
@@ -270,7 +272,7 @@
                 <h2 class="title is-2">Explore Molecular Possibilities</h2>
                 <center>
                 <p class="subtitle">Compare conformers, evaluate reactions and predict properties</p>
-                <center>
+                </center>
                 {% include "frontend/properties/conformers_body.html" with ensemble=ensemble_aspirin %}
             </div>
         </div>
