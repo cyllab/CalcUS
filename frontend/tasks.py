@@ -4930,11 +4930,15 @@ def run_calc(calc_id):
         ret = ErrorCodes.UNKNOWN_TERMINATION
         traceback.print_exc()
 
-        calc.refresh_from_db()
-
-        calc.status = 3
-        calc.error_message = f"Incorrect termination ({str(e)})"
         logger.info(f"Error while running calc {calc_id}: '{str(e)}'")
+
+        try:
+            calc.refresh_from_db()
+        except Calculation.DoesNotExist:
+            logger.error(f"Could not refresh calc with id {calc_id}!")
+        else:
+            calc.status = 3
+            calc.error_message = f"Incorrect termination ({str(e)})"
     else:
         calc.refresh_from_db()
 

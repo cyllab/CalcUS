@@ -4261,6 +4261,7 @@ def get_structure(request):
             inds = [i.number for i in structs]
             m = inds.index(min(inds))
             return HttpResponse(structs[m].xyz_structure)
+    return HttpResponse(status=400)
 
 
 @login_required
