@@ -284,8 +284,9 @@ else:
 MEDIA_URL = "/media/"
 
 AXES_LOCKOUT_TEMPLATE = "registration/lockout.html"
-AXES_FAILURE_LIMIT = 10
+AXES_FAILURE_LIMIT = 30
 AXES_COOLOFF_TIME = 1
+AXES_LOCKOUT_PARAMETERS = ["username"]
 
 THROTTLE_ZONES = {
     "load_remote_log": {
