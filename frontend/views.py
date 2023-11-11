@@ -34,6 +34,7 @@ from datetime import datetime
 import base64, gzip
 import copy
 import itertools
+import magic
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -1620,7 +1621,13 @@ def set_project_default(request):
 
 
 def handle_file_upload(ff, is_local, verify=False):
-    in_file = clean(ff.read().decode("utf-8"))
+    blob = ff.read()
+
+    m = magic.open(magic.MAGIC_MIME_ENCODING)
+    m.load()
+    encoding = m.buffer(blob)
+
+    in_file = clean(blob.decode(encoding))
     fname = clean(ff.name)
     filename = ".".join(fname.split(".")[:-1])
     ext = fname.split(".")[-1]
@@ -4549,9 +4556,11 @@ def launch(request):
         params["interface"] = "simple"
 
     if "ensemble" in request.POST.keys():
+        e_id = clean(request.POST["ensemble"])
         try:
-            e = Ensemble.objects.get(pk=clean(request.POST["ensemble"]))
+            e = Ensemble.objects.get(pk=e_id)
         except Ensemble.DoesNotExist:
+            logger.info(f"Ensemble with id {e_id} requested, but not found")
             return redirect("/")
 
         if not can_view_ensemble(e, request.user):
@@ -4585,16 +4594,20 @@ def launch(request):
                 if s_num not in avail_nums:
                     return HttpResponse(status=404)
 
-            # TODO: catch possible edge cases
-            init_params = struct.properties.all()[0].parameters
+            if struct.properties.count() > 0:
+                init_params = struct.properties.first().parameters
+                if init_params is not None:
+                    params["init_params_id"] = init_params.id
 
             params["structures"] = s_str
             params["structure"] = struct
-            params["init_params_id"] = init_params.id
         else:
-            init_params = e.structure_set.all()[0].properties.all()[0].parameters
-
-            params["init_params_id"] = init_params.id
+            if e.structure_set.count() > 0:
+                example_struct = e.structure_set.first()
+                if example_struct.properties.count() > 0:
+                    init_params = example_struct.properties.first().parameters
+                    if init_params is not None:
+                        params["init_params_id"] = init_params.id
     elif "calc_id" in request.POST.keys():
         calc_id = clean(request.POST["calc_id"])
 

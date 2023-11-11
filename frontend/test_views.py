@@ -625,14 +625,56 @@ class FileInputTests(TestCase):
         self.client.force_login(self.user)
 
     def test_single_file(self):
-        with open(os.path.join(tests_dir, "Cl.xyz")) as f:
-            xyz = bytes(f.read(), "UTF-8")
+        with open(os.path.join(tests_dir, "Cl.xyz"), "rb") as f:
+            xyz = f.read()
 
         f = SimpleUploadedFile("Cl.xyz", xyz, content_type="chemical/x-xyz")
 
         params = basic_params.copy()
         params["structure"] = ""
         params["calc_charge"] = "-1"
+        params["file_structure"] = [f]
+        params["calc_combine_files"] = ("",)
+        params["calc_parse_filenames"] = ""
+
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Error while submitting your calculation")
+
+        self.assertEqual(CalculationOrder.objects.count(), 1)
+        self.assertEqual(Molecule.objects.count(), 1)
+        self.assertEqual(Ensemble.objects.count(), 1)
+
+    def test_iso_8859_1(self):
+        with open(os.path.join(tests_dir, "ethanol_iso-8859-1.xyz"), "rb") as f:
+            xyz = f.read()
+
+        f = SimpleUploadedFile("ethanol.xyz", xyz, content_type="chemical/x-xyz")
+
+        params = basic_params.copy()
+        params["structure"] = ""
+        params["calc_charge"] = "0"
+        params["file_structure"] = [f]
+        params["calc_combine_files"] = ("",)
+        params["calc_parse_filenames"] = ""
+
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Error while submitting your calculation")
+
+        self.assertEqual(CalculationOrder.objects.count(), 1)
+        self.assertEqual(Molecule.objects.count(), 1)
+        self.assertEqual(Ensemble.objects.count(), 1)
+
+    def test_utf_16(self):
+        with open(os.path.join(tests_dir, "ethanol_utf-16.xyz"), "rb") as f:
+            xyz = f.read()
+
+        f = SimpleUploadedFile("ethanol.xyz", xyz, content_type="chemical/x-xyz")
+
+        params = basic_params.copy()
+        params["structure"] = ""
+        params["calc_charge"] = "0"
         params["file_structure"] = [f]
         params["calc_combine_files"] = ("",)
         params["calc_parse_filenames"] = ""
@@ -2008,3 +2050,69 @@ class CloudTests(TestCase):
         self.assertEqual(
             self.user.allocated_seconds, settings.FREE_DEFAULT_COMP_SECONDS + 100
         )
+
+
+class LaunchPageTests(TestCase):
+    def setUp(self):
+        call_command("init_static_obj")
+        self.email = "Tester@test.com"
+        self.password = "test1234"
+
+        self.user = User.objects.create_superuser(
+            email=self.email,
+            password=self.password,
+        )
+        self.proj = Project.objects.create(author=self.user)
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
+        self.client = Client()
+        self.client.force_login(self.user)
+
+    def test_basic(self):
+        response = self.client.get("/launch/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_ensemble_does_not_exist(self):
+        response = self.client.post("/launch/", data={"ensemble": 2})
+        self.assertEqual(response.status_code, 302)
+
+    def test_ensemble_no_structure(self):
+        mol = Molecule.objects.create(project=self.proj)
+        e = Ensemble.objects.create(parent_molecule=mol)
+        response = self.client.post("/launch/", data={"ensemble": e.id})
+        self.assertEqual(response.status_code, 200)
+
+    def test_ensemble_no_prop(self):
+        mol = Molecule.objects.create(project=self.proj)
+        e = Ensemble.objects.create(parent_molecule=mol)
+        struct = Structure.objects.create(parent_ensemble=e, number=1)
+        response = self.client.post("/launch/", data={"ensemble": e.id})
+        self.assertEqual(response.status_code, 200)
+
+    def test_ensemble_prop(self):
+        mol = Molecule.objects.create(project=self.proj)
+        e = Ensemble.objects.create(parent_molecule=mol)
+        struct = Structure.objects.create(parent_ensemble=e, number=1)
+        prop = Property.objects.create(parent_structure=struct)
+        response = self.client.post("/launch/", data={"ensemble": e.id})
+        self.assertEqual(response.status_code, 200)
+
+    def test_ensemble_structure_with_prop(self):
+        mol = Molecule.objects.create(project=self.proj)
+        e = Ensemble.objects.create(parent_molecule=mol)
+        struct = Structure.objects.create(parent_ensemble=e, number=1)
+        prop = Property.objects.create(parent_structure=struct)
+
+        response = self.client.post(
+            "/launch/", data={"ensemble": e.id, "structures": [1]}
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_ensemble_structure_without_prop(self):
+        mol = Molecule.objects.create(project=self.proj)
+        e = Ensemble.objects.create(parent_molecule=mol)
+        struct = Structure.objects.create(parent_ensemble=e, number=1)
+
+        response = self.client.post(
+            "/launch/", data={"ensemble": e.id, "structures": [1]}
+        )
+        self.assertEqual(response.status_code, 200)

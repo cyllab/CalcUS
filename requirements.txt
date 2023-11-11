@@ -24,6 +24,7 @@ pre-commit
 psutil==5.7.2
 psycopg2
 pysisyphus
+python-magic
 rdkit
 requests
 scipy
