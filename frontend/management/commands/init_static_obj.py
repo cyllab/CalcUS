@@ -211,24 +211,26 @@ class Command(BaseCommand):
                 title=title, page_path="nmr_prediction_quick.html"
             )
 
-        if self.is_absent_property("mo"):
-            molden = get_showcase("mo_molden")
-            mo_diagram = get_showcase("mo_diagram")
-            prop = ShowcaseProperty.objects.create(
-                name="mo", molden=molden, mo_diagram=mo_diagram
-            )
-
-        if self.is_absent_ensemble("acetylsalicylic_acid"):
-            e = ShowcaseEnsemble.objects.create(label="acetylsalicylic_acid")
-            params = Parameters.objects.create(charge=0, multiplicity=1)
-            multixyz, E = parse_multixyz_from_file(
-                os.path.join(showcase_dir, "Acetylsalicylic_Acid.xyz")
-            )
-            for ind, (xyz, ener) in enumerate(zip(multixyz, E)):
-                _xyz = format_xyz(xyz)
-                s = Structure.objects.create(
-                    parent_ensemble=e, xyz_structure=_xyz, number=ind + 1
-                )
+        # This screws up the number of ensembles which are tested for
+        if not settings.IS_TEST:
+            if self.is_absent_property("mo"):
+                molden = get_showcase("mo_molden")
+                mo_diagram = get_showcase("mo_diagram")
                 prop = ShowcaseProperty.objects.create(
-                    energy=ener, parent_structure=s, parameters=params
+                    name="mo", molden=molden, mo_diagram=mo_diagram
                 )
+
+            if self.is_absent_ensemble("acetylsalicylic_acid"):
+                e = ShowcaseEnsemble.objects.create(label="acetylsalicylic_acid")
+                params = Parameters.objects.create(charge=0, multiplicity=1)
+                multixyz, E = parse_multixyz_from_file(
+                    os.path.join(showcase_dir, "Acetylsalicylic_Acid.xyz")
+                )
+                for ind, (xyz, ener) in enumerate(zip(multixyz, E)):
+                    _xyz = format_xyz(xyz)
+                    s = Structure.objects.create(
+                        parent_ensemble=e, xyz_structure=_xyz, number=ind + 1
+                    )
+                    prop = ShowcaseProperty.objects.create(
+                        energy=ener, parent_structure=s, parameters=params
+                    )
