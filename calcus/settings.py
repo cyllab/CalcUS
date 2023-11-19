@@ -123,7 +123,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sitemaps",
-    "axes",
+    # "axes",
     "bulma",
     # "gmailapi_backend",
     "corsheaders",
