@@ -37,7 +37,7 @@ else:
 
 if IS_TEST or DEBUG or IS_COMPUTE:
     SECRET_KEY = "testkey"
-    SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]
+    SILENCED_SYSTEM_CHECKS = ["django_captcha.recaptcha_test_key_error"]
     HOST_URL = "http://localhost:8080"
 else:
     if "CALCUS_SECRET_KEY" not in os.environ:
@@ -131,7 +131,7 @@ INSTALLED_APPS = [
 ]
 
 if IS_CLOUD or IS_TEST:
-    INSTALLED_APPS.append("captcha")
+    INSTALLED_APPS.append("django_captcha")
 
 if IS_CLOUD:
     if not DEBUG:

@@ -30,7 +30,7 @@ from django.contrib.auth.forms import SetPasswordForm
 from django.utils import timezone
 
 if settings.IS_CLOUD or settings.IS_TEST:
-    from captcha.fields import ReCaptchaField
+    from django_captcha.fields import ReCaptchaField
 
 from frontend.models import User, ClassGroup, ResourceAllocation, Project
 from frontend.helpers import get_random_string
