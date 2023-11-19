@@ -37,7 +37,7 @@ else:
 
 if IS_TEST or DEBUG or IS_COMPUTE:
     SECRET_KEY = "testkey"
-    SILENCED_SYSTEM_CHECKS = ["django_captcha.recaptcha_test_key_error"]
+    SILENCED_SYSTEM_CHECKS = ["django_recaptcha.recaptcha_test_key_error"]
     HOST_URL = "http://localhost:8080"
 else:
     if "CALCUS_SECRET_KEY" not in os.environ:
@@ -131,7 +131,7 @@ INSTALLED_APPS = [
 ]
 
 if IS_CLOUD or IS_TEST:
-    INSTALLED_APPS.append("django_captcha")
+    INSTALLED_APPS.append("django_recaptcha")
 
 if IS_CLOUD:
     if not DEBUG:
@@ -160,7 +160,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "axes.middleware.AxesMiddleware",
+    # "axes.middleware.AxesMiddleware",
     #'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
@@ -183,7 +183,7 @@ HASHID_FIELD_SALT = os.getenv("CALCUS_HASHID_SALT", "test_salt")
 AUTH_USER_MODEL = "frontend.User"
 
 AUTHENTICATION_BACKENDS = [
-    "axes.backends.AxesBackend",
+    # "axes.backends.AxesBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 
