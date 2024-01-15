@@ -165,6 +165,9 @@ def create_container_job(calc, nproc, timeout):
         ("shutdown-script-url", "gs://calcus-cloud-config/shutdown_script.py")
     )
 
+    if nproc > 1:
+        metadata.append(("startup-script-url", "gs://calcus-cloud-config/set_shm.sh"))
+
     instances = batch_v1.AllocationPolicy.InstancePolicyOrTemplate()
     instances.policy = policy
 
