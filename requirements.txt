@@ -1,6 +1,6 @@
 basis-set-exchange
 bleach
-ccinput>=1.10.2
+ccinput>=1.10.3
 celery[redis]
 django-cors-headers
 cryptography
@@ -18,7 +18,7 @@ fabric<3.0.0
 google-cloud-tasks>=2.10.2
 gunicorn>=21.2.0
 numpy
-paramiko==2.10.1
+paramiko==3.4.0
 periodictable
 pre-commit
 psutil==5.7.2
