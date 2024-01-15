@@ -1288,6 +1288,8 @@ def cloud_calc(request):
         logger.error(f"Could not find calculation number {body}")
         return HttpResponse(status=400)
 
+    os.system("/calcus/scripts/set_shm.sh")
+
     try:
         ret = run_calc(calc.id)
     except Exception as e:
