@@ -67,6 +67,7 @@ services:
                 volumes:
                         - ./scr:/calcus/scr
                         - ./keys:/calcus/keys
+                        - ./calc:/calcus/calc
                 env_file:
                         - ./.env
                 links:

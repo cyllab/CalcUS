@@ -4977,7 +4977,7 @@ def run_calc(calc_id):
 
     calc.save()
 
-    if calc.step.creates_ensemble:
+    if calc.step.creates_ensemble and "Conformational" not in calc.step.name:
         analyse_opt(calc.id)
         calc.refresh_from_db()
 

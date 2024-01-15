@@ -2,7 +2,7 @@
 
 mkdir -p data
 
-docker-compose down
-docker-compose pull
+docker compose down
+docker compose pull
 docker image prune -f
-docker-compose up --remove-orphans
+docker compose up --remove-orphans

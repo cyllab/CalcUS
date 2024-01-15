@@ -119,7 +119,7 @@ def create_container_job(calc, nproc, timeout):
         "CALCUS_CLOUD": "True",
         "NUM_CPU": str(nproc),
         "OMP_NUM_THREADS": f"{nproc},1",
-        "OMP_STACKSIZE": "900M",
+        "OMP_STACKSIZE": "3500M",
         "CALCUS_TIMEOUT": str(timeout),
         # Variables for rescheduling when a VM in preempted
         "CALC_ID": str(calc.id),
@@ -139,7 +139,7 @@ def create_container_job(calc, nproc, timeout):
 
     resources = batch_v1.ComputeResource()
     resources.cpu_milli = nproc * 1000  # in milliseconds per cpu-second
-    resources.memory_mib = nproc * 1024
+    resources.memory_mib = 4 * nproc * 1024
     task.compute_resource = resources
 
     task.max_retry_count = 1
@@ -153,7 +153,7 @@ def create_container_job(calc, nproc, timeout):
     group.parallelism = 1
 
     policy = batch_v1.AllocationPolicy.InstancePolicy()
-    policy.machine_type = f"n2d-highcpu-{nproc}"
+    policy.machine_type = f"t2d-standard-{nproc}"
     # policy.boot_disk = ...
     # https://cloud.google.com/batch/docs/reference/rest/v1/projects.locations.jobs#Disk
 
