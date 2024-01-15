@@ -19,7 +19,7 @@ class Command(BaseCommand):
         except Calculation.DoesNotExist:
             raise Exception(f"Could not find calculation number {calc_id}")
 
-        nproc = os.getenv("OMP_NUM_THREADS")[0]
+        nproc = int(os.getenv("OMP_NUM_THREADS")[0])
         if nproc > 1:
             os.system("/calcus/scripts/set_shm.sh")
 
