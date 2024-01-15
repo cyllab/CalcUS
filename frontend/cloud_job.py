@@ -108,6 +108,9 @@ def create_container_job(calc, nproc, timeout):
         str(calc.id),
     ]
 
+    if nproc > 1:
+        runnable.container.options = "--shm-size 8G"
+
     env = batch_v1.Environment()
     env.secret_variables = {"POSTGRES_PASSWORD": settings.POSTGRES_SECRET_URI}
     env.variables = {
@@ -166,9 +169,6 @@ def create_container_job(calc, nproc, timeout):
     metadata.append(
         ("shutdown-script-url", "gs://calcus-cloud-config/shutdown_script.py")
     )
-
-    if nproc > 1:
-        metadata.append(("startup-script-url", "gs://calcus-cloud-config/set_shm.sh"))
 
     instances = batch_v1.AllocationPolicy.InstancePolicyOrTemplate()
     instances.policy = policy
