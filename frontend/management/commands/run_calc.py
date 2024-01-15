@@ -1,4 +1,3 @@
-import glob
 import os
 from django.core.management.base import BaseCommand
 
@@ -19,6 +18,10 @@ class Command(BaseCommand):
             calc = Calculation.objects.get(pk=calc_id)
         except Calculation.DoesNotExist:
             raise Exception(f"Could not find calculation number {calc_id}")
+
+        nproc = os.getenv("OMP_NUM_THREADS")[0]
+        if nproc > 1:
+            os.system("/calcus/scripts/set_shm.sh")
 
         try:
             ret = run_calc(calc.id)

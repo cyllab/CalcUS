@@ -161,6 +161,8 @@ def create_container_job(calc, nproc, timeout):
 
     # Trying spot VMs
     policy.provisioning_model = batch_v1.types.AllocationPolicy.ProvisioningModel.SPOT
+
+    # the metadata isn't working, for some reason
     metadata.append(
         ("shutdown-script-url", "gs://calcus-cloud-config/shutdown_script.py")
     )
