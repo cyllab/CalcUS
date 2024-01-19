@@ -321,7 +321,7 @@ RESOURCE_LIMITS = {
     },
     "subscriber": {
         "nproc": 8,
-        "time": 6 * 60,
+        "time": 24 * 60,
     },
 }
 
