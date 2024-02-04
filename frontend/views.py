@@ -5884,8 +5884,17 @@ def webhook(request):
                 f"Subscription {sub['id']} unexpectedly has more than one item"
             )
 
-        prod = stripe.Product.retrieve(sub["items"]["data"][0]["price"]["product"])
-        allocation = int(prod["metadata"]["MONTHLY_ALLOCATION"])
+        item = sub["items"]["data"][0]
+
+        # Check if there is specific metadata on the price
+        price = item["price"]
+        if "metadata" in price and "MONTHLY_ALLOCATION" in price["metadata"]:
+            allocation = int(price["metadata"]["MONTHLY_ALLOCATION"])
+            logger.info(f"Using the monthly allocation from the price ({allocation})")
+        else:
+            prod = stripe.Product.retrieve(sub["items"]["data"][0]["price"]["product"])
+            allocation = int(prod["metadata"]["MONTHLY_ALLOCATION"])
+            logger.info(f"Using the monthly allocation from the product ({allocation})")
 
         tasks.create_subscription(
             user,
