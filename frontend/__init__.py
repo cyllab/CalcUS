@@ -17,5 +17,4 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-
 # Necessary for correct code coverage of cluster_daemon.py

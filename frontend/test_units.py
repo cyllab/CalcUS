@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-
 from .models import *
 from .helpers import get_xyz_from_Gaussian_input
 from django.test import TestCase
