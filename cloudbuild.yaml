@@ -1,4 +1,7 @@
 steps:
+  - id: "docker-pull"
+    name: 'gcr.io/cloud-builders/docker'
+    args: ['pull', 'docker/dockerfile:experimental']
   - id: "configuration"
     name: 'gcr.io/cloud-builders/gsutil'
     args: ['cp', 'gs://$_CONFIG_BUCKET/cloud_config.json', 'frontend/cloud_config.json']
