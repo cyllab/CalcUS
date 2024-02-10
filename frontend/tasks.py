@@ -654,7 +654,7 @@ def generate_xyz_structure(drawing, inp, ext, scale=1):
                         a = int(sline[3])
                     except ValueError:
                         to_print.append(
-                            "{} {} {} {}\n".format(
+                            "{} {:.6f} {:.6f} {:.6f}\n".format(
                                 sline[3],
                                 float(sline[0]) * scale,
                                 float(sline[1]) * scale,
