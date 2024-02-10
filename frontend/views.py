@@ -2488,12 +2488,12 @@ def _submit_calculation(request, verify=False):
                                 # Since the charge/multiplicity keywords are considered when detecting molecules,
                                 # all the structures of a given molecule must necessarily have the same charge/multiplicity
                                 __params = _params.copy()
-                                __params[
-                                    "charge"
-                                ] = struct.properties.first().parameters.charge
-                                __params[
-                                    "multiplicity"
-                                ] = struct.properties.first().parameters.multiplicity
+                                __params["charge"] = (
+                                    struct.properties.first().parameters.charge
+                                )
+                                __params["multiplicity"] = (
+                                    struct.properties.first().parameters.multiplicity
+                                )
                                 unique_params[_mol_name] = Parameters.objects.create(
                                     **__params
                                 )
@@ -3638,9 +3638,9 @@ def uvvis(request, pk):
         return HttpResponse(status=404)
 
     response = HttpResponse(prop.uvvis, content_type="text/csv")
-    response[
-        "Content-Disposition"
-    ] = f"attachment; filename=uvvis_{prop.parent_structure.id}.csv"
+    response["Content-Disposition"] = (
+        f"attachment; filename=uvvis_{prop.parent_structure.id}.csv"
+    )
     return response
 
 
@@ -3888,9 +3888,9 @@ def nmr(request):
                 content += f"{-(shift[3] + 0.001)},{0}\n"
 
     response = HttpResponse(content, content_type="text/csv")
-    response[
-        "Content-Disposition"
-    ] = f"attachment; filename=nmr_{clean_filename(e.name)}.csv"
+    response["Content-Disposition"] = (
+        f"attachment; filename=nmr_{clean_filename(e.name)}.csv"
+    )
     return response
 
 
@@ -3906,9 +3906,9 @@ def ir_spectrum(request, pk):
 
     if prop.ir_spectrum != "":
         response = HttpResponse(prop.ir_spectrum, content_type="text/csv")
-        response[
-            "Content-Disposition"
-        ] = f"attachment; filename=ir_{prop.parent_structure.id}.csv"
+        response["Content-Disposition"] = (
+            f"attachment; filename=ir_{prop.parent_structure.id}.csv"
+        )
         return response
     else:
         return HttpResponse(status=204)
@@ -4378,9 +4378,9 @@ def download_all_logs(request, pk):
                 )
 
     response = HttpResponse(mem.getvalue(), content_type="application/zip")
-    response[
-        "Content-Disposition"
-    ] = f'attachment; filename="{order.molecule_name}_order_{pk}.zip"'
+    response["Content-Disposition"] = (
+        f'attachment; filename="{order.molecule_name}_order_{pk}.zip"'
+    )
     return response
 
 
