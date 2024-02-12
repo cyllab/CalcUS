@@ -32,9 +32,10 @@ function calc_selection_changed() {
                 viewer.styles.atoms_displayLabels_3D = false;
             }
         }
+        software = document.getElementById("calc_software");
         msg = document.getElementById("cloud_num_cores");
         if(msg) {
-            if(choice.value == "Conformational Search" || choice.value == "Constrained Conformational Search") {
+            if(software.value == "NWChem" || choice.value == "Conformational Search" || choice.value == "Constrained Conformational Search") {
                 // Hardcoded values for now...
                 $("#cloud_num_cores").html({% if request.user.is_trial %}"4"{% else %}"8"{% endif %});
             }

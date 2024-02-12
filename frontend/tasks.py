@@ -5220,16 +5220,13 @@ def create_account_sub(email):
 def create_subscription(
     user, stripe_sub_id, end_date, allocation, stripe_cus_id, will_renew
 ):
-    time_left = max(0, user.allocated_seconds - user.billed_seconds)
-    sub_amount = max(allocation - time_left, 0)
-
     # Make sure we don't create a duplicate subscription and allocation
     try:
         sub = Subscription.objects.get(subscriber=user, end_date=end_date)
     except Subscription.DoesNotExist:
         alloc = ResourceAllocation.objects.create(
             code=get_random_string(32),
-            allocation_seconds=sub_amount,
+            allocation_seconds=allocation,
             note=ResourceAllocation.SUBSCRIPTION,
         )
         alloc.redeem(user)
