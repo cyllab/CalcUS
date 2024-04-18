@@ -21,7 +21,7 @@ nmrglue==0.8
 numpy
 periodictable
 psutil==5.7.2
-psycopg2
+psycopg2-binary
 pysisyphus
 python-magic
 rdkit
