@@ -8,7 +8,7 @@ services:
         web:
                 build:
                         context: .
-                        dockerfile: Cloud_dockerfile
+                        dockerfile: Dockerfile
                         target: calcus_user
                 restart: always
                 hostname: web
@@ -34,8 +34,6 @@ services:
                         - CALCUS_DEBUG=True
                         - ACTIONS_HOST_URL=http://web:8000
                         - COMPUTE_SMALL_HOST_URL=http://cloud-compute:8001
-                        - COMPUTE_MEDIUM_HOST_URL=http://cloud-compute:8001
-                        - COMPUTE_LARGE_HOST_URL=http://cloud-compute:8001
                         - GCP_LOCATION=us-central1
                         - GCP_PROJECT_ID=test-project
                         - GCP_SERVICE_ACCOUNT_EMAIL=selenium@calcus.com
@@ -63,7 +61,7 @@ services:
         cloud-compute:
                 build:
                         context: .
-                        dockerfile: Cloud_dockerfile
+                        dockerfile: Dockerfile
                 hostname: cloud-compute
                 user: "${UID}:${GID}"
                 expose:
@@ -91,8 +89,6 @@ services:
                         - GCP_SERVICE_ACCOUNT_EMAIL=selenium@calcus.com
                         - ACTIONS_HOST_URL=http://web:8000
                         - COMPUTE_SMALL_HOST_URL=http://cloud-compute:8001
-                        - COMPUTE_MEDIUM_HOST_URL=http://cloud-compute:8001
-                        - COMPUTE_LARGE_HOST_URL=http://cloud-compute:8001
                         - CALCUS_SCR_HOME=/calcus/scr
                         - CALCUS_TEST_SCR_HOME=/calcus/scr
                         - GUNICORN_TIMEOUT=15

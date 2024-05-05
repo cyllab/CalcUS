@@ -138,6 +138,7 @@ def create_container_job(calc, nproc, timeout):
             "OMPI_ALLOW_RUN_AS_ROOT_CONFIRM": "1",
         }
     )
+    print(f"Environment variables: {str(env)}")
 
     runnable.environment = env
 

@@ -4,7 +4,7 @@ steps:
     args: ['cp', 'gs://$_CONFIG_BUCKET/cloud_config.json', 'frontend/cloud_config.json']
   - id: "build"
     name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', '$_IMAGE_NAME', '-f', 'Cloud_dockerfile', '.']
+    args: ['build', '-t', '$_IMAGE_NAME', '--target', 'calcus_cloud', '-f', 'Dockerfile', '.']
     timeout: 500s
   - id: "image-storage"
     name: 'gcr.io/cloud-builders/docker'
