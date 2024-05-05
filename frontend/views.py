@@ -2488,12 +2488,12 @@ def _submit_calculation(request, verify=False):
                                 # Since the charge/multiplicity keywords are considered when detecting molecules,
                                 # all the structures of a given molecule must necessarily have the same charge/multiplicity
                                 __params = _params.copy()
-                                __params["charge"] = (
-                                    struct.properties.first().parameters.charge
-                                )
-                                __params["multiplicity"] = (
-                                    struct.properties.first().parameters.multiplicity
-                                )
+                                __params[
+                                    "charge"
+                                ] = struct.properties.first().parameters.charge
+                                __params[
+                                    "multiplicity"
+                                ] = struct.properties.first().parameters.multiplicity
                                 unique_params[_mol_name] = Parameters.objects.create(
                                     **__params
                                 )
@@ -3638,9 +3638,9 @@ def uvvis(request, pk):
         return HttpResponse(status=404)
 
     response = HttpResponse(prop.uvvis, content_type="text/csv")
-    response["Content-Disposition"] = (
-        f"attachment; filename=uvvis_{prop.parent_structure.id}.csv"
-    )
+    response[
+        "Content-Disposition"
+    ] = f"attachment; filename=uvvis_{prop.parent_structure.id}.csv"
     return response
 
 
@@ -3888,9 +3888,9 @@ def nmr(request):
                 content += f"{-(shift[3] + 0.001)},{0}\n"
 
     response = HttpResponse(content, content_type="text/csv")
-    response["Content-Disposition"] = (
-        f"attachment; filename=nmr_{clean_filename(e.name)}.csv"
-    )
+    response[
+        "Content-Disposition"
+    ] = f"attachment; filename=nmr_{clean_filename(e.name)}.csv"
     return response
 
 
@@ -3906,9 +3906,9 @@ def ir_spectrum(request, pk):
 
     if prop.ir_spectrum != "":
         response = HttpResponse(prop.ir_spectrum, content_type="text/csv")
-        response["Content-Disposition"] = (
-            f"attachment; filename=ir_{prop.parent_structure.id}.csv"
-        )
+        response[
+            "Content-Disposition"
+        ] = f"attachment; filename=ir_{prop.parent_structure.id}.csv"
         return response
     else:
         return HttpResponse(status=204)
@@ -4378,9 +4378,9 @@ def download_all_logs(request, pk):
                 )
 
     response = HttpResponse(mem.getvalue(), content_type="application/zip")
-    response["Content-Disposition"] = (
-        f'attachment; filename="{order.molecule_name}_order_{pk}.zip"'
-    )
+    response[
+        "Content-Disposition"
+    ] = f'attachment; filename="{order.molecule_name}_order_{pk}.zip"'
     return response
 
 
@@ -5114,42 +5114,46 @@ def cancel_calc(request):
 def download_project_logs(proj, user, scope, details, folders):
     # folders options makes this somewhat duplicate code
 
+    filenames = []
+
+    def get_log_name(s, calc):
+        log_name = s.parent_ensemble.parent_molecule.name + f"_conf{s.number}"
+        if log_name not in filenames:
+            filenames.append(log_name)
+            return log_name
+
+        log_name = (
+            s.parent_ensemble.parent_molecule.name
+            + "_"
+            + s.parent_ensemble.name
+            + f"_conf{s.number}"
+        )
+        if log_name not in filenames:
+            filenames.append(log_name)
+            return log_name
+
+        log_name = e.name + "_" + calc.parameters.file_name + f"_conf{s.number}"
+        filenames.append(log_name)
+        return log_name
+
     tmp_dir = f"/tmp/{user.id}_{proj.author.username}_{time.time()}"  ## tmpdir
     os.mkdir(tmp_dir)
     for mol in sorted(proj.molecule_set.all(), key=lambda l: l.name):
         for e in mol.ensemble_set.all():
             if scope == "flagged" and not e.flagged:
                 continue
-            e_dir = os.path.join(tmp_dir, str(e.id) + "_" + e.name.replace(" ", "_"))
-            try:
-                os.mkdir(e_dir)
-            except FileExistsError:
-                pass
+
             for ind, s in enumerate(e.structure_set.all()):
                 for calc in s.calculation_set.all():
                     if calc.status == 0:
                         continue
-                    if details == "freq":
-                        if calc.step.name != "Frequency Calculation":
-                            continue
-                        log_name = (
-                            e.name
-                            + "_"
-                            + calc.parameters.file_name
-                            + f"_conf{s.number}"
-                        )
-                    elif details == "full":
-                        log_name = (
-                            e.name
-                            + "_"
-                            + calc.step.name
-                            + "_"
-                            + calc.parameters.file_name
-                            + f"_conf{s.number}"
-                        )
+                    if details == "freq" and calc.step.name != "Frequency Calculation":
+                        continue
 
                     if len(calc.output_files) == 0:
                         continue
+
+                    log_name = get_log_name(s, calc)
 
                     logs = json.loads(calc.output_files)
 
@@ -5159,13 +5163,13 @@ def download_project_logs(proj, user, scope, details, folders):
                         else:
                             _log_name = f"{log_name}_{subname}.log"
 
-                        with open(os.path.join(e_dir, _log_name), "w") as out:
+                        with open(os.path.join(tmp_dir, _log_name), "w") as out:
                             out.write(log)
 
                     if (
                         calc.parameters.software == "xtb"
                     ):  # xtb logs don't contain the structure
-                        with open(os.path.join(e_dir, log_name + ".xyz"), "w") as out:
+                        with open(os.path.join(tmp_dir, log_name + ".xyz"), "w") as out:
                             out.write(s.xyz_structure)
 
     for d in glob.glob(f"{tmp_dir}/*/"):
@@ -5174,11 +5178,8 @@ def download_project_logs(proj, user, scope, details, folders):
 
     mem = BytesIO()
     with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zip:
-        for d in glob.glob(f"{tmp_dir}/*/"):
-            for f in glob.glob(f"{d}*"):
-                zip.write(
-                    f, os.path.join(proj.name.replace(" ", "_"), *f.split("/")[3:])
-                )
+        for f in glob.glob(f"{tmp_dir}/*"):
+            zip.write(f, os.path.join(proj.name.replace(" ", "_"), *f.split("/")[3:]))
 
     response = HttpResponse(mem.getvalue(), content_type="application/zip")
     response["Content-Disposition"] = 'attachment; filename="{}_logs.zip"'.format(
