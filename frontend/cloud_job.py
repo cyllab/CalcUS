@@ -113,27 +113,31 @@ def create_container_job(calc, nproc, timeout):
 
     env = batch_v1.Environment()
     env.secret_variables = {"POSTGRES_PASSWORD": settings.POSTGRES_SECRET_URI}
-    env.variables = {
-        "POSTGRES_USER": settings.POSTGRES_USER,
-        "POSTGRES_HOST": os.environ.get(
-            "COMPUTE_POSTGRES_HOST", settings.POSTGRES_HOST
-        ),
-        "CALCUS_COMPUTE": "True",
-        "CALCUS_CLOUD": "True",
-        "NUM_CPU": str(nproc),
-        "OMP_NUM_THREADS": f"{nproc},1",
-        "OMP_STACKSIZE": "3500M",
-        "CALCUS_TIMEOUT": str(timeout),
-        # Variables for rescheduling when a VM in preempted
-        "CALC_ID": str(calc.id),
-        "COMPUTE_IMAGE": settings.COMPUTE_IMAGE,
-        "COMPUTE_SERVICE_ACCOUNT": settings.COMPUTE_SERVICE_ACCOUNT,
-        "GCP_PROJECT_ID": settings.GCP_PROJECT_ID,
-        "GCP_LOCATION": settings.GCP_LOCATION,
-        # NWChem variables
-        "OMPI_ALLOW_RUN_AS_ROOT": "1",
-        "OMPI_ALLOW_RUN_AS_ROOT_CONFIRM": "1",
-    }
+    env.variables = os.environ.copy()
+
+    env.variables.update(
+        {
+            "POSTGRES_USER": settings.POSTGRES_USER,
+            "POSTGRES_HOST": os.environ.get(
+                "COMPUTE_POSTGRES_HOST", settings.POSTGRES_HOST
+            ),
+            "CALCUS_COMPUTE": "True",
+            "CALCUS_CLOUD": "True",
+            "NUM_CPU": str(nproc),
+            "OMP_NUM_THREADS": f"{nproc},1",
+            "OMP_STACKSIZE": "3500M",
+            "CALCUS_TIMEOUT": str(timeout),
+            # Variables for rescheduling when a VM in preempted
+            "CALC_ID": str(calc.id),
+            "COMPUTE_IMAGE": settings.COMPUTE_IMAGE,
+            "COMPUTE_SERVICE_ACCOUNT": settings.COMPUTE_SERVICE_ACCOUNT,
+            "GCP_PROJECT_ID": settings.GCP_PROJECT_ID,
+            "GCP_LOCATION": settings.GCP_LOCATION,
+            # NWChem variables
+            "OMPI_ALLOW_RUN_AS_ROOT": "1",
+            "OMPI_ALLOW_RUN_AS_ROOT_CONFIRM": "1",
+        }
+    )
 
     runnable.environment = env
 
