@@ -31,3 +31,4 @@ test_run
 firebase
 !.github
 !bin/*.tar.bz2
+!bin/*.tar.xz
