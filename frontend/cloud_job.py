@@ -113,7 +113,6 @@ def create_container_job(calc, nproc, timeout):
 
     env = batch_v1.Environment()
     env.secret_variables = {"POSTGRES_PASSWORD": settings.POSTGRES_SECRET_URI}
-    env.variables = os.environ.copy()
 
     env.variables.update(
         {
@@ -136,6 +135,7 @@ def create_container_job(calc, nproc, timeout):
             # NWChem variables
             "OMPI_ALLOW_RUN_AS_ROOT": "1",
             "OMPI_ALLOW_RUN_AS_ROOT_CONFIRM": "1",
+            "PATH": os.environ["PATH"],
         }
     )
     print(f"Environment variables: {str(env)}")

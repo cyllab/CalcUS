@@ -1,7 +1,7 @@
 
 TITLE "File created by ccinput"
 start in
-memory total 2000 mb
+memory total 500 mb
 charge 0
 
 geometry units angstroms noautosym

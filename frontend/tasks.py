@@ -1560,7 +1560,13 @@ def fast_conf(in_file, calc):
 
     calc_start = timezone.now()
 
-    subprocess.call(shlex.split("obabel in.xyz -O in.mol"), cwd=local_folder)
+    ret = subprocess.check_output(
+        shlex.split("obabel in.xyz -O in.mol"), cwd=local_folder
+    )
+
+    if not os.path.isfile(os.path.join(local_folder, "in.mol")):
+        logger.error(f"Missing expected file in.mol (in {local_folder}) - {str(ret)}")
+        return ErrorCodes.MISSING_FILE
 
     mol = Chem.MolFromMolFile(os.path.join(local_folder, "in.mol"))
 
