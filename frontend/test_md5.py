@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-
 from .gen_calc import gen_param
 from django.core.management import call_command
 from django.test import TestCase
