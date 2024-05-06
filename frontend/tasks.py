@@ -492,11 +492,14 @@ def system(
             else:
                 t = subprocess.Popen(shlex.split(command), stdout=stream, stderr=stream)
 
-        except FileNotFoundError:
-            logger.error(f'Could not run command "{command}" - executable not found')
+        except FileNotFoundError as e:
+            logger.error(
+                f'Could not run command "{command}" - executable not found (msg: {str(e)})'
+            )
             calc.error_message = f"{command.split()[0]} is not found"
             calc.date_finished = timezone.now()
             calc.save()
+            stream.close()
             return ErrorCodes.FAILED_TO_RUN_LOCAL_SOFTWARE
 
         def kill_task():
@@ -518,6 +521,7 @@ def system(
             poll = t.poll()
 
             if poll is not None:
+                stream.close()
                 if t.returncode == 0:
                     if calc_id != -1:
                         if settings.IS_CLOUD:
@@ -537,6 +541,7 @@ def system(
                 if settings.IS_CLOUD:
                     calc = Calculation.objects.get(id=calc_id)
                     if calc.status == 3:
+                        stream.close()
                         return kill_task()
 
                     time_running = timezone.now() - calc.date_started
@@ -544,11 +549,13 @@ def system(
                         calc.status = 3
                         calc.error_message = "Calculation exceeded your time limit"
                         calc.save()
+                        stream.close()
                         return kill_task()
 
                     time.sleep(settings.DATABASE_STATUS_CHECK_DELAY - 1)
                 else:
                     if res.is_aborted():
+                        stream.close()
                         return kill_task()
             time.sleep(1)
 
