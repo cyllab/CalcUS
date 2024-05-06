@@ -494,7 +494,7 @@ def system(
 
         except FileNotFoundError as e:
             logger.error(
-                f'Could not run command "{command}" - executable not found (msg: {str(e)})'
+                f'Could not run command "{command}" - executable not found (msg: {str(e)}), os.environ is {str(os.environ)}'
             )
             calc.error_message = f"{command.split()[0]} is not found"
             calc.date_finished = timezone.now()
