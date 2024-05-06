@@ -1,8 +1,8 @@
 FROM python:3.10-slim-bookworm AS build
 
 RUN mkdir -p /binaries/
-COPY bin /binaries/xtb
 COPY scripts /calcus/scripts
+COPY bin /binaries/xtb
 RUN python /calcus/scripts/extract_xtb.py
 
 RUN apt update && apt install build-essential gcc libxm4 libgl1 libmagic1 -y
@@ -48,6 +48,7 @@ COPY calcus /calcus/calcus
 COPY frontend /calcus/frontend
 COPY docker /calcus/docker
 COPY manage.py /calcus/manage.py
+COPY scripts /calcus/scripts
 #RUN dos2unix /calcus/scripts/*
 COPY docker/cluster/config /etc/ssh/ssh_config
 
@@ -61,14 +62,10 @@ FROM calcus_user AS calcus_cloud
 
 ENV CALCUS_CLOUD True
 
-RUN ls /calcus/
-
 FROM calcus_user as calcus_dev
 
 ADD ./test-requirements.txt /calcus/test-requirements.txt
-#ADD ./cloud_requirements.txt /calcus/cloud_requirements.txt
 RUN  pip install -r /calcus/test-requirements.txt
-#RUN  pip install -r /calcus/cloud_requirements.txt
 
 RUN mkdir -p /calcus/scratch/keys
 RUN mkdir -p /calcus/scratch/scr
