@@ -18,12 +18,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import json
-import numpy as np
 import periodictable
 import copy
-from .constants import *
-
 from hashlib import md5
+import numpy as np
+from numpy.linalg import expm, norm
+from numpy import cross, eye
+
+
+from .constants import ATOMIC_NUMBER
+
 
 # Structure of xyz:
 # [<EL>, [x, y, z]]
@@ -375,7 +379,7 @@ def create_derivative(base_xyz, sub_xyz):
 
     anchor = [i for i in range(len(sub_xyz)) if sub_xyz[i][0] == "He"]
     if len(anchor) != 1:
-        print("Invalid substituent: {}".format(sub))
+        print("Invalid substituent")
         return
 
     anchor = anchor[0]
@@ -383,7 +387,7 @@ def create_derivative(base_xyz, sub_xyz):
     conn = get_neighbors_lists(sub_xyz, He_radius=1.4)
     anchor_neigh = conn[anchor]
     if len(anchor_neigh) != 1:
-        print("Could not find proper substitution bond: {}".format(sub))
+        print("Could not find proper substitution bond")
         return
     sub_neigh = anchor_neigh[0]
 

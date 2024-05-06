@@ -28,8 +28,21 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 from .gen_calc import gen_calc
 from .calcusliveserver import SCR_DIR
-from .constants import *
-from .models import *
+from .models import (
+    CalculationOrder,
+    Ensemble,
+    HARTREE_FVAL,
+    HARTREE_TO_KCAL_F,
+    Molecule,
+    Parameters,
+    Project,
+    Property,
+    ResearchGroup,
+    Structure,
+    User,
+    np,
+    timezone,
+)
 
 tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 

@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from constants import *
+from .constants import SOFTWARE_BASIS_SETS, SOFTWARE_METHODS
 
 TABLE_TEMPLATE = """
 <table class="table">

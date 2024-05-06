@@ -81,11 +81,54 @@ from django.core.mail import send_mail
 from ccinput.wrapper import generate_calculation
 from ccinput.utilities import get_solvent
 
-from .libxyz import *
-from .models import *
-from .helpers import *
-from .constants import HARTREE_TO_EV
-from .environment_variables import *
+from .libxyz import (
+    format_xyz,
+    parse_multixyz_from_file,
+    parse_xyz_from_file,
+    parse_xyz_from_text,
+)
+from .models import (
+    BasicStep,
+    Calculation,
+    CalculationFrame,
+    CalculationOrder,
+    Ensemble,
+    FlowchartOrder,
+    Molecule,
+    PAL,
+    Project,
+    Property,
+    ResourceAllocation,
+    Step,
+    Structure,
+    Subscription,
+    User,
+)
+
+from .constants import (
+    ATOMIC_NUMBER,
+    ATOMIC_SYMBOL,
+    HARTREE_FVAL,
+    HARTREE_TO_KCAL_F,
+    LOWERCASE_ATOMIC_SYMBOLS,
+    HARTREE_TO_EV,
+    ErrorCodes,
+    MAX_COMMAND_ATTEMPT_COUNT,
+)
+from .helpers import (
+    clean_xyz,
+    get_number_of_electrons,
+    get_random_string,
+    get_xyz_from_Gaussian_input,
+)
+from .environment_variables import (
+    IS_TEST,
+    CALCUS_SCR_HOME,
+    CALCUS_CACHE_HOME,
+    EBROOTORCA,
+    MEM,
+    MULTIWFN_DIR,
+)
 from .cloud_job import submit_cloud_job
 
 import traceback
@@ -301,7 +344,7 @@ def testing_delay_local(res):
     for i in range(wait):
         time.sleep(1)
         if res.is_aborted():
-            logger.info(f"Stopping calculation after loading the cache")
+            logger.info("Stopping calculation after loading the cache")
             return ErrorCodes.JOB_CANCELLED
 
     return ErrorCodes.SUCCESS
@@ -311,6 +354,8 @@ def testing_delay_remote(calc_id):
     """
     Same as `testing_delay_local`, but for remote calculations.
     """
+    pid = int(threading.get_ident())
+
     wait = int(os.environ.get("CACHE_POST_WAIT", "0"))
     for i in range(wait):
         if pid in kill_sig:
@@ -332,7 +377,7 @@ def testing_delay_cloud(calc_id):
         time.sleep(1)
         calc = Calculation.objects.get(id=calc_id)
         if calc.status == 3:
-            logger.info(f"Stopping calculation after loading the cache")
+            logger.info("Stopping calculation after loading the cache")
             return ErrorCodes.JOB_CANCELLED
 
     return ErrorCodes.SUCCESS
@@ -493,7 +538,7 @@ def system(
                 t = subprocess.Popen(shlex.split(command), stdout=stream, stderr=stream)
 
         except FileNotFoundError as e:
-            targetstr = ",".join(glob.glob("/binaries/xtb/*"))
+            targetstr = ",".join(glob.glob("/calcus/binaries/xtb/*"))
             logger.error(
                 f'Could not run command "{command}" - executable not found (msg: {str(e)}), os.environ is {str(os.environ)} and target dir contains {targetstr}'
             )
@@ -599,14 +644,14 @@ def calc_is_cached(calc):
         and os.getenv("CAN_USE_CACHED_LOGS") == "true"
     ):
         if calc.local and not os.path.isdir(CALCUS_CACHE_HOME):
-            logger.info(f"no cache")
+            logger.info("No cache")
             os.mkdir(CALCUS_CACHE_HOME)
             return False
 
         index = get_cache_index(calc, CALCUS_CACHE_HOME)
 
         if index == -1:
-            logger.info(f"not found")
+            logger.info("Cache not found")
             return False
         logger.info(f"Using cache index for calc {calc.id}")
 
@@ -700,9 +745,8 @@ def generate_xyz_structure(drawing, inp, ext, scale=1):
         return ErrorCodes.UNIMPLEMENTED
 
 
-def launch_pysis_calc(in_file, calc, files):
+def launch_pysis_calc(calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    folder = f"scratch/calcus/{calc.id}"
 
     if not os.path.isdir(local_folder):
         os.makedirs(local_folder, exist_ok=True)
@@ -715,23 +759,23 @@ def launch_pysis_calc(in_file, calc, files):
             out.write(calc.input_file)
 
     if not calc.local:
-        log_path = os.path.join(folder, "calc.out")
         pid = int(threading.get_ident())
         conn = connections[pid]
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
 
+        log_path = os.path.join(remote_dir, "calc.out")
         if calc.remote_id == 0:
             sftp_put(
                 f"{local_folder}/calc.xyz",
-                os.path.join(folder, "calc.xyz"),
+                os.path.join(remote_dir, "calc.xyz"),
                 conn,
                 lock,
             )
         if calc.input_file != "":
             sftp_put(
                 f"{local_folder}/calc.inp",
-                os.path.join(folder, "calc.inp"),
+                os.path.join(remote_dir, "calc.inp"),
                 conn,
                 lock,
             )
@@ -750,7 +794,7 @@ def launch_pysis_calc(in_file, calc, files):
     if not calc.local:
         for f in files:
             a = sftp_get(
-                f"{folder}/{f}",
+                f"{remote_dir}/{f}",
                 os.path.join(CALCUS_SCR_HOME, str(calc.id), f),
                 conn,
                 lock,
@@ -772,10 +816,10 @@ def launch_pysis_calc(in_file, calc, files):
         return ErrorCodes.JOB_CANCELLED
 
 
-def xtb_opt(in_file, calc):
+def xtb_opt(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_xtb_calc(in_file, calc, ["calc.out", "xtbopt.xyz"])
+    ret = launch_xtb_calc(calc, ["calc.out", "xtbopt.xyz"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -814,10 +858,10 @@ def xtb_opt(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def xtb_mo_gen(in_file, calc):
+def xtb_mo_gen(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_xtb_calc(in_file, calc, ["calc.out", "molden.input", "xtbout.json"])
+    ret = launch_xtb_calc(calc, ["calc.out", "molden.input", "xtbout.json"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -875,9 +919,8 @@ def xtb_mo_gen(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def launch_xtb_calc(in_file, calc, files):
+def launch_xtb_calc(calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    folder = f"scratch/calcus/{calc.id}"
 
     if not os.path.isdir(local_folder):
         os.makedirs(local_folder, exist_ok=True)
@@ -892,23 +935,24 @@ def launch_xtb_calc(in_file, calc, files):
     os.chdir(local_folder)
 
     if not calc.local:
-        log_path = os.path.join(folder, local_folder)
         pid = int(threading.get_ident())
         conn = connections[pid]
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
 
+        log_path = os.path.join(remote_dir, local_folder)
+
         if calc.remote_id == 0:
             sftp_put(
                 f"{local_folder}/in.xyz",
-                os.path.join(folder, "in.xyz"),
+                os.path.join(remote_dir, "in.xyz"),
                 conn,
                 lock,
             )
         if calc.input_file != "":
             sftp_put(
                 f"{local_folder}/input",
-                os.path.join(folder, "input"),
+                os.path.join(remote_dir, "input"),
                 conn,
                 lock,
             )
@@ -927,7 +971,7 @@ def launch_xtb_calc(in_file, calc, files):
     if not calc.local:
         for f in files:
             a = sftp_get(
-                f"{folder}/{f}",
+                f"{remote_dir}/{f}",
                 os.path.join(CALCUS_SCR_HOME, str(calc.id), f),
                 conn,
                 lock,
@@ -939,7 +983,7 @@ def launch_xtb_calc(in_file, calc, files):
             and os.getenv("CAN_USE_CACHED_LOGS") == "true"
         ):
             a = sftp_get(
-                f"{folder}/NOT_CONVERGED",
+                f"{remote_dir}/NOT_CONVERGED",
                 os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"),
                 conn,
                 lock,
@@ -969,24 +1013,22 @@ def launch_xtb_calc(in_file, calc, files):
         return ErrorCodes.JOB_CANCELLED
 
 
-def mep(in_file, calc):
+def mep(calc):
     if calc.parameters.driver == "orca":
-        return mep_orca(in_file, calc)
+        return mep_orca(calc)
     elif calc.parameters.driver == "pysisyphus":
-        return mep_pysis(in_file, calc)
+        return mep_pysis(calc)
     else:
         raise Exception(f"Unknown driver for MEP calculation: {calc.parameters.driver}")
 
 
-def mep_orca(in_file, calc):
-    folder = "/".join(in_file.split("/")[:-1])
+def mep_orca(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
 
     with open(os.path.join(local_folder, "calc2.xyz"), "w") as out:
         out.write(calc.aux_structure.xyz_structure)
 
-    ret = launch_orca_calc(in_file, calc, ["calc.out", "calc_MEP_trj.xyz"])
+    ret = launch_orca_calc(calc, ["calc.out", "calc_MEP_trj.xyz"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -1027,10 +1069,8 @@ def mep_orca(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def mep_pysis(in_file, calc):
-    folder = "/".join(in_file.split("/")[:-1])
+def mep_pysis(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
 
     with open(os.path.join(local_folder, "calc2.xyz"), "w") as out:
         out.write(calc.aux_structure.xyz_structure)
@@ -1044,13 +1084,13 @@ def mep_pysis(in_file, calc):
         if calc.remote_id == 0:
             sftp_put(
                 f"{local_folder}/calc2.xyz",
-                os.path.join(folder, "calc2.xyz"),
+                os.path.join(remote_dir, "calc2.xyz"),
                 conn,
                 lock,
             )
 
     ret = launch_pysis_calc(
-        in_file, calc, ["calc.out", "current_geometries.trj", "splined_hei.xyz"]
+        calc, ["calc.out", "current_geometries.trj", "splined_hei.xyz"]
     )
 
     if ret != ErrorCodes.SUCCESS:
@@ -1126,10 +1166,10 @@ def mep_pysis(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def xtb_sp(in_file, calc):
+def xtb_sp(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_xtb_calc(in_file, calc, ["calc.out"])
+    ret = launch_xtb_calc(calc, ["calc.out"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -1161,20 +1201,19 @@ def get_or_create(params, struct):
         return Property.objects.create(parameters=params, parent_structure=struct)
 
 
-def xtb_handle_ts(in_file, calc):
+def xtb_handle_ts(calc):
     """Chooses the right driver for the calculation (ORCA or Pysisyphus)"""
 
     # if settings.IS_CLOUD:
-    return xtb_ts_pysis(in_file, calc)
+    return xtb_ts_pysis(calc)
     # else:
-    #    return xtb_ts_orca(in_file, calc)
+    #    return xtb_ts_orca(calc)
 
 
-def xtb_ts_orca(in_file, calc):
+def xtb_ts_orca(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
 
-    ret = launch_orca_calc(in_file, calc, ["calc.out", "calc.xyz"])
+    ret = launch_orca_calc(calc, ["calc.out", "calc.xyz"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -1212,11 +1251,10 @@ def xtb_ts_orca(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def xtb_ts_pysis(in_file, calc):
+def xtb_ts_pysis(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
 
-    ret = launch_pysis_calc(in_file, calc, ["calc.out", "ts_final_geometry.xyz"])
+    ret = launch_pysis_calc(calc, ["calc.out", "ts_final_geometry.xyz"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -1254,15 +1292,15 @@ def xtb_ts_pysis(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def xtb_scan(in_file, calc):
+def xtb_scan(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     has_scan = "scan" in calc.constraints.lower()
 
     if has_scan:
-        ret = launch_xtb_calc(in_file, calc, ["calc.out", "xtbscan.log"])
+        ret = launch_xtb_calc(calc, ["calc.out", "xtbscan.log"])
     else:
-        ret = launch_xtb_calc(in_file, calc, ["calc.out", "xtbopt.xyz"])
+        ret = launch_xtb_calc(calc, ["calc.out", "xtbopt.xyz"])
 
     failed = False
     if ret != ErrorCodes.SUCCESS:
@@ -1293,8 +1331,6 @@ def xtb_scan(in_file, calc):
                     inds.append(ind)
                 ind += 1
             inds.append(len(lines))
-
-            min_E = 0
 
             """
                 Since we can't get the keys of items created in bulk and we can't set a reference without first creating the objects, I haven't found a way to create both the structures and properties using bulk_update. This is still >2.5 times faster than the naive approach.
@@ -1362,10 +1398,10 @@ def xtb_scan(in_file, calc):
         return ret
 
 
-def xtb_freq(in_file, calc):
+def xtb_freq(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_xtb_calc(in_file, calc, ["calc.out", "vibspectrum", "g98.out"])
+    ret = launch_xtb_calc(calc, ["calc.out", "vibspectrum", "g98.out"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -1486,10 +1522,10 @@ def xtb_freq(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def crest(in_file, calc):
+def crest(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_xtb_calc(in_file, calc, ["calc.out", "crest_conformers.xyz"])
+    ret = launch_xtb_calc(calc, ["calc.out", "crest_conformers.xyz"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -1509,7 +1545,6 @@ def crest(in_file, calc):
             )
             return ErrorCodes.INVALID_OUTPUT
 
-        weighted_energy = 0.0
         ind += 1
         structures = []
         properties = []
@@ -1562,9 +1597,8 @@ def crest(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def fast_conf(in_file, calc):
+def fast_conf(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    folder = f"scratch/calcus/{calc.id}"  # Remote
 
     calc_start = timezone.now()
 
@@ -1702,9 +1736,8 @@ def clean_struct_line(line):
     return f"{LOWERCASE_ATOMIC_SYMBOLS[a.lower()]} {x} {y} {z}\n"
 
 
-def launch_orca_calc(in_file, calc, files):
+def launch_orca_calc(calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    folder = f"scratch/calcus/{calc.id}"
 
     if not os.path.isdir(local_folder):
         os.makedirs(local_folder, exist_ok=True)
@@ -1717,17 +1750,18 @@ def launch_orca_calc(in_file, calc, files):
         conn = connections[pid]
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
+
         if calc.remote_id == 0:
             sftp_put(
                 f"{local_folder}/calc.inp",
-                os.path.join(folder, "calc.inp"),
+                os.path.join(remote_dir, "calc.inp"),
                 conn,
                 lock,
             )
             if calc.step.name == "Minimum Energy Path":
                 sftp_put(
                     f"{local_folder}/calc2.xyz",
-                    os.path.join(folder, "calc2.xyz"),
+                    os.path.join(remote_dir, "calc2.xyz"),
                     conn,
                     lock,
                 )
@@ -1753,7 +1787,7 @@ def launch_orca_calc(in_file, calc, files):
     if not calc.local:
         for f in files:
             a = sftp_get(
-                f"{folder}/{f}",
+                f"{remote_dir}/{f}",
                 os.path.join(CALCUS_SCR_HOME, str(calc.id), f),
                 conn,
                 lock,
@@ -1763,7 +1797,7 @@ def launch_orca_calc(in_file, calc, files):
 
         if not cancelled and calc.parameters.software == "xtb":
             a = sftp_get(
-                f"{folder}/NOT_CONVERGED",
+                f"{remote_dir}/NOT_CONVERGED",
                 os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"),
                 conn,
                 lock,
@@ -1781,11 +1815,10 @@ def launch_orca_calc(in_file, calc, files):
         return ErrorCodes.JOB_CANCELLED
 
 
-def orca_mo_gen(in_file, calc):
+def orca_mo_gen(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_orca_calc(
-        in_file,
         calc,
         ["calc.out", "calc.molden.input"],
     )
@@ -1842,7 +1875,7 @@ def orca_mo_gen(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def orca_opt(in_file, calc):
+def orca_opt(calc):
     lines = [
         i + "\n"
         for i in clean_xyz(calc.structure.xyz_structure).split("\n")[2:]
@@ -1861,11 +1894,11 @@ def orca_opt(in_file, calc):
         calc.step = BasicStep.objects.get(name="Single-Point Energy")
         calc.save()
         add_input_to_calc(calc)
-        return orca_sp(in_file, calc)
+        return orca_sp(calc)
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_orca_calc(in_file, calc, ["calc.out", "calc.xyz"])
+    ret = launch_orca_calc(calc, ["calc.out", "calc.xyz"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -1906,10 +1939,10 @@ def orca_opt(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def orca_sp(in_file, calc):
+def orca_sp(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_orca_calc(in_file, calc, ["calc.out"])
+    ret = launch_orca_calc(calc, ["calc.out"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -1937,10 +1970,10 @@ def orca_sp(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def orca_ts(in_file, calc):
+def orca_ts(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_orca_calc(in_file, calc, ["calc.out", "calc.xyz"])
+    ret = launch_orca_calc(calc, ["calc.out", "calc.xyz"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -1979,10 +2012,10 @@ def orca_ts(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def orca_freq(in_file, calc):
+def orca_freq(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_orca_calc(in_file, calc, ["calc.out"])
+    ret = launch_orca_calc(calc, ["calc.out"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -2087,7 +2120,7 @@ def orca_freq(in_file, calc):
     assert ind < len(lines) - 1
 
     ind += 7
-    start_num = int(nums[0])
+    # start_num = int(nums[0])
     end_num = int(nums[-1])
 
     vibs = []
@@ -2131,19 +2164,18 @@ def orca_freq(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def orca_scan(in_file, calc):
+def orca_scan(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     has_scan = "scan" in calc.constraints.lower()
 
     if has_scan:
         ret = launch_orca_calc(
-            in_file,
             calc,
             ["calc.out", "calc.relaxscanact.dat", "calc.allxyz", "calc_trj.xyz"],
         )
     else:
-        ret = launch_orca_calc(in_file, calc, ["calc.out", "calc.xyz"])
+        ret = launch_orca_calc(calc, ["calc.out", "calc.xyz"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -2173,7 +2205,6 @@ def orca_scan(in_file, calc):
 
             inds.append(len(lines) + 1)
 
-            min_E = 0
             for metaind, mol in enumerate(inds[:-1]):
                 E = energies[metaind]
                 struct = clean_xyz(
@@ -2230,10 +2261,10 @@ def orca_scan(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def orca_nmr(in_file, calc):
+def orca_nmr(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_orca_calc(in_file, calc, ["calc.out"])
+    ret = launch_orca_calc(calc, ["calc.out"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -2307,14 +2338,12 @@ def plot_vibs(_x, PP):
     return val
 
 
-def xtb_stda(in_file, calc):  # TO OPTIMIZE
+def xtb_stda(calc):  # TO OPTIMIZE
     ww = []
     TT = []
     PP = []
 
-    folder = "/".join(in_file.split("/")[:-1])
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    local = calc.local
 
     if calc.parameters.solvent != "Vacuum":
         solvent_add = f"-g {get_solvent(calc.parameters.solvent, 'xtb')}"
@@ -2324,7 +2353,7 @@ def xtb_stda(in_file, calc):  # TO OPTIMIZE
     os.chdir(local_folder)
 
     ret1 = system(
-        f"xtb4stda {in_file} -chrg {calc.parameters.charge} {solvent_add}",
+        f"xtb4stda in.xyz -chrg {calc.parameters.charge} {solvent_add}",
         os.path.join(local_folder, "calc.out"),
         calc_id=calc.id,
     )
@@ -2333,7 +2362,7 @@ def xtb_stda(in_file, calc):  # TO OPTIMIZE
         return ret1
 
     ret2 = system(
-        "stda -xtb -e 12".format(in_file, calc.parameters.charge, solvent_add),
+        "stda -xtb -e 12",
         os.path.join(local_folder, "calc2.out"),
         calc_id=calc.id,
     )
@@ -2341,26 +2370,26 @@ def xtb_stda(in_file, calc):  # TO OPTIMIZE
     if ret2 != ErrorCodes.SUCCESS:
         return ret2
 
-    if not local:
+    if not calc.local:
         pid = int(threading.get_ident())
         conn = connections[pid]
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
 
         a = sftp_get(
-            f"{folder}/tda.dat",
+            f"{remote_dir}/tda.dat",
             os.path.join(CALCUS_SCR_HOME, str(calc.id), "tda.dat"),
             conn,
             lock,
         )
         b = sftp_get(
-            f"{folder}/calc.out",
+            f"{remote_dir}/calc.out",
             os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc.out"),
             conn,
             lock,
         )
         c = sftp_get(
-            f"{folder}/calc2.out",
+            f"{remote_dir}/calc2.out",
             os.path.join(CALCUS_SCR_HOME, str(calc.id), "calc2.out"),
             conn,
             lock,
@@ -2408,9 +2437,8 @@ def xtb_stda(in_file, calc):  # TO OPTIMIZE
     return ErrorCodes.SUCCESS
 
 
-def launch_nwchem_calc(in_file, calc, files):
+def launch_nwchem_calc(calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    folder = f"scratch/calcus/{calc.id}"
 
     if not os.path.isdir(local_folder):
         os.makedirs(local_folder, exist_ok=True)
@@ -2429,7 +2457,7 @@ def launch_nwchem_calc(in_file, calc, files):
         if calc.remote_id == 0:
             sftp_put(
                 f"{local_folder}/calc.inp",
-                os.path.join(folder, "calc.inp"),
+                os.path.join(remote_dir, "calc.inp"),
                 conn,
                 lock,
             )
@@ -2463,7 +2491,7 @@ def launch_nwchem_calc(in_file, calc, files):
     if not calc.local:
         for f in files:
             a = sftp_get(
-                f"{folder}/{f}",
+                f"{remote_dir}/{f}",
                 os.path.join(CALCUS_SCR_HOME, str(calc.id), f),
                 conn,
                 lock,
@@ -2481,10 +2509,10 @@ def launch_nwchem_calc(in_file, calc, files):
         return ErrorCodes.JOB_CANCELLED
 
 
-def nwchem_sp(in_file, calc):
+def nwchem_sp(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_nwchem_calc(in_file, calc, ["calc.out"])
+    ret = launch_nwchem_calc(calc, ["calc.out"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -2515,11 +2543,10 @@ def nwchem_sp(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def nwchem_mo_gen(in_file, calc):
+def nwchem_mo_gen(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_nwchem_calc(
-        in_file,
         calc,
         ["calc.out", "in.molden"],
     )
@@ -2677,11 +2704,10 @@ q
         return "".join(lines)
 
 
-def nwchem_esp_gen(in_file, calc):
+def nwchem_esp_gen(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
     ret = launch_nwchem_calc(
-        in_file,
         calc,
         ["calc.out", "esp.cube", "in.eld.total.cube"],
     )
@@ -2736,10 +2762,10 @@ def nwchem_esp_gen(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def nwchem_opt(in_file, calc):
+def nwchem_opt(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_nwchem_calc(in_file, calc, ["calc.out"])
+    ret = launch_nwchem_calc(calc, ["calc.out"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -2847,10 +2873,10 @@ def nwchem_opt(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def nwchem_freq(in_file, calc):
+def nwchem_freq(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_nwchem_calc(in_file, calc, ["calc.out"])
+    ret = launch_nwchem_calc(calc, ["calc.out"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -3100,9 +3126,8 @@ def calc_to_ccinput(calc):
     return inp
 
 
-def launch_gaussian_calc(in_file, calc, files):
+def launch_gaussian_calc(calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
-    folder = f"scratch/calcus/{calc.id}"
 
     if not os.path.isdir(local_folder):
         os.makedirs(local_folder, exist_ok=True)
@@ -3119,7 +3144,7 @@ def launch_gaussian_calc(in_file, calc, files):
         if calc.remote_id == 0:
             sftp_put(
                 f"{local_folder}/calc.com",
-                os.path.join(folder, "calc.com"),
+                os.path.join(remote_dir, "calc.com"),
                 conn,
                 lock,
             )
@@ -3138,7 +3163,7 @@ def launch_gaussian_calc(in_file, calc, files):
 
     if not calc.local:
         for f in files:
-            a = sftp_get(f"{folder}/{f}", os.path.join(local_folder, f), conn, lock)
+            a = sftp_get(f"{remote_dir}/{f}", os.path.join(local_folder, f), conn, lock)
             if not cancelled and a != ErrorCodes.SUCCESS:
                 return a
 
@@ -3419,10 +3444,10 @@ def parse_Hirshfeld_gaussian_charges(calc, s):
     prop.save()
 
 
-def gaussian_sp(in_file, calc):
+def gaussian_sp(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_gaussian_calc(in_file, calc, ["calc.log"])
+    ret = launch_gaussian_calc(calc, ["calc.log"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -3444,10 +3469,10 @@ def gaussian_sp(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def gaussian_td(in_file, calc):
+def gaussian_td(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_gaussian_calc(in_file, calc, ["calc.log"])
+    ret = launch_gaussian_calc(calc, ["calc.log"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -3518,10 +3543,10 @@ def gaussian_td(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def gaussian_opt(in_file, calc):
+def gaussian_opt(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_gaussian_calc(in_file, calc, ["calc.log"])
+    ret = launch_gaussian_calc(calc, ["calc.log"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -3576,10 +3601,10 @@ def gaussian_opt(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def gaussian_freq(in_file, calc):
+def gaussian_freq(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_gaussian_calc(in_file, calc, ["calc.log"])
+    ret = launch_gaussian_calc(calc, ["calc.log"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -3708,10 +3733,10 @@ def gaussian_freq(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def gaussian_ts(in_file, calc):
+def gaussian_ts(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_gaussian_calc(in_file, calc, ["calc.log"])
+    ret = launch_gaussian_calc(calc, ["calc.log"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -3766,10 +3791,10 @@ def gaussian_ts(in_file, calc):
     return ErrorCodes.SUCCESS
 
 
-def gaussian_scan(in_file, calc):
+def gaussian_scan(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_gaussian_calc(in_file, calc, ["calc.log"])
+    ret = launch_gaussian_calc(calc, ["calc.log"])
 
     has_scan = "scan" in calc.constraints.lower()
 
@@ -3911,10 +3936,10 @@ def gaussian_scan(in_file, calc):
         return ErrorCodes.SUCCESS
 
 
-def gaussian_nmr(in_file, calc):
+def gaussian_nmr(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_gaussian_calc(in_file, calc, ["calc.log"])
+    ret = launch_gaussian_calc(calc, ["calc.log"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -4899,6 +4924,7 @@ def run_calc(calc_id):
     f = BASICSTEP_TABLE[calc.parameters.software][calc.step.name]
 
     workdir = os.path.join(CALCUS_SCR_HOME, str(calc.id))
+    os.makedirs(workdir, exist_ok=True)
 
     if calc.status == 3:  # Already revoked:
         logger.info(f"Calc {calc_id} already revoked")
@@ -4913,32 +4939,9 @@ def run_calc(calc_id):
     if isinstance(ret, ErrorCodes):
         return ret
 
-    ####
-    in_file = os.path.join(workdir, "in.xyz")
-
-    if calc.status == 0:
-        os.makedirs(workdir, exist_ok=True)
-
-        with open(in_file, "w") as out:
-            out.write(clean_xyz(calc.structure.xyz_structure))
-    ####
-
-    if not calc.local and calc.remote_id == 0:
-        logger.debug(f"Preparing remote folder for calc {calc_id}")
-        pid = int(threading.get_ident())
-        conn = connections[pid]
-        lock = locks[pid]
-        remote_dir = remote_dirs[pid]
-
-        if calc.status == 0:
-            direct_command(f"mkdir -p {remote_dir}", conn, lock)
-            sftp_put(in_file, os.path.join(remote_dir, "in.xyz"), conn, lock)
-
-        in_file = os.path.join(remote_dir, "in.xyz")
-
     logger.info(f"Running calc {calc_id}")
     try:
-        ret = f(in_file, calc)
+        ret = f(calc)
     except Exception as e:
         ret = ErrorCodes.UNKNOWN_TERMINATION
         traceback.print_exc()

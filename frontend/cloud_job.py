@@ -4,7 +4,7 @@ import uuid
 
 from django.conf import settings
 
-from .environment_variables import *
+from .environment_variables import IS_TEST
 from .helpers import job_triage
 
 if settings.IS_CLOUD:

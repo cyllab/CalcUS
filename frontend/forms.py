@@ -71,13 +71,13 @@ class ResearcherCreateForm(UserCreationForm):
 
         if commit:
             user.save()
-            r = ResourceAllocation.objects.create(
+            ResourceAllocation.objects.create(
                 code=get_random_string(),
                 redeemer=user,
                 allocation_seconds=settings.FREE_DEFAULT_COMP_SECONDS,
                 note=ResourceAllocation.NEW_ACCOUNT,
             )
-            proj = Project.objects.create(name="My Main Project", author=user)
+            Project.objects.create(name="My Main Project", author=user)
 
         return user
 
@@ -119,17 +119,17 @@ class StudentCreateForm(forms.ModelForm):
         classes = ClassGroup.objects.filter(access_code=code)
 
         if classes.count() == 0:
-            raise ValidationError(f"No group found with such access code")
+            raise ValidationError("No group found with such access code")
         elif classes.count() > 1:
             logger.error(f"Multiple groups found with access code {code}!")
-            raise ValidationError(f"Internal error")
+            raise ValidationError("Internal error")
         elif classes.count() == 1:
             self.student_class = classes.first()
         else:
             logger.error(
                 f"Unexpected number of groups found with access code {code}: {classes.count()}!"
             )
-            raise ValidationError(f"Internal error")
+            raise ValidationError("Internal error")
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -188,13 +188,13 @@ class TrialUserCreateForm(forms.ModelForm):
 
         if commit:
             user.save()
-            r = ResourceAllocation.objects.create(
+            ResourceAllocation.objects.create(
                 code=get_random_string(),
                 redeemer=user,
                 allocation_seconds=settings.TRIAL_DEFAULT_COMP_SECONDS,
                 note=ResourceAllocation.TRIAL,
             )
-            proj = Project.objects.create(name="My Main Project", author=user)
+            Project.objects.create(name="My Main Project", author=user)
 
         return user
 
@@ -239,7 +239,7 @@ class CreateFullAccountForm(SetPasswordForm, ModelForm):
 
         if commit:
             user.save()
-            r = ResourceAllocation.objects.create(
+            ResourceAllocation.objects.create(
                 code=get_random_string(),
                 redeemer=user,
                 allocation_seconds=(

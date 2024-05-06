@@ -29,6 +29,6 @@ def default(request):
         try:
             d["SUBSCRIPTION_DATA"] = constants.SUBSCRIPTION_DATA[version]
         except (NameError, AttributeError):
-            logger.error(f"Could not get subscription data")
+            logger.error("Could not get subscription data")
 
     return d

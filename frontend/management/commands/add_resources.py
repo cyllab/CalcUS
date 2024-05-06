@@ -1,9 +1,6 @@
-import os
 from django.core.management.base import BaseCommand
 
-from frontend.models import *
-from frontend.environment_variables import *
-from frontend.tasks import run_calc
+from frontend.models import ResourceAllocation, User
 from frontend.helpers import get_random_string
 
 

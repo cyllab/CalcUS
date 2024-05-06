@@ -1,8 +1,8 @@
 FROM python:3.10-slim-bookworm AS build
 
-RUN mkdir -p /binaries/
+RUN mkdir -p /calcus/binaries/
 COPY scripts /calcus/scripts
-COPY bin /binaries/xtb
+COPY bin /calcus/binaries/xtb
 RUN python /calcus/scripts/extract_xtb.py
 
 RUN apt update && apt install build-essential gcc libxm4 libgl1 libmagic1 -y
@@ -16,7 +16,7 @@ RUN pip install -r /calcus/requirements.txt
 
 FROM python:3.10-slim-bookworm AS calcus_user
 
-COPY --from=0 /binaries/ /binaries/
+COPY --from=0 /calcus/binaries/ /calcus/binaries/
 
 ARG CALCUS_VERSION_HASH
 ENV CALCUS_VERSION_HASH=${CALCUS_VERSION_HASH}
@@ -26,14 +26,14 @@ ENV CALCUS_KEY_HOME "/calcus/keys"
 ENV CALCUS_TEST_SCR_HOME "/calcus/scratch/scr"
 ENV CALCUS_TEST_KEY_HOME "/calcus/scratch/keys"
 
-ENV EBROOTORCA "/binaries/orca"
-ENV GAUSS_EXEDIR "/binaries/g16"
-ENV XTB4STDAHOME "/binaries/xtb"
-ENV XTBPATH "/binaries/xtb/xtb:$XTB4STDAHOME"
-ENV STDAHOME "/binaries/xtb"
+ENV EBROOTORCA "/calcus/binaries/orca"
+ENV GAUSS_EXEDIR "/calcus/binaries/g16"
+ENV XTB4STDAHOME "/calcus/binaries/xtb"
+ENV XTBPATH "/calcus/binaries/xtb/xtb:$XTB4STDAHOME"
+ENV STDAHOME "/calcus/binaries/xtb"
 
 ENV PATH=$PATH:$XTB4STDAHOME/xtb/bin:$XTB4STDAHOME:$EBROOTORCA:$GAUSS_EXEDIR
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/binaries/orca:/usr/lib/openmpi/
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/calcus/binaries/orca:/usr/lib/openmpi/
 
 ENV PYTHONUNBUFFERED 1
 

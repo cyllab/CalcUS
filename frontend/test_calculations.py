@@ -23,8 +23,8 @@ from functools import partial
 
 from .calculation_unittest import CalculationUnitTest
 from .calcusliveserver import tests_dir
-from .models import *
-from .libxyz import *
+from .models import Calculation, Property
+from .libxyz import get_angle, parse_xyz_from_file
 
 
 class XtbCalculationTests(CalculationUnitTest):
@@ -581,16 +581,6 @@ class GaussianCalculationTests(CalculationUnitTest):
                 theory_level="DFT",
                 method="M062X",
                 solvation_model="SMD",
-                solvent="Methanol",
-            )
-        )
-
-    def test_sp_DFT_SMD18(self):
-        self.assertTrue(
-            self.run_test(
-                theory_level="DFT",
-                method="M062X",
-                solvation_model="SMD",
                 solvation_radii="SMD18",
                 solvent="Methanol",
             )
@@ -824,7 +814,7 @@ class GaussianCalculationTests(CalculationUnitTest):
         self.assertIn("Hirshfeld:", prop.charges)
         self.assertIn("CM5:", prop.charges)
 
-    def test_DFT_multiple_pop(self):
+    def test_DFT_multiple_pop2(self):
         self.assertTrue(
             self.run_test(theory_level="DFT", method="M062X", specifications="pop(esp)")
         )

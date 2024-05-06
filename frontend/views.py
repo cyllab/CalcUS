@@ -27,7 +27,6 @@ from io import BytesIO
 import basis_set_exchange
 import numpy as np
 import tempfile
-import json
 import ccinput
 from datetime import datetime
 import base64, gzip
@@ -39,7 +38,6 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 
-from django import template
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -47,13 +45,12 @@ from django.views.decorators.gzip import gzip_page
 from django.views import generic
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import AnonymousUser, User
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth import login, update_session_auth_hash, authenticate
 from django.utils.datastructures import MultiValueDictKeyError
 from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
 from django.template.loader import get_template
-from django.shortcuts import render
 
 
 from .forms import (
@@ -88,8 +85,6 @@ from .models import (
     ShowcaseEnsemble,
     FlowchartOrder,
     ResourceAllocation,
-    BatchCalcOrder,
-    BatchCalculation,
 )
 from .tasks import (
     dispatcher,
@@ -115,8 +110,15 @@ from .decorators import superuser_required
 from .cloud_job import send_gcloud_task, record_event_analytics
 
 from frontend import tasks
-from .decorators import superuser_required
-from .constants import *
+from .constants import (
+    ATOMIC_NUMBER,
+    ErrorCodes,
+    HARTREE_FVAL,
+    HARTREE_TO_KCAL_F,
+    MAX_FOLDER_DEPTH,
+    full_tos,
+    trial_tos,
+)
 from .libxyz import (
     parse_xyz_from_text,
     equivalent_atoms,
@@ -124,7 +126,7 @@ from .libxyz import (
     create_derivative,
     format_xyz,
 )
-from .environment_variables import *
+from .environment_variables import CALCUS_KEY_HOME, CALCUS_SCR_HOME, IS_TEST
 from .helpers import (
     get_xyz_from_Gaussian_input,
     get_random_string,
@@ -1547,7 +1549,7 @@ def parse_parameters(request, parameters_dict, is_flowchart=None, verify=False):
         else:
             try:
                 project_set = request.user.project_set.filter(name=project)
-            except Profile.DoesNotExist:
+            except Project.DoesNotExist:
                 return "No such project"
 
             if len(project_set) != 1:
@@ -1591,7 +1593,7 @@ def save_preset(request):
         return HttpResponse("No preset name")
 
     params = Parameters.objects.create(**_params)
-    preset = Preset.objects.create(name=preset_name, author=request.user, params=params)
+    Preset.objects.create(name=preset_name, author=request.user, params=params)
     return HttpResponse("Preset created")
 
 
@@ -2488,12 +2490,12 @@ def _submit_calculation(request, verify=False):
                                 # Since the charge/multiplicity keywords are considered when detecting molecules,
                                 # all the structures of a given molecule must necessarily have the same charge/multiplicity
                                 __params = _params.copy()
-                                __params["charge"] = (
-                                    struct.properties.first().parameters.charge
-                                )
-                                __params["multiplicity"] = (
-                                    struct.properties.first().parameters.multiplicity
-                                )
+                                __params[
+                                    "charge"
+                                ] = struct.properties.first().parameters.charge
+                                __params[
+                                    "multiplicity"
+                                ] = struct.properties.first().parameters.multiplicity
                                 unique_params[_mol_name] = Parameters.objects.create(
                                     **__params
                                 )
@@ -3638,9 +3640,9 @@ def uvvis(request, pk):
         return HttpResponse(status=404)
 
     response = HttpResponse(prop.uvvis, content_type="text/csv")
-    response["Content-Disposition"] = (
-        f"attachment; filename=uvvis_{prop.parent_structure.id}.csv"
-    )
+    response[
+        "Content-Disposition"
+    ] = f"attachment; filename=uvvis_{prop.parent_structure.id}.csv"
     return response
 
 
@@ -3888,9 +3890,9 @@ def nmr(request):
                 content += f"{-(shift[3] + 0.001)},{0}\n"
 
     response = HttpResponse(content, content_type="text/csv")
-    response["Content-Disposition"] = (
-        f"attachment; filename=nmr_{clean_filename(e.name)}.csv"
-    )
+    response[
+        "Content-Disposition"
+    ] = f"attachment; filename=nmr_{clean_filename(e.name)}.csv"
     return response
 
 
@@ -3906,9 +3908,9 @@ def ir_spectrum(request, pk):
 
     if prop.ir_spectrum != "":
         response = HttpResponse(prop.ir_spectrum, content_type="text/csv")
-        response["Content-Disposition"] = (
-            f"attachment; filename=ir_{prop.parent_structure.id}.csv"
-        )
+        response[
+            "Content-Disposition"
+        ] = f"attachment; filename=ir_{prop.parent_structure.id}.csv"
         return response
     else:
         return HttpResponse(status=204)
@@ -4378,9 +4380,9 @@ def download_all_logs(request, pk):
                 )
 
     response = HttpResponse(mem.getvalue(), content_type="application/zip")
-    response["Content-Disposition"] = (
-        f'attachment; filename="{order.molecule_name}_order_{pk}.zip"'
-    )
+    response[
+        "Content-Disposition"
+    ] = f'attachment; filename="{order.molecule_name}_order_{pk}.zip"'
     return response
 
 

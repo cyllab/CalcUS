@@ -17,10 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import glob
-import os
 from django.core.management.base import BaseCommand
-from frontend.models import *
+from frontend.models import Project, Profile
 
 
 class Command(BaseCommand):
@@ -62,7 +60,7 @@ class Command(BaseCommand):
                         running += 1
                     else:
                         completed += 1
-                if o.ensemble != None:
+                if o.ensemble is not None:
                     mol = o.ensemble.parent_molecule
                     if mol is not None:
                         dnum[mol.id] += o.calculation_set.count()

@@ -79,8 +79,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calcus.settings")
 django.setup()
 
-from frontend.models import *
-from frontend.environment_variables import *
+from frontend.models import Calculation, ClusterAccess, ErrorCodes
+from frontend.environment_variables import CALCUS_KEY_HOME, CALCUS_SCR_HOME
 from frontend import tasks
 
 
