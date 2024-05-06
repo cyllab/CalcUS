@@ -493,8 +493,9 @@ def system(
                 t = subprocess.Popen(shlex.split(command), stdout=stream, stderr=stream)
 
         except FileNotFoundError as e:
+            targetstr = ",".join(glob.glob("/binaries/xtb/*"))
             logger.error(
-                f'Could not run command "{command}" - executable not found (msg: {str(e)}), os.environ is {str(os.environ)}'
+                f'Could not run command "{command}" - executable not found (msg: {str(e)}), os.environ is {str(os.environ)} and target dir contains {targetstr}'
             )
             calc.error_message = f"{command.split()[0]} is not found"
             calc.date_finished = timezone.now()
