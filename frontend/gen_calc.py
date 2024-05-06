@@ -17,7 +17,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .models import *
+from .models import (
+    BasicStep,
+    Calculation,
+    CalculationOrder,
+    Ensemble,
+    Molecule,
+    Parameters,
+    Project,
+    Structure,
+    os,
+)
 from .tasks import generate_xyz_structure
 
 TESTS_DIR = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")

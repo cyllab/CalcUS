@@ -17,10 +17,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import glob
 import os
 from django.core.management.base import BaseCommand
-from frontend.models import *
+from frontend.models import Calculation, Molecule, Project
 
 try:
     os.environ["CALCUS_TEST"]

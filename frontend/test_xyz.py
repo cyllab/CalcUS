@@ -21,7 +21,14 @@ import os
 
 from django.test import TestCase
 
-from .libxyz import *
+from .libxyz import (
+    equivalent_atoms,
+    morgan_hashz_numbering,
+    morgan_numbering,
+    np,
+    parse_xyz_from_file,
+    reorder_xyz,
+)
 
 tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 
@@ -43,7 +50,6 @@ class XyzTests(TestCase):
 
     def test_morgan_hashz(self):
         xyz = parse_xyz_from_file(os.path.join(tests_dir, "ethanol.xyz"))
-        REF = [54, 23, 23, 23, 57, 24, 24, 32, 15]
         indices = morgan_hashz_numbering(xyz)
         groups = [[0], [1, 2, 3], [4], [5, 6], [7], [8]]
 

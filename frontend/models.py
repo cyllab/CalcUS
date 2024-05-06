@@ -36,7 +36,14 @@ import time
 
 from hashid_field import HashidAutoField, BigHashidAutoField
 
-from .constants import *
+from .constants import (
+    HARTREE_FVAL,
+    HARTREE_TO_KCAL_F,
+    NMR_REGRESSIONS,
+    R_CONSTANT_HARTREE,
+    TEMP,
+    decimal,
+)
 from .helpers import get_random_readable_code, job_triage
 from .environment_variables import PAL
 

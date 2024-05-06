@@ -23,7 +23,14 @@ import time
 from django.test import TransactionTestCase
 from django.db import close_old_connections, connection
 
-from .models import *
+from .models import (
+    ResearchGroup,
+    ResourceAllocation,
+    Subscription,
+    User,
+    settings,
+    timezone,
+)
 
 
 def redeem(obj, user, stall=0):
@@ -37,7 +44,7 @@ class ResourceAllocationTests(TransactionTestCase):
 
     def test_base_redeem(self):
         u1 = User.objects.create_user(email="U1@test.com", password="1234")
-        u2 = User.objects.create_user(email="U2@test.com", password="1234")
+        User.objects.create_user(email="U2@test.com", password="1234")
 
         alloc = ResourceAllocation.objects.create(code="AAAA", allocation_seconds=10)
 

@@ -39,10 +39,18 @@ from celery.contrib.abortable import AbortableAsyncResult
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.management import call_command
-from django.contrib.auth.models import User
 
-from .models import *
-from .environment_variables import *
+from .models import (
+    Calculation,
+    CalculationOrder,
+    Ensemble,
+    Molecule,
+    Project,
+    ResearchGroup,
+    settings,
+    User,
+)
+from .environment_variables import CALCUS_KEY_HOME, CALCUS_SCR_HOME
 
 tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -1773,7 +1781,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def select_preset(self, name):
         self.wait_for_ajax()
-        element = WebDriverWait(self.driver, 2).until(
+        WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located(
                 (By.XPATH, f"//*[@id='presets']/option[text()='{name}']")
             )
@@ -2173,7 +2181,7 @@ class CalcusCloudLiveServer(CalcusLiveServer):
         if length == "year":
             switch = WebDriverWait(self.driver, 5).until(
                 EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, f"[for=sub_length_switch]")
+                    (By.CSS_SELECTOR, "[for=sub_length_switch]")
                 )
             )
             switch.click()

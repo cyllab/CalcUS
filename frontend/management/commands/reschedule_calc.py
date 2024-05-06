@@ -1,9 +1,6 @@
-import glob
-import os
 from django.core.management.base import BaseCommand
 
-from frontend.models import *
-from frontend.environment_variables import *
+from frontend.models import Calculation
 from frontend.cloud_job import submit_cloud_job
 
 

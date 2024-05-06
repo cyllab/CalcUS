@@ -23,7 +23,7 @@ import bleach
 from django.conf import settings
 from xkcdpass import xkcd_password as xp
 
-from .constants import *
+from .constants import ATOMIC_NUMBER, ATOMIC_SYMBOL, BOHR_VAL
 
 full_alphabet = string.ascii_letters + string.digits
 

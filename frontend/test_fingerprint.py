@@ -22,7 +22,7 @@ import os
 from django.test import TestCase
 
 from .tasks import write_mol, gen_fingerprint
-from .models import *
+from .models import Structure
 
 tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 

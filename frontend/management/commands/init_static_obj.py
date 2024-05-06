@@ -25,7 +25,15 @@ import pathlib
 filepath = pathlib.Path(__file__).parent.resolve()
 
 showcase_dir = os.path.join(filepath.parent.parent, "showcases")
-from frontend.models import *
+from frontend.models import (
+    BasicStep,
+    Example,
+    Parameters,
+    Recipe,
+    ShowcaseEnsemble,
+    ShowcaseProperty,
+    Structure,
+)
 from frontend.libxyz import format_xyz, parse_multixyz_from_file
 
 try:

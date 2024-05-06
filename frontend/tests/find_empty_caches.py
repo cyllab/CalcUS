@@ -1,6 +1,5 @@
 import glob
 import os
-import shutil
 
 KEEP_FILES = [
     "calc.inp",

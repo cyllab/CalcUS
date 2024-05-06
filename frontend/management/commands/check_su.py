@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from django.core.management.base import BaseCommand
-from frontend.models import *
+from frontend.models import User, os
 
 su_email = os.environ.get("CALCUS_SU_EMAIL", "")
 

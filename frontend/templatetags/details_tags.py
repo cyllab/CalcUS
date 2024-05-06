@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from django import template
-from frontend.models import *
+from frontend.models import Property
 
 register = template.Library()
 

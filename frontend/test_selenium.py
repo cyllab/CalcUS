@@ -25,14 +25,26 @@ from unittest import mock
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import Select
+
+# from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.select import Select
 
 from django.conf import settings
 
 
-from .models import *
-from .libxyz import *
+from .models import (
+    Calculation,
+    CalculationOrder,
+    Ensemble,
+    Molecule,
+    Parameters,
+    Project,
+    Property,
+    ResearchGroup,
+    Structure,
+    User,
+)
+from .libxyz import get_angle, np, parse_xyz_from_file, parse_xyz_from_text
 from .calcusliveserver import CalcusLiveServer, tests_dir
 
 
