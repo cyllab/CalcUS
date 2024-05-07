@@ -57,7 +57,9 @@ jobs:
         dos2unix scripts/*
         mkdir -p scratch/keys
         mkdir -p scratch/scr
-        tar xvfj bin/Multiwfn.tar.bz2 -C bin
+        mkdir -p /binaries/
+        tar xvfj bin/Multiwfn.tar.bz2 -C /binaries/
+        tar xvf bin/xtb_suite.tar.xz -C /binaries/
         PGPASSWORD=postgres createdb -h localhost -p 5432 -U calcus test_calcus
     - name: Run tests
       run: |
