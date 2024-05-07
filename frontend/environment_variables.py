@@ -21,6 +21,7 @@ import os
 
 IS_TEST = "CALCUS_TEST" in os.environ
 IS_COMPUTE = "CALCUS_COMPUTE" in os.environ
+CALCUS_CACHE_HOME = ""
 
 if IS_TEST:
     if "GITHUB_WORKSPACE" in os.environ:
