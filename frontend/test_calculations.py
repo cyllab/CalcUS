@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
+import shutil
 
 from functools import partial
 
@@ -42,6 +43,34 @@ class XtbCalculationTests(CalculationUnitTest):
             "theory_level": "GFN2-xTB",
             "method": "GFN2-xTB",
         }
+
+    def test_xtb_accessible(self):
+        resp = shutil.which("xtb")
+        self.assertEqual(resp, "/binaries/xtb/bin/xtb")
+
+    def test_crest_accessible(self):
+        resp = shutil.which("crest")
+        self.assertEqual(resp, "/binaries/crest")
+
+    def test_multiwfn_accessible(self):
+        resp = shutil.which("Multiwfn")
+        self.assertEqual(resp, "/binaries/Multiwfn")
+
+    def test_stda_accessible(self):
+        resp = shutil.which("stda")
+        self.assertEqual(resp, "/binaries/stda")
+
+    def test_xtb4stda_accessible(self):
+        resp = shutil.which("xtb4stda")
+        self.assertEqual(resp, "/binaries/xtb4stda")
+
+    def test_xtbiff_accessible(self):
+        resp = shutil.which("xtbiff")
+        self.assertEqual(resp, "/binaries/xtbiff")
+
+    def test_dummy_not_accessible(self):
+        resp = shutil.which("xtb2")
+        self.assertEqual(resp, None)
 
     def test_sp(self):
         self.assertTrue(self.run_test())
