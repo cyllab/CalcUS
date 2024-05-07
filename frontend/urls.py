@@ -222,25 +222,7 @@ urlpatterns = [
     path("delete_folder/", views.delete_folder, name="delete_folder"),
     path("batch_calculations/", views.batch_calculations, name="batch_calculations"),
     path("receive_params/", views.receive_params, name="receive_params"),
-    path("flowchart/", views.flowchart, name="flowchart"),
-    path("create_flowchart/", views.create_flowchart, name="create_flowchart"),
-    path("submit_flowchart/", views.submit_flowchart, name="submit_flowchart"),
-    path(
-        "verify_flowchart_calculation/",
-        views.verify_flowchart_calculation,
-        name="verify_flowchart_calculation",
-    ),
-    path(
-        "load_flowchart_params/<int:pk>",
-        views.load_flowchart_params,
-        name="load_flowchart_params",
-    ),
     path("change_password/", views.change_password, name="change_password"),
-    path(
-        "submit_flowchart_input/",
-        views.submit_flowchart_input,
-        name="submit_flowchart_input",
-    ),
     path(
         "robots.txt",
         TemplateView.as_view(

@@ -39,6 +39,7 @@ from celery.contrib.abortable import AbortableAsyncResult
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.management import call_command
+from django.conf import settings
 
 from .models import (
     Calculation,
@@ -47,7 +48,6 @@ from .models import (
     Molecule,
     Project,
     ResearchGroup,
-    settings,
     User,
 )
 from .environment_variables import CALCUS_KEY_HOME, CALCUS_SCR_HOME
@@ -862,7 +862,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             child.sendline("clustertest")
 
         child.expect("\$")
-        child.sendline("mkdir -p .ssh/".format(public_key))
+        child.sendline("mkdir -p .ssh/")
         child.expect("\$")
         child.sendline("echo '{}' > .ssh/authorized_keys".format(public_key))
         child.expect("\$")
@@ -1371,30 +1371,6 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             if i > 20 and "has-background-warning" not in header.get_attribute("class"):
                 raise Exception("Calculation did not start after 20 seconds")
 
-            time.sleep(2)
-            self.driver.refresh()
-        raise Exception("Calculation did not finish")
-
-    def wait_all_calc_done(self, timeout):
-        assert self.is_on_page_calculations()
-        assert self.get_number_calc_orders() > 0
-
-        for i in range(0, timeout, 2):
-            calculations = self.get_calc_orders()
-
-            for calc in calculations:
-                header = calculations[0].find_element(By.CLASS_NAME, "message-header")
-                if not "has-background-success" in header.get_attribute(
-                    "class"
-                ) and not "has-background-danger" in header.get_attribute("class"):
-                    break
-
-                if i > 20 and "has-background-warning" not in header.get_attribute(
-                    "class"
-                ):
-                    raise Exception("Calculation did not start after 20 seconds")
-            else:
-                return
             time.sleep(2)
             self.driver.refresh()
         raise Exception("Calculation did not finish")

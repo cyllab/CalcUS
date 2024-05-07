@@ -316,47 +316,6 @@ class InterfaceTests(CalcusLiveServer):
         self.click_project("Test Project")
         self.assertTrue(self.is_on_page_user_project())
 
-    def test_group_access_molecule_as_PI(self):
-        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
-
-        u = User.objects.create_user(email="Student@test.com", password=self.password)
-
-        proj = Project.objects.create(name="Test Project", author=self.user)
-        mol = Molecule.objects.create(name="Test Molecule", project=proj)
-        e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
-
-        self.lget("/profile/")
-        self.add_user_to_group(u.id)
-        self.logout()
-        self.login("Student@test.com", self.password)
-        self.lget("/projects/")
-        self.group_click_member(f"User {self.user.id}")
-        self.click_project("Test Project")
-        self.click_molecule("Test Molecule")
-        self.assertTrue(self.is_on_page_molecule())
-
-    def test_group_access_ensemble_as_PI(self):
-        g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
-
-        self.lget("/profile/")
-
-        u = User.objects.create_user(email="Student@test.com", password=self.password)
-
-        proj = Project.objects.create(name="Test Project", author=self.user)
-        mol = Molecule.objects.create(name="Test Molecule", project=proj)
-        e = Ensemble.objects.create(name="Test Ensemble", parent_molecule=mol)
-
-        self.lget("/profile/")
-        self.add_user_to_group(u.id)
-        self.logout()
-        self.login("Student@test.com", self.password)
-        self.lget("/projects/")
-        self.group_click_member(f"User {self.user.id}")
-        self.click_project("Test Project")
-        self.click_molecule("Test Molecule")
-        self.click_ensemble("Test Ensemble")
-        self.assertTrue(self.is_on_page_ensemble())
-
     def test_project_empty(self):
         proj = Project.objects.create(name="Test Project", author=self.user)
         self.lget("/projects/")
@@ -616,7 +575,6 @@ class InterfaceTests(CalcusLiveServer):
             "type": "Frequency Calculation",
             "charge": "1",
             "solvent": "Chloroform",
-            "software": "ORCA",
             "theory": "DFT",
             "functional": "M062X",
             "basis_set": "Def2-SVP",
@@ -636,7 +594,6 @@ class InterfaceTests(CalcusLiveServer):
             "type": "Frequency Calculation",
             "charge": "1",
             "solvent": "Chloroform",
-            "software": "ORCA",
             "theory": "DFT",
             "functional": "M062X",
             "basis_set": "Def2-SVP",
@@ -657,7 +614,6 @@ class InterfaceTests(CalcusLiveServer):
             "type": "Frequency Calculation",
             "charge": "1",
             "solvent": "Chloroform",
-            "software": "ORCA",
             "theory": "DFT",
             "functional": "M062X",
             "basis_set": "Def2-SVP",

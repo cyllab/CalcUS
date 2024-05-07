@@ -22,7 +22,8 @@ import periodictable
 import copy
 from hashlib import md5
 import numpy as np
-from numpy.linalg import expm, norm
+from numpy.linalg import norm
+from scipy.linalg import expm
 from numpy import cross, eye
 
 

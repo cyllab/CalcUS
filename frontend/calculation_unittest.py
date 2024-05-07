@@ -1,14 +1,14 @@
 import os
+import numpy as np
 from unittest import mock
 from shutil import rmtree
 
 from django.test import TestCase
-from django.contrib.auth.models import User
 from django.core.management import call_command
 
 from frontend import tasks
 from .libxyz import get_angle, parse_xyz_from_text
-from .models import np
+from .models import User
 from .gen_calc import gen_calc
 from .tasks import run_calc
 from .calcusliveserver import SCR_DIR
