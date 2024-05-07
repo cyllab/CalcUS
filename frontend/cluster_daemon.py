@@ -66,20 +66,22 @@ CONNECTION_MESSAGES = {
     ConnectionCodes.INVALID_KEY_PASSWORD: "Invalid key password",
     ConnectionCodes.SOCKET_RECEIVE_ERROR: "Unknown connection error",
 }
-try:
+
+if "CALCUS_TEST" not in os.environ:
+    IS_TEST = False
+else:
     IS_TEST = os.environ["CALCUS_TEST"]
     if IS_TEST.lower() == "false":
         IS_TEST = False
     else:
         IS_TEST = True
-except:
-    IS_TEST = False
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calcus.settings")
 django.setup()
 
-from frontend.models import Calculation, ClusterAccess, ErrorCodes
+from frontend.constants import ErrorCodes
+from frontend.models import Calculation, ClusterAccess
 from frontend.environment_variables import CALCUS_KEY_HOME, CALCUS_SCR_HOME
 from frontend import tasks
 

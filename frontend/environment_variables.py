@@ -21,10 +21,11 @@ import os
 
 IS_TEST = "CALCUS_TEST" in os.environ
 IS_COMPUTE = "CALCUS_COMPUTE" in os.environ
+IS_GITHUB = "GITHUB_WORKSPACE" in os.environ
 CALCUS_CACHE_HOME = ""
 
 if IS_TEST:
-    if "GITHUB_WORKSPACE" in os.environ:
+    if IS_GITHUB:
         prefix = os.environ["GITHUB_WORKSPACE"]
         CALCUS_CACHE_HOME = os.path.join(prefix, "frontend", "tests", "cache")
     else:

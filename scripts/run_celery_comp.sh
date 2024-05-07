@@ -6,7 +6,7 @@ export OMPI_MCA_btl_vader_single_copy_mechanism=none
 
 if [[ -z "$CALCUS_CLOUD" ]];
 then
-    celery -A calcus worker -Q comp --concurrency=1
+    python3 -m celery -A calcus worker -Q comp --concurrency=1
 else
     echo "Cloud mode detected, no celery worker needed"
 fi

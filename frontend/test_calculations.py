@@ -19,9 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import shutil
+import unittest
 
 from functools import partial
 
+from .environment_variables import IS_GITHUB
 from .calculation_unittest import CalculationUnitTest
 from .calcusliveserver import tests_dir
 from .models import Calculation, Property
@@ -44,30 +46,37 @@ class XtbCalculationTests(CalculationUnitTest):
             "method": "GFN2-xTB",
         }
 
+    @unittest.skipIf(IS_GITHUB, True)
     def test_xtb_accessible(self):
         resp = shutil.which("xtb")
         self.assertEqual(resp, "/binaries/xtb/bin/xtb")
 
+    @unittest.skipIf(IS_GITHUB, True)
     def test_crest_accessible(self):
         resp = shutil.which("crest")
         self.assertEqual(resp, "/binaries/crest")
 
+    @unittest.skipIf(IS_GITHUB, True)
     def test_multiwfn_accessible(self):
         resp = shutil.which("Multiwfn")
         self.assertEqual(resp, "/binaries/Multiwfn")
 
+    @unittest.skipIf(IS_GITHUB, True)
     def test_stda_accessible(self):
         resp = shutil.which("stda")
         self.assertEqual(resp, "/binaries/stda")
 
+    @unittest.skipIf(IS_GITHUB, True)
     def test_xtb4stda_accessible(self):
         resp = shutil.which("xtb4stda")
         self.assertEqual(resp, "/binaries/xtb4stda")
 
+    @unittest.skipIf(IS_GITHUB, True)
     def test_xtbiff_accessible(self):
         resp = shutil.which("xtbiff")
         self.assertEqual(resp, "/binaries/xtbiff")
 
+    @unittest.skipIf(IS_GITHUB, True)
     def test_dummy_not_accessible(self):
         resp = shutil.which("xtb2")
         self.assertEqual(resp, None)
@@ -109,7 +118,11 @@ class XtbCalculationTests(CalculationUnitTest):
 
     def test_conf_search(self):
         self.assertTrue(
-            self.run_test(type="Conformational Search", in_file="ethanol.sdf")
+            self.run_test(
+                type="Conformational Search",
+                in_file="ethanol.sdf",
+                callback=partial(self.cb_has_n_conformers, 5),
+            ),
         )
 
     def test_conf_search_gfnff(self):
