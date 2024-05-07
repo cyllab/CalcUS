@@ -1546,12 +1546,12 @@ def crest(calc):
             )
             return ErrorCodes.INVALID_OUTPUT
 
-        ind += 1
+        ind += 2
         structures = []
         properties = []
         while lines[ind].find("T /K") == -1:
             sline = lines[ind].strip().split()
-            if len(sline) == 8:
+            if len(sline) >= 7:
                 energy = float(sline[2])
                 number = int(sline[5])
                 degeneracy = int(sline[6])
@@ -1574,6 +1574,13 @@ def crest(calc):
                 inds.append(ind)
             ind += 1
         inds.append(len(lines))
+
+        ### Debugging text
+        l_inds = len(inds) - 1
+        l_structs = len(structures)
+        if l_inds != l_structs:
+            print(f"Unexpected number of inds/structures: {l_inds} vs {l_structs}")
+        ###
 
         assert len(inds) - 1 == len(structures)
         for metaind, mol in enumerate(inds[:-1]):
