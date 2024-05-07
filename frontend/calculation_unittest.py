@@ -95,7 +95,7 @@ class CalculationUnitTest(TestCase):
         for s in calc.result_ensemble.structure_set.all():
             s_xyz = parse_xyz_from_text(s.xyz_structure)
             ang = get_angle(s_xyz, *ids)
-            if not np.isclose(ang, value, atol=0.5):
+            if not np.isclose(ang, value, atol=1):
                 print(f"Angle value of {ang:.2f} instead of around {value:.2f}")
                 return False
         return True

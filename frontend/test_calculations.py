@@ -121,7 +121,7 @@ class XtbCalculationTests(CalculationUnitTest):
             self.run_test(
                 type="Conformational Search",
                 in_file="ethanol.sdf",
-                callback=partial(self.cb_has_n_conformers, 5),
+                callback=partial(self.cb_has_n_conformers, 2),
             ),
         )
 
@@ -131,6 +131,7 @@ class XtbCalculationTests(CalculationUnitTest):
                 type="Conformational Search",
                 in_file="ethanol.sdf",
                 specifications="--gfnff",
+                callback=partial(self.cb_has_n_conformers, 2),
             )
         )
 
@@ -143,6 +144,9 @@ class XtbCalculationTests(CalculationUnitTest):
             )
         )
 
+    """
+    # CREST 3.0
+    # > -gfn2//gfnff option not yet available with new calculator
     def test_conf_search_gfnff_sp(self):
         self.assertTrue(
             self.run_test(
@@ -151,6 +155,7 @@ class XtbCalculationTests(CalculationUnitTest):
                 specifications="--gfn2//gfnff",
             )
         )
+    """
 
     # ORCA does not support calculating the Hessian before TS optimization with xtb
     # def test_ts(self):

@@ -1763,6 +1763,9 @@ class XtbCalculationTests(CalcusLiveServer):
         self.wait_latest_calc_done(120)
         self.assertFalse(self.latest_calc_successful())
 
+    """
+    # CREST 3.0
+    # > -gfn2//gfnff option not yet available with new calculator
     def test_conf_search_gfnff_sp(self):
         params = {
             "mol_name": "my_mol",
@@ -1779,6 +1782,7 @@ class XtbCalculationTests(CalcusLiveServer):
         self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.assertTrue(self.latest_calc_successful())
+    """
 
     """
     # ORCA does not support initial Hessian calculations on TS optimization with xtb specifically
