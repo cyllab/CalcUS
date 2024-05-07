@@ -3,9 +3,11 @@ FROM python:3.10-slim-bookworm AS build
 RUN mkdir -p /calcus/
 COPY scripts /calcus/scripts
 COPY bin/ /binaries/
-RUN python /calcus/scripts/extract_xtb.py
+RUN ls /binaries/
 
-RUN apt update && apt install build-essential gcc libxm4 libgl1 libmagic1 -y
+RUN apt update && apt install build-essential gcc libxm4 libgl1 libmagic1 xz-utils -y
+
+RUN python /calcus/scripts/extract_xtb.py
 
 ADD ./cloud_requirements.txt /calcus/cloud_requirements.txt
 RUN pip install -r /calcus/cloud_requirements.txt
