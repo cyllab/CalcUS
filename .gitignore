@@ -24,6 +24,7 @@ npm_packages/css
 npm_packages/css-dist
 npm_packages/js-dist
 npm_packages/node_modules
+env/
 old/
 static/CACHE/
 static/testimonials

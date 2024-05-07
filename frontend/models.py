@@ -865,10 +865,6 @@ class Ensemble(models.Model):
         return shifts
 
 
-class ShowcaseEnsemble(Ensemble):
-    label = models.TextField()
-
-
 @receiver(pre_save, sender=Ensemble)
 def handle_folder(sender, instance, **kwargs):
     try:

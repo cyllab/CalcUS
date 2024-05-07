@@ -538,7 +538,7 @@ def system(
                 t = subprocess.Popen(shlex.split(command), stdout=stream, stderr=stream)
 
         except FileNotFoundError as e:
-            targetstr = ",".join(glob.glob("/calcus/binaries/xtb/*"))
+            targetstr = ",".join(glob.glob("/binaries/xtb/*"))
             logger.error(
                 f'Could not run command "{command}" - executable not found (msg: {str(e)}), os.environ is {str(os.environ)} and target dir contains {targetstr}'
             )

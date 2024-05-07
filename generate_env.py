@@ -176,8 +176,8 @@ software_list = {
 }
 
 override_list = {
-    "g16": ["                        - ${CALCUS_GAUSSIAN}:/calcus/binaries/g16"],
-    "orca": ["                        - ${CALCUS_ORCA}:/calcus/binaries/orca"],
+    "g16": ["                        - ${CALCUS_GAUSSIAN}:/binaries/g16"],
+    "orca": ["                        - ${CALCUS_ORCA}:/binaries/orca"],
 }
 
 software_paths = ""
