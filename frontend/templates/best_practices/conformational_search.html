@@ -1,4 +1,6 @@
-{% extends 'frontend/base.html' %} {% load static %} {% block extrahead %}
+{% extends 'frontend/base.html' %} 
+{% load static %} 
+{% block extrahead %}
 <link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
 <script src="{% static 'frontend/jquery.min.js' %}"></script>
 
@@ -306,7 +308,7 @@ plot.ready(function() {
 </script>
 
 <title>Conformational Sampling</title>
-<meta name="description" content="Summary of the concept of conformational sampling and the practical steps to find all the relevant conformers of arbitrary molecules.">
+<meta name="description" content="Short lesson on the concept of conformational sampling and the practical steps to find all the relevant conformers of arbitrary molecules.">
 
 {% endblock %}
 {% block content %}

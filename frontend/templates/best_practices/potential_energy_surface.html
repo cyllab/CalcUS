@@ -1,0 +1,477 @@
+{% extends 'frontend/base.html' %} {% load static %} {% block extrahead %}
+<link rel="stylesheet" href="{% static 'frontend/uis/jquery-ui-1.11.4.css' %}" type="text/css" />
+<script src="{% static 'frontend/jquery.min.js' %}"></script>
+
+<script src="{% static 'frontend/bulma-slider.min.js' %}"></script>
+
+<link rel="stylesheet" href="{% static 'frontend/dygraph.min.css' %}" type="text/css">
+<script src="{% static 'frontend/dygraph.min.js' %}"></script>
+
+<script src="{% static 'frontend/3Dmol-min.js' %}"></script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+     		tex2jax: {
+       		inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+       		processEscapes: true
+     		}
+    });
+</script>
+<style>
+    p {
+        text-align: justify;
+        text-indent: 2em;
+        margin: 1em;
+    }
+    p > a {
+        color: blue;
+    }
+    .main {
+        margin-top: 4em !important;
+        width: 50%;
+        margin: 0 auto;
+        max-width: 40em;
+        min-width: 15em;
+    }
+    @media screen and (min-width: 1024px) and (max-width: 1407px) {
+        .main {
+            width: 60%;
+        }
+    }
+    @media screen and (min-width: 769px) and (max-width: 1023px) {
+        .main {
+            width: 70%;
+        }
+    }
+    @media screen and (max-width: 768px) {
+        .main {
+            width: 85%;
+        }
+    }
+
+    h3 {
+        text-align: center;
+    }
+    h4 {
+        text-align: center;
+        margin-top: 3em !important;
+        font-style: italic;
+    }
+    figure {
+        margin-bottom: 1em;
+    }
+    figure.small{
+        width: 60%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    figcaption {
+        font-weight: bold;
+    }
+    .message {
+        margin-top: 4em;
+        margin-bottom: 4em !important;
+        text-color: black !important;
+    }
+    .message-header {
+        font-size: 1.5em;
+        text-align: center;
+        display: block;
+    }
+    .slider {
+        background-color: #ebfff5;
+    }
+    #ircgraph_1_speed, #ircgraph_1_frame_control {
+        text-align: center;
+        margin-top: 2em;
+        font-weight: bold;
+    }
+    .table_footnote {
+        margin-top: 5px;
+        margin-left: 1em;
+        margin-bottom: 3em;
+        font-size: 0.8em;
+        font-style: italic;
+    }
+    .equation {
+        font-size: 1.4em;
+        text-align: center;
+        margin-bottom: 1em;
+    }
+    #rmsd_example {
+        margin-top: 2em;
+        margin-bottom: 2em;
+    }
+    #fig_rmsd_example {
+        max-width: 500px;
+    }
+    li {
+        margin-top: 1.0em;
+        margin-bottom: 1.0em;
+        text-align: justify;
+    }
+    ul {
+        list-style-type: disc;
+    }
+    #start_rows_rigid, #start_rows_flexible {
+        border-top: 3px solid #dbdbdb;
+    }
+    #end_table {
+        border-bottom: 3px solid #dbdbdb;
+    }
+
+
+</style>
+<script
+    type="text/javascript"
+    src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+></script>
+
+<title>Stationary Points on the Potential Energy Surface (PES)</title>
+<meta name="description" content="Explanation of the concept of potential energy surface (PES) in computational chemistry and how it is used in practice. This lesson described what stationary points are and how they are obtained by quantum chemistry packages.">
+
+{% endblock %}
+{% block content %}
+
+<div class="main">
+    <h3 class="title is-3">Stationary Points on the Potential Energy Surface (PES)</h3>
+    <h4 class="subtitle is-4">Where the potential energy surface comes from</h4>
+    <p>
+    A given molecule is determined by the types (elements) and positions of its nuclei in certain electronic quantum state. The energy of this electronic quantum state can be evaluated by solving the fundamental equation of quantum mechanics, the Schrödinger equation. In particular, we will look at the time-independent Schrödinger equation:
+    </p>
+    <div class="equation">
+        $\hat H \Psi(r, R) = E \Psi(r, R)$
+    </div>
+    <p>
+    where $\hat H$ is the Hamiltonian operator, which contains the physical equations to calculate the energy, roughly speaking; $\Psi(r, R)$ is the full quantum mechanical wavefunction of the molecule, which depends on the position of its electrons ($r$) and of its nuclei ($R$), which are 3D vectors. While there are often more than one electron and nucleus, we use a single symbol to represent each set of positions for the sake of simplicity. However, you should known that:
+    </p>
+    <div class="equation">
+    $r = (\vec r_1, \vec r_2, ..., \vec r_i) = ((r_{1\; x}, r_{1\; y}, r_{q \; z}), ...)$.
+    </div>
+    <p>
+    This equation is what is called an eigenvalue equation. This particular type of equation features the same variable on both sides of the equality ($\Psi(r, R)$, in this case). The Hamiltonian operator applies mathematical operations to $\Psi(r, R)$, so we cannot simply cancel them out like in more conventional algebra. The equation is then a relationship between the unknown function $\Psi(r, R)$ and itself. Solving this equation for more than one particle is a formidable task. Luckily there is a good approximation that allows its simplification considerably. It is the <em>Born-Oppenheimer approximation</em> of separating the nuclear and electronic motion. The fact is that the electrons are much smaller than even the smallest nucleus, the proton, and move much faster than the nuclei in a molecule. The electrons can be viewed as an electron cloud that follows (relaxes) almost instantly with any change of the nuclei positions. 
+    </p>
+    <p>
+    Mathematically, this means that the approximation states that $\Psi(r, R) \approx \Psi(r)\Phi(R)$, where $\Psi(r)$ is now the wavefunction of only the electrons and $\Phi(R)$ is the wavefunction of only the nuclei. If we chose the positions of the nuclei $R$, then $\Phi(R)$ is fixed and easy to compute. <b>The challenge lies in the evaluation of the molecular electronic energy</b>, since the positions of the electrons $r$ are unknown and cannot be considered to be fixed.
+    </p>
+    
+    <p>
+    For completeness, the equation we need to solve is $\hat H \Psi(r) = E_{el \; R} \Psi(r)$, where $E_{el \; R}$ is the electronic energy when the nuclei have position $R$. We can compute the total energy of the molecule by adding the electrostatic repulsion between (necessarily positively charged) nuclei $E_{nuc \; R}$. Thus:
+    </p>
+    <div class="equation">
+        $E_{tot \; R} = E_{el \; R} + E_{nuc \; R}$
+    </div>
+
+    <h4 class="subtitle is-4">What the potential energy surface is</h4>
+    <p>
+    The previous section was only concerned with one single set of nuclear positions $R$. However, these positions can take an infinity of values, although only a small portion of them is useful to compute. For each set of nuclear positions, we can compute a corresponding electronic energy. <b>The potential energy surface (PES) is the collection of electronic energies associated to all nuclear positions</b>, which considered to be fixed within the Born-Oppenheimer approximation. We call it a surface, since it represents the smooth function of the electronic energy (dependent variable, denoted simply $E$) for each set of nuclear positions (independent variables).
+    </p>
+    <p>
+    In quantum chemistry, we are mostly interested in two types of points on this surface: <b>minima</b>, corresponding to the most stable structure of the molecule, and <b>saddle points</b>, which correspond to transition states. There can be multiple local minima and saddle points on the potential energy surface. Minima can correspond to conformers of the same molecule, reaction intermediates, or stable products of some reactions. Each saddle point will correspond to the transition between two minima.
+    </p>
+    <p>
+    In this lesson, we will look at the <b>minima</b> (also denoted "stationary points" or "equilibrium geometries"), as they are simpler to understand. For a single-variable function like $E(R)$, we know from calculus that the first derivative $dE/dR$ is going to be zero at each minima. Moreover, the second derivative $d^2E/dR^2$ will be positive, since the potential energy surface curves upwards.
+    </p>
+    <figure>
+        <img src="{% static 'best_practices/potential_energy_surface/PES.png' %}" />
+        <figcaption>Simple 1 dimensional potential energy surface</figcaption>
+    </figure>
+
+    <h4 class="subtitle is-4">Internal coordinates</h4>
+    <p>
+        As mentioned before, the nuclear (cartesian) coordinates $R$ represent the positions of all nuclei in the system. In its most intuitive form, this means the 3D positions of each atom in space, thus yielding $3N$ coordinates for $N$ atoms (however they may be bonded). While valid, this representation has some shortcomings in computational chemistry. Firstly, we may consider how a translation of the entire system may influence these coordinates. Since there is no "true origin", every properties will be exactly the same regardless of where the system starts in space. However, a translation of the entire system will change the 3D coordinates of all atoms, as we consider them to be moved by a certain quantity in a certain direction. It thus appears that some coordinate changes don't influence the results at all, while others clearly do. The same thing is true when considering rotations of the entire system.
+    </p>
+    <p>
+    Secondly, these cartesian coordinates can be needlessly complex to handle computationally. Let's consider the dihydrogen molecule. To define its structure, we need 6 cartesian coordinates, as shown below. Then, if we want to optimize the geometry, we will need to calculate the gradient of the energy with respect to these coordinates (<em>i.e.</em>, the previously mentioned $dE/dR$). The gradient will need to represent how the energy changes when each of these six coordinates changes.
+    </p>
+    <figure class="small">
+        <img src="{% static 'best_practices/potential_energy_surface/H2_cartesian.png' %}" />
+        <figcaption>The structure of $H_2$ in cartesian coordinates</figcaption>
+    </figure>
+    <p>
+    However, we know that most of that information is useless, since there is only one meaningful coordinate: the bond length. Regardless of how you move the atoms, the only thing that will influence the properties is how the bond length changed. We can thus can only compute the gradient of the energy with respect to the bond length and have the same information. Very simply, this means that we have only one value to compute instead of six. (As always, the reality is a bit more complex, but this example illustrates the important point.)
+    </p>
+    <p>
+    More generally, structures will be converted from cartesian coordinates to <b>internal coordinates</b> by calculation packages. These internal coordinates eliminates the "external coordinates" related to translation and rotation. The result is $3N - 6$ internal coordinates for $N$ atoms, except for linear systems, where we obtain $3N - 5$ internal coordinates. This exception is because the rotation around the axis of linear systems does not exist, as it does not change the position of any atom in cartesian space. For dihydrogen, a linear molecule, we obtain $3*2 - 5 = 1$ internal coordinate, namely the bond length. 
+    </p>
+    <figure class="small">
+        <img src="{% static 'best_practices/potential_energy_surface/H2_internal.png' %}" />
+        <figcaption>The structure of $H_2$ in internal coordinates</figcaption>
+    </figure>
+    <p>
+        The first atom is defined as the origin, the reference position of the system. The second atom is defined by its distance from the first atom. In larger systems, the third atom will be defined by its distance from the second atom as well as the angle formed by these three atoms, and the fourth atom will be defined by a distance, an angle as well as a dihedral angle formed by these four atoms. Additional atoms will also require three coordinates to be unambiguously defined.
+    </p>
+
+    <div class="example message is-primary">
+        <div class="message-header">
+            Example: visualization of one internal coordinate of butane
+        </div>
+        <div class="message-body">
+            <center>
+            <b>
+            This example is discussed in more detail in the lesson on <a href="/learn/conformational_search" target="_blank" rel="noopener noreferrer">conformational sampling</a>
+            </b>
+            </center>
+            <p>
+            While molecules have many internal coordinates, we can selectively plot a single one for given values. The animation below shows the potential energy curve associated with variations in the C-C-C-C dihedral angle of butane. 
+            </p>
+            <p>
+            In this case, the minima are <b>States A</b> and <b>C</b>, which correspond to possible conformations of the same molecule. <b>States B</b> and <b>D</b> are maxima as well as saddle points (although the other coordinates are not displayed) which connect each stable conformation.
+            </p>
+            <div class="viewer_container columns">
+                <center>
+                    <div id="ircgraph_1" class="mol_container column" style="position: relative"></div>
+                </center>
+                <center>
+                    <div id="ircgraph_1_plot" class="column" style="flex: 1;"></div>
+                </center>
+            </div>
+            <div id="ircgraph_1_speed">
+                <div class="btn_title">Speed</div>
+                <div class="slidecontainer">
+                    <input type="range" min="1" max="10" value="3" class="slider" oninput="change_speed(this, 'ircgraph_1');" style="width: 100%;">
+                </div>
+            </div>
+            <div id="ircgraph_1_frame_control" style="display: none;">
+                <div class="btn_title">Progress</div>
+                <div class="slidecontainer">
+                    <input type="range" min="1" max="1" value="1" class="slider is-info" id="ircgraph_1_frame_control_slider" oninput="step_frame(this, 'ircgraph_1');" style="width: 100%;">
+                </div>
+            </div>
+            <center>
+                Manual Animation <input type="checkbox" onchange="set_loop(this, 'ircgraph_1');">
+            </center>
+        </div>
+    </div>
+
+    <h4 class="subtitle is-4">Geometrical optimizations</h4>
+    <p>
+        When modelling molecules, stationary points are generally what we're looking for. A geometrical optimization is the type of calculation that allows us to obtain stationary points. The calculation starts with an initial structure that you create or obtain from someone (for example, in a scientific publication). The energy gradient is computed for that structure and used to determine what to do next. If the gradient is small enough, then the structure is a minimum for all intents and purposes and the calculation is done. Otherwise, the gradient is used to guess which structure is very likely lower in energy. Visually, the gradient is a vector on the potential energy surface that points towards the steepest increase in energy. To obtain structures lower in energy, the atoms just have to be moved in the exact opposite direction, towards the steepest descent in energy. The atoms are displaced by a small distance before the energy gradient is calculated again. This is because the gradient we calculated is only valid for the point at which we calculated it; as we move atoms, the gradient changes. To find the minimum, we need to iteratively calculate a gradient and move atoms by small measures.
+    </p>
+    <p>
+        In practice, many algorithms exist to carry out this procedure and they vary on how they approach this iterative procedure. For example, some algorithms calculate or estimate the second derivative of the energy in order to guess more accurately how far to move atoms at each step. The goal of more complex algorithms is to reduce the number of steps needed to obtain the minimum, and thus reduce the computing time. Fortunately, as users of existing quantum chemistry packages, we rarely need to worry about the details of these algorithms and the procedures are carried out automatically.
+    </p>
+
+    <h4 class="subtitle is-4">General Recipe</h4>
+
+    <p>
+    	<ol>
+	    <li>
+            Select your input structure on the launch page, either through the online sketcher or by uploading the structure in a suitable format.
+	    </li>
+	     <li>
+	        Specify the molecule name, the solvent (if desired), the project and pick the xtb software. The calculation type should be "Geometrical Optimization".
+	    </li>
+        <li>
+            Submit the calculation and wait for it to finish. For structures under 100 atoms, this should take only seconds.
+        </li>
+        <li>
+            Once the calculation is done, click on the calculation order to view the ensemble page. You will see the optimized structure as well as its energy. By clicking the ruler icon above the structure, you can measure distances between atoms. The two icons on the right allow you to measure angles and dihedral angles respectively.
+        </li>
+        <li>
+            To view the optimization steps, go back to the calculation order page, find the order corresponding to the same calculation, then click on the list icon at the top right (the three lines). Then click on the calculation id, which is a yellow button. You will see a 3D structure alongside a curve which gradually decreases to almost zero (if the optimization was successful). You can go through the different optimization steps by using the scroll bar under the structure or by clicking on points in the graph. If your initial structure is close to optimal, it might be difficult to see any change between the frames; try with a larger molecule with multiple substituents and sidechains.
+        </li>
+
+    	</ol>
+    </p>
+
+    <h4 class="subtitle is-4">Tips and guidelines</h4>
+    <p>
+    	<ul>
+            <li>
+            <b>In almost all cases, properties have to be calculated on optimized geometries.</b> After optimizing a geometry, you can launch subsequent property calculations on it to obtain meaningful results. Otherwise, you will obtain the properties of the specific unoptimized geometries you used, which will not be very representative of the real molecular structure.
+            </li>
+            <li>
+            <b>GFN2-xTB generally yields good enough geometries.</b> Except if you require high accuracy results (for a scientific publication, for example), the geometries optimized with the GFN2-xTB method are often good enough. Systems with exotic functional groups, transition metals or other less common elements might be problematic, but this has to be determined for each specific case. Geometries obtained with DFT functionals and a good basis set are almost always very good.
+            </li>
+    	</ul>
+    </p>
+</div>
+<script>
+	let widgets = {};
+	let settings = {};
+
+	function set_loop(check, k) {
+		if(check.checked == true) {
+			settings[k]['_animation'] = settings[k]['animation'];
+			settings[k]['animation'] = "manual";
+		}
+		else {
+			settings[k]['animation'] = settings[k]['_animation'];
+		}
+		refresh_animation(k);
+	}
+	function change_speed(slider, k) {
+		speed = slider.value;
+		settings[k]['interval'] = 10*(12-speed);
+
+		refresh_animation(k);
+	}
+	function refresh_animation(k) {
+		ircgraph = widgets[k];
+		ircgraph_settings = settings[k];
+		ircgraph.stopAnimate();
+		if(k.includes("ircgraph_")) {
+			speed = document.getElementById(k + "_speed");
+			frame = document.getElementById(k + "_frame_control");
+			slider = document.getElementById(k + "_frame_control_slider");
+		}
+		if(ircgraph_settings['animation'] != 'manual') {
+			ircgraph.animate({'loop': ircgraph_settings['animation'], 'interval': ircgraph_settings['interval']});
+
+			if(k.includes("ircgraph_")) {
+				speed.style.display = "block";
+				frame.style.display = "none";
+			}
+		}
+		else {
+			speed.style.display = "none";
+			frame.style.display = "block";
+			slider.value = ircgraph.getFrame();
+		}
+	}
+	function frame_step(k) {
+		ircgraph = widgets[k];
+		ircgraph_plot = widgets[k + '_plot'];
+		ircgraph_plot.setSelection(ircgraph.getFrame()-1);
+	}
+	function step_frame(slider, k) {
+		ircgraph = widgets[k];
+		ircgraph.setFrame(slider.value);
+		ircgraph.render();
+	}
+</script>
+<script>
+	$(document).ready(function(){
+        $.get("{% static 'best_practices/conf_search/butane_rotation.xyz' %}", function(data) {
+			irc_data = "Dihedral Angle,Relative Energy\n"
+
+			let widget_width = Math.round($(".main").width()/2.3);
+            if($(window).width() >= 769) {
+                $("#ircgraph_1").width(widget_width);
+                $("#ircgraph_1").height(widget_width);
+                $("#ircgraph_1_plot").width(widget_width);
+                $("#ircgraph_1_plot").height(widget_width);
+            }
+            else {
+                $("#ircgraph_1").width(widget_width*1.5);
+                $("#ircgraph_1").height(widget_width);
+                $("#ircgraph_1_plot").width(widget_width*1.5);
+                $("#ircgraph_1_plot").height(widget_width);
+            }
+
+			wid = $3Dmol.createViewer("ircgraph_1");
+
+			set = {
+				animation: 'backAndForth',
+				interval: 90,
+			}
+			
+			split_lines = data.split('\n');
+			num = parseInt(split_lines[0]);
+			total = split_lines.length - 1;
+
+			for(i=0; i < total/(num+2); i++) {
+				E_line = split_lines[i*(num+2)+1];
+				E = parseFloat(E_line.split(' ')[2])*2625.5;
+				irc_data += String(-180 + i*5) + "," + String(E) + '\n';
+			}
+
+			plot = new Dygraph(
+				document.getElementById("ircgraph_1_plot"),
+					irc_data,
+					{
+						strokeWidth: 2,	
+						xlabel: "Dihedral Angle (degrees)",
+						ylabel: "Relative Energy (kJ/mol)",
+						rangeSelectorPlotStrokeColor: "#BABABA",
+						legend: "never",
+						highlightCircleSize:  5, 
+						digitsAfterDecimal: 0,
+						axes: {
+							y: {
+								axisLabelWidth: 60,
+							},
+						}
+					}
+			);
+plot.ready(function() {
+	plot.setAnnotations([
+	{
+		series: "Relative Energy",
+		x: "0",
+		text: "Fully eclipsed",
+                shortText: "D",
+                width: 20,
+                height: 20,
+	},
+	{
+		series: "Relative Energy",
+		x: "-180",
+		text: "Anti",
+                shortText: "A",
+                width: 20,
+                height: 20,
+	},
+	{
+		series: "Relative Energy",
+		x: "-120",
+		text: "Anticlinal",
+                shortText: "B",
+                width: 20,
+                height: 20,
+	},
+	{
+		series: "Relative Energy",
+		x: "-65",
+		text: "Gauche",
+                shortText: "C",
+                width: 20,
+                height: 20,
+	},
+	{
+		series: "Relative Energy",
+		x: "65",
+		text: "Gauche",
+                shortText: "C",
+                width: 20,
+                height: 20,
+	},
+	{
+		series: "Relative Energy",
+		x: "120",
+		text: "Anticlinal",
+                shortText: "B",
+                width: 20,
+                height: 20,
+	},
+	{
+		series: "Relative Energy",
+		x: "180",
+		text: "Anti",
+                shortText: "A",
+                width: 20,
+                height: 20,
+	},
+	]);
+});
+			wid.addModelsAsFrames(data, "xyz");
+			wid.setBackgroundColor(0xF5FFFA);
+            wid.setStyle({}, {stick:{color: 'black', radius: 0.15}, sphere: {scale: 0.3}});
+
+			wid.zoomTo();
+			wid.render();
+			wid.animate({'loop': set['animation'], 'interval': set['interval']});
+
+			wid.setViewChangeCallback(function() { frame_step("ircgraph_1")});
+
+			slider = document.getElementById("ircgraph_1_frame_control_slider");
+			slider.max = wid.getNumFrames();
+			widgets["ircgraph_1"] = wid;
+			widgets["ircgraph_1_plot"] = plot;
+			settings["ircgraph_1"] = set;
+		});
+	});
+</script>
+
+{% endblock %}
