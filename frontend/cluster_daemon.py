@@ -106,7 +106,9 @@ class ClusterDaemon:
 
     def check_binaries(self, conn):
         lock = self.locks[conn[0].id]
-        ls_home = tasks.direct_command("ls ~", conn, lock)
+        ls_home = tasks.direct_command(
+            f"ls /home/{conn[0].cluster_username}", conn, lock
+        )
         if isinstance(ls_home, ErrorCodes):
             logger.warning(
                 f"Could not check the presence of a remote calcus folder: {ls_home}"
