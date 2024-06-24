@@ -2,8 +2,9 @@
 
 {% load static %} 
 {% block extrahead %}
-<title>Computational Chemistry Online Platform</title>
-<meta name="description" content="Learn computational chemistry online by using real quantum chemistry programs through a web interface. CalcUS Cloud interfaces modern software and use cloud computing to facilitate learning and research directly in your browser. View molecular structures in 3D, predict UV-Vis spectra and study organic reactions.">
+<title>Computational Chemistry Online</title>
+<meta name="description" content="Learn computational chemistry online by using real computational chemistry software through a web interface. Generate 3D molecule structures from drawings, find the most stable conformer and simulate its reactions.">
+<link rel="canonical" href="https://calcus.cloud/">
 
 <style>
     .title {
@@ -171,6 +172,18 @@
     #conf_table_el {
         font-size: 1rem;
     }
+    .home-learn-item {
+        text-align: center;
+        font-weight: bold; 
+        text-decoration: underline;
+        color: #0060b2;
+        max-width: 35em;
+        margin: 1em auto;
+    }
+    .home_learn_div {
+        text-align: center;
+        display: block;
+    }
 </style>
 {% if IS_CLOUD %}
 <!-- Begin Brevo Form -->
@@ -226,15 +239,21 @@
             {% endif %}
 
             <div id="tag_title">
-                <h1 class="title is-1" id="tagline">Making Quantum Chemistry<br><span class="highlight">Accessible</span> and <span class="highlight">Efficient</span></h1>
+                <h1 class="title is-1" id="tagline">Making Computational Chemistry<br><span class="highlight">Accessible</span> and <span class="highlight">Efficient</span></h1>
             </div>
 
             {% if not request.user.is_authenticated %}
             {% if ALLOW_TRIAL %}
             <div id="trial_div">
+                <center style="width: 100%">
+                    Use for free and <b>accelerate your research immediately</b> with <span id="free_span">3600 free seconds</span> of compute time per month
+                    <br>
+                </center>
                 <a class="button is-primary is-large is-rounded is-focused" href="/start_trial/" id="trial_button"><i class="fa fa-lg fa-solid fa-gift"></i>Try for free now</a>
             </div>
             {% endif %}
+
+            {% if False %}
             <div>
                 <center style="width: 100%">
                     Create a free account and <b>accelerate your research immediately</b> with <span id="free_span">3600 free seconds</span> of compute time per month
@@ -245,6 +264,7 @@
             </div>
             {% endif %}
 
+            {% endif %}
         </center>
     </div>
     <hr id="logo_sep" />
@@ -253,7 +273,7 @@
     <div class="tile is-ancestor">
         <div class="tile is-parent is-6">
             <div class="tile is-child">
-                <h2 class="title is-2">Quantum Chemistry in your Browser</h2>
+                <h2 class="title is-2">Computational Chemistry in your Browser</h2>
                 <center>
                 <p class="subtitle">View molecular orbitals, vibrational modes, UV-Visible absorbance and reaction processes directly on the CalcUS Cloud</p>
                 {% if False %}
@@ -273,6 +293,10 @@
                 <center>
                 <p class="subtitle">Compare conformers, evaluate reactions and predict properties</p>
                 </center>
+
+                <center style="margin-bottom: 1em;">
+                    <span class="has-background-primary" style="padding: 0.2em;"><b>Try it below!</b></span>
+                </center>
                 {% include "frontend/properties/conformers_body.html" with ensemble=ensemble_aspirin %}
             </div>
         </div>
@@ -291,6 +315,11 @@
     </div>
     {% endif %}
 
+    <div id="home_learn_div">
+        <h2 class="title is-2">Practical guides</h2>
+        <a class="home-learn-item box has-background-warning link" href="/learn/conformational_search">Learn about conformational sampling</a>
+        <a class="home-learn-item box has-background-warning link" href="/learn/potential_energy_surface">Learn about the potential energy surface</a> 
+    </div>
 
     {% if IS_CLOUD %}
     <div id="testimonials_div">
@@ -330,6 +359,13 @@
             </div>
         </div>
     </div>
+    <div style="margin-bottom: 5em;">
+        <center>
+        <a class="button is-primary is-large is-rounded is-focused" href="/start_trial/" id="trial_button"><i class="fa fa-lg fa-solid fa-gift"></i>Try for free now</a>
+        </center>
+    </div>
+
+    {% if False %}
     <div>
         <center style="width: 100%">
             <br>
@@ -338,11 +374,6 @@
     </div>
     {% endif %}
 
-    {% if False %}
-    <div id="learn_div">
-        <h2 class="title is-2">Practical guides</h2>
-        <a class="link" href="/learn/conformational_search">Learn about conformational sampling</a> 
-    </div>
     {% endif %}
 
     <div class="tile is-ancestor" id="contact_tile">
@@ -350,9 +381,11 @@
             <h2 class="title is-2">You have <span class="highlight">questions?</span></h2>
             <br>
             Feel free to contact us for any inquiry at <span class="highlight">contact@calcus.cloud</span>
+            {% if False %}
             <br>
             <br>
             <a class="button is-info is-large link" href="mailto:contact@calcus.cloud">Contact us</a>
+            {% endif %}
         <center>
     </div>
     {% if IS_CLOUD %}
