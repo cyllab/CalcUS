@@ -32,7 +32,8 @@ import glob
 import shutil
 import tempfile
 import json
-import gzip, base64
+import gzip
+import base64
 from django.conf import settings
 
 import threading
@@ -46,6 +47,10 @@ import spyrmsd
 from spyrmsd.optional.rdkit import to_molecule
 from spyrmsd.rmsd import rmsdwrapper
 from sklearn.cluster import DBSCAN
+
+# This is needed when using the Digital Alliance of Canada's "robot" connections, for some reason.
+# With fabric's standard get/put, I get SFTPError("Garbage packet received") when trying to open sftp.
+from scp import SCPClient, SCPException
 
 if not settings.IS_CLOUD:
     from calcus.celery import app
@@ -150,7 +155,7 @@ kill_sig = []
 cache_ind = 1
 
 
-def direct_command(command, conn, lock, attempt_count=1):
+def direct_command(command, conn, lock, attempt_count=1, cwd=None):
     lock.acquire()
 
     def retry():
@@ -165,7 +170,7 @@ def direct_command(command, conn, lock, attempt_count=1):
                 )
             )
             time.sleep(2)
-            return direct_command(command, conn, lock, attempt_count + 1)
+            return direct_command(command, conn, lock, attempt_count + 1, cwd=cwd)
 
     # Do not run the actual calculation in a test
     if not IS_TEST or (
@@ -174,7 +179,11 @@ def direct_command(command, conn, lock, attempt_count=1):
         and command.find("crest") == -1
     ):
         try:
-            response = conn[1].run("source ~/.bashrc; " + command, hide="both")
+            if cwd:
+                with conn[1].cd(cwd):
+                    response = conn[1].run(command, hide="both")
+            else:
+                response = conn[1].run(command, hide="both")
         except invoke.exceptions.UnexpectedExit as e:
             lock.release()
             if e.result.exited == 1 and (
@@ -221,9 +230,12 @@ def sftp_get(src, dst, conn, lock, attempt_count=1):
 
     lock.acquire()
 
+    conn[1].open()
+    scp = SCPClient(conn[1].transport)
+
     for i in range(3):
         try:
-            conn[1].get(src, local=dst)
+            scp.get(src, dst)
         except FileNotFoundError:
             logger.info(f"Could not download {src}: no such remote file")
             lock.release()
@@ -250,11 +262,14 @@ def sftp_put(src, dst, conn, lock, attempt_count=1):
     if not os.path.exists(src):
         return
 
-    ret = direct_command(f"mkdir -p {'/'.join(dst.split('/')[:-1])}", conn, lock)
+    ret = direct_command(f"mkdir -p {os.path.dirname(dst)}", conn, lock)
 
     lock.acquire()
 
-    conn[1].put(src, remote=dst)
+    conn[1].open()
+    scp = SCPClient(conn[1].transport)
+
+    scp.put(src, dst)
 
     lock.release()
     return ErrorCodes.SUCCESS
@@ -408,37 +423,57 @@ def system(
             return testing_delay_remote(calc_id)
 
         if calc.status == 0 and calc.remote_id == 0:
-            if log_file != "":
-                output = direct_command(
-                    "cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{} | tee {}' >> submit_{}.sh; sbatch --job-name={} submit_{}.sh | tee calcus".format(
-                        remote_dir,
-                        conn[0].cluster_username,
-                        software,
-                        command,
-                        log_file,
-                        software,
-                        job_name,
-                        software,
-                    ),
+            """
+            output = direct_command(
+                f"cp /home/{conn[0].cluster_username}/calcus/submit_{software}.sh {remote_dir}",
+                conn,
+                lock,
+                attempt_count=MAX_COMMAND_ATTEMPT_COUNT,  # Do not retry, since it might submit multiple times
+            )
+            """
+
+            with tempfile.TemporaryDirectory() as tmpdir:
+                sftp_get(
+                    f"/home/{conn[0].cluster_username}/calcus/submit_{software}.sh",
+                    os.path.join(tmpdir, "tmp.sh"),
                     conn,
                     lock,
-                    attempt_count=MAX_COMMAND_ATTEMPT_COUNT,  # Do not retry, since it might submit multiple times
                 )
+                with open(os.path.join(tmpdir, "tmp.sh"), "a") as out:
+                    if log_file:
+                        out.write(f"{command} | tee {log_file}\n")
+                    else:
+                        out.write(f"{command}\n")
+                sftp_put(
+                    os.path.join(tmpdir, "tmp.sh"),
+                    os.path.join(remote_dir, f"submit_{software}.sh"),
+                    conn,
+                    lock,
+                )
+
+            """
+            if log_file:
+                subcommand = f"echo '{command} | tee {log_file}' >> submit_{software}.sh"
             else:
-                output = direct_command(
-                    "cd {}; cp /home/{}/calcus/submit_{}.sh .; echo '{}' >> submit_{}.sh; sbatch --job-name={} submit_{}.sh | tee calcus".format(
-                        remote_dir,
-                        conn[0].cluster_username,
-                        software,
-                        command,
-                        software,
-                        job_name,
-                        software,
-                    ),
-                    conn,
-                    lock,
-                    attempt_count=MAX_COMMAND_ATTEMPT_COUNT,
-                )
+                subcommand = f"echo '{command} >> submit_{software}.sh"
+
+            output = direct_command(
+                subcommand,
+                conn,
+                lock,
+                attempt_count=MAX_COMMAND_ATTEMPT_COUNT,  # Do not retry, since it might submit multiple times
+                cwd=remote_dir,
+            )
+            """
+            output = direct_command(
+                # f"sbatch --job-name={job_name} submit_{software}.sh | tee calcus",
+                f"sbatch --job-name={job_name} submit_{software}.sh",
+                conn,
+                lock,
+                attempt_count=MAX_COMMAND_ATTEMPT_COUNT,  # Do not retry, since it might submit multiple times
+                cwd=remote_dir,
+            )
+            print("output after sbatch", output)
 
             if output == ErrorCodes.FAILED_TO_EXECUTE_COMMAND or len(output) < 2:
                 if calc_id != -1:
@@ -446,7 +481,7 @@ def system(
 
                     while ind < 20:
                         output = direct_command(
-                            f"cd {remote_dir}; cat calcus", conn, lock
+                            "cat calcus", conn, lock, cwd=remote_dir
                         )
                         if isinstance(output, int):
                             ind += 1
@@ -983,15 +1018,18 @@ def launch_xtb_calc(calc, files):
             os.getenv("USE_CACHED_LOGS") == "true"
             and os.getenv("CAN_USE_CACHED_LOGS") == "true"
         ):
-            a = sftp_get(
-                f"{remote_dir}/NOT_CONVERGED",
-                os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"),
-                conn,
-                lock,
-            )
-
-            if a != ErrorCodes.COULD_NOT_GET_REMOTE_FILE:
-                return ErrorCodes.FAILED_TO_CONVERGE
+            try:
+                a = sftp_get(
+                    f"{remote_dir}/NOT_CONVERGED",
+                    os.path.join(CALCUS_SCR_HOME, str(calc.id), "NOT_CONVERGED"),
+                    conn,
+                    lock,
+                )
+            except SCPException:
+                pass
+            else:
+                if a == ErrorCodes.SUCCESS:
+                    return ErrorCodes.FAILED_TO_CONVERGE
 
     if not cancelled:
         for f in files:

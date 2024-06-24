@@ -5,20 +5,20 @@ COPY scripts /calcus/scripts
 COPY bin/ /binaries/
 RUN ls /binaries/
 
-RUN apt update && apt install build-essential gcc libxm4 libgl1 libmagic1 xz-utils -y
+RUN apt update && apt install build-essential gcc libxm4 libgl1 libmagic1 xz-utils git -y
 
 RUN python /calcus/scripts/extract_xtb.py
 
 ADD ./cloud_requirements.txt /calcus/cloud_requirements.txt
 RUN pip install -r /calcus/cloud_requirements.txt
 
-####
 ADD ./requirements.txt /calcus/requirements.txt
 RUN pip install -r /calcus/requirements.txt
 
 FROM python:3.10-slim-bookworm AS calcus_user
 
 COPY --from=0 /binaries/ /binaries/
+COPY --from=0 /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 
 ARG CALCUS_VERSION_HASH
 ENV CALCUS_VERSION_HASH=${CALCUS_VERSION_HASH}
@@ -38,8 +38,6 @@ ENV PATH=$PATH:$XTB4STDAHOME/xtb/bin:$XTB4STDAHOME:$EBROOTORCA:$GAUSS_EXEDIR
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/binaries/orca:/usr/lib/openmpi/
 
 ENV PYTHONUNBUFFERED 1
-
-COPY --from=0 /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 
 RUN apt update && apt install openbabel postgresql-client dos2unix libxm4 libgl1 libmagic1 sshpass python3-dev gfortran mpi-default-bin mpi-default-dev curl -y
 RUN curl -LJO https://github.com/nwchemgit/nwchem/releases/download/v7.2.1-release/nwchem-data_7.2.1-1_all.debian_bookworm.deb

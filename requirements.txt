@@ -32,3 +32,4 @@ scikit-learn
 spyrmsd
 wheel
 xkcdpass
+git+https://github.com/jbardin/scp.py
