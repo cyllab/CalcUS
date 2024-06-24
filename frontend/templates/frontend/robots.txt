@@ -3,5 +3,8 @@ Allow: /
 
 User-agent: *
 Disallow: /stripe_config/
+Disallow: /details_structure/
+Disallow: /ensemble/
+Disallow: /cdn-cgi/l/email-protection
 
 Sitemap: https://calcus.cloud/sitemap.xml

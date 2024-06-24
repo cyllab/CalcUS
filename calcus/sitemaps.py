@@ -15,6 +15,7 @@ class CalcUSSitemap(sitemaps.Sitemap):
             ("frontend:start_trial", {}),
             ("frontend:learn", {}),
             ("frontend:learn_keyword", {"keyword": "conformational_search"}),
+            ("frontend:learn_keyword", {"keyword": "potential_energy_surface"}),
         ]
 
     def location(self, item_data):
