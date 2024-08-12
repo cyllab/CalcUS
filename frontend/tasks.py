@@ -236,8 +236,8 @@ def sftp_get(src, dst, conn, lock, attempt_count=1):
     for i in range(3):
         try:
             scp.get(src, dst)
-        except FileNotFoundError:
-            logger.info(f"Could not download {src}: no such remote file")
+        except (FileNotFoundError, SCPException) as e:
+            logger.info(f"Could not download {src}: no such remote file: {str(e)}")
             lock.release()
             return ErrorCodes.COULD_NOT_GET_REMOTE_FILE
         except ConnectionResetError as e:
@@ -441,9 +441,9 @@ def system(
                 )
                 with open(os.path.join(tmpdir, "tmp.sh"), "a") as out:
                     if log_file:
-                        out.write(f"{command} | tee {log_file}\n")
+                        out.write(f"run.py '{command}' | tee {log_file}/calc.log\n")
                     else:
-                        out.write(f"{command}\n")
+                        out.write(f"run.py '{command}'\n")
                 sftp_put(
                     os.path.join(tmpdir, "tmp.sh"),
                     os.path.join(remote_dir, f"submit_{software}.sh"),
@@ -451,20 +451,6 @@ def system(
                     lock,
                 )
 
-            """
-            if log_file:
-                subcommand = f"echo '{command} | tee {log_file}' >> submit_{software}.sh"
-            else:
-                subcommand = f"echo '{command} >> submit_{software}.sh"
-
-            output = direct_command(
-                subcommand,
-                conn,
-                lock,
-                attempt_count=MAX_COMMAND_ATTEMPT_COUNT,  # Do not retry, since it might submit multiple times
-                cwd=remote_dir,
-            )
-            """
             output = direct_command(
                 # f"sbatch --job-name={job_name} submit_{software}.sh | tee calcus",
                 f"sbatch --job-name={job_name} submit_{software}.sh",
@@ -473,7 +459,6 @@ def system(
                 attempt_count=MAX_COMMAND_ATTEMPT_COUNT,  # Do not retry, since it might submit multiple times
                 cwd=remote_dir,
             )
-            print("output after sbatch", output)
 
             if output == ErrorCodes.FAILED_TO_EXECUTE_COMMAND or len(output) < 2:
                 if calc_id != -1:
@@ -1851,6 +1836,11 @@ def launch_orca_calc(calc, files):
             if a != ErrorCodes.COULD_NOT_GET_REMOTE_FILE:
                 return ErrorCodes.FAILED_TO_CONVERGE
 
+    with open(os.path.join(local_folder, "calc.out")) as f:
+        lines = f.readlines()
+        if "OUT OF MEMORY ERROR!" in "".join(lines[-30:]):
+            return ErrorCodes.OUT_OF_MEMORY
+
     if not cancelled:
         for f in files:
             if not os.path.isfile(f"{local_folder}/{f}"):
@@ -1944,7 +1934,7 @@ def orca_opt(calc):
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_orca_calc(calc, ["calc.out", "calc.xyz"])
+    ret = launch_orca_calc(calc, ["calc.out", "calc.xyz", "calc_trj.xyz"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
@@ -2019,13 +2009,14 @@ def orca_sp(calc):
 def orca_ts(calc):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    ret = launch_orca_calc(calc, ["calc.out", "calc.xyz"])
+    ret = launch_orca_calc(calc, ["calc.out", "calc.xyz", "calc_trj.xyz"])
 
     if ret != ErrorCodes.SUCCESS:
         return ret
 
     with open(f"{local_folder}/calc.xyz") as f:
         lines = f.readlines()
+
     xyz_structure = clean_xyz("\n".join([i.strip() for i in lines]))
     with open(f"{local_folder}/calc.out") as f:
         lines = f.readlines()
