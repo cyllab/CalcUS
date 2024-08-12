@@ -53,6 +53,8 @@ COPY scripts /calcus/scripts
 COPY docker/cluster/config /etc/ssh/ssh_config
 
 RUN adduser --disabled-password --gecos '' calcus  
+RUN echo "#!/bin/bash\npython3 /usr/local/lib/python3.10/site-packages/pysisyphus/run.py \$@" >> /usr/bin/pysis
+RUN chmod +x /usr/bin/pysis
 
 WORKDIR /calcus/
 

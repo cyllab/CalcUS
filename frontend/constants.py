@@ -79,6 +79,7 @@ class ErrorCodes(IntEnum):
     INVALID_OUTPUT = 22
 
     FAILED_TO_RUN_LOCAL_SOFTWARE = 30
+    OUT_OF_MEMORY = 31
 
     CONNECTION_KEY_NOT_FOUND = 40
 
