@@ -135,6 +135,7 @@
             {% include "frontend/form/custom_bs_body.html" %}
 		</div>
 		<br />
+
 		{% if IS_CLOUD %}
 		<input type="hidden" id="calc_resource" name="calc_resource" value="Local">
 		{% else %}
@@ -146,14 +147,19 @@
 		{% endif %}
 
         <center>
-		<div class="field" id="submit_field">
-			<span id="form_error_msg"></span>
-			<div class="control">
-				<a class="button is-primary" id="submit_button" onclick="verify_form()">Submit</a>
-			</div>
-            {% if IS_CLOUD %}
-            <div class="cloud_comp_info">
-                <span id="cloud_num_cores">1 to 4</span> core will be used (maximum runtime: <span id="cloud_timeout">{% if request.user.is_trial %}5 minutes{% elif request.user.is_subscriber %}6 hours{% else %}15 minutes{% endif %}</span></span>)
+            <div class="div_time_estimation">
+                <span id="calc_time_estimation"></span>
+                <br />
+                <span id="calc_time_advice"></span>
+            </div>
+            <div class="field" id="submit_field">
+                <span id="form_error_msg"></span>
+                <div class="control">
+                    <a class="button is-primary" id="submit_button" onclick="verify_form()">Submit</a>
+                </div>
+                {% if IS_CLOUD %}
+                <div class="cloud_comp_info">
+                    <span id="cloud_num_cores">1 to 4</span> core will be used (maximum runtime: <span id="cloud_timeout">{% if request.user.is_trial %}5 minutes{% elif request.user.is_subscriber %}6 hours{% else %}15 minutes{% endif %}</span></span>)
                 {% if request.user.is_trial %}
                 <br>
                 <a href="/create_full_account/">You are using a trial account. Convert to a free full account to unlock more computing power and longer runtimes</a>
@@ -161,9 +167,9 @@
                 <br>
                 <a href="/pricing/">Become a subscriber to increase your maximum runtime</a>
                 {% endif %}
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
-		</div>
         <center>
 	</form>
 </div>

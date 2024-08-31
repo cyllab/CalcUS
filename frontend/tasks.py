@@ -441,7 +441,7 @@ def system(
                 )
                 with open(os.path.join(tmpdir, "tmp.sh"), "a") as out:
                     if log_file:
-                        out.write(f"run.py '{command}' | tee {log_file}/calc.log\n")
+                        out.write(f"run.py '{command}' | tee calc.out\n")
                     else:
                         out.write(f"run.py '{command}'\n")
                 sftp_put(

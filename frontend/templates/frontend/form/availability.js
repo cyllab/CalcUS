@@ -306,6 +306,8 @@ function _refresh_availabilities(context, target, additive) {
 
     });
 
+    update_time_estimation();
+
     {% if is_batch %}
     for (ind=0; ind<parameters_dependencies.length; ind++) {
         let key=parameters_dependencies[ind]

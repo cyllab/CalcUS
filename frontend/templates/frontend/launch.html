@@ -115,12 +115,18 @@
             </div>
             {% endif %}
             <center>
+            <div class="div_time_estimation">
+                <span id="calc_time_estimation"></span>
+                <br />
+                <span id="calc_time_advice"></span>
+            </div>
             <div class="field" id="submit_field">
                 <span id="form_error_msg"></span>
                 <div class="control">
                     <a class="button is-primary" id="submit_button" onclick="verify_form()">Submit</a>
                 </div>
                 {% if IS_CLOUD %}
+
                 <div class="cloud_comp_info">
                     <span id="cloud_num_cores">1 to 4</span> core will be used (maximum runtime: <span id="cloud_timeout">{% if request.user.is_trial %}5 minutes{% elif request.user.is_subscriber %}24 hours{% else %}15 minutes{% endif %}</span></span>)
                     {% if request.user.is_trial %}
