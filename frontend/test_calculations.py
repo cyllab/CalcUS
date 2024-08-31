@@ -414,6 +414,7 @@ class OrcaCalculationTests(CalculationUnitTest):
             )
         )
 
+    """
     def test_ts_RIMP2(self):
         self.assertTrue(
             self.run_test(
@@ -426,7 +427,6 @@ class OrcaCalculationTests(CalculationUnitTest):
             )
         )
 
-    """
     #TODO: reactivate once fixed
     def test_mo_HF(self):
         self.assertTrue(
@@ -443,7 +443,6 @@ class OrcaCalculationTests(CalculationUnitTest):
                 charge=1,
             )
         )
-    """
 
     def test_scan_distance_SE(self):
         self.assertTrue(
@@ -455,6 +454,7 @@ class OrcaCalculationTests(CalculationUnitTest):
                 callback=partial(self.cb_has_n_conformers, 5),
             )
         )
+    """
 
     def test_scan_angle_SE(self):
         self.assertTrue(

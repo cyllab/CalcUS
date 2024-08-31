@@ -1,0 +1,29 @@
+
+!SP M062X Def2-SVP
+*xyz 1 1
+C   -2.90770000   1.66310000   0.00000000
+H   -2.55100000   2.16750000   0.87370000
+H   -3.97770000   1.66310000   0.00000000
+H   -2.55100000   2.16750000  -0.87370000
+*
+%plots
+dim1 45
+dim2 45
+dim3 45
+min1 0
+max1 0
+min2 0
+max2 0
+min3 0
+max3 0
+Format Gaussian_Cube
+MO("in-HOMO.cube",3,0);
+MO("in-LUMO.cube",4,0);
+MO("in-LUMOA.cube",5,0);
+MO("in-LUMOB.cube",6,0);
+end
+
+%MaxCore 500
+%pal
+nprocs 4
+end

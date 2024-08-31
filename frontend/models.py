@@ -206,12 +206,17 @@ class User(AbstractUser):
 
         return self
 
-    def has_sufficient_resources(self, expected_time):
+    @property
+    def remaining_time(self):
         if self.resource_provider != self:
-            return self.resource_provider.has_sufficient_resources(expected_time)
+            return self.resource_provider.remaining_time
+        return self.allocated_seconds - self.billed_seconds
+
+    def has_sufficient_resources(self, expected_time):
+        t = self.remaining_time
 
         # Not fool-proof or entirely safe, but good enough for now
-        if self.allocated_seconds - self.billed_seconds > expected_time:
+        if t > expected_time:
             return True
         return False
 
