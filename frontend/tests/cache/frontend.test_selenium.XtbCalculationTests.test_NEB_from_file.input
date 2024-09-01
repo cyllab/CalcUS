@@ -13,10 +13,10 @@ O   -0.91651000   0.74066000   3.00993000
 H   -1.82448000   0.94856000   3.28105000
 *
 %neb
-product "calc2.xyz"
 nimages 3
+product "calc2.xyz"
 end
-%MaxCore 500
 %pal
 nprocs 4
 end
+%MaxCore 500

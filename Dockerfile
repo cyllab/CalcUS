@@ -31,6 +31,7 @@ ENV CALCUS_TEST_KEY_HOME "/calcus/scratch/keys"
 ENV EBROOTORCA "/binaries/orca"
 ENV GAUSS_EXEDIR "/binaries/g16"
 ENV XTB4STDAHOME "/binaries"
+ENV XTBEXE "/binaries/xtb/bin/xtb"
 ENV XTBPATH "/binaries/xtb:$XTB4STDAHOME"
 ENV STDAHOME "/binaries"
 
