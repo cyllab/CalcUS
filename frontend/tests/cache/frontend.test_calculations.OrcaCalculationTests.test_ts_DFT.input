@@ -9,7 +9,7 @@ H    0.66998094  -0.58930117  -0.87511947
 %geom
 Calc_Hess true
 end
-%MaxCore 500
 %pal
 nprocs 4
 end
+%MaxCore 500
