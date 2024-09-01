@@ -2089,7 +2089,7 @@ class XtbCalculationTests(CalcusLiveServer):
             "in_file": "elimination_substrate.xyz",
             "aux_file": "elimination_product.xyz",
             "charge": "-1",
-            "specifications": "--nimages 3",
+            "specifications": "neb(nimages=3)",
         }
 
         self.lget("/launch/")
@@ -2130,7 +2130,7 @@ class XtbCalculationTests(CalcusLiveServer):
             "software": "xtb",
             "driver": "ORCA",
             "aux_structure": ["elimination_substrate", "elimination_substrate", 4],
-            "specifications": "--nimages 3",
+            "specifications": "neb(nimages=3)",
         }
 
         self.calc_input_params(params)
@@ -2166,7 +2166,7 @@ class XtbCalculationTests(CalcusLiveServer):
             "driver": "ORCA",
             "aux_structure": ["elimination_substrate", "elimination_substrate", 4],
             "in_file": "elimination_substrate.xyz",
-            "specifications": "--nimages 3",
+            "specifications": "neb(nimages=3)",
             "charge": "-1",
         }
 

@@ -232,7 +232,7 @@ class XtbCalculationTests(CalculationUnitTest):
                 aux_file="elimination_product.xyz",
                 driver="orca",
                 charge=-1,
-                specifications="--nimages 3",
+                specifications="neb(nimages=3)",
                 callback=partial(self.cb_has_n_conformers, 5),
             )
         )
