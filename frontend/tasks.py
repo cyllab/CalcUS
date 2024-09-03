@@ -2382,6 +2382,12 @@ def xtb_stda(calc):  # TO OPTIMIZE
 
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
+    if not calc.local:
+        raise NotImplementedError("Remote stda calculations not implemented yet")
+
+    with open(os.path.join(local_folder, "in.xyz"), "w") as out:
+        out.write(calc.structure.xyz_structure)
+
     if calc.parameters.solvent != "Vacuum":
         solvent_add = f"-g {get_solvent(calc.parameters.solvent, 'xtb')}"
     else:
