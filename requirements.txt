@@ -24,6 +24,7 @@ pre-commit
 psutil==5.7.2
 psycopg2-binary
 pysisyphus
+git+https://github.com/eljost/pysisyphus@214bb65c3112c4d8efd06ef0f24a602e8ac5e0f3
 python-magic
 rdkit
 requests
