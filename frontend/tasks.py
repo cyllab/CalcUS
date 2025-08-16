@@ -946,7 +946,7 @@ def launch_xtb_calc(calc, files):
     if not os.path.isdir(local_folder):
         os.makedirs(local_folder, exist_ok=True)
 
-    with open(os.path.join(local_folder, "in.xyz"), "w") as out:
+    with open(os.path.join(local_folder, "calc.xyz"), "w") as out:
         out.write(clean_xyz(calc.structure.xyz_structure))
 
     if calc.input_file != "":
@@ -965,8 +965,8 @@ def launch_xtb_calc(calc, files):
 
         if calc.remote_id == 0:
             sftp_put(
-                f"{local_folder}/in.xyz",
-                os.path.join(remote_dir, "in.xyz"),
+                f"{local_folder}/calc.xyz",
+                os.path.join(remote_dir, "calc.xyz"),
                 conn,
                 lock,
             )
@@ -1634,7 +1634,7 @@ def fast_conf(calc):
     calc_start = timezone.now()
 
     ret = subprocess.check_output(
-        shlex.split("obabel in.xyz -O in.mol"), cwd=local_folder
+        shlex.split("obabel calc.xyz -O in.mol"), cwd=local_folder
     )
 
     if not os.path.isfile(os.path.join(local_folder, "in.mol")):
@@ -1658,7 +1658,7 @@ def fast_conf(calc):
         cpath = os.path.join(local_folder, f"conf{num+1}")
         os.makedirs(cpath, exist_ok=True)
 
-        Chem.rdmolfiles.MolToXYZFile(mol, os.path.join(cpath, "in.xyz"), confId=num)
+        Chem.rdmolfiles.MolToXYZFile(mol, os.path.join(cpath, "calc.xyz"), confId=num)
 
         os.chdir(cpath)
 
@@ -2004,6 +2004,14 @@ def orca_sp(calc):
     parse_orca_charges(calc, calc.structure)
 
     return ErrorCodes.SUCCESS
+
+
+def orca_handle_ts(calc):
+    """Chooses the right driver for the calculation (ORCA or Pysisyphus)"""
+    if calc.driver == "ORCA":
+        return orca_ts(calc)
+    else:
+        return xtb_ts_pysis(calc)
 
 
 def orca_ts(calc):
@@ -2385,7 +2393,7 @@ def xtb_stda(calc):  # TO OPTIMIZE
     if not calc.local:
         raise NotImplementedError("Remote stda calculations not implemented yet")
 
-    with open(os.path.join(local_folder, "in.xyz"), "w") as out:
+    with open(os.path.join(local_folder, "calc.xyz"), "w") as out:
         out.write(calc.structure.xyz_structure)
 
     if calc.parameters.solvent != "Vacuum":
@@ -2396,7 +2404,7 @@ def xtb_stda(calc):  # TO OPTIMIZE
     os.chdir(local_folder)
 
     ret1 = system(
-        f"xtb4stda in.xyz -chrg {calc.parameters.charge} {solvent_add}",
+        f"xtb4stda calc.xyz -chrg {calc.parameters.charge} {solvent_add}",
         os.path.join(local_folder, "calc.out"),
         calc_id=calc.id,
     )
@@ -3152,7 +3160,7 @@ def calc_to_ccinput(calc):
         "charge": calc.parameters.charge,
         "multiplicity": calc.parameters.multiplicity,
         "aux_name": "calc2",
-        "name": "in",
+        "name": "calc",
         "driver": calc.parameters.driver,
     }
 
@@ -4495,7 +4503,7 @@ BASICSTEP_TABLE = {
     "ORCA": {
         "NMR Prediction": orca_nmr,
         "Geometrical Optimisation": orca_opt,
-        "TS Optimisation": orca_ts,
+        "TS Optimisation": orca_handle_ts,
         "MO Calculation": orca_mo_gen,
         "Frequency Calculation": orca_freq,
         "Constrained Optimisation": orca_scan,
