@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-
 import os
 
 from frontend.helpers import get_random_string
@@ -216,6 +215,7 @@ DATABASES = {
         "PASSWORD": POSTGRES_PASSWORD,
         "HOST": POSTGRES_HOST,
         "PORT": "5432",
+        "OPTIONS": {"sslmode": "require"},
         # To connect over SSL
         # "OPTIONS": {
         #     'sslmode': 'verify-ca',
