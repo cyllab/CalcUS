@@ -75,6 +75,7 @@ POSTGRES_SECRET_URI = os.getenv("POSTGRES_SECRET_URI", "")
 
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_USER = os.environ.get("POSTGRES_USER", "calcus")
+POSTGRES_PORT = os.environ.get("POSTGRES_PORT", "5432")
 
 if "USE_CLOUD_SQL_AUTH_PROXY" in os.environ:
     POSTGRES_HOST = "127.0.0.1"
@@ -214,7 +215,7 @@ DATABASES = {
         "USER": POSTGRES_USER,
         "PASSWORD": POSTGRES_PASSWORD,
         "HOST": POSTGRES_HOST,
-        "PORT": "5432",
+        "PORT": POSTGRES_PORT,
         "OPTIONS": {"sslmode": "require"},
         # To connect over SSL
         # "OPTIONS": {
