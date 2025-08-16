@@ -216,7 +216,6 @@ DATABASES = {
         "PASSWORD": POSTGRES_PASSWORD,
         "HOST": POSTGRES_HOST,
         "PORT": POSTGRES_PORT,
-        "OPTIONS": {"sslmode": "require"},
         # To connect over SSL
         # "OPTIONS": {
         #     'sslmode': 'verify-ca',
@@ -226,6 +225,9 @@ DATABASES = {
         # },
     }
 }
+
+if not IS_TEST:
+    DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
 
 # In Cloud mode, we need to constantly query the database to check if the
 # running calculation has been cancelled. This is the delay between checks in seconds.
