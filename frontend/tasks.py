@@ -3239,7 +3239,7 @@ def parse_orca_charges(calc, s):
     if len(xyz) < 2:  # Monoatomic
         return
 
-    parse_default_orca_charges(calc, s)
+    # parse_default_orca_charges(calc, s)
 
     if calc.parameters.specifications.lower().replace("_", "").find("hirshfeld") != -1:
         parse_hirshfeld_orca_charges(calc, s)

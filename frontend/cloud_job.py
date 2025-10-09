@@ -120,6 +120,7 @@ def create_container_job(calc, nproc, timeout):
             "POSTGRES_HOST": os.environ.get(
                 "COMPUTE_POSTGRES_HOST", settings.POSTGRES_HOST
             ),
+            "POSTGRES_PORT": settings.POSTGRES_PORT,
             "CALCUS_COMPUTE": "True",
             "CALCUS_CLOUD": "True",
             "NUM_CPU": str(nproc),
