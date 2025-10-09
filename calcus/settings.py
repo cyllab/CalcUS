@@ -226,7 +226,7 @@ DATABASES = {
     }
 }
 
-if not IS_TEST:
+if not IS_TEST and IS_CLOUD:
     DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
 
 # In Cloud mode, we need to constantly query the database to check if the
