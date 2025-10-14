@@ -2008,7 +2008,7 @@ def orca_sp(calc):
 
 def orca_handle_ts(calc):
     """Chooses the right driver for the calculation (ORCA or Pysisyphus)"""
-    if calc.driver == "ORCA":
+    if not hasattr(calc, "driver") or calc.driver == "ORCA":
         return orca_ts(calc)
     else:
         return xtb_ts_pysis(calc)
