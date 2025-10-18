@@ -1694,7 +1694,12 @@ def _submit_calculation(request, verify=False):
 
     _params, project_obj, step = ret
 
-    if settings.IS_CLOUD and not verify and not request.user.is_subscriber:
+    if (
+        settings.IS_CLOUD
+        and not verify
+        and not request.user.is_subscriber
+        and request.user.resource_provider is None
+    ):
         if request.user.is_trial:
             limit = 1
         else:
