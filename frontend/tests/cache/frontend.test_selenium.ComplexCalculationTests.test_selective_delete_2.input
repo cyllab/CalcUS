@@ -1,1 +1,1 @@
-xtb in.xyz --hess
+xtb calc.xyz --hess

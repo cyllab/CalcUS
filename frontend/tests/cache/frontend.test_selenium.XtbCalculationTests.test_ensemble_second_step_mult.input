@@ -1,1 +1,1 @@
-xtb in.xyz --opt tight --uhf 2
+xtb calc.xyz --opt tight --uhf 1

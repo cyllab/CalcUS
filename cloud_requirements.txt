@@ -22,6 +22,7 @@ numpy
 periodictable
 psutil==5.7.2
 psycopg2-binary
+PySCF
 pysisyphus
 python-magic
 rdkit
@@ -29,6 +30,6 @@ requests
 scipy
 scikit-learn
 spyrmsd
-stripe
+stripe<12
 wheel
 xkcdpass

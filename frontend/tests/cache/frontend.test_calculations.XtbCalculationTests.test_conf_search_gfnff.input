@@ -1,1 +1,1 @@
-crest in.xyz -gfnff -rthr 2.0 -ewin 6
+crest calc.xyz -gfnff -rthr 2.0 -ewin 6

@@ -38,7 +38,7 @@
 
     hostname        = web
     program         = nwchem
-    date            = Sun May  5 09:41:21 2024
+    date            = Tue Oct 21 09:23:30 2025
 
     compiled        = Sat_Oct_07_00:31:53_2023
     source          = /opt/debichem-team/nwchem/nwchem-7.2.1
@@ -47,8 +47,8 @@
     ga revision     = 5.8.0
     use scalapack   = T
     input           = calc.inp
-    prefix          = in.
-    data base       = ./in.db
+    prefix          = calc.
+    data base       = ./calc.db
     status          = startup
     nproc           =       16
     time left       =     -1s
@@ -58,10 +58,10 @@
            Memory information
            ------------------
 
-    heap     =   16383994 doubles =    125.0 Mbytes
-    stack    =   16383999 doubles =    125.0 Mbytes
+    heap     =   16384000 doubles =    125.0 Mbytes
+    stack    =   16383997 doubles =    125.0 Mbytes
     global   =   32768000 doubles =    250.0 Mbytes (distinct from heap & stack)
-    total    =   65535993 doubles =    500.0 Mbytes
+    total    =   65535997 doubles =    500.0 Mbytes
     verify   = yes
     hardfail = no 
 
@@ -196,7 +196,7 @@
   charge          =   0.00
   wavefunction    = RHF 
   input vectors   = atomic
-  output vectors  = ./in.movecs
+  output vectors  = ./calc.movecs
   use symmetry    = F
   symmetry adapt  = F
 
@@ -227,7 +227,7 @@
  LUMO         =       0.171435
 
 
- Starting SCF solution at       0.2s
+ Starting SCF solution at       0.3s
 
 
 
@@ -243,9 +243,9 @@
  #quartets = 2.310D+02 #integrals = 5.870D+02 #direct =  0.0% #cached =100.0%
 
 
- Integral file          = ./in.aoints.00
+ Integral file          = ./calc.aoints.00
  Record size in doubles =  65536        No. of integs per rec  =  43688
- Max. records in memory =      3        Max. records in file   =  30304
+ Max. records in memory =      3        Max. records in file   =  18034
  No. of bits per label  =      8        No. of bits per value  =     64
 
 
@@ -254,9 +254,9 @@ File balance: exchanges=     0  moved=     0  time=   0.0
 
               iter       energy          gnorm     gmax       time
              ----- ------------------- --------- --------- --------
-                 1       -1.1053911951  1.21D-01  1.18D-01      0.2
-                 2       -1.1073017598  2.13D-02  2.13D-02      0.2
-                 3       -1.1073666012  4.25D-05  4.23D-05      0.2
+                 1       -1.1053911951  1.21D-01  1.18D-01      0.3
+                 2       -1.1073017598  2.13D-02  2.13D-02      0.4
+                 3       -1.1073666012  4.25D-05  4.23D-05      0.5
 
 
        Final RHF  results 
@@ -267,7 +267,7 @@ File balance: exchanges=     0  moved=     0  time=   0.0
       Two-electron energy =      0.711656199544
  Nuclear repulsion energy =      0.881962081666
 
-        Time for solution =      0.1s
+        Time for solution =      0.3s
 
 
              Final eigenvalues
@@ -400,7 +400,7 @@ File balance: exchanges=     0  moved=     0  time=   0.0
  Parallel integral file used      16 records with       0 large values
 
 
- Task  times  cpu:        0.1s     wall:        0.2s
+ Task  times  cpu:        0.4s     wall:        0.6s
 
 
                                 NWChem Input Module
@@ -422,7 +422,7 @@ MA usage statistics:
 	current number of blocks	         0	         0
 	maximum number of blocks	        17	        14
 	current total bytes		         0	         0
-	maximum total bytes		   1578072	  22509208
+	maximum total bytes		   1578024	  22509192
 	maximum total K-bytes		      1579	     22510
 	maximum total M-bytes		         2	        23
 
@@ -480,4 +480,4 @@ MA usage statistics:
    K. Glaesemann, G. Sandrone, M. Stave, H. Taylor, G. Thomas, J. H. van Lenthe,
                                A. T. Wong, Z. Zhang.
 
- Total times  cpu:        0.1s     wall:        0.3s
+ Total times  cpu:        0.5s     wall:        0.7s

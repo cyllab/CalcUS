@@ -1,1 +1,1 @@
-xtb in.xyz --hess -g chcl3 --chrg 1
+xtb calc.xyz --hess -g chcl3 --chrg 1

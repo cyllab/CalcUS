@@ -7,7 +7,7 @@
      |                    University of Bonn                     |     
       -----------------------------------------------------------      
 
-   * xtb version 6.5.1 (579679a) compiled by 'ehlert@majestix' on 2022-07-11
+   * xtb version 6.6.0 (8843059) compiled by 'stahn@majestix' on 2023-02-09
 
    xtb is free software: you can redistribute it and/or modify it under
    the terms of the GNU Lesser General Public License as published by
@@ -76,15 +76,15 @@
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2022/11/01 at 17:25:14.034     
+ * started run on 2025/10/21 at 09:03:17.176     
 
            -------------------------------------------------
           |                Calculation Setup                |
            -------------------------------------------------
 
-          program call               : xtb in.xyz --hess --alpb chcl3 --chrg 1
+          program call               : xtb calc.xyz --hess --alpb chcl3 --chrg 1
           hostname                   : web
-          coordinate file            : in.xyz
+          coordinate file            : calc.xyz
           omp threads                :                    16
 
    ID    Z sym.   atoms
@@ -164,7 +164,7 @@
    5     -3.1624386  0.496179E-05  0.594E-02    1.90       1.0  T
    6     -3.1624465 -0.787401E-05  0.271E-03    1.91      18.5  T
    7     -3.1624465 -0.986777E-08  0.572E-04    1.91      87.3  T
-   8     -3.1624465 -0.111823E-09  0.112E-06    1.91   44533.1  T
+   8     -3.1624465 -0.111818E-09  0.112E-06    1.91   44533.1  T
 
    *** convergence criteria satisfied after 8 iterations ***
 
@@ -181,14 +181,14 @@
                   HL-Gap            0.0703432 Eh            1.9141 eV
              Fermi-level           -0.5877299 Eh          -15.9929 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.001 sec
- SCC setup                      ...        0 min,  0.000 sec ( 13.080%)
- Dispersion                     ...        0 min,  0.000 sec (  3.049%)
- classical contributions        ...        0 min,  0.000 sec (  0.975%)
- integral evaluation            ...        0 min,  0.000 sec (  6.540%)
- iterations                     ...        0 min,  0.001 sec ( 56.345%)
- molecular gradient             ...        0 min,  0.000 sec ( 13.754%)
- printout                       ...        0 min,  0.000 sec (  4.679%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.005 sec
+ SCC setup                      ...        0 min,  0.000 sec (  6.635%)
+ Dispersion                     ...        0 min,  0.000 sec (  2.866%)
+ classical contributions        ...        0 min,  0.000 sec (  2.847%)
+ integral evaluation            ...        0 min,  0.000 sec (  3.927%)
+ iterations                     ...        0 min,  0.003 sec ( 67.202%)
+ molecular gradient             ...        0 min,  0.001 sec ( 15.329%)
+ printout                       ...        0 min,  0.000 sec (  0.822%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
@@ -291,10 +291,10 @@ molecular quadrupole (traceless):
 eigval :       -0.00    -0.00     0.00     0.00     0.00     0.00
 eigval :     1017.21  1113.54  1113.61  3197.89  3202.87  3203.09
  reduced masses (amu)
-   1:  6.00   2:  7.94   3:  6.26   4:  3.43   5:  5.88   6:  3.64   7:  3.01   8:  1.81
+   1:  3.51   2:  5.77   3:  9.91   4:  6.63   5:  4.60   6:  2.73   7:  3.01   8:  1.81
    9:  1.81  10:  1.23  11:  2.05  12:  2.05
  IR intensities (km·mol⁻¹)
-   1: 27.11   2: 66.94   3: 42.32   4: 27.01   5: 13.45   6: 25.95   7: 21.95   8:146.56
+   1:  8.74   2: 44.92   3: 61.23   4: 28.29   5: 21.42   6: 38.19   7: 21.95   8:146.56
    9:146.69  10: 37.57  11:176.65  12:177.27
  Raman intensities (amu)
    1:  0.00   2:  0.00   3:  0.00   4:  0.00   5:  0.00   6:  0.00   7:  0.00   8:  0.00
@@ -367,19 +367,19 @@ c3v symmetry found (for desy threshold:  0.10E+00) used in thermo
 ########################################################################
 
 ------------------------------------------------------------------------
- * finished run on 2022/11/01 at 17:25:14.073     
+ * finished run on 2025/10/21 at 09:03:17.201     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.039 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.551 sec
- * ratio c/w:    14.013 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.024 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.263 sec
+ * ratio c/w:    10.865 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.002 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.025 sec
- * ratio c/w:    15.974 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.006 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.074 sec
+ * ratio c/w:    11.959 speedup
  analytical hessian:
- * wall-time:     0 d,  0 h,  0 min,  0.004 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.051 sec
- * ratio c/w:    14.366 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.005 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.058 sec
+ * ratio c/w:    11.994 speedup
 
 normal termination of xtb

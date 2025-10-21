@@ -38,7 +38,7 @@
 
     hostname        = web
     program         = nwchem
-    date            = Sun May  5 09:41:08 2024
+    date            = Tue Oct 21 09:23:19 2025
 
     compiled        = Sat_Oct_07_00:31:53_2023
     source          = /opt/debichem-team/nwchem/nwchem-7.2.1
@@ -47,8 +47,8 @@
     ga revision     = 5.8.0
     use scalapack   = T
     input           = calc.inp
-    prefix          = in.
-    data base       = ./in.db
+    prefix          = calc.
+    data base       = ./calc.db
     status          = startup
     nproc           =       16
     time left       =     -1s
@@ -336,25 +336,25 @@
  HOMO         =      -0.531515
  LUMO         =       0.114926
 
-  WARNING: movecs_in_org=atomic not equal to movecs_in=./in.movecs
-   Time after variat. SCF:      0.2
-   Time prior to 1st pass:      0.2
+  WARNING: movecs_in_org=atomic not equal to movecs_in=./calc.movecs
+   Time after variat. SCF:      0.4
+   Time prior to 1st pass:      0.4
 
  #quartets = 1.471D+04 #integrals = 1.802D+05 #direct =  0.0% #cached =100.0%
 
 
- Integral file          = ./in.aoints.00
+ Integral file          = ./calc.aoints.00
  Record size in doubles =  65536        No. of integs per rec  =  43688
- Max. records in memory =      3        Max. records in file   =  30306
+ Max. records in memory =      3        Max. records in file   =  18036
  No. of bits per label  =      8        No. of bits per value  =     64
 
 
 File balance: exchanges=     0  moved=     0  time=   0.0
 
 
- Grid_pts file          = ./in.gridpts.00
+ Grid_pts file          = ./calc.gridpts.00
  Record size in doubles =  12289        No. of grid_pts per rec  =   3070
- Max. records in memory =      4        Max. recs in file   =    161624
+ Max. records in memory =      4        Max. recs in file   =     96188
 
 
            Memory utilization after 1st SCF pass: 
@@ -363,14 +363,14 @@ File balance: exchanges=     0  moved=     0  time=   0.0
 
    convergence    iter        energy       DeltaE   RMS-Dens  Diis-err    time
  ---------------- ----- ----------------- --------- --------- ---------  ------
- d= 0,ls=0.0,diis     1    -40.4407108679 -5.41D+01  6.34D-03  7.22D-02     0.3
- d= 0,ls=0.0,diis     2    -40.4488698979 -8.16D-03  2.00D-03  8.41D-03     0.3
- d= 0,ls=0.0,diis     3    -40.4495638575 -6.94D-04  7.21D-04  1.84D-03     0.4
- d= 0,ls=0.0,diis     4    -40.4497874719 -2.24D-04  4.86D-05  1.70D-06     0.4
- d= 0,ls=0.0,diis     5    -40.4497878220 -3.50D-07  3.04D-06  1.87D-08     0.4
+ d= 0,ls=0.0,diis     1    -40.4407108679 -5.41D+01  6.34D-03  7.22D-02     0.5
+ d= 0,ls=0.0,diis     2    -40.4488698979 -8.16D-03  2.00D-03  8.41D-03     0.5
+ d= 0,ls=0.0,diis     3    -40.4495638575 -6.94D-04  7.21D-04  1.84D-03     0.6
+ d= 0,ls=0.0,diis     4    -40.4497874719 -2.24D-04  4.86D-05  1.70D-06     0.6
+ d= 0,ls=0.0,diis     5    -40.4497878220 -3.50D-07  3.04D-06  1.87D-08     0.6
 
 
-         Total DFT energy =      -40.449787822041
+         Total DFT energy =      -40.449787822040
       One electron energy =      -80.188179880397
            Coulomb energy =       32.942520090807
     Exchange-Corr. energy =       -6.882537743852
@@ -760,7 +760,7 @@ File balance: exchanges=     0  moved=     0  time=   0.0
  Parallel integral file used      16 records with       0 large values
 
 
- Task  times  cpu:        0.2s     wall:        0.4s
+ Task  times  cpu:        0.3s     wall:        0.5s
 
 
                                 NWChem Input Module
@@ -840,4 +840,4 @@ MA usage statistics:
    K. Glaesemann, G. Sandrone, M. Stave, H. Taylor, G. Thomas, J. H. van Lenthe,
                                A. T. Wong, Z. Zhang.
 
- Total times  cpu:        0.3s     wall:        0.4s
+ Total times  cpu:        0.4s     wall:        0.7s
