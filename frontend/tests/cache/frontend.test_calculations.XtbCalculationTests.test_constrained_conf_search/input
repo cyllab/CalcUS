@@ -1,6 +1,6 @@
 $constrain
 force constant=1.0
-reference=in.xyz
+reference=calc.xyz
 angle: 1, 5, 8, auto
 atoms: 1,5,8
 $metadyn

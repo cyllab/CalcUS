@@ -1,0 +1,4 @@
+$constrain
+force constant=1.0
+distance: 1, 4, auto
+distance: 2, 3, auto
