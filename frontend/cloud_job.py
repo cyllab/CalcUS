@@ -56,7 +56,12 @@ def record_event_analytics(request, event_name, **extra_params):
     # Session ID
     for cookie, val in request.COOKIES.items():
         if "_ga_" in cookie and len(cookie) > 4:
-            payload["events"][0]["params"]["session_id"] = val.split(".")[2]
+            try:
+                payload["events"][0]["params"]["session_id"] = val.split(".")[2]
+            except IndexError as e:
+                logger.error(
+                    f"Could not record calculation launched for {request.user.id}: {str(e)}"
+                )
 
     if not request.user.is_anonymous:
         payload["user_id"] = str(request.user.id)
