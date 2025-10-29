@@ -1257,7 +1257,7 @@ class CalculationOrder(models.Model):
         Parameters, on_delete=models.SET_NULL, blank=True, null=True
     )
 
-    constraints = models.CharField(max_length=400, default="", blank=True, null=True)
+    constraints = models.CharField(max_length=1000, default="", blank=True, null=True)
 
     filter = models.ForeignKey(
         "Filter", on_delete=models.SET_NULL, blank=True, null=True
@@ -1440,8 +1440,8 @@ class Calculation(models.Model):
 
     INV_CALC_STATUSES = {v: k for k, v in CALC_STATUSES.items()}
 
-    error_message = models.CharField(max_length=400, default="")
-    current_status = models.CharField(max_length=400, default="")
+    error_message = models.CharField(max_length=1000, default="")
+    current_status = models.CharField(max_length=1000, default="")
 
     date_submitted = models.DateTimeField("date", null=True, blank=True)
     date_started = models.DateTimeField("date", null=True, blank=True)
@@ -1449,7 +1449,7 @@ class Calculation(models.Model):
     billed_seconds = models.PositiveIntegerField(default=0)
 
     status = models.PositiveIntegerField(default=0)
-    error_message = models.CharField(max_length=400, default="", blank=True, null=True)
+    error_message = models.CharField(max_length=1000, default="", blank=True, null=True)
 
     structure = models.ForeignKey(Structure, on_delete=models.SET_NULL, null=True)
     aux_structure = models.ForeignKey(
@@ -1472,7 +1472,7 @@ class Calculation(models.Model):
         Ensemble, on_delete=models.CASCADE, blank=True, null=True
     )
 
-    constraints = models.CharField(max_length=400, default="", blank=True, null=True)
+    constraints = models.CharField(max_length=1000, default="", blank=True, null=True)
 
     input_file = models.CharField(max_length=50000, default="", blank=True, null=True)
 
