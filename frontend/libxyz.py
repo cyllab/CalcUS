@@ -270,11 +270,14 @@ def reorder_xyz(ref, xyz):
     elements = {i: e[0] for i, e in enumerate(ref)}
 
 
-def format_xyz(xyz):
-    str_xyz = f"{len(xyz)}\n\n"
+def format_xyz(xyz, header=True, header_text=""):
+    text = ""
+    if header:
+        text += f"{len(xyz)}\n{header_text}\n"
+
     for line in xyz:
-        str_xyz += "{} {:.4f} {:.4f} {:.4f}\n".format(line[0], *line[1])
-    return str_xyz
+        text += "{} {:.4f} {:.4f} {:.4f}\n".format(line[0], *line[1])
+    return text
 
 
 def rotation_matrix_from_vectors(vec1, vec2):

@@ -610,8 +610,7 @@ class Ensemble(models.Model):
             return False
 
         unique = []
-        structs = self.structure_set.all()
-        for s in structs:
+        for s in self.structure_set.all():
             for p in s.properties.all():
                 if not _in(p.parameters, unique):
                     unique.append(p.parameters)
@@ -621,11 +620,10 @@ class Ensemble(models.Model):
     @property
     def unique_calculations(self):
         unique = []
-        structs = self.structure_set.all()
-        for s in structs:
-            for c in s.calculation_set.all():
-                if c.step.name not in unique:
-                    unique.append(c.step.name)
+        for s in self.structure_set.all():
+            for c in s.calculation_set.values("step__name"):
+                if c["step__name"] not in unique:
+                    unique.append(c["step__name"])
         return unique
 
     def has_nmr(self, params):
@@ -886,10 +884,12 @@ def handle_folder(sender, instance, **kwargs):
 
 class Property(models.Model):
     id = BigHashidAutoField(
-        primary_key=True, salt="Property_hashid_" + settings.HASHID_FIELD_SALT
+        primary_key=True,
+        salt="Property_hashid_" + settings.HASHID_FIELD_SALT,
+        db_index=True,
     )
     parameters = models.ForeignKey(
-        "Parameters", on_delete=models.SET_NULL, blank=True, null=True
+        "Parameters", on_delete=models.SET_NULL, blank=True, null=True, db_index=True
     )
     parent_structure = models.ForeignKey(
         "Structure",
@@ -897,6 +897,7 @@ class Property(models.Model):
         blank=True,
         null=True,
         related_name="properties",
+        db_index=True,
     )
 
     energy = models.FloatField(default=0)
@@ -943,10 +944,12 @@ class ShowcaseProperty(Property):
 
 class Structure(models.Model):
     id = BigHashidAutoField(
-        primary_key=True, salt="Structure_hashid_" + settings.HASHID_FIELD_SALT
+        primary_key=True,
+        salt="Structure_hashid_" + settings.HASHID_FIELD_SALT,
+        db_index=True,
     )
     parent_ensemble = models.ForeignKey(
-        Ensemble, on_delete=models.CASCADE, blank=True, null=True
+        Ensemble, on_delete=models.CASCADE, blank=True, null=True, db_index=True
     )
 
     xyz_structure = models.CharField(default="", max_length=5000000)
@@ -1204,7 +1207,9 @@ class FlowchartOrder(models.Model):
 
 class CalculationOrder(models.Model):
     id = BigHashidAutoField(
-        primary_key=True, salt="CalculationOrder_hashid_" + settings.HASHID_FIELD_SALT
+        primary_key=True,
+        salt="CalculationOrder_hashid_" + settings.HASHID_FIELD_SALT,
+        db_index=True,
     )
     name = models.CharField(max_length=100)
 
@@ -1238,7 +1243,9 @@ class CalculationOrder(models.Model):
         BasicStep, on_delete=models.SET_NULL, blank=True, null=True
     )
 
-    author = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, blank=True, null=True, db_index=True
+    )
 
     # Account billed for the resource usage
     # Set when creating the order, then never modified
@@ -1388,26 +1395,26 @@ class CalculationOrder(models.Model):
         return 0
 
     @property
-    def get_queued(self):
-        return len(self.calculation_set.filter(status=0))
+    def get_data(self):
+        """Returns a list of [queued, running, done, error, net_status, total_time, new_status]"""
+        nums = [0, 0, 0, 0, 0, 0, 0]
+        for c in self.calculation_set.all():
+            nums[c.status] += 1
+            if c.status > 0:
+                nums[5] += c.execution_time
 
-    @property
-    def get_running(self):
-        return len(self.calculation_set.filter(status=1))
+        nums[4] = self._status(nums[0], nums[1], nums[2], nums[3])
 
-    @property
-    def get_done(self):
-        return len(self.calculation_set.filter(status=2))
+        if self.last_seen_status != nums[4]:
+            nums[6] = 1
 
-    @property
-    def get_error(self):
-        return len(self.calculation_set.filter(status=3))
+        return nums
 
     @property
     def get_all_calcs(self):
         res = {i: 0 for i in range(4)}
 
-        for calc in self.calculation_set.all().values("status"):
+        for calc in self.calculation_set.values("status"):
             res[calc["status"]] += 1
         return [res[i] for i in range(4)]
 
@@ -1448,7 +1455,7 @@ class Calculation(models.Model):
     date_finished = models.DateTimeField("date", null=True, blank=True)
     billed_seconds = models.PositiveIntegerField(default=0)
 
-    status = models.PositiveIntegerField(default=0)
+    status = models.PositiveIntegerField(default=0, db_index=True)
     error_message = models.CharField(max_length=1000, default="", blank=True, null=True)
 
     structure = models.ForeignKey(Structure, on_delete=models.SET_NULL, null=True)
@@ -1458,7 +1465,7 @@ class Calculation(models.Model):
 
     step = models.ForeignKey(BasicStep, on_delete=models.SET_NULL, null=True)
     order = models.ForeignKey(
-        CalculationOrder, on_delete=models.CASCADE, blank=True, null=True
+        CalculationOrder, on_delete=models.CASCADE, blank=True, null=True, db_index=True
     )
     flowchart_order = models.ForeignKey(
         FlowchartOrder, on_delete=models.CASCADE, blank=True, null=True
