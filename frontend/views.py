@@ -51,6 +51,7 @@ from django.utils.datastructures import MultiValueDictKeyError
 from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
 from django.template.loader import get_template
+from django.template import TemplateDoesNotExist
 
 
 from .forms import (
@@ -169,10 +170,13 @@ class IndexView(generic.ListView):
         target_user_id = clean(self.request.GET.get("user_id"))
         mode = clean(self.request.GET.get("mode"))
 
-        try:
-            target_user = User.objects.get(id=target_user_id)
-        except User.DoesNotExist:
-            return []
+        if target_user_id != self.request.user.id:
+            try:
+                target_user = User.objects.get(id=target_user_id)
+            except User.DoesNotExist:
+                return []
+        else:
+            target_user = self.request.user
 
         if user_intersection(target_user, self.request.user):
             if mode in ["Workspace", "Unseen only"]:
@@ -210,10 +214,15 @@ class IndexView(generic.ListView):
 
 
 def home(request):
-    params = {
-        "prop_mo": ShowcaseProperty.objects.get(name="mo"),
-        "ensemble_aspirin": ShowcaseEnsemble.objects.get(label="acetylsalicylic_acid"),
-    }
+    params = {}
+    if not IS_TEST:
+        params = {
+            "prop_mo": ShowcaseProperty.objects.get(name="mo"),
+            "ensemble_aspirin": ShowcaseEnsemble.objects.get(
+                label="acetylsalicylic_acid"
+            ),
+        }
+
     resp = render(request, "frontend/home.html", params)
     if "gclid" in request.GET:
         resp.set_cookie("gclid", request.GET["gclid"])
@@ -1061,7 +1070,7 @@ def learn_keyword(request, keyword):
     template = f"best_practices/{ckeyword}.html"
     try:
         get_template(template)
-    except template.exceptions.TemplateDoesNotExist:
+    except TemplateDoesNotExist:
         return HttpResponse(status=404)
     else:
         return render(request, template)

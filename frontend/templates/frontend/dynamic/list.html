@@ -1,17 +1,24 @@
 {% if latest_frontend %} {% for order in latest_frontend %}
-<article class="grid-item main-grid-item message {% if order.new_status %}new{% endif %} has-background-light" id="order_{{ order.id }}">
+{% with data=order.get_data %}
+{% comment %}
+data = [queued, running, done, error, net_status, total_time, new_status]
+{% endcomment %}
+
+<article class="grid-item main-grid-item message {% if data.6 %}new{% endif %} has-background-light" id="order_{{ order.id }}">
     <div
-        class="message-header {% if order.status == 1 %} has-background-warning {% elif order.status == 2 %} has-background-success {% elif order.status == 3 %} has-background-danger{% endif %}"
+        class="message-header {% if data.4 == 1 %} has-background-warning {% elif data.4 == 2 %} has-background-success {% elif data.4 == 3 %} has-background-danger{% endif %}"
         style="padding-right: 0"
     >
         <div class="columns is-vcentered" style="width: 100%">
             <div class="column" style="text-align: left">
-                {% if order.status == 0 %}
+                {% if data.4 == 0 %}
                 <i class="fas fa-hourglass-half"></i>
-                {% elif order.status == 1 %}
+                {% elif data.4 == 1 %}
                 <i class="fas fa-spinner"></i>
-                {% elif order.status == 2 %}
-                <i class="fas fa-check"></i>{% elif order.status == 3 %} <i class="fas fa-times"></i>{% endif %}
+                {% elif data.4 == 2 %}
+                <i class="fas fa-check"></i>
+                {% elif data.4 == 3 %} <i class="fas fa-times"></i>
+                {% endif %}
                 
                 <span class="text_wrap"> {{ order.label }}</span>
             </div>
@@ -34,28 +41,27 @@
                 <span class="text_wrap"> {{ order.molecule_name }} </span>
                 <br />
                 {{ order.date }}
-                {% if IS_CLOUD or True%}
-                <span>| <strong>{{ order.total_cpu_time }}</strong> CPU-sec  </span>
-                {% endif %}
+                <span>| <strong>{{ data.4 }}</strong> CPU-sec  </span>
                 <br />
                 <table class="table has-background-light">
                     <tr>
                         <td>Queued</td>
-                        <td>{{ order.get_queued }}</td>
+                        <td>{{ data.0 }}</td>
                         <td>Running</td>
-                        <td>{{ order.get_running }}</td>
+                        <td>{{ data.1 }}</td>
                     </tr>
                     <tr>
                         <td>Done</td>
-                        <td>{{ order.get_done }}</td>
+                        <td>{{ data.2 }}</td>
                         <td>Error</td>
-                        <td>{{ order.get_error }}</td>
+                        <td>{{ data.3 }}</td>
                     </tr>
                 </table>
             </center>
         </div>
     </a>
 </article>
+{% endwith %}
 {% endfor %}{% else %}
 <p id="tmp_msg">No calculation found</p>
 {% endif %}

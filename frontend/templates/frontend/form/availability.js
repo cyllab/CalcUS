@@ -147,7 +147,7 @@ var master_available = {
         "Gaussian": ["df", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints"],
         "ORCA": ["hf3c", "pbeh3c", "se_method", "functional_field", "basis_set_field", "custom_bs", "solvation_model", "solvation_radii", "constraints", "aux_file_structure", "aux_structure"],
         "xtb": ["aux_file_structure", "aux_structure", "solvation_model", "solvation_radii", "constraints", "xtb_method", "new_type_badge"],
-        "NWChem": ["functional_field", "basis_set_field", "solvation_model", "solvation_radii"],
+        "NWChem": ["functional_field", "basis_set_field", "solvation_model", "solvation_radii", "df"],
     },
 
     "theory_level": {

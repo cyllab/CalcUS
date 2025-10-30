@@ -251,11 +251,13 @@
                         <a class="navbar-item" href="/batch_calculations/"> Batch Calculations</a>
                         {% endif %}
 
+                        {% with unseen=request.user.unseen_calculations %}
                         <a class="navbar-item" href="/calculations/">
-                            Calculations {% if request.user.unseen_calculations > 0 %}
-                            <span id="unseen_calculations_badge" class="badge is-bottom is-warning">{{ request.user.unseen_calculations }}</span>
+                            Calculations {% if unseen > 0 %}
+                            <span id="unseen_calculations_badge" class="badge is-bottom is-warning">{{ unseen }}</span>
                             {% endif %}
                         </a>
+                        {% endwith %}
                         {% if IS_CLOUD %}
                             <a class="navbar-item" href="/pricing/"> Pricing </a>
                         {% endif %}
@@ -269,20 +271,23 @@
                         --!>
 
 
-                        {% if request.user.group != None %}
+                        {% with group=request.user.group %}
+                        {% if group != None %}
                         <div class="navbar-item has-dropdown is-hoverable" id="navbar_group">
                             <a class="navbar-link">Research Group</a>
                             <div class="navbar-dropdown">
-                                <a class="navbar-item" href="/projects/{{ request.user.group.PI.id }}">{{ request.user.group.PI.name }}</a>
-                                {% for u in request.user.group.members.all %}
+                                <a class="navbar-item" href="/projects/{{ group.PI.id }}">{{ group.PI.name }}</a>
+                                {% for u in group.members.all %}
                                 <a class="navbar-item" href="/projects/{{ u.id }}">{{ u.name }}</a>
                                 {% endfor %}
                             </div>
                         </div>
                         {% endif %} 
+                        {% endwith %} 
 
-                        {% if request.user.professor_of.count > 0 %}
-                            {% for class in request.user.professor_of.all %}
+                        {% with classes=request.user.professor_of %}
+                        {% if classes.count > 0 %}
+                            {% for class in classes.all %}
                             <div class="navbar-item has-dropdown is-hoverable">
                                 <a class="navbar-link">{{ class.name }}</a>
                                 <div class="navbar-dropdown">
@@ -293,6 +298,7 @@
                             </div>
                             {% endfor %}
                         {% endif %} 
+                        {% endwith %} 
 
                         {% if ALLOW_REMOTE_CALC and request.user.clusteraccess_owner.count > 0 %}
                         <div class="navbar-item has-dropdown is-hoverable" id="navbar_accesses">

@@ -1,5 +1,5 @@
 
-%chk=in.chk
+%chk=calc.chk
 %nproc=4
 %mem=2000MB
 #p freq PM3
