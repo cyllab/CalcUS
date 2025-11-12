@@ -441,9 +441,11 @@ def system(
                 )
                 with open(os.path.join(tmpdir, "tmp.sh"), "a") as out:
                     if log_file:
-                        out.write(f"run.py '{command}' | tee calc.out\n")
+                        # out.write(f"run.py '{command}' | tee calc.out\n")
+                        out.write(f"{command} | tee calc.out\n")
                     else:
-                        out.write(f"run.py '{command}'\n")
+                        # out.write(f"run.py '{command}'\n")
+                        out.write(f"{command}\n")
                 sftp_put(
                     os.path.join(tmpdir, "tmp.sh"),
                     os.path.join(remote_dir, f"submit_{software}.sh"),
@@ -2514,7 +2516,7 @@ def launch_nwchem_calc(calc, files):
             )
 
         ret = system(
-            "mpirun -n {PAL} nwchem calc.inp",
+            f"mpirun -n {PAL} nwchem calc.inp",
             "calc.out",
             software="NWChem",
             calc_id=calc.id,
@@ -4529,6 +4531,13 @@ BASICSTEP_TABLE = {
         # "Constrained Optimisation": nwchem_scan,
         "Single-Point Energy": nwchem_sp,
         # "Minimum Energy Path": mep,
+    },
+    "PySCF": {
+        # "Geometrical Optimisation": pyscf_opt,
+        # "TS Optimisation": pyscf_ts,
+        # "Frequency Calculation": pyscf_freq,
+        # "Constrained Optimisation": pyscf_scan,
+        # "Single-Point Energy": pyscf_sp,
     },
 }
 

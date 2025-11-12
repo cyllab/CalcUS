@@ -310,7 +310,7 @@ INTERNAL_IPS = [
 
 SESSION_COOKIE_NAME = "CALCUS_SESSION_COOKIE"
 
-PACKAGES = ["xtb"]
+PACKAGES = ["xtb", "PySCF"]
 
 # For the Cloud version
 RESOURCE_LIMITS = {

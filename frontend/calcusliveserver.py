@@ -81,6 +81,21 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         cls.host = socket.gethostbyname(socket.gethostname())
 
         chrome_options = Options()
+        chrome_options.add_argument(
+            "--incognito"
+        )  # Required to avoid the "leaked password" popup.
+
+        # This should work also, but doesn't
+        """
+        chrome_options.add_argument("--password-store=basic")
+        chrome_options.add_experimental_option(
+            "prefs",
+            {
+                "credentials_enable_service": False,
+                "profile.password_manager_enabled": False,
+            },
+        )
+        """
         if "CI" in os.environ:  # Github Actions
             chrome_options.add_argument("--headless")
             # from pyvirtualdisplay import Display

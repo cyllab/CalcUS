@@ -1484,7 +1484,7 @@ class Calculation(models.Model):
 
     input_file = models.CharField(max_length=50000, default="", blank=True, null=True)
 
-    command = models.CharField(max_length=500, default="", blank=True, null=True)
+    command = models.CharField(max_length=5000, default="", blank=True, null=True)
 
     local = models.BooleanField(default=True)
 
