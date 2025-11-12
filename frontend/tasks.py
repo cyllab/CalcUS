@@ -4734,7 +4734,7 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
         )[0]
         s.degeneracy = 1
         s.xyz_structure = f.xyz_structure
-        prop = Property.objects.create(
+        prop, created = Property.objects.get_or_create(
             parent_structure=s, parameters=calc.parameters, geom=True
         )
         prop.save()
