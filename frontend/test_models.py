@@ -30,6 +30,10 @@ from .models import (
     User,
     settings,
     timezone,
+    Parameters,
+    Structure,
+    Property,
+    Ensemble,
 )
 
 
@@ -146,3 +150,49 @@ class UserTypeTests(TransactionTestCase):
         self.sub.end_date = timezone.now() - timezone.timedelta(seconds=5)
         self.sub.save()
         self.assertEqual(self.user.user_type, "free")
+
+
+class CalculationModelsTests(TransactionTestCase):
+    def tearDown(self):
+        close_old_connections()
+
+    def setUp(self):
+        self.password = "password1234"
+        self.user = User.objects.create_user(email="PI@uni.com", password=self.password)
+        self.group = ResearchGroup.objects.create(PI=self.user)
+        self.student = User.objects.create_user(
+            email="student@uni.com", password=self.password, member_of=self.group
+        )
+
+        self.sub = Subscription.objects.create(
+            subscriber=self.user,
+            start_date=timezone.now(),
+            end_date=timezone.now() + timezone.timedelta(days=1),
+        )
+
+    def test_structure_multiple_properties_for_params(self):
+        params = Parameters.objects.create(
+            name="params1",
+            charge=0,
+            multiplicity=2,
+        )
+        e = Ensemble.objects.create()
+        struct = Structure.objects.create(xyz_structure="H 0 0 0", parent_ensemble=e)
+
+        prop1 = Property.objects.create(
+            parameters=params,
+            parent_structure=struct,
+            energy=1.0,
+            free_energy=1.0,
+        )
+
+        prop2 = Property.objects.create(
+            parameters=params,
+            parent_structure=struct,
+            energy=1.0,
+            free_energy=1.0,
+        )
+
+        # Normally, this should not happen as the previous property should be updated.
+        # However, it seems to happen in some cases, so let's just handle it correctly.
+        self.assertFalse(e.has_nmr(params))
