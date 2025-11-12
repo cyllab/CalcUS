@@ -629,11 +629,12 @@ class Ensemble(models.Model):
     def has_nmr(self, params):
         for s in self.structure_set.all():
             try:
-                p = s.properties.get(parameters=params)
+                props = s.properties.filter(parameters=params).all()
             except Property.DoesNotExist:
                 continue  # Handle this better?
-            if p.simple_nmr != "":
-                return True
+            for p in props:
+                if p.simple_nmr != "":
+                    return True
         return False
 
     def boltzmann_weighting_full(self, values, degeneracies):
