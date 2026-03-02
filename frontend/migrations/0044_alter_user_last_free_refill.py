@@ -2,7 +2,14 @@
 
 import datetime
 from django.db import migrations, models
-from django.utils.timezone import utc
+
+try:
+    # Django <4.1
+    from django.utils.timezone import utc
+except:
+    from datetime import timezone
+
+    utc = timezone.utc
 
 
 class Migration(migrations.Migration):

@@ -33,9 +33,9 @@ data = [queued, running, done, error, net_status, total_time, new_status]
     <a href="/link_order/{{ order.id }}">
         <div class="message-body">
             <center>
-                <strong>{{ order.step.name }}</strong>
+                <strong>{{ order.step_name }}</strong>
                 <br />
-                Project: {{ order.project.name }}
+                Project: {{ order.project_name }}
                 <br />
                 Molecule:
                 <span class="text_wrap"> {{ order.molecule_name }} </span>

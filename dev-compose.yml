@@ -20,6 +20,7 @@ services:
                         - ./backups:/calcus/backups
                         - ./logs:/calcus/logs
                         - ./frontend:/calcus/frontend
+                        - ./static:/calcus/static
                 links:
                         - redis
                 env_file:
@@ -89,7 +90,7 @@ services:
                 depends_on:
                         - redis
         postgres:
-                image: postgres:11-bullseye
+                image: postgres:18-trixie
                 restart: always
                 user: "${UID}:${GID}"
                 command: postgres -c config_file=/etc/postgresql/postgresql.conf

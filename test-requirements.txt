@@ -1,5 +1,6 @@
 coverage
 django-recaptcha
+django-silk
 pexpect==4.8.0
 pyvirtualdisplay
 selenium

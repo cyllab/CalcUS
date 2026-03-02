@@ -4,9 +4,9 @@ ccinput>=1.11.0
 celery[redis]
 django-cors-headers
 cryptography
-Django>=3.2.18,<4
-django-appconf==1.0.4
-django-axes==5.27.0
+Django>=5.2.11,<6
+django-appconf
+django-axes
 django-bulma
 django-dbbackup
 django-gmailapi-backend

@@ -99,20 +99,19 @@ ALLOWED_HOSTS = [
     "cloud-compute:*",
 ]
 
-CSRF_TRUSTED_ORIGINS = ["calcus.cloud", "static.calcus.cloud"]
+CSRF_TRUSTED_ORIGINS = [
+    "https://calcus.cloud",
+    "https://static.calcus.cloud",
+    "http://localhost",
+]
+
+if DEBUG:
+    SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
 if "CALCUS_CLOUD_INTERNAL" in os.environ:
     ALLOWED_HOSTS.append("*")
     CSRF_TRUSTED_ORIGINS.append("*")
 
-if IS_TEST:
-    ALLOWED_HOSTS.append("*")
-    ALLOWED_HOSTS.append("*.*.*.*")
-    ALLOWED_HOSTS.append("*.*.*.*:*")
-
-    CSRF_TRUSTED_ORIGINS.append("*")
-    CSRF_TRUSTED_ORIGINS.append("*.*.*.*")
-    CSRF_TRUSTED_ORIGINS.append("*.*.*.*:*")
 
 INSTALLED_APPS = [
     "frontend",
@@ -123,12 +122,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sitemaps",
+    "django.contrib.postgres",
     # "axes",
     "bulma",
     # "gmailapi_backend",
     "corsheaders",
     #'debug_toolbar',
 ]
+
 
 if IS_CLOUD or IS_TEST:
     INSTALLED_APPS.append("django_recaptcha")
@@ -161,7 +162,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # "axes.middleware.AxesMiddleware",
-    #'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 if IS_CLOUD:
@@ -177,6 +177,16 @@ if IS_CLOUD:
         "https://static.calcus.cloud",
         "https://www.static.calcus.cloud",
     ]
+if IS_TEST:
+    ALLOWED_HOSTS.append("*")
+    ALLOWED_HOSTS.append("*.*.*.*")
+    ALLOWED_HOSTS.append("*.*.*.*:*")
+
+    CSRF_TRUSTED_ORIGINS.append("*")
+    CSRF_TRUSTED_ORIGINS.append("*.*.*.*")
+    CSRF_TRUSTED_ORIGINS.append("*.*.*.*:*")
+    INSTALLED_APPS.append("silk")
+    MIDDLEWARE.append("silk.middleware.SilkyMiddleware")
 
 HASHID_FIELD_SALT = os.getenv("CALCUS_HASHID_SALT", "test_salt")
 
@@ -266,6 +276,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
 LOGIN_REDIRECT_URL = "/projects"
 
 DEFAULT_FROM_EMAIL = "bot@calcus.cloud"
@@ -306,7 +318,10 @@ THROTTLE_ENABLED = True
 MAX_UPLOAD_SIZE = "5242880"  # 5MB max
 INTERNAL_IPS = [
     "127.0.0.1",
+    "*.*.*.*",
+    "*",
 ]
+
 
 SESSION_COOKIE_NAME = "CALCUS_SESSION_COOKIE"
 

@@ -20,8 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from django.db import models, transaction
 from django.db.models.signals import pre_save
 from django.utils import timezone
-from django.contrib.auth.models import GroupManager, Permission
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import (
+    GroupManager,
+    Permission,
+    AbstractUser,
+    BaseUserManager,
+)
 
 from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import post_save
@@ -477,6 +481,12 @@ class Project(models.Model):
     def __repr__(self):
         return self.name
 
+    def save(self, *args, **kwargs):
+        rename = kwargs.pop("rename", False)
+        if rename:
+            self._is_renaming = True
+        super().save(*args, **kwargs)
+
 
 @receiver(post_save, sender=Project)
 def create_main_folder(sender, instance, created, **kwargs):
@@ -500,6 +510,12 @@ class Folder(models.Model):
         "Folder", on_delete=models.SET_NULL, blank=True, null=True
     )
     depth = models.PositiveIntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        rename = kwargs.pop("rename", False)
+        if rename:
+            self._is_renaming = True
+        super().save(*args, **kwargs)
 
 
 class ClusterAccess(models.Model):
@@ -577,6 +593,12 @@ class Ensemble(models.Model):
     flagged = models.BooleanField(default=False)
 
     hidden = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        rename = kwargs.pop("rename", False)
+        if rename:
+            self._is_renaming = True
+        super().save(*args, **kwargs)
 
     @property
     def get_node_color(self):
@@ -1132,6 +1154,12 @@ class Molecule(models.Model):
     def count_vis(self):
         return len(self.ensemble_set.filter(hidden=False))
 
+    def save(self, *args, **kwargs):
+        rename = kwargs.pop("rename", False)
+        if rename:
+            self._is_renaming = True
+        super().save(*args, **kwargs)
+
 
 class FlowchartOrder(models.Model):
     name = models.CharField(max_length=100)
@@ -1271,13 +1299,23 @@ class CalculationOrder(models.Model):
         "Filter", on_delete=models.SET_NULL, blank=True, null=True
     )
 
-    date = models.DateTimeField("date", null=True, blank=True)
-    last_seen_status = models.PositiveIntegerField(default=0)
     hidden = models.BooleanField(default=False)
 
     resource = models.ForeignKey(
         "ClusterAccess", on_delete=models.SET_NULL, blank=True, null=True
     )
+
+    date = models.DateTimeField("date", null=True, blank=True)
+    last_seen_status = models.PositiveIntegerField(default=0)
+    cached_status = models.PositiveIntegerField(default=0)
+    _calc_statuses = models.CharField(max_length=50, default="")
+
+    _label = models.CharField(max_length=200, default="")
+    _molecule_name = models.CharField(max_length=200, default="")
+    _source = models.CharField(max_length=200, default="")
+
+    _project_name = models.CharField(max_length=200, default="")
+    _step_name = models.CharField(max_length=200, default="")
 
     def see(self):
         if self.last_seen_status != self.status:
@@ -1307,9 +1345,12 @@ class CalculationOrder(models.Model):
 
     @property
     def label(self):
-        if not self.step:
-            return "Unknown"
+        if self._label == "":
+            self._label = self._get_label()
+            self.save()
+        return self._label
 
+    def _get_label(self):
         if self.step.creates_ensemble:
             if self.result_ensemble:
                 return self.result_ensemble.name
@@ -1325,18 +1366,38 @@ class CalculationOrder(models.Model):
 
     @property
     def molecule_name(self):
-        if self.ensemble != None and self.ensemble.parent_molecule != None:
+        if self._molecule_name == "":
+            self._molecule_name = self._get_molecule_name()
+            self.save()
+        return self._molecule_name
+
+    @property
+    def step_name(self):
+        if self._step_name == "":
+            self._step_name = self.step.name
+            self.save()
+        return self._step_name
+
+    @property
+    def project_name(self):
+        if self._project_name == "":
+            self._project_name = self.project.name
+            self.save()
+        return self._project_name
+
+    def _get_molecule_name(self):
+        if self.ensemble is not None and self.ensemble.parent_molecule is not None:
             return self.ensemble.parent_molecule.name
         elif (
-            self.structure != None
-            and self.structure.parent_ensemble != None
-            and self.structure.parent_ensemble.parent_molecule != None
+            self.structure is not None
+            and self.structure.parent_ensemble is not None
+            and self.structure.parent_ensemble.parent_molecule is not None
         ):
             return self.structure.parent_ensemble.parent_molecule.name
         elif (
-            self.start_calc != None
-            and self.start_calc.result_ensemble != None
-            and self.start_calc.result_ensemble.parent_molecule != None
+            self.start_calc is not None
+            and self.start_calc.result_ensemble is not None
+            and self.start_calc.result_ensemble.parent_molecule is not None
         ):
             return self.start_calc.result_ensemble.parent_molecule.name
         else:
@@ -1344,14 +1405,22 @@ class CalculationOrder(models.Model):
 
     @property
     def source(self):
-        if self.ensemble != None and self.ensemble.parent_molecule != None:
+        if self._source == "":
+            self._source = self._get_source()
+            self.save()
+        return self._source
+
+    def _get_source(self):
+        if self.ensemble is not None and self.ensemble.parent_molecule is not None:
             return self.ensemble.name, f"/ensemble/{self.ensemble.id}"
-        elif self.structure != None and self.structure.parent_ensemble != None:
+        elif self.structure is not None and self.structure.parent_ensemble is not None:
             return (
                 self.structure.parent_ensemble.name,
                 f"/ensemble/{self.structure.parent_ensemble.id}",
             )
-        elif self.start_calc != None and self.start_calc.result_ensemble != None:
+        elif (
+            self.start_calc is not None and self.start_calc.result_ensemble is not None
+        ):
             return (
                 self.start_calc.result_ensemble.name,
                 f"/ensemble/{self.start_calc.result_ensemble.id}",
@@ -1360,11 +1429,42 @@ class CalculationOrder(models.Model):
             return "Unknown"
 
     @property
+    def calc_statuses(self):
+        if self._calc_statuses == "":
+            return ""
+        return [int(i) for i in self._calc_statuses.split(",")]
+
+    @calc_statuses.setter
+    def calc_statuses(self, val):
+        self._calc_statuses = ",".join([str(i) for i in val])
+
+    def set_calc_statuses(self):
+        statuses = self.get_all_calcs
+        self.calc_statuses = statuses
+        return statuses
+
+    @property
     def status(self):
+        should_save = False
+        if self.calc_statuses == "":
+            statuses = self.set_calc_statuses()
+            should_save = True
+        else:
+            statuses = self.calc_statuses
+
+        stat = self._status(*statuses)
+
+        if should_save or stat != self.cached_status:
+            self.cached_status = stat
+            self.save()
+
+        return stat
+
+    def ensure_status(self):
+        """Triggers a manual update of the status"""
         return self._status(*self.get_all_calcs)
 
     def update_unseen(self, old_status, old_unseen):
-        new_status = self.status
         new_unseen = self.new_status
 
         if old_unseen:
@@ -1398,12 +1498,17 @@ class CalculationOrder(models.Model):
     @property
     def get_data(self):
         """Returns a list of [queued, running, done, error, net_status, total_time, new_status]"""
-        nums = [0, 0, 0, 0, 0, 0, 0]
+        calc_statuses = self.calc_statuses
+        if calc_statuses == "":
+            calc_statuses = self.set_calc_statuses()
+        nums = calc_statuses + [0, 0, 0]
+
+        """
         for c in self.calculation_set.all():
             nums[c.status] += 1
             if c.status > 0:
                 nums[5] += c.execution_time
-
+        """
         nums[4] = self._status(nums[0], nums[1], nums[2], nums[3])
 
         if self.last_seen_status != nums[4]:
@@ -1636,6 +1741,74 @@ class Filter(models.Model):
     type = models.CharField(max_length=500)
     parameters = models.ForeignKey(Parameters, on_delete=models.CASCADE, null=True)
     value = models.CharField(max_length=500)
+
+
+@receiver(post_save, sender=Ensemble)
+def ensemble_renamed(sender, instance, **kwargs):
+    if getattr(instance, "_is_renaming", False):
+        for o in instance.calculationorder_set.all():
+            o._source = o._get_source()
+            o._label = o._get_label()
+            o.save()
+        for o in instance.result_of.all():
+            o._label = o._get_label()
+            o.save()
+        for s in instance.structure_set.all():
+            for o in s.calculationorder_set.all():
+                o._label = o._get_label()
+                o._source = o._get_source()
+                o.save()
+
+
+@receiver(post_save, sender=Molecule)
+def molecule_renamed(sender, instance, **kwargs):
+    if getattr(instance, "_is_renaming", False):
+        for e in instance.ensemble_set.all():
+            for o in e.calculationorder_set.all():
+                o._molecule_name = o._get_molecule_name()
+                o.save()
+
+
+@receiver(post_save, sender=Project)
+def project_renamed(sender, instance, **kwargs):
+    if getattr(instance, "_is_renaming", False):
+        pass
+
+
+@receiver(post_save, sender=Folder)
+def folder_renamed(sender, instance, **kwargs):
+    if getattr(instance, "_is_renaming", False):
+        pass
+
+
+@receiver(post_save, sender=Calculation)
+def add_new_calc_to_order(sender, instance, created, **kwargs):
+    if created:
+        with transaction.atomic():
+            order = CalculationOrder.objects.select_for_update().get(
+                id=instance.order.pk
+            )
+            calc_statuses = order.calc_statuses
+            calc_statuses[instance.status] += 1
+            order.calc_statuses = calc_statuses
+            order.save()
+
+
+@receiver(pre_save, sender=Calculation)
+def update_order_calc_statuses(sender, instance, **kwargs):
+    """Updates the cached CalculationOrder status"""
+    try:
+        obj = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        return
+
+    with transaction.atomic():
+        order = CalculationOrder.objects.select_for_update().get(id=instance.order.pk)
+        calc_statuses = order.calc_statuses
+        calc_statuses[obj.status] -= 1
+        calc_statuses[instance.status] += 1
+        order.calc_statuses = calc_statuses
+        order.save()
 
 
 @receiver(post_save, sender=Parameters)

@@ -149,6 +149,17 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def priority_fn(obj):
+    if obj.new_status:
+        return (2, obj.date)
+    if obj.status == 1:
+        return (1, obj.date)
+    return (0, obj.date)
+
+
+from django.db.models import Case, When, Value, IntegerField, F, Q
+
+
 class IndexView(generic.ListView):
     template_name = "frontend/dynamic/list.html"
     context_object_name = "latest_frontend"
@@ -203,11 +214,21 @@ class IndexView(generic.ListView):
                         new_hits.append(hit)
                 hits = new_hits
 
+            custom_order = Case(
+                When(~Q(last_seen_status=F("cached_status")), then=Value(2)),
+                When(Q(cached_status=1), then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
+            res = hits.annotate(custom_order=custom_order).order_by(custom_order)
+
+            """
             res = sorted(
                 hits,
-                key=lambda d: (1 if d.new_status or d.status == 1 else 0, d.date),
+                #key=lambda d: (1 if d.new_status or d.status == 1 else 0, d.date),
+                key=priority_fn,
                 reverse=True,
-            )
+            )"""
             return res
         else:
             return []
@@ -3676,7 +3697,7 @@ def rename_molecule(request):
             name = "Nameless molecule"
 
         mol.name = name
-        mol.save()
+        mol.save(rename=True)
         return HttpResponse(status=200)
     else:
         return HttpResponse(status=403)
@@ -3702,7 +3723,7 @@ def rename_project(request):
             name = "Nameless project"
 
         proj.name = name
-        proj.save()
+        proj.save(rename=True)
         return HttpResponse(status=200)
     else:
         return HttpResponse(status=403)
@@ -3792,7 +3813,7 @@ def rename_ensemble(request):
             name = "Nameless ensemble"
 
         e.name = name
-        e.save()
+        e.save(rename=True)
         return HttpResponse(status=200)
     else:
         return HttpResponse(status=403)
@@ -3818,7 +3839,7 @@ def rename_folder(request):
             return HttpResponse(status=403)
 
         f.name = name
-        f.save()
+        f.save(rename=True)
         return HttpResponse(status=200)
     else:
         return HttpResponse(status=403)

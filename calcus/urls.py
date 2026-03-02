@@ -17,11 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from django.contrib import admin
 from django.urls import include, path
-from django.contrib.auth.views import LoginView, LogoutView
 from django.conf import settings
-from django.conf.urls.static import static
 
 from django.contrib.sitemaps.views import sitemap
 
@@ -47,12 +44,5 @@ urlpatterns = [
 handler404 = "frontend.views.handler404"
 handler500 = "frontend.views.handler500"
 
-from django.conf import settings
-from django.urls import include, path
-
-if settings.DEBUG and False:
-    import debug_toolbar
-
-    urlpatterns += [
-        path("__debug__/", include(debug_toolbar.urls)),
-    ] + urlpatterns
+if settings.DEBUG:
+    urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]

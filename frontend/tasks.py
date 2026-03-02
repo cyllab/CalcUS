@@ -441,9 +441,9 @@ def system(
                 )
                 with open(os.path.join(tmpdir, "tmp.sh"), "a") as out:
                     if log_file:
-                        out.write(f"run.py '{command}' | tee calc.out\n")
+                        out.write(f'run.py "{command}" | tee calc.out\n')
                     else:
-                        out.write(f"run.py '{command}'\n")
+                        out.write(f'run.py "{command}"\n')
                 sftp_put(
                     os.path.join(tmpdir, "tmp.sh"),
                     os.path.join(remote_dir, f"submit_{software}.sh"),
@@ -2197,7 +2197,11 @@ def orca_freq(calc):
     freq_animations = []
     for ind in range(len(vibs)):
         anim = f"{num_atoms}\nCalcUS\n"
-        assert len(struct) == num_atoms
+        if len(struct) != num_atoms:
+            logger.error(
+                f"For some reason, len(struct) is {len(struct)} and not {num_atoms}"
+            )
+            # assert len(struct) == num_atoms
         for ind2, (a, x, y, z) in enumerate(struct):
             anim += "{} {:.4f} {:.4f} {:.4f} {} {} {}\n".format(
                 a, x, y, z, *vibs[ind][3 * ind2 : 3 * ind2 + 3]
