@@ -1437,6 +1437,7 @@ class CalculationOrder(models.Model):
     @calc_statuses.setter
     def calc_statuses(self, val):
         self._calc_statuses = ",".join([str(i) for i in val])
+        self.cached_status = self.ensure_status()
 
     def set_calc_statuses(self):
         statuses = self.get_all_calcs
@@ -1624,38 +1625,45 @@ class Calculation(models.Model):
             print("Could not find the corresponding ensemble")
 
     def save(self, *args, **kwargs):
+        order = None
+        flowchart_order = None
         if self.flowchart_order is not None:
-            old_status = self.flowchart_order.status
-            old_unseen = self.flowchart_order.new_status
+            flowchart_order = FlowchartOrder.objects.get(id=self.flowchart_order_id)
+            old_status = flowchart_order.status
+            old_unseen = flowchart_order.new_status
 
         elif self.order is not None:
-            old_status = self.order.status
-            old_unseen = self.order.new_status
+            order = CalculationOrder.objects.get(id=self.order_id)
+            old_status = order.status
+            old_unseen = order.new_status
 
         else:
             raise Exception("No calculation order")
 
         super(Calculation, self).save(*args, **kwargs)
 
-        if self.flowchart_order is not None:
-            self.flowchart_order.update_unseen(old_status, old_unseen)
+        if flowchart_order is not None:
+            flowchart_order.refresh_from_db()
+            flowchart_order.update_unseen(old_status, old_unseen)
 
-        elif self.order is not None:
-            self.order.update_unseen(old_status, old_unseen)
+        elif order is not None:
+            order.refresh_from_db()
+            order.update_unseen(old_status, old_unseen)
 
         else:
             raise Exception("No calculation order")
 
     def delete(self, *args, **kwargs):
-        old_status = self.order.status
-        old_unseen = self.order.new_status
+        order = CalculationOrder.objects.get(id=self.order_id)
+        old_status = order.status
+        old_unseen = order.new_status
 
         super(Calculation, self).delete(*args, **kwargs)
 
-        self.order.update_unseen(old_status, old_unseen)
+        order.update_unseen(old_status, old_unseen)
 
-        if self.order.calculation_set.count() == 0:
-            self.order.delete()
+        if order.calculation_set.count() == 0:
+            order.delete()
 
     @property
     def execution_time(self):
@@ -1802,13 +1810,16 @@ def update_order_calc_statuses(sender, instance, **kwargs):
     except sender.DoesNotExist:
         return
 
-    with transaction.atomic():
-        order = CalculationOrder.objects.select_for_update().get(id=instance.order.pk)
-        calc_statuses = order.calc_statuses
-        calc_statuses[obj.status] -= 1
-        calc_statuses[instance.status] += 1
-        order.calc_statuses = calc_statuses
-        order.save()
+    if obj.status != instance.status:
+        with transaction.atomic():
+            order = CalculationOrder.objects.select_for_update().get(
+                id=instance.order_id
+            )
+            calc_statuses = order.calc_statuses
+            calc_statuses[obj.status] -= 1
+            calc_statuses[instance.status] += 1
+            order.calc_statuses = calc_statuses
+            order.save()
 
 
 @receiver(post_save, sender=Parameters)

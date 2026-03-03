@@ -1764,6 +1764,59 @@ class CalculationTests(TestCase):
         self.client = Client()
         self.client.force_login(self.user)
 
+    def test_order_calc_statuses_not_overwritten_by_stale_related_order(self):
+        params = {
+            "calc_name": "test",
+            "type": "Geometrical Optimisation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "software": "xtb",
+            "in_file": "CH4.xyz",
+            "theory": "GFN2-xTB",
+            "method": "GFN2-xTB",
+        }
+
+        calc = gen_calc(params, self.user)
+        order_id = calc.order_id
+
+        # Keep a stale related-object instance cached on calc.
+        calc.order
+
+        calc.status = 1
+        calc.save()
+
+        # Force a mismatch so stale `calc.order.status` would save stale fields
+        # on the old implementation.
+        calc.order.cached_status = 1
+
+        calc.status = 2
+        calc.save()
+
+        order = CalculationOrder.objects.get(id=order_id)
+        self.assertEqual(order.calc_statuses, [0, 0, 1, 0])
+
+    def test_unseen_counter_increments_when_calc_becomes_running(self):
+        params = {
+            "calc_name": "test",
+            "type": "Geometrical Optimisation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "software": "xtb",
+            "in_file": "CH4.xyz",
+            "theory": "GFN2-xTB",
+            "method": "GFN2-xTB",
+        }
+
+        calc = gen_calc(params, self.user)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.unseen_calculations, 0)
+
+        calc.status = 1
+        calc.save()
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.unseen_calculations, 1)
+
     def test_Gaussian_frames1(self):
         params = {
             "calc_name": "test",

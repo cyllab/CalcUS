@@ -221,7 +221,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         submit.send_keys(Keys.RETURN)
 
-        self.lget("/projects")
+        self.lget("/projects/")
         element = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located((By.ID, "projects_list"))
         )

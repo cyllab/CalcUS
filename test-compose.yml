@@ -33,6 +33,8 @@ services:
                         - taskqueue
                         - cloud-compute
                         - stripe-cli
+                        - postgres
+                        - selenium
         taskqueue:
               image: ghcr.io/aertje/cloud-tasks-emulator:latest
               command: -host 0.0.0.0 -port 8123 -queue projects/test-project/locations/us-central1/queues/xtb-compute -queue projects/test-project/locations/us-central1/queues/actions
@@ -79,14 +81,12 @@ services:
                 ports:
                         - "4444:4444"
                         - "5900:5900"
-                links:
-                        - web
                 shm_size: '1gb' # Necessary to ensure that selenium does not crash
                 environment:
                         - SCREEN_WIDTH=1920
                         - SCREEN_HEIGHT=1080
         postgres:
-                image: postgres:11-bullseye
+                image: postgres:18-trixie
                 user: "${UID}:${GID}"
                 volumes:
                         - ./data:/var/lib/postgresql/data/:rw

@@ -215,20 +215,13 @@ class IndexView(generic.ListView):
                 hits = new_hits
 
             custom_order = Case(
-                When(~Q(last_seen_status=F("cached_status")), then=Value(2)),
-                When(Q(cached_status=1), then=Value(1)),
+                When(~Q(last_seen_status=F("cached_status")), then=Value(-2)),
+                When(Q(cached_status=1), then=Value(-1)),
                 default=Value(0),
                 output_field=IntegerField(),
             )
             res = hits.annotate(custom_order=custom_order).order_by(custom_order)
 
-            """
-            res = sorted(
-                hits,
-                #key=lambda d: (1 if d.new_status or d.status == 1 else 0, d.date),
-                key=priority_fn,
-                reverse=True,
-            )"""
             return res
         else:
             return []

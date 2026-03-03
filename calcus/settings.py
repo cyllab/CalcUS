@@ -110,7 +110,7 @@ if DEBUG:
 
 if "CALCUS_CLOUD_INTERNAL" in os.environ:
     ALLOWED_HOSTS.append("*")
-    CSRF_TRUSTED_ORIGINS.append("*")
+    # CSRF_TRUSTED_ORIGINS.append("*")
 
 
 INSTALLED_APPS = [
@@ -182,9 +182,9 @@ if IS_TEST:
     ALLOWED_HOSTS.append("*.*.*.*")
     ALLOWED_HOSTS.append("*.*.*.*:*")
 
-    CSRF_TRUSTED_ORIGINS.append("*")
-    CSRF_TRUSTED_ORIGINS.append("*.*.*.*")
-    CSRF_TRUSTED_ORIGINS.append("*.*.*.*:*")
+    # CSRF_TRUSTED_ORIGINS.append("*")
+    # CSRF_TRUSTED_ORIGINS.append("*.*.*.*")
+    # CSRF_TRUSTED_ORIGINS.append("*.*.*.*:*")
     INSTALLED_APPS.append("silk")
     MIDDLEWARE.append("silk.middleware.SilkyMiddleware")
 
