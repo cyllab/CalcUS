@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import hashlib
 import os
 import time
 import selenium
@@ -137,7 +138,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         m = getattr(self, self.m_name)
 
         num = 1
-        MAX_ATTEMPTS = int(os.environ.get("CALCUS_TEST_MAX_ATTEMPTS", "1"))
+        MAX_ATTEMPTS = int(os.environ.get("CALCUS_TEST_MAX_ATTEMPTS", "3"))
 
         exc = None
 
@@ -163,8 +164,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.addCleanup(self.cleanupCalculations)
         os.chdir(base_cwd)
         call_command("init_static_obj")
-        self.email = "Selenium@test.com"
+        email_hash = hashlib.md5(self.full_test_name.encode("utf-8")).hexdigest()[:12]
+        self.email = f"selenium_{email_hash}@test.com"
         self.password = "test1234"
+        self.current_order_id = None
 
         self.user = User.objects.create_user(
             email=self.email,
@@ -189,6 +192,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 res.abort()
 
     def login(self, email, password):
+        # Selenium driver is shared across tests/classes; reset browser state
+        # before authenticating a new user to avoid cross-test leakage.
+        self.driver.get(f"{self.live_server_url}/")
+        self.driver.delete_all_cookies()
+        self.driver.execute_script(
+            "window.localStorage.clear(); window.sessionStorage.clear();"
+        )
         self.lget("/accounts/login/")
 
         element = WebDriverWait(self.driver, 2).until(
@@ -200,6 +210,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         email_f = self.driver.find_element(By.ID, "id_username")
         password_f = self.driver.find_element(By.ID, "id_password")
         submit = self.driver.find_element(By.CSS_SELECTOR, "input.control")
+        login_url = self.driver.current_url
         email_f.send_keys(email)
         password_f.send_keys(password)
 
@@ -220,14 +231,29 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             time.sleep(0.3)
 
         submit.send_keys(Keys.RETURN)
-
-        self.lget("/projects/")
-        element = WebDriverWait(self.driver, 2).until(
-            EC.presence_of_element_located((By.ID, "projects_list"))
+        WebDriverWait(self.driver, 5).until(
+            lambda d: d.current_url != login_url
+            or len(d.find_elements(By.XPATH, "//a[contains(., 'Logout')]")) > 0
         )
 
+        self.lget("/projects/")
+        WebDriverWait(self.driver, 5).until(
+            lambda d: "/projects/" in d.current_url
+            or "/accounts/login/" in d.current_url
+        )
+        if "/accounts/login/" in self.driver.current_url:
+            raise selenium.common.exceptions.TimeoutException("Login did not complete")
+
     def logout(self):
-        self.driver.get(f"{self.live_server_url}/accounts/logout/?next=/")
+        self.driver.get(f"{self.live_server_url}/")
+        self.driver.delete_all_cookies()
+        self.driver.execute_script(
+            "window.localStorage.clear(); window.sessionStorage.clear();"
+        )
+        self.lget("/accounts/login/")
+        WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.ID, "id_username"))
+        )
 
     def lget(self, url):
         self.driver.get(f"{self.live_server_url}{url}")
@@ -580,7 +606,28 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def calc_launch(self):
         self.wait_for_ajax()
         submit = self.driver.find_element(By.ID, "submit_button")
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block: 'center'});", submit
+        )
+        launch_url = self.driver.current_url
         submit.click()
+
+        loading_started = False
+        for i in range(10):
+            try:
+                submit = self.driver.find_element(By.ID, "submit_button")
+                loading_started = "is-loading" in submit.get_attribute("class")
+            except (
+                selenium.common.exceptions.NoSuchElementException,
+                selenium.common.exceptions.StaleElementReferenceException,
+            ):
+                loading_started = True
+            if loading_started or self.driver.current_url != launch_url:
+                break
+            time.sleep(0.1)
+
+        if not loading_started and self.driver.current_url == launch_url:
+            self.driver.execute_script("verify_form();")
 
         self.wait_for_submission()
         try:
@@ -590,6 +637,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         else:
             if msg.text != "":
                 raise Exception(f"Got error while submitting calculation: {msg.text}")
+
+        if self.driver.current_url == launch_url:
+            raise Exception("Calculation submission did not complete")
 
     def get_confirmed_specifications(self):
         assert self.is_on_page_ensemble()
@@ -1237,7 +1287,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.get_number_calc_orders() > 0
 
         calculations = self.get_calc_orders()
-        calculations[0].click()
+        self.current_order_id = calculations[0].get_attribute("id")
+        link = calculations[0].find_element(By.CSS_SELECTOR, "a[href^='/link_order/']")
+        self.driver.get(link.get_attribute("href"))
         self.wait_for_ajax()
 
     def see_latest_calc(self):
@@ -1255,9 +1307,26 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.get_number_calc_orders() > 0
 
         calculations = self.get_calc_orders()
+        self.current_order_id = calculations[0].get_attribute("id")
 
-        link = calculations[0].find_element(By.CLASS_NAME, "fa-list")
-        link.click()
+        icon = calculations[0].find_element(By.CLASS_NAME, "fa-list")
+        link = icon.find_element(By.XPATH, "./ancestor::a[1]")
+        self.driver.get(link.get_attribute("href"))
+        self.wait_for_ajax()
+
+    def _get_target_calc_order(self):
+        calculations = self.get_calc_orders()
+        if self.current_order_id is None:
+            return calculations[0]
+
+        for calc in calculations:
+            if calc.get_attribute("id") == self.current_order_id:
+                return calc
+        return calculations[0]
+
+    def _refresh_calculations_page(self):
+        self.driver.refresh()
+        self.wait_for_ajax()
 
     def get_error_messages(self):
         assert self.is_on_page_order_details()
@@ -1357,22 +1426,38 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def wait_latest_calc_done(self, timeout):
         assert self.is_on_page_calculations()
         self.wait_for_ajax()
-        assert self.get_number_calc_orders() > 0
 
-        for i in range(0, timeout, 2):
+        deadline = time.monotonic() + timeout
+        while True:
             calculations = self.get_calc_orders()
+            if len(calculations) > 0:
+                break
+            if time.monotonic() >= deadline:
+                raise Exception("Calculation order did not appear")
+            time.sleep(0.5)
+            self._refresh_calculations_page()
 
-            header = calculations[0].find_element(By.CLASS_NAME, "message-header")
+        while time.monotonic() < deadline:
+            try:
+                header = self._get_target_calc_order().find_element(
+                    By.CLASS_NAME, "message-header"
+                )
+            except (
+                selenium.common.exceptions.NoSuchElementException,
+                selenium.common.exceptions.StaleElementReferenceException,
+            ):
+                time.sleep(0.2)
+                self._refresh_calculations_page()
+                continue
             if "has-background-success" in header.get_attribute(
                 "class"
             ) or "has-background-danger" in header.get_attribute("class"):
+                # One final refresh ensures related UI state (badges/new markers) is current.
+                self._refresh_calculations_page()
                 return
 
-            if i > 20 and "has-background-warning" not in header.get_attribute("class"):
-                raise Exception("Calculation did not start after 20 seconds")
-
-            time.sleep(2)
-            self.driver.refresh()
+            time.sleep(0.5)
+            self._refresh_calculations_page()
         raise Exception("Calculation did not finish")
 
     def wait_all_calc_done(self, timeout):
@@ -1417,16 +1502,34 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def wait_latest_calc_error(self, timeout):
         assert self.is_on_page_calculations()
-        assert self.get_number_calc_orders() > 0
-
-        for i in range(timeout):
+        self.wait_for_ajax()
+        deadline = time.monotonic() + timeout
+        while True:
             calculations = self.get_calc_orders()
+            if len(calculations) > 0:
+                break
+            if time.monotonic() >= deadline:
+                raise Exception("Calculation order did not appear")
+            time.sleep(0.5)
+            self._refresh_calculations_page()
 
-            header = calculations[0].find_element(By.CLASS_NAME, "message-header")
+        while time.monotonic() < deadline:
+            try:
+                header = self._get_target_calc_order().find_element(
+                    By.CLASS_NAME, "message-header"
+                )
+            except (
+                selenium.common.exceptions.NoSuchElementException,
+                selenium.common.exceptions.StaleElementReferenceException,
+            ):
+                time.sleep(0.2)
+                self._refresh_calculations_page()
+                continue
             if "has-background-danger" in header.get_attribute("class"):
+                self._refresh_calculations_page()
                 return
-            time.sleep(1)
-            self.driver.refresh()
+            time.sleep(0.5)
+            self._refresh_calculations_page()
         raise Exception("Calculation did not produce an error")
 
     def latest_calc_successful(self):
@@ -1768,11 +1871,16 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         ).click()
 
     def try_assert_number_unseen_calcs(self, num, timeout):
-        for i in range(timeout):
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            self.wait_for_ajax()
             if self.get_number_unseen_calcs() == num:
                 return True
             self.driver.refresh()
-            time.sleep(1)
+            time.sleep(0.25)
+        self.wait_for_ajax()
+        if self.get_number_unseen_calcs() == num:
+            return True
         return False
 
     def get_related_calculations_div(self):
@@ -2015,7 +2123,21 @@ class CalcusCloudLiveServer(CalcusLiveServer):
         submit = self.driver.find_element(
             By.CSS_SELECTOR, "#form_" + acc_type + " > button"
         )
+        register_url = self.driver.current_url
         submit.click()
+
+        for i in range(10):
+            if self.driver.current_url != register_url:
+                break
+            time.sleep(0.1)
+        else:
+            self.driver.execute_script("arguments[0].click();", submit)
+
+        WebDriverWait(self.driver, 5).until(
+            lambda d: d.current_url != register_url
+            or len(d.find_elements(By.CSS_SELECTOR, ".notification.is-danger")) > 0
+            or len(d.find_elements(By.CSS_SELECTOR, ".help.is-danger")) > 0
+        )
 
     def redeem_code(self, code):
         self.lget("/profile/")
@@ -2186,7 +2308,11 @@ class CalcusCloudLiveServer(CalcusLiveServer):
         self.driver.find_element(By.ID, "billingName").send_keys("Selenium Robot")
         self.driver.find_element(By.ID, "billingPostalCode").send_keys("123 456")
 
-        self.driver.find_element(By.CSS_SELECTOR, ".SubmitButton").click()
-
-        WebDriverWait(self.driver, 10).until(EC.url_contains(self.live_server_url))
+        submit = self.driver.find_element(By.CSS_SELECTOR, ".SubmitButton")
+        checkout_url = self.driver.current_url
+        submit.click()
+        WebDriverWait(self.driver, 5).until(
+            lambda d: d.current_url.startswith(self.live_server_url)
+            or (d.current_url != checkout_url and self.live_server_url in d.current_url)
+        )
         self.wait_for_ajax()

@@ -304,7 +304,6 @@
 		}
         if (viewer.molecules.length == 0 && sketcher.molecules.length > 0) {
 			let mol = ChemDoodle.writeMOL(sketcher.getMolecule());
-
 			data.append("structure", mol);
 		}
 		{% endif %}

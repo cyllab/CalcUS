@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from django.db import models, transaction
+from django.db.models import Case, F, When
 from django.db.models.signals import pre_save
 from django.utils import timezone
 from django.contrib.auth.models import (
@@ -1193,15 +1194,21 @@ class FlowchartOrder(models.Model):
         if old_unseen:
             if not new_unseen:
                 with transaction.atomic():
-                    p = User.objects.select_for_update().get(id=self.author.id)
-                    p.unseen_calculations -= 1
-                    p.save()
+                    User.objects.filter(id=self.author_id).update(
+                        unseen_calculations=Case(
+                            When(
+                                unseen_calculations__gt=0,
+                                then=F("unseen_calculations") - 1,
+                            ),
+                            default=0,
+                        )
+                    )
         else:
             if new_unseen:
                 with transaction.atomic():
-                    p = User.objects.select_for_update().get(id=self.author.id)
-                    p.unseen_calculations += 1
-                    p.save()
+                    User.objects.filter(id=self.author_id).update(
+                        unseen_calculations=F("unseen_calculations") + 1
+                    )
 
     def _status(self, num_queued, num_running, num_done, num_error):
         if num_queued + num_running + num_done + num_error == 0:
@@ -1308,6 +1315,7 @@ class CalculationOrder(models.Model):
     date = models.DateTimeField("date", null=True, blank=True)
     last_seen_status = models.PositiveIntegerField(default=0)
     cached_status = models.PositiveIntegerField(default=0)
+    total_cpu_time = models.PositiveBigIntegerField(default=0)
     _calc_statuses = models.CharField(max_length=50, default="")
 
     _label = models.CharField(max_length=200, default="")
@@ -1332,12 +1340,6 @@ class CalculationOrder(models.Model):
             if not self.hidden and self.status in [2, 3]:
                 self.hidden = True
                 self.save()
-
-    @property
-    def total_cpu_time(self):
-        return sum(
-            [c.execution_time for c in self.calculation_set.filter(status__gt=0).all()]
-        )
 
     @property
     def color(self):
@@ -1437,7 +1439,9 @@ class CalculationOrder(models.Model):
     @calc_statuses.setter
     def calc_statuses(self, val):
         self._calc_statuses = ",".join([str(i) for i in val])
-        self.cached_status = self.ensure_status()
+        # Derive cached status from the same counter snapshot being stored.
+        # Calling ensure_status() here may read stale DB rows during calc pre-save.
+        self.cached_status = self._status(*val)
 
     def set_calc_statuses(self):
         statuses = self.get_all_calcs
@@ -1471,15 +1475,21 @@ class CalculationOrder(models.Model):
         if old_unseen:
             if not new_unseen:
                 with transaction.atomic():
-                    p = User.objects.select_for_update().get(id=self.author.id)
-                    p.unseen_calculations -= 1
-                    p.save()
+                    User.objects.filter(id=self.author_id).update(
+                        unseen_calculations=Case(
+                            When(
+                                unseen_calculations__gt=0,
+                                then=F("unseen_calculations") - 1,
+                            ),
+                            default=0,
+                        )
+                    )
         else:
             if new_unseen:
                 with transaction.atomic():
-                    p = User.objects.select_for_update().get(id=self.author.id)
-                    p.unseen_calculations += 1
-                    p.save()
+                    User.objects.filter(id=self.author_id).update(
+                        unseen_calculations=F("unseen_calculations") + 1
+                    )
 
     def _status(self, num_queued, num_running, num_done, num_error):
         if num_queued + num_running + num_done + num_error == 0:
@@ -1502,14 +1512,9 @@ class CalculationOrder(models.Model):
         calc_statuses = self.calc_statuses
         if calc_statuses == "":
             calc_statuses = self.set_calc_statuses()
-        nums = calc_statuses + [0, 0, 0]
 
-        """
-        for c in self.calculation_set.all():
-            nums[c.status] += 1
-            if c.status > 0:
-                nums[5] += c.execution_time
-        """
+        nums = calc_statuses + [0, 0, 0]
+        nums[5] = self.total_cpu_time
         nums[4] = self._status(nums[0], nums[1], nums[2], nums[3])
 
         if self.last_seen_status != nums[4]:
@@ -1796,9 +1801,8 @@ def add_new_calc_to_order(sender, instance, created, **kwargs):
             order = CalculationOrder.objects.select_for_update().get(
                 id=instance.order.pk
             )
-            calc_statuses = order.calc_statuses
-            calc_statuses[instance.status] += 1
-            order.calc_statuses = calc_statuses
+            # Always derive counters from current DB rows to avoid stale cache drift.
+            order.calc_statuses = order.get_all_calcs
             order.save()
 
 
