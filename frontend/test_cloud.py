@@ -573,6 +573,10 @@ class StripeTests(CalcusCloudLiveServer):
     def setUpClass(cls):
         super().setUpClass()
 
+    def setUp(self):
+        self.__class__._restart_driver()
+        super().setUp()
+
     def test_subscribe_valid(self):
         self.assertFalse(self.user.is_subscriber)
         self.assertEqual(self.user.allocated_seconds, 100)

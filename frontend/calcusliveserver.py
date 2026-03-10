@@ -17,9 +17,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import hashlib
 import os
 import time
+import types
+import unittest
 import selenium
 import pexpect
 import socket
@@ -76,28 +77,35 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     host = "0.0.0.0"
 
     @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-
-        cls.host = socket.gethostbyname(socket.gethostname())
-
+    def _make_driver(cls):
         chrome_options = Options()
         if "CI" in os.environ:  # Github Actions
             chrome_options.add_argument("--headless")
-            # from pyvirtualdisplay import Display
-
-            # cls.display = Display(visible=0, size=(ZOOM * 1920, ZOOM * 1080))
-            # cls.display.start()
-
-            cls.driver = webdriver.Chrome(options=chrome_options)
+            driver = webdriver.Chrome(options=chrome_options)
         else:
-            cls.driver = webdriver.Remote(
+            driver = webdriver.Remote(
                 command_executor="http://selenium:4444/wd/hub",
                 options=chrome_options,
             )
 
-        cls.driver.set_window_size(ZOOM * 1920, ZOOM * 1080)
-        cls.driver.maximize_window()
+        driver.set_window_size(ZOOM * 1920, ZOOM * 1080)
+        driver.maximize_window()
+        return driver
+
+    @classmethod
+    def _restart_driver(cls):
+        try:
+            cls.driver.quit()
+        except Exception:
+            pass
+        cls.driver = cls._make_driver()
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        cls.host = socket.gethostbyname(socket.gethostname())
+        cls.driver = cls._make_driver()
 
         tasks.REMOTE = False
 
@@ -123,49 +131,125 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         cls.driver.quit()
         if not IS_CLOUD:
             cls.celery_worker.__exit__(None, None, None)
+        cls.patcher.stop()
         os.chdir(base_cwd)  # Prevent coverage.py crash
         super().tearDownClass()
 
     def run(self, result=None):
-        self.full_test_name = self.id()
-        self.m_name = self._testMethodName
-        self._testMethodName = "_test_wrapper"
-        tasks.cache_ind = 1
-        super(StaticLiveServerTestCase, self).run(result)
-        self._testMethodName = self.m_name
+        if result is None:
+            result = self.defaultTestResult()
+            startTestRun = getattr(result, "startTestRun", None)
+            stopTestRun = getattr(result, "stopTestRun", None)
+            if startTestRun is not None:
+                startTestRun()
+        else:
+            stopTestRun = None
 
-    def _test_wrapper(self):
-        m = getattr(self, self.m_name)
+        class RetryAttemptResult(unittest.TestResult):
+            def __init__(self):
+                super().__init__()
+                self.error_infos = []
+                self.failure_infos = []
+                self.expected_failure_infos = []
 
-        num = 1
-        MAX_ATTEMPTS = int(os.environ.get("CALCUS_TEST_MAX_ATTEMPTS", "3"))
+            def addError(self, test, err):
+                self.error_infos.append((test, err))
+                super().addError(test, err)
 
-        exc = None
+            def addFailure(self, test, err):
+                self.failure_infos.append((test, err))
+                super().addFailure(test, err)
 
-        print(f"Running {self.m_name}")
-        while True:
-            try:
-                m()
-            except Exception as e:
-                if exc is None:
-                    exc = e
-                if num == MAX_ATTEMPTS:
-                    raise exc
-                else:
-                    num += 1
-                print(f"Test failed, trying again (attempt {num}/{MAX_ATTEMPTS})")
-                self.cleanupCalculations()
-                self.lget("/")
-                time.sleep(3)
+            def addExpectedFailure(self, test, err):
+                self.expected_failure_infos.append((test, err))
+                super().addExpectedFailure(test, err)
+
+        result.startTest(self)
+        try:
+            test_method = getattr(self, self._testMethodName)
+            if getattr(self.__class__, "__unittest_skip__", False) or getattr(
+                test_method, "__unittest_skip__", False
+            ):
+                skip_why = getattr(
+                    self.__class__, "__unittest_skip_why__", ""
+                ) or getattr(test_method, "__unittest_skip_why__", "")
+                result.addSkip(self, skip_why)
+                return result
+
+            max_attempts = int(os.environ.get("CALCUS_TEST_MAX_ATTEMPTS", "3"))
+            print(f"Running {self._testMethodName}", flush=True)
+
+            final_error = None
+            final_failure = None
+
+            for attempt in range(1, max_attempts + 1):
+                if attempt > 1:
+                    print(
+                        f"Test failed, trying again (attempt {attempt}/{max_attempts})",
+                        flush=True,
+                    )
+                    self.__class__._restart_driver()
+
+                tasks.cache_ind = 1
+                attempt_case = self.__class__(self._testMethodName)
+                attempt_case.retry_attempt = attempt
+                attempt_result = RetryAttemptResult()
+                attempt_case.run = types.MethodType(unittest.TestCase.run, attempt_case)
+                attempt_case._setup_and_call(attempt_result)
+
+                if attempt_result.wasSuccessful():
+                    result.addSuccess(self)
+                    return result
+
+                if attempt_result.skipped:
+                    result.addSkip(self, attempt_result.skipped[0][1])
+                    return result
+
+                if attempt_result.expectedFailures:
+                    result.addExpectedFailure(
+                        self, attempt_result.expected_failure_infos[0][1]
+                    )
+                    return result
+
+                if attempt_result.unexpectedSuccesses:
+                    result.addUnexpectedSuccess(self)
+                    return result
+
+                if attempt_result.error_infos:
+                    final_error = attempt_result.error_infos[0][1]
+                if attempt_result.failure_infos:
+                    final_failure = attempt_result.failure_infos[0][1]
+
+            if final_failure is not None:
+                result.addFailure(self, final_failure)
+            elif final_error is not None:
+                result.addError(self, final_error)
             else:
-                break
+                result.addError(
+                    self,
+                    (
+                        AssertionError,
+                        AssertionError("Test failed without error details"),
+                        None,
+                    ),
+                )
+            return result
+        finally:
+            result.stopTest(self)
+            if stopTestRun is not None:
+                stopTestRun()
 
     def setUp(self):
         self.addCleanup(self.cleanupCalculations)
         os.chdir(base_cwd)
         call_command("init_static_obj")
-        email_hash = hashlib.md5(self.full_test_name.encode("utf-8")).hexdigest()[:12]
-        self.email = f"selenium_{email_hash}@test.com"
+        self.full_test_name = self.id()
+        attempt = getattr(self, "retry_attempt", 1)
+        if attempt > 1:
+            self.full_test_name = f"{self.full_test_name}__attempt_{attempt}"
+            self.email = f"selenium_retry_{attempt}@test.com"
+        else:
+            self.email = "Selenium@test.com"
         self.password = "test1234"
         self.current_order_id = None
 
@@ -184,6 +268,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             os.environ, {"TEST_NAME": self.full_test_name}
         )
         self.name_patcher.start()
+        self.addCleanup(self.name_patcher.stop)
 
     def cleanupCalculations(self):
         for c in Calculation.objects.all():
@@ -2131,13 +2216,25 @@ class CalcusCloudLiveServer(CalcusLiveServer):
                 break
             time.sleep(0.1)
         else:
+            submit = self.driver.find_element(
+                By.CSS_SELECTOR, "#form_" + acc_type + " > button"
+            )
             self.driver.execute_script("arguments[0].click();", submit)
 
         WebDriverWait(self.driver, 5).until(
             lambda d: d.current_url != register_url
-            or len(d.find_elements(By.CSS_SELECTOR, ".notification.is-danger")) > 0
             or len(d.find_elements(By.CSS_SELECTOR, ".help.is-danger")) > 0
         )
+        if self.driver.current_url == register_url:
+            errors = [
+                e.text
+                for e in self.driver.find_elements(By.CSS_SELECTOR, ".help.is-danger")
+                if e.text.strip() != ""
+            ]
+            raise Exception(
+                "Registration did not complete"
+                + (f": {' | '.join(errors)}" if errors else "")
+            )
 
     def redeem_code(self, code):
         self.lget("/profile/")
@@ -2311,7 +2408,7 @@ class CalcusCloudLiveServer(CalcusLiveServer):
         submit = self.driver.find_element(By.CSS_SELECTOR, ".SubmitButton")
         checkout_url = self.driver.current_url
         submit.click()
-        WebDriverWait(self.driver, 5).until(
+        WebDriverWait(self.driver, 15).until(
             lambda d: d.current_url.startswith(self.live_server_url)
             or (d.current_url != checkout_url and self.live_server_url in d.current_url)
         )
