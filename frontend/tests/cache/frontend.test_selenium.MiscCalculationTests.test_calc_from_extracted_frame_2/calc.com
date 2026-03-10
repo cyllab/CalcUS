@@ -1,5 +1,5 @@
-%chk=in.chk
-%nproc=1
+%chk=calc.chk
+%nproc=4
 %mem=2000MB
 #p sp M062X/Def2TZVP
 

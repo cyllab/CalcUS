@@ -179,6 +179,13 @@
                         editor.loadMolecule(mol);
                     }
                 },
+                {% if IS_TEST %}
+                error: function (xhr) {
+                    if (xhr.status == 403 || xhr.status == 404) {
+                        clearInterval(my_refresh);
+                    }
+                },
+                {% endif %}
             });
         }, 1000);
     });

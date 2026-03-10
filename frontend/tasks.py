@@ -405,6 +405,7 @@ def system(
     software="xtb",
     calc_id=-1,
     time_cumul=False,
+    cache_files=None,
 ):
     if REMOTE and not force_local:
         assert calc_id != -1
@@ -419,7 +420,11 @@ def system(
         lock = locks[pid]
         remote_dir = remote_dirs[pid]
 
-        if calc_id != -1 and IS_TEST and setup_cached_calc(calc):
+        if (
+            calc_id != -1
+            and IS_TEST
+            and setup_cached_calc(calc, required_files=cache_files)
+        ):
             return testing_delay_remote(calc_id)
 
         if calc.status == 0 and calc.remote_id == 0:
@@ -546,7 +551,11 @@ def system(
         else:
             stream = open("/dev/null", "w")
 
-        if calc_id != -1 and IS_TEST and setup_cached_calc(calc):
+        if (
+            calc_id != -1
+            and IS_TEST
+            and setup_cached_calc(calc, required_files=cache_files)
+        ):
             return testing_delay_local(res)
 
         try:
@@ -649,17 +658,34 @@ def files_are_equal(f, input_file):
     return True
 
 
-def get_cache_index(calc, cache_path):
+def _cache_candidate_is_usable(cache_dir, required_files=None):
+    if required_files is None:
+        return True
+
+    for relpath in required_files:
+        path = os.path.join(cache_dir, relpath)
+        if not os.path.isfile(path):
+            return False
+        if os.path.getsize(path) == 0:
+            return False
+
+    return True
+
+
+def get_cache_index(calc, cache_path, required_files=None):
     inputs = list(glob.glob(cache_path + "/*.input"))
     for f in inputs:
         if files_are_equal(f, calc.all_inputs):
             ind = ".".join(f.split("/")[-1].split(".")[:-1])
-            return ind
+            if _cache_candidate_is_usable(
+                os.path.join(cache_path, ind), required_files=required_files
+            ):
+                return ind
     else:
         return -1
 
 
-def calc_is_cached(calc):
+def calc_is_cached(calc, required_files=None):
     if (
         os.getenv("USE_CACHED_LOGS") == "true"
         and os.getenv("CAN_USE_CACHED_LOGS") == "true"
@@ -669,7 +695,7 @@ def calc_is_cached(calc):
             os.mkdir(CALCUS_CACHE_HOME)
             return False
 
-        index = get_cache_index(calc, CALCUS_CACHE_HOME)
+        index = get_cache_index(calc, CALCUS_CACHE_HOME, required_files=required_files)
 
         if index == -1:
             logger.info("Cache not found")
@@ -681,8 +707,8 @@ def calc_is_cached(calc):
         return False
 
 
-def setup_cached_calc(calc):
-    index = calc_is_cached(calc)
+def setup_cached_calc(calc, required_files=None):
+    index = calc_is_cached(calc, required_files=required_files)
     if not index:
         return False
 
@@ -803,7 +829,13 @@ def launch_pysis_calc(calc, files):
     else:
         log_path = os.path.join(local_folder, "calc.out")
 
-    ret = system(calc.command, log_path, software="pysis", calc_id=calc.id)
+    ret = system(
+        calc.command,
+        log_path,
+        software="pysis",
+        calc_id=calc.id,
+        cache_files=files,
+    )
 
     cancelled = False
     if ret != ErrorCodes.SUCCESS:
@@ -980,7 +1012,13 @@ def launch_xtb_calc(calc, files):
     else:
         log_path = os.path.join(local_folder, "calc.out")
 
-    ret = system(calc.command, log_path, software="xtb", calc_id=calc.id)
+    ret = system(
+        calc.command,
+        log_path,
+        software="xtb",
+        calc_id=calc.id,
+        cache_files=files,
+    )
 
     cancelled = False
     if ret != ErrorCodes.SUCCESS:

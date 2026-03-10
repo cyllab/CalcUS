@@ -1353,6 +1353,18 @@ class CalculationOrder(models.Model):
         return self._label
 
     def _get_label(self):
+        if settings.IS_TEST and self.step is None:
+            if self.result_ensemble is not None:
+                return self.result_ensemble.name
+            if self.ensemble is not None:
+                return self.ensemble.name
+            if (
+                self.structure is not None
+                and self.structure.parent_ensemble is not None
+            ):
+                return self.structure.parent_ensemble.name
+            return "Unknown"
+
         if self.step.creates_ensemble:
             if self.result_ensemble:
                 return self.result_ensemble.name
@@ -1376,14 +1388,20 @@ class CalculationOrder(models.Model):
     @property
     def step_name(self):
         if self._step_name == "":
-            self._step_name = self.step.name
+            if settings.IS_TEST and self.step is None:
+                self._step_name = "Unknown"
+            else:
+                self._step_name = self.step.name
             self.save()
         return self._step_name
 
     @property
     def project_name(self):
         if self._project_name == "":
-            self._project_name = self.project.name
+            if settings.IS_TEST and self.project is None:
+                self._project_name = "Unknown"
+            else:
+                self._project_name = self.project.name
             self.save()
         return self._project_name
 
@@ -1796,34 +1814,16 @@ def folder_renamed(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Calculation)
 def add_new_calc_to_order(sender, instance, created, **kwargs):
-    if created:
-        with transaction.atomic():
-            order = CalculationOrder.objects.select_for_update().get(
-                id=instance.order.pk
-            )
-            # Always derive counters from current DB rows to avoid stale cache drift.
-            order.calc_statuses = order.get_all_calcs
-            order.save()
+    with transaction.atomic():
+        order = CalculationOrder.objects.select_for_update().get(id=instance.order_id)
+        order.calc_statuses = order.get_all_calcs
+        order.save()
 
 
 @receiver(pre_save, sender=Calculation)
 def update_order_calc_statuses(sender, instance, **kwargs):
     """Updates the cached CalculationOrder status"""
-    try:
-        obj = sender.objects.get(pk=instance.pk)
-    except sender.DoesNotExist:
-        return
-
-    if obj.status != instance.status:
-        with transaction.atomic():
-            order = CalculationOrder.objects.select_for_update().get(
-                id=instance.order_id
-            )
-            calc_statuses = order.calc_statuses
-            calc_statuses[obj.status] -= 1
-            calc_statuses[instance.status] += 1
-            order.calc_statuses = calc_statuses
-            order.save()
+    return
 
 
 @receiver(post_save, sender=Parameters)

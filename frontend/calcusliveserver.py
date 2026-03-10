@@ -42,6 +42,7 @@ from celery.contrib.abortable import AbortableAsyncResult
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.management import call_command
 from django.conf import settings
+from django.db import close_old_connections
 
 from .models import (
     Calculation,
@@ -189,6 +190,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                         flush=True,
                     )
                     self.__class__._restart_driver()
+                    close_old_connections()
+                    call_command("flush", verbosity=0, interactive=False)
 
                 tasks.cache_ind = 1
                 attempt_case = self.__class__(self._testMethodName)
@@ -948,9 +951,18 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         panel = self.get_group_panel()
         panel.click()
         users = panel.find_elements(By.CSS_SELECTOR, ".navbar-dropdown > .navbar-item")
+        target_id = None
+        if name.startswith("User "):
+            target_id = name.split("User ", 1)[1].strip()
         for u in users:
-            if u.text == name:
-                u.click()
+            href = u.get_attribute("href")
+            if u.text.strip() == name or (
+                target_id is not None
+                and href is not None
+                and href.endswith(f"/{target_id}")
+            ):
+                self.driver.get(href)
+                self.wait_for_ajax()
                 return
         raise Exception("No such user")
 
@@ -1112,9 +1124,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def is_on_page_projects(self):
         for i in range(3):
-            url = self.get_split_url()
-            if url[0] == "projects" and (
-                len(url) < 2 or self.is_user(url[1]) or url[1] == ""
+            url = [segment for segment in self.get_split_url() if segment != ""]
+            if (
+                url
+                and url[0] == "projects"
+                and (len(url) == 1 or (len(url) == 2 and self.is_user(url[1])))
             ):
                 return True
             time.sleep(0.5)
@@ -1200,7 +1214,21 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def get_projects(self):
         assert self.is_on_page_projects()
 
-        project_div = self.driver.find_element(By.ID, "projects_list")
+        def list_url():
+            url = [segment for segment in self.get_split_url() if segment != ""]
+            if len(url) >= 2 and url[0] == "projects" and self.is_user(url[1]):
+                return f"/projects/{url[1]}"
+            return "/projects/"
+
+        try:
+            project_div = WebDriverWait(self.driver, 2).until(
+                EC.presence_of_element_located((By.ID, "projects_list"))
+            )
+        except selenium.common.exceptions.TimeoutException:
+            self.lget(list_url())
+            project_div = WebDriverWait(self.driver, 2).until(
+                EC.presence_of_element_located((By.ID, "projects_list"))
+            )
         projects = project_div.find_elements(By.CSS_SELECTOR, ".box")
         return projects
 
@@ -1294,7 +1322,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             p_name = proj.find_element(By.CSS_SELECTOR, "strong > p").text
             if p_name == name:
                 link = proj.find_element(By.CSS_SELECTOR, "div > a")
-                link.click()
+                self.driver.get(link.get_attribute("href"))
+                self.wait_for_ajax()
                 return
         else:
             raise Exception("Project not found")
@@ -1314,13 +1343,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         for mol in molecules:
             mol_name = mol.find_element(By.CSS_SELECTOR, "a > strong > p").text
             if mol_name == name:
-                curr_url = self.driver.current_url
-                for i in range(3):
-                    mol.click()
-                    self.wait_for_ajax()
-                    time.sleep(0.5)
-                    if self.driver.current_url != curr_url:
-                        break
+                link = mol.find_element(By.CSS_SELECTOR, "a[href*='/molecule/']")
+                self.driver.get(link.get_attribute("href"))
+                self.wait_for_ajax()
                 return
         else:
             raise Exception("Could not click on molecule")
@@ -1662,6 +1687,17 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         button_submit = self.driver.find_element(By.ID, "user_add_button")
         field_username.send_keys(str(user_id))
         button_submit.send_keys(Keys.RETURN)
+        self.wait_for_ajax()
+
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            self.user.refresh_from_db()
+            group = self.user.PI_of.first()
+            if group is not None and group.members.filter(id=user_id).exists():
+                return
+            time.sleep(0.1)
+
+        raise Exception("User was not added to the group")
 
     def launch_ensemble_next_step(self):
         assert self.is_on_page_ensemble()
