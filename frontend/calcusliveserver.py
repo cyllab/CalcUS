@@ -247,6 +247,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.addCleanup(self.cleanupCalculations)
         os.chdir(base_cwd)
         call_command("init_static_obj")
+        if os.path.isdir(SCR_DIR):
+            rmtree(SCR_DIR)
+        if os.path.isdir(KEYS_DIR):
+            rmtree(KEYS_DIR)
+        os.mkdir(SCR_DIR)
+        os.mkdir(KEYS_DIR)
         self.full_test_name = self.id()
         attempt = getattr(self, "retry_attempt", 1)
         if attempt > 1:
@@ -1713,13 +1719,36 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_calculations()
         assert self.get_number_calc_orders() > 0
 
-        calculations_container = self.driver.find_element(By.ID, "calculations_list")
-        calculations = calculations_container.find_elements(By.CSS_SELECTOR, "article")
-        header = calculations[0].find_element(By.CLASS_NAME, "message-header")
-        successful = "has-background-success" in header.get_attribute("class")
+        deadline = time.monotonic() + 2
+        successful = False
+        while time.monotonic() < deadline:
+            try:
+                header = self._get_target_calc_order().find_element(
+                    By.CLASS_NAME, "message-header"
+                )
+            except (
+                selenium.common.exceptions.NoSuchElementException,
+                selenium.common.exceptions.StaleElementReferenceException,
+            ):
+                time.sleep(0.2)
+                self._refresh_calculations_page()
+                continue
+
+            classes = header.get_attribute("class")
+            if "has-background-success" in classes:
+                successful = True
+                break
+            if "has-background-danger" in classes:
+                break
+
+            time.sleep(0.2)
+            self._refresh_calculations_page()
 
         if not successful:
-            latest_order = CalculationOrder.objects.latest("id")
+            if self.current_order_id is not None:
+                latest_order = CalculationOrder.objects.get(id=self.current_order_id)
+            else:
+                latest_order = CalculationOrder.objects.latest("id")
             print(f"Error messages of calculations in order {latest_order.id}")
             for c in latest_order.calculation_set.all():
                 print(f"Calc {c.id}: {c.error_message}")
@@ -1766,12 +1795,27 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         raise Exception("User was not added to the group")
 
+    def wait_for_launch_form(self):
+        WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.ID, "calcform"))
+        )
+        WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.NAME, "calc_software"))
+        )
+        WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.NAME, "calc_solvent"))
+        )
+        self.wait_for_ajax()
+        time.sleep(0.3)
+        self.wait_for_ajax()
+
     def launch_ensemble_next_step(self):
         assert self.is_on_page_ensemble()
         button = WebDriverWait(self.driver, 1).until(
             EC.presence_of_element_located((By.ID, "next_step_ensemble"))
         )
         button.click()  # Less flaky than "send_keys(Keys.RETURN)" in headless mode?
+        self.wait_for_launch_form()
 
     def launch_structure_next_step(self):
         assert self.is_on_page_ensemble()
@@ -1784,6 +1828,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         )
 
         button.click()  # Less flaky than "send_keys(Keys.RETURN)" in headless mode?
+        self.wait_for_launch_form()
 
     def launch_frame_next_step(self):
         assert self.is_on_page_calculation()
@@ -1807,6 +1852,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         )
 
         button.click()  # Less flaky than "send_keys(Keys.RETURN)" in headless mode?
+        self.wait_for_launch_form()
 
     def accept_alert(self):
         alert = self.driver.find_element(By.CSS_SELECTOR, ".alert.modal.is-active")

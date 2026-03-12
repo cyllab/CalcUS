@@ -1,15 +1,21 @@
 if ("{{ params.software }}" != "Unknown" && "{{ params.software }}" != "Open Babel") {
-	solvent = document.getElementsByName("calc_solvent")[0];
-    if(solvent)
-	    solvent.value = "{{ params.solvent }}";
+    function setFieldValue(name, value) {
+        field = document.getElementsByName(name)[0];
+        if(field)
+            field.value = value;
+        return field;
+    }
 
-	solvation_model = document.getElementsByName("calc_solvation_model")[0];
-    if(solvation_model)
-	    solvation_model.value = "{{ params.solvation_model }}";
+    function applySolvationFields() {
+        solvent = setFieldValue("calc_solvent", "{{ params.solvent }}");
+        if(solvent) {
+            solvent.dispatchEvent(new Event("input", {bubbles: true}));
+            solvent.dispatchEvent(new Event("change", {bubbles: true}));
+        }
 
-	solvation_radii = document.getElementsByName("calc_solvation_radii")[0];
-    if(solvation_radii)
-	    solvation_radii.value = "{{ params.solvation_radii }}";
+        setFieldValue("calc_solvation_model", "{{ params.solvation_model }}");
+        setFieldValue("calc_solvation_radii", "{{ params.solvation_radii }}");
+    }
 
 	software = document.getElementsByName("calc_software")[0];
     if(software)
@@ -19,6 +25,15 @@ if ("{{ params.software }}" != "Unknown" && "{{ params.software }}" != "Open Bab
     if(theory_level)
 	    theory_level.value = "{{ params.theory_level }}";
 
+    function stabilizeSolvationFields(attempt) {
+        applySolvationFields();
+        if(attempt < 4)
+            setTimeout(function() { stabilizeSolvationFields(attempt + 1); }, 100);
+    }
+
+    stabilizeSolvationFields(0);
+    refresh_availabilities();
+    stabilizeSolvationFields(0);
 
 	basis_set = document.getElementsByName("calc_basis_set")[0];
     if(basis_set)

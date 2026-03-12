@@ -546,17 +546,17 @@ def system(
             calc.save()
             res = AbortableAsyncResult(calc.task_id)
 
-        if log_file != "":
-            stream = open(log_file, "w")
-        else:
-            stream = open("/dev/null", "w")
-
         if (
             calc_id != -1
             and IS_TEST
             and setup_cached_calc(calc, required_files=cache_files)
         ):
             return testing_delay_local(res)
+
+        if log_file != "":
+            stream = open(log_file, "w")
+        else:
+            stream = open("/dev/null", "w")
 
         try:
             if exe_dir.strip() != "":
@@ -713,14 +713,17 @@ def setup_cached_calc(calc, required_files=None):
         return False
 
     scr_path = f"{CALCUS_SCR_HOME}/{calc.id}"
+    target_path = os.path.join(CALCUS_CACHE_HOME, index)
     if os.path.isdir(scr_path):
         if os.path.islink(scr_path):
-            # Likely already setup
-            return True
-        rmtree(scr_path)
+            if os.path.realpath(scr_path) == os.path.realpath(target_path):
+                return True
+            os.unlink(scr_path)
+        else:
+            rmtree(scr_path)
 
     os.symlink(
-        os.path.join(CALCUS_CACHE_HOME, index),
+        target_path,
         scr_path,
     )
     logger.info(f"Using cache ({index})")

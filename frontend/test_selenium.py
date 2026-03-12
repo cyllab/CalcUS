@@ -2249,7 +2249,7 @@ class XtbCalculationTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
 
-        self.lget("/calculations")
+        self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.click_latest_calc()
 
@@ -2286,7 +2286,7 @@ class XtbCalculationTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
 
-        self.lget("/calculations")
+        self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.click_latest_calc()
 
@@ -2323,7 +2323,7 @@ class XtbCalculationTests(CalcusLiveServer):
         self.calc_input_params(params)
         self.calc_launch()
 
-        self.lget("/calculations")
+        self.lget("/calculations/")
         self.wait_latest_calc_done(120)
         self.details_latest_order()
         self.details_first_calc()

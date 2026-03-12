@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from django.db import models, transaction
-from django.db.models import Case, F, When
+from django.db.models import Case, Count, F, When
 from django.db.models.signals import pre_save
 from django.utils import timezone
 from django.contrib.auth.models import (
@@ -1187,29 +1187,6 @@ class FlowchartOrder(models.Model):
     def status(self):
         return self._status(*self.get_all_calcs)
 
-    def update_unseen(self, old_status, old_unseen):
-        new_status = self.status
-        new_unseen = self.new_status
-
-        if old_unseen:
-            if not new_unseen:
-                with transaction.atomic():
-                    User.objects.filter(id=self.author_id).update(
-                        unseen_calculations=Case(
-                            When(
-                                unseen_calculations__gt=0,
-                                then=F("unseen_calculations") - 1,
-                            ),
-                            default=0,
-                        )
-                    )
-        else:
-            if new_unseen:
-                with transaction.atomic():
-                    User.objects.filter(id=self.author_id).update(
-                        unseen_calculations=F("unseen_calculations") + 1
-                    )
-
     def _status(self, num_queued, num_running, num_done, num_error):
         if num_queued + num_running + num_done + num_error == 0:
             return 0
@@ -1487,13 +1464,44 @@ class CalculationOrder(models.Model):
         """Triggers a manual update of the status"""
         return self._status(*self.get_all_calcs)
 
-    def update_unseen(self, old_status, old_unseen):
-        new_unseen = self.new_status
+    @staticmethod
+    def _serialize_calc_statuses(statuses):
+        return ",".join(str(i) for i in statuses)
 
-        if old_unseen:
-            if not new_unseen:
-                with transaction.atomic():
-                    User.objects.filter(id=self.author_id).update(
+    @classmethod
+    def _count_calc_statuses(cls, order_id):
+        counts = [0, 0, 0, 0]
+        rows = (
+            Calculation.objects.filter(order_id=order_id)
+            .values("status")
+            .annotate(total=Count("id"))
+        )
+        for row in rows:
+            counts[row["status"]] = row["total"]
+        return counts
+
+    @classmethod
+    def sync_cache(cls, order_id):
+        if order_id is None:
+            return
+
+        with transaction.atomic():
+            order = (
+                cls.objects.select_for_update()
+                .only("id", "author_id", "last_seen_status", "cached_status")
+                .filter(id=order_id)
+                .first()
+            )
+            if order is None:
+                return
+
+            old_status = order.cached_status
+            old_unseen = order.last_seen_status != old_status
+            statuses = cls._count_calc_statuses(order_id)
+
+            if sum(statuses) == 0:
+                if old_unseen:
+                    User.objects.filter(id=order.author_id).update(
                         unseen_calculations=Case(
                             When(
                                 unseen_calculations__gt=0,
@@ -1502,12 +1510,33 @@ class CalculationOrder(models.Model):
                             default=0,
                         )
                     )
-        else:
+                cls.objects.filter(id=order_id).delete()
+                return
+
+            new_status = order._status(*statuses)
+            cls.objects.filter(id=order_id).update(
+                _calc_statuses=cls._serialize_calc_statuses(statuses),
+                cached_status=new_status,
+            )
+
+            new_unseen = order.last_seen_status != new_status
+            if old_unseen == new_unseen:
+                return
+
             if new_unseen:
-                with transaction.atomic():
-                    User.objects.filter(id=self.author_id).update(
-                        unseen_calculations=F("unseen_calculations") + 1
+                User.objects.filter(id=order.author_id).update(
+                    unseen_calculations=F("unseen_calculations") + 1
+                )
+            else:
+                User.objects.filter(id=order.author_id).update(
+                    unseen_calculations=Case(
+                        When(
+                            unseen_calculations__gt=0,
+                            then=F("unseen_calculations") - 1,
+                        ),
+                        default=0,
                     )
+                )
 
     def _status(self, num_queued, num_running, num_done, num_error):
         if num_queued + num_running + num_done + num_error == 0:
@@ -1648,45 +1677,19 @@ class Calculation(models.Model):
             print("Could not find the corresponding ensemble")
 
     def save(self, *args, **kwargs):
-        order = None
-        flowchart_order = None
-        if self.flowchart_order is not None:
-            flowchart_order = FlowchartOrder.objects.get(id=self.flowchart_order_id)
-            old_status = flowchart_order.status
-            old_unseen = flowchart_order.new_status
-
-        elif self.order is not None:
-            order = CalculationOrder.objects.get(id=self.order_id)
-            old_status = order.status
-            old_unseen = order.new_status
-
-        else:
+        if self.order is None:
             raise Exception("No calculation order")
 
-        super(Calculation, self).save(*args, **kwargs)
-
-        if flowchart_order is not None:
-            flowchart_order.refresh_from_db()
-            flowchart_order.update_unseen(old_status, old_unseen)
-
-        elif order is not None:
-            order.refresh_from_db()
-            order.update_unseen(old_status, old_unseen)
-
-        else:
-            raise Exception("No calculation order")
+        super().save(*args, **kwargs)
+        CalculationOrder.sync_cache(self.order_id)
 
     def delete(self, *args, **kwargs):
-        order = CalculationOrder.objects.get(id=self.order_id)
-        old_status = order.status
-        old_unseen = order.new_status
+        if self.order is None:
+            return super().delete(*args, **kwargs)
 
-        super(Calculation, self).delete(*args, **kwargs)
-
-        order.update_unseen(old_status, old_unseen)
-
-        if order.calculation_set.count() == 0:
-            order.delete()
+        order_id = self.order_id
+        super().delete(*args, **kwargs)
+        CalculationOrder.sync_cache(order_id)
 
     @property
     def execution_time(self):
@@ -1810,20 +1813,6 @@ def project_renamed(sender, instance, **kwargs):
 def folder_renamed(sender, instance, **kwargs):
     if getattr(instance, "_is_renaming", False):
         pass
-
-
-@receiver(post_save, sender=Calculation)
-def add_new_calc_to_order(sender, instance, created, **kwargs):
-    with transaction.atomic():
-        order = CalculationOrder.objects.select_for_update().get(id=instance.order_id)
-        order.calc_statuses = order.get_all_calcs
-        order.save()
-
-
-@receiver(pre_save, sender=Calculation)
-def update_order_calc_statuses(sender, instance, **kwargs):
-    """Updates the cached CalculationOrder status"""
-    return
 
 
 @receiver(post_save, sender=Parameters)
