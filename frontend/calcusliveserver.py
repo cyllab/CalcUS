@@ -26,12 +26,13 @@ import pexpect
 import socket
 from unittest import mock
 from shutil import rmtree
+from urllib.parse import urlparse
 
 from selenium import webdriver
 from selenium.webdriver.common.alert import Alert
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
@@ -299,8 +300,18 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         password_f = self.driver.find_element(By.ID, "id_password")
         submit = self.driver.find_element(By.CSS_SELECTOR, "input.control")
         login_url = self.driver.current_url
-        email_f.send_keys(email)
-        password_f.send_keys(password)
+        self.driver.execute_script(
+            "arguments[0].value = arguments[2];"
+            "arguments[1].value = arguments[3];"
+            "arguments[0].dispatchEvent(new Event('input', {bubbles: true}));"
+            "arguments[0].dispatchEvent(new Event('change', {bubbles: true}));"
+            "arguments[1].dispatchEvent(new Event('input', {bubbles: true}));"
+            "arguments[1].dispatchEvent(new Event('change', {bubbles: true}));",
+            email_f,
+            password_f,
+            email,
+            password,
+        )
 
         if IS_CLOUD:
             WebDriverWait(self.driver, 1).until(
@@ -318,11 +329,35 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             self.driver.switch_to.default_content()
             time.sleep(0.3)
 
+        def login_finished(driver):
+            return (
+                driver.current_url != login_url
+                or len(driver.find_elements(By.XPATH, "//a[contains(., 'Logout')]")) > 0
+                or len(driver.find_elements(By.CSS_SELECTOR, ".notification.is-danger"))
+                > 0
+            )
+
         submit.send_keys(Keys.RETURN)
-        WebDriverWait(self.driver, 5).until(
-            lambda d: d.current_url != login_url
-            or len(d.find_elements(By.XPATH, "//a[contains(., 'Logout')]")) > 0
-        )
+        try:
+            WebDriverWait(self.driver, 5).until(login_finished)
+        except selenium.common.exceptions.TimeoutException:
+            submit = self.driver.find_element(By.CSS_SELECTOR, "input.control")
+            try:
+                submit.click()
+                WebDriverWait(self.driver, 5).until(login_finished)
+            except selenium.common.exceptions.TimeoutException:
+                form = self.driver.find_element(By.CSS_SELECTOR, "form")
+                self.driver.execute_script("arguments[0].submit();", form)
+                WebDriverWait(self.driver, 5).until(login_finished)
+
+        if "/accounts/login/" in self.driver.current_url:
+            errors = self.driver.find_elements(
+                By.CSS_SELECTOR, ".notification.is-danger"
+            )
+            if len(errors) > 0:
+                raise selenium.common.exceptions.TimeoutException(
+                    f"Login did not complete: {errors[0].text}"
+                )
 
         self.lget("/projects/")
         WebDriverWait(self.driver, 5).until(
@@ -454,10 +489,15 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             self.wait_for_ajax()
 
         if "project" in params.keys():
-            self.driver.find_element(
-                By.XPATH,
-                f"//*[@name='calc_project']/option[text()='{params['project']}']",
-            ).click()
+            project_select = WebDriverWait(self.driver, 6).until(
+                EC.presence_of_element_located((By.NAME, "calc_project"))
+            )
+            Select(project_select).select_by_visible_text(params["project"])
+            self.driver.execute_script(
+                "project_selection_changed(arguments[0]);"
+                "arguments[0].dispatchEvent(new Event('change', {bubbles: true}));",
+                project_select,
+            )
             self.wait_for_ajax()
 
         if "solvation_model" in params.keys():
@@ -478,9 +518,17 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             ).click()
 
         if "new_project_name" in params.keys():
-            new_project_input = self.driver.find_element(By.NAME, "new_project_name")
-            new_project_input.click()
-            new_project_input.send_keys(params["new_project_name"])
+            new_project_input = WebDriverWait(self.driver, 6).until(
+                EC.visibility_of_element_located((By.NAME, "new_project_name"))
+            )
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView({block: 'center'});"
+                "arguments[0].value = arguments[1];"
+                "arguments[0].dispatchEvent(new Event('input', {bubbles: true}));"
+                "arguments[0].dispatchEvent(new Event('change', {bubbles: true}));",
+                new_project_input,
+                params["new_project_name"],
+            )
 
         if "in_file" in params.keys():
             upload_input.send_keys(f"{dir_path}/tests/{params['in_file']}")
@@ -922,7 +970,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             ).key_up(Keys.CONTROL).perform()
 
     def get_split_url(self):
-        return self.driver.current_url.split("/")[3:]
+        path = urlparse(self.driver.current_url).path.strip("/")
+
+        if path == "":
+            return []
+
+        return [segment for segment in path.split("/") if segment]
 
     def get_group_panel(self):
         return self.driver.find_element(By.ID, "navbar_group")
@@ -1103,7 +1156,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         for i in range(3):
             url = self.get_split_url()
             if (
-                url[0] == "projects"
+                len(url) >= 4
+                and url[0] == "projects"
                 and self.is_user(url[1])
                 and self.is_user_project(url[1], url[2])
                 and url[3] == "folders"
@@ -1116,7 +1170,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_order_details(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == "calculationorder" and url[1] != "":
+            if len(url) >= 2 and url[0] == "calculationorder":
                 return True
             time.sleep(1)
 
@@ -1124,7 +1178,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def is_on_page_projects(self):
         for i in range(3):
-            url = [segment for segment in self.get_split_url() if segment != ""]
+            url = self.get_split_url()
             if (
                 url
                 and url[0] == "projects"
@@ -1139,7 +1193,8 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         for i in range(3):
             url = self.get_split_url()
             if (
-                url[0] == "projects"
+                len(url) >= 3
+                and url[0] == "projects"
                 and self.is_user(url[1])
                 and self.is_user_project(url[1], url[2])
             ):
@@ -1151,7 +1206,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_calculations(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == "calculations" and url[1] == "":
+            if url == ["calculations"]:
                 return True
             time.sleep(1)
 
@@ -1160,7 +1215,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_calculation(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == "calculation" and url[1] != "":
+            if len(url) >= 2 and url[0] == "calculation":
                 return True
             time.sleep(1)
 
@@ -1169,7 +1224,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_profile(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == "profile" and url[1] == "":
+            if url == ["profile"]:
                 return True
             time.sleep(1)
 
@@ -1178,7 +1233,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_access(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == "manage_access" and url[1] != "":
+            if len(url) >= 2 and url[0] == "manage_access":
                 return True
             time.sleep(1)
 
@@ -1195,7 +1250,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def is_on_page_ensemble(self):
         for i in range(3):
-            url = self.driver.current_url.split("/")[3:]
+            url = self.get_split_url()
             if len(url) >= 2 and url[0] == "ensemble" and self.is_ensemble_id(url[1]):
                 return True
             time.sleep(1)
@@ -1205,7 +1260,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
     def is_on_page_nmr_analysis(self):
         for i in range(3):
             url = self.get_split_url()
-            if url[0] == "nmr_analysis" and url[1] != "":
+            if len(url) >= 2 and url[0] == "nmr_analysis":
                 return True
             time.sleep(1)
 
@@ -1298,15 +1353,21 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_projects()
         num_before = self.get_number_projects()
 
-        create_proj_box = self.driver.find_element(
-            By.CSS_SELECTOR, "#content_container > div > center > a"
+        create_proj_box = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "#content_container center a")
+            )
         )
-        create_proj_box.click()
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block: 'center'});", create_proj_box
+        )
+        self.driver.execute_script("create_project();")
         for i in range(5):
+            self.wait_for_ajax()
             num_projects = self.get_number_projects()
             if num_projects == num_before + 1:
                 return
-            time.sleep(1)
+            time.sleep(0.5)
         raise Exception("Could not create empty project")
 
     def create_molecule_in_project(self):
@@ -1380,17 +1441,23 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def get_calc_orders(self):
         assert self.is_on_page_calculations()
-        self.wait_for_ajax()
+        calculations_div = WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#calculations_list"))
+        )
 
-        try:
-            calculations_div = WebDriverWait(self.driver, 1).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "#calculations_list"))
-            )
-        except selenium.common.exceptions.TimeoutException:
-            return []
+        for i in range(10):
+            self.wait_for_ajax()
 
-        calculations = calculations_div.find_elements(By.CSS_SELECTOR, "article")
-        return calculations
+            calculations = calculations_div.find_elements(By.CSS_SELECTOR, "article")
+            if len(calculations) > 0:
+                return calculations
+
+            if len(self.driver.find_elements(By.ID, "tmp_msg")) > 0:
+                return []
+
+            time.sleep(0.2)
+
+        return calculations_div.find_elements(By.CSS_SELECTOR, "article")
 
     def click_latest_calc(self):
         assert self.is_on_page_calculations()
@@ -2057,7 +2124,22 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.click_icon(proj_name, "folder")
 
     def click_icon_shield(self, proj_name):
-        self.click_icon(proj_name, "user-shield")
+        projects = self.get_projects()
+        for proj in projects:
+            name = proj.find_element(By.CSS_SELECTOR, "a > strong > p").text
+            if name == proj_name:
+                icon = proj.find_element(By.CSS_SELECTOR, ".fa-user-shield")
+                previous_style = icon.value_of_css_property("color")
+                self.driver.execute_script("arguments[0].click();", icon)
+                WebDriverWait(self.driver, 5).until(
+                    lambda d: proj.find_element(
+                        By.CSS_SELECTOR, ".fa-user-shield"
+                    ).value_of_css_property("color")
+                    != previous_style
+                )
+                return
+        else:
+            raise Exception("No such project found")
 
     def create_empty_folder(self):
         assert self.is_on_page_folders()

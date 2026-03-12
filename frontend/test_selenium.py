@@ -1521,6 +1521,7 @@ class UserPermissionsTests(CalcusLiveServer):
 
     def test_manage_PI_request(self):
         g = ResearchGroup.objects.create(name="Test Group", PI=self.user)
+        self.login(self.email, self.password)
 
         self.lget("/profile/")
 
@@ -1535,7 +1536,7 @@ class UserPermissionsTests(CalcusLiveServer):
         }
         self.calc_input_params(params)
         self.calc_launch()
-        self.lget("/calculations")
+        self.lget("/calculations/")
         self.assertEqual(self.get_number_calc_orders(), 1)
 
     def test_private_project_invisible_to_others(self):
