@@ -1977,19 +1977,41 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         while not main_window_handle:
             main_window_handle = self.driver.current_window_handle
 
-        ensembles_rows = self.get_ensemble_rows()
+        for _ in range(50):
+            try:
+                ensembles_rows = self.get_ensemble_rows()
 
-        for e in ensembles_rows:
-            e_name = e.find_element(By.CSS_SELECTOR, "td:nth-child(2) > a").text
-            if e_name == name:
-                trash = e.find_element(By.CSS_SELECTOR, "i.fa-trash-alt")
-                trash.click()
+                for e in ensembles_rows:
+                    e_name = e.find_element(By.CSS_SELECTOR, "td:nth-child(2) > a").text
+                    if e_name == name:
+                        trash = e.find_element(By.CSS_SELECTOR, "i.fa-trash-alt")
+                        trash.click()
 
-                self.accept_alert()
-                self.wait_for_ajax()
-                return
-        else:
-            raise Exception("Could not delete ensemble")
+                        self.accept_alert()
+                        self.wait_for_ajax()
+                        for _ in range(50):
+                            try:
+                                remaining = self.get_ensemble_rows()
+                            except Exception:
+                                time.sleep(0.1)
+                                continue
+
+                            if all(
+                                row.find_element(
+                                    By.CSS_SELECTOR, "td:nth-child(2) > a"
+                                ).text
+                                != name
+                                for row in remaining
+                            ):
+                                return
+                            time.sleep(0.1)
+                        return
+            except selenium.common.exceptions.StaleElementReferenceException:
+                time.sleep(0.1)
+                continue
+            time.sleep(0.1)
+
+        raise Exception("Could not delete ensemble")
 
     def flag_ensemble(self):
         assert self.is_on_page_ensemble()

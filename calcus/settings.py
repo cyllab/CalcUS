@@ -218,23 +218,38 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "calcus.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "calcus",
-        "USER": POSTGRES_USER,
-        "PASSWORD": POSTGRES_PASSWORD,
-        "HOST": POSTGRES_HOST,
-        "PORT": POSTGRES_PORT,
-        # To connect over SSL
-        # "OPTIONS": {
-        #     'sslmode': 'verify-ca',
-        #     'sslrootcert': 'server-ca.pem',
-        #     'sslcert': 'client-cert.pem',
-        #     'sslkey': 'client-key.pem',
-        # },
+if IS_CLOUD:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django_cockroachdb",
+            "NAME": "calcus",
+            "USER": POSTGRES_USER,
+            "PASSWORD": POSTGRES_PASSWORD,
+            "HOST": POSTGRES_HOST,
+            "PORT": POSTGRES_PORT,
+            "OPTIONS": {
+                "sslmode": "require",
+            },
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "NAME": "calcus",
+            "USER": POSTGRES_USER,
+            "PASSWORD": POSTGRES_PASSWORD,
+            "HOST": POSTGRES_HOST,
+            "PORT": POSTGRES_PORT,
+            # To connect over SSL
+            # "OPTIONS": {
+            #     'sslmode': 'verify-ca',
+            #     'sslrootcert': 'server-ca.pem',
+            #     'sslcert': 'client-cert.pem',
+            #     'sslkey': 'client-key.pem',
+            # },
+        }
+    }
 
 if not IS_TEST and IS_CLOUD:
     DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}

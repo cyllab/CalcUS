@@ -672,14 +672,28 @@ def _cache_candidate_is_usable(cache_dir, required_files=None):
     return True
 
 
+def _cache_candidate_matches_calc(calc, cache_dir):
+    if calc.parameters.software == "xtb":
+        cache_xyz = os.path.join(cache_dir, "calc.xyz")
+        if os.path.isfile(cache_xyz):
+            with open(cache_xyz) as f:
+                cached_xyz = clean_xyz("".join(f.readlines()))
+
+            if cached_xyz != clean_xyz(calc.structure.xyz_structure):
+                return False
+
+    return True
+
+
 def get_cache_index(calc, cache_path, required_files=None):
     inputs = list(glob.glob(cache_path + "/*.input"))
     for f in inputs:
         if files_are_equal(f, calc.all_inputs):
             ind = ".".join(f.split("/")[-1].split(".")[:-1])
+            cache_dir = os.path.join(cache_path, ind)
             if _cache_candidate_is_usable(
-                os.path.join(cache_path, ind), required_files=required_files
-            ):
+                cache_dir, required_files=required_files
+            ) and _cache_candidate_matches_calc(calc, cache_dir):
                 return ind
     else:
         return -1
@@ -978,8 +992,12 @@ def xtb_mo_gen(calc):
 def launch_xtb_calc(calc, files):
     local_folder = os.path.join(CALCUS_SCR_HOME, str(calc.id))
 
-    if not os.path.isdir(local_folder):
-        os.makedirs(local_folder, exist_ok=True)
+    if os.path.islink(local_folder) or os.path.isfile(local_folder):
+        os.unlink(local_folder)
+    elif os.path.isdir(local_folder):
+        rmtree(local_folder)
+
+    os.makedirs(local_folder, exist_ok=True)
 
     with open(os.path.join(local_folder, "calc.xyz"), "w") as out:
         out.write(clean_xyz(calc.structure.xyz_structure))
@@ -1572,6 +1590,17 @@ def xtb_freq(calc):
             while ind < len(lines) - 1 and lines[ind].find("Atom AN") == -1:
                 ind += 1
             ind += 1
+
+        mode_lengths = [len(vib) for vib in vibs]
+        if any(length != num_atoms for length in mode_lengths):
+            logger.error(
+                "Invalid xTB frequency output for calc %s in %s: structure has %s atoms but mode lengths are %s",
+                calc.id,
+                local_folder,
+                num_atoms,
+                mode_lengths,
+            )
+            return ErrorCodes.INVALID_OUTPUT
 
         for ind in range(len(vibs)):
             anim = f"{num_atoms}\nCalcUS\n"

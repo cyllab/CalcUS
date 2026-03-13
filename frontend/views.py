@@ -2461,6 +2461,9 @@ def _submit_calculation(request, verify=False):
 
 
 def can_view_project(proj, user):
+    if proj.author is None:
+        return False
+
     if proj.author == user:
         return True
     else:

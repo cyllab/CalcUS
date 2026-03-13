@@ -6,6 +6,7 @@ Django>=5.2.11,<6
 django-appconf
 django-axes
 django-bulma
+django-cockroachdb==6.0
 django-cors-headers
 django-gmailapi-backend
 django-hashid-field
