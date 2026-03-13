@@ -222,7 +222,9 @@
 <script src="https://unpkg.com/konva@9.2.0/konva.min.js"></script>
 <script type="text/javascript" src="{% static 'frontend/uis/ChemDoodleWeb-uis.js' %}"></script>
 
+{% if ensemble_aspirin %}
 {% include "frontend/properties/conformers_head.html" with ensemble=ensemble_aspirin %}
+{% endif %}
 
 
 {% endblock %} 

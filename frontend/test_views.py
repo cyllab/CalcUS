@@ -162,7 +162,7 @@ class CalculationLaunchTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_submit_empty(self):
-        response = self.client.post("/submit_calculation", data={}, follow=True)
+        response = self.client.post("/submit_calculation/", data={}, follow=True)
         assert (
             response.content.decode("utf-8").find("Please login to see this page") == -1
         )
