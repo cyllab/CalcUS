@@ -7,7 +7,7 @@
      |                    University of Bonn                     |     
       -----------------------------------------------------------      
 
-   * xtb version 6.5.1 (579679a) compiled by 'ehlert@majestix' on 2022-07-11
+   * xtb version 6.6.0 (8843059) compiled by 'stahn@majestix' on 2023-02-09
 
    xtb is free software: you can redistribute it and/or modify it under
    the terms of the GNU Lesser General Public License as published by
@@ -76,15 +76,15 @@
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2022/09/05 at 11:08:54.054     
+ * started run on 2026/03/12 at 21:39:24.516     
 
            -------------------------------------------------
           |                Calculation Setup                |
            -------------------------------------------------
 
-          program call               : xtb in.xyz --hess --chrg 1
+          program call               : xtb calc.xyz --hess --chrg 1
           hostname                   : web
-          coordinate file            : in.xyz
+          coordinate file            : calc.xyz
           omp threads                :                    16
 
    ID    Z sym.   atoms
@@ -147,7 +147,7 @@
    5     -3.0650293  0.328820E-04  0.126E-01    2.20       1.0  T
    6     -3.0650713 -0.420251E-04  0.211E-03    2.24      23.6  T
    7     -3.0650713 -0.102953E-07  0.767E-05    2.23     651.7  T
-   8     -3.0650713 -0.845546E-11  0.192E-05    2.23    2605.4  T
+   8     -3.0650713 -0.845679E-11  0.192E-05    2.23    2605.4  T
 
    *** convergence criteria satisfied after 8 iterations ***
 
@@ -164,28 +164,28 @@
                   HL-Gap            0.0821270 Eh            2.2348 eV
              Fermi-level           -0.7985668 Eh          -21.7301 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.001 sec
- SCC setup                      ...        0 min,  0.000 sec (  9.713%)
- Dispersion                     ...        0 min,  0.000 sec (  3.017%)
- classical contributions        ...        0 min,  0.000 sec (  1.085%)
- integral evaluation            ...        0 min,  0.000 sec (  8.094%)
- iterations                     ...        0 min,  0.001 sec ( 59.566%)
- molecular gradient             ...        0 min,  0.000 sec ( 12.564%)
- printout                       ...        0 min,  0.000 sec (  4.249%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.003 sec
+ SCC setup                      ...        0 min,  0.000 sec (  3.586%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.769%)
+ classical contributions        ...        0 min,  0.000 sec (  1.122%)
+ integral evaluation            ...        0 min,  0.000 sec (  2.873%)
+ iterations                     ...        0 min,  0.003 sec ( 85.199%)
+ molecular gradient             ...        0 min,  0.000 sec (  4.560%)
+ printout                       ...        0 min,  0.000 sec (  1.306%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy              -3.019359422293 Eh    ::
-         :: gradient norm              0.000471426925 Eh/a0 ::
-         :: HOMO-LUMO gap              2.234788620489 eV    ::
+         :: gradient norm              0.000471426251 Eh/a0 ::
+         :: HOMO-LUMO gap              2.234788621512 eV    ::
          ::.................................................::
-         :: SCC energy                -3.065071337775 Eh    ::
-         :: -> isotropic ES            0.156490698672 Eh    ::
-         :: -> anisotropic ES         -0.024189557284 Eh    ::
-         :: -> anisotropic XC          0.016610436238 Eh    ::
+         :: SCC energy                -3.065071337677 Eh    ::
+         :: -> isotropic ES            0.156490698651 Eh    ::
+         :: -> anisotropic ES         -0.024189557294 Eh    ::
+         :: -> anisotropic XC          0.016610436244 Eh    ::
          :: -> dispersion             -0.000208217322 Eh    ::
-         :: repulsion energy           0.045711913259 Eh    ::
+         :: repulsion energy           0.045711913161 Eh    ::
          :: add. restraining           0.000000000000 Eh    ::
          :: total charge               1.000000000000 e     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -204,7 +204,7 @@ estimated wall time      0.00 min
 writing file <hessian>.
 
  projected vibrational frequencies (cm⁻¹)
-eigval :       -0.00    -0.00     0.00     0.00     0.00     0.00
+eigval :       -0.00    -0.00    -0.00    -0.00     0.00     0.00
 eigval :     1038.06  1138.37  1139.44  2830.58  2876.69  2880.91
            -------------------------------------------------
           |                Property Printout                |
@@ -242,7 +242,7 @@ largest (>0.10) Wiberg bond orders for each atom
  ---------------------------------------------------------------------------
      #   Z sym  total        # sym  WBO       # sym  WBO       # sym  WBO
  ---------------------------------------------------------------------------
-     1   6 C    2.723 --     3 H    0.908     4 H    0.908     2 H    0.908
+     1   6 C    2.723 --     3 H    0.908     2 H    0.908     4 H    0.908
      2   1 H    0.909 --     1 C    0.908
      3   1 H    0.909 --     1 C    0.908
      4   1 H    0.909 --     1 C    0.908
@@ -265,13 +265,13 @@ molecular quadrupole (traceless):
           |               Frequency Printout                |
            -------------------------------------------------
  projected vibrational frequencies (cm⁻¹)
-eigval :       -0.00    -0.00     0.00     0.00     0.00     0.00
+eigval :       -0.00    -0.00    -0.00    -0.00     0.00     0.00
 eigval :     1038.06  1138.37  1139.44  2830.58  2876.69  2880.91
  reduced masses (amu)
-   1:  6.47   2:  3.92   3:  5.24   4:  8.16   5:  4.38   6:  4.25   7:  3.22   8:  2.04
+   1:  4.94   2:  3.58   3:  4.70   4:  7.56   5:  8.66   6:  2.97   7:  3.22   8:  2.04
    9:  2.04  10:  1.01  11:  2.19  12:  2.19
  IR intensities (km·mol⁻¹)
-   1: 40.35   2: 21.51   3: 31.29   4: 52.80   5: 24.89   6: 23.96   7: 32.70   8: 97.52
+   1: 29.01   2: 19.07   3: 27.34   4: 48.44   5: 56.42   6: 14.51   7: 32.70   8: 97.52
    9: 97.80  10:  0.63  11:219.69  12:219.09
  Raman intensities (amu)
    1:  0.00   2:  0.00   3:  0.00   4:  0.00   5:  0.00   6:  0.00   7:  0.00   8:  0.00
@@ -323,36 +323,36 @@ d3h symmetry found (for desy threshold:  0.10E+00) used in thermo
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                  THERMODYNAMIC                  ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
-         :: total free energy          -3.009666052150 Eh   ::
+         :: total free energy          -3.009666052164 Eh   ::
          ::.................................................::
          :: total energy               -3.019359422294 Eh   ::
-         :: zero point energy           0.027119432924 Eh   ::
+         :: zero point energy           0.027119432911 Eh   ::
          :: G(RRHO) w/o ZPVE           -0.017426062780 Eh   ::
-         :: G(RRHO) contrib.            0.009693370144 Eh   ::
+         :: G(RRHO) contrib.            0.009693370131 Eh   ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
            -------------------------------------------------
           | TOTAL ENERGY               -3.019359422294 Eh   |
-          | TOTAL ENTHALPY             -2.988388558012 Eh   |
-          | TOTAL FREE ENERGY          -3.009666052150 Eh   |
-          | GRADIENT NORM               0.000471436151 Eh/α |
-          | HOMO-LUMO GAP               2.234792628882 eV   |
+          | TOTAL ENTHALPY             -2.988388558026 Eh   |
+          | TOTAL FREE ENERGY          -3.009666052164 Eh   |
+          | GRADIENT NORM               0.000471435477 Eh/α |
+          | HOMO-LUMO GAP               2.234792629904 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2022/09/05 at 11:08:54.098     
+ * finished run on 2026/03/12 at 21:39:24.533     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.044 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.587 sec
- * ratio c/w:    13.418 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.016 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.208 sec
+ * ratio c/w:    13.023 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.001 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.023 sec
- * ratio c/w:    15.935 speedup
- analytical hessian:
  * wall-time:     0 d,  0 h,  0 min,  0.003 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.047 sec
- * ratio c/w:    14.713 speedup
+ *  cpu-time:     0 d,  0 h,  0 min,  0.055 sec
+ * ratio c/w:    15.633 speedup
+ analytical hessian:
+ * wall-time:     0 d,  0 h,  0 min,  0.004 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.060 sec
+ * ratio c/w:    15.818 speedup
 
 normal termination of xtb

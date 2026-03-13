@@ -218,7 +218,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "calcus.wsgi.application"
 
-if IS_CLOUD:
+if IS_CLOUD and not IS_TEST:
     DATABASES = {
         "default": {
             "ENGINE": "django_cockroachdb",

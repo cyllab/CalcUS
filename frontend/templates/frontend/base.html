@@ -319,7 +319,10 @@
                                 {% if user.is_authenticated %}
                                 <a href="{% url 'frontend:profile' %}"> &nbsp;<strong>My Profile</strong></a>
                                 &nbsp;&nbsp;&nbsp;&nbsp;
-                                <a href="{% url 'logout'%}?next={{request.path}}">Logout <i class="fas fa-sign-out-alt"></i></a>
+                                <form action="{% url 'logout' %}?next={{ request.path }}" method="post">
+                                {% csrf_token %}
+                                <button class="button" type="submit">Logout <i class="fas fa-sign-out-alt"></i></button>
+                                </form>
                                 {% else %}
                                 <a class="button is-primary" href="{% url 'frontend:register' %}">
                                     <strong>Register</strong>

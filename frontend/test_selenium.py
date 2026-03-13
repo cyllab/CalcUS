@@ -52,6 +52,39 @@ class InterfaceTests(CalcusLiveServer):
     def test_default_login_page(self):
         self.assertTrue(self.is_on_page_projects())
 
+    def test_logout(self):
+        self.lget("/projects/")
+
+        logout_button = WebDriverWait(self.driver, 5).until(
+            EC.element_to_be_clickable(
+                (
+                    By.XPATH,
+                    "//form[contains(@action, 'logout')]//button[contains(normalize-space(.), 'Logout')]",
+                )
+            )
+        )
+        logout_button.click()
+
+        WebDriverWait(self.driver, 5).until(
+            lambda d: len(
+                d.find_elements(By.XPATH, "//a[contains(normalize-space(.), 'Log in')]")
+            )
+            > 0
+            and len(
+                d.find_elements(
+                    By.XPATH,
+                    "//form[contains(@action, 'logout')]//button[contains(normalize-space(.), 'Logout')]",
+                )
+            )
+            == 0
+        )
+
+        self.lget("/projects/")
+        WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.ID, "id_username"))
+        )
+        self.assertIn("/accounts/login/", self.driver.current_url)
+
     def test_goto_projects(self):
         self.lget("/projects/")
         self.assertTrue(self.is_on_page_projects())
