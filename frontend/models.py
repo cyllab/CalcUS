@@ -1481,6 +1481,23 @@ class CalculationOrder(models.Model):
         return counts
 
     @classmethod
+    def _get_total_cpu_time(cls, order_id):
+        total_cpu_time = 0
+
+        for calc in Calculation.objects.filter(order_id=order_id).select_related(
+            "order__resource"
+        ):
+            if (
+                settings.IS_CLOUD
+                and calc.status != Calculation.CALC_STATUSES["Running"]
+            ):
+                total_cpu_time += calc.billed_seconds
+            else:
+                total_cpu_time += calc.execution_time
+
+        return total_cpu_time
+
+    @classmethod
     def sync_cache(cls, order_id):
         if order_id is None:
             return
@@ -1514,9 +1531,11 @@ class CalculationOrder(models.Model):
                 return
 
             new_status = order._status(*statuses)
+            total_cpu_time = cls._get_total_cpu_time(order_id)
             cls.objects.filter(id=order_id).update(
                 _calc_statuses=cls._serialize_calc_statuses(statuses),
                 cached_status=new_status,
+                total_cpu_time=total_cpu_time,
             )
 
             new_unseen = order.last_seen_status != new_status

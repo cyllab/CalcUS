@@ -22,13 +22,15 @@ import copy
 from shutil import copyfile, rmtree
 
 from django.core.management import call_command
-from django.test import TestCase, Client
+from django.test import TestCase, Client, RequestFactory
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from .gen_calc import gen_calc
 from .calcusliveserver import SCR_DIR
+from .views import IndexView
 from .models import (
+    Calculation,
     CalculationOrder,
     Ensemble,
     HARTREE_FVAL,
@@ -149,6 +151,7 @@ class CalculationLaunchTests(TestCase):
         )
         self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
         self.client = Client()
+        self.factory = RequestFactory()
         self.client.force_login(self.user)
 
     def tearDown(self):
@@ -395,6 +398,7 @@ class FlowchartLaunchTests(TestCase):
         )
         self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
         self.client = Client()
+        self.factory = RequestFactory()
         self.client.force_login(self.user)
 
     def test_verify_correct_flowchart(self):
@@ -634,6 +638,7 @@ class FileInputTests(TestCase):
         )
         self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
         self.client = Client()
+        self.factory = RequestFactory()
         self.client.force_login(self.user)
 
     def test_single_file(self):
@@ -1762,7 +1767,46 @@ class CalculationTests(TestCase):
         )
         self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
         self.client = Client()
+        self.factory = RequestFactory()
         self.client.force_login(self.user)
+
+    def create_order_with_child_cpu_times(self, *durations):
+        params = {
+            "calc_name": "test",
+            "type": "Geometrical Optimisation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "software": "xtb",
+            "in_file": "CH4.xyz",
+            "theory": "GFN2-xTB",
+            "method": "GFN2-xTB",
+        }
+
+        calc = gen_calc(params, self.user)
+        order = calc.order
+        start = timezone.now()
+        calculations = []
+
+        for ind, duration in enumerate(durations):
+            if ind == 0:
+                current_calc = calc
+            else:
+                current_calc = Calculation.objects.create(
+                    structure=calc.structure,
+                    step=calc.step,
+                    parameters=calc.parameters,
+                    order=order,
+                    task_id=str(ind + 1),
+                )
+
+            current_calc.date_started = start
+            current_calc.date_finished = start + timezone.timedelta(seconds=duration)
+            current_calc.status = 2
+            current_calc.save()
+            calculations.append(current_calc)
+
+        order.refresh_from_db()
+        return order, calculations
 
     def test_order_calc_statuses_not_overwritten_by_stale_related_order(self):
         params = {
@@ -1816,6 +1860,43 @@ class CalculationTests(TestCase):
 
         self.user.refresh_from_db()
         self.assertEqual(self.user.unseen_calculations, 1)
+
+    def test_order_total_cpu_time_sums_child_calculation_cpu_times(self):
+        order, calculations = self.create_order_with_child_cpu_times(5, 7, 11)
+
+        self.assertEqual(
+            order.total_cpu_time,
+            sum(calc.execution_time for calc in calculations),
+        )
+        self.assertEqual(
+            order.get_data[5],
+            sum(calc.execution_time for calc in calculations),
+        )
+
+    def test_order_list_shows_total_cpu_time_sum_of_child_calculations(self):
+        order, calculations = self.create_order_with_child_cpu_times(5, 7, 11)
+        total_cpu_time = sum(calc.execution_time for calc in calculations)
+
+        request = self.factory.get(
+            "/list/",
+            {
+                "page": 1,
+                "project": "All projects",
+                "type": "All steps",
+                "status": "All statuses",
+                "user_id": str(self.user.id),
+                "mode": "Workspace",
+            },
+        )
+        request.user = self.user
+        request.session = {}
+        response = IndexView.as_view()(request)
+        response.render()
+
+        self.assertIn(
+            f"| <strong>{total_cpu_time}</strong> CPU-sec",
+            " ".join(response.rendered_content.split()),
+        )
 
     def test_Gaussian_frames1(self):
         params = {
