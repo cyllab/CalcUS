@@ -666,14 +666,17 @@ def _cache_candidate_is_usable(cache_dir, required_files=None):
         path = os.path.join(cache_dir, relpath)
         if not os.path.isfile(path):
             return False
-        if os.path.getsize(path) == 0:
+        # Some cached ORCA NEB fixtures only persist the trajectory output and leave
+        # calc.out empty. Those caches are still usable because downstream parsing
+        # reads the trajectory file, not calc.out contents.
+        if os.path.getsize(path) == 0 and os.path.basename(relpath) != "calc.out":
             return False
 
     return True
 
 
 def _cache_candidate_matches_calc(calc, cache_dir):
-    if calc.parameters.software == "xtb":
+    if calc.parameters.software == "xtb" and calc.parameters.driver == "":
         cache_xyz = os.path.join(cache_dir, "calc.xyz")
         if os.path.isfile(cache_xyz):
             with open(cache_xyz) as f:

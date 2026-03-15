@@ -262,6 +262,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             self.email = "Selenium@test.com"
         self.password = "test1234"
         self.current_order_id = None
+        self.order_ids_before_launch = None
 
         self.user = User.objects.create_user(
             email=self.email,
@@ -747,6 +748,11 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def calc_launch(self):
         self.wait_for_ajax()
+        self.order_ids_before_launch = {
+            f"order_{order_id}"
+            for order_id in CalculationOrder.objects.values_list("id", flat=True)
+        }
+        self.current_order_id = None
         submit = self.driver.find_element(By.ID, "submit_button")
         self.driver.execute_script(
             "arguments[0].scrollIntoView({block: 'center'});", submit
@@ -1471,6 +1477,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         calculations = self.get_calc_orders()
         self.current_order_id = calculations[0].get_attribute("id")
+        self.order_ids_before_launch = None
         link = calculations[0].find_element(By.CSS_SELECTOR, "a[href^='/link_order/']")
         self.driver.get(link.get_attribute("href"))
         self.wait_for_ajax()
@@ -1491,6 +1498,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         calculations = self.get_calc_orders()
         self.current_order_id = calculations[0].get_attribute("id")
+        self.order_ids_before_launch = None
 
         icon = calculations[0].find_element(By.CLASS_NAME, "fa-list")
         link = icon.find_element(By.XPATH, "./ancestor::a[1]")
@@ -1499,6 +1507,14 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
     def _get_target_calc_order(self):
         calculations = self.get_calc_orders()
+        if self.current_order_id is None and self.order_ids_before_launch is not None:
+            for calc in calculations:
+                calc_id = calc.get_attribute("id")
+                if calc_id not in self.order_ids_before_launch:
+                    self.current_order_id = calc_id
+                    self.order_ids_before_launch = None
+                    return calc
+            return None
         if self.current_order_id is None:
             return calculations[0]
 
@@ -1622,9 +1638,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         while time.monotonic() < deadline:
             try:
-                header = self._get_target_calc_order().find_element(
-                    By.CLASS_NAME, "message-header"
-                )
+                target = self._get_target_calc_order()
+                if target is None:
+                    time.sleep(0.2)
+                    self._refresh_calculations_page()
+                    continue
+                header = target.find_element(By.CLASS_NAME, "message-header")
             except (
                 selenium.common.exceptions.NoSuchElementException,
                 selenium.common.exceptions.StaleElementReferenceException,
@@ -1698,9 +1717,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         while time.monotonic() < deadline:
             try:
-                header = self._get_target_calc_order().find_element(
-                    By.CLASS_NAME, "message-header"
-                )
+                target = self._get_target_calc_order()
+                if target is None:
+                    time.sleep(0.2)
+                    self._refresh_calculations_page()
+                    continue
+                header = target.find_element(By.CLASS_NAME, "message-header")
             except (
                 selenium.common.exceptions.NoSuchElementException,
                 selenium.common.exceptions.StaleElementReferenceException,
@@ -1723,9 +1745,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         successful = False
         while time.monotonic() < deadline:
             try:
-                header = self._get_target_calc_order().find_element(
-                    By.CLASS_NAME, "message-header"
-                )
+                target = self._get_target_calc_order()
+                if target is None:
+                    time.sleep(0.2)
+                    self._refresh_calculations_page()
+                    continue
+                header = target.find_element(By.CLASS_NAME, "message-header")
             except (
                 selenium.common.exceptions.NoSuchElementException,
                 selenium.common.exceptions.StaleElementReferenceException,
@@ -1746,9 +1771,15 @@ class CalcusLiveServer(StaticLiveServerTestCase):
 
         if not successful:
             if self.current_order_id is not None:
-                latest_order = CalculationOrder.objects.get(id=self.current_order_id)
+                latest_order = CalculationOrder.objects.filter(
+                    id=self.current_order_id.removeprefix("order_")
+                ).first()
             else:
-                latest_order = CalculationOrder.objects.latest("id")
+                latest_order = None
+            if latest_order is None:
+                latest_order = CalculationOrder.objects.order_by("-id").first()
+            if latest_order is None:
+                return successful
             print(f"Error messages of calculations in order {latest_order.id}")
             for c in latest_order.calculation_set.all():
                 print(f"Calc {c.id}: {c.error_message}")
@@ -2137,6 +2168,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.wait_for_ajax()
         if self.get_number_unseen_calcs() == num:
             return True
+        grace_deadline = time.monotonic() + 2
+        while time.monotonic() < grace_deadline:
+            self.driver.refresh()
+            self.wait_for_ajax()
+            if self.get_number_unseen_calcs() == num:
+                return True
+            time.sleep(0.25)
         return False
 
     def get_related_calculations_div(self):

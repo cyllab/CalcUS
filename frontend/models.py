@@ -1302,21 +1302,51 @@ class CalculationOrder(models.Model):
     _project_name = models.CharField(max_length=200, default="")
     _step_name = models.CharField(max_length=200, default="")
 
-    def see(self):
-        if self.last_seen_status != self.status:
-            self.last_seen_status = self.status
-            self.save()
+    @classmethod
+    def _update_unseen_counter(cls, user_id, delta):
+        if user_id is None or delta == 0:
+            return
 
-            with transaction.atomic():
-                p = User.objects.select_for_update().get(id=self.author.id)
-                p.unseen_calculations = max(
-                    p.unseen_calculations - 1, 0
-                )  # Glitches may screw up the count...
-                p.save()
+        if delta > 0:
+            User.objects.filter(id=user_id).update(
+                unseen_calculations=F("unseen_calculations") + delta
+            )
         else:
-            if not self.hidden and self.status in [2, 3]:
-                self.hidden = True
-                self.save()
+            User.objects.filter(id=user_id).update(
+                unseen_calculations=Case(
+                    When(
+                        unseen_calculations__gte=-delta,
+                        then=F("unseen_calculations") + delta,
+                    ),
+                    default=0,
+                )
+            )
+
+    def see(self):
+        with transaction.atomic():
+            order = (
+                CalculationOrder.objects.select_for_update()
+                .only("id", "author_id", "last_seen_status", "cached_status", "hidden")
+                .get(id=self.id)
+            )
+
+            update_fields = []
+            delta = 0
+            was_new = order.last_seen_status != order.cached_status
+
+            if was_new:
+                order.last_seen_status = order.cached_status
+                update_fields.append("last_seen_status")
+                delta = -1
+
+            if not was_new and not order.hidden and order.cached_status in [2, 3]:
+                order.hidden = True
+                update_fields.append("hidden")
+
+            if update_fields:
+                order.save(update_fields=update_fields)
+
+            CalculationOrder._update_unseen_counter(order.author_id, delta)
 
     @property
     def color(self):
@@ -1326,7 +1356,7 @@ class CalculationOrder(models.Model):
     def label(self):
         if self._label == "":
             self._label = self._get_label()
-            self.save()
+            self.save(update_fields=["_label"])
         return self._label
 
     def _get_label(self):
@@ -1518,15 +1548,7 @@ class CalculationOrder(models.Model):
 
             if sum(statuses) == 0:
                 if old_unseen:
-                    User.objects.filter(id=order.author_id).update(
-                        unseen_calculations=Case(
-                            When(
-                                unseen_calculations__gt=0,
-                                then=F("unseen_calculations") - 1,
-                            ),
-                            default=0,
-                        )
-                    )
+                    cls._update_unseen_counter(order.author_id, -1)
                 cls.objects.filter(id=order_id).delete()
                 return
 
@@ -1543,19 +1565,9 @@ class CalculationOrder(models.Model):
                 return
 
             if new_unseen:
-                User.objects.filter(id=order.author_id).update(
-                    unseen_calculations=F("unseen_calculations") + 1
-                )
+                cls._update_unseen_counter(order.author_id, 1)
             else:
-                User.objects.filter(id=order.author_id).update(
-                    unseen_calculations=Case(
-                        When(
-                            unseen_calculations__gt=0,
-                            then=F("unseen_calculations") - 1,
-                        ),
-                        default=0,
-                    )
-                )
+                cls._update_unseen_counter(order.author_id, -1)
 
     def _status(self, num_queued, num_running, num_done, num_error):
         if num_queued + num_running + num_done + num_error == 0:
@@ -1603,13 +1615,32 @@ class CalculationOrder(models.Model):
         else:
             return False
 
+    def save(self, *args, **kwargs):
+        if self.step_id is not None or (settings.IS_TEST and self.step is None):
+            new_label = self._get_label()
+            if self._label != new_label:
+                self._label = new_label
+                update_fields = kwargs.get("update_fields")
+                if update_fields is not None and "_label" not in update_fields:
+                    kwargs["update_fields"] = list(update_fields) + ["_label"]
+        super().save(*args, **kwargs)
+
     def delete(self, *args, **kwargs):
-        if self.new_status:
-            with transaction.atomic():
-                p = User.objects.select_for_update().get(id=self.author.id)
-                p.unseen_calculations = max(0, p.unseen_calculations - 1)
-                p.save()
-        super(CalculationOrder, self).delete(*args, **kwargs)
+        with transaction.atomic():
+            order = (
+                CalculationOrder.objects.select_for_update()
+                .only("id", "author_id", "last_seen_status", "cached_status")
+                .filter(id=self.id)
+                .first()
+            )
+
+            if order is None:
+                return super(CalculationOrder, self).delete(*args, **kwargs)
+
+            delta = -1 if order.last_seen_status != order.cached_status else 0
+            ret = super(CalculationOrder, self).delete(*args, **kwargs)
+            CalculationOrder._update_unseen_counter(order.author_id, delta)
+            return ret
 
 
 class Calculation(models.Model):

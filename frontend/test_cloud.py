@@ -1057,7 +1057,6 @@ class GeneralIntegrationTests(CalcusCloudLiveServer):
         self.calc_launch()
         self.wait_latest_calc_done(150)
         self.assertEqual(self.get_number_calc_orders(), 3)
-
         self.assertTrue(self.try_assert_number_unseen_calcs(2, 3))
         self.assertEqual(self.get_number_unseen_calcs_manually(), 2)
 

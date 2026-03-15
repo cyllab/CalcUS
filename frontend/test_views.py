@@ -30,6 +30,7 @@ from .gen_calc import gen_calc
 from .calcusliveserver import SCR_DIR
 from .views import IndexView
 from .models import (
+    BasicStep,
     Calculation,
     CalculationOrder,
     Ensemble,
@@ -1808,6 +1809,122 @@ class CalculationTests(TestCase):
         order.refresh_from_db()
         return order, calculations
 
+    def create_unseen_order(self):
+        params = {
+            "calc_name": "test",
+            "type": "Geometrical Optimisation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "software": "xtb",
+            "in_file": "CH4.xyz",
+            "theory": "GFN2-xTB",
+            "method": "GFN2-xTB",
+        }
+
+        calc = gen_calc(params, self.user)
+        calc.status = 1
+        calc.save()
+
+        return CalculationOrder.objects.get(id=calc.order_id)
+
+    def create_processing_order(self):
+        project = Project.objects.create(name="Test Project", author=self.user)
+        molecule = Molecule.objects.create(name="Test Molecule", project=project)
+        ensemble = Ensemble.objects.create(
+            name="Starting Ensemble", parent_molecule=molecule
+        )
+        structure = Structure.objects.create(parent_ensemble=ensemble, number=1)
+        parameters = Parameters.objects.create(
+            charge=0,
+            multiplicity=1,
+            software="xtb",
+            method="GFN2-xTB",
+        )
+        step = BasicStep.objects.get(name="Geometrical Optimisation")
+        order = CalculationOrder.objects.create(
+            name="",
+            author=self.user,
+            project=project,
+            step=step,
+            parameters=parameters,
+            ensemble=ensemble,
+            structure=structure,
+            date=timezone.now(),
+        )
+
+        return order, molecule
+
+    def create_direct_ensemble_order(self):
+        project = Project.objects.create(name="Direct Project", author=self.user)
+        molecule = Molecule.objects.create(name="Direct Molecule", project=project)
+        ensemble = Ensemble.objects.create(
+            name="Initial Ensemble", parent_molecule=molecule
+        )
+        parameters = Parameters.objects.create(
+            charge=0,
+            multiplicity=1,
+            software="xtb",
+            method="GFN2-xTB",
+        )
+        step = BasicStep.objects.get(name="Single-Point Energy")
+        order = CalculationOrder.objects.create(
+            name="",
+            author=self.user,
+            project=project,
+            step=step,
+            parameters=parameters,
+            ensemble=ensemble,
+            date=timezone.now(),
+        )
+
+        return order, ensemble
+
+    def create_structure_order(self):
+        project = Project.objects.create(name="Structure Project", author=self.user)
+        molecule = Molecule.objects.create(name="Structure Molecule", project=project)
+        ensemble = Ensemble.objects.create(
+            name="Initial Structure Ensemble", parent_molecule=molecule
+        )
+        structure = Structure.objects.create(parent_ensemble=ensemble, number=1)
+        parameters = Parameters.objects.create(
+            charge=0,
+            multiplicity=1,
+            software="xtb",
+            method="GFN2-xTB",
+        )
+        step = BasicStep.objects.get(name="Single-Point Energy")
+        order = CalculationOrder.objects.create(
+            name="",
+            author=self.user,
+            project=project,
+            step=step,
+            parameters=parameters,
+            structure=structure,
+            date=timezone.now(),
+        )
+
+        return order, ensemble
+
+    def create_unknown_order(self):
+        project = Project.objects.create(name="Unknown Project", author=self.user)
+        parameters = Parameters.objects.create(
+            charge=0,
+            multiplicity=1,
+            software="xtb",
+            method="GFN2-xTB",
+        )
+        step = BasicStep.objects.get(name="Single-Point Energy")
+        order = CalculationOrder.objects.create(
+            name="",
+            author=self.user,
+            project=project,
+            step=step,
+            parameters=parameters,
+            date=timezone.now(),
+        )
+
+        return order
+
     def test_order_calc_statuses_not_overwritten_by_stale_related_order(self):
         params = {
             "calc_name": "test",
@@ -1861,6 +1978,64 @@ class CalculationTests(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.unseen_calculations, 1)
 
+    def test_see_from_stale_instance_decrements_unseen_only_once(self):
+        order1 = self.create_unseen_order()
+        order2 = self.create_unseen_order()
+        stale_order1 = CalculationOrder.objects.get(id=order1.id)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.unseen_calculations, 2)
+
+        order1.see()
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.unseen_calculations, 1)
+
+        stale_order1.see()
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.unseen_calculations, 1)
+
+        order2.refresh_from_db()
+        self.assertTrue(order2.new_status)
+
+    def test_see_leaves_new_completed_order_visible_until_seen_again(self):
+        order = self.create_unseen_order()
+        calc = order.calculation_set.get()
+
+        calc.status = Calculation.CALC_STATUSES["Done"]
+        calc.save()
+
+        order.refresh_from_db()
+        self.assertFalse(order.hidden)
+        self.assertTrue(order.new_status)
+
+        order.see()
+        order.refresh_from_db()
+        self.assertFalse(order.hidden)
+        self.assertFalse(order.new_status)
+
+        order.see()
+        order.refresh_from_db()
+        self.assertTrue(order.hidden)
+
+    def test_delete_from_stale_instance_decrements_unseen_only_once(self):
+        order1 = self.create_unseen_order()
+        order2 = self.create_unseen_order()
+        stale_order1 = CalculationOrder.objects.get(id=order1.id)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.unseen_calculations, 2)
+
+        order1.see()
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.unseen_calculations, 1)
+
+        stale_order1.delete()
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.unseen_calculations, 1)
+
+        order2.refresh_from_db()
+        self.assertTrue(order2.new_status)
+
     def test_order_total_cpu_time_sums_child_calculation_cpu_times(self):
         order, calculations = self.create_order_with_child_cpu_times(5, 7, 11)
 
@@ -1897,6 +2072,163 @@ class CalculationTests(TestCase):
             f"| <strong>{total_cpu_time}</strong> CPU-sec",
             " ".join(response.rendered_content.split()),
         )
+
+    def test_order_label_updates_when_result_ensemble_is_set(self):
+        order, molecule = self.create_processing_order()
+
+        self.assertEqual(order.label, "Processing...")
+
+        result_ensemble = Ensemble.objects.create(
+            name="Optimized Ensemble", parent_molecule=molecule
+        )
+        order.result_ensemble = result_ensemble
+        order.save()
+        order.refresh_from_db()
+
+        self.assertEqual(order.label, "Optimized Ensemble")
+
+    def test_order_list_shows_updated_result_ensemble_name(self):
+        order, molecule = self.create_processing_order()
+        self.assertEqual(order.label, "Processing...")
+
+        result_ensemble = Ensemble.objects.create(
+            name="Optimized Ensemble", parent_molecule=molecule
+        )
+        order.result_ensemble = result_ensemble
+        order.save()
+
+        request = self.factory.get(
+            "/list/",
+            {
+                "page": 1,
+                "project": "All projects",
+                "type": "All steps",
+                "status": "All statuses",
+                "user_id": str(self.user.id),
+                "mode": "Workspace",
+            },
+        )
+        request.user = self.user
+        request.session = {}
+        response = IndexView.as_view()(request)
+        response.render()
+
+        rendered = " ".join(response.rendered_content.split())
+        self.assertIn("Optimized Ensemble", rendered)
+        self.assertNotIn("Processing...", rendered)
+
+    def test_order_label_updates_when_result_ensemble_is_set_with_update_fields(self):
+        order, molecule = self.create_processing_order()
+        self.assertEqual(order.label, "Processing...")
+
+        result_ensemble = Ensemble.objects.create(
+            name="Recovered Ensemble", parent_molecule=molecule
+        )
+        order.result_ensemble = result_ensemble
+        order.save(update_fields=["result_ensemble"])
+        order.refresh_from_db()
+
+        self.assertEqual(order.label, "Recovered Ensemble")
+
+    def test_order_list_shows_updated_name_after_result_ensemble_partial_save(self):
+        order, molecule = self.create_processing_order()
+        self.assertEqual(order.label, "Processing...")
+
+        result_ensemble = Ensemble.objects.create(
+            name="Recovered Ensemble", parent_molecule=molecule
+        )
+        order.result_ensemble = result_ensemble
+        order.save(update_fields=["result_ensemble"])
+
+        request = self.factory.get(
+            "/list/",
+            {
+                "page": 1,
+                "project": "All projects",
+                "type": "All steps",
+                "status": "All statuses",
+                "user_id": str(self.user.id),
+                "mode": "Workspace",
+            },
+        )
+        request.user = self.user
+        request.session = {}
+        response = IndexView.as_view()(request)
+        response.render()
+
+        rendered = " ".join(response.rendered_content.split())
+        self.assertIn("Recovered Ensemble", rendered)
+        self.assertNotIn("Processing...", rendered)
+
+    def test_get_label_production_cases_use_defined_steps(self):
+        processing_order, molecule = self.create_processing_order()
+        self.assertIsNotNone(processing_order.step)
+        self.assertTrue(processing_order.step.creates_ensemble)
+        self.assertEqual(processing_order._get_label(), "Processing...")
+
+        result_ensemble = Ensemble.objects.create(
+            name="Produced Ensemble", parent_molecule=molecule
+        )
+        processing_order.result_ensemble = result_ensemble
+        processing_order.save(update_fields=["result_ensemble"])
+        self.assertEqual(processing_order._get_label(), "Produced Ensemble")
+
+        direct_order, _ = self.create_direct_ensemble_order()
+        self.assertIsNotNone(direct_order.step)
+        self.assertFalse(direct_order.step.creates_ensemble)
+        self.assertEqual(direct_order._get_label(), "Initial Ensemble")
+
+        structure_order, _ = self.create_structure_order()
+        self.assertIsNotNone(structure_order.step)
+        self.assertFalse(structure_order.step.creates_ensemble)
+        self.assertEqual(
+            structure_order._get_label(),
+            "Initial Structure Ensemble",
+        )
+
+        unknown_order = self.create_unknown_order()
+        self.assertIsNotNone(unknown_order.step)
+        self.assertFalse(unknown_order.step.creates_ensemble)
+        self.assertEqual(unknown_order._get_label(), "Unknown")
+
+    def test_order_label_matches_get_label_after_input_ensemble_rename(self):
+        order, ensemble = self.create_direct_ensemble_order()
+        self.assertEqual(order.label, order._get_label())
+
+        ensemble.name = "Renamed Input Ensemble"
+        ensemble.save(rename=True)
+        order.refresh_from_db()
+
+        self.assertEqual(order.label, "Renamed Input Ensemble")
+        self.assertEqual(order.label, order._get_label())
+
+    def test_order_label_matches_get_label_after_result_ensemble_rename(self):
+        order, molecule = self.create_processing_order()
+        result_ensemble = Ensemble.objects.create(
+            name="Initial Result Ensemble", parent_molecule=molecule
+        )
+        order.result_ensemble = result_ensemble
+        order.save(update_fields=["result_ensemble"])
+        order.refresh_from_db()
+        self.assertEqual(order.label, order._get_label())
+
+        result_ensemble.name = "Renamed Result Ensemble"
+        result_ensemble.save(rename=True)
+        order.refresh_from_db()
+
+        self.assertEqual(order.label, "Renamed Result Ensemble")
+        self.assertEqual(order.label, order._get_label())
+
+    def test_order_label_matches_get_label_after_structure_ensemble_rename(self):
+        order, ensemble = self.create_structure_order()
+        self.assertEqual(order.label, order._get_label())
+
+        ensemble.name = "Renamed Structure Ensemble"
+        ensemble.save(rename=True)
+        order.refresh_from_db()
+
+        self.assertEqual(order.label, "Renamed Structure Ensemble")
+        self.assertEqual(order.label, order._get_label())
 
     def test_Gaussian_frames1(self):
         params = {

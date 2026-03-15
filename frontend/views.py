@@ -964,10 +964,7 @@ def link_order(request, pk):
 
     if request.user == o.author:
         if o.new_status:
-            o.last_seen_status = o.status
-            o.author.unseen_calculations = max(o.author.unseen_calculations - 1, 0)
-            o.author.save()
-            o.save()
+            o.see()
 
     if o.result_ensemble:
         return HttpResponseRedirect(f"/ensemble/{o.result_ensemble.id}")
