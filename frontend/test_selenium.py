@@ -851,7 +851,7 @@ class InterfaceTests(CalcusLiveServer):
         c2a = Calculation.objects.create(order=o2, status=2)
 
         self.user.unseen_calculations = 2
-        self.user.save()
+        self.user.save(update_fields=["unseen_calculations"])
 
         for i in range(3):
             self.lget("/calculations/")
@@ -903,7 +903,7 @@ class InterfaceTests(CalcusLiveServer):
         o5.save()
 
         self.user.unseen_calculations = 2
-        self.user.save()
+        self.user.save(update_fields=["unseen_calculations"])
 
         for i in range(3):
             self.lget("/calculations/")
@@ -963,7 +963,7 @@ class InterfaceTests(CalcusLiveServer):
         o5.save()
 
         self.user.unseen_calculations = 2
-        self.user.save()
+        self.user.save(update_fields=["unseen_calculations"])
 
         for i in range(3):
             self.lget("/calculations/")

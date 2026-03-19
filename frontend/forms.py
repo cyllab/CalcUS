@@ -95,7 +95,7 @@ class StudentCreateForm(forms.ModelForm):
         label="Access code",
     )
 
-    if settings.IS_CLOUD:
+    if settings.IS_CLOUD or settings.IS_TEST:
         captcha = ReCaptchaField()
 
     class Meta:
@@ -157,7 +157,7 @@ class TrialUserCreateForm(forms.ModelForm):
     )
     """
 
-    if settings.IS_CLOUD:
+    if settings.IS_CLOUD or settings.IS_TEST:
         captcha = ReCaptchaField()
 
     class Meta:
@@ -203,7 +203,7 @@ class UserLoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super(UserLoginForm, self).__init__(*args, **kwargs)
 
-    if settings.IS_CLOUD:
+    if settings.IS_CLOUD or settings.IS_TEST:
         captcha = ReCaptchaField()
 
 

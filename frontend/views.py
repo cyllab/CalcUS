@@ -201,18 +201,10 @@ class IndexView(generic.ListView):
                 hits = hits.filter(project__name=proj)
             if type != "All steps":
                 hits = hits.filter(step__name=type)
-            if status != "All statuses":
-                new_hits = []
-                for hit in hits:
-                    if hit.status == Calculation.CALC_STATUSES[status]:
-                        new_hits.append(hit)
-                hits = new_hits
+            if status != "All statuses" and status in Calculation.CALC_STATUSES:
+                hits = hits.filter(cached_status=Calculation.CALC_STATUSES[status])
             if mode == "Unseen only":
-                new_hits = []
-                for hit in hits:
-                    if hit.status != hit.last_seen_status:
-                        new_hits.append(hit)
-                hits = new_hits
+                hits = hits.exclude(last_seen_status=F("cached_status"))
 
             custom_order = Case(
                 When(~Q(last_seen_status=F("cached_status")), then=Value(-2)),
@@ -220,7 +212,7 @@ class IndexView(generic.ListView):
                 default=Value(0),
                 output_field=IntegerField(),
             )
-            res = hits.annotate(custom_order=custom_order).order_by(custom_order)
+            res = hits.annotate(custom_order=custom_order).order_by("custom_order")
 
             return res
         else:
@@ -5241,7 +5233,7 @@ def see_all(request):
     # This should be true if everything works.
     # If a glitch happens and the counter is off, this will reset it.
     request.user.unseen_calculations = 0
-    request.user.save()
+    request.user.save(update_fields=["unseen_calculations"])
 
     return HttpResponse(status=200)
 

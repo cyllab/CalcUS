@@ -320,21 +320,10 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             password,
         )
 
-        if IS_CLOUD:
-            WebDriverWait(self.driver, 1).until(
-                EC.frame_to_be_available_and_switch_to_it(
-                    (By.XPATH, "//*[@title='reCAPTCHA']")
-                )
-            )
-            time.sleep(0.3)
-            WebDriverWait(self.driver, 1).until(
-                EC.element_to_be_clickable(
-                    (By.XPATH, "//div[@class='recaptcha-checkbox-border']")
-                )
-            ).click()
-            self.wait_for_ajax()
-            self.driver.switch_to.default_content()
-            time.sleep(0.3)
+        if settings.IS_TEST:
+            self.set_test_recaptcha_response((By.CSS_SELECTOR, "form"))
+        elif IS_CLOUD:
+            self.complete_cloud_captcha()
 
         def login_finished(driver):
             return (
@@ -344,18 +333,12 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 > 0
             )
 
-        submit.send_keys(Keys.RETURN)
-        try:
-            WebDriverWait(self.driver, 5).until(login_finished)
-        except selenium.common.exceptions.TimeoutException:
-            submit = self.driver.find_element(By.CSS_SELECTOR, "input.control")
-            try:
-                submit.click()
-                WebDriverWait(self.driver, 5).until(login_finished)
-            except selenium.common.exceptions.TimeoutException:
-                form = self.driver.find_element(By.CSS_SELECTOR, "form")
-                self.driver.execute_script("arguments[0].submit();", form)
-                WebDriverWait(self.driver, 5).until(login_finished)
+        self.submit_form(
+            (By.CSS_SELECTOR, "input.control"),
+            login_finished,
+            (By.CSS_SELECTOR, "form"),
+            submit_with_return=True,
+        )
 
         if "/accounts/login/" in self.driver.current_url:
             errors = self.driver.find_elements(
@@ -384,6 +367,78 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located((By.ID, "id_username"))
         )
+
+    def complete_cloud_captcha(self):
+        switched_to_frame = False
+        try:
+            WebDriverWait(self.driver, 1).until(
+                EC.frame_to_be_available_and_switch_to_it(
+                    (By.XPATH, "//*[@title='reCAPTCHA']")
+                )
+            )
+            switched_to_frame = True
+            time.sleep(0.3)
+            WebDriverWait(self.driver, 1).until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, "//div[@class='recaptcha-checkbox-border']")
+                )
+            ).click()
+            self.wait_for_ajax()
+            time.sleep(0.3)
+        except (
+            selenium.common.exceptions.NoSuchElementException,
+            selenium.common.exceptions.TimeoutException,
+        ):
+            pass
+        finally:
+            if switched_to_frame:
+                self.driver.switch_to.default_content()
+
+    def set_test_recaptcha_response(self, form_locator):
+        form = self.driver.find_element(*form_locator)
+        self.driver.execute_script(
+            """
+            let input = arguments[0].querySelector(
+                'textarea[name="g-recaptcha-response"], input[name="g-recaptcha-response"]'
+            );
+            if (!input) {
+                input = document.createElement("textarea");
+                input.name = "g-recaptcha-response";
+                input.style.display = "none";
+                arguments[0].appendChild(input);
+            }
+            input.value = "PASSED";
+            """,
+            form,
+        )
+
+    def submit_form(
+        self,
+        submit_locator,
+        completion_condition,
+        form_locator,
+        submit_with_return=False,
+    ):
+        submit = self.driver.find_element(*submit_locator)
+        if submit_with_return:
+            submit.send_keys(Keys.RETURN)
+        else:
+            submit.click()
+
+        try:
+            WebDriverWait(self.driver, 5).until(completion_condition)
+            return
+        except selenium.common.exceptions.TimeoutException:
+            pass
+
+        submit = self.driver.find_element(*submit_locator)
+        try:
+            self.driver.execute_script("arguments[0].click();", submit)
+            WebDriverWait(self.driver, 5).until(completion_condition)
+        except selenium.common.exceptions.TimeoutException:
+            form = self.driver.find_element(*form_locator)
+            self.driver.execute_script("arguments[0].submit();", form)
+            WebDriverWait(self.driver, 5).until(completion_condition)
 
     def lget(self, url):
         self.driver.get(f"{self.live_server_url}{url}")
@@ -2411,44 +2466,25 @@ class CalcusCloudLiveServer(CalcusLiveServer):
             if opt_in_emails:
                 self.driver.find_element(By.ID, "id_opted_in_emails").click()
 
-            try:
-                WebDriverWait(self.driver, 3).until(
-                    EC.frame_to_be_available_and_switch_to_it(
-                        (By.XPATH, "//*[@title='reCAPTCHA']")
-                    )
-                )
-                time.sleep(0.3)
-                WebDriverWait(self.driver, 1).until(
-                    EC.element_to_be_clickable(
-                        (By.XPATH, "//div[@class='recaptcha-checkbox-border']")
-                    )
-                ).click()
-                self.wait_for_ajax()
-                self.driver.switch_to.default_content()
-                time.sleep(0.3)
-            except selenium.common.exceptions.NoSuchElementException:
-                pass
+            if settings.IS_TEST:
+                self.set_test_recaptcha_response((By.ID, "form_" + acc_type))
+            else:
+                self.complete_cloud_captcha()
 
-        submit = self.driver.find_element(
-            By.CSS_SELECTOR, "#form_" + acc_type + " > button"
-        )
         register_url = self.driver.current_url
-        submit.click()
 
-        for i in range(10):
-            if self.driver.current_url != register_url:
-                break
-            time.sleep(0.1)
-        else:
-            submit = self.driver.find_element(
-                By.CSS_SELECTOR, "#form_" + acc_type + " > button"
+        def registration_finished(driver):
+            return (
+                driver.current_url != register_url
+                or len(driver.find_elements(By.CSS_SELECTOR, ".help.is-danger")) > 0
             )
-            self.driver.execute_script("arguments[0].click();", submit)
 
-        WebDriverWait(self.driver, 5).until(
-            lambda d: d.current_url != register_url
-            or len(d.find_elements(By.CSS_SELECTOR, ".help.is-danger")) > 0
+        self.submit_form(
+            (By.CSS_SELECTOR, "#form_" + acc_type + " > button"),
+            registration_finished,
+            (By.ID, "form_" + acc_type),
         )
+
         if self.driver.current_url == register_url:
             errors = [
                 e.text

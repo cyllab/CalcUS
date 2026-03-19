@@ -5018,7 +5018,7 @@ def load_output_files(calc):
     )
 
     calc.output_files = json.dumps(output_files)
-    calc.save()
+    calc.save(update_fields=["output_files"])
 
 
 @app.task(base=AbortableTask)
@@ -5209,6 +5209,8 @@ def _del_order(id):
     except CalculationOrder.DoesNotExist:
         return
 
+    author_id = o.author_id
+
     for c in o.calculation_set.all():
         _del_calculation(c)
 
@@ -5225,6 +5227,8 @@ def _del_order(id):
         if o.pk:
             o.delete()
 
+    CalculationOrder._update_unseen_counter(author_id, 0)
+
 
 def _del_project(id):
     try:
@@ -5232,11 +5236,15 @@ def _del_project(id):
     except Project.DoesNotExist:
         return
 
+    author_id = proj.author_id
+
     proj.author = None
     proj.save()
     for m in proj.molecule_set.all():
         _del_molecule(m.id)
     proj.delete()
+
+    CalculationOrder._update_unseen_counter(author_id, 0)
 
 
 def _del_molecule(id):
@@ -5244,9 +5252,13 @@ def _del_molecule(id):
         mol = Molecule.objects.get(pk=id)
     except Molecule.DoesNotExist:
         return
+
+    author_id = mol.project.author_id
     for e in mol.ensemble_set.all():
         _del_ensemble(e.id)
     mol.delete()
+
+    CalculationOrder._update_unseen_counter(author_id, 0)
 
 
 def _del_calculation(calc):
@@ -5266,6 +5278,10 @@ def _del_ensemble(id):
     except Ensemble.DoesNotExist:
         return
 
+    author_id = None
+    if e.parent_molecule and e.parent_molecule.project:
+        author_id = e.parent_molecule.project.author_id
+
     for s in e.structure_set.all():
         _del_structure(s)
 
@@ -5273,6 +5289,8 @@ def _del_ensemble(id):
         _del_calculation(c)
 
     e.delete()
+
+    CalculationOrder._update_unseen_counter(author_id, 0)
 
 
 def _del_structure(s):

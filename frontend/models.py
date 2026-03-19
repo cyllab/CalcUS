@@ -35,6 +35,8 @@ from django.conf import settings
 from django import template
 
 import numpy as np
+import ast
+import json
 import os
 import hashlib
 import time
@@ -235,6 +237,24 @@ class User(AbstractUser):
             user.save()
 
         return user
+
+    def save(self, *args, **kwargs):
+        update_fields = kwargs.get("update_fields")
+        should_preserve_unseen = (
+            self.pk is not None
+            and update_fields is not None
+            and "unseen_calculations" not in update_fields
+        )
+        if should_preserve_unseen:
+            current_unseen = (
+                User.objects.filter(id=self.pk)
+                .values_list("unseen_calculations", flat=True)
+                .first()
+            )
+            if current_unseen is not None:
+                self.unseen_calculations = current_unseen
+
+        super().save(*args, **kwargs)
 
     @property
     def is_PI(self):
@@ -1304,23 +1324,15 @@ class CalculationOrder(models.Model):
 
     @classmethod
     def _update_unseen_counter(cls, user_id, delta):
-        if user_id is None or delta == 0:
+        if user_id is None:
             return
 
-        if delta > 0:
-            User.objects.filter(id=user_id).update(
-                unseen_calculations=F("unseen_calculations") + delta
-            )
-        else:
-            User.objects.filter(id=user_id).update(
-                unseen_calculations=Case(
-                    When(
-                        unseen_calculations__gte=-delta,
-                        then=F("unseen_calculations") + delta,
-                    ),
-                    default=0,
-                )
-            )
+        unseen = (
+            cls.objects.filter(author_id=user_id, hidden=False)
+            .exclude(last_seen_status=F("cached_status"))
+            .count()
+        )
+        User.objects.filter(id=user_id).update(unseen_calculations=unseen)
 
     def see(self):
         with transaction.atomic():
@@ -1432,10 +1444,39 @@ class CalculationOrder(models.Model):
 
     @property
     def source(self):
-        if self._source == "":
-            self._source = self._get_source()
-            self.save()
-        return self._source
+        source = self._deserialize_source(self._source)
+        if source is not None:
+            return source
+
+        source = self._get_source()
+        self._source = self._serialize_source(source)
+        self.save(update_fields=["_source"])
+        return source
+
+    @staticmethod
+    def _serialize_source(source):
+        return json.dumps(list(source))
+
+    @staticmethod
+    def _deserialize_source(source):
+        if source == "":
+            return None
+
+        if source == "Unknown":
+            return ("Unknown", "")
+
+        try:
+            parsed = json.loads(source)
+        except json.JSONDecodeError:
+            try:
+                parsed = ast.literal_eval(source)
+            except (ValueError, SyntaxError):
+                return ("Unknown", "")
+
+        if isinstance(parsed, (list, tuple)) and len(parsed) == 2:
+            return (parsed[0], parsed[1])
+
+        return ("Unknown", "")
 
     def _get_source(self):
         if self.ensemble is not None and self.ensemble.parent_molecule is not None:
@@ -1453,7 +1494,7 @@ class CalculationOrder(models.Model):
                 f"/ensemble/{self.start_calc.result_ensemble.id}",
             )
         else:
-            return "Unknown"
+            return ("Unknown", "")
 
     @property
     def calc_statuses(self):
@@ -1473,22 +1514,29 @@ class CalculationOrder(models.Model):
         self.calc_statuses = statuses
         return statuses
 
-    @property
-    def status(self):
-        should_save = False
-        if self.calc_statuses == "":
-            statuses = self.set_calc_statuses()
-            should_save = True
-        else:
-            statuses = self.calc_statuses
-
+    def _sync_cached_status(self, statuses, persist_statuses=False):
         stat = self._status(*statuses)
+        should_save = persist_statuses or stat != self.cached_status
 
-        if should_save or stat != self.cached_status:
+        if should_save:
             self.cached_status = stat
-            self.save()
+            update_fields = ["cached_status"]
+            if persist_statuses:
+                update_fields.append("_calc_statuses")
+            self.save(update_fields=update_fields)
 
         return stat
+
+    @property
+    def status(self):
+        if self.calc_statuses == "":
+            statuses = self.set_calc_statuses()
+            persist_statuses = True
+        else:
+            statuses = self.calc_statuses
+            persist_statuses = False
+
+        return self._sync_cached_status(statuses, persist_statuses=persist_statuses)
 
     def ensure_status(self):
         """Triggers a manual update of the status"""
@@ -1588,12 +1636,16 @@ class CalculationOrder(models.Model):
     def get_data(self):
         """Returns a list of [queued, running, done, error, net_status, total_time, new_status]"""
         calc_statuses = self.calc_statuses
+        persist_statuses = False
         if calc_statuses == "":
             calc_statuses = self.set_calc_statuses()
+            persist_statuses = True
 
         nums = calc_statuses + [0, 0, 0]
         nums[5] = self.total_cpu_time
-        nums[4] = self._status(nums[0], nums[1], nums[2], nums[3])
+        nums[4] = self._sync_cached_status(
+            calc_statuses, persist_statuses=persist_statuses
+        )
 
         if self.last_seen_status != nums[4]:
             nums[6] = 1
@@ -1616,11 +1668,28 @@ class CalculationOrder(models.Model):
             return False
 
     def save(self, *args, **kwargs):
+        update_fields = kwargs.get("update_fields")
+        if self.pk is not None and update_fields is not None:
+            current_cache = (
+                CalculationOrder.objects.filter(id=self.pk)
+                .values(
+                    "hidden",
+                    "last_seen_status",
+                    "cached_status",
+                    "_calc_statuses",
+                    "total_cpu_time",
+                )
+                .first()
+            )
+            if current_cache is not None:
+                for field, value in current_cache.items():
+                    if update_fields is None or field not in update_fields:
+                        setattr(self, field, value)
+
         if self.step_id is not None or (settings.IS_TEST and self.step is None):
             new_label = self._get_label()
             if self._label != new_label:
                 self._label = new_label
-                update_fields = kwargs.get("update_fields")
                 if update_fields is not None and "_label" not in update_fields:
                     kwargs["update_fields"] = list(update_fields) + ["_label"]
         super().save(*args, **kwargs)
@@ -1730,8 +1799,31 @@ class Calculation(models.Model):
         if self.order is None:
             raise Exception("No calculation order")
 
+        previous_state = None
+        if self.pk is not None:
+            previous_state = (
+                Calculation.objects.filter(id=self.pk)
+                .values(
+                    "status",
+                    "order_id",
+                    "date_started",
+                    "date_finished",
+                    "billed_seconds",
+                )
+                .first()
+            )
+
         super().save(*args, **kwargs)
-        CalculationOrder.sync_cache(self.order_id)
+        if previous_state is None or any(
+            [
+                previous_state["status"] != self.status,
+                previous_state["order_id"] != self.order_id,
+                previous_state["date_started"] != self.date_started,
+                previous_state["date_finished"] != self.date_finished,
+                previous_state["billed_seconds"] != self.billed_seconds,
+            ]
+        ):
+            CalculationOrder.sync_cache(self.order_id)
 
     def delete(self, *args, **kwargs):
         if self.order is None:
@@ -1831,7 +1923,7 @@ class Filter(models.Model):
 def ensemble_renamed(sender, instance, **kwargs):
     if getattr(instance, "_is_renaming", False):
         for o in instance.calculationorder_set.all():
-            o._source = o._get_source()
+            o._source = o._serialize_source(o._get_source())
             o._label = o._get_label()
             o.save()
         for o in instance.result_of.all():
@@ -1840,7 +1932,7 @@ def ensemble_renamed(sender, instance, **kwargs):
         for s in instance.structure_set.all():
             for o in s.calculationorder_set.all():
                 o._label = o._get_label()
-                o._source = o._get_source()
+                o._source = o._serialize_source(o._get_source())
                 o.save()
 
 

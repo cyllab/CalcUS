@@ -386,6 +386,51 @@ class CalculationLaunchTests(TestCase):
         self.assertEqual(o.ensemble.parent_molecule.name, "name/details-.")
 
 
+class CalculationOrderSourceTests(TestCase):
+    def setUp(self):
+        call_command("init_static_obj")
+        self.user = User.objects.create_user(
+            email="source@test.com", password="test1234"
+        )
+        self.project = Project.objects.create(name="Test Project", author=self.user)
+        self.molecule = Molecule.objects.create(
+            name="Test Molecule", project=self.project
+        )
+        self.ensemble = Ensemble.objects.create(
+            name="Test Ensemble", parent_molecule=self.molecule
+        )
+
+    def test_source_is_deserialized_from_cache(self):
+        order = CalculationOrder.objects.create(
+            name="Test Order",
+            author=self.user,
+            project=self.project,
+            ensemble=self.ensemble,
+        )
+
+        self.assertEqual(
+            order.source, ("Test Ensemble", f"/ensemble/{self.ensemble.id}")
+        )
+
+        order.refresh_from_db()
+        self.assertEqual(
+            order.source, ("Test Ensemble", f"/ensemble/{self.ensemble.id}")
+        )
+
+    def test_source_reads_legacy_tuple_repr_cache(self):
+        order = CalculationOrder.objects.create(
+            name="Test Order",
+            author=self.user,
+            project=self.project,
+            ensemble=self.ensemble,
+            _source=f"('Test Ensemble', '/ensemble/{self.ensemble.id}')",
+        )
+
+        self.assertEqual(
+            order.source, ("Test Ensemble", f"/ensemble/{self.ensemble.id}")
+        )
+
+
 """
 class FlowchartLaunchTests(TestCase):
     def setUp(self):
@@ -1978,6 +2023,85 @@ class CalculationTests(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.unseen_calculations, 1)
 
+    def test_get_data_repairs_stale_cached_status(self):
+        order = self.create_unseen_order()
+
+        CalculationOrder.objects.filter(id=order.id).update(
+            _calc_statuses="",
+            cached_status=Calculation.CALC_STATUSES["Queued"],
+        )
+
+        order.refresh_from_db()
+        data = order.get_data
+        order.refresh_from_db()
+
+        self.assertEqual(data[4], Calculation.CALC_STATUSES["Running"])
+        self.assertEqual(order.cached_status, Calculation.CALC_STATUSES["Running"])
+
+    def test_stale_order_save_does_not_restore_cached_status(self):
+        params = {
+            "calc_name": "test",
+            "type": "Geometrical Optimisation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "software": "xtb",
+            "in_file": "CH4.xyz",
+            "theory": "GFN2-xTB",
+            "method": "GFN2-xTB",
+        }
+
+        calc = gen_calc(params, self.user)
+        stale_order = CalculationOrder.objects.get(id=calc.order_id)
+
+        calc.status = Calculation.CALC_STATUSES["Running"]
+        calc.save()
+
+        stale_order.name = "Renamed from stale instance"
+        stale_order.save()
+
+        calc.status = Calculation.CALC_STATUSES["Done"]
+        calc.save()
+
+        self.user.refresh_from_db()
+        order = CalculationOrder.objects.get(id=calc.order_id)
+        self.assertEqual(order.cached_status, Calculation.CALC_STATUSES["Done"])
+        self.assertEqual(self.user.unseen_calculations, 1)
+
+    def test_irrelevant_calc_save_does_not_duplicate_unseen_counter(self):
+        params = {
+            "calc_name": "test",
+            "type": "Geometrical Optimisation",
+            "project": "New Project",
+            "new_project_name": "SeleniumProject",
+            "software": "xtb",
+            "in_file": "CH4.xyz",
+            "theory": "GFN2-xTB",
+            "method": "GFN2-xTB",
+        }
+
+        calc = gen_calc(params, self.user)
+        calc.status = Calculation.CALC_STATUSES["Done"]
+        calc.save()
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.unseen_calculations, 1)
+
+        calc.output_files = "{}"
+        calc.save()
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.unseen_calculations, 1)
+
+    def test_user_save_preserves_unseen_counter_from_stale_instance(self):
+        stale_user = User.objects.get(id=self.user.id)
+        self.create_unseen_order()
+
+        stale_user.full_name = "Updated Name"
+        stale_user.save()
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.unseen_calculations, 1)
+
     def test_see_from_stale_instance_decrements_unseen_only_once(self):
         order1 = self.create_unseen_order()
         order2 = self.create_unseen_order()
@@ -2072,6 +2196,46 @@ class CalculationTests(TestCase):
             f"| <strong>{total_cpu_time}</strong> CPU-sec",
             " ".join(response.rendered_content.split()),
         )
+
+    def test_order_list_filters_unseen_and_status_without_materializing_hits(self):
+        running_order = self.create_unseen_order()
+
+        params = {
+            "calc_name": "finished",
+            "type": "Geometrical Optimisation",
+            "project": "New Project",
+            "new_project_name": "FinishedProject",
+            "software": "xtb",
+            "in_file": "CH4.xyz",
+            "theory": "GFN2-xTB",
+            "method": "GFN2-xTB",
+        }
+        finished_calc = gen_calc(params, self.user)
+        finished_calc.status = Calculation.CALC_STATUSES["Done"]
+        finished_calc.save()
+        finished_order = CalculationOrder.objects.get(id=finished_calc.order_id)
+        finished_order.last_seen_status = finished_order.cached_status
+        finished_order.save(update_fields=["last_seen_status"])
+
+        request = self.factory.get(
+            "/list/",
+            {
+                "page": 1,
+                "project": "All projects",
+                "type": "All steps",
+                "status": "Running",
+                "user_id": str(self.user.id),
+                "mode": "Unseen only",
+            },
+        )
+        request.user = self.user
+        request.session = {}
+        response = IndexView.as_view()(request)
+        response.render()
+
+        object_ids = [obj.id for obj in response.context_data["latest_frontend"]]
+        self.assertEqual(object_ids, [running_order.id])
+        self.assertNotIn(finished_order.id, object_ids)
 
     def test_order_label_updates_when_result_ensemble_is_set(self):
         order, molecule = self.create_processing_order()
