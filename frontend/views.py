@@ -212,7 +212,9 @@ class IndexView(generic.ListView):
                 default=Value(0),
                 output_field=IntegerField(),
             )
-            res = hits.annotate(custom_order=custom_order).order_by("custom_order")
+            res = hits.annotate(custom_order=custom_order).order_by(
+                "custom_order", "-date", "-id"
+            )
 
             return res
         else:

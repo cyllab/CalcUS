@@ -36,6 +36,7 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.remote.client_config import ClientConfig
 
 from celery.contrib.testing.worker import start_worker
 from celery.contrib.abortable import AbortableAsyncResult
@@ -77,6 +78,7 @@ ZOOM = 1
 
 class CalcusLiveServer(StaticLiveServerTestCase):
     host = "0.0.0.0"
+    REMOTE_DRIVER_TIMEOUT = 60
 
     @classmethod
     def _make_driver(cls):
@@ -85,9 +87,13 @@ class CalcusLiveServer(StaticLiveServerTestCase):
             chrome_options.add_argument("--headless")
             driver = webdriver.Chrome(options=chrome_options)
         else:
+            selenium_hub = "http://selenium:4444/wd/hub"
             driver = webdriver.Remote(
-                command_executor="http://selenium:4444/wd/hub",
+                command_executor=selenium_hub,
                 options=chrome_options,
+                client_config=ClientConfig(
+                    remote_server_addr=selenium_hub, timeout=cls.REMOTE_DRIVER_TIMEOUT
+                ),
             )
 
         driver.set_window_size(ZOOM * 1920, ZOOM * 1080)
@@ -103,6 +109,18 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         cls.driver = cls._make_driver()
 
     @classmethod
+    def _restart_celery_worker(cls):
+        if IS_CLOUD:
+            return
+
+        if hasattr(cls, "celery_worker"):
+            cls.celery_worker.__exit__(None, None, None)
+
+        app.loader.import_module("celery.contrib.testing.tasks")
+        cls.celery_worker = start_worker(app, perform_ping_check=False)
+        cls.celery_worker.__enter__()
+
+    @classmethod
     def setUpClass(cls):
         super().setUpClass()
 
@@ -112,10 +130,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         tasks.REMOTE = False
 
         if not IS_CLOUD:
-            app.loader.import_module("celery.contrib.testing.tasks")
-
-            cls.celery_worker = start_worker(app, perform_ping_check=False)
-            cls.celery_worker.__enter__()
+            cls._restart_celery_worker()
 
         if os.path.isdir(SCR_DIR):
             rmtree(SCR_DIR)
@@ -263,6 +278,9 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         self.password = "test1234"
         self.current_order_id = None
         self.order_ids_before_launch = None
+
+        if not IS_CLOUD:
+            self.__class__._restart_celery_worker()
 
         self.user = User.objects.create_user(
             email=self.email,
@@ -1530,10 +1548,19 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_calculations()
         assert self.get_number_calc_orders() > 0
 
-        calculations = self.get_calc_orders()
-        self.current_order_id = calculations[0].get_attribute("id")
+        target = self._get_target_calc_order()
+        if target is None:
+            target_order_id = self._get_target_order_id()
+            if target_order_id is not None:
+                self.current_order_id = f"order_{target_order_id}"
+                self.order_ids_before_launch = None
+                self.driver.get(f"{self.live_server_url}/link_order/{target_order_id}")
+                self.wait_for_ajax()
+                return
+            target = self.get_calc_orders()[0]
+        self.current_order_id = target.get_attribute("id")
         self.order_ids_before_launch = None
-        link = calculations[0].find_element(By.CSS_SELECTOR, "a[href^='/link_order/']")
+        link = target.find_element(By.CSS_SELECTOR, "a[href^='/link_order/']")
         self.driver.get(link.get_attribute("href"))
         self.wait_for_ajax()
 
@@ -1551,32 +1578,58 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         assert self.is_on_page_calculations()
         assert self.get_number_calc_orders() > 0
 
-        calculations = self.get_calc_orders()
-        self.current_order_id = calculations[0].get_attribute("id")
+        target = self._get_target_calc_order()
+        if target is None:
+            target_order_id = self._get_target_order_id()
+            if target_order_id is not None:
+                self.current_order_id = f"order_{target_order_id}"
+                self.order_ids_before_launch = None
+                self.driver.get(
+                    f"{self.live_server_url}/calculationorder/{target_order_id}"
+                )
+                self.wait_for_ajax()
+                return
+            target = self.get_calc_orders()[0]
+        self.current_order_id = target.get_attribute("id")
         self.order_ids_before_launch = None
 
-        icon = calculations[0].find_element(By.CLASS_NAME, "fa-list")
+        icon = target.find_element(By.CLASS_NAME, "fa-list")
         link = icon.find_element(By.XPATH, "./ancestor::a[1]")
         self.driver.get(link.get_attribute("href"))
         self.wait_for_ajax()
 
+    def _get_target_order_id(self):
+        if self.current_order_id is not None:
+            return self.current_order_id.removeprefix("order_")
+
+        if self.order_ids_before_launch is None:
+            return None
+
+        close_old_connections()
+        current_ids = {
+            f"order_{order_id}"
+            for order_id in CalculationOrder.objects.values_list("id", flat=True)
+        }
+        new_ids = current_ids - self.order_ids_before_launch
+        if not new_ids:
+            return None
+
+        target_id = sorted(new_ids)[-1]
+        self.current_order_id = target_id
+        self.order_ids_before_launch = None
+        return target_id.removeprefix("order_")
+
     def _get_target_calc_order(self):
         calculations = self.get_calc_orders()
-        if self.current_order_id is None and self.order_ids_before_launch is not None:
-            for calc in calculations:
-                calc_id = calc.get_attribute("id")
-                if calc_id not in self.order_ids_before_launch:
-                    self.current_order_id = calc_id
-                    self.order_ids_before_launch = None
-                    return calc
-            return None
-        if self.current_order_id is None:
+        target_order_id = self._get_target_order_id()
+        if target_order_id is None:
             return calculations[0]
 
+        target_dom_id = f"order_{target_order_id}"
         for calc in calculations:
-            if calc.get_attribute("id") == self.current_order_id:
+            if calc.get_attribute("id") == target_dom_id:
                 return calc
-        return calculations[0]
+        return None
 
     def _refresh_calculations_page(self):
         self.driver.refresh()
@@ -1712,6 +1765,18 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                 # One final refresh ensures related UI state (badges/new markers) is current.
                 self._refresh_calculations_page()
                 return
+
+            target_order_id = self._get_target_order_id()
+            if target_order_id is not None:
+                close_old_connections()
+                backend_status = (
+                    CalculationOrder.objects.filter(id=target_order_id)
+                    .values_list("cached_status", flat=True)
+                    .first()
+                )
+                if backend_status in [2, 3]:
+                    self._refresh_calculations_page()
+                    return
 
             time.sleep(0.5)
             self._refresh_calculations_page()

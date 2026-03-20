@@ -238,12 +238,25 @@ class User(AbstractUser):
 
         return user
 
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super().from_db(db, field_names, values)
+        if "unseen_calculations" in field_names:
+            instance._loaded_unseen_calculations = instance.unseen_calculations
+        else:
+            instance._loaded_unseen_calculations = None
+        return instance
+
     def save(self, *args, **kwargs):
         update_fields = kwargs.get("update_fields")
-        should_preserve_unseen = (
-            self.pk is not None
-            and update_fields is not None
-            and "unseen_calculations" not in update_fields
+        should_preserve_unseen = self.pk is not None and (
+            (update_fields is not None and "unseen_calculations" not in update_fields)
+            or (
+                update_fields is None
+                and hasattr(self, "_loaded_unseen_calculations")
+                and self._loaded_unseen_calculations is not None
+                and self.unseen_calculations == self._loaded_unseen_calculations
+            )
         )
         if should_preserve_unseen:
             current_unseen = (
@@ -255,6 +268,7 @@ class User(AbstractUser):
                 self.unseen_calculations = current_unseen
 
         super().save(*args, **kwargs)
+        self._loaded_unseen_calculations = self.unseen_calculations
 
     @property
     def is_PI(self):
@@ -1401,7 +1415,7 @@ class CalculationOrder(models.Model):
     def molecule_name(self):
         if self._molecule_name == "":
             self._molecule_name = self._get_molecule_name()
-            self.save()
+            self.save(update_fields=["_molecule_name"])
         return self._molecule_name
 
     @property
@@ -1411,7 +1425,7 @@ class CalculationOrder(models.Model):
                 self._step_name = "Unknown"
             else:
                 self._step_name = self.step.name
-            self.save()
+            self.save(update_fields=["_step_name"])
         return self._step_name
 
     @property
@@ -1421,7 +1435,7 @@ class CalculationOrder(models.Model):
                 self._project_name = "Unknown"
             else:
                 self._project_name = self.project.name
-            self.save()
+            self.save(update_fields=["_project_name"])
         return self._project_name
 
     def _get_molecule_name(self):
