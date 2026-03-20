@@ -960,15 +960,24 @@ def link_order(request, pk):
         if o.new_status:
             o.see()
 
-    if o.result_ensemble:
-        return HttpResponseRedirect(f"/ensemble/{o.result_ensemble.id}")
-    else:
-        if o.ensemble is not None:
-            return HttpResponseRedirect(f"/ensemble/{o.ensemble.id}")
-        elif o.structure:
-            return HttpResponseRedirect(f"/ensemble/{o.structure.parent_ensemble.id}")
-        else:
-            return HttpResponseRedirect("/calculations/")
+    target_ensemble = o.result_ensemble
+    if target_ensemble is None and o.ensemble is not None:
+        target_ensemble = o.ensemble
+    if target_ensemble is None and o.structure is not None:
+        target_ensemble = o.structure.parent_ensemble
+
+    if target_ensemble is None:
+        calc = o.calculation_set.order_by("-date_submitted", "-id").first()
+        if calc is not None:
+            if calc.result_ensemble is not None:
+                target_ensemble = calc.result_ensemble
+            elif calc.structure is not None:
+                target_ensemble = calc.structure.parent_ensemble
+
+    if target_ensemble is not None:
+        return HttpResponseRedirect(f"/ensemble/{target_ensemble.id}")
+
+    return HttpResponseRedirect(f"/calculationorder/{o.id}")
 
 
 @login_required
@@ -5063,7 +5072,7 @@ def relaunch_calc(request):
     calc.date_started = None
     calc.date_finished = None
     calc.order.hidden = False
-    calc.order.save()
+    calc.order.save(update_fields=["hidden"])
     calc.save()
 
     if calc.local:

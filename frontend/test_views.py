@@ -1899,6 +1899,33 @@ class CalculationTests(TestCase):
 
         return order, molecule
 
+    def test_link_order_redirects_to_child_result_when_order_links_are_missing(self):
+        order, molecule = self.create_processing_order()
+        result_ensemble = Ensemble.objects.create(
+            name="Result Ensemble", parent_molecule=molecule
+        )
+        calc = Calculation.objects.create(
+            order=order,
+            structure=order.structure,
+            step=order.step,
+            parameters=order.parameters,
+            result_ensemble=result_ensemble,
+            date_submitted=timezone.now(),
+            status=2,
+        )
+
+        order.start_calc = calc
+        order.structure = None
+        order.ensemble = None
+        order.result_ensemble = None
+        order.save(
+            update_fields=["start_calc", "structure", "ensemble", "result_ensemble"]
+        )
+
+        response = self.client.get(f"/link_order/{order.id}")
+
+        self.assertRedirects(response, f"/ensemble/{result_ensemble.id}")
+
     def create_direct_ensemble_order(self):
         project = Project.objects.create(name="Direct Project", author=self.user)
         molecule = Molecule.objects.create(name="Direct Molecule", project=project)

@@ -1939,15 +1939,15 @@ def ensemble_renamed(sender, instance, **kwargs):
         for o in instance.calculationorder_set.all():
             o._source = o._serialize_source(o._get_source())
             o._label = o._get_label()
-            o.save()
+            o.save(update_fields=["_source", "_label"])
         for o in instance.result_of.all():
             o._label = o._get_label()
-            o.save()
+            o.save(update_fields=["_label"])
         for s in instance.structure_set.all():
             for o in s.calculationorder_set.all():
                 o._label = o._get_label()
                 o._source = o._serialize_source(o._get_source())
-                o.save()
+                o.save(update_fields=["_label", "_source"])
 
 
 @receiver(post_save, sender=Molecule)
@@ -1956,7 +1956,7 @@ def molecule_renamed(sender, instance, **kwargs):
         for e in instance.ensemble_set.all():
             for o in e.calculationorder_set.all():
                 o._molecule_name = o._get_molecule_name()
-                o.save()
+                o.save(update_fields=["_molecule_name"])
 
 
 @receiver(post_save, sender=Project)
