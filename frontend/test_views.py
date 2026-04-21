@@ -46,6 +46,7 @@ from .models import (
     np,
     timezone,
 )
+from .libxyz import parse_xyz_from_text
 
 tests_dir = os.path.join("/".join(__file__.split("/")[:-1]), "tests/")
 
@@ -384,6 +385,257 @@ class CalculationLaunchTests(TestCase):
         self.assertNotContains(response, "Error while submitting your calculation")
         o = CalculationOrder.objects.latest("id")
         self.assertEqual(o.ensemble.parent_molecule.name, "name/details-.")
+
+
+class ImaginaryFrequencyDistortionTests(TestCase):
+    def setUp(self):
+        call_command("init_static_obj")
+        self.user = User.objects.create_superuser(
+            email="imaginary@test.com",
+            password="test1234",
+            advanced_interface=True,
+        )
+        self.group = ResearchGroup.objects.create(name="Test group", PI=self.user)
+        self.client = Client()
+        self.client.force_login(self.user)
+
+        self.project = Project.objects.create(name="Test Project", author=self.user)
+        self.molecule = Molecule.objects.create(
+            name="Test Molecule", project=self.project
+        )
+        self.ensemble = Ensemble.objects.create(
+            name="Test Ensemble", parent_molecule=self.molecule
+        )
+        self.params = Parameters.objects.create(
+            charge=0,
+            multiplicity=1,
+            software="xtb",
+            method="GFN2-xTB",
+            basis_set="",
+            solvation_model="",
+        )
+
+        self.struct1 = Structure.objects.create(
+            parent_ensemble=self.ensemble,
+            number=1,
+            xyz_structure="2\nCalcUS\nH 0.0000 0.0000 0.0000\nH 0.0000 0.0000 1.0000\n",
+        )
+        self.struct2 = Structure.objects.create(
+            parent_ensemble=self.ensemble,
+            number=2,
+            xyz_structure="2\nCalcUS\nH 1.0000 0.0000 0.0000\nH 1.0000 0.0000 1.0000\n",
+        )
+
+        Property.objects.create(
+            parent_structure=self.struct1,
+            parameters=self.params,
+            freq_list=[-50.0, -125.0, 42.0],
+            freq_animations=[
+                "2\nCalcUS\nH 0.0000 0.0000 0.0000 1.0 0.0 0.0\nH 0.0000 0.0000 1.0000 -1.0 0.0 0.0\n",
+                "2\nCalcUS\nH 0.0000 0.0000 0.0000 0.5 0.0 0.0\nH 0.0000 0.0000 1.0000 -0.5 0.0 0.0\n",
+                "2\nCalcUS\nH 0.0000 0.0000 0.0000 0.1 0.0 0.0\nH 0.0000 0.0000 1.0000 -0.1 0.0 0.0\n",
+            ],
+        )
+        Property.objects.create(
+            parent_structure=self.struct2,
+            parameters=self.params,
+            freq_list=[-70.0, 25.0],
+            freq_animations=[
+                "2\nCalcUS\nH 1.0000 0.0000 0.0000 0.25 0.0 0.0\nH 1.0000 0.0000 1.0000 -0.25 0.0 0.0\n",
+                "2\nCalcUS\nH 1.0000 0.0000 0.0000 0.1 0.0 0.0\nH 1.0000 0.0000 1.0000 -0.1 0.0 0.0\n",
+            ],
+        )
+
+    def submit_imaginary_distortion(self, ensemble_id, starting_structs, calc_name):
+        params = basic_params.copy()
+        params["calc_project"] = self.project.name
+        params["calc_name"] = calc_name
+        params["starting_ensemble"] = str(ensemble_id)
+        params["starting_structs"] = starting_structs
+        del params["structure"]
+
+        return self.client.post("/submit_calculation/", data=params, follow=True)
+
+    def prepare_imaginary_distortion(self, structures):
+        return self.client.post(
+            "/launch_imaginary_freq_distortion/",
+            {
+                "ensemble": self.ensemble.id,
+                "structures": structures,
+                "imaginary_freq_distortion": self.params.id,
+            },
+            follow=True,
+        )
+
+    def test_details_structure_shows_imaginary_distortion_button(self):
+        response = self.client.post(
+            "/details_structure/",
+            {
+                "id": self.ensemble.id,
+                "num": self.struct1.number,
+                "p_id": self.params.id,
+            },
+        )
+
+        self.assertContains(
+            response,
+            "Launch calculation on selected structure with imaginary freq distortion",
+        )
+
+    def test_prepare_imaginary_distortion_posts_to_launch_page(self):
+        response = self.prepare_imaginary_distortion("1,2")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'action="/launch/"')
+        self.assertContains(response, 'name="ensemble"')
+        self.assertContains(response, 'name="structures"')
+
+        distorted_ensemble = Ensemble.objects.exclude(id=self.ensemble.id).get()
+        self.assertContains(response, f'value="{distorted_ensemble.id}"')
+        self.assertContains(response, 'value="1,2"')
+
+    def test_prepare_imaginary_distortion_forbidden_for_unrelated_user(self):
+        other_user = User.objects.create_user(
+            email="other@test.com",
+            password="test1234",
+            advanced_interface=True,
+        )
+        other_client = Client()
+        other_client.force_login(other_user)
+
+        response = other_client.post(
+            "/launch_imaginary_freq_distortion/",
+            {
+                "ensemble": self.ensemble.id,
+                "structures": "1,2",
+                "imaginary_freq_distortion": self.params.id,
+            },
+            follow=False,
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(Ensemble.objects.exclude(id=self.ensemble.id).count(), 0)
+
+    def test_prepare_imaginary_distortion_requires_login(self):
+        anon_client = Client()
+
+        response = anon_client.post(
+            "/launch_imaginary_freq_distortion/",
+            {
+                "ensemble": self.ensemble.id,
+                "structures": "1,2",
+                "imaginary_freq_distortion": self.params.id,
+            },
+            follow=False,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/accounts/login/", response["Location"])
+        self.assertEqual(Ensemble.objects.exclude(id=self.ensemble.id).count(), 0)
+
+    def test_submit_calculation_creates_one_distorted_ensemble_for_selected_structures(
+        self,
+    ):
+        self.prepare_imaginary_distortion("1,2")
+        distorted_ensemble = Ensemble.objects.exclude(id=self.ensemble.id).get()
+        response = self.submit_imaginary_distortion(
+            distorted_ensemble.id, "1,2", "Distorted run"
+        )
+
+        self.assertNotContains(response, "Error while submitting your calculation")
+
+        order = CalculationOrder.objects.latest("id")
+        distorted_ensemble = order.ensemble
+
+        self.assertIsNotNone(distorted_ensemble)
+        self.assertNotEqual(distorted_ensemble.id, self.ensemble.id)
+        self.assertEqual(distorted_ensemble.origin, self.ensemble)
+        self.assertEqual(distorted_ensemble.structure_set.count(), 2)
+
+        distorted_struct1 = distorted_ensemble.structure_set.get(number=1)
+        distorted_struct2 = distorted_ensemble.structure_set.get(number=2)
+
+        xyz1 = parse_xyz_from_text(distorted_struct1.xyz_structure)
+        xyz2 = parse_xyz_from_text(distorted_struct2.xyz_structure)
+
+        self.assertTrue(np.isclose(xyz1[0][1][0], 0.4350, atol=0.0001))
+        self.assertTrue(np.isclose(xyz1[1][1][0], -0.4350, atol=0.0001))
+        self.assertTrue(np.isclose(xyz2[0][1][0], 1.2175, atol=0.0001))
+        self.assertTrue(np.isclose(xyz2[1][1][0], 0.7825, atol=0.0001))
+
+    def test_submit_calculation_reuses_distorted_ensemble_for_same_structure(self):
+        response1 = self.prepare_imaginary_distortion("1")
+        response2 = self.prepare_imaginary_distortion("1")
+
+        self.assertEqual(response1.status_code, 200)
+        self.assertEqual(response2.status_code, 200)
+
+        distorted_ensembles = list(Ensemble.objects.exclude(id=self.ensemble.id))
+        self.assertEqual(len(distorted_ensembles), 1)
+        distorted_ensemble1 = distorted_ensembles[0]
+        distorted_ensemble2 = distorted_ensembles[0]
+
+        self.assertEqual(distorted_ensemble1.origin, self.ensemble)
+        self.assertEqual(distorted_ensemble2.origin, self.ensemble)
+        self.assertEqual(distorted_ensemble1.structure_set.count(), 1)
+        self.assertEqual(distorted_ensemble2.structure_set.count(), 1)
+        self.assertEqual(
+            list(distorted_ensemble1.structure_set.values_list("number", flat=True)),
+            [1],
+        )
+
+        xyz1 = parse_xyz_from_text(
+            distorted_ensemble1.structure_set.get(number=1).xyz_structure
+        )
+        xyz2 = parse_xyz_from_text(
+            distorted_ensemble2.structure_set.get(number=1).xyz_structure
+        )
+
+        self.assertTrue(np.isclose(xyz1[0][1][0], 0.4350, atol=0.0001))
+        self.assertTrue(np.isclose(xyz2[0][1][0], 0.4350, atol=0.0001))
+        self.assertEqual(self.ensemble.structure_set.count(), 2)
+
+    def test_submit_calculation_reuses_distorted_ensemble_for_overlapping_structure_sets(
+        self,
+    ):
+        response1 = self.prepare_imaginary_distortion("1")
+        response2 = self.prepare_imaginary_distortion("1,2")
+
+        self.assertEqual(response1.status_code, 200)
+        self.assertEqual(response2.status_code, 200)
+
+        distorted_ensembles = list(Ensemble.objects.exclude(id=self.ensemble.id))
+        self.assertEqual(len(distorted_ensembles), 1)
+        distorted_ensemble1 = distorted_ensembles[0]
+        distorted_ensemble2 = distorted_ensembles[0]
+
+        self.assertEqual(distorted_ensemble1.origin, self.ensemble)
+        self.assertEqual(distorted_ensemble2.origin, self.ensemble)
+        self.assertEqual(distorted_ensemble1.structure_set.count(), 2)
+        self.assertEqual(distorted_ensemble2.structure_set.count(), 2)
+        self.assertEqual(
+            sorted(distorted_ensemble1.structure_set.values_list("number", flat=True)),
+            [1, 2],
+        )
+
+        xyz11 = parse_xyz_from_text(
+            distorted_ensemble1.structure_set.get(number=1).xyz_structure
+        )
+        xyz12 = parse_xyz_from_text(
+            distorted_ensemble1.structure_set.get(number=2).xyz_structure
+        )
+        xyz21 = parse_xyz_from_text(
+            distorted_ensemble2.structure_set.get(number=1).xyz_structure
+        )
+        xyz22 = parse_xyz_from_text(
+            distorted_ensemble2.structure_set.get(number=2).xyz_structure
+        )
+
+        self.assertTrue(np.isclose(xyz11[0][1][0], 0.4350, atol=0.0001))
+        self.assertTrue(np.isclose(xyz12[0][1][0], 1.2175, atol=0.0001))
+        self.assertTrue(np.isclose(xyz21[0][1][0], 0.4350, atol=0.0001))
+        self.assertTrue(np.isclose(xyz22[0][1][0], 1.2175, atol=0.0001))
+        self.assertEqual(self.ensemble.structure_set.count(), 2)
 
 
 class CalculationOrderSourceTests(TestCase):

@@ -1703,6 +1703,134 @@ def submit_calculation(request):
     return ret
 
 
+def create_imaginary_freq_distorted_ensemble(
+    source_ensemble, structure_numbers, distortion_params, verify=False
+):
+    if len(structure_numbers) == 0:
+        return "No starting structures found"
+
+    distorted_ensemble_name = (f"{source_ensemble.name} - Imaginary freq distortion")[
+        :100
+    ]
+    distorted_structures = []
+
+    for s_num in structure_numbers:
+        try:
+            struct = source_ensemble.structure_set.get(number=s_num)
+        except Structure.DoesNotExist:
+            return "Invalid starting structures"
+
+        prop = struct.properties.filter(parameters=distortion_params).first()
+        if prop is None or not prop.has_negative_freq:
+            return f"Structure {s_num} does not have negative frequencies for the selected parameters"
+
+        distorted_xyz = prop.get_distorted_structure()
+        if distorted_xyz == "":
+            return f"Could not generate the imaginary frequency distortion for structure {s_num}"
+
+        distorted_structures.append((struct, distorted_xyz))
+
+    if verify:
+        return None, distorted_ensemble_name
+
+    distorted_ensemble = None
+    for candidate in Ensemble.objects.filter(
+        name=distorted_ensemble_name,
+        parent_molecule=source_ensemble.parent_molecule,
+        origin=source_ensemble,
+    ).order_by("id"):
+        for existing_struct in candidate.structure_set.all():
+            if not existing_struct.properties.filter(
+                parameters=distortion_params, geom=True
+            ).exists():
+                break
+        else:
+            distorted_ensemble = candidate
+            break
+
+    if distorted_ensemble is None:
+        distorted_ensemble = Ensemble.objects.create(
+            name=distorted_ensemble_name,
+            parent_molecule=source_ensemble.parent_molecule,
+            origin=source_ensemble,
+        )
+
+    for struct, distorted_xyz in distorted_structures:
+        distorted_structure, _ = Structure.objects.get_or_create(
+            parent_ensemble=distorted_ensemble,
+            number=struct.number,
+            defaults={
+                "degeneracy": struct.degeneracy,
+                "xyz_structure": distorted_xyz,
+            },
+        )
+        distorted_structure.degeneracy = struct.degeneracy
+        distorted_structure.xyz_structure = distorted_xyz
+        distorted_structure.save()
+
+        distorted_prop, _ = Property.objects.get_or_create(
+            parent_structure=distorted_structure,
+            parameters=distortion_params,
+            defaults={"geom": True},
+        )
+        if not distorted_prop.geom:
+            distorted_prop.geom = True
+            distorted_prop.save(update_fields=["geom"])
+
+    return distorted_ensemble, distorted_ensemble_name
+
+
+@login_required
+def launch_imaginary_freq_distortion(request):
+    if request.method != "POST":
+        return HttpResponse(status=404)
+
+    if (
+        "ensemble" not in request.POST
+        or "imaginary_freq_distortion" not in request.POST
+    ):
+        return HttpResponse(status=400)
+
+    try:
+        source_ensemble = Ensemble.objects.get(pk=clean(request.POST["ensemble"]))
+    except Ensemble.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if not can_view_ensemble(source_ensemble, request.user):
+        return HttpResponse(status=403)
+
+    try:
+        distortion_params = Parameters.objects.get(
+            pk=clean(request.POST["imaginary_freq_distortion"])
+        )
+    except Parameters.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if not can_view_parameters(distortion_params, request.user):
+        return HttpResponse(status=403)
+
+    structures_str = clean(request.POST.get("structures", ""))
+    structure_numbers = [int(i) for i in structures_str.split(",") if i.strip() != ""]
+
+    ret = create_imaginary_freq_distorted_ensemble(
+        source_ensemble, structure_numbers, distortion_params, verify=False
+    )
+    if isinstance(ret, str):
+        return error(request, ret)
+
+    distorted_ensemble, _ = ret
+
+    redirect_data = {"ensemble": distorted_ensemble.id}
+    if len(structure_numbers) > 0:
+        redirect_data["structures"] = ",".join(str(i) for i in structure_numbers)
+
+    return render(
+        request,
+        "frontend/post_redirect.html",
+        {"action_url": "/launch/", "data": redirect_data},
+    )
+
+
 def _submit_calculation(request, verify=False):
     raw_params = request.POST.dict()
 
@@ -1819,7 +1947,7 @@ def _submit_calculation(request, verify=False):
         filter = None
         if "starting_structs" in request.POST:
             structs_str = clean(request.POST["starting_structs"])
-            structs_nums = [int(i) for i in structs_str.split(",")]
+            structs_nums = [int(i) for i in structs_str.split(",") if i.strip() != ""]
 
             avail_nums = [i["number"] for i in start_e.structure_set.values("number")]
 

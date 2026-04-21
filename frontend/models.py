@@ -51,7 +51,8 @@ from .constants import (
     TEMP,
     decimal,
 )
-from .helpers import get_random_readable_code, job_triage
+from .helpers import clean_xyz, get_random_readable_code, job_triage
+from .libxyz import format_xyz
 from .environment_variables import PAL
 
 import ccinput
@@ -978,6 +979,45 @@ class Property(models.Model):
     @property
     def has_freq(self):
         return len(self.freq_list) > 0
+
+    @property
+    def has_negative_freq(self):
+        return any(freq < 0 for freq in self.freq_list)
+
+    @property
+    def most_negative_freq_index(self):
+        if not self.has_negative_freq:
+            return None
+        return min(
+            (ind for ind, freq in enumerate(self.freq_list) if freq < 0),
+            key=lambda ind: self.freq_list[ind],
+        )
+
+    def get_distorted_structure(self, scale=0.87):
+        mode_ind = self.most_negative_freq_index
+        if mode_ind is None or mode_ind >= len(self.freq_animations):
+            return ""
+
+        distorted_xyz = []
+        for line in (
+            self.freq_animations[mode_ind].replace("\xa0", " ").splitlines()[2:]
+        ):
+            if line.strip() == "":
+                continue
+
+            parts = line.split()
+            if len(parts) < 7:
+                return ""
+
+            atom = parts[0]
+            coords = np.array([float(i) for i in parts[1:4]])
+            displacement = np.array([float(i) for i in parts[4:7]])
+            distorted_xyz.append([atom, coords + displacement * scale])
+
+        if len(distorted_xyz) == 0:
+            return ""
+
+        return clean_xyz(format_xyz(distorted_xyz, header_text="CalcUS"))
 
     @property
     def has_uvvis(self):

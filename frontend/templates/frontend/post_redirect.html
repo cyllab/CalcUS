@@ -1,0 +1,9 @@
+<form method="POST" action="{{ action_url }}" id="post_redirect_form">
+    {% csrf_token %}
+    {% for name, value in data.items %}
+    <input type="hidden" name="{{ name }}" value="{{ value }}" />
+    {% endfor %}
+</form>
+<script>
+document.getElementById("post_redirect_form").submit();
+</script>

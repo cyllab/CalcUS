@@ -17,6 +17,19 @@
 <div>
     <div class="columns is-multiline is-centered" id="vib_table"></div>
 </div>
+{% if not ensemble.showcaseensemble and property.parameters and property.has_negative_freq %}
+<div class="mt-4">
+    <form method="POST" action="/launch_imaginary_freq_distortion/" id="launch_imaginary_freq_form">
+        {% csrf_token %}
+        <input type="hidden" name="ensemble" value="{{ ensemble.id }}" />
+        <input type="hidden" name="imaginary_freq_distortion" value="{{ property.parameters.id }}" />
+        <button class="button button_full is-info" id="imaginary_freq_distortion_button">
+            Launch calculation on selected structure with imaginary freq distortion
+            <i class="fas fa-external-link-alt"></i>
+        </button>
+    </form>
+</div>
+{% endif %}
 <script>
 var past_num = -1;
 function animate_vib(num) {
@@ -91,5 +104,25 @@ $(document).ready(function () {
             },
         },
     });
+});
+
+$("#launch_imaginary_freq_form").submit(function () {
+    $(this).find("input[name='structures']").remove();
+
+    var structures = document.querySelectorAll("#conf_table > tr.is-selected");
+    selected_structures = [];
+    for (i = 0; i < structures.length; i++) {
+        selected_structures.push(structures[i].dataset["num"]);
+    }
+
+    if (selected_structures.length == 0) {
+        selected_structures.push("{{ structure.number }}");
+    }
+
+    $("<input />")
+        .attr("type", "hidden")
+        .attr("name", "structures")
+        .attr("value", selected_structures.join(","))
+        .appendTo(this);
 });
 </script>

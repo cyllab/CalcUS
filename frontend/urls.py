@@ -169,6 +169,11 @@ urlpatterns = [
         views.get_related_calculations,
         name="get_related_calculations",
     ),
+    path(
+        "launch_imaginary_freq_distortion/",
+        views.launch_imaginary_freq_distortion,
+        name="launch_imaginary_freq_distortion",
+    ),
     path("launch/", views.launch, name="launch"),
     path("launch/project/<str:pk>", views.launch_project, name="launch_project"),
     path("load_params/<str:pk>", views.load_params, name="load_params"),
