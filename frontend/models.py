@@ -985,16 +985,33 @@ class Property(models.Model):
         return any(freq < 0 for freq in self.freq_list)
 
     @property
-    def most_negative_freq_index(self):
-        if not self.has_negative_freq:
-            return None
-        return min(
-            (ind for ind, freq in enumerate(self.freq_list) if freq < 0),
-            key=lambda ind: self.freq_list[ind],
-        )
+    def negative_freq_count(self):
+        return sum(1 for freq in self.freq_list if freq < 0)
 
-    def get_distorted_structure(self, scale=0.87):
-        mode_ind = self.most_negative_freq_index
+    def get_negative_freq_index(self, negative_freq_num=1):
+        try:
+            negative_freq_num = int(negative_freq_num)
+        except (TypeError, ValueError):
+            return None
+
+        if negative_freq_num < 1:
+            return None
+
+        negative_freq_indices = [
+            ind
+            for ind, freq in sorted(enumerate(self.freq_list), key=lambda item: item[1])
+            if freq < 0
+        ]
+        if negative_freq_num > len(negative_freq_indices):
+            return None
+        return negative_freq_indices[negative_freq_num - 1]
+
+    @property
+    def most_negative_freq_index(self):
+        return self.get_negative_freq_index(1)
+
+    def get_distorted_structure(self, scale=0.87, negative_freq_num=1):
+        mode_ind = self.get_negative_freq_index(negative_freq_num)
         if mode_ind is None or mode_ind >= len(self.freq_animations):
             return ""
 

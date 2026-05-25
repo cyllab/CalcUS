@@ -23,6 +23,21 @@
         {% csrf_token %}
         <input type="hidden" name="ensemble" value="{{ ensemble.id }}" />
         <input type="hidden" name="imaginary_freq_distortion" value="{{ property.parameters.id }}" />
+        {% if property.negative_freq_count > 1 %}
+        <div class="field">
+            <label class="label" for="negative_freq_num">Distortion mode</label>
+            <div class="control">
+                <div class="select is-fullwidth">
+                    <select name="negative_freq_num" id="negative_freq_num">
+                        <option value="1">First negative frequency</option>
+                        <option value="2">Second negative frequency</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <input type="hidden" name="negative_freq_num" value="1" />
+        {% endif %}
         <button class="button button_full is-info" id="imaginary_freq_distortion_button">
             Launch calculation on selected structure with imaginary freq distortion
             <i class="fas fa-external-link-alt"></i>

@@ -456,13 +456,14 @@ class ImaginaryFrequencyDistortionTests(TestCase):
 
         return self.client.post("/submit_calculation/", data=params, follow=True)
 
-    def prepare_imaginary_distortion(self, structures):
+    def prepare_imaginary_distortion(self, structures, negative_freq_num="1"):
         return self.client.post(
             "/launch_imaginary_freq_distortion/",
             {
                 "ensemble": self.ensemble.id,
                 "structures": structures,
                 "imaginary_freq_distortion": self.params.id,
+                "negative_freq_num": negative_freq_num,
             },
             follow=True,
         )
@@ -481,6 +482,7 @@ class ImaginaryFrequencyDistortionTests(TestCase):
             response,
             "Launch calculation on selected structure with imaginary freq distortion",
         )
+        self.assertContains(response, "Second negative frequency")
 
     def test_prepare_imaginary_distortion_posts_to_launch_page(self):
         response = self.prepare_imaginary_distortion("1,2")
@@ -562,6 +564,31 @@ class ImaginaryFrequencyDistortionTests(TestCase):
         self.assertTrue(np.isclose(xyz1[1][1][0], -0.4350, atol=0.0001))
         self.assertTrue(np.isclose(xyz2[0][1][0], 1.2175, atol=0.0001))
         self.assertTrue(np.isclose(xyz2[1][1][0], 0.7825, atol=0.0001))
+
+    def test_prepare_imaginary_distortion_uses_second_negative_frequency(self):
+        response = self.prepare_imaginary_distortion("1", negative_freq_num="2")
+
+        self.assertEqual(response.status_code, 200)
+        distorted_ensemble = Ensemble.objects.exclude(id=self.ensemble.id).get()
+        self.assertIn("Second imaginary freq distortion", distorted_ensemble.name)
+
+        distorted_struct = distorted_ensemble.structure_set.get(number=1)
+        xyz = parse_xyz_from_text(distorted_struct.xyz_structure)
+
+        self.assertTrue(np.isclose(xyz[0][1][0], 0.8700, atol=0.0001))
+        self.assertTrue(np.isclose(xyz[1][1][0], -0.8700, atol=0.0001))
+
+    def test_prepare_imaginary_distortion_rejects_missing_second_negative_frequency(
+        self,
+    ):
+        response = self.prepare_imaginary_distortion("2", negative_freq_num="2")
+
+        self.assertContains(
+            response,
+            "does not have negative frequency #2",
+            status_code=200,
+        )
+        self.assertEqual(Ensemble.objects.exclude(id=self.ensemble.id).count(), 0)
 
     def test_submit_calculation_reuses_distorted_ensemble_for_same_structure(self):
         response1 = self.prepare_imaginary_distortion("1")

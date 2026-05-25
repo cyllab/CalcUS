@@ -142,7 +142,6 @@ from throttle.decorators import throttle
 
 import logging
 
-
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s [%(levelname)s]  %(module)s: %(message)s"
 )
@@ -1704,13 +1703,34 @@ def submit_calculation(request):
 
 
 def create_imaginary_freq_distorted_ensemble(
-    source_ensemble, structure_numbers, distortion_params, verify=False
+    source_ensemble,
+    structure_numbers,
+    distortion_params,
+    negative_freq_num=1,
+    verify=False,
 ):
     if len(structure_numbers) == 0:
         return "No starting structures found"
 
-    distorted_ensemble_name = (f"{source_ensemble.name} - Imaginary freq distortion")[
-        :100
+    try:
+        negative_freq_num = int(negative_freq_num)
+    except (TypeError, ValueError):
+        return "Invalid negative frequency selection"
+
+    if negative_freq_num < 1:
+        return "Invalid negative frequency selection"
+
+    if negative_freq_num == 1:
+        distortion_label = "Imaginary freq distortion"
+    elif negative_freq_num == 2:
+        distortion_label = "Second imaginary freq distortion"
+    else:
+        distortion_label = f"Imaginary freq {negative_freq_num} distortion"
+
+    suffix = f" - {distortion_label}"
+    max_source_name_len = max(0, 100 - len(suffix))
+    distorted_ensemble_name = f"{source_ensemble.name[:max_source_name_len]}{suffix}"[
+        -100:
     ]
     distorted_structures = []
 
@@ -1724,7 +1744,12 @@ def create_imaginary_freq_distorted_ensemble(
         if prop is None or not prop.has_negative_freq:
             return f"Structure {s_num} does not have negative frequencies for the selected parameters"
 
-        distorted_xyz = prop.get_distorted_structure()
+        if prop.get_negative_freq_index(negative_freq_num) is None:
+            return f"Structure {s_num} does not have negative frequency #{negative_freq_num} for the selected parameters"
+
+        distorted_xyz = prop.get_distorted_structure(
+            negative_freq_num=negative_freq_num
+        )
         if distorted_xyz == "":
             return f"Could not generate the imaginary frequency distortion for structure {s_num}"
 
@@ -1811,9 +1836,14 @@ def launch_imaginary_freq_distortion(request):
 
     structures_str = clean(request.POST.get("structures", ""))
     structure_numbers = [int(i) for i in structures_str.split(",") if i.strip() != ""]
+    negative_freq_num = clean(request.POST.get("negative_freq_num", "1"))
 
     ret = create_imaginary_freq_distorted_ensemble(
-        source_ensemble, structure_numbers, distortion_params, verify=False
+        source_ensemble,
+        structure_numbers,
+        distortion_params,
+        negative_freq_num=negative_freq_num,
+        verify=False,
     )
     if isinstance(ret, str):
         return error(request, ret)
