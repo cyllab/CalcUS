@@ -9,6 +9,7 @@
     "bulma-slider": "2.0.4",
     "bulma-switch": "^2.0.4",
     "clipboard": "^2.0.11",
+    "css-minify": "^2.1.0",
     "cytoscape": "^3.25.0",
     "cytoscape-dagre": "^2.5.0",
     "dagre": "^0.8.5",
