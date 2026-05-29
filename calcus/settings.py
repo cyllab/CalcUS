@@ -26,6 +26,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IS_CLOUD = "CALCUS_CLOUD" in os.environ
 IS_TEST = "CALCUS_TEST" in os.environ
 IS_COMPUTE = "CALCUS_COMPUTE" in os.environ
+COCKROACHDB_OVERRIDE = "CALCUS_COCKROACHDB" in os.environ
 
 try:
     DEBUG = os.environ["CALCUS_DEBUG"]
@@ -218,7 +219,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "calcus.wsgi.application"
 
-if IS_CLOUD and not IS_TEST:
+if (IS_CLOUD and not IS_TEST) or COCKROACHDB_OVERRIDE:
     DATABASES = {
         "default": {
             "ENGINE": "django_cockroachdb",
