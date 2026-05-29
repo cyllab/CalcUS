@@ -133,6 +133,7 @@ from .helpers import (
     clean_filename,
 )
 from .cloud_job import submit_cloud_job
+from .calculation_outputs import has_outputs, read_all_output_files
 
 from shutil import rmtree
 from django.db.models.functions import Lower
@@ -4080,11 +4081,11 @@ def download_log(request, pk):
 
     name = f"{clean_filename(calc.order.molecule_name)}_{clean_filename(calc.corresponding_ensemble.name)}"
 
-    if len(calc.output_files) == 0:
+    if not has_outputs(calc):
         logger.warning(f"No log to download! (Calculation {pk})")
         return HttpResponse(status=404)
 
-    data = json.loads(calc.output_files)
+    data = read_all_output_files(calc)
 
     if "calc" not in data:
         logger.warning(f"Calculation {str(calc.pk)} has no output file!")
@@ -4128,7 +4129,7 @@ def download_all_logs(request, pk):
             if calc.status in [0, 1]:
                 return HttpResponse(status=204)
 
-            for logname, log in json.loads(calc.output_files).items():
+            for logname, log in read_all_output_files(calc).items():
                 if logname == "calc":
                     _logname = ""
                 else:
@@ -4171,10 +4172,10 @@ def log(request, pk):
     if calc.status == 1 and not settings.IS_CLOUD:
         load_output_files(calc)
 
-    if len(calc.output_files) == 0:
+    if not has_outputs(calc):
         return HttpResponse(status=204)
 
-    data = json.loads(calc.output_files)
+    data = read_all_output_files(calc)
 
     for log_name, log in data.items():
         response += LOG_HTML.format(log_name, log)
@@ -4881,12 +4882,12 @@ def download_project_logs(proj, user, scope, details, folders):
                     if details == "freq" and calc.step.name != "Frequency Calculation":
                         continue
 
-                    if len(calc.output_files) == 0:
+                    if not has_outputs(calc):
                         continue
 
                     log_name = get_log_name(s, calc)
 
-                    logs = json.loads(calc.output_files)
+                    logs = read_all_output_files(calc)
 
                     for subname, log in logs.items():
                         if subname == "calc":
@@ -5091,10 +5092,10 @@ def download_folder(request, pk):
                             + str(c.structure.number)
                         )
 
-                        if len(c.output_files) == 0:
+                        if not has_outputs(c):
                             continue
 
-                        logs = json.loads(c.output_files)
+                        logs = read_all_output_files(c)
                         for subname, log in logs.items():
                             if subname == "calc":
                                 _log_name = log_name + ".log"

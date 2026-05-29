@@ -16,6 +16,7 @@ django-pipeline==2.0.5
 django-silk
 django-throttle-requests==0.5.9
 fabric<3.0.0
+google-cloud-storage
 google-cloud-tasks>=2.10.2
 gunicorn>=21.2.0
 numpy

@@ -41,7 +41,7 @@ from .models import (
     Subscription,
     User,
 )
-from .libxyz import json
+from .calculation_outputs import has_outputs, read_all_output_files
 from .calcusliveserver import CalcusCloudLiveServer
 
 GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
@@ -108,9 +108,9 @@ class CloudCalculationTests(CalcusCloudLiveServer):
         self.assertTrue(self.latest_calc_successful())
 
         calc = Calculation.objects.latest("pk")
-        self.assertTrue(len(calc.output_files) > 0)
+        self.assertTrue(has_outputs(calc))
 
-        data = json.loads(calc.output_files)
+        data = read_all_output_files(calc)
 
         assert "calc" in data
 

@@ -135,6 +135,7 @@ from .environment_variables import (
     MULTIWFN_DIR,
 )
 from .cloud_job import submit_cloud_job
+from .calculation_outputs import read_all_output_files, save_output_files
 
 import traceback
 import periodictable
@@ -4999,10 +5000,7 @@ def load_output_files(calc):
         )
         return
 
-    if calc.output_files.strip() in ["{}", ""]:
-        output_files = {}
-    else:
-        output_files = json.loads(calc.output_files)
+    output_files = read_all_output_files(calc)
 
     for log_name in glob.glob(
         os.path.join(CALCUS_SCR_HOME, str(calc.id), "*.log")
@@ -5017,8 +5015,7 @@ def load_output_files(calc):
         f"Loaded {len(output_files)} output file(s) for calculation {str(calc.id)} (scr: {CALCUS_SCR_HOME})"
     )
 
-    calc.output_files = json.dumps(output_files)
-    calc.save(update_fields=["output_files"])
+    save_output_files(calc, output_files)
 
 
 @app.task(base=AbortableTask)

@@ -14,6 +14,7 @@ services:
                         - 8000
                 depends_on:
                         - redis
+                        - fake-gcs
                 volumes:
                         - scratch:/calcus/scratch
                         - ./frontend/tests/cache:/calcus/cache:rw
@@ -27,6 +28,10 @@ services:
                         - GCP_LOCATION=us-central1
                         - GCP_PROJECT_ID=test-project
                         - GCP_SERVICE_ACCOUNT_EMAIL=selenium@calcus.com
+                        - CALCUS_OUTPUT_STORAGE_BACKEND=gcs
+                        - CALCUS_OUTPUT_BUCKET=calcus-test-outputs
+                        - CALCUS_OUTPUT_PREFIX=test
+                        - STORAGE_EMULATOR_HOST=http://fake-gcs:4443
                         - USE_CACHED_LOGS=true
                 links:
                         - redis
@@ -35,11 +40,17 @@ services:
                         - stripe-cli
                         - postgres
                         - selenium
+                        - fake-gcs
         taskqueue:
               image: ghcr.io/aertje/cloud-tasks-emulator:latest
               command: -host 0.0.0.0 -port 8123 -queue projects/test-project/locations/us-central1/queues/xtb-compute -queue projects/test-project/locations/us-central1/queues/actions
               expose:
                     - 8123
+        fake-gcs:
+              image: fsouza/fake-gcs-server:latest
+              command: ["-scheme", "http", "-port", "4443", "-public-host", "fake-gcs:4443"]
+              expose:
+                    - 4443
         stripe-cli:
               image: stripe/stripe-cli
               command: listen --forward-to cloud-compute:8001/webhook/ --api-key $STRIPE_SECRET_KEY
@@ -53,6 +64,7 @@ services:
                         - 8001
                 depends_on:
                         - redis
+                        - fake-gcs
                 volumes:
                         - scratch:/calcus/scratch
                         - ./frontend/tests/cache:/calcus/cache:rw
@@ -69,6 +81,10 @@ services:
                         - GCP_LOCATION=us-central1
                         - GCP_PROJECT_ID=test-project
                         - GCP_SERVICE_ACCOUNT_EMAIL=selenium@calcus.com
+                        - CALCUS_OUTPUT_STORAGE_BACKEND=gcs
+                        - CALCUS_OUTPUT_BUCKET=calcus-test-outputs
+                        - CALCUS_OUTPUT_PREFIX=test
+                        - STORAGE_EMULATOR_HOST=http://fake-gcs:4443
                         - ACTIONS_HOST_URL=http://web:8000
                         - COMPUTE_SMALL_HOST_URL=http://cloud-compute:8001
                         - CALCUS_SCR_HOME=/calcus/scr

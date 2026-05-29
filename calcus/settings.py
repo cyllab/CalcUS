@@ -314,6 +314,19 @@ else:
 
 MEDIA_URL = "/media/"
 
+CALCULATION_OUTPUT_STORAGE_BACKEND = os.getenv(
+    "CALCUS_OUTPUT_STORAGE_BACKEND", "gcs" if IS_CLOUD or IS_TEST else "database"
+)
+CALCULATION_OUTPUT_BUCKET = os.getenv(
+    "CALCUS_OUTPUT_BUCKET", "calcus-test-outputs" if IS_TEST else ""
+)
+CALCULATION_OUTPUT_PREFIX = os.getenv(
+    "CALCUS_OUTPUT_PREFIX", "test" if IS_TEST else "prod" if IS_CLOUD else "dev"
+)
+CALCULATION_OUTPUT_LOCAL_ROOT = os.getenv(
+    "CALCUS_OUTPUT_LOCAL_ROOT", os.path.join(BASE_DIR, "scratch", "calculation_outputs")
+)
+
 AXES_LOCKOUT_TEMPLATE = "registration/lockout.html"
 AXES_FAILURE_LIMIT = 30
 AXES_COOLOFF_TIME = 1

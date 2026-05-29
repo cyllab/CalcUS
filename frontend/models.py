@@ -1841,6 +1841,7 @@ class Calculation(models.Model):
     remote_id = models.PositiveIntegerField(default=0)
 
     output_files = models.TextField(default="")
+    output_file_manifest = models.JSONField(default=dict, blank=True)
 
     def __str__(self):
         return self.step.name
