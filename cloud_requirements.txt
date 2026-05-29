@@ -1,6 +1,5 @@
 basis-set-exchange
 bleach
-braces>=3.0.3
 ccinput>=1.10.3
 cryptography
 Django>=5.2.11,<6

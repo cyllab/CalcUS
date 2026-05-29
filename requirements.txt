@@ -1,6 +1,5 @@
 basis-set-exchange
 bleach
-braces>=3.0.3
 ccinput>=1.11.0
 celery[redis]
 django-cors-headers
