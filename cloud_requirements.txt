@@ -1,5 +1,6 @@
 basis-set-exchange
 bleach
+braces>=3.0.3
 ccinput>=1.10.3
 cryptography
 Django>=5.2.11,<6
@@ -19,6 +20,8 @@ google-cloud-storage
 google-cloud-tasks
 grpc-google-iam-v1
 gunicorn
+immutable>=4.3.8
+lodash>=4.18.0
 nmrglue==0.8
 numpy
 periodictable
