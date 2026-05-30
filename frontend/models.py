@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from django.db import models, transaction
 from django.db.models import Case, Count, F, When
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_delete, pre_save
 from django.utils import timezone
 from django.contrib.auth.models import (
     GroupManager,
@@ -1644,7 +1644,7 @@ class CalculationOrder(models.Model):
             else:
                 total_cpu_time += calc.execution_time
 
-        return total_cpu_time
+        return max(0, total_cpu_time)
 
     @classmethod
     def sync_cache(cls, order_id):
@@ -1914,13 +1914,13 @@ class Calculation(models.Model):
         else:
             end_date = self.date_finished
 
+        elapsed_seconds = max(0, (end_date - self.date_started).total_seconds())
+
         if settings.IS_CLOUD:
             nproc, limit = job_triage(self)
-            delta = end_date - self.date_started
-            return round(delta.total_seconds() * nproc)
+            return round(elapsed_seconds * nproc)
         if self.local:
-            delta = end_date - self.date_started
-            return round(delta.total_seconds() * PAL)
+            return round(elapsed_seconds * PAL)
 
         if self.order.resource is None:
             # Shouldn't happen
@@ -1930,7 +1930,7 @@ class Calculation(models.Model):
             pal = os.getenv("OMP_NUM_THREADS")[0]
         else:
             pal = self.order.resource.pal
-        return int((end_date - self.date_started).seconds * int(pal))
+        return int(elapsed_seconds * int(pal))
 
     def __repr__(self):
         return str(self.id)
@@ -1948,6 +1948,13 @@ class Calculation(models.Model):
             calc = Calculation.objects.select_for_update().get(id=self.id)
             calc.status = 3
             calc.save()
+
+
+@receiver(pre_delete, sender=Calculation)
+def calculation_deleted(sender, instance, **kwargs):
+    from .calculation_outputs import delete_output_files
+
+    transaction.on_commit(lambda: delete_output_files(instance, save=False))
 
 
 class BatchCalcOrder(models.Model):

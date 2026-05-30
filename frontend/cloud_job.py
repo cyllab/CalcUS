@@ -142,6 +142,9 @@ def create_container_job(calc, nproc, timeout):
             "OMPI_ALLOW_RUN_AS_ROOT": "1",
             "OMPI_ALLOW_RUN_AS_ROOT_CONFIRM": "1",
             "PATH": os.environ["PATH"],
+            "CALCUS_OUTPUT_STORAGE_BACKEND": settings.CALCULATION_OUTPUT_STORAGE_BACKEND,
+            "CALCUS_OUTPUT_BUCKET": settings.CALCULATION_OUTPUT_BUCKET,
+            "CALCUS_OUTPUT_PREFIX": settings.CALCULATION_OUTPUT_PREFIX,
         }
     )
     print(f"Environment variables: {str(env)}")

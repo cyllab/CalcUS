@@ -89,10 +89,11 @@ class DatabaseCalculationOutputBackend:
         calc.save(update_fields=["output_files", "output_file_manifest"])
         return {}
 
-    def delete_many(self, calc, manifest):
+    def delete_many(self, calc, manifest, save=True):
         calc.output_files = ""
         calc.output_file_manifest = {}
-        calc.save(update_fields=["output_files", "output_file_manifest"])
+        if save:
+            calc.save(update_fields=["output_files", "output_file_manifest"])
 
 
 class LocalCalculationOutputBackend:
@@ -138,7 +139,7 @@ class LocalCalculationOutputBackend:
     def read(self, calc, name, metadata):
         return self._path_from_metadata(metadata).read_text(encoding="utf-8")
 
-    def delete_many(self, calc, manifest):
+    def delete_many(self, calc, manifest, save=True):
         for metadata in manifest.values():
             if metadata.get("backend") != self.name or "path" not in metadata:
                 continue
@@ -147,7 +148,8 @@ class LocalCalculationOutputBackend:
             except FileNotFoundError:
                 pass
         calc.output_file_manifest = {}
-        calc.save(update_fields=["output_file_manifest"])
+        if save:
+            calc.save(update_fields=["output_file_manifest"])
 
 
 class GCSCalculationOutputBackend:
@@ -220,14 +222,20 @@ class GCSCalculationOutputBackend:
         bucket = self.client.bucket(bucket_name)
         return bucket.blob(key).download_as_text()
 
-    def delete_many(self, calc, manifest):
+    def delete_many(self, calc, manifest, save=True):
+        from google.api_core.exceptions import NotFound
+
         for metadata in manifest.values():
             if metadata.get("backend") != self.name or "key" not in metadata:
                 continue
             bucket_name = metadata.get("bucket") or self.bucket_name
-            self.client.bucket(bucket_name).blob(metadata["key"]).delete()
+            try:
+                self.client.bucket(bucket_name).blob(metadata["key"]).delete()
+            except NotFound:
+                pass
         calc.output_file_manifest = {}
-        calc.save(update_fields=["output_file_manifest"])
+        if save:
+            calc.save(update_fields=["output_file_manifest"])
 
 
 _BACKENDS = {
@@ -289,7 +297,7 @@ def save_output_files(calc, outputs, backend_name=None):
     return get_backend(backend_name).save_many(calc, normalized)
 
 
-def delete_output_files(calc):
+def delete_output_files(calc, save=True):
     manifest = _manifest(calc)
     if manifest:
         for backend_name in {
@@ -300,9 +308,9 @@ def delete_output_files(calc):
                 for name, meta in manifest.items()
                 if meta.get("backend", _backend_name()) == backend_name
             }
-            get_backend(backend_name).delete_many(calc, backend_manifest)
+            get_backend(backend_name).delete_many(calc, backend_manifest, save=save)
         return
-    DatabaseCalculationOutputBackend().delete_many(calc, manifest)
+    DatabaseCalculationOutputBackend().delete_many(calc, manifest, save=save)
 
 
 def migrate_legacy_output_files(calc, backend_name=None, clear_legacy=False):
