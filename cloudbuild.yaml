@@ -21,6 +21,8 @@ steps:
       - 'POSTGRES_USER=${_POSTGRES_USER}'
       - 'POSTGRES_PORT=${_POSTGRES_PORT}'
       - 'POSTGRES_HOST=${_POSTGRES_HOST}'
+      - 'CALCUS_CLOUD=1'
+      - 'CALCUS_DEBUG=1'
       - 'SECRET_KEY=1'
     secretEnv: ['POSTGRES_PASSWORD']
     waitFor: ['image-storage']
