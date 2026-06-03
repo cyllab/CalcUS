@@ -10,6 +10,7 @@ steps:
     name: 'gcr.io/cloud-builders/docker'
     args: ['push', '$_IMAGE_NAME']
   - id: 'run-migrations'
+    name: '${_IMAGE_NAME}'
     entrypoint: 'python'
     args:
       - 'manage.py'
