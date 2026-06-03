@@ -1318,7 +1318,7 @@ class LaunchParametersTests(CalcusLiveServer):
         return [
             i.text
             for i in Select(self.driver.find_element(By.NAME, "calc_driver")).options
-            if "unavailable" not in i.get_attribute("class")
+            if "unavailable" not in (i.get_attribute("class") or "")
         ]
 
     def choose_type(self, name):

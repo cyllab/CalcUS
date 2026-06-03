@@ -1,8 +1,9 @@
 """Storage for calculation frame XYZ payloads.
 
-New frames are written to ``CalculationFrame`` rows for the ``database`` backend
-or to the calculation output GCS bucket for the ``gcs`` backend. In both cases,
-``Calculation.frame_file_manifest`` stores frame metadata.
+The database backend keeps using legacy ``CalculationFrame`` rows.  The GCS
+backend stores all frames for a calculation as one multi-XYZ object in the
+calculation output bucket and records frame metadata on
+``Calculation.frame_file_manifest``.
 """
 
 import logging
@@ -46,16 +47,22 @@ def _has_xyz(xyz):
     return (xyz or "").strip() not in LEGACY_EMPTY_VALUES
 
 
-def _gcs_key(calc, frame_number):
+def _gcs_key(calc):
     return "/".join(
         part.strip("/")
         for part in [
             settings.CALCULATION_OUTPUT_PREFIX,
             "calculation_frames",
             str(calc.pk or calc.id),
-            f"{int(frame_number)}.xyz",
+            "frames.xyz",
         ]
         if part
+    )
+
+
+def _is_multi_manifest(manifest):
+    return manifest.get("format") == "multi_xyz" and isinstance(
+        manifest.get("frames"), dict
     )
 
 
@@ -87,6 +94,36 @@ def _frame_payloads(frames):
     return payloads
 
 
+def _multi_xyz(frames):
+    return "".join(
+        (frames[frame_number]["xyz_structure"] or "").rstrip() + "\n"
+        for frame_number in sorted(frames, key=int)
+    )
+
+
+def _split_multi_xyz(contents):
+    lines = contents.splitlines(keepends=True)
+    frames = []
+    index = 0
+    while index < len(lines):
+        if not lines[index].strip():
+            index += 1
+            continue
+        try:
+            atom_count = int(lines[index].strip().split()[0])
+        except (TypeError, ValueError) as exc:
+            raise CalculationFrameStorageError(
+                "Invalid multi-XYZ frame header"
+            ) from exc
+
+        end = index + atom_count + 2
+        if end > len(lines):
+            raise CalculationFrameStorageError("Truncated multi-XYZ frame payload")
+        frames.append("".join(lines[index:end]))
+        index = end
+    return frames
+
+
 def _legacy_records(calc, frame_numbers=None):
     qs = calc.calculationframe_set.values(
         "number", "xyz_structure", "RMSD", "converged", "energy"
@@ -108,11 +145,23 @@ def _legacy_records(calc, frame_numbers=None):
 
 
 def _manifest_record(calc, frame_number, entry):
+    xyz = get_backend(entry.get("backend")).read(calc, frame_number, entry)
     return {
         **_metadata(frame_number, entry),
-        "xyz_structure": get_backend(entry.get("backend")).read(
-            calc, frame_number, entry
-        ),
+        "xyz_structure": xyz,
+        "size": len(xyz.encode("utf-8")),
+        "content_type": entry.get("content_type", CONTENT_TYPE),
+    }
+
+
+def _manifest_records(calc, manifest):
+    if not manifest:
+        return {}
+    if _is_multi_manifest(manifest):
+        return get_backend(manifest.get("backend")).read_records(calc, manifest)
+    return {
+        str(frame_number): _manifest_record(calc, frame_number, entry)
+        for frame_number, entry in manifest.items()
     }
 
 
@@ -194,39 +243,85 @@ class GCSCalculationFrameStorageBackend:
         return self._bucket
 
     def save_many(self, calc, frames):
-        manifest = _stored_manifest(calc).copy()
-        for frame_number, frame in frames.items():
-            key = _gcs_key(calc, frame_number)
-            blob = self.bucket.blob(key)
-            blob.upload_from_string(frame["xyz_structure"], content_type=CONTENT_TYPE)
-            manifest[frame_number] = {
-                "backend": self.name,
-                "bucket": self.bucket_name,
-                "key": key,
-                "generation": blob.generation,
+        combined_frames = _manifest_records(calc, _stored_manifest(calc))
+        combined_frames.update(frames)
+
+        contents = _multi_xyz(combined_frames)
+        key = _gcs_key(calc)
+        blob = self.bucket.blob(key)
+        blob.upload_from_string(contents, content_type=CONTENT_TYPE)
+
+        frame_metadata = {}
+        for frame_index, frame_number in enumerate(sorted(combined_frames, key=int)):
+            frame = combined_frames[frame_number]
+            frame_metadata[frame_number] = {
+                "frame_index": frame_index,
                 **{k: v for k, v in frame.items() if k != "xyz_structure"},
             }
+
+        manifest = {
+            "backend": self.name,
+            "bucket": self.bucket_name,
+            "key": key,
+            "format": "multi_xyz",
+            "size": len(contents.encode("utf-8")),
+            "content_type": CONTENT_TYPE,
+            "generation": blob.generation,
+            "frames": frame_metadata,
+        }
         calc.frame_file_manifest = manifest
         calc.save(update_fields=["frame_file_manifest"])
         return manifest
 
-    def read(self, calc, frame_number, entry):
+    def read_multi_xyz(self, manifest):
         return (
+            self.client.bucket(manifest.get("bucket") or self.bucket_name)
+            .blob(manifest["key"])
+            .download_as_text()
+        )
+
+    def read_records(self, calc, manifest):
+        xyz_frames = _split_multi_xyz(self.read_multi_xyz(manifest))
+        records = {}
+        for frame_number, metadata in manifest["frames"].items():
+            try:
+                xyz = xyz_frames[int(metadata["frame_index"])]
+            except (IndexError, KeyError, ValueError) as exc:
+                raise FileNotFoundError(frame_number) from exc
+            records[str(frame_number)] = {
+                **_metadata(frame_number, metadata),
+                "xyz_structure": xyz,
+                "size": len(xyz.encode("utf-8")),
+                "content_type": CONTENT_TYPE,
+            }
+        return records
+
+    def read(self, calc, frame_number, entry):
+        contents = (
             self.client.bucket(entry.get("bucket") or self.bucket_name)
             .blob(entry["key"])
             .download_as_text()
         )
+        if entry.get("format") != "multi_xyz":
+            return contents
+
+        try:
+            return _split_multi_xyz(contents)[int(entry["frame_index"])]
+        except (IndexError, KeyError, ValueError) as exc:
+            raise FileNotFoundError(frame_number) from exc
 
     def delete_many(self, manifest):
         from google.api_core.exceptions import NotFound
 
-        for entry in manifest.values():
+        entries = [manifest] if _is_multi_manifest(manifest) else manifest.values()
+        deleted = set()
+        for entry in entries:
+            blob_id = (entry.get("bucket") or self.bucket_name, entry["key"])
+            if blob_id in deleted:
+                continue
+            deleted.add(blob_id)
             try:
-                (
-                    self.client.bucket(entry.get("bucket") or self.bucket_name)
-                    .blob(entry["key"])
-                    .delete()
-                )
+                self.client.bucket(blob_id[0]).blob(blob_id[1]).delete()
             except NotFound:
                 pass
 
@@ -253,6 +348,8 @@ def has_frames(calc):
 
 def list_frame_files(calc):
     manifest = _manifest(calc)
+    if _is_multi_manifest(manifest):
+        return manifest["frames"]
     if manifest:
         return manifest
     return {
@@ -270,9 +367,11 @@ def read_frame_record(calc, frame_number):
     frame_number = str(int(frame_number))
     manifest = _manifest(calc)
 
-    if frame_number in manifest:
+    if manifest:
         try:
-            return _manifest_record(calc, frame_number, manifest[frame_number])
+            records = _manifest_records(calc, manifest)
+            if frame_number in records:
+                return records[frame_number]
         except (CalculationFrameStorageError, FileNotFoundError, KeyError) as exc:
             logger.warning(
                 "Falling back to legacy CalculationFrame.xyz_structure for "
@@ -306,8 +405,8 @@ def read_all_frame_records(calc):
             len(records),
             getattr(calc, "pk", None),
         )
-    for frame_number in manifest:
-        records[frame_number] = read_frame_record(calc, frame_number)
+    if manifest:
+        records.update(_manifest_records(calc, manifest))
     return records
 
 
@@ -333,7 +432,13 @@ def flush_legacy_frame_payloads(
 
 def delete_frame_files(calc, save=True):
     manifest = _manifest(calc)
-    backends = {entry.get("backend", _backend_name()) for entry in manifest.values()}
+    if _is_multi_manifest(manifest):
+        backends = {manifest.get("backend", _backend_name())}
+    else:
+        backends = {
+            entry.get("backend", _backend_name()) for entry in manifest.values()
+        }
+
     unknown_backends = backends - {"database", "gcs"}
     if unknown_backends:
         raise CalculationFrameStorageError(
@@ -341,7 +446,9 @@ def delete_frame_files(calc, save=True):
         )
     if "gcs" in backends:
         get_backend("gcs").delete_many(
-            {k: v for k, v in manifest.items() if v.get("backend") == "gcs"}
+            manifest
+            if _is_multi_manifest(manifest)
+            else {k: v for k, v in manifest.items() if v.get("backend") == "gcs"}
         )
 
     calc.frame_file_manifest = {}

@@ -101,23 +101,29 @@ class CalculationFrameStorageTests(TransactionTestCase):
         ):
             manifest = save_frame_files(
                 self.calc,
-                {1: "1\ngcs frame\nHe 0 0 0\n"},
+                {
+                    1: "1\ngcs frame one\nHe 0 0 0\n",
+                    2: "1\ngcs frame two\nHe 0 0 1\n",
+                },
                 backend_name="gcs",
             )
             backend = GCSCalculationFrameStorageBackend()
-            blob = backend.client.bucket(manifest["1"]["bucket"]).blob(
-                manifest["1"]["key"]
-            )
+            blob = backend.client.bucket(manifest["bucket"]).blob(manifest["key"])
 
             self.assertTrue(blob.exists())
-            self.assertEqual(blob.download_as_text(), "1\ngcs frame\nHe 0 0 0\n")
             self.assertEqual(
-                manifest["1"]["key"],
-                f"{prefix}/calculation_frames/{self.calc.pk}/1.xyz",
+                blob.download_as_text(),
+                "1\ngcs frame one\nHe 0 0 0\n1\ngcs frame two\nHe 0 0 1\n",
+            )
+            self.assertEqual(manifest["format"], "multi_xyz")
+            self.assertEqual(manifest["frames"]["2"]["frame_index"], 1)
+            self.assertEqual(
+                manifest["key"],
+                f"{prefix}/calculation_frames/{self.calc.pk}/frames.xyz",
             )
             self.assertEqual(
-                read_frame_record(self.calc, 1)["xyz_structure"],
-                "1\ngcs frame\nHe 0 0 0\n",
+                read_frame_record(self.calc, 2)["xyz_structure"],
+                "1\ngcs frame two\nHe 0 0 1\n",
             )
             self.assertFalse(self.calc.calculationframe_set.exists())
 
@@ -317,9 +323,7 @@ class CalculationFrameStorageTests(TransactionTestCase):
                 backend_name="gcs",
             )
             backend = GCSCalculationFrameStorageBackend()
-            blob = backend.client.bucket(manifest["1"]["bucket"]).blob(
-                manifest["1"]["key"]
-            )
+            blob = backend.client.bucket(manifest["bucket"]).blob(manifest["key"])
             self.assertTrue(blob.exists())
 
             self.calc.delete()
@@ -335,17 +339,23 @@ class CalculationFrameStorageTests(TransactionTestCase):
             self.calc,
             {
                 1: {
-                    "xyz_structure": "1\ndatabase frame\nHe 0 0 0\n",
+                    "xyz_structure": "1\ndatabase frame one\nHe 0 0 0\n",
                     "RMSD": 0.8,
                     "energy": -5,
                     "converged": True,
-                }
+                },
+                2: {
+                    "xyz_structure": "1\ndatabase frame two\nHe 0 0 1\n",
+                    "RMSD": 0.4,
+                    "energy": -4,
+                    "converged": False,
+                },
             },
             backend_name="database",
         )
         self.assertEqual(
             self.calc.calculationframe_set.get(number=1).xyz_structure,
-            "1\ndatabase frame\nHe 0 0 0\n",
+            "1\ndatabase frame one\nHe 0 0 0\n",
         )
 
         prefix = f"frame-migration-{uuid.uuid4()}"
@@ -357,26 +367,31 @@ class CalculationFrameStorageTests(TransactionTestCase):
             manifest = flush_legacy_frame_payloads(self.calc)
             self.calc.refresh_from_db()
             backend = GCSCalculationFrameStorageBackend()
-            blob = backend.client.bucket(manifest["1"]["bucket"]).blob(
-                manifest["1"]["key"]
-            )
+            blob = backend.client.bucket(manifest["bucket"]).blob(manifest["key"])
 
-            self.assertEqual(manifest["1"]["backend"], "gcs")
+            self.assertEqual(manifest["backend"], "gcs")
             self.assertEqual(
-                manifest["1"]["key"],
-                f"{prefix}/calculation_frames/{self.calc.pk}/1.xyz",
+                manifest["key"],
+                f"{prefix}/calculation_frames/{self.calc.pk}/frames.xyz",
             )
+            self.assertEqual(manifest["format"], "multi_xyz")
             self.assertTrue(blob.exists())
-            self.assertEqual(blob.download_as_text(), "1\ndatabase frame\nHe 0 0 0\n")
+            self.assertEqual(
+                blob.download_as_text(),
+                "1\ndatabase frame one\nHe 0 0 0\n1\ndatabase frame two\nHe 0 0 1\n",
+            )
             self.assertEqual(
                 self.calc.calculationframe_set.get(number=1).xyz_structure, ""
             )
-            record = read_frame_record(self.calc, 1)
+            self.assertEqual(
+                self.calc.calculationframe_set.get(number=2).xyz_structure, ""
+            )
+            record = read_frame_record(self.calc, 2)
 
-        self.assertEqual(record["xyz_structure"], "1\ndatabase frame\nHe 0 0 0\n")
-        self.assertEqual(record["RMSD"], 0.8)
-        self.assertEqual(record["energy"], -5)
-        self.assertTrue(record["converged"])
+        self.assertEqual(record["xyz_structure"], "1\ndatabase frame two\nHe 0 0 1\n")
+        self.assertEqual(record["RMSD"], 0.4)
+        self.assertEqual(record["energy"], -4)
+        self.assertFalse(record["converged"])
 
     def test_analyse_opt_xtb_writes_frames_through_storage_helper(self):
         from . import tasks
