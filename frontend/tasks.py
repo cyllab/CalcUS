@@ -1423,6 +1423,7 @@ def xtb_scan(calc):
                 Since we can't get the keys of items created in bulk and we can't set a reference without first creating the objects, I haven't found a way to create both the structures and properties using bulk_update. This is still >2.5 times faster than the naive approach.
             """
             properties = []
+            property_structures = []
 
             for metaind, mol in enumerate(inds[:-1]):
                 r = Structure.objects.get_or_create(
@@ -1447,8 +1448,21 @@ def xtb_scan(calc):
                 prop.geom = True
 
                 properties.append(prop)
+                property_structures.append(r)
 
-            Property.objects.bulk_create(properties)
+            existing_structure_ids = set(
+                Property.objects.filter(
+                    parent_structure__in=property_structures,
+                    parameters=calc.parameters,
+                ).values_list("parent_structure_id", flat=True)
+            )
+            Property.objects.bulk_create(
+                [
+                    prop
+                    for prop in properties
+                    if prop.parent_structure_id not in existing_structure_ids
+                ]
+            )
     else:
         with open(os.path.join(local_folder, "xtbopt.xyz")) as f:
             lines = f.readlines()
@@ -2305,6 +2319,7 @@ def orca_scan(calc):
 
     if has_scan:
         properties = []
+        property_structures = []
         energies = []
         with open(os.path.join(local_folder, "calc.relaxscanact.dat")) as f:
             lines = f.readlines()
@@ -2350,8 +2365,21 @@ def orca_scan(calc):
                 prop.energy = E
                 prop.geom = True
                 properties.append(prop)
+                property_structures.append(r)
 
-        Property.objects.bulk_create(properties)
+        existing_structure_ids = set(
+            Property.objects.filter(
+                parent_structure__in=property_structures,
+                parameters=calc.parameters,
+            ).values_list("parent_structure_id", flat=True)
+        )
+        Property.objects.bulk_create(
+            [
+                prop
+                for prop in properties
+                if prop.parent_structure_id not in existing_structure_ids
+            ]
+        )
     else:
         with open(os.path.join(local_folder, "calc.xyz")) as f:
             lines = f.readlines()
@@ -4726,9 +4754,13 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
         s.degeneracy = 1
         s.xyz_structure = start_frame_xyz
         prop, created = Property.objects.get_or_create(
-            parent_structure=s, parameters=calc.parameters, geom=True
+            parent_structure=s,
+            parameters=calc.parameters,
+            defaults={"geom": True},
         )
-        prop.save()
+        if not prop.geom:
+            prop.geom = True
+            prop.save(update_fields=["geom"])
         if should_create_ensemble is True:
             ensemble.save()
         s.save()

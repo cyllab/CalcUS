@@ -243,17 +243,14 @@ class GCSCalculationFrameStorageBackend:
         return self._bucket
 
     def save_many(self, calc, frames):
-        combined_frames = _manifest_records(calc, _stored_manifest(calc))
-        combined_frames.update(frames)
-
-        contents = _multi_xyz(combined_frames)
+        contents = _multi_xyz(frames)
         key = _gcs_key(calc)
         blob = self.bucket.blob(key)
         blob.upload_from_string(contents, content_type=CONTENT_TYPE)
 
         frame_metadata = {}
-        for frame_index, frame_number in enumerate(sorted(combined_frames, key=int)):
-            frame = combined_frames[frame_number]
+        for frame_index, frame_number in enumerate(sorted(frames, key=int)):
+            frame = frames[frame_number]
             frame_metadata[frame_number] = {
                 "frame_index": frame_index,
                 **{k: v for k, v in frame.items() if k != "xyz_structure"},

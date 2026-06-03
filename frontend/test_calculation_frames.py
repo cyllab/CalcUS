@@ -359,6 +359,15 @@ class CalculationFrameStorageTests(TransactionTestCase):
         )
 
         prefix = f"frame-migration-{uuid.uuid4()}"
+        self.calc.frame_file_manifest = {
+            "1": {
+                "backend": "gcs",
+                "bucket": "calcus-test-outputs",
+                "key": f"{prefix}/calculation_frames/{self.calc.pk}/1.xyz",
+            }
+        }
+        self.calc.save(update_fields=["frame_file_manifest"])
+
         with override_settings(
             CALCULATION_OUTPUT_STORAGE_BACKEND="gcs",
             CALCULATION_OUTPUT_BUCKET="calcus-test-outputs",
