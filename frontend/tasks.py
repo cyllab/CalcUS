@@ -95,7 +95,6 @@ from .libxyz import (
 from .models import (
     BasicStep,
     Calculation,
-    CalculationFrame,
     CalculationOrder,
     Ensemble,
     FlowchartOrder,
@@ -136,6 +135,7 @@ from .environment_variables import (
 )
 from .cloud_job import submit_cloud_job
 from .calculation_outputs import read_all_output_files, save_output_files
+from .calculation_frames import read_frame_record, save_frame_files
 
 import traceback
 import periodictable
@@ -2973,29 +2973,14 @@ def nwchem_opt(calc):
     else:
         frames = structures
 
-    new_frames = []
-    update_frames = []
-
+    frame_payloads = {}
     for ind, (s, rmsd) in enumerate(zip(frames, rmsds)):
-        xyz = format_xyz(s)
-        try:
-            f = calc.calculationframe_set.get(number=ind + 1)
-        except CalculationFrame.DoesNotExist:
-            new_frames.append(
-                CalculationFrame(
-                    number=ind + 1,
-                    xyz_structure=xyz,
-                    parent_calculation=calc,
-                    RMSD=rmsd,
-                )
-            )
-        else:
-            f.xyz_structure = xyz
-            f.RMSD = rmsd
-            update_frames.append(f)
+        frame_payloads[ind + 1] = {
+            "xyz_structure": format_xyz(s),
+            "RMSD": rmsd,
+        }
 
-    CalculationFrame.objects.bulk_create(new_frames)
-    CalculationFrame.objects.bulk_update(update_frames, ["xyz_structure", "RMSD"])
+    save_frame_files(calc, frame_payloads)
 
     # parse_nwchem_charges(calc, s)
 
@@ -4293,29 +4278,14 @@ def analyse_opt_pysis(calc):
             ind += 1
 
     structs, energies = parse_multixyz_from_file(os.path.join(prepath, "calc_trj.xyz"))
-    new_frames = []
-    update_frames = []
-
+    frame_payloads = {}
     for ind, (s, E) in enumerate(zip(structs, energies)):
-        xyz = format_xyz(s)
-        try:
-            f = calc.calculationframe_set.get(number=ind + 1)
-        except CalculationFrame.DoesNotExist:
-            new_frames.append(
-                CalculationFrame(
-                    number=ind + 1,
-                    xyz_structure=xyz,
-                    parent_calculation=calc,
-                    RMSD=RMSDs[ind],
-                )
-            )
-        else:
-            f.xyz_structure = xyz
-            f.RMSD = RMSDs[ind]
-            update_frames.append(f)
+        frame_payloads[ind + 1] = {
+            "xyz_structure": format_xyz(s),
+            "RMSD": RMSDs[ind],
+        }
 
-    CalculationFrame.objects.bulk_create(new_frames)
-    CalculationFrame.objects.bulk_update(update_frames, ["xyz_structure", "RMSD"])
+    save_frame_files(calc, frame_payloads)
 
     return ErrorCodes.SUCCESS
 
@@ -4351,29 +4321,14 @@ def analyse_opt_ORCA(calc):
             ind += 1
 
     structs, energies = parse_multixyz_from_file(os.path.join(prepath, "calc_trj.xyz"))
-    new_frames = []
-    update_frames = []
-
+    frame_payloads = {}
     for ind, (s, E) in enumerate(zip(structs, energies)):
-        xyz = format_xyz(s)
-        try:
-            f = calc.calculationframe_set.get(number=ind + 1)
-        except CalculationFrame.DoesNotExist:
-            new_frames.append(
-                CalculationFrame(
-                    number=ind + 1,
-                    xyz_structure=xyz,
-                    parent_calculation=calc,
-                    RMSD=RMSDs[ind],
-                )
-            )
-        else:
-            f.xyz_structure = xyz
-            f.RMSD = RMSDs[ind]
-            update_frames.append(f)
+        frame_payloads[ind + 1] = {
+            "xyz_structure": format_xyz(s),
+            "RMSD": RMSDs[ind],
+        }
 
-    CalculationFrame.objects.bulk_create(new_frames)
-    CalculationFrame.objects.bulk_update(update_frames, ["xyz_structure", "RMSD"])
+    save_frame_files(calc, frame_payloads)
 
     return ErrorCodes.SUCCESS
 
@@ -4394,51 +4349,27 @@ def analyse_opt_xtb(calc):
     natoms = int(lines[0])
     nn = int(len(lines) / (natoms + 2))
 
-    to_update = []
-    to_create = []
+    frame_payloads = {}
     if calc.step.name == "Minimum Energy Path":
         for n in range(nn):
             xyz = "".join(lines[(natoms + 2) * n : (natoms + 2) * (n + 1)])
             E = float(lines[n * (natoms + 2) + 1].split()[-1])
-            try:
-                f = calc.calculationframe_set.get(number=n + 1)
-            except CalculationFrame.DoesNotExist:
-                to_create.append(
-                    CalculationFrame(
-                        parent_calculation=calc,
-                        number=n + 1,
-                        RMSD=0,
-                        xyz_structure=xyz,
-                        energy=E,
-                        converged=True,
-                    )
-                )
-            else:
-                f.xyz_structure = xyz
-                f.energy = E
-                to_update.append(f)
-
-        CalculationFrame.objects.bulk_update(to_update, ["xyz_structure", "energy"])
-        CalculationFrame.objects.bulk_create(to_create)
+            frame_payloads[n + 1] = {
+                "xyz_structure": xyz,
+                "RMSD": 0,
+                "energy": E,
+                "converged": True,
+            }
     else:
         for n in range(nn):
             xyz = "".join(lines[(natoms + 2) * n : (natoms + 2) * (n + 1)])
             rms = lines[n * (natoms + 2) + 1].split()[3]
-            try:
-                f = calc.calculationframe_set.get(number=n + 1)
-            except CalculationFrame.DoesNotExist:
-                to_create.append(
-                    CalculationFrame(
-                        parent_calculation=calc,
-                        number=n + 1,
-                        RMSD=rms,
-                        xyz_structure=xyz,
-                    )
-                )
-            else:
-                continue
-        CalculationFrame.objects.bulk_update(to_update, ["xyz_structure", "RMSD"])
-        CalculationFrame.objects.bulk_create(to_create)
+            frame_payloads[n + 1] = {
+                "xyz_structure": xyz,
+                "RMSD": rms,
+            }
+
+    save_frame_files(calc, frame_payloads)
 
     return ErrorCodes.SUCCESS
 
@@ -4448,9 +4379,6 @@ def analyse_opt_Gaussian(calc):
 
     if not os.path.isfile(calc_path):
         return
-
-    _calc = Calculation.objects.prefetch_related("calculationframe_set").get(pk=calc.id)
-    frames = _calc.calculationframe_set
 
     with open(calc_path, encoding="utf8", errors="ignore") as f:
         lines = f.readlines()
@@ -4479,8 +4407,7 @@ def analyse_opt_Gaussian(calc):
     xyz = ""
 
     E = 0
-    to_update = []
-    to_create = []
+    frame_payloads = {}
     while ind < len(lines) - 2:
         if lines[ind].find(orientation_str) != -1:
             s_ind += 1
@@ -4511,35 +4438,21 @@ def analyse_opt_Gaussian(calc):
 
             assert E != 0
 
-            try:
-                f = frames.get(number=s_ind)
-            except CalculationFrame.DoesNotExist:
-                to_create.append(
-                    CalculationFrame(
-                        number=s_ind,
-                        xyz_structure=xyz,
-                        parent_calculation=calc,
-                        RMSD=rms,
-                        converged=converged,
-                        energy=E,
-                    )
-                )
-            else:
-                # Really necessary? Not sure there is a good case where frames should systematically be overwritten
-                f.xyz_structure = xyz
-                f.energy = E
-                to_update.append(f)
+            frame_payloads[s_ind] = {
+                "xyz_structure": xyz,
+                "RMSD": rms,
+                "converged": converged,
+                "energy": E,
+            }
             xyz = ""
             ind += 1
         else:
             ind += 1
             if ind > len(lines) - 3:
-                calc.save()
-                CalculationFrame.objects.bulk_update(
-                    to_update, ["xyz_structure", "energy"], batch_size=100
-                )
-                CalculationFrame.objects.bulk_create(to_create)
+                save_frame_files(calc, frame_payloads)
                 return ErrorCodes.SUCCESS
+
+    save_frame_files(calc, frame_payloads)
     return ErrorCodes.SUCCESS
 
 
@@ -4805,13 +4718,13 @@ def dispatcher(order_id, drawing=None, is_flowchart=False, flowchartStepObjectId
                 origin=calc.result_ensemble,
                 name=f"Extracted frame {fid}",
             )
-        f = calc.calculationframe_set.get(number=fid)
+        start_frame_xyz = read_frame_record(calc, fid)["xyz_structure"]
         s = Structure.objects.get_or_create(
             parent_ensemble=ensemble,
             number=order.start_calc.structure.number,
         )[0]
         s.degeneracy = 1
-        s.xyz_structure = f.xyz_structure
+        s.xyz_structure = start_frame_xyz
         prop, created = Property.objects.get_or_create(
             parent_structure=s, parameters=calc.parameters, geom=True
         )

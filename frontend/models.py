@@ -1842,6 +1842,7 @@ class Calculation(models.Model):
 
     output_files = models.TextField(default="")
     output_file_manifest = models.JSONField(default=dict, blank=True)
+    frame_file_manifest = models.JSONField(default=dict, blank=True)
 
     def __str__(self):
         return self.step.name
@@ -1953,8 +1954,10 @@ class Calculation(models.Model):
 @receiver(pre_delete, sender=Calculation)
 def calculation_deleted(sender, instance, **kwargs):
     from .calculation_outputs import delete_output_files
+    from .calculation_frames import delete_frame_files
 
     transaction.on_commit(lambda: delete_output_files(instance, save=False))
+    transaction.on_commit(lambda: delete_frame_files(instance, save=False))
 
 
 class BatchCalcOrder(models.Model):

@@ -79,7 +79,6 @@ from .models import (
     Preset,
     Recipe,
     Folder,
-    CalculationFrame,
     ShowcaseProperty,
     ShowcaseEnsemble,
     ResourceAllocation,
@@ -134,6 +133,7 @@ from .helpers import (
 )
 from .cloud_job import submit_cloud_job
 from .calculation_outputs import has_outputs, read_all_output_files
+from .calculation_frames import read_all_frame_records, read_frame_record
 
 from shutil import rmtree
 from django.db.models.functions import Lower
@@ -3429,6 +3429,7 @@ def get_calc_data(request, pk):
 def format_frames(calc, user):
     if calc.status == 1:
         analyse_opt(calc.id)
+        calc.refresh_from_db(fields=["frame_file_manifest"])
 
     multi_xyz = ""
     scan_energy = "Frame,Relative Energy\n"
@@ -3437,14 +3438,10 @@ def format_frames(calc, user):
     scan_frames = []
     scan_energies = []
 
-    for f in (
-        calc.calculationframe_set.values(
-            "xyz_structure", "number", "RMSD", "converged", "energy"
-        )
-        .order_by("number")
-        .all()
-    ):
-        multi_xyz += f["xyz_structure"]
+    frame_records = read_all_frame_records(calc)
+    for frame_number in sorted(frame_records.keys(), key=int):
+        f = frame_records[frame_number]
+        multi_xyz += f.get("xyz_structure", "")
         RMSD += f"{f['number']},{f['RMSD']}\n"
         if f["converged"] == True:
             scan_frames.append(f["number"])
@@ -3518,8 +3515,11 @@ def get_calc_frame(request, cid, fid):
     if calc.status == 0:
         return HttpResponse(status=204)
 
-    xyz = calc.calculationframe_set.get(number=fid).xyz_structure
-    return HttpResponse(xyz)
+    try:
+        frame = read_frame_record(calc, fid)
+    except (FileNotFoundError, ValueError):
+        return HttpResponse(status=404)
+    return HttpResponse(frame["xyz_structure"])
 
 
 @login_required
@@ -4398,8 +4398,8 @@ def launch(request):
             params["resource"] = calc.order.resource.cluster_address
 
         try:
-            frame = calc.calculationframe_set.get(number=frame_num)
-        except CalculationFrame.DoesNotExist:
+            read_frame_record(calc, frame_num)
+        except (FileNotFoundError, ValueError):
             return redirect("/")
 
         init_params = calc.order.parameters

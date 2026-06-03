@@ -9,6 +9,20 @@ steps:
   - id: "image-storage"
     name: 'gcr.io/cloud-builders/docker'
     args: ['push', '$_IMAGE_NAME']
+  - id: 'run-migrations'
+    entrypoint: 'python'
+    args:
+      - 'manage.py'
+      - 'migrate'
+      - '--noinput'
+    env:
+      - 'DJANGO_SETTINGS_MODULE=calcus.settings'
+      - 'POSTGRES_USER=${_POSTGRES_USER}'
+      - 'POSTGRES_PORT=${_POSTGRES_PORT}'
+      - 'POSTGRES_HOST=${_POSTGRES_HOST}'
+      - 'SECRET_KEY=1'
+    secretEnv: ['POSTGRES_PASSWORD']
+    waitFor: ['image-storage']
   - id: "main-deployment"
     name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
@@ -25,6 +39,10 @@ options:
   dynamic_substitutions: true
   logging: CLOUD_LOGGING_ONLY
 
+availableSecrets:
+  secretManager:
+    - versionName: '${_SECRET_REF}'
+      env: 'POSTGRES_PASSWORD'
+
 substitutions:
   _IMAGE_NAME: gcr.io/${_PROJECT_REPO}:latest
-  _DATABASE_PORT: '5432'
