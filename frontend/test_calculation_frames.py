@@ -116,7 +116,10 @@ class CalculationFrameStorageTests(TransactionTestCase):
                 "1\ngcs frame one\nHe 0 0 0\n1\ngcs frame two\nHe 0 0 1\n",
             )
             self.assertEqual(manifest["format"], "multi_xyz")
-            self.assertEqual(manifest["frames"]["2"]["frame_index"], 1)
+            self.assertEqual(manifest["frames"], [0, 0])
+            self.assertNotIn("content_type", manifest)
+            self.assertNotIn("size", manifest)
+            self.assertNotIn("generation", manifest)
             self.assertEqual(
                 manifest["key"],
                 f"{prefix}/calculation_frames/{self.calc.pk}/frames.xyz",

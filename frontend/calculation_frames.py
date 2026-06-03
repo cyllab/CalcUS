@@ -62,7 +62,7 @@ def _gcs_key(calc):
 
 def _is_multi_manifest(manifest):
     return manifest.get("format") == "multi_xyz" and isinstance(
-        manifest.get("frames"), dict
+        manifest.get("frames"), (list, dict)
     )
 
 
@@ -87,8 +87,6 @@ def _frame_payloads(frames):
         xyz = _xyz(payload)
         payloads[str(frame_number)] = {
             "xyz_structure": xyz,
-            "size": len(xyz.encode("utf-8")),
-            "content_type": CONTENT_TYPE,
             **_metadata(frame_number, payload),
         }
     return payloads
@@ -146,12 +144,7 @@ def _legacy_records(calc, frame_numbers=None):
 
 def _manifest_record(calc, frame_number, entry):
     xyz = get_backend(entry.get("backend")).read(calc, frame_number, entry)
-    return {
-        **_metadata(frame_number, entry),
-        "xyz_structure": xyz,
-        "size": len(xyz.encode("utf-8")),
-        "content_type": entry.get("content_type", CONTENT_TYPE),
-    }
+    return {**_metadata(frame_number, entry), "xyz_structure": xyz}
 
 
 def _manifest_records(calc, manifest):
@@ -248,22 +241,16 @@ class GCSCalculationFrameStorageBackend:
         blob = self.bucket.blob(key)
         blob.upload_from_string(contents, content_type=CONTENT_TYPE)
 
-        frame_metadata = {}
-        for frame_index, frame_number in enumerate(sorted(frames, key=int)):
-            frame = frames[frame_number]
-            frame_metadata[frame_number] = {
-                "frame_index": frame_index,
-                **{k: v for k, v in frame.items() if k != "xyz_structure"},
-            }
+        frame_metadata = [
+            frames[frame_number].get("RMSD", 0)
+            for frame_number in sorted(frames, key=int)
+        ]
 
         manifest = {
             "backend": self.name,
             "bucket": self.bucket_name,
             "key": key,
             "format": "multi_xyz",
-            "size": len(contents.encode("utf-8")),
-            "content_type": CONTENT_TYPE,
-            "generation": blob.generation,
             "frames": frame_metadata,
         }
         calc.frame_file_manifest = manifest
@@ -279,17 +266,33 @@ class GCSCalculationFrameStorageBackend:
 
     def read_records(self, calc, manifest):
         xyz_frames = _split_multi_xyz(self.read_multi_xyz(manifest))
+        frame_metadata = manifest["frames"]
         records = {}
-        for frame_number, metadata in manifest["frames"].items():
+
+        if isinstance(frame_metadata, dict):
+            for frame_number, metadata in frame_metadata.items():
+                try:
+                    xyz = xyz_frames[int(metadata["frame_index"])]
+                except (IndexError, KeyError, ValueError) as exc:
+                    raise FileNotFoundError(frame_number) from exc
+                records[str(frame_number)] = {
+                    **_metadata(frame_number, metadata),
+                    "xyz_structure": xyz,
+                }
+            return records
+
+        for index, rmsd in enumerate(frame_metadata):
+            frame_number = str(index + 1)
             try:
-                xyz = xyz_frames[int(metadata["frame_index"])]
-            except (IndexError, KeyError, ValueError) as exc:
+                xyz = xyz_frames[index]
+            except IndexError as exc:
                 raise FileNotFoundError(frame_number) from exc
-            records[str(frame_number)] = {
-                **_metadata(frame_number, metadata),
+            records[frame_number] = {
+                "number": index + 1,
                 "xyz_structure": xyz,
-                "size": len(xyz.encode("utf-8")),
-                "content_type": CONTENT_TYPE,
+                "RMSD": rmsd,
+                "converged": index == len(frame_metadata) - 1,
+                "energy": 0,
             }
         return records
 
@@ -303,7 +306,8 @@ class GCSCalculationFrameStorageBackend:
             return contents
 
         try:
-            return _split_multi_xyz(contents)[int(entry["frame_index"])]
+            index = entry.get("frame_index", int(frame_number) - 1)
+            return _split_multi_xyz(contents)[int(index)]
         except (IndexError, KeyError, ValueError) as exc:
             raise FileNotFoundError(frame_number) from exc
 
@@ -352,8 +356,6 @@ def list_frame_files(calc):
     return {
         frame_number: {
             "backend": "database",
-            "size": len(record["xyz_structure"].encode("utf-8")),
-            "content_type": CONTENT_TYPE,
             **_metadata(frame_number, record),
         }
         for frame_number, record in _legacy_records(calc).items()

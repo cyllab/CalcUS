@@ -1288,6 +1288,32 @@ def get_or_create(params, struct):
         return Property.objects.create(parameters=params, parent_structure=struct)
 
 
+def bulk_update_or_create_properties(params, properties):
+    structure_ids = [prop.parent_structure_id for prop in properties]
+    existing = {}
+    for prop in Property.objects.filter(
+        parent_structure_id__in=structure_ids,
+        parameters=params,
+    ).order_by("parent_structure_id", "id"):
+        existing.setdefault(prop.parent_structure_id, prop)
+
+    to_create = []
+    to_update = []
+    for prop in properties:
+        current = existing.get(prop.parent_structure_id)
+        if current is None:
+            to_create.append(prop)
+        else:
+            current.energy = prop.energy
+            current.geom = prop.geom
+            to_update.append(current)
+
+    if to_create:
+        Property.objects.bulk_create(to_create)
+    if to_update:
+        Property.objects.bulk_update(to_update, ["energy", "geom"])
+
+
 def xtb_handle_ts(calc):
     """Chooses the right driver for the calculation (ORCA or Pysisyphus)"""
 
@@ -1423,7 +1449,6 @@ def xtb_scan(calc):
                 Since we can't get the keys of items created in bulk and we can't set a reference without first creating the objects, I haven't found a way to create both the structures and properties using bulk_update. This is still >2.5 times faster than the naive approach.
             """
             properties = []
-            property_structures = []
 
             for metaind, mol in enumerate(inds[:-1]):
                 r = Structure.objects.get_or_create(
@@ -1448,21 +1473,8 @@ def xtb_scan(calc):
                 prop.geom = True
 
                 properties.append(prop)
-                property_structures.append(r)
 
-            existing_structure_ids = set(
-                Property.objects.filter(
-                    parent_structure__in=property_structures,
-                    parameters=calc.parameters,
-                ).values_list("parent_structure_id", flat=True)
-            )
-            Property.objects.bulk_create(
-                [
-                    prop
-                    for prop in properties
-                    if prop.parent_structure_id not in existing_structure_ids
-                ]
-            )
+            bulk_update_or_create_properties(calc.parameters, properties)
     else:
         with open(os.path.join(local_folder, "xtbopt.xyz")) as f:
             lines = f.readlines()
@@ -2319,7 +2331,6 @@ def orca_scan(calc):
 
     if has_scan:
         properties = []
-        property_structures = []
         energies = []
         with open(os.path.join(local_folder, "calc.relaxscanact.dat")) as f:
             lines = f.readlines()
@@ -2365,21 +2376,8 @@ def orca_scan(calc):
                 prop.energy = E
                 prop.geom = True
                 properties.append(prop)
-                property_structures.append(r)
 
-        existing_structure_ids = set(
-            Property.objects.filter(
-                parent_structure__in=property_structures,
-                parameters=calc.parameters,
-            ).values_list("parent_structure_id", flat=True)
-        )
-        Property.objects.bulk_create(
-            [
-                prop
-                for prop in properties
-                if prop.parent_structure_id not in existing_structure_ids
-            ]
-        )
+        bulk_update_or_create_properties(calc.parameters, properties)
     else:
         with open(os.path.join(local_folder, "calc.xyz")) as f:
             lines = f.readlines()
