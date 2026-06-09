@@ -7,7 +7,7 @@ from unittest import mock, skipUnless
 from django.core.management import call_command
 from django.test import RequestFactory, TransactionTestCase, override_settings
 
-from .calculation_frames import (
+from .storage_backends.calculation_frames import (
     CalculationFrameStorageError,
     GCSCalculationFrameStorageBackend,
     delete_frame_files,
@@ -63,7 +63,9 @@ class CalculationFrameStorageTests(TransactionTestCase):
     def test_legacy_frame_rows_remain_readable(self):
         self._create_legacy_frames()
 
-        with self.assertLogs("frontend.calculation_frames", level="WARNING") as logs:
+        with self.assertLogs(
+            "frontend.storage_backends.calculation_frames", level="WARNING"
+        ) as logs:
             record = read_frame_record(self.calc, 1)
 
         self.assertIn("frame 1", record["xyz_structure"])
@@ -162,7 +164,9 @@ class CalculationFrameStorageTests(TransactionTestCase):
         self.calc.frame_file_manifest = {"1": {"backend": "gcs"}}
         self.calc.save(update_fields=["frame_file_manifest"])
 
-        with self.assertLogs("frontend.calculation_frames", level="WARNING") as logs:
+        with self.assertLogs(
+            "frontend.storage_backends.calculation_frames", level="WARNING"
+        ) as logs:
             record = read_frame_record(self.calc, 1)
 
         self.assertIn("legacy fallback", record["xyz_structure"])

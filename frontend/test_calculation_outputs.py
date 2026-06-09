@@ -4,7 +4,11 @@ from unittest import skipUnless
 
 from django.test import TransactionTestCase, override_settings
 
-from .calculation_outputs import get_backend, read_all_output_files, save_output_files
+from .storage_backends.calculation_outputs import (
+    get_backend,
+    read_all_output_files,
+    save_output_files,
+)
 from .models import Calculation, CalculationOrder, User
 
 

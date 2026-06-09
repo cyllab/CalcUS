@@ -41,7 +41,7 @@ from .models import (
     Subscription,
     User,
 )
-from .calculation_outputs import has_outputs, read_all_output_files
+from .storage_backends.calculation_outputs import has_outputs, read_all_output_files
 from .calcusliveserver import CalcusCloudLiveServer
 
 GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"

@@ -7,11 +7,13 @@ calculation output bucket and records frame metadata on
 """
 
 import logging
-import os
 
-from django.conf import settings
-
-from .models import CalculationFrame
+from ..models import CalculationFrame
+from .gcs import (
+    GCSBucketBackend,
+    output_storage_backend_name,
+    storage_key,
+)
 
 CONTENT_TYPE = "chemical/x-xyz"
 LEGACY_EMPTY_VALUES = ("", "{}", "null")
@@ -24,7 +26,7 @@ class CalculationFrameStorageError(Exception):
 
 
 def _backend_name():
-    return settings.CALCULATION_OUTPUT_STORAGE_BACKEND.lower()
+    return output_storage_backend_name()
 
 
 def _manifest(calc):
@@ -48,16 +50,7 @@ def _has_xyz(xyz):
 
 
 def _gcs_key(calc):
-    return "/".join(
-        part.strip("/")
-        for part in [
-            settings.CALCULATION_OUTPUT_PREFIX,
-            "calculation_frames",
-            str(calc.pk or calc.id),
-            "frames.xyz",
-        ]
-        if part
-    )
+    return storage_key("calculation_frames", calc.pk or calc.id, "frames.xyz")
 
 
 def _is_multi_manifest(manifest):
@@ -85,9 +78,14 @@ def _frame_payloads(frames):
     for frame_number, payload in frames.items():
         frame_number = int(frame_number)
         xyz = _xyz(payload)
+        explicit_metadata = bool(
+            isinstance(payload, dict)
+            and set(payload).intersection(FRAME_METADATA_DEFAULTS)
+        )
         payloads[str(frame_number)] = {
             "xyz_structure": xyz,
             **_metadata(frame_number, payload),
+            "_explicit_metadata": explicit_metadata,
         }
     return payloads
 
@@ -177,7 +175,11 @@ class DatabaseCalculationFrameStorageBackend:
             manifest[frame_number] = {
                 "backend": self.name,
                 "frame_id": str(obj.pk),
-                **{k: v for k, v in frame.items() if k != "xyz_structure"},
+                **{
+                    k: v
+                    for k, v in frame.items()
+                    if k != "xyz_structure" and not k.startswith("_")
+                },
             }
         calc.frame_file_manifest = manifest
         calc.save(update_fields=["frame_file_manifest"])
@@ -201,50 +203,40 @@ class DatabaseCalculationFrameStorageBackend:
         return records[key]["xyz_structure"]
 
 
-class GCSCalculationFrameStorageBackend:
+class GCSCalculationFrameStorageBackend(GCSBucketBackend):
     name = "gcs"
-
-    def __init__(self):
-        self.bucket_name = settings.CALCULATION_OUTPUT_BUCKET
-        self._client = None
-        self._bucket = None
-
-    @property
-    def client(self):
-        if self._client is None:
-            from google.cloud import storage
-
-            if os.getenv("STORAGE_EMULATOR_HOST"):
-                from google.auth.credentials import AnonymousCredentials
-
-                self._client = storage.Client(
-                    project=getattr(settings, "GCP_PROJECT_ID", None) or "calcus-test",
-                    credentials=AnonymousCredentials(),
-                )
-            else:
-                self._client = storage.Client(
-                    project=getattr(settings, "GCP_PROJECT_ID", None)
-                )
-        return self._client
-
-    @property
-    def bucket(self):
-        if self._bucket is None:
-            self._bucket = self.client.bucket(self.bucket_name)
-            if os.getenv("STORAGE_EMULATOR_HOST") and not self._bucket.exists():
-                self._bucket = self.client.create_bucket(self.bucket_name)
-        return self._bucket
 
     def save_many(self, calc, frames):
         contents = _multi_xyz(frames)
         key = _gcs_key(calc)
-        blob = self.bucket.blob(key)
-        blob.upload_from_string(contents, content_type=CONTENT_TYPE)
+        self.upload_text(key, contents, CONTENT_TYPE)
 
-        frame_metadata = [
-            frames[frame_number].get("RMSD", 0)
-            for frame_number in sorted(frames, key=int)
-        ]
+        sorted_frame_numbers = sorted(frames, key=int)
+        needs_full_metadata = any(
+            frames[frame_number].get("_explicit_metadata")
+            and (
+                frames[frame_number].get("energy", 0) != 0
+                or frames[frame_number].get("converged", False)
+                != (index == len(sorted_frame_numbers) - 1)
+            )
+            for index, frame_number in enumerate(sorted_frame_numbers)
+        )
+        if needs_full_metadata:
+            frame_metadata = {
+                frame_number: {
+                    "frame_index": index,
+                    **{
+                        key: frames[frame_number].get(key, default)
+                        for key, default in FRAME_METADATA_DEFAULTS.items()
+                    },
+                }
+                for index, frame_number in enumerate(sorted_frame_numbers)
+            }
+        else:
+            frame_metadata = [
+                frames[frame_number].get("RMSD", 0)
+                for frame_number in sorted_frame_numbers
+            ]
 
         manifest = {
             "backend": self.name,
@@ -258,11 +250,7 @@ class GCSCalculationFrameStorageBackend:
         return manifest
 
     def read_multi_xyz(self, manifest):
-        return (
-            self.client.bucket(manifest.get("bucket") or self.bucket_name)
-            .blob(manifest["key"])
-            .download_as_text()
-        )
+        return self.download_text(manifest)
 
     def read_records(self, calc, manifest):
         xyz_frames = _split_multi_xyz(self.read_multi_xyz(manifest))
@@ -297,11 +285,7 @@ class GCSCalculationFrameStorageBackend:
         return records
 
     def read(self, calc, frame_number, entry):
-        contents = (
-            self.client.bucket(entry.get("bucket") or self.bucket_name)
-            .blob(entry["key"])
-            .download_as_text()
-        )
+        contents = self.download_text(entry)
         if entry.get("format") != "multi_xyz":
             return contents
 
@@ -312,19 +296,8 @@ class GCSCalculationFrameStorageBackend:
             raise FileNotFoundError(frame_number) from exc
 
     def delete_many(self, manifest):
-        from google.api_core.exceptions import NotFound
-
         entries = [manifest] if _is_multi_manifest(manifest) else manifest.values()
-        deleted = set()
-        for entry in entries:
-            blob_id = (entry.get("bucket") or self.bucket_name, entry["key"])
-            if blob_id in deleted:
-                continue
-            deleted.add(blob_id)
-            try:
-                self.client.bucket(blob_id[0]).blob(blob_id[1]).delete()
-            except NotFound:
-                pass
+        self.delete_blobs(entries)
 
 
 _BACKENDS = {

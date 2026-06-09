@@ -1012,12 +1012,12 @@ class Property(models.Model):
         return self.get_negative_freq_index(1)
 
     def get_heavy_property(self, field):
-        from .property_storage import read_property_file
+        from .storage_backends.property_storage import read_property_file
 
         return read_property_file(self, field)
 
     def save(self, *args, **kwargs):
-        from .property_storage import (
+        from .storage_backends.property_storage import (
             HEAVY_PROPERTY_FIELDS,
             empty_value,
             is_empty_value,
@@ -1103,7 +1103,7 @@ class Property(models.Model):
 
 @receiver(pre_delete, sender=Property)
 def property_deleted(sender, instance, **kwargs):
-    from .property_storage import delete_property_files
+    from .storage_backends.property_storage import delete_property_files
 
     transaction.on_commit(lambda: delete_property_files(instance, save=False))
 
@@ -2008,8 +2008,8 @@ class Calculation(models.Model):
 
 @receiver(pre_delete, sender=Calculation)
 def calculation_deleted(sender, instance, **kwargs):
-    from .calculation_outputs import delete_output_files
-    from .calculation_frames import delete_frame_files
+    from .storage_backends.calculation_outputs import delete_output_files
+    from .storage_backends.calculation_frames import delete_frame_files
 
     transaction.on_commit(lambda: delete_output_files(instance, save=False))
     transaction.on_commit(lambda: delete_frame_files(instance, save=False))

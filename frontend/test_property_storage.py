@@ -7,7 +7,11 @@ from django.core.management import call_command
 from django.test import TestCase, TransactionTestCase, override_settings
 
 from .models import Property
-from .property_storage import get_backend, read_property_file, save_property_files
+from .storage_backends.property_storage import (
+    get_backend,
+    read_property_file,
+    save_property_files,
+)
 
 
 class DatabasePropertyStorageTests(TestCase):
@@ -44,7 +48,9 @@ class DatabasePropertyStorageTests(TestCase):
             "uvvis": {"backend": "unsupported", "key": "missing"}
         }
 
-        with self.assertLogs("frontend.property_storage", level="WARNING") as logs:
+        with self.assertLogs(
+            "frontend.storage_backends.property_storage", level="WARNING"
+        ) as logs:
             self.assertEqual(read_property_file(prop, "uvvis"), "legacy uvvis")
 
         self.assertIn("Falling back to legacy Property.uvvis", logs.output[0])

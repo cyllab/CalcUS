@@ -6,11 +6,13 @@ in ``Calculation.output_file_manifest``.
 """
 
 import json
-import os
 
-from django.conf import settings
-
-from .helpers import clean_filename
+from ..helpers import clean_filename
+from .gcs import (
+    GCSBucketBackend,
+    output_storage_backend_name,
+    storage_key,
+)
 
 CONTENT_TYPE = "text/plain"
 LEGACY_EMPTY_VALUES = ("", "{}", "null")
@@ -21,7 +23,7 @@ class CalculationOutputStorageError(Exception):
 
 
 def _backend_name():
-    return settings.CALCULATION_OUTPUT_STORAGE_BACKEND.lower()
+    return output_storage_backend_name()
 
 
 def _manifest(calc):
@@ -42,16 +44,7 @@ def _legacy_outputs(calc):
 
 def _gcs_key(calc, name):
     filename = clean_filename(str(name)).strip("._") or "calc"
-    return "/".join(
-        part.strip("/")
-        for part in [
-            settings.CALCULATION_OUTPUT_PREFIX,
-            "calculations",
-            str(calc.pk or calc.id),
-            f"{filename}.log",
-        ]
-        if part
-    )
+    return storage_key("calculations", calc.pk or calc.id, f"{filename}.log")
 
 
 class DatabaseCalculationOutputBackend:
@@ -70,47 +63,15 @@ class DatabaseCalculationOutputBackend:
             raise FileNotFoundError(name) from exc
 
 
-class GCSCalculationOutputBackend:
+class GCSCalculationOutputBackend(GCSBucketBackend):
     name = "gcs"
-
-    def __init__(self):
-        self.bucket_name = settings.CALCULATION_OUTPUT_BUCKET
-        self._client = None
-        self._bucket = None
-
-    @property
-    def client(self):
-        if self._client is None:
-            from google.cloud import storage
-
-            if os.getenv("STORAGE_EMULATOR_HOST"):
-                from google.auth.credentials import AnonymousCredentials
-
-                self._client = storage.Client(
-                    project=getattr(settings, "GCP_PROJECT_ID", None) or "calcus-test",
-                    credentials=AnonymousCredentials(),
-                )
-            else:
-                self._client = storage.Client(
-                    project=getattr(settings, "GCP_PROJECT_ID", None)
-                )
-        return self._client
-
-    @property
-    def bucket(self):
-        if self._bucket is None:
-            self._bucket = self.client.bucket(self.bucket_name)
-            if os.getenv("STORAGE_EMULATOR_HOST") and not self._bucket.exists():
-                self._bucket = self.client.create_bucket(self.bucket_name)
-        return self._bucket
 
     def save_many(self, calc, outputs):
         manifest = {}
         for name, content in outputs.items():
             text = content or ""
             key = _gcs_key(calc, name)
-            blob = self.bucket.blob(key)
-            blob.upload_from_string(text, content_type=CONTENT_TYPE)
+            blob = self.upload_text(key, text, CONTENT_TYPE)
             manifest[name] = {
                 "backend": self.name,
                 "bucket": self.bucket_name,
@@ -124,24 +85,10 @@ class GCSCalculationOutputBackend:
         return manifest
 
     def read(self, calc, name, metadata):
-        return (
-            self.client.bucket(metadata.get("bucket") or self.bucket_name)
-            .blob(metadata["key"])
-            .download_as_text()
-        )
+        return self.download_text(metadata)
 
     def delete_many(self, manifest):
-        from google.api_core.exceptions import NotFound
-
-        for metadata in manifest.values():
-            try:
-                (
-                    self.client.bucket(metadata.get("bucket") or self.bucket_name)
-                    .blob(metadata["key"])
-                    .delete()
-                )
-            except NotFound:
-                pass
+        self.delete_blobs(manifest.values())
 
 
 _BACKENDS = {

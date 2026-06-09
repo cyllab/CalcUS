@@ -7,9 +7,12 @@ metadata in ``Property.property_file_manifest``.
 
 import json
 import logging
-import os
 
-from django.conf import settings
+from .gcs import (
+    GCSBucketBackend,
+    output_storage_backend_name,
+    storage_key,
+)
 
 CONTENT_TYPE_TEXT = "text/plain"
 CONTENT_TYPE_JSON = "application/json"
@@ -33,15 +36,7 @@ class PropertyFileStorageError(Exception):
 
 
 def _backend_name():
-    return settings.CALCULATION_OUTPUT_STORAGE_BACKEND.lower()
-
-
-def _bucket_name():
-    return settings.CALCULATION_OUTPUT_BUCKET
-
-
-def _prefix():
-    return settings.CALCULATION_OUTPUT_PREFIX
+    return output_storage_backend_name()
 
 
 def _validate_field(field):
@@ -67,7 +62,7 @@ def _manifest(prop):
 
 
 def _property_queryset(prop):
-    from .models import Property
+    from ..models import Property
 
     return Property.objects.filter(pk=prop.pk)
 
@@ -115,16 +110,7 @@ def _content_type(field):
 
 def _gcs_key(prop, field):
     _validate_field(field)
-    return "/".join(
-        part.strip("/")
-        for part in [
-            _prefix(),
-            "properties",
-            str(prop.pk or prop.id),
-            f"{field}.{_extension(field)}",
-        ]
-        if part
-    )
+    return storage_key("properties", prop.pk or prop.id, f"{field}.{_extension(field)}")
 
 
 def _db_updates_for_fields(fields):
@@ -152,39 +138,8 @@ class DatabasePropertyFileBackend:
         return _legacy_value(prop, field)
 
 
-class GCSPropertyFileBackend:
+class GCSPropertyFileBackend(GCSBucketBackend):
     name = "gcs"
-
-    def __init__(self):
-        self.bucket_name = _bucket_name()
-        self._client = None
-        self._bucket = None
-
-    @property
-    def client(self):
-        if self._client is None:
-            from google.cloud import storage
-
-            if os.getenv("STORAGE_EMULATOR_HOST"):
-                from google.auth.credentials import AnonymousCredentials
-
-                self._client = storage.Client(
-                    project=getattr(settings, "GCP_PROJECT_ID", None) or "calcus-test",
-                    credentials=AnonymousCredentials(),
-                )
-            else:
-                self._client = storage.Client(
-                    project=getattr(settings, "GCP_PROJECT_ID", None)
-                )
-        return self._client
-
-    @property
-    def bucket(self):
-        if self._bucket is None:
-            self._bucket = self.client.bucket(self.bucket_name)
-            if os.getenv("STORAGE_EMULATOR_HOST") and not self._bucket.exists():
-                self._bucket = self.client.create_bucket(self.bucket_name)
-        return self._bucket
 
     def save_many(self, prop, values):
         manifest = _stored_manifest(prop).copy()
@@ -198,8 +153,7 @@ class GCSPropertyFileBackend:
 
             text = _serialize(field, value)
             key = _gcs_key(prop, field)
-            blob = self.bucket.blob(key)
-            blob.upload_from_string(text, content_type=_content_type(field))
+            blob = self.upload_text(key, text, _content_type(field))
             manifest[field] = {
                 "backend": self.name,
                 "bucket": self.bucket_name,
@@ -216,27 +170,14 @@ class GCSPropertyFileBackend:
         return manifest
 
     def read(self, prop, field, metadata):
-        contents = (
-            self.client.bucket(metadata.get("bucket") or self.bucket_name)
-            .blob(metadata["key"])
-            .download_as_text()
-        )
-        return _deserialize(field, contents)
+        return _deserialize(field, self.download_text(metadata))
 
     def delete_many(self, manifest):
-        from google.api_core.exceptions import NotFound
-
-        for metadata in manifest.values():
-            if metadata.get("backend") != self.name or "key" not in metadata:
-                continue
-            try:
-                (
-                    self.client.bucket(metadata.get("bucket") or self.bucket_name)
-                    .blob(metadata["key"])
-                    .delete()
-                )
-            except NotFound:
-                pass
+        self.delete_blobs(
+            metadata
+            for metadata in manifest.values()
+            if metadata.get("backend") == self.name
+        )
 
 
 _BACKENDS = {
