@@ -134,6 +134,7 @@ from .helpers import (
 from .cloud_job import submit_cloud_job
 from .calculation_outputs import has_outputs, read_all_output_files
 from .calculation_frames import read_all_frame_records, read_frame_record
+from .property_storage import read_property_file
 
 from shutil import rmtree
 from django.db.models.functions import Lower
@@ -3403,7 +3404,7 @@ def uvvis(request, pk):
     if not can_view_structure(prop.parent_structure, request.user):
         return HttpResponse(status=404)
 
-    response = HttpResponse(prop.uvvis, content_type="text/csv")
+    response = HttpResponse(read_property_file(prop, "uvvis"), content_type="text/csv")
     response["Content-Disposition"] = (
         f"attachment; filename=uvvis_{prop.parent_structure.id}.csv"
     )
@@ -3539,10 +3540,11 @@ def get_mo_cube(request):
         ):
             return HttpResponse(status=404)
 
-        if len(prop.molden) == 0:
+        molden_data = read_property_file(prop, "molden")
+        if len(molden_data) == 0:
             return HttpResponse(status=204)
 
-        molden = base64.b64decode(prop.molden)
+        molden = base64.b64decode(molden_data)
         molden = gzip.decompress(molden).decode("utf-8")
 
         cube = get_cube_from_molden(molden, orb)
@@ -3569,10 +3571,11 @@ def get_mo_diagram(request, pk):
     ):
         return HttpResponse(status=404)
 
-    if len(prop.mo_diagram) == 0:
+    mo_diagram = read_property_file(prop, "mo_diagram")
+    if len(mo_diagram) == 0:
         return HttpResponse(status=204)
 
-    data = base64.b64decode(prop.mo_diagram)
+    data = base64.b64decode(mo_diagram)
     clear_data = gzip.decompress(data)
     return HttpResponse(clear_data)
 
@@ -3590,10 +3593,11 @@ def get_esp_cube(request):
         if not can_view_structure(prop.parent_structure, request.user):
             return HttpResponse(status=404)
 
-        if len(prop.esp) == 0:
+        esp_data = read_property_file(prop, "esp")
+        if len(esp_data) == 0:
             return HttpResponse(status=204)
 
-        cubes = json.loads(prop.esp)
+        cubes = json.loads(esp_data)
 
         _density = base64.b64decode(cubes["density"])
         _esp = base64.b64decode(cubes["esp"])
@@ -3670,8 +3674,9 @@ def ir_spectrum(request, pk):
     if not can_view_structure(prop.parent_structure, request.user):
         return HttpResponse(status=404)
 
-    if prop.ir_spectrum != "":
-        response = HttpResponse(prop.ir_spectrum, content_type="text/csv")
+    ir_spectrum_data = read_property_file(prop, "ir_spectrum")
+    if ir_spectrum_data != "":
+        response = HttpResponse(ir_spectrum_data, content_type="text/csv")
         response["Content-Disposition"] = (
             f"attachment; filename=ir_{prop.parent_structure.id}.csv"
         )
@@ -4065,7 +4070,10 @@ def get_vib_animation(request):
 
         num = int(clean(request.POST["num"]))
 
-        animation = prop.freq_animations[num]
+        try:
+            animation = read_property_file(prop, "freq_animations")[num]
+        except IndexError:
+            return HttpResponse(status=404)
         return HttpResponse(animation)
 
 

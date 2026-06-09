@@ -970,6 +970,7 @@ class Property(models.Model):
     freq_list = ArrayField(models.FloatField(), default=list)
     freq_animations = ArrayField(models.TextField(), default=list)
     ir_spectrum = models.TextField(default="")
+    property_file_manifest = models.JSONField(default=dict, blank=True)
 
     simple_nmr = models.CharField(default="", max_length=100000)  # TODO: to array
     charges = models.CharField(default="", max_length=100000)  # TODO: to array
@@ -1010,15 +1011,62 @@ class Property(models.Model):
     def most_negative_freq_index(self):
         return self.get_negative_freq_index(1)
 
+    def get_heavy_property(self, field):
+        from .property_storage import read_property_file
+
+        return read_property_file(self, field)
+
+    def save(self, *args, **kwargs):
+        from .property_storage import (
+            HEAVY_PROPERTY_FIELDS,
+            empty_value,
+            is_empty_value,
+            save_property_files,
+        )
+
+        backend_name = settings.CALCULATION_OUTPUT_STORAGE_BACKEND.lower()
+        if backend_name == "database":
+            return super().save(*args, **kwargs)
+
+        update_fields = kwargs.get("update_fields")
+        if update_fields is None:
+            fields_to_check = HEAVY_PROPERTY_FIELDS
+        else:
+            update_fields_set = set(update_fields)
+            fields_to_check = [
+                field for field in HEAVY_PROPERTY_FIELDS if field in update_fields_set
+            ]
+
+        heavy_values = {}
+        for field in fields_to_check:
+            value = self.__dict__.get(field, empty_value(field))
+            if update_fields is not None or not is_empty_value(field, value):
+                heavy_values[field] = value
+
+        if not heavy_values:
+            return super().save(*args, **kwargs)
+
+        originals = {field: self.__dict__.get(field) for field in heavy_values}
+        for field in heavy_values:
+            self.__dict__[field] = empty_value(field)
+
+        if update_fields is not None:
+            kwargs["update_fields"] = list(set(update_fields) | set(heavy_values))
+
+        super().save(*args, **kwargs)
+        save_property_files(self, heavy_values, backend_name=backend_name)
+
+        for field, value in originals.items():
+            self.__dict__[field] = value
+
     def get_distorted_structure(self, scale=0.87, negative_freq_num=1):
+        freq_animations = self.get_heavy_property("freq_animations")
         mode_ind = self.get_negative_freq_index(negative_freq_num)
-        if mode_ind is None or mode_ind >= len(self.freq_animations):
+        if mode_ind is None or mode_ind >= len(freq_animations):
             return ""
 
         distorted_xyz = []
-        for line in (
-            self.freq_animations[mode_ind].replace("\xa0", " ").splitlines()[2:]
-        ):
+        for line in freq_animations[mode_ind].replace("\xa0", " ").splitlines()[2:]:
             if line.strip() == "":
                 continue
 
@@ -1038,7 +1086,7 @@ class Property(models.Model):
 
     @property
     def has_uvvis(self):
-        return len(self.uvvis) > 0
+        return len(self.get_heavy_property("uvvis")) > 0
 
     @property
     def has_nmr(self):
@@ -1046,11 +1094,18 @@ class Property(models.Model):
 
     @property
     def has_mo(self):
-        return len(self.mo_diagram) > 0
+        return len(self.get_heavy_property("mo_diagram")) > 0
 
     @property
     def has_esp(self):
-        return len(self.esp) > 0
+        return len(self.get_heavy_property("esp")) > 0
+
+
+@receiver(pre_delete, sender=Property)
+def property_deleted(sender, instance, **kwargs):
+    from .property_storage import delete_property_files
+
+    transaction.on_commit(lambda: delete_property_files(instance, save=False))
 
 
 class ShowcaseProperty(Property):
