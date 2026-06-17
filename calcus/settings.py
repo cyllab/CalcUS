@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 
+from django.core.exceptions import ImproperlyConfigured
 from frontend.helpers import get_random_string
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -65,6 +66,11 @@ ANALYTICS_API_SECRET = os.getenv("ANALYTICS_API_SECRET", "")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_ENDPOINT_SECRET = os.getenv("STRIPE_ENDPOINT_SECRET", "")
+
+if STRIPE_PUBLISHABLE_KEY.startswith("sk_"):
+    raise ImproperlyConfigured(
+        "STRIPE_PUBLISHABLE_KEY appears to be a secret key (must start with 'pk_')."
+    )
 
 if STRIPE_SECRET_KEY and (IS_CLOUD or IS_TEST):
     import stripe
