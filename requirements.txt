@@ -1,6 +1,6 @@
 basis-set-exchange
 bleach
-ccinput>=1.11.0
+ccinput>=1.12.0
 celery[redis]
 django-cors-headers
 cryptography
@@ -25,7 +25,7 @@ periodictable
 pre-commit
 psutil==5.7.2
 psycopg2-binary
-git+https://github.com/RaphaelRobidas/pysisyphus@c26992423c52ba6b27b2509e3ad40dc1b3b1d95e
+git+https://github.com/RaphaelRobidas/pysisyphus@9a1931cdea21ec7c5380229106317811ca9befe9
 python-magic
 rdkit
 requests
