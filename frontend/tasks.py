@@ -4522,17 +4522,33 @@ def analyse_opt_Gaussian(calc):
 
 def get_Gaussian_xyz(text):
     lines = text.split("\n")
-    ind = len(lines) - 1
-    while lines[ind].find("Coordinates (Angstroms)") == -1:
-        ind -= 1
+    coordinate_header = next(
+        (
+            ind
+            for ind in range(len(lines) - 1, -1, -1)
+            if "Coordinates (Angstroms)" in lines[ind]
+        ),
+        None,
+    )
+    if coordinate_header is None:
+        raise ValueError("No Gaussian coordinate table was found")
 
-    ind += 3
+    ind = coordinate_header + 3
     s = []
-    while lines[ind].find("----------") == -1:
+    while ind < len(lines) and "----------" not in lines[ind]:
         if lines[ind].strip() != "":
-            _, n, _, x, y, z = lines[ind].split()
-            s.append((ATOMIC_SYMBOL[int(n)], x, y, z))
+            try:
+                _, n, _, x, y, z = lines[ind].split()
+                s.append((ATOMIC_SYMBOL[int(n)], x, y, z))
+            except (KeyError, ValueError) as exc:
+                raise ValueError("The Gaussian coordinate table is malformed") from exc
         ind += 1
+
+    if ind == len(lines):
+        raise ValueError("The Gaussian coordinate table is incomplete")
+    if len(s) == 0:
+        raise ValueError("The Gaussian coordinate table is empty")
+
     xyz = f"{len(s)}\n\n"
     for l in s:
         xyz += "{} {} {} {}\n".format(*l)

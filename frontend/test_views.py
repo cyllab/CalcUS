@@ -991,6 +991,25 @@ class FileInputTests(TestCase):
         self.assertEqual(Molecule.objects.count(), 1)
         self.assertEqual(Ensemble.objects.count(), 1)
 
+    def test_invalid_gaussian_output_returns_helpful_error(self):
+        output = b"Gaussian calculation stopped before coordinates were written"
+        f = SimpleUploadedFile("incomplete.log", output, content_type="text/plain")
+
+        params = basic_params.copy()
+        params["structure"] = ""
+        params["file_structure"] = [f]
+        params["calc_combine_files"] = ("",)
+        params["calc_parse_filenames"] = ""
+
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No Gaussian coordinate table was found")
+        self.assertContains(response, "Only Gaussian .log/.out files are supported")
+        self.assertEqual(CalculationOrder.objects.count(), 0)
+        self.assertEqual(Molecule.objects.count(), 0)
+        self.assertEqual(Ensemble.objects.count(), 0)
+
     def test_iso_8859_1(self):
         with open(os.path.join(tests_dir, "ethanol_iso-8859-1.xyz"), "rb") as f:
             xyz = f.read()

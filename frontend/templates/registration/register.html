@@ -49,6 +49,7 @@
                             <li onclick="change_tab('student');" id="tab_student" {% if acc_type == "student" %} class="is-active"{% endif %}><a>Student</a></li>
                         </ul>
                     </div>
+                    {% include "registration/_recaptcha_status.html" %}
                     <form method="post" id="form_researcher" style="display: none;">
                         <center>
                         {% csrf_token %} {{ form_researcher|bulma }}

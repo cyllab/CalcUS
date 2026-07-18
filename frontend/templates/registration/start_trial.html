@@ -29,6 +29,7 @@
                         <center>
                         Please confirm that you are not a robot.
                         {% csrf_token %} {{ form|bulma }}
+                        {% include "registration/_recaptcha_status.html" %}
                         </center>
                         <button class="control button is-primary" type="Submit">Try CalcUS now</button>
                     </form>

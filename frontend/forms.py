@@ -82,10 +82,11 @@ class ResearcherCreateForm(UserCreationForm):
         return user
 
     def clean_email(self):
-        validate_email(self.cleaned_data["email"])
-        if User.objects.filter(email=self.cleaned_data["email"]).exists():
+        email = User.objects.normalize_email(self.cleaned_data["email"])
+        validate_email(email)
+        if User.objects.filter(email__iexact=email).exists():
             raise ValidationError(self.fields["email"].error_messages["exists"])
-        return self.cleaned_data["email"]
+        return email
 
 
 class StudentCreateForm(forms.ModelForm):
@@ -200,8 +201,13 @@ class TrialUserCreateForm(forms.ModelForm):
 
 
 class UserLoginForm(AuthenticationForm):
-    def __init__(self, *args, **kwargs):
-        super(UserLoginForm, self).__init__(*args, **kwargs)
+    error_messages = {
+        "invalid_login": (
+            "We couldn't sign you in with that email and password. "
+            "Check both fields and try again."
+        ),
+        "inactive": "This account is inactive.",
+    }
 
     if settings.IS_CLOUD or settings.IS_TEST:
         captcha = ReCaptchaField()
@@ -221,10 +227,14 @@ class CreateFullAccountForm(SetPasswordForm, ModelForm):
         fields = ["email"]
 
     def clean_email(self):
-        validate_email(self.cleaned_data["email"])
-        if User.objects.filter(email=self.cleaned_data["email"]).exists():
-            raise ValidationError(self.fields["email"].error_messages["exists"])
-        return self.cleaned_data["email"]
+        email = User.objects.normalize_email(self.cleaned_data["email"])
+        validate_email(email)
+        users_with_email = User.objects.filter(email__iexact=email)
+        if self.instance.pk:
+            users_with_email = users_with_email.exclude(pk=self.instance.pk)
+        if users_with_email.exists():
+            raise ValidationError("This email has already been used")
+        return email
 
     def save(self, commit=True):
         user = super(CreateFullAccountForm, self).save(commit=False)

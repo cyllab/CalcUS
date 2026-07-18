@@ -24,12 +24,16 @@
             <section class="section">
                 {% if form.errors or next %}
                 <div class="field has-addons has-addons-centered">
-                    <div class="notification is-danger">
-                        {% if form.errors %}
-                        <p><b>Your email and password didn't match. Please try again.</b></p> 
-                        {% endif %} 
+                    <div class="notification is-danger" role="alert">
+                        {% if form.captcha.errors %}
+                        <p><b>Security verification failed. Complete reCAPTCHA and try again.</b></p>
+                        {% elif form.non_field_errors %}
+                        <p><b>We couldn't sign you in with that email and password. Check both fields and try again.</b></p>
+                        {% elif form.errors %}
+                        <p><b>Check the highlighted fields and try again.</b></p>
+                        {% endif %}
                         {% if next %}
-                        <p><b>Please login to see this page.</b></p>
+                        <p><b>Sign in to continue to this page.</b></p>
                         {% endif %}
                     </div>
                 </div>
@@ -39,8 +43,9 @@
                         <form method="post" action="{% url 'login' %}">
                             <center>
                             {% csrf_token %} {{ form|bulma }}
+                            {% include "registration/_recaptcha_status.html" %}
                             </center>
-                            <input class="control button is-primary" type="submit" value="Login" />
+                            <input class="control button is-primary" type="submit" value="Sign in" />
                             <input type="hidden" name="next" value="{{ next }}" />
                         </form>
                     </div>

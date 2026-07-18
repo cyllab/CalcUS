@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from .helpers import get_xyz_from_Gaussian_input
+from .tasks import get_Gaussian_xyz
 from django.test import TestCase
 
 
@@ -110,3 +111,24 @@ H       2.857594      -2.183310      -1.540327"""
                 """
         parsed_xyz = get_xyz_from_Gaussian_input(inp)
         self.assertEqual(parsed_xyz, self.xyz)
+
+    def test_parse_gaussian_output_coordinates(self):
+        inp = """Standard orientation:
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          6           0        0.000000    0.000000    0.000000
+      2          1           0        0.000000    0.000000    1.000000
+ ---------------------------------------------------------------------"""
+
+        parsed_xyz = get_Gaussian_xyz(inp)
+
+        self.assertEqual(
+            parsed_xyz,
+            "2\n\nC 0.000000 0.000000 0.000000\nH 0.000000 0.000000 1.000000\n",
+        )
+
+    def test_parse_gaussian_output_without_coordinates(self):
+        with self.assertRaisesRegex(ValueError, "No Gaussian coordinate table"):
+            get_Gaussian_xyz("This is not a complete Gaussian output file")

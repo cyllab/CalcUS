@@ -1553,7 +1553,17 @@ def handle_file_upload(ff, is_local, verify=False):
         else:
             xyz = in_file
     elif ext in ["mol", "mol2", "sdf", "log", "out", "com", "gjf"]:
-        xyz = generate_xyz_structure(False, in_file, ext)
+        try:
+            xyz = generate_xyz_structure(False, in_file, ext)
+        except ValueError as exc:
+            if ext not in ["log", "out"]:
+                raise
+            logger.warning(f"Could not parse Gaussian output: {exc}")
+            return (
+                f"Could not read a structure from {fname}: {exc}. "
+                "Only Gaussian .log/.out files are supported. Please upload a "
+                "complete Gaussian output file or convert the structure to .xyz."
+            )
     else:
         return "Unknown file extension (Known formats: .mol, .mol2, .xyz, .sdf, .com, .gjf)"
 

@@ -65,6 +65,16 @@ STATUS_COLORS = {0: "#202f26", 1: "#e2e100", 2: "#02b200", 3: "#b21b00"}
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
+    @classmethod
+    def normalize_email(cls, email):
+        """Treat the entire email address as case-insensitive."""
+        normalized_email = super().normalize_email(email)
+        return normalized_email.casefold() if normalized_email else normalized_email
+
+    def get_by_natural_key(self, email):
+        """Allow existing mixed-case accounts to log in with any casing."""
+        return self.get(**{f"{self.model.USERNAME_FIELD}__iexact": email})
+
     def _create_user(self, email, password, **extra_fields):
         if not email:
             raise ValueError("No email provided")
@@ -109,6 +119,10 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = UserManager()
+
+    def clean(self):
+        super().clean()
+        self.email = self.__class__.objects.normalize_email(self.email)
 
     is_temporary = models.BooleanField(default=False)
     is_trial = models.BooleanField(default=False)
