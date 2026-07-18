@@ -1936,7 +1936,11 @@ def launch_orca_calc(calc, files):
                 )
 
         ret = system(
-            "$EBROOTORCA/orca calc.inp", "calc.out", software="ORCA", calc_id=calc.id
+            "$EBROOTORCA/orca calc.inp",
+            "calc.out",
+            software="ORCA",
+            calc_id=calc.id,
+            cache_files=files,
         )
     else:
         ret = system(
@@ -1944,6 +1948,7 @@ def launch_orca_calc(calc, files):
             os.path.join(local_folder, "calc.out"),
             software="ORCA",
             calc_id=calc.id,
+            cache_files=files,
         )
 
     cancelled = False

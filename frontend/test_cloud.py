@@ -25,6 +25,7 @@ import shutil
 from unittest import mock, skipIf
 
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -679,11 +680,10 @@ class StripeTests(CalcusCloudLiveServer):
             )
         )
         cancel_btn.click()
-
         confirm_btn = WebDriverWait(self.driver, 2).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, '[data-test="confirm"]'))
+            EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-test="confirm"]'))
         )
-        confirm_btn.click()
+        confirm_btn.send_keys(Keys.ENTER)
 
         try:
             reason_btn = WebDriverWait(self.driver, 2).until(

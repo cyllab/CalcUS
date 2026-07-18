@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import os
 import string
 import secrets
 import bleach
@@ -91,6 +92,27 @@ def get_random_readable_code(n=5):
     wordfile = xp.locate_wordfile()
     words = xp.generate_wordlist(wordfile=wordfile, min_length=n, max_length=n + 2)
     return xp.generate_xkcdpassword(words)
+
+
+def can_run_in_sync_gunicorn_timeout(calculation_timeout):
+    """Return whether a calculation safely fits in one Gunicorn request.
+
+    Synchronous cloud calculations need time for request setup, result storage,
+    and cleanup in addition to the calculation itself. Keep half of the worker
+    timeout in reserve for that overhead. If the configured timeout is absent
+    or invalid, use the safer asynchronous execution path.
+    """
+    try:
+        gunicorn_timeout = float(os.environ["GUNICORN_TIMEOUT"])
+        calculation_timeout = float(calculation_timeout)
+    except (KeyError, TypeError, ValueError):
+        return False
+
+    return (
+        gunicorn_timeout > 0
+        and calculation_timeout >= 0
+        and calculation_timeout * 2 < gunicorn_timeout
+    )
 
 
 def job_triage(calc):

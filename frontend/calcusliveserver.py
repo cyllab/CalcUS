@@ -42,9 +42,9 @@ from celery.contrib.testing.worker import start_worker
 from celery.contrib.abortable import AbortableAsyncResult
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.core.management import call_command
+from django.core.management import call_command, CommandError
 from django.conf import settings
-from django.db import close_old_connections
+from django.db import OperationalError, close_old_connections
 
 from .models import (
     Calculation,
@@ -107,6 +107,31 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         except Exception:
             pass
         cls.driver = cls._make_driver()
+
+    @staticmethod
+    def _is_database_deadlock(error):
+        while error is not None:
+            if "deadlock detected" in str(error).lower():
+                return True
+            error = error.__cause__ or error.__context__
+        return False
+
+    @classmethod
+    def _flush_database_for_retry(cls, max_attempts=3):
+        """Flush between Selenium retries after in-flight requests finish."""
+        for attempt in range(1, max_attempts + 1):
+            close_old_connections()
+            try:
+                call_command("flush", verbosity=0, interactive=False)
+                return
+            except (CommandError, OperationalError) as error:
+                if not cls._is_database_deadlock(error) or attempt == max_attempts:
+                    raise
+                print(
+                    f"Database flush deadlocked; retrying ({attempt}/{max_attempts})",
+                    flush=True,
+                )
+                time.sleep(0.25 * attempt)
 
     @classmethod
     def _restart_celery_worker(cls):
@@ -207,7 +232,7 @@ class CalcusLiveServer(StaticLiveServerTestCase):
                     )
                     self.__class__._restart_driver()
                     close_old_connections()
-                    call_command("flush", verbosity=0, interactive=False)
+                    self.__class__._flush_database_for_retry()
 
                 tasks.cache_ind = 1
                 attempt_case = self.__class__(self._testMethodName)
@@ -298,6 +323,18 @@ class CalcusLiveServer(StaticLiveServerTestCase):
         )
         self.name_patcher.start()
         self.addCleanup(self.name_patcher.stop)
+
+    def tearDown(self):
+        # Stop browser requests before TransactionTestCase takes exclusive table
+        # locks for its database flush. In-flight Silk/session writes can
+        # otherwise deadlock PostgreSQL's TRUNCATE statements.
+        try:
+            self.driver.get("about:blank")
+        except selenium.common.exceptions.WebDriverException:
+            pass
+        close_old_connections()
+        time.sleep(0.1)
+        super().tearDown()
 
     def cleanupCalculations(self):
         for c in Calculation.objects.all():
@@ -2524,12 +2561,38 @@ class CalcusCloudLiveServer(CalcusLiveServer):
         )
 
         tab.click()
+        form_locator = (By.ID, "form_" + acc_type)
+        WebDriverWait(self.driver, 2).until(
+            EC.visibility_of_element_located(form_locator)
+        )
         if acc_type == "researcher":
-            self.driver.find_element(By.ID, "id_email").send_keys(email)
-            self.driver.find_element(By.ID, "id_password1").send_keys(password)
-            self.driver.find_element(By.ID, "id_password2").send_keys(password)
+            email_field = self.driver.find_element(By.ID, "id_email")
+            password1_field = self.driver.find_element(By.ID, "id_password1")
+            password2_field = self.driver.find_element(By.ID, "id_password2")
+            self.driver.execute_script(
+                "const fields = arguments[0];"
+                "const values = arguments[1];"
+                "fields.forEach((field, index) => {"
+                "  field.value = values[index];"
+                "  field.dispatchEvent(new Event('input', {bubbles: true}));"
+                "  field.dispatchEvent(new Event('change', {bubbles: true}));"
+                "});",
+                [email_field, password1_field, password2_field],
+                [email, password, password],
+            )
+            WebDriverWait(self.driver, 2).until(
+                lambda driver: email_field.get_attribute("value") == email
+                and password1_field.get_attribute("value") == password
+                and password2_field.get_attribute("value") == password
+            )
             if opt_in_emails:
-                self.driver.find_element(By.ID, "id_opted_in_emails").click()
+                opt_in = self.driver.find_element(By.ID, "id_opted_in_emails")
+                self.driver.execute_script(
+                    "arguments[0].checked = true;"
+                    "arguments[0].dispatchEvent(new Event('change', {bubbles: true}));",
+                    opt_in,
+                )
+                WebDriverWait(self.driver, 2).until(lambda driver: opt_in.is_selected())
 
             if settings.IS_TEST:
                 self.set_test_recaptcha_response((By.ID, "form_" + acc_type))

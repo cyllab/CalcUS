@@ -2415,7 +2415,7 @@ class StudentTests(CalcusLiveServer):
         self.assertEqual(self.get_number_conformers(), 1)
 
     def test_proj(self):
-        student = User.objects.get(email="Student@test.com")
+        student = User.objects.get(email="student@test.com")
         proj = Project.objects.create(author=student, name="TestProj")
 
         params = {

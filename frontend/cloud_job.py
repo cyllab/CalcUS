@@ -5,7 +5,7 @@ import uuid
 from django.conf import settings
 
 from .environment_variables import IS_TEST
-from .helpers import job_triage
+from .helpers import can_run_in_sync_gunicorn_timeout, job_triage
 
 if settings.IS_CLOUD:
     from google.cloud import batch_v1
@@ -240,7 +240,7 @@ def send_gcloud_task(url, payload, compute=True):
 
     if compute:
         queue = "xtb-compute"
-        url = getattr(settings, f"COMPUTE_SMALL_HOST_URL") + url
+        url = getattr(settings, "COMPUTE_SMALL_HOST_URL") + url
     else:
         queue = "actions"
         url = settings.ACTION_HOST_URL + url
@@ -261,7 +261,7 @@ def send_gcloud_task(url, payload, compute=True):
 
 def submit_cloud_job(calc):
     nproc, timeout = job_triage(calc)
-    if nproc == 1:
+    if nproc == 1 and can_run_in_sync_gunicorn_timeout(timeout):
         send_gcloud_task("/cloud_calc/", str(calc.id))
     else:
         create_container_job(calc, nproc, timeout)

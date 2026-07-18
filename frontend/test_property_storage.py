@@ -128,7 +128,9 @@ class GCSPropertyStorageTests(TransactionTestCase):
             call_command("migrate_property_files", dry_run=True, stdout=stdout)
 
         prop.refresh_from_db()
-        self.assertIn("Would migrate", stdout.getvalue())
+        self.assertIn(
+            "Would process 3 legacy Property field payload(s)", stdout.getvalue()
+        )
         self.assertEqual(prop.property_file_manifest, {})
         self.assertEqual(prop.uvvis, "Wavelength,Absorbance\n300,1\n")
         self.assertEqual(prop.freq_animations, ["2\nCalcUS\nH 0 0 0 0 0 1\n"])
@@ -151,7 +153,7 @@ class GCSPropertyStorageTests(TransactionTestCase):
                 freq_metadata["key"]
             )
 
-            self.assertIn("Migrated 1", stdout.getvalue())
+            self.assertIn("Uploaded 3 field payload(s)", stdout.getvalue())
             self.assertTrue(uvvis_blob.exists())
             self.assertTrue(freq_blob.exists())
             self.assertEqual(
