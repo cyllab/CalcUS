@@ -640,6 +640,21 @@ def system(
             time.sleep(1)
 
 
+def _normalize_cached_input_line(line):
+    """Normalize harmless command aliases when matching test calculation caches."""
+    stripped = line.strip()
+
+    if stripped.startswith("xtb ") or stripped.startswith("crest "):
+        parts = [i for i in stripped.split() if i not in ["--gxtb", "-gxtb"]]
+        return " ".join(parts)
+
+    if stripped.startswith("!"):
+        parts = ["xtb2" if i.lower() == "gxtb" else i for i in stripped.split()]
+        return " ".join(parts)
+
+    return stripped
+
+
 def files_are_equal(f, input_file):
     with open(f) as ff:
         lines = ff.readlines()
@@ -656,13 +671,33 @@ def files_are_equal(f, input_file):
         if l1.lower().find("maxcore") != -1 and l2.lower().find("maxcore") != -1:
             continue
 
-        if l1 != l2:
+        if _normalize_cached_input_line(l1) != _normalize_cached_input_line(l2):
             return False
 
     return True
 
 
+def _cache_candidate_has_failed_output(cache_dir):
+    failure_markers = [
+        "abnormal termination",
+        "fatal error",
+        "crest terminated with i/o errors",
+    ]
+    for relpath in ["calc.out", "calc.log"]:
+        path = os.path.join(cache_dir, relpath)
+        if not os.path.isfile(path):
+            continue
+        with open(path, errors="ignore") as f:
+            output = f.read().lower()
+        if any(marker in output for marker in failure_markers):
+            return True
+    return False
+
+
 def _cache_candidate_is_usable(cache_dir, required_files=None):
+    if _cache_candidate_has_failed_output(cache_dir):
+        return False
+
     if required_files is None:
         return True
 

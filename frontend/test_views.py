@@ -17,9 +17,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import io
 import os
 import copy
+import zipfile
 from shutil import copyfile, rmtree
+from unittest import mock
 
 from django.core.management import call_command
 from django.test import TestCase, Client, RequestFactory
@@ -28,6 +31,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 from .gen_calc import gen_calc
 from .calcusliveserver import SCR_DIR
+from .storage_backends.calculation_outputs import save_output_files
 from .views import IndexView
 from .models import (
     BasicStep,
@@ -2275,6 +2279,278 @@ class CalculationTests(TestCase):
         )
 
         return order
+
+    def create_project_log_calc(
+        self,
+        proj,
+        ensemble,
+        structure,
+        output,
+        step=None,
+        params=None,
+        result_ensemble=None,
+    ):
+        if step is None:
+            step = BasicStep.objects.get(name="Geometrical Optimisation")
+        if params is None:
+            params = Parameters.objects.create(
+                charge=0,
+                multiplicity=1,
+                software="xtb",
+                method="GFN2-xTB",
+            )
+
+        order = CalculationOrder.objects.create(
+            name="",
+            author=self.user,
+            project=proj,
+            step=step,
+            parameters=params,
+            ensemble=ensemble,
+            structure=structure,
+            result_ensemble=result_ensemble,
+            date=timezone.now(),
+        )
+        calc = Calculation.objects.create(
+            order=order,
+            structure=structure,
+            step=step,
+            parameters=params,
+            result_ensemble=result_ensemble,
+            status=2,
+        )
+        save_output_files(calc, {"calc": output}, backend_name="database")
+        return calc
+
+    def download_project_log_files(self, proj, scope="flagged", details="full"):
+        response = self.client.post(
+            "/download_project/",
+            {
+                "id": proj.id,
+                "data": "logs",
+                "scope": scope,
+                "details": details,
+                "folders": False,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+
+        with zipfile.ZipFile(io.BytesIO(response.content), "r") as archive:
+            log_files = [name for name in archive.namelist() if name.endswith(".log")]
+            contents = [archive.read(name).decode("utf-8") for name in log_files]
+
+        return log_files, contents
+
+    def test_download_project_flagged_ensembles_with_duplicate_names_keeps_distinct_logs(
+        self,
+    ):
+        proj = Project.objects.create(name="Project Download", author=self.user)
+        mol = Molecule.objects.create(name="DupMol", project=proj, inchi="dummy")
+        params = Parameters.objects.create(
+            charge=0,
+            multiplicity=1,
+            software="xtb",
+            method="GFN2-xTB",
+        )
+
+        expected_contents = []
+        for suffix in ["A", "B"]:
+            ensemble = Ensemble.objects.create(
+                name="Duplicate",
+                parent_molecule=mol,
+                flagged=True,
+            )
+            structure = Structure.objects.create(parent_ensemble=ensemble, number=1)
+            output = f"LOG FROM ENSEMBLE {suffix}"
+            self.create_project_log_calc(
+                proj, ensemble, structure, output, params=params
+            )
+            expected_contents.append(output)
+
+        log_files, contents = self.download_project_log_files(proj)
+
+        self.assertEqual(len(log_files), 2)
+        self.assertEqual(len(set(log_files)), 2)
+        self.assertCountEqual(contents, expected_contents)
+
+    def test_download_project_duplicate_flagged_names_with_repeated_calcs_do_not_overwrite(
+        self,
+    ):
+        proj = Project.objects.create(name="Duplicate Repeated Calcs", author=self.user)
+        mol = Molecule.objects.create(name="DupMol", project=proj, inchi="dummy")
+        params = Parameters.objects.create(
+            charge=0,
+            multiplicity=1,
+            software="xtb",
+            method="GFN2-xTB",
+        )
+
+        expected_contents = []
+        for ensemble_ind in range(2):
+            ensemble = Ensemble.objects.create(
+                name="Duplicate",
+                parent_molecule=mol,
+                flagged=True,
+            )
+            structure = Structure.objects.create(parent_ensemble=ensemble, number=1)
+            for calc_ind in range(2):
+                output = f"LOG FROM ENSEMBLE {ensemble_ind} CALC {calc_ind}"
+                self.create_project_log_calc(
+                    proj, ensemble, structure, output, params=params
+                )
+                expected_contents.append(output)
+
+        log_files, contents = self.download_project_log_files(proj)
+
+        self.assertEqual(len(log_files), 4)
+        self.assertEqual(len(set(log_files)), 4)
+        self.assertCountEqual(contents, expected_contents)
+
+    def test_download_project_logs_are_zipped_in_memory_without_tmp_directory(self):
+        proj = Project.objects.create(name="In Memory Download", author=self.user)
+        mol = Molecule.objects.create(name="DupMol", project=proj, inchi="dummy")
+        ensemble = Ensemble.objects.create(
+            name="Duplicate",
+            parent_molecule=mol,
+            flagged=True,
+        )
+        structure = Structure.objects.create(parent_ensemble=ensemble, number=1)
+        self.create_project_log_calc(proj, ensemble, structure, "IN MEMORY LOG")
+
+        with mock.patch("frontend.views.os.mkdir") as mkdir:
+            log_files, contents = self.download_project_log_files(proj)
+
+        mkdir.assert_not_called()
+        self.assertEqual(len(log_files), 1)
+        self.assertEqual(contents, ["IN MEMORY LOG"])
+
+    def test_download_project_many_duplicate_flagged_names_keeps_all_logs(self):
+        proj = Project.objects.create(name="Many Duplicates", author=self.user)
+        mol = Molecule.objects.create(name="DupMol", project=proj, inchi="dummy")
+        params = Parameters.objects.create(
+            charge=0,
+            multiplicity=1,
+            software="xtb",
+            method="GFN2-xTB",
+        )
+
+        expected_contents = []
+        for ind in range(4):
+            ensemble = Ensemble.objects.create(
+                name="Duplicate",
+                parent_molecule=mol,
+                flagged=True,
+            )
+            structure = Structure.objects.create(parent_ensemble=ensemble, number=1)
+            output = f"LOG FROM DUPLICATE ENSEMBLE {ind}"
+            self.create_project_log_calc(
+                proj, ensemble, structure, output, params=params
+            )
+            expected_contents.append(output)
+
+        log_files, contents = self.download_project_log_files(proj)
+
+        self.assertEqual(len(log_files), 4)
+        self.assertEqual(len(set(log_files)), 4)
+        self.assertCountEqual(contents, expected_contents)
+
+    def test_download_project_duplicate_unflagged_ensemble_name_is_excluded(self):
+        proj = Project.objects.create(name="Unflagged Duplicate", author=self.user)
+        mol = Molecule.objects.create(name="DupMol", project=proj, inchi="dummy")
+        params = Parameters.objects.create(
+            charge=0,
+            multiplicity=1,
+            software="xtb",
+            method="GFN2-xTB",
+        )
+
+        expected_contents = []
+        for flagged, output in [
+            (True, "FLAGGED LOG A"),
+            (False, "UNFLAGGED LOG"),
+            (True, "FLAGGED LOG B"),
+        ]:
+            ensemble = Ensemble.objects.create(
+                name="Duplicate",
+                parent_molecule=mol,
+                flagged=flagged,
+            )
+            structure = Structure.objects.create(parent_ensemble=ensemble, number=1)
+            self.create_project_log_calc(
+                proj, ensemble, structure, output, params=params
+            )
+            if flagged:
+                expected_contents.append(output)
+
+        log_files, contents = self.download_project_log_files(proj)
+
+        self.assertEqual(len(log_files), 2)
+        self.assertCountEqual(contents, expected_contents)
+        self.assertNotIn("UNFLAGGED LOG", contents)
+
+    def test_download_project_flagged_child_duplicate_name_includes_producing_calc(
+        self,
+    ):
+        proj = Project.objects.create(name="Child Duplicate", author=self.user)
+        mol = Molecule.objects.create(name="DupMol", project=proj, inchi="dummy")
+        parent = Ensemble.objects.create(
+            name="Duplicate",
+            parent_molecule=mol,
+            flagged=False,
+        )
+        child = Ensemble.objects.create(
+            name="Duplicate",
+            parent_molecule=mol,
+            origin=parent,
+            flagged=True,
+        )
+        parent_structure = Structure.objects.create(parent_ensemble=parent, number=1)
+        Structure.objects.create(parent_ensemble=child, number=1)
+
+        self.create_project_log_calc(
+            proj,
+            parent,
+            parent_structure,
+            "CHILD-PRODUCING LOG",
+            result_ensemble=child,
+        )
+
+        log_files, contents = self.download_project_log_files(proj)
+
+        self.assertEqual(len(log_files), 1)
+        self.assertEqual(contents, ["CHILD-PRODUCING LOG"])
+
+    def test_download_project_flagged_parent_and_child_duplicate_name_no_duplicate_calc(
+        self,
+    ):
+        proj = Project.objects.create(name="Parent Child Duplicate", author=self.user)
+        mol = Molecule.objects.create(name="DupMol", project=proj, inchi="dummy")
+        parent = Ensemble.objects.create(
+            name="Duplicate",
+            parent_molecule=mol,
+            flagged=True,
+        )
+        child = Ensemble.objects.create(
+            name="Duplicate",
+            parent_molecule=mol,
+            origin=parent,
+            flagged=True,
+        )
+        parent_structure = Structure.objects.create(parent_ensemble=parent, number=1)
+        Structure.objects.create(parent_ensemble=child, number=1)
+
+        self.create_project_log_calc(
+            proj,
+            parent,
+            parent_structure,
+            "SHARED PARENT-CHILD LOG",
+            result_ensemble=child,
+        )
+
+        log_files, contents = self.download_project_log_files(proj)
+
+        self.assertEqual(len(log_files), 1)
+        self.assertEqual(contents, ["SHARED PARENT-CHILD LOG"])
 
     def test_order_calc_statuses_not_overwritten_by_stale_related_order(self):
         params = {

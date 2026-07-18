@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import json
 import os
-import glob
 import random
 import time
 import zipfile
@@ -4857,37 +4856,62 @@ def cancel_calc(request):
 def download_project_logs(proj, user, scope, details, folders):
     # folders options makes this somewhat duplicate code
 
-    filenames = []
+    filenames = set()
+    seen_calculations = set()
 
     def get_log_name(s, calc):
-        log_name = s.parent_ensemble.parent_molecule.name + f"_conf{s.number}"
-        if log_name not in filenames:
-            filenames.append(log_name)
-            return log_name
-
-        log_name = (
+        candidates = [
+            s.parent_ensemble.parent_molecule.name + f"_conf{s.number}",
             s.parent_ensemble.parent_molecule.name
             + "_"
             + s.parent_ensemble.name
-            + f"_conf{s.number}"
-        )
-        if log_name not in filenames:
-            filenames.append(log_name)
-            return log_name
+            + f"_conf{s.number}",
+            s.parent_ensemble.name
+            + "_"
+            + calc.parameters.file_name
+            + f"_conf{s.number}",
+        ]
 
-        log_name = e.name + "_" + calc.parameters.file_name + f"_conf{s.number}"
-        filenames.append(log_name)
+        for log_name in candidates:
+            if log_name not in filenames:
+                filenames.add(log_name)
+                return log_name
+
+        base_name = candidates[-1]
+        suffix = 2
+        log_name = f"{base_name}_{suffix}"
+        while log_name in filenames:
+            suffix += 1
+            log_name = f"{base_name}_{suffix}"
+
+        filenames.add(log_name)
         return log_name
 
-    tmp_dir = f"/tmp/{user.id}_{proj.author.username}_{time.time()}"  ## tmpdir
-    os.mkdir(tmp_dir)
-    for mol in sorted(proj.molecule_set.all(), key=lambda l: l.name):
-        for e in mol.ensemble_set.all():
-            if scope == "flagged" and not e.flagged:
-                continue
+    def iter_calculations_for_ensemble(e):
+        for s in e.structure_set.all():
+            for calc in s.calculation_set.all():
+                yield calc
 
-            for ind, s in enumerate(e.structure_set.all()):
-                for calc in s.calculation_set.all():
+        for calc in e.calculation_set.all():
+            yield calc
+
+    mem = BytesIO()
+    zip_root = proj.name.replace(" ", "_")
+    with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zip:
+        for mol in sorted(proj.molecule_set.all(), key=lambda l: l.name):
+            for e in mol.ensemble_set.all():
+                if scope == "flagged" and not e.flagged:
+                    continue
+
+                for calc in iter_calculations_for_ensemble(e):
+                    if calc.id in seen_calculations:
+                        continue
+                    seen_calculations.add(calc.id)
+
+                    if calc.structure is None:
+                        continue
+                    s = calc.structure
+
                     if calc.status == 0:
                         continue
                     if details == "freq" and calc.step.name != "Frequency Calculation":
@@ -4897,7 +4921,6 @@ def download_project_logs(proj, user, scope, details, folders):
                         continue
 
                     log_name = get_log_name(s, calc)
-
                     logs = read_all_output_files(calc)
 
                     for subname, log in logs.items():
@@ -4906,23 +4929,14 @@ def download_project_logs(proj, user, scope, details, folders):
                         else:
                             _log_name = f"{log_name}_{subname}.log"
 
-                        with open(os.path.join(tmp_dir, _log_name), "w") as out:
-                            out.write(log)
+                        zip.writestr(os.path.join(zip_root, _log_name), log)
 
-                    if (
-                        calc.parameters.software == "xtb"
-                    ):  # xtb logs don't contain the structure
-                        with open(os.path.join(tmp_dir, log_name + ".xyz"), "w") as out:
-                            out.write(s.xyz_structure)
-
-    for d in glob.glob(f"{tmp_dir}/*/"):
-        if len(os.listdir(d)) == 0:
-            os.rmdir(d)
-
-    mem = BytesIO()
-    with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as zip:
-        for f in glob.glob(f"{tmp_dir}/*"):
-            zip.write(f, os.path.join(proj.name.replace(" ", "_"), *f.split("/")[3:]))
+                    # xtb logs don't contain the structure
+                    if calc.parameters.software == "xtb":
+                        zip.writestr(
+                            os.path.join(zip_root, log_name + ".xyz"),
+                            s.xyz_structure,
+                        )
 
     response = HttpResponse(mem.getvalue(), content_type="application/zip")
     response["Content-Disposition"] = 'attachment; filename="{}_logs.zip"'.format(
