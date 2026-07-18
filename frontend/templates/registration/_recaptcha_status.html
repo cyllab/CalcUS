@@ -1,0 +1,59 @@
+{% if IS_CLOUD %}
+<div
+    id="recaptcha-load-warning"
+    class="notification is-warning has-text-left"
+    role="alert"
+    aria-live="polite"
+    hidden
+>
+    <strong>Security verification could not load.</strong>
+    Check your connection, allow Google reCAPTCHA, then reload this page.
+</div>
+<noscript>
+    <div class="notification is-warning has-text-left" role="alert">
+        <strong>JavaScript is required for security verification.</strong>
+        Enable JavaScript, then reload this page.
+    </div>
+</noscript>
+<script>
+    (function () {
+        const warning = document.getElementById("recaptcha-load-warning");
+        if (!warning) return;
+
+        let checkTimer;
+        let warningTimer;
+
+        function recaptchaLoaded() {
+            return Boolean(
+                window.grecaptcha &&
+                document.querySelector(
+                    'iframe[src*="recaptcha"], textarea[name="g-recaptcha-response"], input[name="g-recaptcha-response"]'
+                )
+            );
+        }
+
+        function showWarning() {
+            if (!recaptchaLoaded()) warning.hidden = false;
+        }
+
+        function checkRecaptcha() {
+            if (!recaptchaLoaded()) return;
+            warning.hidden = true;
+            window.clearInterval(checkTimer);
+            window.clearTimeout(warningTimer);
+        }
+
+        document.querySelectorAll('script[src*="recaptcha"]').forEach(function (script) {
+            script.addEventListener("error", showWarning, { once: true });
+        });
+        window.addEventListener("offline", showWarning);
+
+        checkTimer = window.setInterval(checkRecaptcha, 500);
+        warningTimer = window.setTimeout(showWarning, 8000);
+        window.setTimeout(function () {
+            window.clearInterval(checkTimer);
+        }, 60000);
+        checkRecaptcha();
+    })();
+</script>
+{% endif %}
