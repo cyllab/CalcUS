@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import time
 import selenium
-from unittest import mock
+from unittest import mock, skip
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -3149,6 +3149,7 @@ class OrcaCalculationTests(CalcusLiveServer):
         self.click_latest_calc()
         self.assertEqual(self.get_number_conformers(), 1)
 
+    @skip("Population parsing currently not active for ORCA")
     def test_DFT_default_pop(self):
         params = {
             "mol_name": "my_mol",

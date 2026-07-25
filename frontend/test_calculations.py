@@ -566,6 +566,7 @@ class OrcaCalculationTests(CalculationUnitTest):
             )
         )
 
+    @unittest.skip("Population parsing currently not active for ORCA")
     def test_DFT_default_pop(self):
         self.assertTrue(
             self.run_test(

@@ -132,7 +132,7 @@ def create_container_job(calc, nproc, timeout):
             "OMP_NUM_THREADS": f"{nproc},1",
             "OMP_STACKSIZE": "3500M",
             "CALCUS_TIMEOUT": str(timeout),
-            # Variables for rescheduling when a VM in preempted
+            "CALCUS_BATCH_MAX_RETRIES": str(settings.GCP_BATCH_SPOT_MAX_RETRIES),
             "CALC_ID": str(calc.id),
             "COMPUTE_IMAGE": settings.COMPUTE_IMAGE,
             "COMPUTE_SERVICE_ACCOUNT": settings.COMPUTE_SERVICE_ACCOUNT,
@@ -159,7 +159,7 @@ def create_container_job(calc, nproc, timeout):
     resources.memory_mib = 4 * nproc * 1024
     task.compute_resource = resources
 
-    task.max_retry_count = 1
+    task.max_retry_count = settings.GCP_BATCH_SPOT_MAX_RETRIES
     task.max_run_duration = f"{timeout+300}s"  # Add some margin in the task runtime; the timeout is for the actual calculation
 
     group = batch_v1.TaskGroup()
@@ -261,7 +261,7 @@ def send_gcloud_task(url, payload, compute=True):
 
 def submit_cloud_job(calc):
     nproc, timeout = job_triage(calc)
-    if nproc == 1 and can_run_in_sync_gunicorn_timeout(timeout):
+    if nproc == 1 and (IS_TEST or can_run_in_sync_gunicorn_timeout(timeout)):
         send_gcloud_task("/cloud_calc/", str(calc.id))
     else:
         create_container_job(calc, nproc, timeout)
