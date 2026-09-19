@@ -422,6 +422,9 @@
 						},
 						400: function(response) {
 							$("#3d_msg").html("Could not generate preview: the file is too large");
+						},
+						422: function(response) {
+							$("#3d_msg").text(response.responseText || "Could not generate preview: invalid structure file");
 						}
 					}
 				});

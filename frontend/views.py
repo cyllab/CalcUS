@@ -3804,20 +3804,29 @@ def download_structure(request, ee, num):
 
 
 def get_mol_preview(request):
-    if request.method == "POST":
-        mol = clean(request.POST["mol"])
-        ext = clean(request.POST["ext"])
+    if request.method != "POST":
+        return HttpResponse(status=400)
 
-        if ext == "xyz":
-            return HttpResponse(mol)
+    mol = clean(request.POST["mol"])
+    ext = clean(request.POST["ext"]).lower()
 
+    if ext == "xyz":
+        return HttpResponse(mol)
+
+    try:
         xyz = generate_xyz_structure(False, mol, ext)
+    except ValueError as exc:
+        logger.warning(f"Could not generate a {ext} structure preview: {exc}")
+        return HttpResponse(
+            f"Could not generate preview: {exc}",
+            status=422,
+            content_type="text/plain",
+        )
 
-        if xyz == ErrorCodes.UNIMPLEMENTED:
-            return HttpResponse(status=204)
+    if xyz == ErrorCodes.UNIMPLEMENTED:
+        return HttpResponse(status=204)
 
-        return HttpResponse(xyz)
-    return HttpResponse(status=400)
+    return HttpResponse(xyz)
 
 
 def gen_3D(request):

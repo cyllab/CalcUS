@@ -1010,6 +1010,21 @@ class FileInputTests(TestCase):
         self.assertEqual(Molecule.objects.count(), 0)
         self.assertEqual(Ensemble.objects.count(), 0)
 
+    def test_invalid_gaussian_output_preview_returns_helpful_error(self):
+        response = self.client.post(
+            "/get_mol_preview/",
+            data={
+                "mol": "Gaussian calculation stopped before coordinates were written",
+                "ext": "log",
+            },
+        )
+
+        self.assertContains(
+            response,
+            "Could not generate preview: No Gaussian coordinate table was found",
+            status_code=422,
+        )
+
     def test_iso_8859_1(self):
         with open(os.path.join(tests_dir, "ethanol_iso-8859-1.xyz"), "rb") as f:
             xyz = f.read()
