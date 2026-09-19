@@ -2142,7 +2142,9 @@ def _submit_calculation(request, verify=False):
                     struct, filename = ss
                     xyz_structure = struct.xyz_structure
 
-                electrons = get_number_of_electrons(xyz_structure)
+                electrons = get_number_of_electrons(
+                    xyz_structure, helium_as_placeholder=gen_derivatives
+                )
                 if electrons == -1:
                     return "Some elements in the structure are not recognized!"
 

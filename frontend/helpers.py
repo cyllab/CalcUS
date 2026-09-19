@@ -174,7 +174,7 @@ def guess_missing_parameters(params):
                 params["calc_solvation_radii"] = "default"
 
 
-def get_number_of_electrons(xyz):
+def get_number_of_electrons(xyz, helium_as_placeholder=False):
     electrons = 0
     for line in xyz.split("\n")[2:]:
         if line.strip() == "":
@@ -184,7 +184,7 @@ def get_number_of_electrons(xyz):
             print(f"Unknown element: {el}")
             return -1
         electrons += int(ATOMIC_NUMBER[el])
-        if el == "He":
-            # Assume that substituents form a single bond
+        if helium_as_placeholder and el == "He":
+            # Derivative templates use He as a single-bond substitution point.
             electrons -= 1
     return electrons

@@ -991,6 +991,22 @@ class FileInputTests(TestCase):
         self.assertEqual(Molecule.objects.count(), 1)
         self.assertEqual(Ensemble.objects.count(), 1)
 
+    def test_helium_is_counted_as_an_element(self):
+        xyz = b"2\n\nHe 0 0 0\nH 0 0 0.774\n"
+        structure = SimpleUploadedFile("heh.xyz", xyz, content_type="chemical/x-xyz")
+
+        params = basic_params.copy()
+        params["structure"] = ""
+        params["calc_charge"] = "1"
+        params["file_structure"] = [structure]
+        params["calc_combine_files"] = ("",)
+        params["calc_parse_filenames"] = ""
+
+        response = self.client.post("/submit_calculation/", data=params, follow=True)
+
+        self.assertNotContains(response, "Error while submitting your calculation")
+        self.assertEqual(CalculationOrder.objects.count(), 1)
+
     def test_invalid_gaussian_output_returns_helpful_error(self):
         output = b"Gaussian calculation stopped before coordinates were written"
         f = SimpleUploadedFile("incomplete.log", output, content_type="text/plain")
